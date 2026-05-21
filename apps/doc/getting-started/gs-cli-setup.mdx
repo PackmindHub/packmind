@@ -172,9 +172,27 @@ export PACKMIND_API_KEY_V3="your-api-key-here"
 
 To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.).
 
+## Initialize Your Project
+
+Once you're authenticated, the first command to run inside your project is `packmind-cli init`. This sets up Packmind for the repository and must be run before any onboarding or artifact generation.
+
+From the root of your project (which must be a Git repository), run:
+
+```bash
+packmind-cli init
+```
+
+This will:
+
+- Prompt you to select which AI coding agents you use (Claude Code, Cursor, GitHub Copilot, etc.)
+- Save your selection to a `packmind.json` file at the project root
+- Install Packmind's default skills (including `packmind-onboard` and `packmind-update-playbook`) into the appropriate directories for your selected agents
+
+See the [Init Command](/tools/cli#init-command) reference for the full output and details.
+
 ## Next Steps
 
-Now that you have the CLI installed and authenticated, you can create your first standards and commands:
+Now that you have the CLI installed, authenticated, and your project initialized, you can create your first standards and commands:
 
 ### Quick Start: Run `/packmind-onboard`
 

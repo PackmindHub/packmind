@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ActiveDistributedPackagesByTarget,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -12,8 +13,6 @@ import {
   IGitPort,
   ISpacesPort,
   IStandardsPort,
-  RecipeDeploymentStatus,
-  RepositoryDeploymentStatus,
   Space,
   SpaceType,
   Standard,
@@ -58,7 +57,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
     } as unknown as jest.Mocked<ISpacesPort>;
 
     mockDeploymentPort = {
-      getDeploymentOverview: jest.fn(),
+      listActiveDistributedPackagesBySpace: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     stubbedLogger = stubLogger();
@@ -135,13 +134,13 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([
           { id: 'standard-1' } as unknown as Standard,
         ]);
-        mockDeploymentPort.getDeploymentOverview.mockResolvedValue({
-          repositories: [
-            { repositoryId: 'repo-1' } as unknown as RepositoryDeploymentStatus,
+        mockDeploymentPort.listActiveDistributedPackagesBySpace.mockResolvedValue(
+          [
+            {
+              targetId: 'target-1',
+            } as unknown as ActiveDistributedPackagesByTarget,
           ],
-          recipes: [],
-          targets: [],
-        });
+        );
 
         const result =
           await getOrganizationOnboardingStatusUseCase.executeForMembers(
@@ -165,11 +164,9 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
-        mockDeploymentPort.getDeploymentOverview.mockResolvedValue({
-          repositories: [],
-          recipes: [],
-          targets: [],
-        });
+        mockDeploymentPort.listActiveDistributedPackagesBySpace.mockResolvedValue(
+          [],
+        );
 
         const result =
           await getOrganizationOnboardingStatusUseCase.executeForMembers(
@@ -195,11 +192,9 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
-        mockDeploymentPort.getDeploymentOverview.mockResolvedValue({
-          repositories: [],
-          recipes: [],
-          targets: [],
-        });
+        mockDeploymentPort.listActiveDistributedPackagesBySpace.mockResolvedValue(
+          [],
+        );
 
         const result =
           await getOrganizationOnboardingStatusUseCase.executeForMembers(
@@ -243,20 +238,20 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
       });
     });
 
-    describe('with deployment via recipes', () => {
-      it('detects deployment through recipes list', async () => {
+    describe('with deployment via active packages', () => {
+      it('detects deployment through active distributed packages', async () => {
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
         mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
-        mockDeploymentPort.getDeploymentOverview.mockResolvedValue({
-          repositories: [],
-          recipes: [
-            { recipeId: 'recipe-1' } as unknown as RecipeDeploymentStatus,
+        mockDeploymentPort.listActiveDistributedPackagesBySpace.mockResolvedValue(
+          [
+            {
+              targetId: 'target-1',
+            } as unknown as ActiveDistributedPackagesByTarget,
           ],
-          targets: [],
-        });
+        );
 
         const result =
           await getOrganizationOnboardingStatusUseCase.executeForMembers(
@@ -278,11 +273,9 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
-        mockDeploymentPort.getDeploymentOverview.mockResolvedValue({
-          repositories: [],
-          recipes: [],
-          targets: [],
-        });
+        mockDeploymentPort.listActiveDistributedPackagesBySpace.mockResolvedValue(
+          [],
+        );
 
         const result =
           await getOrganizationOnboardingStatusUseCase.executeForMembers(

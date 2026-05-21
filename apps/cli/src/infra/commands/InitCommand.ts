@@ -28,6 +28,7 @@ export const initCommand = command({
       baseDirectory,
       installDefaultSkills:
         packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
+      ensureCliVersion: packmindCliHexa.ensureCliVersion.bind(packmindCliHexa),
       cliVersion: CLI_VERSION,
     });
 

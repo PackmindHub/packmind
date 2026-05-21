@@ -54,7 +54,7 @@ export class ListOrganizationUsersUseCase
 
       return {
         userId: user.id,
-        displayName: user.email.split('@')[0],
+        displayName: user.displayName ?? user.email.split('@')[0],
         role: membership?.role || 'member',
       };
     });

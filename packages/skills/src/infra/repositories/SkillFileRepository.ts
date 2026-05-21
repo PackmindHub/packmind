@@ -29,6 +29,37 @@ export class SkillFileRepository
     };
   }
 
+  async findBySkillVersionIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillFile[]> {
+    if (skillVersionIds.length === 0) return [];
+
+    this.logger.info('Finding skill files by version IDs', {
+      count: skillVersionIds.length,
+    });
+
+    try {
+      const files = await this.repository
+        .createQueryBuilder('skillFile')
+        .where('skillFile.skillVersionId IN (:...skillVersionIds)', {
+          skillVersionIds: skillVersionIds as string[],
+        })
+        .getMany();
+
+      this.logger.info('Skill files found by version IDs', {
+        requestedCount: skillVersionIds.length,
+        foundCount: files.length,
+      });
+      return files;
+    } catch (error) {
+      this.logger.error('Failed to find skill files by version IDs', {
+        count: skillVersionIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findBySkillVersionId(
     skillVersionId: SkillVersionId,
   ): Promise<SkillFile[]> {
@@ -47,25 +78,6 @@ export class SkillFileRepository
     } catch (error) {
       this.logger.error('Failed to find skill files by version ID', {
         skillVersionId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async addMany(files: SkillFile[]): Promise<SkillFile[]> {
-    this.logger.info('Adding multiple skill files', { count: files.length });
-
-    try {
-      const savedFiles = await this.repository.save(files);
-
-      this.logger.info('Successfully added multiple skill files', {
-        count: savedFiles.length,
-      });
-      return savedFiles;
-    } catch (error) {
-      this.logger.error('Failed to add multiple skill files', {
-        count: files.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

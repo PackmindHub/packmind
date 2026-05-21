@@ -14,7 +14,24 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
-import { PackmindLockFile } from '@packmind/types';
+import { CodingAgent, PackmindLockFile } from '@packmind/types';
+import {
+  buildInstallSummary,
+  buildIncapableArtifactsWarning,
+} from './installSummary';
+import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
+import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
+import { bootstrapInstallContext } from './bootstrapInstallContext';
+import { handleIncompatibleInstalledSkillsSilently } from './skills/incompatibleSkillsHandler';
+import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
+import {
+  buildSkillsSkippedWarning,
+  configuredAgentsSupportSkills,
+} from './skillsCapabilityWarning';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../package.json');
 
 function findSubDirectoriesWithPackmindJson(
   dirPath: string,
@@ -45,7 +62,7 @@ function findSubDirectoriesWithPackmindJson(
   return result;
 }
 
-function mergeInstallResults(results: IInstallResult[]): IInstallResult {
+export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   const merged: IInstallResult = {
     filesCreated: 0,
     filesUpdated: 0,
@@ -63,7 +80,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     skillDirectoriesDeleted: 0,
     missingAccess: [],
     joinSpaceUrl: undefined,
+    configCreated: false,
+    packagesAdded: [],
+    sourceArtifacts: {
+      skillsCount: 0,
+      standardsCount: 0,
+      commandsCount: 0,
+      recipesCount: 0,
+    },
+    resolvedAgents: [],
   };
+
+  const packagesAddedSet = new Set<string>();
+  const resolvedAgentsSet = new Set<CodingAgent>();
 
   for (const r of results) {
     merged.filesCreated += r.filesCreated;
@@ -81,9 +110,19 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     merged.skillsRemoved += r.skillsRemoved;
     merged.skillDirectoriesDeleted += r.skillDirectoriesDeleted;
     merged.missingAccess.push(...r.missingAccess);
+
+    merged.configCreated = merged.configCreated || r.configCreated;
+    r.packagesAdded.forEach((p) => packagesAddedSet.add(p));
+    merged.sourceArtifacts.skillsCount += r.sourceArtifacts.skillsCount;
+    merged.sourceArtifacts.standardsCount += r.sourceArtifacts.standardsCount;
+    merged.sourceArtifacts.commandsCount += r.sourceArtifacts.commandsCount;
+    merged.sourceArtifacts.recipesCount += r.sourceArtifacts.recipesCount;
+    r.resolvedAgents.forEach((a) => resolvedAgentsSet.add(a));
   }
 
   merged.missingAccess = [...new Set(merged.missingAccess)];
+  merged.packagesAdded = [...packagesAddedSet];
+  merged.resolvedAgents = [...resolvedAgentsSet];
 
   const urlsFromResultsWithMissingAccess = results
     .filter((r) => r.missingAccess.length > 0)
@@ -97,39 +136,6 @@ function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   }
 
   return merged;
-}
-
-function buildInstallSummary(result: IInstallResult): string {
-  const contentParts = [
-    result.standardsCount > 0
-      ? `${result.standardsCount} ${result.standardsCount === 1 ? 'standard' : 'standards'}`
-      : null,
-    result.commandsCount > 0
-      ? `${result.commandsCount} ${result.commandsCount === 1 ? 'command' : 'commands'}`
-      : null,
-    result.skillsCount > 0
-      ? `${result.skillsCount} ${result.skillsCount === 1 ? 'skill' : 'skills'}`
-      : null,
-    result.recipesCount > 0
-      ? `${result.recipesCount} ${result.recipesCount === 1 ? 'recipe' : 'recipes'}`
-      : null,
-  ].filter(Boolean);
-
-  const contentChanged = result.contentFilesChanged > 0;
-
-  if (!contentChanged && contentParts.length === 0) {
-    return '✅ Nothing to install';
-  }
-
-  if (!contentChanged) {
-    return `✅ Already up to date — ${contentParts.join(', ')}`;
-  }
-
-  if (contentParts.length === 0) {
-    return '✅ Packages removed';
-  }
-
-  return `✅ Synced ${contentParts.join(', ')}`;
 }
 
 async function notifyArtefactsDistributionIfInGitRepo(params: {
@@ -169,18 +175,75 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
   }
 }
 
+async function installDefaultSkillsIfAtGitRoot(params: {
+  packmindCliHexa: PackmindCliHexa;
+  cwd: string;
+  configRepository: IConfigFileRepository;
+}): Promise<void> {
+  const { packmindCliHexa, cwd, configRepository } = params;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  if (!gitRoot || cwd !== gitRoot) {
+    return;
+  }
+
+  const config = await configRepository.readConfig(cwd);
+  const configuredAgents = config?.agents ?? [];
+
+  if (!configuredAgentsSupportSkills(configuredAgents)) {
+    logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+    return;
+  }
+
+  try {
+    const skillsResult = await packmindCliHexa.installDefaultSkills({
+      cliVersion: CLI_VERSION,
+      baseDirectory: cwd,
+    });
+
+    if (skillsResult.incompatibleInstalledSkills.length > 0) {
+      await handleIncompatibleInstalledSkillsSilently(
+        skillsResult.incompatibleInstalledSkills,
+        cwd,
+      );
+    }
+
+    if (skillsResult.errors.length > 0) {
+      skillsResult.errors.forEach((err) => {
+        logWarningConsole(`Warning: ${err}`);
+      });
+    }
+
+    const totalSkillFiles =
+      skillsResult.filesCreated + skillsResult.filesUpdated;
+    // Stay silent when nothing happened — otherwise the user reads a
+    // contradictory "Already up to date" + "Installing default skills..."
+    // narrative in the same turn.
+    if (totalSkillFiles > 0) {
+      logConsole(
+        `Default skills: added ${skillsResult.filesCreated} files, changed ${skillsResult.filesUpdated} files`,
+      );
+    }
+  } catch {
+    // Silently ignore default skills installation errors as it's a secondary operation
+  }
+}
+
 export async function installHandler({
   installPath,
   packages,
   list,
   show,
   status,
+  skipInstalledAt,
 }: {
   installPath: string;
   packages: string[];
   list: boolean;
   show: string;
   status: boolean;
+  skipInstalledAt: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -227,12 +290,42 @@ export async function installHandler({
     }
   }
 
+  try {
+    const ensureOutcome = await packmindCliHexa.ensureCliVersion({
+      baseDirectory: cwd,
+      currentCliVersion: CLI_VERSION,
+      includeBeta: false,
+    });
+    reportEnsureCliVersionOutcome(ensureOutcome, CLI_VERSION);
+  } catch {
+    // Silently swallow drift-check failures; install must continue.
+  }
+
+  const configRepository = new ConfigFileRepository();
+
+  const bootstrap = await bootstrapInstallContext({
+    configRepository,
+    agentDetectionService: new AgentArtifactDetectionService(),
+    packmindGateway: packmindCliHexa.getPackmindGateway(),
+    baseDirectory: cwd,
+    packages,
+    isTTY: process.stdin.isTTY ?? false,
+    installDefaultSkills:
+      packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
+    cliVersion: CLI_VERSION,
+  });
+
   // Determine target directories
   let targetDirs: string[];
 
   if (installPath) {
-    // With -p: find packmind.json in direct sub-directories only (non-recursive)
-    targetDirs = findSubDirectoriesWithPackmindJson(cwd, false);
+    // With -p: target cwd itself when it has packmind.json or explicit packages
+    // were passed, plus any direct sub-directories with packmind.json.
+    targetDirs = [];
+    if (fs.existsSync(path.join(cwd, 'packmind.json')) || packages.length > 0) {
+      targetDirs.push(cwd);
+    }
+    targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, false));
   } else if (packages.length > 0) {
     // With explicit packages: only update the cwd's packmind.json
     targetDirs = [cwd];
@@ -245,9 +338,14 @@ export async function installHandler({
     targetDirs.push(...findSubDirectoriesWithPackmindJson(cwd, true));
   }
 
-  // Fallback: if no config files found anywhere, run on cwd (use case will report the error)
   if (targetDirs.length === 0) {
-    targetDirs = [cwd];
+    if (bootstrap.warned) {
+      return;
+    }
+    logErrorConsole(
+      'No packmind.json found in the current directory or its sub-directories.',
+    );
+    process.exit(1);
   }
 
   const results: IInstallResult[] = [];
@@ -259,6 +357,8 @@ export async function installHandler({
       const result = await packmindCliHexa.install({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
+        skipInstalledAt,
+        cliVersion: CLI_VERSION,
       });
       results.push(result);
 
@@ -279,6 +379,18 @@ export async function installHandler({
 
   const combined = mergeInstallResults(results);
 
+  // Merge bootstrap-induced changes into the summary so users see "config
+  // created" / "packages added" even when bootstrap pre-populated packmind.json
+  // before the install use case ran.
+  if (bootstrap.configCreated) {
+    combined.configCreated = true;
+  }
+  if (bootstrap.packagesAdded.length > 0) {
+    const merged = new Set(combined.packagesAdded);
+    bootstrap.packagesAdded.forEach((p) => merged.add(p));
+    combined.packagesAdded = [...merged];
+  }
+
   if (combined.missingAccess.length > 0) {
     let warning =
       `⚠️  You don't have access to the following packages (their artifacts were preserved from the lock file):\n` +
@@ -291,7 +403,18 @@ export async function installHandler({
     logWarningConsole(warning);
   }
 
-  logConsole(buildInstallSummary(combined));
+  if (results.length > 0) {
+    const capabilityWarning = buildIncapableArtifactsWarning(combined);
+    if (capabilityWarning) {
+      logWarningConsole(capabilityWarning);
+    }
+    logConsole(buildInstallSummary(combined));
+    await installDefaultSkillsIfAtGitRoot({
+      packmindCliHexa,
+      cwd,
+      configRepository,
+    });
+  }
 
   const allErrors = [...combined.errors, ...thrownErrors];
 
@@ -337,6 +460,11 @@ export const installCommand = command({
       long: 'show',
       description: '[Deprecated] Show details of a specific package',
       defaultValue: () => '',
+    }),
+    skipInstalledAt: flag({
+      long: 'skip-installed-at',
+      description:
+        'Omit the installedAt timestamp from the packmind-lock.json file',
     }),
   },
   handler: installHandler,

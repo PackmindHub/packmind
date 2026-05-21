@@ -5,6 +5,10 @@ import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
 import { DeploymentsBlankState } from './DeploymentsBlankState';
 
+jest.mock('@packmind/assets', () => ({
+  logoPackmind: 'logo-packmind',
+}));
+
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(
     <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
@@ -12,13 +16,6 @@ const renderWithProvider = (ui: React.ReactElement) => {
     </MemoryRouter>,
   );
 };
-
-// Mock PMTable to avoid internal UI hook/state issues in tests
-jest.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
-  const PMTable = () => <div data-testid="pm-table" />;
-  return { ...actual, PMTable };
-});
 
 describe('DeploymentsBlankState', () => {
   it('displays the main heading', () => {
@@ -67,17 +64,19 @@ describe('DeploymentsBlankState', () => {
 
   it('displays KPI stats', () => {
     renderWithProvider(<DeploymentsBlankState />);
-    expect(screen.getByText('Up-to-date')).toBeInTheDocument();
-    expect(screen.getByText('Outdated')).toBeInTheDocument();
+    expect(screen.getAllByText('Up-to-date').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Outdated').length).toBeGreaterThanOrEqual(1);
 
-    // Both stats show "2" - verify there are exactly 2 elements with this text
-    const twoElements = screen.getAllByText('2');
-    expect(twoElements).toHaveLength(2);
+    // Both KPI stats show "2" - check via heading role to avoid matching version badges in tables
+    const kpiValues = screen
+      .getAllByRole('heading')
+      .filter((el) => el.textContent === '2');
+    expect(kpiValues).toHaveLength(2);
   });
 
   it('displays tables for each target', () => {
     renderWithProvider(<DeploymentsBlankState />);
-    const tables = screen.getAllByTestId('pm-table');
+    const tables = screen.getAllByRole('table');
     expect(tables.length).toBe(2); // api and frontend
   });
 });

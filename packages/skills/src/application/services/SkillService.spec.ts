@@ -29,6 +29,7 @@ describe('SkillService', () => {
   beforeEach(() => {
     skillRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
@@ -40,6 +41,7 @@ describe('SkillService', () => {
 
     skillVersionRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -55,6 +57,7 @@ describe('SkillService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findBySkillVersionId: jest.fn(),
+      findBySkillVersionIds: jest.fn(),
       addMany: jest.fn(),
     };
 
@@ -439,8 +442,8 @@ describe('SkillService', () => {
         skillVersionRepository.findBySkillId = jest
           .fn()
           .mockResolvedValue([version]);
-        skillVersionRepository.add = jest.fn().mockResolvedValue(version);
-        skillFileRepository.findBySkillVersionId = jest
+        skillVersionRepository.addMany = jest.fn().mockResolvedValue([version]);
+        skillFileRepository.findBySkillVersionIds = jest
           .fn()
           .mockResolvedValue([file]);
         skillFileRepository.addMany = jest.fn().mockResolvedValue([file]);
@@ -473,7 +476,7 @@ describe('SkillService', () => {
           newUserId,
         );
 
-        expect(skillVersionRepository.add).toHaveBeenCalledWith(
+        expect(skillVersionRepository.addMany).toHaveBeenCalledWith([
           expect.objectContaining({
             name: version.name,
             slug: version.slug,
@@ -481,7 +484,7 @@ describe('SkillService', () => {
             prompt: version.prompt,
             version: version.version,
           }),
-        );
+        ]);
       });
 
       it('copies all files linked to the new versions', async () => {
@@ -571,35 +574,45 @@ describe('SkillService', () => {
         skillVersionRepository.findBySkillId = jest
           .fn()
           .mockResolvedValue([version1, version2]);
-        skillVersionRepository.add = jest.fn().mockResolvedValue(version1);
-        skillFileRepository.findBySkillVersionId = jest
+        skillVersionRepository.addMany = jest
           .fn()
-          .mockImplementation((versionId) => {
-            if (versionId === version1.id) return Promise.resolve([file1]);
-            if (versionId === version2.id) return Promise.resolve([file2]);
-            return Promise.resolve([]);
-          });
+          .mockResolvedValue([version1, version2]);
+        skillFileRepository.findBySkillVersionIds = jest
+          .fn()
+          .mockResolvedValue([file1, file2]);
         skillFileRepository.addMany = jest.fn().mockResolvedValue([]);
       });
 
-      it('copies all versions', async () => {
+      it('copies all versions in a single bulk call', async () => {
         await skillService.duplicateSkillToSpace(
           skillId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(skillVersionRepository.add).toHaveBeenCalledTimes(2);
+        expect(skillVersionRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(skillVersionRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ name: version1.name }),
+            expect.objectContaining({ name: version2.name }),
+          ]),
+        );
       });
 
-      it('copies files for each version', async () => {
+      it('copies all files in a single bulk call', async () => {
         await skillService.duplicateSkillToSpace(
           skillId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(skillFileRepository.addMany).toHaveBeenCalledTimes(2);
+        expect(skillFileRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(skillFileRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ path: file1.path }),
+            expect.objectContaining({ path: file2.path }),
+          ]),
+        );
       });
     });
 
@@ -618,13 +631,13 @@ describe('SkillService', () => {
         skillVersionRepository.findBySkillId = jest
           .fn()
           .mockResolvedValue([version]);
-        skillVersionRepository.add = jest.fn().mockResolvedValue(version);
-        skillFileRepository.findBySkillVersionId = jest
+        skillVersionRepository.addMany = jest.fn().mockResolvedValue([version]);
+        skillFileRepository.findBySkillVersionIds = jest
           .fn()
           .mockResolvedValue([]);
       });
 
-      it('does not call addMany', async () => {
+      it('does not call addMany for files', async () => {
         await skillService.duplicateSkillToSpace(
           skillId,
           destinationSpaceId,
@@ -691,7 +704,7 @@ describe('SkillService', () => {
           newUserId,
         );
 
-        expect(skillVersionRepository.add).not.toHaveBeenCalled();
+        expect(skillVersionRepository.addMany).not.toHaveBeenCalled();
       });
 
       it('does not create any files', async () => {

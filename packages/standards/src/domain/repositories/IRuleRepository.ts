@@ -11,5 +11,9 @@ export interface IRuleRepository extends IRepository<Rule> {
     standardVersionId: StandardVersionId,
   ): Promise<Rule[]>;
 
+  findByStandardVersionIds(
+    standardVersionIds: StandardVersionId[],
+  ): Promise<Rule[]>;
+
   findByIdInSpace(ruleId: RuleId, spaceId: SpaceId): Promise<Rule | null>;
 }

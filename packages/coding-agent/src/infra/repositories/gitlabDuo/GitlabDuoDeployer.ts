@@ -16,6 +16,7 @@ import {
 } from '../genericSectionWriter/SingleFileDeployer';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
+import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
 
 export class GitlabDuoDeployer extends SingleFileDeployer {
   private static readonly ARTEFACT_PATHS =
@@ -28,10 +29,7 @@ export class GitlabDuoDeployer extends SingleFileDeployer {
     codingAgent: 'gitlab_duo',
   };
 
-  async deployDefaultSkills(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }) {
+  async deployDefaultSkills(options?: DeployDefaultSkillsOptions) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'GitLab Duo',
       GitlabDuoDeployer.ARTEFACT_PATHS.skill,

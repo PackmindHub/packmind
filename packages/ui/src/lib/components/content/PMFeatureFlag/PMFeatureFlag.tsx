@@ -10,37 +10,22 @@ export interface IPMFeatureFlagProps {
 export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
   'rule-details-detection-tab';
 
-export const MCP_CONFIG_REDESIGN_FEATURE_KEY = 'mcp-config-redesign';
-
-export const STANDARD_SAMPLES_FEATURE_KEY = 'standard-samples';
-
-export const CHANGE_PROPOSALS_FEATURE_KEY = 'change-proposals';
-
 /* Custom feature toggle for the "Propose change" links in the app */
 export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
   'change-proposals-in-webapp';
 
-export const EDIT_CHANGE_PROPOSALS_FEATURE_KEY = 'edit-change-proposals';
-
-export const SPACES_MANAGEMENT_FEATURE_KEY = 'spaces-management';
-
-export const SPACE_SETTINGS_FEATURE_KEY = 'space-settings';
-
 export const SPACE_IDENTITY_FEATURE_KEY = 'space-identity';
+
+export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [STANDARD_SAMPLES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]: [
     '@packmind.com',
     '@promyze.com',
   ],
-  [EDIT_CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [SPACES_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [SPACE_SETTINGS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SPACE_IDENTITY_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

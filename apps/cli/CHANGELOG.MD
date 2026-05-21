@@ -2,6 +2,53 @@
 
 ## Added
 
+- Default skills are now tracked in `packmind-lock.json` as first-class entries with a `source: 'default'` discriminator, alongside user-authored and package-distributed entries (`source: 'user'`).
+
+## Changed
+
+- Authentication is now done by reading `PACKMIND_API_KEY` env var (and also `PACKMIND_API_KEY_V3`)
+- Track the running CLI version in `packmind-lock.json`; warn when the installed CLI is older than the recorded version, auto-refresh default skills when it is newer.
+- **Breaking for external tooling that parses `packmind-lock.json`:** `lockfileVersion` has been bumped from `1` to `2`. The `artifacts` map key format changed from `${type}:${slug}` to `${source}:${type}:${slug}` (e.g. `default:skill:packmind-create-skill`, `user:standard:my-standard`), and each entry now carries a required `source: 'default' | 'user'` field. The CLI silently migrates v1 lockfiles to v2 on read (tagging every existing entry as `source: 'user'`), but external tooling must be updated to handle the new key format and the new required field.
+
+## Fixed
+
+- `playbook submit` no longer crashes on Windows when neither `$EDITOR` nor `$VISUAL` is set. The CLI now probes for a platform-appropriate editor (`notepad` on Windows; `nano` → `vim` → `vi` on macOS/Linux) and surfaces a clear, actionable error if none is found.
+- `install <package>` against a directory without `packmind.json` now reports `Created packmind.json with N package(s)` instead of the misleading `Nothing to install`.
+- `playbook add` and `playbook submit` now reject skills whose description exceeds 1024 characters with an actionable message, instead of failing later on the server.
+
+## Removed
+
+# [0.28.1] - 2026-05-04
+
+## Fixed
+
+- `installedAt` property was incorrectly reset even when absent from lockfile.
+
+# [0.28.0] - 2026-05-04
+
+## Added
+
+- Parse and preserve the new Claude Code skill frontmatter fields (`when_to_use`, `paths`, `shell`) when syncing SKILL.md files
+
+## Fixed
+
+- Better lookup for the local cert files when using HTTPS
+
+# [0.27.0] - 2026-04-20
+
+## Removed
+
+- drop `setup-mcp` command.
+
+# [0.26.1] - 2026-04-17
+
+## Fixed
+
+- when skipping deprecated default skills, some files were still rendered in sub-folders
+- when running `packmind-cli install` at the root of the repo, the default skills are installed.
+
+# [0.26.0] - 2026-04-14
+
 ## Changed
 
 - the `install` command does not try to read data from a space the user can not access.
@@ -9,8 +56,6 @@
 ## Fixed
 
 - the `--path` option of `playbook diff` raised an error if there was no `packmind.json` file in the directory.
-
-## Removed
 
 # [0.25.0] - 2026-04-07
 
@@ -313,7 +358,12 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...HEAD
+[0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1
+[0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
+[0.27.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...release-cli/0.27.0
+[0.26.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.0...release-cli/0.26.1
+[0.26.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.25.0...release-cli/0.26.0
 [0.25.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.24.0...release-cli/0.25.0
 [0.24.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.23.0...release-cli/0.24.0
 [0.23.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.22.0...release-cli/0.23.0

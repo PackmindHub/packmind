@@ -620,6 +620,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       }
 
       // Generate lock file and merge with existing to preserve inaccessible package entries
+      const existingLockFile = await this.fetchExistingLockFile(
+        gitRepo,
+        target,
+      );
       const lockFile = this.lockFileService.buildLockFile({
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
@@ -632,11 +636,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         targetId: target.id,
         artifactSpaceIds,
         artifactPackageIds,
+        includeInstalledAt:
+          !existingLockFile || existingLockFile.installedAt !== undefined,
       });
-      const existingLockFile = await this.fetchExistingLockFile(
-        gitRepo,
-        target,
-      );
       const mergedLockFile = this.lockFileService.mergeWithExistingLockFile(
         lockFile,
         existingLockFile,
@@ -1123,6 +1125,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       userId,
       organizationId,
       agents: targetCodingAgents,
+      excludeDeprecated: true,
     });
 
     // Extract skill names from paths and determine which are new

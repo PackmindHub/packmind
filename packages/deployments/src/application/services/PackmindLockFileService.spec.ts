@@ -72,6 +72,24 @@ describe('PackmindLockFileService', () => {
       },
     ];
 
+    describe('when includeInstalledAt is set to false', () => {
+      it('does not set the installedAt property', () => {
+        const lockFile = service.buildLockFile({
+          artifactPackageIds: {},
+          artifactSpaceIds: {},
+          codingAgents: [],
+          fileModifications: [],
+          packageSlugs: [],
+          recipeVersions: [],
+          skillVersions: [],
+          standardVersions: [],
+          includeInstalledAt: false,
+        });
+
+        expect(lockFile.installedAt).toBe(undefined);
+      });
+    });
+
     describe('with recipe, standard, and skill versions', () => {
       let result: PackmindLockFile;
 
@@ -118,8 +136,8 @@ describe('PackmindLockFileService', () => {
         });
       });
 
-      it('returns lockfileVersion 1', () => {
-        expect(result.lockfileVersion).toBe(1);
+      it('returns lockfileVersion 2', () => {
+        expect(result.lockfileVersion).toBe(2);
       });
 
       it('returns the targetId', () => {
@@ -131,37 +149,40 @@ describe('PackmindLockFileService', () => {
       });
 
       it('includes recipe artifact with correct metadata', () => {
-        expect(result.artifacts['command:my-recipe']).toEqual({
+        expect(result.artifacts['user:command:my-recipe']).toEqual({
           name: 'My Recipe',
           type: 'command',
           id: String(recipeId),
           version: 3,
           spaceId: 'space-A',
           packageIds: ['pkg-1'],
+          source: 'user',
           files: [{ path: '.claude/commands/my-recipe.md', agent: 'claude' }],
         });
       });
 
       it('includes standard artifact with correct metadata', () => {
-        expect(result.artifacts['standard:my-standard']).toEqual({
+        expect(result.artifacts['user:standard:my-standard']).toEqual({
           name: 'My Standard',
           type: 'standard',
           id: String(standardId),
           version: 2,
           spaceId: 'space-B',
           packageIds: ['pkg-2'],
+          source: 'user',
           files: [{ path: '.claude/rules/my-standard.md', agent: 'claude' }],
         });
       });
 
       it('includes skill artifact with isSkillDefinition for SKILL.md', () => {
-        expect(result.artifacts['skill:my-skill']).toEqual({
+        expect(result.artifacts['user:skill:my-skill']).toEqual({
           name: 'My Skill',
           type: 'skill',
           id: String(skillId),
           version: 1,
           spaceId: 'space-C',
           packageIds: ['pkg-3'],
+          source: 'user',
           files: [
             {
               path: '.claude/skills/my-skill/SKILL.md',
@@ -279,7 +300,7 @@ describe('PackmindLockFileService', () => {
           artifactPackageIds: { [String(recipeId)]: ['pkg-1'] },
         });
 
-        expect(result.artifacts['command:my-recipe'].files).toEqual([
+        expect(result.artifacts['user:command:my-recipe'].files).toEqual([
           { path: '.claude/commands/my-recipe.md', agent: 'claude' },
           { path: '.cursor/commands/my-recipe.md', agent: 'cursor' },
         ]);
@@ -320,7 +341,11 @@ describe('PackmindLockFileService', () => {
       });
 
       it('sets isSkillDefinition for the skill definition file', () => {
-        expect(result.artifacts['skill:my-skill'].files[0]).toEqual({
+        expect(
+          result.artifacts['user:skill:my-skill'].files.find(
+            (f) => f.path === '.claude/skills/my-skill/SKILL.md',
+          ),
+        ).toEqual({
           path: '.claude/skills/my-skill/SKILL.md',
           agent: 'claude',
           isSkillDefinition: true,
@@ -328,7 +353,11 @@ describe('PackmindLockFileService', () => {
       });
 
       it('does not set isSkillDefinition for files with skillFileId', () => {
-        expect(result.artifacts['skill:my-skill'].files[1]).toEqual({
+        expect(
+          result.artifacts['user:skill:my-skill'].files.find(
+            (f) => f.path === '.claude/skills/my-skill/helper.ts',
+          ),
+        ).toEqual({
           path: '.claude/skills/my-skill/helper.ts',
           agent: 'claude',
         });
@@ -366,6 +395,91 @@ describe('PackmindLockFileService', () => {
         });
 
         expect(result.agents).toEqual(['claude', 'copilot', 'cursor']);
+      });
+    });
+
+    describe('determinism', () => {
+      const buildWithOrder = (fileModifications: FileModification[]) =>
+        service.buildLockFile({
+          fileModifications,
+          recipeVersions,
+          standardVersions,
+          skillVersions,
+          codingAgents: ['cursor', 'claude'],
+          packageSlugs: ['pkg-b', 'pkg-a'],
+          targetId: 'target-1',
+          artifactSpaceIds: {
+            [String(recipeId)]: 'space-A',
+            [String(standardId)]: 'space-B',
+            [String(skillId)]: 'space-C',
+          },
+          artifactPackageIds: {
+            [String(recipeId)]: ['pkg-1'],
+            [String(standardId)]: ['pkg-2'],
+            [String(skillId)]: ['pkg-3'],
+          },
+        });
+
+      const filesA: FileModification[] = [
+        {
+          path: '.cursor/commands/my-recipe.md',
+          content: 'recipe content',
+          artifactType: 'command',
+          artifactId: String(recipeId),
+        },
+        {
+          path: '.claude/commands/my-recipe.md',
+          content: 'recipe content',
+          artifactType: 'command',
+          artifactId: String(recipeId),
+        },
+        {
+          path: '.claude/rules/my-standard.md',
+          content: 'standard content',
+          artifactType: 'standard',
+          artifactId: String(standardId),
+        },
+        {
+          path: '.claude/skills/my-skill/SKILL.md',
+          content: 'skill content',
+          artifactType: 'skill',
+          artifactId: String(skillId),
+        },
+      ];
+
+      const filesB: FileModification[] = [
+        filesA[3],
+        filesA[2],
+        filesA[1],
+        filesA[0],
+      ];
+
+      it('produces byte-identical output regardless of input order', () => {
+        const a = buildWithOrder(filesA);
+        const b = buildWithOrder(filesB);
+
+        expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+      });
+
+      it('sorts artifact keys alphabetically', () => {
+        const result = buildWithOrder(filesA);
+
+        expect(Object.keys(result.artifacts)).toEqual([
+          'user:command:my-recipe',
+          'user:skill:my-skill',
+          'user:standard:my-standard',
+        ]);
+      });
+
+      it('sorts files within an artifact by path', () => {
+        const result = buildWithOrder(filesA);
+
+        expect(
+          result.artifacts['user:command:my-recipe'].files.map((f) => f.path),
+        ).toEqual([
+          '.claude/commands/my-recipe.md',
+          '.cursor/commands/my-recipe.md',
+        ]);
       });
     });
 
@@ -431,30 +545,108 @@ describe('PackmindLockFileService', () => {
       });
 
       it('defaults spaceId to empty string', () => {
-        expect(result.artifacts['command:my-recipe'].spaceId).toBe('');
+        expect(result.artifacts['user:command:my-recipe'].spaceId).toBe('');
       });
 
       it('defaults packageIds to empty array', () => {
-        expect(result.artifacts['command:my-recipe'].packageIds).toEqual([]);
+        expect(result.artifacts['user:command:my-recipe'].packageIds).toEqual(
+          [],
+        );
+      });
+    });
+
+    describe('source discriminator', () => {
+      const skillFileMod = (overrides?: Partial<FileModification>) =>
+        ({
+          path: '.claude/skills/my-skill/SKILL.md',
+          content: 'skill content',
+          artifactType: 'skill',
+          artifactId: String(skillId),
+          ...overrides,
+        }) as FileModification;
+
+      it('emits entries with source: "default" under the default: key prefix when FileModification.source is "default"', () => {
+        const result = service.buildLockFile({
+          fileModifications: [skillFileMod({ source: 'default' })],
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions,
+          codingAgents: ['claude'],
+          packageSlugs: [],
+          artifactSpaceIds: {},
+          artifactPackageIds: {},
+        });
+
+        expect(Object.keys(result.artifacts)).toEqual([
+          'default:skill:my-skill',
+        ]);
+        expect(result.artifacts['default:skill:my-skill'].source).toBe(
+          'default',
+        );
+      });
+
+      it('defaults to source: "user" under the user: key prefix when FileModification.source is undefined', () => {
+        const result = service.buildLockFile({
+          fileModifications: [skillFileMod()],
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions,
+          codingAgents: ['claude'],
+          packageSlugs: [],
+          artifactSpaceIds: {},
+          artifactPackageIds: {},
+        });
+
+        expect(Object.keys(result.artifacts)).toEqual(['user:skill:my-skill']);
+        expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
+      });
+
+      it('emits both default and user entries side-by-side when the same slug appears with both sources', () => {
+        const result = service.buildLockFile({
+          fileModifications: [
+            skillFileMod({ source: 'default' }),
+            skillFileMod({
+              path: '.cursor/skills/my-skill/SKILL.md',
+              source: 'user',
+            }),
+          ],
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions,
+          codingAgents: ['claude', 'cursor'],
+          packageSlugs: [],
+          artifactSpaceIds: {},
+          artifactPackageIds: {},
+        });
+
+        expect(Object.keys(result.artifacts).sort()).toEqual([
+          'default:skill:my-skill',
+          'user:skill:my-skill',
+        ]);
+        expect(result.artifacts['default:skill:my-skill'].source).toBe(
+          'default',
+        );
+        expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
       });
     });
   });
 
   describe('mergeWithExistingLockFile', () => {
     const newLockFile: PackmindLockFile = {
-      lockfileVersion: 1,
+      lockfileVersion: 2,
       packageSlugs: ['@team-a/pkg-a'],
       agents: ['claude'],
       installedAt: FIXED_DATE,
       targetId: 'target-1',
       artifacts: {
-        'standard:accessible-standard': {
+        'user:standard:accessible-standard': {
           name: 'Accessible Standard',
           type: 'standard',
           id: 'std-1',
           version: 2,
           spaceId: 'space-accessible',
           packageIds: ['pkg-a'],
+          source: 'user',
           files: [
             { path: '.claude/rules/accessible-standard.md', agent: 'claude' },
           ],
@@ -475,19 +667,20 @@ describe('PackmindLockFileService', () => {
     describe('when all existing entries also exist in the new lock file', () => {
       it('returns newLockFile without preserving old entries', () => {
         const existingLockFile: PackmindLockFile = {
-          lockfileVersion: 1,
+          lockfileVersion: 2,
           packageSlugs: ['@team-a/pkg-a'],
           agents: ['claude'],
           installedAt: '2024-01-01T00:00:00.000Z',
           targetId: 'target-1',
           artifacts: {
-            'standard:accessible-standard': {
+            'user:standard:accessible-standard': {
               name: 'Accessible Standard OLD',
               type: 'standard',
               id: 'std-1',
               version: 1,
               spaceId: 'space-accessible',
               packageIds: ['pkg-a'],
+              source: 'user',
               files: [
                 {
                   path: '.claude/rules/accessible-standard.md',
@@ -504,27 +697,28 @@ describe('PackmindLockFileService', () => {
           ['pkg-a'],
         );
 
-        expect(result.artifacts['standard:accessible-standard'].version).toBe(
-          2,
-        );
+        expect(
+          result.artifacts['user:standard:accessible-standard'].version,
+        ).toBe(2);
       });
     });
 
     describe('when existing entries belong to inaccessible packages', () => {
       const existingLockFile: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
         agents: ['claude'],
         installedAt: '2024-01-01T00:00:00.000Z',
         targetId: 'target-1',
         artifacts: {
-          'standard:accessible-standard': {
+          'user:standard:accessible-standard': {
             name: 'Accessible Standard OLD',
             type: 'standard',
             id: 'std-1',
             version: 1,
             spaceId: 'space-accessible',
             packageIds: ['pkg-a'],
+            source: 'user',
             files: [
               {
                 path: '.claude/rules/accessible-standard.md',
@@ -532,13 +726,14 @@ describe('PackmindLockFileService', () => {
               },
             ],
           },
-          'command:private-recipe': {
+          'user:command:private-recipe': {
             name: 'Private Recipe',
             type: 'command',
             id: 'recipe-private',
             version: 5,
             spaceId: 'space-private',
             packageIds: ['pkg-private'],
+            source: 'user',
             files: [
               {
                 path: '.claude/commands/private-recipe.md',
@@ -560,14 +755,14 @@ describe('PackmindLockFileService', () => {
       });
 
       it('preserves inaccessible artifact entries in the merged result', () => {
-        expect(result.artifacts['command:private-recipe']).toEqual(
-          existingLockFile.artifacts['command:private-recipe'],
+        expect(result.artifacts['user:command:private-recipe']).toEqual(
+          existingLockFile.artifacts['user:command:private-recipe'],
         );
       });
 
       it('keeps new entries taking precedence over existing ones', () => {
-        expect(result.artifacts['standard:accessible-standard']).toEqual(
-          newLockFile.artifacts['standard:accessible-standard'],
+        expect(result.artifacts['user:standard:accessible-standard']).toEqual(
+          newLockFile.artifacts['user:standard:accessible-standard'],
         );
       });
 
@@ -581,19 +776,20 @@ describe('PackmindLockFileService', () => {
 
     describe('when new entry has empty packageIds but existing has metadata', () => {
       const newLockFileWithEmptyMetadata: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['@team-a/pkg-a'],
         agents: ['claude'],
         installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {
-          'command:moved-recipe': {
+          'user:command:moved-recipe': {
             name: 'Moved Recipe',
             type: 'command',
             id: 'recipe-moved',
             version: 1,
             spaceId: '',
             packageIds: [],
+            source: 'user',
             files: [
               {
                 path: '.claude/commands/moved-recipe.md',
@@ -605,19 +801,20 @@ describe('PackmindLockFileService', () => {
       };
 
       const existingLockFile: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
         agents: ['claude'],
         installedAt: '2024-01-01T00:00:00.000Z',
         targetId: 'target-1',
         artifacts: {
-          'command:moved-recipe': {
+          'user:command:moved-recipe': {
             name: 'Moved Recipe',
             type: 'command',
             id: 'recipe-moved',
             version: 1,
             spaceId: 'space-private',
             packageIds: ['pkg-private'],
+            source: 'user',
             files: [
               {
                 path: '.claude/commands/moved-recipe.md',
@@ -639,34 +836,35 @@ describe('PackmindLockFileService', () => {
       });
 
       it('preserves existing spaceId', () => {
-        expect(result.artifacts['command:moved-recipe'].spaceId).toBe(
+        expect(result.artifacts['user:command:moved-recipe'].spaceId).toBe(
           'space-private',
         );
       });
 
       it('preserves existing packageIds', () => {
-        expect(result.artifacts['command:moved-recipe'].packageIds).toEqual([
-          'pkg-private',
-        ]);
+        expect(
+          result.artifacts['user:command:moved-recipe'].packageIds,
+        ).toEqual(['pkg-private']);
       });
     });
 
     describe('when artifact was removed from an accessible package', () => {
       it('does not preserve the removed artifact', () => {
         const existingLockFile: PackmindLockFile = {
-          lockfileVersion: 1,
+          lockfileVersion: 2,
           packageSlugs: ['@team-a/pkg-a'],
           agents: ['claude'],
           installedAt: '2024-01-01T00:00:00.000Z',
           targetId: 'target-1',
           artifacts: {
-            'command:removed-recipe': {
+            'user:command:removed-recipe': {
               name: 'Removed Recipe',
               type: 'command',
               id: 'recipe-removed',
               version: 1,
               spaceId: 'space-a',
               packageIds: ['pkg-a'],
+              source: 'user',
               files: [
                 {
                   path: '.claude/commands/removed-recipe.md',
@@ -683,14 +881,70 @@ describe('PackmindLockFileService', () => {
           ['pkg-a'],
         );
 
-        expect(result.artifacts['command:removed-recipe']).toBeUndefined();
+        expect(result.artifacts['user:command:removed-recipe']).toBeUndefined();
+      });
+    });
+
+    describe('determinism when merging', () => {
+      it('sorts merged artifact keys alphabetically', () => {
+        const existingLockFile: PackmindLockFile = {
+          lockfileVersion: 2,
+          packageSlugs: ['@team-a/pkg-a', '@private-team/pkg-private'],
+          agents: ['claude'],
+          installedAt: '2024-01-01T00:00:00.000Z',
+          targetId: 'target-1',
+          artifacts: {
+            'user:standard:zzz-preserved': {
+              name: 'Preserved Standard',
+              type: 'standard',
+              id: 'std-preserved',
+              version: 1,
+              spaceId: 'space-private',
+              packageIds: ['pkg-private'],
+              source: 'user',
+              files: [
+                {
+                  path: '.claude/rules/zzz-preserved.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+            'user:command:aaa-preserved': {
+              name: 'Aaa Preserved',
+              type: 'command',
+              id: 'recipe-preserved',
+              version: 1,
+              spaceId: 'space-private',
+              packageIds: ['pkg-private'],
+              source: 'user',
+              files: [
+                {
+                  path: '.claude/commands/aaa-preserved.md',
+                  agent: 'claude',
+                },
+              ],
+            },
+          },
+        };
+
+        const result = service.mergeWithExistingLockFile(
+          newLockFile,
+          existingLockFile,
+          ['pkg-a'],
+        );
+
+        expect(Object.keys(result.artifacts)).toEqual([
+          'user:command:aaa-preserved',
+          'user:standard:accessible-standard',
+          'user:standard:zzz-preserved',
+        ]);
       });
     });
 
     describe('when existing lock file has duplicate package slugs with new', () => {
       it('deduplicates package slugs', () => {
         const existingLockFile: PackmindLockFile = {
-          lockfileVersion: 1,
+          lockfileVersion: 2,
           packageSlugs: ['@team-a/pkg-a', '@team-b/pkg-b'],
           agents: ['claude'],
           installedAt: '2024-01-01T00:00:00.000Z',
@@ -712,7 +966,7 @@ describe('PackmindLockFileService', () => {
   describe('createLockFileModification', () => {
     it('returns a FileModification with path packmind-lock.json', () => {
       const lockFile: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['my-package'],
         agents: ['claude'],
         installedAt: FIXED_DATE,
@@ -727,7 +981,7 @@ describe('PackmindLockFileService', () => {
 
     it('returns prettified JSON content with trailing newline', () => {
       const lockFile: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['pkg-a'],
         agents: ['claude'],
         installedAt: FIXED_DATE,
@@ -742,19 +996,20 @@ describe('PackmindLockFileService', () => {
 
     it('returns parseable JSON that matches the input lock file', () => {
       const lockFile: PackmindLockFile = {
-        lockfileVersion: 1,
+        lockfileVersion: 2,
         packageSlugs: ['pkg-a', 'pkg-b'],
         agents: ['claude', 'cursor'],
         installedAt: FIXED_DATE,
         targetId: 'target-1',
         artifacts: {
-          'command:my-recipe': {
+          'user:command:my-recipe': {
             name: 'My Recipe',
             type: 'command',
             id: 'recipe-1',
             version: 3,
             spaceId: 'space-A',
             packageIds: ['pkg-1'],
+            source: 'user',
             files: [{ path: '.claude/commands/my-recipe.md', agent: 'claude' }],
           },
         },

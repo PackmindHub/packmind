@@ -187,21 +187,51 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     spaceId: SpaceId,
   ): Promise<OutdatedDeploymentsByTarget[]>;
+
+  /**
+   * For each (target, package) pair within a space, return the latest
+   * distribution by createdAt, filtered to only those whose latest operation
+   * leaves the package actively distributed (successful add OR failed remove).
+   * Aggregation and the active-distribution predicate both run in SQL.
+   */
+  findActivePackageOperationsBySpace(
+    spaceId: SpaceId,
+  ): Promise<ActivePackageOperationRow[]>;
 }
 
-export type OutdatedDeploymentInfo = {
+export type ActivePackageOperationRow = {
+  targetId: TargetId;
+  packageId: PackageId;
+  lastDistributionStatus: DistributionStatus;
+  lastDistributedAt: string;
+};
+
+type OutdatedDeploymentBase = {
   artifactId: string;
   artifactName: string;
+  artifactSlug: string;
   deployedVersion: number;
-  latestVersion: number;
   deploymentDate: string;
   isDeleted: boolean;
+};
+
+export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
+  artifactId: StandardId;
+};
+
+export type OutdatedRecipeDeployment = OutdatedDeploymentBase & {
+  artifactId: RecipeId;
+};
+
+export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
+  artifactId: SkillId;
 };
 
 export type OutdatedDeploymentsByTarget = {
   targetId: TargetId;
   targetName: string;
   gitRepoId: string;
-  standards: OutdatedDeploymentInfo[];
-  recipes: OutdatedDeploymentInfo[];
+  standards: OutdatedStandardDeployment[];
+  recipes: OutdatedRecipeDeployment[];
+  skills: OutdatedSkillDeployment[];
 };

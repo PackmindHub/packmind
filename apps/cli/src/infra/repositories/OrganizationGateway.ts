@@ -1,6 +1,6 @@
 import { IOrganizationGateway } from '../../domain/repositories/IOrganizationGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { Organization } from '@packmind/types';
+import { Organization, UserOrganizationRole } from '@packmind/types';
 
 export class OrganizationGateway implements IOrganizationGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
@@ -15,5 +15,13 @@ export class OrganizationGateway implements IOrganizationGateway {
       throw new Error(`Organization ${organizationId} not found`);
     }
     return org;
+  }
+
+  getCurrentUserRole(): UserOrganizationRole | null {
+    try {
+      return this.httpClient.getAuthContext().role;
+    } catch {
+      return null;
+    }
   }
 }

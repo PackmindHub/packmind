@@ -1,5 +1,6 @@
 import {
   Package,
+  PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
   RecipeId,
@@ -22,6 +23,15 @@ export interface IPackageRepository extends IRepository<Package> {
     slugs: string[],
     spaceId: SpaceId,
   ): Promise<PackageWithArtefacts[]>;
+  /**
+   * Count recipe/standard/skill artifacts for every package in the given
+   * space. The returned map covers all packages in the space, so callers can
+   * look up counts directly for any package id without needing to pass the
+   * active-package list up front.
+   */
+  countArtifactsForPackagesInSpace(
+    spaceId: SpaceId,
+  ): Promise<Map<PackageId, PackageArtifactCounts>>;
   addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   addStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
   updatePackageDetails(

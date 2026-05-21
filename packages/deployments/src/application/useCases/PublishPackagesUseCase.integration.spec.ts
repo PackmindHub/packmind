@@ -15,11 +15,13 @@ import {
   IStandardsPort,
   ISkillsPort,
   IDeploymentPort,
+  ISpacesPort,
   Distribution,
   DistributionStatus,
   PackagesDeployment,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,6 +36,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
@@ -75,6 +78,14 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
+    mockSpacesPort = {
+      getSpaceById: jest
+        .fn()
+        .mockImplementation(async (spaceId) =>
+          spaceFactory({ id: spaceId, slug: 'test-space' }),
+        ),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     useCase = new PublishPackagesUseCase(
       mockRecipesPort,
       mockStandardsPort,
@@ -82,6 +93,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       mockDeploymentPort,
       mockPackageService,
       mockDistributedPackageRepository,
+      mockSpacesPort,
       mockLogger,
     );
   });

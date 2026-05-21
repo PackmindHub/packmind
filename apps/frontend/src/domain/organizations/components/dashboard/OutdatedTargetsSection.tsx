@@ -9,60 +9,99 @@ import {
   PMHeading,
   PMBox,
   PMIcon,
+  PMLink,
+  PMText,
 } from '@packmind/ui';
-import { useGetDashboardOutdatedQuery } from '../../../deployments/api/queries/DeploymentsQueries';
+import { useListActiveDistributedPackagesBySpaceQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
+  ActiveDistributedPackage,
   TargetId,
   GitRepo,
-  DeployedRecipeTargetInfo,
-  DeployedStandardTargetInfo,
+  GitProviderId,
 } from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
+import { OutdatedDistributeBanner } from '../../../deployments/components/OutdatedDistributeBanner/OutdatedDistributeBanner';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
+import { routes } from '../../../../shared/utils/routes';
 
-// ---- Types & constants
 type RepoResult = {
   repoKey: string;
   title: string;
+  providerId: GitProviderId;
   targets: Array<{
     id: TargetId;
     title: string;
-    recipes: DeployedRecipeTargetInfo[];
-    standards: DeployedStandardTargetInfo[];
+    packages: ActiveDistributedPackage[];
   }>;
 };
+
+const isArtifactOutdated = (d: {
+  isUpToDate: boolean;
+  isDeleted?: boolean;
+}): boolean => !d.isUpToDate || !!d.isDeleted;
+
+const hasOutdatedArtifacts = (pkg: ActiveDistributedPackage): boolean =>
+  pkg.deployedRecipes.some(isArtifactOutdated) ||
+  pkg.deployedStandards.some(isArtifactOutdated) ||
+  pkg.deployedSkills.some(isArtifactOutdated) ||
+  pkg.pendingRecipes.length > 0 ||
+  pkg.pendingStandards.length > 0 ||
+  pkg.pendingSkills.length > 0;
 
 export const OutdatedTargetsSection: React.FC = () => {
   const { orgSlug } = useParams() as { orgSlug?: string };
   const { spaceId } = useCurrentSpace();
   const {
-    data: outdatedData,
+    data: overviewData,
     isLoading,
     isError,
     error,
-  } = useGetDashboardOutdatedQuery(spaceId ?? '');
+  } = useListActiveDistributedPackagesBySpaceQuery(spaceId);
+  const { data: gitProvidersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo(() => {
+    const set = new Set<GitProviderId>();
+    gitProvidersResponse?.providers
+      .filter((provider) => provider.hasToken)
+      .forEach((provider) => set.add(provider.id));
+    return set;
+  }, [gitProvidersResponse]);
 
-  const reposWithTargets = useMemo(() => {
-    if (!outdatedData?.targets) return [];
+  const reposWithTargets = useMemo<RepoResult[]>(() => {
+    if (!overviewData) return [];
     type TargetValue = RepoResult['targets'][number];
     const repoMap = new Map<
       string,
-      { repoKey: string; title: string; targets: Map<TargetId, TargetValue> }
+      {
+        repoKey: string;
+        title: string;
+        providerId: GitProviderId;
+        targets: Map<TargetId, TargetValue>;
+      }
     >();
 
-    for (const t of outdatedData.targets) {
+    for (const t of overviewData) {
+      if (!t.gitRepo) continue;
+      const outdatedPackages = t.packages.filter(hasOutdatedArtifacts);
+      if (outdatedPackages.length === 0) continue;
+
       const { key, title } = getRepoIdentity(t.gitRepo);
       let repo = repoMap.get(key);
       if (!repo) {
-        repo = { repoKey: key, title, targets: new Map() };
+        repo = {
+          repoKey: key,
+          title,
+          providerId: t.gitRepo.providerId,
+          targets: new Map(),
+        };
         repoMap.set(key, repo);
       }
       repo.targets.set(t.target.id, {
         id: t.target.id,
         title: t.target.name,
-        recipes: t.outdatedRecipes,
-        standards: t.outdatedStandards,
+        packages: outdatedPackages,
       });
     }
 
@@ -70,16 +109,17 @@ export const OutdatedTargetsSection: React.FC = () => {
       .map((r) => ({
         repoKey: r.repoKey,
         title: r.title,
+        providerId: r.providerId,
         targets: Array.from(r.targets.values()).sort((a, b) =>
           a.title.localeCompare(b.title),
         ),
       }))
       .sort((a, b) => a.title.localeCompare(b.title));
-  }, [outdatedData]);
+  }, [overviewData]);
 
   return (
     <PMPageSection
-      title="Outdated artifacts"
+      title="Outdated packages"
       headingLevel="h5"
       boxProps={{ padding: 0 }}
     >
@@ -116,39 +156,53 @@ export const OutdatedTargetsSection: React.FC = () => {
             }
             title="Everything is up-to-date!"
             description="All distributed artifacts are up-to-date across your targets."
-          />
+          >
+            {orgSlug && (
+              <PMText variant="small" color="tertiary">
+                <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
+                  Keep it that way — schedule auto-updates
+                </PMLink>
+              </PMText>
+            )}
+          </PMEmptyState>
         </PMBox>
       )}
 
       {!isLoading && !isError && reposWithTargets.length > 0 && (
         <PMVStack gap={4} align="stretch" width="full">
+          {orgSlug && (
+            <PMText variant="small" color="tertiary">
+              Tired of seeing this list?{' '}
+              <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
+                Automate updates →
+              </PMLink>
+            </PMText>
+          )}
+          <OutdatedDistributeBanner entries={overviewData ?? []} />
           {reposWithTargets.map((repo) => {
             return (
               <PMVStack
                 key={repo.repoKey}
                 align="stretch"
-                border={'solid 1px'}
-                borderColor={'border.primary'}
-                gap={0}
+                backgroundColor={'blue.1000'}
+                gap={4}
+                borderRadius={'lg'}
+                padding={6}
               >
-                <PMBox
-                  borderBottom={'solid 1px'}
-                  borderColor={'border.primary'}
-                  padding={4}
-                  backgroundColor={'background.primary'}
-                >
-                  <PMHeading level="h6">{repo.title}</PMHeading>
-                </PMBox>
-                <PMVStack align="stretch" width="full" padding={2}>
+                <PMHeading level="h5">{repo.title}</PMHeading>
+                <PMVStack align="stretch" width="full">
                   {repo.targets.map((t) => (
                     <RepositoryTargetTable
                       key={String(t.id)}
                       orgSlug={orgSlug}
                       target={{ id: t.id, name: t.title }}
-                      recipes={t.recipes}
-                      standards={t.standards}
-                      skills={[]}
-                      mode="outdated"
+                      packageGroups={t.packages}
+                      mode="all"
+                      canDistributeFromApp={
+                        !isProvidersLoading &&
+                        providersWithToken.has(repo.providerId)
+                      }
+                      isDistributeReadinessLoading={isProvidersLoading}
                     />
                   ))}
                 </PMVStack>
@@ -161,7 +215,6 @@ export const OutdatedTargetsSection: React.FC = () => {
   );
 };
 
-// ---- Pure helpers
 const getRepoIdentity = (gitRepo: GitRepo) => {
   const title = `${gitRepo.owner}/${gitRepo.repo}:${gitRepo.branch}`;
   const key = gitRepo.id || title;

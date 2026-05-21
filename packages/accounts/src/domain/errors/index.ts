@@ -1,3 +1,4 @@
+export { ExpectedAuthError } from './ExpectedAuthError';
 export { EmailAlreadyExistsError } from './EmailAlreadyExistsError';
 export {
   OrganizationSlugConflictError,
@@ -20,3 +21,7 @@ export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundErr
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
 export { InvalidTrialActivationTokenError } from './InvalidTrialActivationTokenError';
 export { InvalidOrganizationNameError } from './InvalidOrganizationNameError';
+export {
+  InvalidDisplayNameError,
+  MAX_DISPLAY_NAME_LENGTH,
+} from './InvalidDisplayNameError';

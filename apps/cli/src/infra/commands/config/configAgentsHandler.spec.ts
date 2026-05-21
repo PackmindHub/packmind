@@ -56,7 +56,9 @@ describe('configAgentsHandler', () => {
     mockConfigRepository = {
       readConfig: jest.fn(),
       writeConfig: jest.fn(),
-      configExists: jest.fn(),
+      // Default to true so existing tests don't incidentally hit the
+      // "Creating packmind.json..." branch unless they explicitly opt in.
+      configExists: jest.fn().mockResolvedValue(true),
       addPackagesToConfig: jest.fn(),
       findDescendantConfigs: jest.fn().mockResolvedValue([]),
       readHierarchicalConfig: jest.fn(),
@@ -1216,6 +1218,46 @@ describe('configAgentsHandler', () => {
         expect(
           mockConfigRepository.findDescendantConfigs,
         ).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('creation vs update messaging', () => {
+    describe('when packmind.json does not exist yet', () => {
+      beforeEach(async () => {
+        mockConfigRepository.configExists.mockResolvedValue(false);
+        mockConfigRepository.readConfig.mockResolvedValue(null);
+        mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+        mockInquirerPrompt.mockResolvedValue({ selectedAgents: ['claude'] });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('announces that packmind.json is being created at the local path', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          expect.stringMatching(
+            /Creating packmind\.json at \.\/packmind\.json\.\.\./,
+          ),
+        );
+      });
+    });
+
+    describe('when packmind.json already exists', () => {
+      beforeEach(async () => {
+        mockConfigRepository.configExists.mockResolvedValue(true);
+        mockConfigRepository.readConfig.mockResolvedValue({
+          packages: {},
+          agents: ['claude'],
+        });
+        mockInquirerPrompt.mockResolvedValue({ selectedAgents: ['claude'] });
+
+        await configAgentsHandler(deps);
+      });
+
+      it('does not announce creation', () => {
+        expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('Creating packmind.json'),
+        );
       });
     });
   });

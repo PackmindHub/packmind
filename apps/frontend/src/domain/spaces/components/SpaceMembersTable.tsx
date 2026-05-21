@@ -58,7 +58,9 @@ export function SpaceMembersTable({
                 displayName={member.displayName}
                 size="sm"
               />
-              <PMText>{member.displayName}</PMText>
+              <PMText data-testid="member-display-name">
+                {member.displayName}
+              </PMText>
               {isCurrentUser && (
                 <PMBadge colorPalette="blue" size="sm">
                   You

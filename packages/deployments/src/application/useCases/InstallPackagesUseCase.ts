@@ -284,6 +284,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       packageSlugs: command.packagesSlugs,
       artifactSpaceIds,
       artifactPackageIds,
+      includeInstalledAt: command.packmindLockFile.installedAt !== undefined,
     });
 
     // Preserve inaccessible artifacts from the previous lock file
@@ -326,11 +327,19 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       return skillVersions.map((sv) => `${skillPath}${sv.slug}`);
     });
 
+    const sourceArtifacts = {
+      skillsCount: skillVersions.length,
+      standardsCount: standardVersions.length,
+      commandsCount: 0,
+      recipesCount: recipeVersions.length,
+    };
+
     return {
       fileUpdates: mergedFileUpdates,
       resolvedAgents: codingAgents,
       missingAccess: inaccessibleSlugs,
       skillFolders: Array.from(new Set(skillFolders)),
+      sourceArtifacts,
     };
   }
 

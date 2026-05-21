@@ -3,35 +3,40 @@ import {
   ListCommandsHandlerDependencies,
 } from './listCommandsHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
-import { SpaceType } from '@packmind/types';
+import { IOutput } from '../../../domain/repositories/IOutput';
+import { createMockOutput } from '../../../mocks/createMockRepositories';
+import { spaceFactory } from '@packmind/spaces/test';
+import { recipeFactory } from '@packmind/recipes/test';
+import { createSpaceId } from '@packmind/types';
 
-const mockSpaceA = {
-  id: 'space-a',
+const spaceAId = createSpaceId('space-a');
+const spaceBId = createSpaceId('space-b');
+
+const mockSpaceA = spaceFactory({
+  id: spaceAId,
   slug: 'space-a',
   name: 'Space A',
-  type: SpaceType.open,
-  organizationId: 'org-id',
   isDefaultSpace: true,
-};
-
-const mockSpaceB = {
-  id: 'space-b',
+});
+const mockSpaceB = spaceFactory({
+  id: spaceBId,
   slug: 'space-b',
   name: 'Space B',
-  type: SpaceType.open,
-  organizationId: 'org-id',
-  isDefaultSpace: false,
-};
+});
 
 describe('listCommandsHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
+  let mockOutput: jest.Mocked<IOutput>;
   let mockExit: jest.Mock;
   let deps: ListCommandsHandlerDependencies;
 
   beforeEach(() => {
+    mockOutput = createMockOutput();
+
     mockPackmindCliHexa = {
       listCommands: jest.fn(),
       getSpaces: jest.fn().mockResolvedValue([mockSpaceA, mockSpaceB]),
+      output: mockOutput,
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -40,31 +45,22 @@ describe('listCommandsHandler', () => {
       packmindCliHexa: mockPackmindCliHexa,
       exit: mockExit,
     };
-
-    jest.spyOn(console, 'log').mockReturnValue(undefined);
-    jest.spyOn(console, 'error').mockReturnValue(undefined);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   describe('when no space filter is provided', () => {
     describe('when commands exist across multiple spaces', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listCommands.mockResolvedValue([
-          {
-            id: 'id-z',
+          recipeFactory({
             slug: 'zebra-command',
             name: 'Zebra Command',
-            spaceId: 'space-a',
-          },
-          {
-            id: 'id-a',
+            spaceId: spaceAId,
+          }),
+          recipeFactory({
             slug: 'alpha-command',
             name: 'Alpha Command',
-            spaceId: 'space-b',
-          },
+            spaceId: spaceBId,
+          }),
         ]);
 
         await listCommandsHandler({}, deps);
@@ -74,33 +70,30 @@ describe('listCommandsHandler', () => {
         expect(mockPackmindCliHexa.listCommands).toHaveBeenCalledWith({});
       });
 
-      it('displays header with total count', () => {
-        const logCalls = (console.log as jest.Mock).mock.calls.map(
-          (c) => c[0] as string,
+      it('displays the commands grouped by spaces', () => {
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.stringContaining('Commands (2)'),
+          [
+            {
+              title: 'Space: Space A',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'zebra-command',
+                  title: 'Zebra Command',
+                }),
+              ],
+            },
+            {
+              title: 'Space: Space B',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'alpha-command',
+                  title: 'Alpha Command',
+                }),
+              ],
+            },
+          ],
         );
-        expect(logCalls.find((c) => c.includes('Commands (2)'))).toBeDefined();
-      });
-
-      describe('displays space group headers', () => {
-        let logCalls: string[];
-
-        beforeEach(() => {
-          logCalls = (console.log as jest.Mock).mock.calls.map(
-            (c) => c[0] as string,
-          );
-        });
-
-        it('displays Space A header', () => {
-          expect(
-            logCalls.find((c) => c.includes('Space "Space A"')),
-          ).toBeDefined();
-        });
-
-        it('displays Space B header', () => {
-          expect(
-            logCalls.find((c) => c.includes('Space "Space B"')),
-          ).toBeDefined();
-        });
       });
 
       it('exits with code 0', () => {
@@ -115,7 +108,9 @@ describe('listCommandsHandler', () => {
       });
 
       it('displays empty message', () => {
-        expect(console.log).toHaveBeenCalledWith('No commands found.');
+        expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
+          expect.stringContaining('No commands found.'),
+        );
       });
 
       it('exits with code 0', () => {
@@ -128,12 +123,11 @@ describe('listCommandsHandler', () => {
     describe('when the space exists', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listCommands.mockResolvedValue([
-          {
-            id: 'id-a',
+          recipeFactory({
             slug: 'alpha-command',
             name: 'Alpha Command',
-            spaceId: 'space-a',
-          },
+            spaceId: spaceAId,
+          }),
         ]);
 
         await listCommandsHandler({ space: 'space-a' }, deps);
@@ -145,13 +139,21 @@ describe('listCommandsHandler', () => {
         });
       });
 
-      it('displays the space group header', () => {
-        const logCalls = (console.log as jest.Mock).mock.calls.map(
-          (c) => c[0] as string,
+      it('displays the space group', () => {
+        expect(mockOutput.listScopedArtefacts).toHaveBeenCalledWith(
+          expect.stringContaining('Commands (1)'),
+          [
+            {
+              title: 'Space: Space A',
+              artefacts: [
+                expect.objectContaining({
+                  slug: 'alpha-command',
+                  title: 'Alpha Command',
+                }),
+              ],
+            },
+          ],
         );
-        expect(
-          logCalls.find((c) => c.includes('Space "Space A"')),
-        ).toBeDefined();
       });
 
       it('exits with code 0', () => {
@@ -166,8 +168,8 @@ describe('listCommandsHandler', () => {
       });
 
       it('displays space-specific empty message', () => {
-        expect(console.log).toHaveBeenCalledWith(
-          'No commands found in space "@space-a".',
+        expect(mockOutput.notifyInfo).toHaveBeenCalledWith(
+          expect.stringContaining('No commands found in space "@space-a"'),
         );
       });
 
@@ -182,9 +184,11 @@ describe('listCommandsHandler', () => {
       });
 
       it('displays an error message', () => {
-        expect(console.error).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.stringContaining('Space "@unknown-space" not found.'),
+        expect(mockOutput.notifyError).toHaveBeenCalledWith(
+          expect.stringContaining('Space "@unknown-space" not found'),
+          {
+            content: expect.stringContaining('Available spaces:'),
+          },
         );
       });
 
@@ -204,9 +208,11 @@ describe('listCommandsHandler', () => {
     });
 
     it('displays error message', () => {
-      expect(console.error).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.stringContaining('Network error'),
+      expect(mockOutput.notifyError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to list commands:'),
+        expect.objectContaining({
+          content: expect.stringContaining('Network error'),
+        }),
       );
     });
 

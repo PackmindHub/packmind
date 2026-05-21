@@ -4,6 +4,9 @@ Define testing patterns for integration tests in the Packmind monorepo to ensure
 
 ## Rules
 
+* Use one primary assertion per test case for clarity and easier debugging
+* Use .toHaveLength() for array length assertions instead of manual .length checks
+* Use expect.objectContaining() for partial object matching when testing subset of properties
 * Wrap integration tests with integrationTestWithUser((getContext) => {...}) to provide authenticated user context
 * Declare all test variables with explicit types at the top of the test suite before beforeEach hooks
 * Initialize test context in beforeEach using await getContext() and assign to a local testContext variable
@@ -16,7 +19,4 @@ Define testing patterns for integration tests in the Packmind monorepo to ensure
 * Restore all mocks in afterEach using jest.restoreAllMocks() after tests that use jest.spyOn()
 * Clear all mocks in afterEach using jest.clearAllMocks() to prevent inter-test pollution
 * Clean up database connections in afterEach with datasource.destroy() when datasource is initialized in beforeEach
-* Use one primary assertion per test case for clarity and easier debugging
-* Use expect.objectContaining() for partial object matching when testing subset of properties
-* Use .toHaveLength() for array length assertions instead of manual .length checks
 * Test both success and failure scenarios for comprehensive coverage

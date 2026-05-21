@@ -4523,6 +4523,100 @@ describe('ClaudeDeployer', () => {
       });
     });
 
+    describe('when additional property is whenToUse', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              whenToUse: 'Use when debugging TypeScript errors',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders the underscore YAML key when_to_use', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          "when_to_use: 'Use when debugging TypeScript errors'",
+        );
+      });
+    });
+
+    describe('when additional property is paths as an array', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              paths: ['src/**/*.ts', 'test/**/*.spec.ts'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders paths as inline YAML flow sequence', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          "paths: ['src/**/*.ts', 'test/**/*.spec.ts']",
+        );
+      });
+    });
+
+    describe('when additional property is paths as a string', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              paths: 'src/**/*.ts, test/**/*.spec.ts',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders paths as a single-quoted string scalar', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("paths: 'src/**/*.ts, test/**/*.spec.ts'");
+      });
+    });
+
+    describe('when additional property is shell', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { shell: 'powershell' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders shell as a quoted YAML scalar', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("shell: 'powershell'");
+      });
+    });
+
     describe('when additional property has deep nesting with arrays', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateFileUpdatesForSkills>

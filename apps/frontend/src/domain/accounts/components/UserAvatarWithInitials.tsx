@@ -9,14 +9,19 @@ interface UserAvatarWithInitialsProps {
 /**
  * Extracts initials from a display name.
  * Examples:
+ * - "Joan Racenet" → "JR"
  * - "john.doe" → "JD"
  * - "jane" → "J"
  * - "a" → "A"
  */
 function getInitialsFromDisplayName(displayName: string): string {
-  const parts = displayName.split('.');
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+  const spaceParts = displayName.split(' ').filter(Boolean);
+  if (spaceParts.length >= 2) {
+    return (spaceParts[0][0] + spaceParts[1][0]).toUpperCase();
+  }
+  const dotParts = displayName.split('.');
+  if (dotParts.length >= 2) {
+    return (dotParts[0][0] + dotParts[1][0]).toUpperCase();
   }
   return displayName[0]?.toUpperCase() ?? '?';
 }
@@ -50,7 +55,11 @@ export const UserAvatarWithInitials: React.FC<UserAvatarWithInitialsProps> = ({
 
   return (
     <PMTooltip label={displayName} placement="top">
-      <span style={{ display: 'inline-flex' }}>
+      <span
+        style={{ display: 'inline-flex' }}
+        data-testid="user-avatar"
+        aria-label={displayName}
+      >
         <PMAvatar.Root size={size} colorPalette={color}>
           <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
           <PMAvatar.Image src="" alt={displayName} />

@@ -1,6 +1,6 @@
 {
   "name": "@packmind/cli",
-  "version": "0.25.0-next",
+  "version": "0.28.1-next",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
@@ -38,6 +38,10 @@
     "@types/inquirer": "^9.0.9",
     "inquirer": "^13.0.2",
     "zod": "^4.3.5",
-    "semver": "^7.7.4"
+    "semver": "^7.7.4",
+    "which": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/which": "^3.0.4"
   }
 }

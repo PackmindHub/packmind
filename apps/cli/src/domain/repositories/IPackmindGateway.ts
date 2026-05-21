@@ -1,6 +1,5 @@
 import { IChangeProposalGateway } from './IChangeProposalGateway';
 import { ILinterGateway } from './ILinterGateway';
-import { IMcpGateway } from './IMcpGateway';
 import { ISpacesGateway } from './ISpacesGateway';
 import { ISkillsGateway } from './ISkillsGateway';
 import { ICommandsGateway } from './ICommandsGateway';
@@ -22,7 +21,6 @@ export type {
 export interface IPackmindGateway {
   readonly changeProposals: IChangeProposalGateway;
   readonly linter: ILinterGateway;
-  readonly mcp: IMcpGateway;
   readonly spaces: ISpacesGateway;
   readonly skills: ISkillsGateway;
   readonly commands: ICommandsGateway;

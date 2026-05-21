@@ -16,6 +16,7 @@ import {
 } from '../genericSectionWriter/SingleFileDeployer';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
+import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
 
 export class CodexDeployer extends SingleFileDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.codex;
@@ -26,10 +27,7 @@ export class CodexDeployer extends SingleFileDeployer {
     codingAgent: 'codex',
   };
 
-  async deployDefaultSkills(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }) {
+  async deployDefaultSkills(options?: DeployDefaultSkillsOptions) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Codex',
       CodexDeployer.ARTEFACT_PATHS.skill,

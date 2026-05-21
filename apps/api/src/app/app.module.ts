@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -58,6 +58,7 @@ import {
   SpacesManagementHexa,
   SpacesManagementModule,
 } from '@packmind/spaces-management';
+import { CliVersionLoggerMiddleware } from './shared/middleware/CliVersionLoggerMiddleware';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { PublicSkillsModule } from './skills/skills.module';
@@ -267,4 +268,8 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CliVersionLoggerMiddleware).forRoutes('*');
+  }
+}

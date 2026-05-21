@@ -7,18 +7,16 @@ import {
   IUpdateRenderModeConfigurationUseCase,
 } from '@packmind/types';
 import {
-  IGetDeploymentOverview,
   IGetPackageByIdUseCase,
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
-  IGetStandardDeploymentOverview,
-  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
@@ -26,16 +24,12 @@ import {
   IGetTargetsByRepositoryUseCase,
   IRemovePackageFromTargetsUseCase,
   IGetDashboardKpi,
-  IGetDashboardOutdated,
   IGetDashboardNonLive,
   PackageId,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
@@ -48,7 +42,6 @@ import {
   UpdateRenderModeConfigurationCommand,
   RemovePackageFromTargetsCommand,
   GetDashboardKpiCommand,
-  GetDashboardOutdatedCommand,
   GetDashboardNonLiveCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
@@ -168,38 +161,6 @@ export class DeploymentsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
   };
-
-  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview> = async ({
-    organizationId,
-    spaceId,
-  }: NewPackmindCommandBody<GetDeploymentOverviewCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/recipes/overview`,
-      { params: { spaceId } },
-    );
-  };
-
-  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview> =
-    async ({
-      organizationId,
-      spaceId,
-    }: NewPackmindCommandBody<GetStandardDeploymentOverviewCommand>) => {
-      return this._api.get(
-        `${this._endpoint}/${organizationId}/deployments/standards/overview`,
-        { params: { spaceId } },
-      );
-    };
-
-  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview> =
-    async ({
-      organizationId,
-      spaceId,
-    }: NewPackmindCommandBody<GetSkillDeploymentOverviewCommand>) => {
-      return this._api.get(
-        `${this._endpoint}/${organizationId}/deployments/skills/overview`,
-        { params: { spaceId } },
-      );
-    };
 
   publishRecipes: NewGateway<IPublishRecipes> = async ({
     organizationId,
@@ -328,16 +289,6 @@ export class DeploymentsGatewayApi
     );
   };
 
-  getDashboardOutdated: NewGateway<IGetDashboardOutdated> = async ({
-    organizationId,
-    spaceId,
-  }: NewPackmindCommandBody<GetDashboardOutdatedCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/dashboard/outdated`,
-      { params: { spaceId } },
-    );
-  };
-
   getDashboardNonLive: NewGateway<IGetDashboardNonLive> = async ({
     organizationId,
     spaceId,
@@ -347,4 +298,11 @@ export class DeploymentsGatewayApi
       { params: { spaceId } },
     );
   };
+
+  listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase> =
+    async ({ organizationId, spaceId }) => {
+      return this._api.get(
+        `/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
+      );
+    };
 }

@@ -97,8 +97,10 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
+    const sortedStandardVersions = this.sortStandardVersions(standardVersions);
+
     const standardsListContent = await Promise.all(
-      standardVersions.map((standardVersion) =>
+      sortedStandardVersions.map((standardVersion) =>
         this.formatStandardContent(
           standardVersion,
           `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
@@ -173,9 +175,11 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
+    const sortedStandardVersions = this.sortStandardVersions(standardVersions);
+
     // Generate content without fetching existing content or using target prefixing
     const standardsSection = await Promise.all(
-      standardVersions.map((standardVersion) =>
+      sortedStandardVersions.map((standardVersion) =>
         this.formatStandardContent(
           standardVersion,
           `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
@@ -295,8 +299,10 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       },
     );
 
+    const sortedStandardVersions = this.sortStandardVersions(standardVersions);
+
     const standardsListContent = await Promise.all(
-      standardVersions.map((standardVersion) =>
+      sortedStandardVersions.map((standardVersion) =>
         this.formatStandardContent(
           standardVersion,
           `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
@@ -408,6 +414,14 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       ],
       delete: [],
     };
+  }
+
+  private sortStandardVersions(
+    standardVersions: StandardVersion[],
+  ): StandardVersion[] {
+    return [...standardVersions].sort((a, b) =>
+      a.slug.localeCompare(b.slug, 'en'),
+    );
   }
 
   private async getExistingContent(

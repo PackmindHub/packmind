@@ -6,6 +6,7 @@ import {
   ICommandsPage,
   ISettingsPage,
   ISkillsPage,
+  ISpaceSettingsPage,
   IStandardsPage,
 } from '../../domain/pages';
 import { AbstractPackmindPage } from './AbstractPackmindPage';
@@ -13,6 +14,7 @@ import {
   SidebarAccountsMenuDataTestIds,
   SidebarNavigationDataTestId,
 } from '@packmind/frontend';
+import { SpaceType } from '@packmind/types';
 
 export abstract class AbstractPackmindAppPage
   extends AbstractPackmindPage
@@ -58,16 +60,43 @@ export abstract class AbstractPackmindAppPage
     return this.pageFactory.getCliSetupPage();
   }
 
-  async createSpace(name: string): Promise<IDashboardPage> {
+  async openSpaceSettings(): Promise<ISpaceSettingsPage> {
+    await this.page
+      .locator(
+        `[data-testid="${SidebarNavigationDataTestId.SpaceSettingsLink}"]:not(.space-settings-btn)`,
+      )
+      .click();
+
+    return this.pageFactory.getSpaceSettingsPage();
+  }
+
+  async createSpace(
+    name: string,
+    options?: { type?: SpaceType },
+  ): Promise<IDashboardPage> {
     await this.page.getByTestId('browse-spaces-trigger').click();
     await this.page.getByTestId('browse-spaces-new-button').click();
     await this.page.getByTestId('create-space-name-input').fill(name);
+
+    if (options?.type) {
+      await this.page
+        .getByTestId('create-space-type-select')
+        .locator('select')
+        .selectOption(options.type);
+    }
+
     await this.page.getByTestId('create-space-submit').click();
 
     // Wait for dialog to close and navigation to the new space dashboard
     await this.page
       .getByTestId('create-space-name-input')
       .waitFor({ state: 'hidden' });
+
+    return this.pageFactory.getDashboardPage();
+  }
+
+  async navigateToDashboard(): Promise<IDashboardPage> {
+    await this.page.getByRole('link', { name: 'Dashboard' }).first().click();
 
     return this.pageFactory.getDashboardPage();
   }
@@ -90,6 +119,9 @@ export abstract class AbstractPackmindAppPage
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
     await this.page.waitForURL((url) => url.toString() !== currentUrl);
+
+    // Wait for the space drawer to close (it closes via useEffect on pathname change)
+    await drawer.waitFor({ state: 'hidden' });
 
     return this.pageFactory.getDashboardPage();
   }

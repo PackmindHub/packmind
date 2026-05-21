@@ -18,6 +18,8 @@ For the complete format specification (frontmatter fields, naming rules, directo
 
 Run \`packmind-cli skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
 
+**Exclude default artifacts**: skip any skill whose slug starts with \`packmind-\`. These are managed by Packmind and must not be analyzed or modified by this workflow.
+
 ### Step 2: Filter Relevant Skills
 
 For each skill in the list, ask: **Does the user's intent relate to this skill?**

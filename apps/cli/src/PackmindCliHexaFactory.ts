@@ -23,6 +23,8 @@ import { IUninstallUseCase } from './domain/useCases/IUninstallUseCase';
 import { UninstallUseCase } from './application/useCases/UninstallUseCase';
 import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import { InstallDefaultSkillsUseCase } from './application/useCases/InstallDefaultSkillsUseCase';
+import { IEnsureCliVersionUseCase } from './domain/useCases/IEnsureCliVersionUseCase';
+import { EnsureCliVersionUseCase } from './application/useCases/EnsureCliVersionUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
@@ -35,9 +37,6 @@ import { IWhoamiUseCase } from './domain/useCases/IWhoamiUseCase';
 import { WhoamiUseCase } from './application/useCases/WhoamiUseCase';
 import { ICheckCliVersionUseCase } from './domain/useCases/ICheckCliVersionUseCase';
 import { CheckCliVersionUseCase } from './application/useCases/CheckCliVersionUseCase';
-import { ISetupMcpUseCase } from './domain/useCases/ISetupMcpUseCase';
-import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
-import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { LockFileRepository } from './infra/repositories/LockFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
@@ -56,6 +55,7 @@ import { SubmitDiffsUseCase } from './application/useCases/SubmitDiffsUseCase';
 import { ICheckDiffsUseCase } from './domain/useCases/ICheckDiffsUseCase';
 import { CheckDiffsUseCase } from './application/useCases/CheckDiffsUseCase';
 import { SpaceService } from './application/services/SpaceService';
+import { CliOutput } from './infra/repositories/CliOutput';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -71,13 +71,13 @@ export class PackmindCliHexaFactory {
     install: IInstallUseCase;
     uninstall: IUninstallUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
+    ensureCliVersion: IEnsureCliVersionUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
     login: ILoginUseCase;
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     checkCliVersion: ICheckCliVersionUseCase;
-    setupMcp: ISetupMcpUseCase;
     listStandards: IListStandardsUseCase;
     listCommands: IListCommandsUseCase;
     listSkills: IListSkillsUseCase;
@@ -92,6 +92,7 @@ export class PackmindCliHexaFactory {
       packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
       lockFileRepository: new LockFileRepository(),
+      output: new CliOutput(),
     };
 
     this.services = {
@@ -107,6 +108,10 @@ export class PackmindCliHexaFactory {
       this.repositories.lockFileRepository,
       this.repositories.configFileRepository,
       this.services.spaceService,
+    );
+
+    const installDefaultSkillsUseCase = new InstallDefaultSkillsUseCase(
+      this.repositories,
     );
 
     this.useCases = {
@@ -132,7 +137,11 @@ export class PackmindCliHexaFactory {
         this.services.spaceService,
         installUseCase,
       ),
-      installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
+      installDefaultSkills: installDefaultSkillsUseCase,
+      ensureCliVersion: new EnsureCliVersionUseCase(
+        this.repositories.lockFileRepository,
+        installDefaultSkillsUseCase,
+      ),
       listPackages: new ListPackagesUseCase(
         this.repositories.packmindGateway,
         this.services.spaceService,
@@ -144,10 +153,6 @@ export class PackmindCliHexaFactory {
       logout: new LogoutUseCase(),
       whoami: new WhoamiUseCase(),
       checkCliVersion: new CheckCliVersionUseCase(),
-      setupMcp: new SetupMcpUseCase({
-        gateway: this.repositories.packmindGateway,
-        mcpConfigService: new McpConfigService(),
-      }),
       listStandards: new ListStandardsUseCase(
         this.repositories.packmindGateway,
         this.services.spaceService,

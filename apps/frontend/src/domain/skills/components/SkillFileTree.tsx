@@ -2,10 +2,12 @@ import { useMemo, useState, useEffect } from 'react';
 import { LuFolder, LuFile, LuChevronRight } from 'react-icons/lu';
 import {
   createFileTreeCollection,
+  PMBox,
   PMIcon,
   PMSeparator,
   PMTreeView,
   PMTreeViewBranchIndentGuide,
+  PMVStack,
 } from '@packmind/ui';
 
 import type { SkillFile } from '@packmind/types';
@@ -91,83 +93,90 @@ export const SkillFileTree = ({
   const hasOtherFiles = otherFiles.length > 0;
 
   return (
-    <>
-      {/* SKILL.md - Principal file */}
+    <PMVStack align="stretch" gap={2} width="full" flex="1 1 0" minH={0}>
       {skillMdFile && (
-        <PMTreeView.Root
-          collection={createFileTreeCollection([SKILL_MD_PATH])}
-          selectionMode="single"
-          selectedValue={
-            selectedFilePath === SKILL_MD_PATH ? [SKILL_MD_PATH] : []
-          }
-          onSelectionChange={() => onFileSelect(SKILL_MD_PATH)}
-          width="full"
-          size="sm"
-        >
-          <PMTreeView.Tree>
-            <PMTreeView.Node
-              render={() => (
-                <PMTreeView.Item>
-                  <LuFile />
-                  <PMTreeView.ItemText>{SKILL_MD_PATH}</PMTreeView.ItemText>
-                </PMTreeView.Item>
-              )}
-            />
-          </PMTreeView.Tree>
-        </PMTreeView.Root>
-      )}
-
-      {/* Separator between SKILL.md and other files */}
-      {skillMdFile && hasOtherFiles && (
-        <PMSeparator borderColor="border.secondary" width="full" />
-      )}
-
-      {/* Other files tree */}
-      {hasOtherFiles && (
-        <PMTreeView.Root
-          collection={collection}
-          selectionMode="single"
-          selectedValue={selectedFilePath ? [selectedFilePath] : []}
-          onSelectionChange={handleSelectionChange}
-          expandedValue={expandedValue}
-          onExpandedChange={handleExpandedChange}
-          width="full"
-          size="sm"
-        >
-          <PMTreeView.Tree>
-            <PMTreeView.Node
-              indentGuide={<PMTreeViewBranchIndentGuide />}
-              render={({ node, nodeState }) => {
-                if (nodeState.isBranch) {
-                  return (
-                    <PMTreeView.Branch>
-                      <PMTreeView.BranchControl>
-                        <PMTreeView.BranchIndicator>
-                          <LuChevronRight />
-                        </PMTreeView.BranchIndicator>
-                        <PMIcon>
-                          <LuFolder />
-                        </PMIcon>
-                        <PMTreeView.BranchText>
-                          {node.label}
-                        </PMTreeView.BranchText>
-                      </PMTreeView.BranchControl>
-                      <PMTreeView.BranchContent />
-                    </PMTreeView.Branch>
-                  );
-                }
-
-                return (
+        <PMVStack align="stretch" gap={2} width="full" flexShrink={0}>
+          <PMTreeView.Root
+            collection={createFileTreeCollection([SKILL_MD_PATH])}
+            selectionMode="single"
+            selectedValue={
+              selectedFilePath === SKILL_MD_PATH ? [SKILL_MD_PATH] : []
+            }
+            onSelectionChange={() => onFileSelect(SKILL_MD_PATH)}
+            width="full"
+            size="sm"
+          >
+            <PMTreeView.Tree>
+              <PMTreeView.Node
+                render={() => (
                   <PMTreeView.Item>
                     <LuFile />
-                    <PMTreeView.ItemText>{node.label}</PMTreeView.ItemText>
+                    <PMTreeView.ItemText>{SKILL_MD_PATH}</PMTreeView.ItemText>
                   </PMTreeView.Item>
-                );
-              }}
-            />
-          </PMTreeView.Tree>
-        </PMTreeView.Root>
+                )}
+              />
+            </PMTreeView.Tree>
+          </PMTreeView.Root>
+
+          {hasOtherFiles && (
+            <PMSeparator borderColor="border.secondary" width="full" />
+          )}
+        </PMVStack>
       )}
-    </>
+
+      {hasOtherFiles && (
+        <PMBox
+          flex="1 1 0"
+          minH={0}
+          overflow="auto"
+          width="full"
+          scrollbarColor="{colors.background.tertiary} transparent"
+        >
+          <PMTreeView.Root
+            collection={collection}
+            selectionMode="single"
+            selectedValue={selectedFilePath ? [selectedFilePath] : []}
+            onSelectionChange={handleSelectionChange}
+            expandedValue={expandedValue}
+            onExpandedChange={handleExpandedChange}
+            width="full"
+            size="sm"
+          >
+            <PMTreeView.Tree>
+              <PMTreeView.Node
+                indentGuide={<PMTreeViewBranchIndentGuide />}
+                render={({ node, nodeState }) => {
+                  if (nodeState.isBranch) {
+                    return (
+                      <PMTreeView.Branch>
+                        <PMTreeView.BranchControl>
+                          <PMTreeView.BranchIndicator>
+                            <LuChevronRight />
+                          </PMTreeView.BranchIndicator>
+                          <PMIcon>
+                            <LuFolder />
+                          </PMIcon>
+                          <PMTreeView.BranchText>
+                            {node.label}
+                          </PMTreeView.BranchText>
+                        </PMTreeView.BranchControl>
+                        <PMTreeView.BranchContent />
+                      </PMTreeView.Branch>
+                    );
+                  }
+
+                  return (
+                    <PMTreeView.Item>
+                      <LuFile />
+                      <PMTreeView.ItemText>{node.label}</PMTreeView.ItemText>
+                    </PMTreeView.Item>
+                  );
+                }}
+              />
+            </PMTreeView.Tree>
+          </PMTreeView.Root>
+        </PMBox>
+      )}
+    </PMVStack>
   );
 };

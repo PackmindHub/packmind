@@ -173,6 +173,15 @@ export interface ISpacesPort {
   removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
 
   /**
+   * Update the pinned status of a user's space membership.
+   */
+  updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean>;
+
+  /**
    * Update a space's mutable fields (name, type).
    * Slug is regenerated automatically when name changes.
    * Returns the updated space.

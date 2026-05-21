@@ -1,11 +1,21 @@
-import { IPublicUseCase } from '@packmind/types';
+import { InstallPackagesResponse, IPublicUseCase } from '@packmind/types';
 
 export type IInstallCommand = {
   baseDirectory?: string;
   packages?: string[];
+  skipInstalledAt?: boolean;
+  /**
+   * The running CLI version, stored verbatim (including any `-next`
+   * pre-release suffix) in `packmind-lock.json#cliVersion` after a
+   * successful install so drift can be detected on subsequent commands.
+   */
+  cliVersion: string;
 };
 
-export type IInstallResult = {
+export type IInstallResult = Pick<
+  InstallPackagesResponse,
+  'sourceArtifacts' | 'resolvedAgents' | 'missingAccess'
+> & {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
@@ -20,8 +30,9 @@ export type IInstallResult = {
   commandsRemoved: number;
   skillsRemoved: number;
   skillDirectoriesDeleted: number;
-  missingAccess: string[];
   joinSpaceUrl?: string;
+  configCreated: boolean;
+  packagesAdded: string[];
 };
 
 export type IInstallUseCase = IPublicUseCase<IInstallCommand, IInstallResult>;

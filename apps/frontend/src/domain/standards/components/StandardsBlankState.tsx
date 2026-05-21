@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import {
   PMBox,
   PMButton,
@@ -13,7 +13,7 @@ import {
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_STANDARD_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
-import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
+import { LuBot, LuLibrary, LuPencilLine, LuPlug } from 'react-icons/lu';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { StandardExampleDialog } from './StandardExampleDialog';
 
@@ -29,6 +29,7 @@ export const StandardsBlankState = ({
   onBrowseTemplatesClick,
 }: StandardsBlankStateProps) => {
   const analytics = useAnalytics();
+  const navigate = useNavigate();
 
   return (
     <PMBox
@@ -93,6 +94,44 @@ export const StandardsBlankState = ({
             <PMHeading level="h5" fontWeight={'medium'}>
               Other ways to create standards
             </PMHeading>
+          </PMGridItem>
+
+          {/* Browse use cases */}
+          <PMGridItem>
+            <PMBox
+              backgroundColor={'background.primary'}
+              borderRadius={'md'}
+              p={6}
+              display={'flex'}
+              flexDirection={'column'}
+              gap={4}
+              height={'full'}
+              border={'solid 1px'}
+              borderColor={'border.tertiary'}
+            >
+              <PMBox>
+                <PMHStack mb={2}>
+                  <PMIcon color={'green.200'} size={'lg'}>
+                    <LuPlug />
+                  </PMIcon>
+                  <PMHeading level="h5" fontWeight={'bold'}>
+                    Browse use cases
+                  </PMHeading>
+                </PMHStack>
+                <PMBox fontSize={'sm'} color={'text.secondary'}>
+                  Auto-populate your playbook from GitHub, Slack, Jira and more
+                </PMBox>
+              </PMBox>
+              <PMButton
+                variant="tertiary"
+                w="fit-content"
+                size={'xs'}
+                onClick={() => navigate(routes.org.toSetupUseCases(orgSlug))}
+                marginTop={'auto'}
+              >
+                Browse
+              </PMButton>
+            </PMBox>
           </PMGridItem>
 
           {/* Generate from your code */}

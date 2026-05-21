@@ -1,5 +1,5 @@
 {
   "packages": {
-    "@global/packages-packmind": "*"
+    "@backend/hexagonal-architecture": "*"
   }
 }

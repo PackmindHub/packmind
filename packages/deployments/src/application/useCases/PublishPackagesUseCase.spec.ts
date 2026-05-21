@@ -18,12 +18,14 @@ import {
   IStandardsPort,
   ISkillsPort,
   IDeploymentPort,
+  ISpacesPort,
   Distribution,
   DistributionStatus,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
+import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,7 +40,9 @@ describe('PublishPackagesUseCase', () => {
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockLogger: PackmindLogger;
+  const spaceSlug = 'my-space';
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
@@ -99,6 +103,14 @@ describe('PublishPackagesUseCase', () => {
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
+    mockSpacesPort = {
+      getSpaceById: jest
+        .fn()
+        .mockImplementation(async (spaceId) =>
+          spaceFactory({ id: spaceId, slug: spaceSlug }),
+        ),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     useCase = new PublishPackagesUseCase(
       mockRecipesPort,
       mockStandardsPort,
@@ -106,6 +118,7 @@ describe('PublishPackagesUseCase', () => {
       mockDeploymentPort,
       mockPackageService,
       mockDistributedPackageRepository,
+      mockSpacesPort,
       mockLogger,
     );
   });
@@ -217,7 +230,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [standardVersion.id],
         skillVersionIds: [],
         targetIds: [targetId],
-        packagesSlugs: [pkg.slug],
+        packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -245,8 +258,23 @@ describe('PublishPackagesUseCase', () => {
 
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          packagesSlugs: [customSlug],
+          packagesSlugs: [`@${spaceSlug}/${customSlug}`],
         }),
+      );
+    });
+
+    it('resolves space slugs once per spaceId across packages', async () => {
+      await useCase.execute(command);
+
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledTimes(1);
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(pkg.spaceId);
+    });
+
+    it('throws if a package space cannot be resolved', async () => {
+      mockSpacesPort.getSpaceById.mockResolvedValueOnce(null);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        `Space ${pkg.spaceId} not found for package ${pkg.slug}`,
       );
     });
 
@@ -339,7 +367,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [],
         skillVersionIds: [],
         targetIds: [targetId],
-        packagesSlugs: [pkg.slug],
+        packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageIds: [packageId],
         artifactSpaceIds: {
           [recipeId]: pkg.spaceId,
@@ -397,7 +425,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [standardVersionForStandardOnly.id],
         skillVersionIds: [],
         targetIds: [targetId],
-        packagesSlugs: [pkg.slug],
+        packagesSlugs: [`@${spaceSlug}/${pkg.slug}`],
         packageIds: [packageId],
         artifactSpaceIds: {
           [standardId]: pkg.spaceId,
@@ -613,7 +641,10 @@ describe('PublishPackagesUseCase', () => {
         ]),
         skillVersionIds: [],
         targetIds: [targetId],
-        packagesSlugs: [package1.slug, package2.slug],
+        packagesSlugs: [
+          `@${spaceSlug}/${package1.slug}`,
+          `@${spaceSlug}/${package2.slug}`,
+        ],
         packageIds: [package1Id, package2Id],
         artifactSpaceIds: {
           [sharedRecipeId]: package2.spaceId,

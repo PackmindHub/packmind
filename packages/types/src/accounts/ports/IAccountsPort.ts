@@ -56,6 +56,8 @@ import {
   SignUpWithOrganizationResponse,
   StartTrialCommand,
   StartTrialResult,
+  UpdateUserDisplayNameCommand,
+  UpdateUserDisplayNameResponse,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -199,6 +201,11 @@ export interface IAccountsPort {
   activateTrialAccount(
     command: ActivateTrialAccountCommand,
   ): Promise<ActivateTrialAccountResult>;
+
+  // User profile operations
+  updateUserDisplayName(
+    command: UpdateUserDisplayNameCommand,
+  ): Promise<UpdateUserDisplayNameResponse>;
 
   // Social login operations
   signInSocialUser(

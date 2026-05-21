@@ -16,6 +16,7 @@ import {
 } from '../genericSectionWriter/SingleFileDeployer';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
+import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
 
 export class OpenCodeDeployer extends SingleFileDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.opencode;
@@ -26,10 +27,7 @@ export class OpenCodeDeployer extends SingleFileDeployer {
     codingAgent: 'opencode',
   };
 
-  async deployDefaultSkills(options?: {
-    cliVersion?: string;
-    includeBeta?: boolean;
-  }) {
+  async deployDefaultSkills(options?: DeployDefaultSkillsOptions) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'OpenCode',
       OpenCodeDeployer.ARTEFACT_PATHS.skill,

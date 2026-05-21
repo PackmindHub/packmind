@@ -8,6 +8,9 @@ import {
 } from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../package.json');
+
 function buildUninstallSummary(result: IInstallResult): string {
   const removedParts = [
     result.standardsRemoved > 0
@@ -56,6 +59,7 @@ export const uninstallCommand = command({
       const result = await packmindCliHexa.uninstall({
         baseDirectory: process.cwd(),
         packages,
+        cliVersion: CLI_VERSION,
       });
 
       if (result.missingAccess.length > 0) {

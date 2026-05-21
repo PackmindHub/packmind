@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-20T00:00:00.000Z",
+  "title": "Design System: Packmind",
+  "extensions": {
+    "colorMeta": {
+      "blue-200": {
+        "role": "primary",
+        "displayName": "Periwinkle (blue-200)",
+        "canonical": "#c3c7fc",
+        "tonalRamp": [
+          "#27283e",
+          "#393b5c",
+          "#4e517c",
+          "#62659d",
+          "#777bbf",
+          "#8d92e2",
+          "#a6acfb",
+          "#c3c7fc"
+        ]
+      },
+      "blue-300": {
+        "role": "primary",
+        "displayName": "Periwinkle Hover (blue-300)",
+        "canonical": "#a6acfb"
+      },
+      "beige-1000": {
+        "role": "neutral",
+        "displayName": "Surface Primary (beige-1000)",
+        "canonical": "#181818",
+        "tonalRamp": [
+          "#181818",
+          "#2a2a29",
+          "#3f3d3c",
+          "#555352",
+          "#6c6967",
+          "#84807d",
+          "#9c9894",
+          "#b6b1ad"
+        ]
+      },
+      "beige-900": {
+        "role": "neutral",
+        "displayName": "Surface Secondary (beige-900)",
+        "canonical": "#2a2a29"
+      },
+      "beige-800": {
+        "role": "neutral",
+        "displayName": "Surface Tertiary (beige-800)",
+        "canonical": "#3f3d3c"
+      },
+      "beige-700": {
+        "role": "neutral",
+        "displayName": "Surface Faded (beige-700)",
+        "canonical": "#555352"
+      },
+      "beige-0": {
+        "role": "neutral",
+        "displayName": "Text Primary (beige-0)",
+        "canonical": "#ffffff"
+      },
+      "beige-100": {
+        "role": "neutral",
+        "displayName": "Text Secondary (beige-100)",
+        "canonical": "#e9e3dd"
+      },
+      "beige-300": {
+        "role": "neutral",
+        "displayName": "Text Tertiary (beige-300)",
+        "canonical": "#b6b1ad"
+      },
+      "beige-500": {
+        "role": "neutral",
+        "displayName": "Text Faded (beige-500)",
+        "canonical": "#84807d"
+      },
+      "green-500": {
+        "role": "semantic",
+        "displayName": "Success (green-500)",
+        "canonical": "#648b54"
+      },
+      "red-500": {
+        "role": "semantic",
+        "displayName": "Error (red-500)",
+        "canonical": "#dd5151"
+      },
+      "yellow-500": {
+        "role": "semantic",
+        "displayName": "Warning Button (yellow-500)",
+        "canonical": "#8e8227"
+      },
+      "orange-500": {
+        "role": "semantic",
+        "displayName": "Warning Text (orange-500)",
+        "canonical": "#c46652"
+      },
+      "orange-300": {
+        "role": "accent",
+        "displayName": "Coral Accent (orange-300)",
+        "canonical": "#fe9680"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headlines and large page titles. At most one per screen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles, modal titles, major nav labels."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, list-item titles, subsection headers."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default running text. 15px between dense and editorial; cap at 65–75ch in reading surfaces."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form-field labels, compact button text, small caps-style labels."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-state",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions (hover, focus, active)."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Color and background transitions on interactive elements."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The canonical primary affordance. Light periwinkle on near-black text; load-bearing inversion.",
+      "html": "<button class=\"ds-btn-primary\">Deploy playbook</button>",
+      "css": ".ds-btn-primary { background: #c3c7fc; color: #181818; font-family: 'Borna', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.025em; padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #a6acfb; } .ds-btn-primary:focus-visible { outline: 2px solid #c3c7fc; outline-offset: 2px; } .ds-btn-primary:disabled { background: #62659d; color: #3f3d3c; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Surface-matched secondary action. Subtle border, used when two primary buttons would compete.",
+      "html": "<button class=\"ds-btn-secondary\">Review changes</button>",
+      "css": ".ds-btn-secondary { background: #181818; color: #ffffff; font-family: 'Borna', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.025em; padding: 0.5rem 1rem; border: 1px solid #2a2a29; border-radius: 0.25rem; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms; } .ds-btn-secondary:hover { background: #2a2a29; color: #cfcac5; border-color: #181818; } .ds-btn-secondary:focus-visible { outline: 2px solid #c3c7fc; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Promoted secondary action in the brand voice. Periwinkle border and text, transparent surface.",
+      "html": "<button class=\"ds-btn-outline\">View history</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #c3c7fc; font-family: 'Borna', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.025em; padding: 0.5rem 1rem; border: 1px solid #c3c7fc; border-radius: 0.25rem; cursor: pointer; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms; } .ds-btn-outline:hover { color: #a6acfb; border-color: #a6acfb; background: transparent; } .ds-btn-outline:focus-visible { outline: 2px solid #c3c7fc; outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive confirmation. Solid red, full-contrast text. Reserved for actions like delete, revoke, force-deploy.",
+      "html": "<button class=\"ds-btn-danger\">Revoke deployment</button>",
+      "css": ".ds-btn-danger { background: #dd5151; color: #ffffff; font-family: 'Borna', sans-serif; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.025em; padding: 0.5rem 1rem; border: 1px solid #dd5151; border-radius: 0.25rem; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-danger:hover { background: #4a1b1b; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-base",
+      "description": "Text input. Surface matches primary, focus ring is the brand periwinkle.",
+      "html": "<label class=\"ds-input-wrap\"><span class=\"ds-input-label\">Standard name</span><input class=\"ds-input\" type=\"text\" placeholder=\"e.g. typescript-good-practices\" /></label>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 0.375rem; font-family: 'Borna', sans-serif; } .ds-input-label { font-size: 0.875rem; font-weight: 500; letter-spacing: 0.025em; color: #e9e3dd; } .ds-input { background: #181818; color: #ffffff; font-family: 'Borna', sans-serif; font-size: 0.9375rem; line-height: 1.4; padding: 0.5rem 0.75rem; border: 1px solid #2a2a29; border-radius: 0.25rem; outline: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1); width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #84807d; } .ds-input:focus-visible { border-color: #c3c7fc; box-shadow: 0 0 0 1px #c3c7fc; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Content container. One tonal step above the page, no shadow, optional 1px border.",
+      "html": "<article class=\"ds-card\"><h3 class=\"ds-card-title\">typescript-good-practices</h3><p class=\"ds-card-meta\">v2.3 · deployed to 14 repos</p><p class=\"ds-card-body\">Standard governing error classes, DTO intersections, and presentation enrichment. Owned by the Platform team.</p></article>",
+      "css": ".ds-card { background: #181818; color: #ffffff; font-family: 'Borna', sans-serif; padding: 1rem; border: 1px solid #2a2a29; border-radius: 0.25rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 520px; } .ds-card-title { font-size: 1.25rem; font-weight: 500; line-height: 1.4; margin: 0; color: #ffffff; } .ds-card-meta { font-size: 0.8125rem; line-height: 1.3; margin: 0; color: #84807d; } .ds-card-body { font-size: 0.9375rem; line-height: 1.4; margin: 0; color: #e9e3dd; max-width: 65ch; }"
+    },
+    {
+      "name": "Table Row",
+      "kind": "card",
+      "refersTo": "table-row",
+      "description": "Governance-list row. Comfortable density, tonal background, no shadow.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Standard</th><th>Version</th><th>Adoption</th><th>Owner</th></tr></thead><tbody><tr><td>use-case-architecture-patterns</td><td>v1.4</td><td>22 repos</td><td>Platform</td></tr><tr><td>domain-events</td><td>v0.9</td><td>11 repos</td><td>Core</td></tr><tr><td>compliance-logging</td><td>v2.0</td><td>8 repos</td><td>Security</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'Borna', sans-serif; font-size: 0.9375rem; color: #ffffff; } .ds-table thead th { background: #181818; color: #ffffff; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.025em; text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid #2a2a29; } .ds-table tbody td { background: #2a2a29; padding: 0.75rem 1rem; border-bottom: 1px solid #181818; line-height: 1.4; } .ds-table tbody tr:nth-child(even) td { background: #3f3d3c; } .ds-table tbody tr:hover td { background: #555352; }"
+    },
+    {
+      "name": "Subtle Chip",
+      "kind": "chip",
+      "refersTo": "chip-subtle",
+      "description": "Quiet tag, used for category, framework, or owner labels in lists.",
+      "html": "<span class=\"ds-chip\">deployed</span> <span class=\"ds-chip ds-chip-success\">success</span> <span class=\"ds-chip ds-chip-error\">failed</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; background: #3f3d3c; color: #cfcac5; font-family: 'Borna', sans-serif; font-size: 0.8125rem; font-weight: 500; padding: 0.125rem 0.5rem; border-radius: 0.125rem; line-height: 1.3; } .ds-chip-success { background: #304328; color: #dde9d9; } .ds-chip-error { background: #6c2727; color: #ffdddd; }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "button-ghost",
+      "description": "Primary navigation entry. Underline-style active state, periwinkle accent.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\">Standards</a><a class=\"ds-nav-item\" href=\"#\">Commands</a><a class=\"ds-nav-item\" href=\"#\">Skills</a><a class=\"ds-nav-item\" href=\"#\">Deployments</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 0; background: #181818; border-bottom: 1px solid #2a2a29; font-family: 'Borna', sans-serif; } .ds-nav-item { color: #b6b1ad; font-size: 0.9375rem; font-weight: 400; text-decoration: none; padding: 0.75rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms; } .ds-nav-item:hover { color: #ffffff; } .ds-nav-active { color: #ffffff; border-bottom-color: #c3c7fc; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Curator's Workshop",
+    "overview": "Packmind's design system is a calm, warm-dark surface that reads like a curator's workshop after hours: aged-paper neutrals tinted with warmth, a single periwinkle accent that behaves like ink under lamplight, and almost no chrome between the reader and the content. The product's job is to make a team's engineering playbook coherent across many AI agents; the interface stays out of the way of that work. Density is earned in the governance surfaces (lists, version history, deployment status) and relaxed in the editing surfaces (writing a standard, reviewing a change). This system explicitly rejects the enterprise-B2B-admin default and the AI-startup-template look. The aesthetic lane is Notion + Vercel dashboard, leaning Vercel: strong typography, content-led layout, tonal depth without shadows.",
+    "keyCharacteristics": [
+      "Warm-dark surface as the default. beige-1000 (#181818) is the page, not pure black.",
+      "Single brand accent. blue-200 periwinkle, used sparingly on primary affordances.",
+      "Single typeface. Borna carries every weight; no display/body pairing.",
+      "Flat at rest. Depth is conveyed through four tonal background steps, never through shadow.",
+      "Quiet, low-chrome components. Borders are subtle, fills are deliberate, decoration is absent."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "blue-200 periwinkle is the only chromatic identity color. It carries primary affordance, focus, and link state. Do not introduce a second brand color, do not stack purples next to it, and do not promote orange or yellow to brand status.",
+        "section": "colors"
+      },
+      {
+        "name": "The Warm-Neutral Rule",
+        "body": "Neutrals are beige, not gray. Every background or border choice resolves to a beige-* token. Cool slate grays are forbidden; they break the workshop warmth.",
+        "section": "colors"
+      },
+      {
+        "name": "The Inverted-Primary Rule",
+        "body": "The primary button is light on dark: blue-200 background, beige-1000 text. The inversion is what makes the brand visible against a dark page.",
+        "section": "colors"
+      },
+      {
+        "name": "The Single-Voice Rule",
+        "body": "Borna does all the work. Do not pair it with a display serif, a mono accent face for headlines, or a secondary sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight-and-Scale Rule",
+        "body": "Hierarchy is established through scale and weight contrast, never through color. A title is not 'the blue one'; it is the larger, heavier one.",
+        "section": "typography"
+      },
+      {
+        "name": "The 65–75ch Rule",
+        "body": "Reading surfaces cap body line length at 65–75ch. Governance lists and tables are exempt; density is the point there.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "No element is elevated at rest. No box-shadow on cards, panels, headers, or tabs. If a surface needs to feel above another, change its tonal step on the beige ramp.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Tonal-Depth Rule",
+        "body": "Stack at most three tonal steps in any single composition. More than three steps reads as visual noise and collapses the hierarchy.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Overlay Exception",
+        "body": "Modals, menus, toasts, and combobox popovers may use a single subtle drop-shadow to detach from the page beneath. Treat this as an exception, not a vocabulary.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use blue-200 (#c3c7fc) as the single brand accent: on primary buttons, focus rings, outline buttons, and active-nav indicators.",
+      "Do use the inverted primary button (light periwinkle on near-black text) as the canonical primary affordance.",
+      "Do convey depth through the four-step beige-1000 → beige-900 → beige-800 → beige-700 ramp, with at most three steps stacked in one composition.",
+      "Do keep all text in the neutral ramp (beige-0 → beige-500) for body and labels; reserve color for state.",
+      "Do use Borna for every hierarchy step; vary scale and weight, not family.",
+      "Do cap body line length at 65–75ch in reading surfaces (artifact editor, change review, docs panels).",
+      "Do prefer inline disclosure and side-panels to modals; modals are reserved for genuinely disruptive flows.",
+      "Do surface governance state (version, owner, deployment, adoption) in the primary view, not behind a History tab."
+    ],
+    "donts": [
+      "Don't use cramped gray-on-gray data tables, modal-for-everything flows, or tab-and-form-grid configuration panels: the enterprise-B2B-admin default.",
+      "Don't introduce purple gradients, hero-metric tiles, glassmorphism, identical card grids, or AI-sparkle iconography.",
+      "Don't use developer-cool maximalism: neon terminals, scroll-triggered animations, 3D logos.",
+      "Don't use pure #000 or #fff for surfaces. Backgrounds are warm beige-*.",
+      "Don't use cool slate grays as neutrals. Neutrals are beige.",
+      "Don't add box-shadow to cards, panels, table rows, headers, or tabs. Shadows live only on true overlays.",
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe on cards, alerts, or list items. Never.",
+      "Don't apply background-clip: text with a gradient. Use a solid color; emphasize with weight or size.",
+      "Don't pair Borna with a serif display face, a mono headline, or a secondary sans. One voice.",
+      "Don't introduce a second brand color. Periwinkle is the only chromatic identity.",
+      "Don't rely on color alone to convey status. Pair every semantic color with text, icon, or position.",
+      "Don't use em dashes in UI copy. Commas, colons, semicolons, periods, parentheses. Also not '--'."
+    ]
+  }
+}

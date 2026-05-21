@@ -36,6 +36,7 @@ describe('StandardService', () => {
   beforeEach(() => {
     standardRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
@@ -47,6 +48,7 @@ describe('StandardService', () => {
 
     standardVersionRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -59,18 +61,22 @@ describe('StandardService', () => {
 
     ruleRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByStandardVersionId: jest.fn(),
+      findByStandardVersionIds: jest.fn(),
     };
 
     ruleExampleRepository = {
       add: jest.fn(),
+      addMany: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByRuleId: jest.fn(),
+      findByRuleIds: jest.fn(),
       updateById: jest.fn(),
     };
 
@@ -509,15 +515,17 @@ describe('StandardService', () => {
         standardVersionRepository.findByStandardId = jest
           .fn()
           .mockResolvedValue([version]);
-        standardVersionRepository.add = jest.fn().mockResolvedValue(version);
-        ruleRepository.findByStandardVersionId = jest
+        standardVersionRepository.addMany = jest
+          .fn()
+          .mockResolvedValue([version]);
+        ruleRepository.findByStandardVersionIds = jest
           .fn()
           .mockResolvedValue([rule]);
-        ruleRepository.add = jest.fn().mockResolvedValue(rule);
-        ruleExampleRepository.findByRuleId = jest
+        ruleRepository.addMany = jest.fn().mockResolvedValue([rule]);
+        ruleExampleRepository.findByRuleIds = jest
           .fn()
           .mockResolvedValue([example]);
-        ruleExampleRepository.add = jest.fn().mockResolvedValue(example);
+        ruleExampleRepository.addMany = jest.fn().mockResolvedValue([example]);
       });
 
       it('creates a new standard in the destination space', async () => {
@@ -546,14 +554,14 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(standardVersionRepository.add).toHaveBeenCalledWith(
+        expect(standardVersionRepository.addMany).toHaveBeenCalledWith([
           expect.objectContaining({
             name: version.name,
             slug: version.slug,
             description: version.description,
             version: version.version,
           }),
-        );
+        ]);
       });
 
       it('copies all rules linked to the new versions', async () => {
@@ -563,11 +571,11 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(ruleRepository.add).toHaveBeenCalledWith(
+        expect(ruleRepository.addMany).toHaveBeenCalledWith([
           expect.objectContaining({
             content: rule.content,
           }),
-        );
+        ]);
       });
 
       it('copies all examples linked to the new rules', async () => {
@@ -577,13 +585,13 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(ruleExampleRepository.add).toHaveBeenCalledWith(
+        expect(ruleExampleRepository.addMany).toHaveBeenCalledWith([
           expect.objectContaining({
             lang: example.lang,
             positive: example.positive,
             negative: example.negative,
           }),
-        );
+        ]);
       });
 
       it('returns the duplicated standard', async () => {
@@ -677,57 +685,73 @@ describe('StandardService', () => {
         standardVersionRepository.findByStandardId = jest
           .fn()
           .mockResolvedValue([version1, version2]);
-        standardVersionRepository.add = jest.fn().mockResolvedValue(version1);
-        ruleRepository.findByStandardVersionId = jest
+        standardVersionRepository.addMany = jest
           .fn()
-          .mockImplementation((versionId) => {
-            if (versionId === version1.id)
-              return Promise.resolve([rule1v1, rule2v1]);
-            if (versionId === version2.id)
-              return Promise.resolve([rule1v2, rule2v2]);
-            return Promise.resolve([]);
-          });
-        ruleRepository.add = jest.fn().mockResolvedValue(rule1v1);
-        ruleExampleRepository.findByRuleId = jest
+          .mockResolvedValue([version1, version2]);
+        ruleRepository.findByStandardVersionIds = jest
           .fn()
-          .mockImplementation((ruleId) => {
-            if (ruleId === rule1v1.id) return Promise.resolve([example1]);
-            if (ruleId === rule2v1.id) return Promise.resolve([example2]);
-            if (ruleId === rule1v2.id) return Promise.resolve([example3]);
-            if (ruleId === rule2v2.id) return Promise.resolve([example4]);
-            return Promise.resolve([]);
-          });
-        ruleExampleRepository.add = jest.fn().mockResolvedValue(example1);
+          .mockResolvedValue([rule1v1, rule2v1, rule1v2, rule2v2]);
+        ruleRepository.addMany = jest
+          .fn()
+          .mockResolvedValue([rule1v1, rule2v1, rule1v2, rule2v2]);
+        ruleExampleRepository.findByRuleIds = jest
+          .fn()
+          .mockResolvedValue([example1, example2, example3, example4]);
+        ruleExampleRepository.addMany = jest
+          .fn()
+          .mockResolvedValue([example1, example2, example3, example4]);
       });
 
-      it('copies all versions', async () => {
+      it('copies all versions in a single bulk call', async () => {
         await standardService.duplicateStandardToSpace(
           standardId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(standardVersionRepository.add).toHaveBeenCalledTimes(2);
+        expect(standardVersionRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(standardVersionRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ name: version1.name }),
+            expect.objectContaining({ name: version2.name }),
+          ]),
+        );
       });
 
-      it('copies all rules across versions', async () => {
+      it('copies all rules in a single bulk call', async () => {
         await standardService.duplicateStandardToSpace(
           standardId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(ruleRepository.add).toHaveBeenCalledTimes(4);
+        expect(ruleRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(ruleRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ content: rule1v1.content }),
+            expect.objectContaining({ content: rule2v1.content }),
+            expect.objectContaining({ content: rule1v2.content }),
+            expect.objectContaining({ content: rule2v2.content }),
+          ]),
+        );
       });
 
-      it('copies all examples across rules', async () => {
+      it('copies all examples in a single bulk call', async () => {
         await standardService.duplicateStandardToSpace(
           standardId,
           destinationSpaceId,
           newUserId,
         );
 
-        expect(ruleExampleRepository.add).toHaveBeenCalledTimes(4);
+        expect(ruleExampleRepository.addMany).toHaveBeenCalledTimes(1);
+        expect(ruleExampleRepository.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ lang: example1.lang }),
+            expect.objectContaining({ lang: example2.lang }),
+            expect.objectContaining({ lang: example3.lang }),
+            expect.objectContaining({ lang: example4.lang }),
+          ]),
+        );
       });
 
       it('returns rule mappings for all rules', async () => {
@@ -808,7 +832,7 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(standardVersionRepository.add).not.toHaveBeenCalled();
+        expect(standardVersionRepository.addMany).not.toHaveBeenCalled();
       });
 
       it('does not create any rules', async () => {
@@ -818,7 +842,7 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(ruleRepository.add).not.toHaveBeenCalled();
+        expect(ruleRepository.addMany).not.toHaveBeenCalled();
       });
 
       it('does not create any examples', async () => {
@@ -828,7 +852,7 @@ describe('StandardService', () => {
           newUserId,
         );
 
-        expect(ruleExampleRepository.add).not.toHaveBeenCalled();
+        expect(ruleExampleRepository.addMany).not.toHaveBeenCalled();
       });
 
       it('returns empty rule mappings', async () => {

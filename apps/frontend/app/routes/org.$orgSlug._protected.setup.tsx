@@ -87,9 +87,9 @@ export default function SetupIndexRouteModule() {
                 exact
               />,
               <SidebarNavigationLink
-                key="mcp"
-                url={orgSlug ? routes.org.toSetupMCP(orgSlug) : '#'}
-                label="MCP Servers"
+                key="auto-update"
+                url={orgSlug ? routes.org.toSetupAutoUpdate(orgSlug) : '#'}
+                label="Auto-update"
                 exact
               />,
             ]}
@@ -102,6 +102,12 @@ export default function SetupIndexRouteModule() {
                 key="skills"
                 url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
                 label="Playbook management"
+                exact
+              />,
+              <SidebarNavigationLink
+                key="use-cases"
+                url={orgSlug ? routes.org.toSetupUseCases(orgSlug) : '#'}
+                label="Use cases"
                 exact
               />,
             ]}

@@ -33,6 +33,10 @@ import {
   IInstallDefaultSkillsResult,
 } from './domain/useCases/IInstallDefaultSkillsUseCase';
 import {
+  EnsureCliVersionOutcome,
+  IEnsureCliVersionCommand,
+} from './domain/useCases/IEnsureCliVersionUseCase';
+import {
   IListPackagesCommand,
   IListPackagesResult,
 } from './domain/useCases/IListPackagesUseCase';
@@ -53,10 +57,6 @@ import {
   ICheckCliVersionCommand,
   ICheckCliVersionResult,
 } from './domain/useCases/ICheckCliVersionUseCase';
-import {
-  ISetupMcpCommand,
-  ISetupMcpResult,
-} from './domain/useCases/ISetupMcpUseCase';
 import {
   ListStandardsCommand,
   ListStandardsResult,
@@ -92,6 +92,7 @@ import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
+import { IOutput } from './domain/repositories/IOutput';
 
 const origin = 'PackmindCliHexa';
 
@@ -120,6 +121,10 @@ export class PackmindCliHexa {
     this.logger.info('Destroying PackmindCliHexa');
     // Add any cleanup logic here if needed
     this.logger.info('PackmindCliHexa destroyed');
+  }
+
+  public get output(): IOutput {
+    return this.hexa.repositories.output;
   }
 
   public async getGitRemoteUrl(
@@ -349,10 +354,6 @@ export class PackmindCliHexa {
     return this.hexa.useCases.checkCliVersion.execute(command);
   }
 
-  public async setupMcp(command: ISetupMcpCommand): Promise<ISetupMcpResult> {
-    return this.hexa.useCases.setupMcp.execute(command);
-  }
-
   public getCurrentBranch(repoPath: string): string {
     return this.hexa.services.gitRemoteUrlService.getCurrentBranch(repoPath)
       .branch;
@@ -388,6 +389,20 @@ export class PackmindCliHexa {
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
     return this.hexa.useCases.installDefaultSkills.execute(command);
+  }
+
+  public async bootstrapSkillsInitDirectory(command: {
+    baseDirectory: string;
+  }): Promise<void> {
+    return this.hexa.useCases.installDefaultSkills.bootstrapEmptyDirectory(
+      command.baseDirectory,
+    );
+  }
+
+  public async ensureCliVersion(
+    command: IEnsureCliVersionCommand,
+  ): Promise<EnsureCliVersionOutcome> {
+    return this.hexa.useCases.ensureCliVersion.execute(command);
   }
 
   public getPackmindGateway() {

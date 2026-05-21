@@ -1,0 +1,26 @@
+name: Nightly Packmind Artifacts Update
+
+on:
+  schedule:
+    - cron: '0 2 * * 1-5' # Every weeknight at 02:00 UTC (Mon–Fri)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-artifacts:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Update Packmind artifacts
+        uses: PackmindHub/update-packmind-artifacts@v1
+        with:
+          packmind-api-key: ${{ secrets.PACKMIND_API_KEY_V3 }}

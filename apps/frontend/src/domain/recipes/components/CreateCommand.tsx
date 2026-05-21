@@ -11,6 +11,7 @@ import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
+import { pmToaster } from '@packmind/ui';
 
 export const CreateCommand = () => {
   const { organization } = useAuthContext();
@@ -50,14 +51,10 @@ export const CreateCommand = () => {
       },
       {
         onSuccess: (createdRecipe: Recipe) => {
-          setAlert({
-            type: 'success',
-            message: RECIPE_MESSAGES.success.created,
+          pmToaster.success({
+            title: RECIPE_MESSAGES.success.created,
           });
-          setTimeout(() => {
-            setAlert(null);
-            nav.space.toCommand(createdRecipe.id);
-          }, 1500);
+          nav.space.toCommand(createdRecipe.id);
         },
         onError: (error) => {
           console.error('Failed to create command:', error);
@@ -89,6 +86,7 @@ export const CreateCommand = () => {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isPending={createMutation.isPending}
+        isSuccess={createMutation.isSuccess}
         alert={alert}
       />
     </MarkdownEditorProvider>

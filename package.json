@@ -1,6 +1,6 @@
 {
   "name": "packmind",
-  "version": "1.12.0",
+  "version": "1.14.0",
   "private": true,
   "engines": {
     "node": "24.14.0",
@@ -182,6 +182,7 @@
     "http-proxy-middleware": "^3.0.5",
     "isbot": "^4.4.0",
     "jsonwebtoken": "^9.0.3",
+    "log-update": "^8.0.0",
     "marked": "^16.2.1",
     "nodemailer": "^8.0.4",
     "open": "^11.0.0",

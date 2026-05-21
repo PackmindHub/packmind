@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { LuCopy, LuDownload } from 'react-icons/lu';
 import {
   PMTabs,
@@ -24,12 +25,16 @@ interface ISkillFilePreviewProps {
   file: SkillFile | null;
   clipboardContent?: string;
   rawContent?: string;
+  transformLinkUri?: (href: string) => string;
+  onLinkClick?: (href: string, event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
 export const SkillFilePreview = ({
   file,
   clipboardContent,
   rawContent,
+  transformLinkUri,
+  onLinkClick,
 }: ISkillFilePreviewProps) => {
   if (!file) {
     return (
@@ -76,7 +81,11 @@ export const SkillFilePreview = ({
       padding={4}
       backgroundColor="background.primary"
     >
-      <PMMarkdownViewer content={file.content} />
+      <PMMarkdownViewer
+        content={file.content}
+        transformLinkUri={transformLinkUri}
+        onLinkClick={onLinkClick}
+      />
     </PMBox>
   );
 

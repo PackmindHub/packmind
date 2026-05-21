@@ -46,13 +46,6 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-# Standard: Frontend testing
-
-Enforce behavioral tests for components in files matching **/*.test.tsx using Jest and React Testing Library to assert functionality (e.g., that a button triggers the expected action) rather than mere presence, improving test reliability and preventing regressions. :
-* Do not write test checking if a button is there, check that it actually works as expected
-
-Full standard is available here for further request: [Frontend testing](.packmind/standards/frontend-testing.md)
-
 # Standard: Frontend Data Flow
 
 Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse. :
@@ -71,18 +64,6 @@ Standardize frontend route data flow using React Router v7 framework mode with T
 
 Full standard is available here for further request: [Frontend Data Flow](.packmind/standards/frontend-data-flow.md)
 
-# Standard: Frontend Navigation with React Router
-
-Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx. :
-* Omit orgSlug and spaceSlug parameters to use current organization and space context by default and only specify them explicitly when navigating to a different organization or space.
-* Use authentication route methods (routes.auth.*) for authentication-related navigation.
-* Use organization-scoped route methods (routes.org.*) for pages that require only organization context.
-* Use space-scoped route methods (routes.space.*) for pages that require both organization and space context.
-* Use the routes utility from shared/utils/routes for all declarative navigation with Link and NavLink components.
-* Use the useNavigation() hook from shared/hooks/useNavigation for all programmatic navigation with navigate().
-
-Full standard is available here for further request: [Frontend Navigation with React Router](.packmind/standards/frontend-navigation-with-react-router.md)
-
 # Standard: Frontend Error Management
 
 Establish frontend error management for apps/frontend/**/*.tsx that prescribes when to add React error boundaries beyond the global root.tsx fallback and how to handle errors they don't catch—such as event handlers, async code, SSR, or errors thrown in the boundary—by using TypeScript-typed guards (e.g., isPackmindError), try/catch for async operations, TanStack Query onError callbacks and mutation-pending checks to prevent double submissions, inline validation for expected API/user errors, and selective page- or component-level boundaries for isolated third-party widgets like CodeMirror, to reduce complexity, improve UX, and keep error flows maintainable in React/TypeScript projects built with Node.js and typical tooling (Vite/Webpack, ESLint/Prettier) and tested with Jest/Cypress. :
@@ -98,28 +79,26 @@ Establish frontend error management for apps/frontend/**/*.tsx that prescribes w
 
 Full standard is available here for further request: [Frontend Error Management](.packmind/standards/frontend-error-management.md)
 
-# Standard: Jest Test Suite Organization and Patterns
+# Standard: Frontend Navigation with React Router
 
-Establish Jest test suite organization and patterns governing test file structure, describe/it hierarchy, typed mocking using jest.Mocked<ServiceType> and createMockInstance, factory-based test data and @packmind/types createUserId/createOrganizationId/createStandardId helpers, assertion conventions (single primary assertion, .not.toHaveBeenCalled()), test ordering (happy path, error cases, edge cases, complex scenarios), and validation/error-handling patterns for TypeScript/Node.js monorepo code (including Express or frontend React/Vue components where applicable) and toolchains (ESLint, Prettier, Webpack/Vite) with CI/infrastructure considerations (Docker, Kubernetes, AWS) to ensure reliable, maintainable, and debuggable unit and integration tests when writing or refactoring test suites with Jest. :
-* Define reusable test data at the describe block level before test cases when the data is shared across multiple tests
-* Group related complex scenarios in dedicated describe blocks (e.g., 'rate limiting', 'multiple organizations') with multiple test cases covering different aspects
-* Order tests within each describe block: happy path first, then error cases, then edge cases (null/undefined/empty/whitespace), then complex scenarios
-* Organize describe blocks using 'with...' prefix for input/state conditions and 'when...' prefix for action-based scenarios
-* Test all validation edge cases systematically in separate describe blocks: empty string, whitespace-only, null, undefined, and minimal valid input
-* Use .not.toHaveBeenCalled() to verify services were not invoked in error or validation failure scenarios
-* Use `createXXXId` functions from @packmind/types (createUserId, createOrganizationId, createStandardId, createRecipeId) for creating typed IDs in test data
-* Use createMockInstance to create mock instances
-* Use typed mocks with 'jest.Mocked<ServiceType>' and initialize them in beforeEach using the pattern '{ methodName: jest.fn() } as unknown as jest.Mocked<ServiceType>'
+Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx. :
+* Omit orgSlug and spaceSlug parameters to use current organization and space context by default and only specify them explicitly when navigating to a different organization or space.
+* Use authentication route methods (routes.auth.*) for authentication-related navigation.
+* Use organization-scoped route methods (routes.org.*) for pages that require only organization context.
+* Use space-scoped route methods (routes.space.*) for pages that require both organization and space context.
+* Use the routes utility from shared/utils/routes for all declarative navigation with Link and NavLink components.
+* Use the useNavigation() hook from shared/hooks/useNavigation for all programmatic navigation with navigate().
 
-Full standard is available here for further request: [Jest Test Suite Organization and Patterns](.packmind/standards/jest-test-suite-organization-and-patterns.md)
+Full standard is available here for further request: [Frontend Navigation with React Router](.packmind/standards/frontend-navigation-with-react-router.md)
 
 # Standard: TanStack Query Key Management
 
-Manage TanStack Query key structures using hierarchical prefix matching and dedicated queryKeys.ts files in React applications to ensure efficient cache invalidation and type-safe query management when handling cross-domain data operations. :
+Standardize TanStack Query query key definitions in per-domain api/queryKeys.ts files using const base key arrays, separate scope constants, and operation enums with hierarchical organization→domain→operation→identifiers ordering to enable type-safe prefix-based cache invalidation without circular dependencies and to ensure mutations invalidate all affected sibling scopes. :
 * Define base query key arrays as const to enable precise invalidation patterns and avoid duplication
 * Define domain query scope as a separate const outside enum to maintain clear separation between scope and operations
 * Define query keys in a dedicated queryKeys.ts file in the domain's api folder for centralized management
 * Follow hierarchical query key structure: organization scope, domain scope, operation, then identifiers for consistent invalidation patterns
+* In mutation onSuccess, invalidate every affected sibling query-key scope; prefix matching cannot bridge siblings
 * Limit cross-domain imports to only query key constants and enums to prevent runtime coupling and circular dependencies
 * Use query invalidation with prefix matching from key start in correct hierarchical order
 

@@ -1,5 +1,5 @@
 {
   "packages": {
-    "@global/design-system": "*"
+    "@frontend/ui-components": "*"
   }
 }

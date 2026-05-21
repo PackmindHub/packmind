@@ -4,20 +4,28 @@ import {
 } from './ICredentialsProvider';
 import { decodeApiKey } from './decodeApiKey';
 
-const ENV_VAR_NAME = 'PACKMIND_API_KEY_V3';
+export const ENV_VAR_NAMES = [
+  'PACKMIND_API_KEY',
+  'PACKMIND_API_KEY_V3',
+] as const;
 
 export class EnvCredentialsProvider implements ICredentialsProvider {
   getSourceName(): string {
-    return `${ENV_VAR_NAME} environment variable`;
+    const name = this.findActiveEnvVarName() ?? ENV_VAR_NAMES[0];
+    return `${name} environment variable`;
   }
 
   hasCredentials(): boolean {
-    const apiKey = process.env[ENV_VAR_NAME];
-    return !!apiKey && apiKey.trim().length > 0;
+    return this.findActiveEnvVarName() !== undefined;
   }
 
   loadCredentials(): DecodedCredentials | null {
-    const apiKey = process.env[ENV_VAR_NAME];
+    const name = this.findActiveEnvVarName();
+    if (!name) {
+      return null;
+    }
+
+    const apiKey = process.env[name];
     if (!apiKey) {
       return null;
     }
@@ -38,5 +46,15 @@ export class EnvCredentialsProvider implements ICredentialsProvider {
       userName: decoded.jwt.user?.name,
       expiresAt,
     };
+  }
+
+  private findActiveEnvVarName(): string | undefined {
+    for (const name of ENV_VAR_NAMES) {
+      const value = process.env[name];
+      if (value && value.trim().length > 0) {
+        return name;
+      }
+    }
+    return undefined;
   }
 }

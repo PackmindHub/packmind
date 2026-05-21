@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { PMVStack, PMHStack, PMButton, PMAlert, PMBox } from '@packmind/ui';
-import {
-  CopiableTextarea,
-  CopiableTextField,
-} from '../../../../../shared/components/inputs';
-import { CliAuthenticationDataTestIds } from '@packmind/frontend';
+import { PMVStack, PMBox } from '@packmind/ui';
+import { CopiableTextField } from '../../../../../shared/components/inputs';
 import { AuthMethod } from '../types';
-import { buildCliLoginCommand, formatExpirationDate } from '../utils';
+import { buildCliLoginCommand } from '../utils';
 import { useApiKey } from '../hooks';
-import { SectionCard, StepHeader, AuthMethodSelector } from '../components';
+import {
+  SectionCard,
+  StepHeader,
+  AuthMethodSelector,
+  ApiKeyGenerator,
+} from '../components';
 
 const LoginCommandContent: React.FC = () => (
   <SectionCard
@@ -26,104 +27,14 @@ const LoginCommandContent: React.FC = () => (
 );
 
 const ApiKeyContent: React.FC = () => {
-  const {
-    hasExistingKey,
-    existingKeyExpiresAt,
-    generatedKey,
-    generatedKeyExpiresAt,
-    isGenerating,
-    isSuccess,
-    isError,
-    error,
-    showConfirmGenerate,
-    handleGenerate,
-    cancelGenerate,
-    getGenerateButtonLabel,
-  } = useApiKey();
+  const apiKey = useApiKey();
 
   return (
     <SectionCard
       title="API key"
       description="Generate an API key to use as an environment variable. It will expire after 3 months."
     >
-      {hasExistingKey && (
-        <PMAlert.Root status="info">
-          <PMAlert.Indicator />
-          <PMAlert.Title>Active API Key</PMAlert.Title>
-          <PMAlert.Description>
-            You have an active API key that expires on{' '}
-            {formatExpirationDate(existingKeyExpiresAt)}
-          </PMAlert.Description>
-        </PMAlert.Root>
-      )}
-
-      {showConfirmGenerate ? (
-        <PMVStack gap={3}>
-          <PMAlert.Root status="warning">
-            <PMAlert.Indicator />
-            <PMAlert.Title>Replace Existing API Key?</PMAlert.Title>
-            <PMAlert.Description>
-              This will invalidate your current API key. Any applications using
-              the old key will need to be updated.
-            </PMAlert.Description>
-          </PMAlert.Root>
-
-          <PMHStack gap={2}>
-            <PMButton onClick={handleGenerate} disabled={isGenerating}>
-              {isGenerating ? 'Generating...' : 'Yes, Generate New Key'}
-            </PMButton>
-            <PMButton
-              variant="outline"
-              onClick={cancelGenerate}
-              disabled={isGenerating}
-            >
-              Cancel
-            </PMButton>
-          </PMHStack>
-        </PMVStack>
-      ) : (
-        <PMButton
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          data-testid={CliAuthenticationDataTestIds.GenerateApiKeyCTA}
-        >
-          {getGenerateButtonLabel()}
-        </PMButton>
-      )}
-
-      {isError && (
-        <PMAlert.Root status="error">
-          <PMAlert.Indicator />
-          <PMAlert.Title>Error Generating API Key</PMAlert.Title>
-          <PMAlert.Description>
-            {error instanceof Error
-              ? error.message
-              : 'Failed to generate API key. Please try again.'}
-          </PMAlert.Description>
-        </PMAlert.Root>
-      )}
-
-      {isSuccess && generatedKey && (
-        <PMVStack width="full" gap={3} alignItems="stretch">
-          <PMAlert.Root status="success">
-            <PMAlert.Indicator />
-            <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
-            <PMAlert.Description>
-              Copy this key now - it won't be shown again. Expires on{' '}
-              {formatExpirationDate(generatedKeyExpiresAt)}
-            </PMAlert.Description>
-          </PMAlert.Root>
-
-          <PMBox width="full">
-            <CopiableTextarea
-              value={generatedKey}
-              readOnly
-              rows={4}
-              data-testid={CliAuthenticationDataTestIds.ApiKeyInput}
-            />
-          </PMBox>
-        </PMVStack>
-      )}
+      <ApiKeyGenerator apiKey={apiKey} />
     </SectionCard>
   );
 };

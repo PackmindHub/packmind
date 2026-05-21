@@ -9,6 +9,7 @@
     "@packmind/types": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
+    "@packmind/skills": "*",
     "@packmind/test-utils": "*",
     "uuid": "^11.1.0",
     "yaml": "^2.8.3",

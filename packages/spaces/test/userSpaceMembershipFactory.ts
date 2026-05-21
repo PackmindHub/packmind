@@ -14,6 +14,7 @@ export function userSpaceMembershipFactory(
     userId,
     spaceId: createSpaceId(uuidv4()),
     role: UserSpaceRole.MEMBER,
+    pinned: false,
     createdBy: userId,
     updatedBy: userId,
     ...overrides,

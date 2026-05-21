@@ -8,9 +8,14 @@ import {
   logWarningConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
-import * as readline from 'readline';
-import { IncompatibleInstalledSkill } from '../../../domain/useCases/IInstallDefaultSkillsUseCase';
-import { handleIncompatibleInstalledSkills } from './incompatibleSkillsHandler';
+import { handleIncompatibleInstalledSkillsSilently } from './incompatibleSkillsHandler';
+import { reportEnsureCliVersionOutcome } from '../ensureCliVersionReporter';
+import { ConfigFileRepository } from '../../repositories/ConfigFileRepository';
+import {
+  buildSkillsSkippedWarning,
+  configuredAgentsSupportSkills,
+} from '../skillsCapabilityWarning';
+import { isSkillsInitBootstrapError } from '../../../domain/errors/SkillsInitBootstrapError';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -30,9 +35,35 @@ export const installDefaultSkillsCommand = command({
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
+      const baseDirectory = process.cwd();
+
+      try {
+        const outcome = await packmindCliHexa.ensureCliVersion({
+          baseDirectory,
+          currentCliVersion: CLI_VERSION,
+          includeBeta,
+        });
+        reportEnsureCliVersionOutcome(outcome, CLI_VERSION);
+      } catch {
+        // Silently swallow drift-check failures; skills init must continue.
+      }
+
+      // Bootstrap an empty directory (no packmind.json + no packmind-lock.json)
+      // from the org's active render modes before evaluating skill capability.
+      // Throws SkillsInitBootstrapError on gateway failure — handled by the
+      // outer catch below.
+      await packmindCliHexa.bootstrapSkillsInitDirectory({ baseDirectory });
+
+      const config = await new ConfigFileRepository().readConfig(baseDirectory);
+      const configuredAgents = config?.agents ?? [];
+
+      if (!configuredAgentsSupportSkills(configuredAgents)) {
+        logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+        return;
+      }
+
       logInfoConsole('Installing default skills...');
 
-      const baseDirectory = process.cwd();
       const result = await packmindCliHexa.installDefaultSkills({
         includeBeta,
         cliVersion: includeBeta ? undefined : CLI_VERSION,
@@ -45,16 +76,8 @@ export const installDefaultSkillsCommand = command({
         );
       }
 
-      if (result.skippedIncompatibleSkillNames.length > 0) {
-        for (const skillName of result.skippedIncompatibleSkillNames) {
-          logWarningConsole(
-            `Skill "${skillName}" was not installed because it is not compatible with this version of packmind-cli.`,
-          );
-        }
-      }
-
       if (result.incompatibleInstalledSkills.length > 0) {
-        await handleIncompatibleInstalledSkillsWithPrompt(
+        await handleIncompatibleInstalledSkillsSilently(
           result.incompatibleInstalledSkills,
           baseDirectory,
         );
@@ -81,6 +104,10 @@ export const installDefaultSkillsCommand = command({
         }
       }
     } catch (error) {
+      if (isSkillsInitBootstrapError(error)) {
+        logErrorConsole(error.message);
+        process.exit(1);
+      }
       if (error instanceof Error) {
         logErrorConsole(`Installation failed: ${error.message}`);
       } else {
@@ -90,26 +117,3 @@ export const installDefaultSkillsCommand = command({
     }
   },
 });
-
-async function handleIncompatibleInstalledSkillsWithPrompt(
-  skills: IncompatibleInstalledSkill[],
-  baseDirectory: string,
-): Promise<void> {
-  await handleIncompatibleInstalledSkills(skills, baseDirectory, () =>
-    promptConfirmation('Confirm deletion? [y/N]: '),
-  );
-}
-
-async function promptConfirmation(question: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase() === 'y');
-    });
-  });
-}

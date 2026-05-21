@@ -17,6 +17,37 @@ describe('DefaultSkillsDeployer', () => {
         paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
+      describe('deployedSkills metadata', () => {
+        it('returns one entry per deployed default skill', () => {
+          const deployedSlugs = result.deployedSkills.map((s) => s.slug);
+          expect(deployedSlugs).toEqual(
+            expect.arrayContaining([
+              'packmind-create-skill',
+              'packmind-create-standard',
+              'packmind-onboard',
+              'packmind-create-command',
+              'packmind-create-package',
+              'packmind-cli-list-commands',
+              'packmind-update-playbook',
+            ]),
+          );
+        });
+
+        it('exposes a non-empty name for each deployed skill', () => {
+          for (const skill of result.deployedSkills) {
+            expect(typeof skill.name).toBe('string');
+            expect(skill.name.length).toBeGreaterThan(0);
+          }
+        });
+
+        it('exposes a numeric version for each deployed skill', () => {
+          for (const skill of result.deployedSkills) {
+            expect(typeof skill.version).toBe('number');
+            expect(Number.isFinite(skill.version)).toBe(true);
+          }
+        });
+      });
+
       it('includes packmind-create-skill', () => {
         expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
           true,

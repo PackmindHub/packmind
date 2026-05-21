@@ -1,5 +1,9 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/tsc/frontend.tsbuildinfo"
+  },
   "include": [
     "app/**/*.ts",
     "app/**/*.tsx",

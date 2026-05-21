@@ -15,14 +15,12 @@ import {
   CreateRenderModeConfigurationCommand,
   DashboardKpiResponse,
   DashboardNonLiveResponse,
-  DashboardOutdatedResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  DeploymentOverview,
   Distribution,
   DownloadDefaultSkillsZipForAgentCommand,
   DownloadDefaultSkillsZipForAgentResponse,
@@ -34,18 +32,14 @@ import {
   GetContentByVersionsResponse,
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
-  GetDashboardOutdatedCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
-  GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-  GetStandardDeploymentOverviewCommand,
-  GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
   GetTargetByIdCommand,
   GetTargetByIdResponse,
@@ -70,6 +64,9 @@ import {
   IStandardsPort,
   IStandardsPortName,
   ListDeploymentsByPackageCommand,
+  IListActiveDistributedPackagesBySpaceUseCase,
+  ListActiveDistributedPackagesBySpaceCommand,
+  ListActiveDistributedPackagesBySpaceResponse,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
@@ -89,8 +86,6 @@ import {
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
-  StandardDeploymentOverview,
-  SkillDeploymentOverview,
   Target,
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
@@ -113,16 +108,14 @@ import { DeployDefaultSkillsUseCase } from '../useCases/DeployDefaultSkillsUseCa
 import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDefaultSkillsZipForAgentUseCase';
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
-import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
-import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
-import { GetSkillsDeploymentOverviewUseCase } from '../useCases/GetSkillsDeploymentOverviewUseCase';
 import { GetTargetByIdUseCase } from '../useCases/GetTargetByIdUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
+import { ListActiveDistributedPackagesBySpaceUseCase } from '../useCases/ListActiveDistributedPackagesBySpaceUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
@@ -137,7 +130,6 @@ import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
-import { GetDashboardOutdatedUseCase } from '../useCases/getDashboardOutdated/GetDashboardOutdatedUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
@@ -162,13 +154,10 @@ export class DeploymentsAdapter
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
   private _publishPackagesUseCase!: PublishPackagesUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
-  private _getDeploymentOverviewUseCase!: GetDeploymentOverviewUseCase;
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
   private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
   private _listDistributionsBySkillUseCase!: ListDistributionsBySkillUseCase;
-  private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
-  private _getSkillsDeploymentOverviewUseCase!: GetSkillsDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
   private _getTargetByIdUseCase!: GetTargetByIdUseCase;
   private _getTargetsByGitRepoUseCase!: GetTargetsByGitRepoUseCase;
@@ -196,10 +185,10 @@ export class DeploymentsAdapter
   private _downloadSkillZipForAgentUseCase!: DownloadSkillZipForAgentUseCase;
   private _getContentByVersionsUseCase!: GetContentByVersionsUseCase;
   private _getDashboardKpiUseCase!: GetDashboardKpiUseCase;
-  private _getDashboardOutdatedUseCase!: GetDashboardOutdatedUseCase;
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
+  private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -288,25 +277,13 @@ export class DeploymentsAdapter
       this,
       this.deploymentsServices.getPackageService(),
       this.distributedPackageRepository,
+      this.spacesPort,
     );
 
     this._findActiveStandardVersionsByTargetUseCase =
       new FindActiveStandardVersionsByTargetUseCase(
         this.distributionRepository,
       );
-
-    const getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
-      this.deploymentsServices.getTargetService(),
-      this.gitPort,
-    );
-
-    this._getDeploymentOverviewUseCase = new GetDeploymentOverviewUseCase(
-      this.distributionRepository,
-      this.recipesPort,
-      this.spacesPort,
-      this.gitPort,
-      getTargetsByOrganizationUseCase,
-    );
 
     this._listDeploymentsByPackageUseCase = new ListDeploymentsByPackageUseCase(
       this.distributionRepository,
@@ -321,22 +298,6 @@ export class DeploymentsAdapter
     this._listDistributionsBySkillUseCase = new ListDistributionsBySkillUseCase(
       this.distributionRepository,
     );
-
-    this._getStandardDeploymentOverviewUseCase =
-      new GetStandardDeploymentOverviewUseCase(
-        this.distributionRepository,
-        this.standardsPort,
-        this.gitPort,
-        this.spacesPort,
-      );
-
-    this._getSkillsDeploymentOverviewUseCase =
-      new GetSkillsDeploymentOverviewUseCase(
-        this.distributionRepository,
-        this.skillsPort,
-        this.gitPort,
-        this.spacesPort,
-      );
 
     this._addTargetUseCase = new AddTargetUseCase(
       this.deploymentsServices.getTargetService(),
@@ -449,13 +410,6 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
-    this._getDashboardOutdatedUseCase = new GetDashboardOutdatedUseCase(
-      this.distributionRepository,
-      this.standardsPort,
-      this.recipesPort,
-      this.gitPort,
-    );
-
     this._getDashboardNonLiveUseCase = new GetDashboardNonLiveUseCase(
       this.distributionRepository,
       this.standardsPort,
@@ -468,6 +422,19 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.deploymentsServices,
     );
+
+    this._listActiveDistributedPackagesBySpaceUseCase =
+      new ListActiveDistributedPackagesBySpaceUseCase(
+        this.spacesPort,
+        this.accountsPort,
+        this.distributionRepository,
+        this.deploymentsServices.getRepositories().getPackageRepository(),
+        this.deploymentsServices.getRepositories().getTargetRepository(),
+        this.standardsPort,
+        this.recipesPort,
+        this.skillsPort,
+        this.gitPort,
+      );
 
     this._listPackagesUseCase = new ListPackagesUsecase(
       this.accountsPort,
@@ -620,12 +587,6 @@ export class DeploymentsAdapter
     return this._findActiveStandardVersionsByTargetUseCase.execute(command);
   }
 
-  getDeploymentOverview(
-    command: GetDeploymentOverviewCommand,
-  ): Promise<DeploymentOverview> {
-    return this._getDeploymentOverviewUseCase.execute(command);
-  }
-
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
   ): Promise<Distribution[]> {
@@ -648,18 +609,6 @@ export class DeploymentsAdapter
     command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]> {
     return this._listDistributionsBySkillUseCase.execute(command);
-  }
-
-  getStandardDeploymentOverview(
-    command: GetStandardDeploymentOverviewCommand,
-  ): Promise<StandardDeploymentOverview> {
-    return this._getStandardDeploymentOverviewUseCase.execute(command);
-  }
-
-  getSkillsDeploymentOverview(
-    command: GetSkillDeploymentOverviewCommand,
-  ): Promise<SkillDeploymentOverview> {
-    return this._getSkillsDeploymentOverviewUseCase.execute(command);
   }
 
   async addTarget(command: AddTargetCommand): Promise<Target> {
@@ -832,15 +781,19 @@ export class DeploymentsAdapter
     return this._getDashboardKpiUseCase.execute(command);
   }
 
-  async getDashboardOutdated(
-    command: GetDashboardOutdatedCommand,
-  ): Promise<DashboardOutdatedResponse> {
-    return this._getDashboardOutdatedUseCase.execute(command);
-  }
-
   async getDashboardNonLive(
     command: GetDashboardNonLiveCommand,
   ): Promise<DashboardNonLiveResponse> {
     return this._getDashboardNonLiveUseCase.execute(command);
+  }
+
+  listActiveDistributedPackagesBySpace(
+    command: ListActiveDistributedPackagesBySpaceCommand,
+  ): Promise<ListActiveDistributedPackagesBySpaceResponse> {
+    return this._listActiveDistributedPackagesBySpaceUseCase.execute(command);
+  }
+
+  getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
+    return this._listActiveDistributedPackagesBySpaceUseCase;
   }
 }

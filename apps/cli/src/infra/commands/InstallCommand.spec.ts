@@ -22,7 +22,13 @@ jest.mock('../../PackmindCliHexa', () => ({
 jest.mock('../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logInfoConsole: jest.fn(),
   logWarningConsole: jest.fn(),
+  formatCommand: jest.fn((cmd: string) => cmd),
+}));
+
+jest.mock('./skills/incompatibleSkillsHandler', () => ({
+  handleIncompatibleInstalledSkillsSilently: jest.fn(),
 }));
 
 jest.mock('@packmind/logger', () => ({
@@ -30,11 +36,42 @@ jest.mock('@packmind/logger', () => ({
   LogLevel: { INFO: 'INFO' },
 }));
 
+jest.mock('./bootstrapInstallContext', () => ({
+  bootstrapInstallContext: jest.fn().mockResolvedValue({
+    configReady: true,
+    warned: false,
+    configCreated: false,
+    packagesAdded: [],
+  }),
+}));
+
+jest.mock('../repositories/ConfigFileRepository', () => ({
+  ConfigFileRepository: jest.fn().mockImplementation(() => ({
+    readConfig: jest.fn().mockResolvedValue({
+      packages: {},
+      agents: ['claude'],
+    }),
+  })),
+}));
+
+jest.mock('../../application/services/AgentArtifactDetectionService', () => ({
+  AgentArtifactDetectionService: jest.fn().mockImplementation(() => ({})),
+}));
+
 import * as path from 'path';
-import { installHandler } from './InstallCommand';
+import { installHandler, mergeInstallResults } from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
+import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
+import { bootstrapInstallContext } from './bootstrapInstallContext';
+
+const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
+  typeof bootstrapInstallContext
+>;
+
+const MockedConfigFileRepository = ConfigFileRepository as unknown as jest.Mock;
 
 function makeDirent(name: string, isDir = true): fs.Dirent {
   return {
@@ -53,6 +90,9 @@ function makeDirent(name: string, isDir = true): fs.Dirent {
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
+const mockIncompatibleSkillsHandler = incompatibleSkillsHandler as jest.Mocked<
+  typeof incompatibleSkillsHandler
+>;
 const MockPackmindCliHexa = PackmindCliHexa as jest.MockedClass<
   typeof PackmindCliHexa
 >;
@@ -68,6 +108,15 @@ const makeResult = (
   missingAccess: [],
   joinSpaceUrl: undefined,
   errors: [],
+  configCreated: false,
+  packagesAdded: [],
+  sourceArtifacts: {
+    skillsCount: 0,
+    standardsCount: 0,
+    commandsCount: 0,
+    recipesCount: 0,
+  },
+  resolvedAgents: [],
   ...overrides,
 });
 
@@ -76,6 +125,9 @@ const handler = installHandler;
 describe('installCommand', () => {
   let processExitSpy: jest.SpyInstance;
   let mockInstall: jest.Mock;
+  let mockTryGetGitRepositoryRoot: jest.Mock;
+  let mockInstallDefaultSkills: jest.Mock;
+  let mockEnsureCliVersion: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -84,8 +136,25 @@ describe('installCommand', () => {
       .mockImplementation(() => undefined as never);
 
     mockInstall = jest.fn().mockResolvedValue(makeResult());
+    mockTryGetGitRepositoryRoot = jest.fn().mockResolvedValue(null);
+    mockInstallDefaultSkills = jest.fn().mockResolvedValue({
+      filesCreated: 0,
+      filesUpdated: 0,
+      errors: [],
+      skippedSkillsCount: 0,
+      skippedIncompatibleSkillNames: [],
+      incompatibleInstalledSkills: [],
+    });
+    mockEnsureCliVersion = jest.fn().mockResolvedValue({ kind: 'no-lockfile' });
     MockPackmindCliHexa.mockImplementation(
-      () => ({ install: mockInstall }) as unknown as PackmindCliHexa,
+      () =>
+        ({
+          install: mockInstall,
+          tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+          installDefaultSkills: mockInstallDefaultSkills,
+          getPackmindGateway: jest.fn().mockReturnValue({}),
+          ensureCliVersion: mockEnsureCliVersion,
+        }) as unknown as PackmindCliHexa,
     );
   });
 
@@ -148,11 +217,20 @@ describe('installCommand', () => {
     });
 
     describe('when the path is a valid directory', () => {
+      const appsDir = path.resolve(process.cwd(), 'apps/frontend');
+      const subProject = path.join(appsDir, 'sub-project');
+
       beforeEach(async () => {
-        mockFs.existsSync.mockReturnValue(true);
         mockFs.statSync.mockReturnValue({
           isDirectory: () => true,
         } as fs.Stats);
+        mockFs.existsSync.mockImplementation((p) => {
+          const s = String(p);
+          return s === appsDir || s === path.join(subProject, 'packmind.json');
+        });
+        mockFs.readdirSync.mockReturnValue([
+          makeDirent('sub-project'),
+        ] as unknown as string[]);
         await handler({
           installPath: 'apps/frontend',
           packages: [],
@@ -160,6 +238,10 @@ describe('installCommand', () => {
           show: '',
           status: false,
         });
+      });
+
+      afterEach(() => {
+        mockFs.readdirSync.mockReturnValue([]);
       });
 
       it('does not exit', () => {
@@ -177,7 +259,11 @@ describe('installCommand', () => {
 
     describe('when no path is provided', () => {
       beforeEach(async () => {
-        mockFs.existsSync.mockReturnValue(false);
+        const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+        mockFs.existsSync.mockImplementation(
+          (p) => String(p) === cwdPackmindJson,
+        );
+        mockFs.readdirSync.mockReturnValue([]);
         await handler({
           installPath: '',
           packages: [],
@@ -203,6 +289,13 @@ describe('installCommand', () => {
     beforeEach(() => {
       mockFs.existsSync.mockReturnValue(true);
       mockFs.statSync.mockReturnValue({ isDirectory: () => true } as fs.Stats);
+      mockFs.readdirSync.mockReturnValue([
+        makeDirent('sub-project'),
+      ] as unknown as string[]);
+    });
+
+    afterEach(() => {
+      mockFs.readdirSync.mockReturnValue([]);
     });
 
     describe('when there are missing access packages', () => {
@@ -502,5 +595,847 @@ describe('installCommand', () => {
         );
       });
     });
+  });
+
+  describe('installHandler output', () => {
+    beforeEach(() => {
+      mockFs.existsSync.mockReturnValue(false);
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    it('emits the capability warning before the summary line', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+          resolvedAgents: ['agents_md', 'packmind'],
+          sourceArtifacts: {
+            skillsCount: 3,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const warningIndex =
+        mockConsoleLogger.logWarningConsole.mock.calls.findIndex(([msg]) =>
+          msg.includes('could not be rendered'),
+        );
+      const summaryIndex = mockConsoleLogger.logConsole.mock.calls.findIndex(
+        ([msg]) => msg.includes('Created packmind.json'),
+      );
+      expect(warningIndex).toBeGreaterThanOrEqual(0);
+      expect(summaryIndex).toBeGreaterThanOrEqual(0);
+
+      const warningOrder =
+        mockConsoleLogger.logWarningConsole.mock.invocationCallOrder[
+          warningIndex
+        ];
+      const summaryOrder =
+        mockConsoleLogger.logConsole.mock.invocationCallOrder[summaryIndex];
+      expect(warningOrder).toBeLessThan(summaryOrder);
+    });
+
+    it('never emits "Nothing to install" when packages were added', async () => {
+      mockInstall.mockResolvedValue(
+        makeResult({
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+        }),
+      );
+
+      await handler({
+        installPath: '',
+        packages: ['@testing/cli-e2e'],
+        list: false,
+        show: '',
+        status: false,
+        skipInstalledAt: false,
+      });
+
+      const allLogged = [
+        ...mockConsoleLogger.logConsole.mock.calls,
+        ...mockConsoleLogger.logWarningConsole.mock.calls,
+      ]
+        .map(([msg]) => msg)
+        .join('\n');
+      expect(allLogged).not.toContain('Nothing to install');
+    });
+
+    describe("when bootstrap pre-populated packmind.json (Cedric's scenario)", () => {
+      beforeEach(async () => {
+        // Bootstrap auto-detected agents and wrote packmind.json with the
+        // CLI-supplied package — so install use case sees no diff.
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@testing/cli-e2e'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: [],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@testing/cli-e2e'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+      });
+
+      it('does not emit a misleading "Already up to date" summary', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain('Already up to date');
+      });
+
+      it('reports that packmind.json was created', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).toContain('Created packmind.json');
+      });
+
+      it('lists the package as added', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).toContain('@testing/cli-e2e');
+      });
+    });
+
+    describe('when bootstrap and install each add a different package', () => {
+      let allLogged: string;
+
+      beforeEach(async () => {
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@a/x'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: ['@b/y'],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@a/x', '@b/y'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+
+        allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+      });
+
+      it('includes the bootstrap-added package in the summary', () => {
+        expect(allLogged).toContain('@a/x');
+      });
+
+      it('includes the install-added package in the summary', () => {
+        expect(allLogged).toContain('@b/y');
+      });
+    });
+
+    describe('when bootstrap and install report the same package', () => {
+      let summaryLog: string;
+
+      beforeEach(async () => {
+        mockBootstrap.mockResolvedValueOnce({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: ['@a/x'],
+        });
+        mockInstall.mockResolvedValue(
+          makeResult({
+            configCreated: false,
+            packagesAdded: ['@a/x'],
+          }),
+        );
+
+        await handler({
+          installPath: '',
+          packages: ['@a/x'],
+          list: false,
+          show: '',
+          status: false,
+          skipInstalledAt: false,
+        });
+
+        summaryLog = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+      });
+
+      it('lists the package exactly once in the summary', () => {
+        const matches = summaryLog.match(/@a\/x/g) ?? [];
+        expect(matches).toHaveLength(1);
+      });
+    });
+  });
+
+  describe('default skills auto-install', () => {
+    const gitRoot = process.cwd();
+
+    beforeEach(() => {
+      mockFs.existsSync.mockImplementation((p) =>
+        String(p).endsWith('packmind.json'),
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    describe('when cwd is the git root', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('calls installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalledWith(
+          expect.objectContaining({ baseDirectory: gitRoot }),
+        );
+      });
+    });
+
+    describe('when cwd is not the git root', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue('/some/other/root');
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when not in a git repository', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(null);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when installDefaultSkills returns new files', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 3,
+          filesUpdated: 1,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('logs the file counts', () => {
+        expect(mockConsoleLogger.logConsole).toHaveBeenCalledWith(
+          expect.stringContaining('added 3 files'),
+        );
+      });
+    });
+
+    describe('when installDefaultSkills is a no-op (already up to date)', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not announce "Installing default skills..."', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain('Installing default skills');
+      });
+
+      it('does not print "Default skills are already up to date"', () => {
+        const allLogged = mockConsoleLogger.logConsole.mock.calls
+          .map(([msg]) => msg)
+          .join('\n');
+        expect(allLogged).not.toContain(
+          'Default skills are already up to date',
+        );
+      });
+    });
+
+    describe('when installDefaultSkills throws', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockRejectedValue(new Error('skills failed'));
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not exit with error', () => {
+        expect(processExitSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when installDefaultSkills is slow to resolve', () => {
+      let installDefaultSkillsResolved: boolean;
+      let handlerReturned: boolean;
+      let resolveInstallDefaultSkills: (value: unknown) => void;
+
+      beforeEach(async () => {
+        installDefaultSkillsResolved = false;
+        handlerReturned = false;
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              resolveInstallDefaultSkills = (value: unknown) => {
+                installDefaultSkillsResolved = true;
+                resolve(value);
+              };
+            }),
+        );
+
+        const handlerPromise = handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        }).then(() => {
+          handlerReturned = true;
+        });
+
+        // Drain the microtask queue so any non-awaited fire-and-forget call
+        // would have already resolved the handler. If the handler is properly
+        // awaiting installDefaultSkills, it should still be pending here.
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+
+        // At this point installDefaultSkills has been invoked but is still
+        // pending. If the handler were not awaiting it, handlerReturned would
+        // already be true.
+        expect(installDefaultSkillsResolved).toBe(false);
+        expect(handlerReturned).toBe(false);
+
+        resolveInstallDefaultSkills({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handlerPromise;
+      });
+
+      it('awaits installDefaultSkills before returning (no mid-flight return)', () => {
+        // The two flags must be set in this order: skills first, then handler.
+        // If the handler ran fire-and-forget, handlerReturned would be true
+        // before installDefaultSkillsResolved.
+        expect(installDefaultSkillsResolved).toBe(true);
+        expect(handlerReturned).toBe(true);
+      });
+    });
+
+    describe('on a fast-following second invocation', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        // First invocation installs default skills.
+        mockInstallDefaultSkills.mockResolvedValueOnce({
+          filesCreated: 5,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        // Second invocation: lockfile already merged, no new files.
+        mockInstallDefaultSkills.mockResolvedValueOnce({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('invokes installDefaultSkills on both invocations (lockfile merge is awaited each time)', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when no configured agent supports skills', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue({
+            packages: {},
+            agents: ['agents_md'],
+          }),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+
+      it('logs a warning explaining that configured agents do not support skills', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('do not support skills'),
+        );
+      });
+
+      it('includes the actionable hint pointing to packmind-cli config agents', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-cli config agents'),
+        );
+      });
+
+      it('lists the offending configured agent in the warning', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('agents_md'),
+        );
+      });
+    });
+
+    describe('when readConfig returns null', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue(null),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('does not call installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+      });
+
+      it('warns that no agents are configured', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('no coding agents are configured'),
+        );
+      });
+    });
+
+    describe('when configured agents are mixed and include a capable one', () => {
+      beforeEach(async () => {
+        MockedConfigFileRepository.mockImplementationOnce(() => ({
+          readConfig: jest.fn().mockResolvedValue({
+            packages: {},
+            agents: ['agents_md', 'claude'],
+          }),
+        }));
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('still calls installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalled();
+      });
+
+      it('does not log the no-capable-agent warning', () => {
+        expect(mockConsoleLogger.logWarningConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('do not support skills'),
+        );
+      });
+    });
+  });
+
+  describe('CLI version drift detection (ensureCliVersion)', () => {
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    it('calls ensureCliVersion exactly once with the running CLI version', async () => {
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockEnsureCliVersion).toHaveBeenCalledTimes(1);
+      expect(mockEnsureCliVersion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseDirectory: process.cwd(),
+          currentCliVersion: expect.any(String),
+          includeBeta: false,
+        }),
+      );
+    });
+
+    it('emits a warning when ensureCliVersion returns "older"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'older',
+        lockVersion: '99.0.0',
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls.map(
+        ([msg]) => msg,
+      );
+      const driftWarnings = warnings.filter((msg) =>
+        msg.includes('older than the version recorded in packmind-lock.json'),
+      );
+      expect(driftWarnings).toHaveLength(1);
+      expect(driftWarnings[0]).toContain('99.0.0');
+    });
+
+    it('emits an info line when ensureCliVersion returns "newer"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'newer',
+        lockVersion: '0.0.1',
+        upgraded: true,
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('CLI upgrade detected'),
+      );
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "match"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({ kind: 'match' });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "no-lockfile"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({ kind: 'no-lockfile' });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "no-cli-version-recorded"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'no-cli-version-recorded',
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('older than the version recorded'));
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('continues installing when ensureCliVersion throws', async () => {
+      mockEnsureCliVersion.mockRejectedValue(new Error('boom'));
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstall).toHaveBeenCalled();
+      expect(processExitSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('silent cleanup of obsolete default skills', () => {
+    const gitRoot = process.cwd();
+
+    beforeEach(() => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+      mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+    });
+
+    it('invokes the silent cleanup helper when default-skills reports obsolete skills', async () => {
+      const incompatibleInstalledSkills = [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: ['.packmind/skills/obsolete-skill.md'],
+        },
+      ];
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills,
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).toHaveBeenCalledWith(incompatibleInstalledSkills, gitRoot);
+    });
+
+    it('does not invoke the silent cleanup helper when no obsolete skills are reported', async () => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('cliVersion propagation', () => {
+    it('forwards the running CLI version to the install use case', async () => {
+      const cwdPackmindJson = path.join(process.cwd(), 'packmind.json');
+      mockFs.existsSync.mockImplementation(
+        (p) => String(p) === cwdPackmindJson,
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstall).toHaveBeenCalledWith(
+        expect.objectContaining({ cliVersion: expect.any(String) }),
+      );
+    });
+  });
+});
+
+describe('mergeInstallResults', () => {
+  it('ORs configCreated across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ configCreated: false }),
+      makeResult({ configCreated: true }),
+    ]);
+    expect(merged.configCreated).toBe(true);
+  });
+
+  it('deduplicates packagesAdded across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({ packagesAdded: ['@a/x'] }),
+      makeResult({ packagesAdded: ['@a/x', '@b/y'] }),
+    ]);
+    expect(merged.packagesAdded).toEqual(['@a/x', '@b/y']);
+  });
+
+  it('sums sourceArtifacts counts across results', () => {
+    const merged = mergeInstallResults([
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 1,
+          standardsCount: 2,
+          commandsCount: 0,
+          recipesCount: 0,
+        },
+      }),
+      makeResult({
+        sourceArtifacts: {
+          skillsCount: 3,
+          standardsCount: 0,
+          commandsCount: 1,
+          recipesCount: 0,
+        },
+      }),
+    ]);
+    expect(merged.sourceArtifacts).toEqual({
+      skillsCount: 4,
+      standardsCount: 2,
+      commandsCount: 1,
+      recipesCount: 0,
+    });
+  });
+
+  it('unions resolvedAgents across results (deduplicated)', () => {
+    const merged = mergeInstallResults([
+      makeResult({ resolvedAgents: ['claude'] }),
+      makeResult({ resolvedAgents: ['claude', 'cursor'] }),
+    ]);
+    expect(merged.resolvedAgents).toEqual(['claude', 'cursor']);
   });
 });

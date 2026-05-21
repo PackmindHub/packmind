@@ -7,7 +7,7 @@ testWithUserSignedUp.describe('Invitation Workflow', () => {
   testWithUserSignedUp(
     'admin invites a new user who successfully activates their account',
     async ({ dashboardPage, page }) => {
-      const invitedEmail = `invited-${uuidv4()}@example.com`;
+      const invitedEmail = `test-invited-${uuidv4()}@example.com`;
       const newUserPassword = uuidv4();
 
       // Navigate to settings / users

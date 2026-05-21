@@ -11,6 +11,7 @@ import {
   ISettingsPage,
   ISignUpPage,
   ISkillsPage,
+  ISpaceSettingsPage,
   IStandardsPage,
   IStartTrialAgentPage,
   IStartTrialAgentSelectorPage,
@@ -33,6 +34,7 @@ import { StartTrialPage } from './pages/StartTrialPage';
 import { StartTrialAgentSelectorPage } from './pages/StartTrialAgentSelectorPage';
 import { ClaudeStartTrialAgentPage } from './pages/ClaudeStartTrialAgentPage';
 import { ActivateAccountPage } from './pages/ActivateAccountPage';
+import { SpaceSettingsPage } from './pages/SpaceSettingsPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -110,6 +112,10 @@ export class PageFactory implements IPageFactory {
 
   async getActivateAccountPage(): Promise<IActivateAccountPage> {
     return this.getPageInstance(ActivateAccountPage);
+  }
+
+  async getSpaceSettingsPage(): Promise<ISpaceSettingsPage> {
+    return this.getPageInstance(SpaceSettingsPage);
   }
 
   private async getPageInstance<T extends IPackmindPage>(

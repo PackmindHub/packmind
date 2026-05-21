@@ -4,6 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "jsx": "react-jsx",
     "isolatedModules": true,
+    "esModuleInterop": true,
     "types": [
       "vite/client",
       "node",

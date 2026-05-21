@@ -1,0 +1,214 @@
+---
+title: 'Automate Repo Updates'
+---
+
+When standards, commands, or skills evolve on Packmind, your repositories don't pick up the changes on their own — someone has to run `packmind-cli install` to refresh the artifacts on disk. This page shows how to delegate that step to a scheduled CI/CD job: the job runs `packmind-cli install` on a cadence you choose and opens a pull/merge request whenever artifacts change, so your team reviews updates instead of remembering to fetch them.
+
+**Use this if** you maintain several repositories, or your playbook evolves often.
+**Manual `packmind-cli install` is fine if** a single maintainer touches the repo and updates are rare.
+
+## How it works
+
+<Steps>
+  <Step title="Scheduled trigger">
+    A cron-scheduled CI job runs in your repository (typically nightly).
+  </Step>
+  <Step title="Sync with Packmind">
+    The job runs `packmind-cli install`, which pulls the latest standards,
+    commands, and skills.
+  </Step>
+  <Step title="Open a PR/MR for review">
+    If anything changed, the job commits to a dedicated branch
+    (`packmind-cli-update`) and opens a pull/merge request targeting your
+    default branch. If nothing changed, the job exits silently. If a PR/MR
+    already exists for that branch, new changes are appended instead of
+    duplicating it.
+  </Step>
+</Steps>
+
+## Set up the workflow
+
+<Tabs>
+  <Tab title="GitHub">
+    Powered by the [`update-packmind-artifacts`](https://github.com/marketplace/actions/update-packmind-artifacts) Marketplace action.
+
+    ### Prerequisites
+
+    - A Packmind API key (Packmind → your profile → API keys)
+    - Repository admin rights to add a secret and a workflow
+
+    ### Add the workflow
+
+    Create `.github/workflows/nightly-packmind-update.yml`:
+
+    ```yaml
+    name: Nightly Packmind Artifacts Update
+
+    on:
+      schedule:
+        - cron: '0 2 * * 1-5' # Every weeknight at 02:00 UTC — adjust to your timezone
+      workflow_dispatch:
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    jobs:
+      update:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+          - uses: actions/checkout@v4
+            with:
+              ref: main # replace with your default branch if different
+              fetch-depth: 0 # required so the action can diff and commit
+          - uses: PackmindHub/update-packmind-artifacts@v1
+            with:
+              packmind-api-key: ${{ secrets.PACKMIND_API_KEY_V3 }}
+    ```
+
+    ### Configure the API key secret
+
+    In your repository: **Settings → Secrets and variables → Actions → New repository secret**.
+
+    | Secret name           | Value                                         |
+    | --------------------- | --------------------------------------------- |
+    | `PACKMIND_API_KEY_V3` | The API key from your Packmind user profile   |
+
+    <Note>The `_V3` suffix is the current API key format used by Packmind — keep the name as-is.</Note>
+
+    Common action inputs (branch name, PR title, target branch, Node version) are documented on the [Marketplace listing](https://github.com/marketplace/actions/update-packmind-artifacts).
+
+    ### Verify it works
+
+    Don't wait for the next scheduled run. Go to **Actions → Nightly Packmind Artifacts Update → Run workflow** and trigger it manually. Within a minute or two you should see either a new PR titled `chore(packmind): nightly artifacts update`, or a successful run with the message `No artifact changes`.
+
+  </Tab>
+
+  <Tab title="GitLab">
+    ### Prerequisites
+
+    - A Packmind API key (Packmind → your profile → API keys)
+    - Maintainer or Owner access to create a Project Access Token
+
+    ### Add the workflow
+
+    Place this file at the **root of your repository** as `.gitlab-ci.yml`. If you already have one, merge the `nightly-packmind-update` job into your existing `stages` and jobs.
+
+    ```yaml
+    stages:
+      - update
+
+    nightly-packmind-update:
+      stage: update
+      image: node:22.17.0
+      timeout: 15 minutes
+      variables:
+        GIT_DEPTH: 0 # full history required to commit and diff
+      rules:
+        - if: $CI_PIPELINE_SOURCE == "web"      # manual "Run pipeline"
+        - if: $CI_PIPELINE_SOURCE == "schedule" # cron schedule
+      script:
+        - git config user.name "packmind-bot"
+        - git config user.email "packmind-bot@users.noreply.gitlab.com"
+        - git remote set-url origin "https://oauth2:${PACKMIND_BOT_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+        - |
+          if git ls-remote --exit-code --heads origin packmind-cli-update; then
+            git fetch origin packmind-cli-update
+            git checkout packmind-cli-update
+            git merge --no-edit origin/main || true
+          else
+            git checkout -b packmind-cli-update
+          fi
+        - npm install -g @packmind/cli
+        - packmind-cli install
+        - |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No artifact changes — skipping commit/push."
+            exit 0
+          fi
+        - git add -A
+        - 'git commit -m "chore(packmind): nightly artifacts update"'
+        - |
+          git push origin packmind-cli-update \
+            -o merge_request.create \
+            -o merge_request.target=${CI_DEFAULT_BRANCH} \
+            -o merge_request.title="chore(packmind): nightly artifacts update"
+    ```
+
+    The reference template is also available in the [Packmind repository](https://github.com/PackmindHub/packmind/blob/main/auto-update/.gitlab-ci.yml).
+
+    ### Configure the CI variables
+
+    In **Settings → CI/CD → Variables**, add both variables and mark them as **Masked**:
+
+    | Variable              | Value                                                                                    |
+    | --------------------- | ---------------------------------------------------------------------------------------- |
+    | `PACKMIND_API_KEY_V3` | The API key from your Packmind user profile                                              |
+    | `PACKMIND_BOT_TOKEN`  | A Project Access Token with `write_repository` and `api` scopes, role ≥ Developer       |
+
+    To create the token: **Settings → Access Tokens → Add new token** with scopes `write_repository` and `api`.
+
+    <Note>The `_V3` suffix is the current API key format used by Packmind — keep the name as-is.</Note>
+
+    ### Schedule the job
+
+    In **Settings → CI/CD → Pipeline schedules → Add new schedule**, set:
+    - **Interval pattern**: `0 2 * * 1-5` (weeknights at 02:00 UTC — adjust to your timezone)
+    - **Target branch**: your default branch
+
+    ### Verify it works
+
+    Don't wait for the schedule. Go to **Build → Pipelines → Run pipeline**, select your default branch and click **Run pipeline**. Within a couple of minutes you should see either a new merge request titled `chore(packmind): nightly artifacts update`, or job logs ending with `No artifact changes — skipping commit/push.`
+
+  </Tab>
+</Tabs>
+
+## Choose a schedule
+
+The example uses `0 2 * * 1-5` — every weeknight at 02:00 UTC (03:00 Paris in winter, 04:00 Paris in summer, 21:00 New York the previous day). Adjust the cron expression to land outside your team's working hours so PRs are waiting when people come online.
+
+**How often?** Nightly fits most teams. Run hourly only if your playbook changes multiple times a day; running more frequently than your playbook evolves just creates noise.
+
+## Security considerations
+
+<Warning>
+  The job has write access to your repository and uses an API key tied to your
+  Packmind account. Treat both with care.
+</Warning>
+
+- Always store the API key and bot token as CI/CD secrets — never commit them.
+- Where possible, generate the Packmind API key from a dedicated service account rather than a personal account, so reviews and audits stay clean if people leave the team.
+- On GitLab, scope the Project Access Token to the minimum role (Developer) and rotate it periodically.
+- The opened PR/MR is reviewed by a human — keep that step in your branch protection rules so artifact changes don't auto-merge.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The job ran but no PR/MR was created">
+    Either no artifacts changed (check the logs for `No artifact changes`), or the job lacked write permissions. On GitHub, verify the `permissions:` block includes `contents: write` and `pull-requests: write`. On GitLab, verify the Project Access Token has `write_repository` and `api` scopes and a role of at least Developer.
+  </Accordion>
+
+<Accordion title="Authentication error from packmind-cli">
+  The API key is missing, mistyped, or revoked. Regenerate it from your Packmind
+  profile and update the `PACKMIND_API_KEY_V3` secret. Make sure the variable
+  name matches exactly — including the `_V3` suffix.
+</Accordion>
+
+<Accordion title="The PR/MR exists but doesn't reflect the latest changes">
+  The `packmind-cli-update` branch may have been edited manually, or merged into
+  the default branch without closing the PR. Close the existing PR/MR, delete
+  the `packmind-cli-update` branch, and re-run the job — it will recreate the
+  branch from your default branch.
+</Accordion>
+
+  <Accordion title="Default branch isn't main">
+    The GitHub example pins `ref: main` in the checkout step. Replace it with the name of your default branch. On GitLab, `CI_DEFAULT_BRANCH` is auto-detected, so no change is needed.
+  </Accordion>
+</AccordionGroup>
+
+## Related documentation
+
+- [Distribution](/governance/distribution) — Distribute artifacts to your team manually or via CLI
+- [Updating Your Playbook](/playbook-maintenance/updating-your-playbook) — Other ways to update artifacts
+- [CLI Reference](/tools/cli) — Full reference for `packmind-cli install` and other commands

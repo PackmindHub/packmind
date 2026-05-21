@@ -4,6 +4,7 @@ import {
   FileModification,
   PackmindLockFile,
   PackmindLockFileEntry,
+  PackmindLockFileEntrySource,
   PackmindLockFileFile,
   RecipeVersion,
   SkillVersion,
@@ -36,6 +37,7 @@ export class PackmindLockFileService {
     targetId?: string;
     artifactSpaceIds: Record<string, string>;
     artifactPackageIds: Record<string, string[]>;
+    includeInstalledAt?: boolean;
   }): PackmindLockFile {
     const versionLookup = this.buildVersionLookup(
       params.recipeVersions,
@@ -81,7 +83,8 @@ export class PackmindLockFileService {
         continue;
       }
 
-      const artifactKey = `${versionInfo.type}:${versionInfo.slug}`;
+      const source: PackmindLockFileEntrySource = file.source ?? 'user';
+      const artifactKey = `${source}:${versionInfo.type}:${versionInfo.slug}`;
 
       const lockFileFile: PackmindLockFileFile = {
         path: file.path,
@@ -101,6 +104,7 @@ export class PackmindLockFileService {
             version: versionInfo.version,
             spaceId: params.artifactSpaceIds[file.artifactId] ?? '',
             packageIds: params.artifactPackageIds[file.artifactId] ?? [],
+            source,
           },
           files: [lockFileFile],
         });
@@ -110,19 +114,26 @@ export class PackmindLockFileService {
       }
     }
 
+    const sortedKeys = [...artifactMap.keys()].sort((a, b) =>
+      a.localeCompare(b),
+    );
     const artifacts: Record<string, PackmindLockFileEntry> = {};
-    for (const [key, value] of artifactMap) {
+    for (const key of sortedKeys) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- key comes from artifactMap.keys()
+      const value = artifactMap.get(key)!;
       artifacts[key] = {
         ...value.entry,
-        files: value.files,
+        files: [...value.files].sort((a, b) => a.path.localeCompare(b.path)),
       };
     }
 
     return {
-      lockfileVersion: 1,
+      lockfileVersion: 2,
       packageSlugs: [...params.packageSlugs].sort((a, b) => a.localeCompare(b)),
       agents: [...params.codingAgents].sort((a, b) => a.localeCompare(b)),
-      installedAt: new Date().toISOString(),
+      ...(params.includeInstalledAt !== false
+        ? { installedAt: new Date().toISOString() }
+        : {}),
       targetId: params.targetId,
       artifacts,
     };
@@ -165,10 +176,17 @@ export class PackmindLockFileService {
       ...(existingLockFile.packageSlugs ?? []),
     ]);
 
+    const sortedArtifacts: Record<string, PackmindLockFileEntry> = {};
+    for (const key of Object.keys(mergedArtifacts).sort((a, b) =>
+      a.localeCompare(b),
+    )) {
+      sortedArtifacts[key] = mergedArtifacts[key];
+    }
+
     return {
       ...newLockFile,
       packageSlugs: [...allPackageSlugs].sort((a, b) => a.localeCompare(b)),
-      artifacts: mergedArtifacts,
+      artifacts: sortedArtifacts,
     };
   }
 

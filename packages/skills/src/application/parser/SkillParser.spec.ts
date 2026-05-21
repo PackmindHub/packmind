@@ -176,6 +176,76 @@ hooks:
       });
     });
 
+    it('extracts when_to_use (underscore) into whenToUse', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+when_to_use: Use when debugging TypeScript errors.
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        whenToUse: 'Use when debugging TypeScript errors.',
+      });
+    });
+
+    it('extracts paths as a YAML list', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+paths:
+  - src/**/*.ts
+  - test/**/*.spec.ts
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        paths: ['src/**/*.ts', 'test/**/*.spec.ts'],
+      });
+    });
+
+    it('extracts paths as a comma-separated string', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+paths: src/**/*.ts, test/**/*.spec.ts
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        paths: 'src/**/*.ts, test/**/*.spec.ts',
+      });
+    });
+
+    it('extracts shell into additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+shell: powershell
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        shell: 'powershell',
+      });
+    });
+
     describe('when no Claude fields are present', () => {
       it('does not include additionalProperties', () => {
         const content = `---

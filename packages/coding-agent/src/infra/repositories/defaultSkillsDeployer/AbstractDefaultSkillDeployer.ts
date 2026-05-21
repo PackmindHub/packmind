@@ -21,6 +21,28 @@ export abstract class AbstractDefaultSkillDeployer implements ISkillDeployer {
   protected abstract unsupportedFromVersion: SemVer | null;
   abstract slug: string;
 
+  /**
+   * Human-readable name for the deployed default skill. Subclasses must
+   * provide a stable string (typically the `SkillMD.title` they ship).
+   *
+   * Consumed by `DefaultSkillsMetadataEnricher` to stamp `artifactName` on
+   * the deployer's `FileModification[]` so lockfile entries carry a useful
+   * label.
+   */
+  abstract readonly name: string;
+
+  /**
+   * Numeric version for the deployed default skill. Default skills are
+   * code-defined (not DB-persisted), so this is a stable marker rather than
+   * a monotonic version counter — subclasses bump it when the skill's
+   * content evolves in a way that downstream tooling should observe.
+   *
+   * Defaults to `1`. Consumed by `DefaultSkillsMetadataEnricher` to stamp
+   * `artifactVersion` on the deployer's `FileModification[]` so lockfile
+   * entries match the shape of user/package artifact entries.
+   */
+  readonly version: number = 1;
+
   protected getSkillMd(agentName: string, skill: SkillMD) {
     return `${this.getFrontMatter(skill, agentName)}
 
@@ -31,6 +53,10 @@ ${this.injectVersionsPrompt(skill.versions)}${skill.getPrompt(agentName)}
 
   isBetaSkill(): boolean {
     return this.minimumVersion === 'unreleased';
+  }
+
+  isDeprecated(): boolean {
+    return this.unsupportedFromVersion !== null;
   }
 
   isSupportedByCliVersion(cliVersion: string | undefined): boolean {

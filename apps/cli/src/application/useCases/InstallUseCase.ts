@@ -44,12 +44,24 @@ export class InstallUseCase implements IInstallUseCase {
       skillsRemoved: 0,
       skillDirectoriesDeleted: 0,
       missingAccess: [],
+      configCreated: false,
+      packagesAdded: [],
+      sourceArtifacts: {
+        skillsCount: 0,
+        standardsCount: 0,
+        commandsCount: 0,
+        recipesCount: 0,
+      },
+      resolvedAgents: [],
     };
 
     const hasExplicitPackages = command.packages && command.packages.length > 0;
 
+    const configExistedBefore =
+      await this.configFileRepository.configExists(baseDirectory);
     const lockFile = await this.lockFileRepository.read(baseDirectory);
     const config = await this.configFileRepository.readConfig(baseDirectory);
+    const slugsBefore = new Set(Object.keys(config?.packages ?? {}));
 
     if (!config && !hasExplicitPackages) {
       const configFileExists =
@@ -68,9 +80,13 @@ export class InstallUseCase implements IInstallUseCase {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: new Date().toISOString(),
       artifacts: {},
+      ...(command.skipInstalledAt
+        ? {}
+        : { installedAt: new Date().toISOString() }),
     };
+
+    effectiveLockFile.cliVersion = command.cliVersion;
 
     let packagesSlugs: string[];
     let normalizedPackages: string[] = [];
@@ -93,6 +109,13 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     if (packagesSlugs.length === 0) {
+      // TODO(downstream-safe-cleanup-sprint): this branch unconditionally
+      // deletes every artifact referenced in the lockfile, but the v2 schema
+      // now allows `source: 'user'` user-authored skills and `source: 'default'`
+      // default skills to live alongside package-installed entries. Filter by
+      // `source` (and, when available, package ownership) before deleting.
+      // See tmp/feature-specs/default-skills-lockfile-tracking/implementation-plan.md
+      // → "Known issues for the downstream safe-cleanup sprint".
       try {
         for (const entry of Object.values(effectiveLockFile.artifacts)) {
           for (const file of entry.files) {
@@ -114,6 +137,8 @@ export class InstallUseCase implements IInstallUseCase {
     });
 
     result.missingAccess = response.missingAccess;
+    result.resolvedAgents = response.resolvedAgents;
+    result.sourceArtifacts = response.sourceArtifacts;
 
     if (result.missingAccess.length > 0) {
       result.joinSpaceUrl = await this.computeJoinSpaceUrl(
@@ -122,9 +147,18 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     // Filter out packmind.json from server response - config writing is handled separately
-    // by the CLI to preserve property order
+    // by the CLI to preserve property order.
+    // Filter out packmind-lock.json — it is written below via the lockfile
+    // port so we can inject cliVersion.
     const filteredCreateOrUpdate = response.fileUpdates.createOrUpdate.filter(
-      (file) => file.path !== 'packmind.json',
+      (file) =>
+        file.path !== 'packmind.json' && file.path !== 'packmind-lock.json',
+    );
+
+    // Capture the server's lockfile content (if returned) so we can merge it
+    // with the running CLI version before persisting via the port.
+    const serverLockFile = response.fileUpdates.createOrUpdate.find(
+      (file) => file.path === 'packmind-lock.json',
     );
 
     // Deduplicate files by path
@@ -241,11 +275,45 @@ export class InstallUseCase implements IInstallUseCase {
       result.errors.push(`Failed to install packages: ${errorMsg}`);
     }
 
+    // Persist the lockfile through the port so we can inject the running CLI
+    // version. Prefer the server's lockfile content as the base (it reflects
+    // the latest artifact state after install); fall back to the in-memory
+    // `effectiveLockFile` when the server did not return one.
+    try {
+      let lockFileToPersist = effectiveLockFile;
+      if (serverLockFile?.content) {
+        try {
+          lockFileToPersist = JSON.parse(serverLockFile.content);
+        } catch {
+          // Fall back to in-memory lockfile if the server payload was malformed.
+        }
+      }
+
+      if (command.skipInstalledAt) {
+        delete (lockFileToPersist as { installedAt?: string }).installedAt;
+      }
+
+      lockFileToPersist.cliVersion = command.cliVersion;
+
+      await this.lockFileRepository.write(baseDirectory, lockFileToPersist);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to write packmind-lock.json: ${errorMsg}`);
+    }
+
     if (normalizedPackages.length > 0) {
       await this.configFileRepository.addPackagesToConfig(
         baseDirectory,
         normalizedPackages,
       );
+
+      const configAfter =
+        await this.configFileRepository.readConfig(baseDirectory);
+      const slugsAfter = new Set(Object.keys(configAfter?.packages ?? {}));
+      result.packagesAdded = [...slugsAfter].filter(
+        (slug) => !slugsBefore.has(slug),
+      );
+      result.configCreated = !configExistedBefore && slugsAfter.size > 0;
     }
 
     return result;

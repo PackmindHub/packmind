@@ -8,6 +8,10 @@ jest.mock('@sentry/react', () => ({
   captureException: jest.fn(),
 }));
 
+jest.mock('@packmind/assets', () => ({
+  logoPackmindText: 'logo-packmind-text',
+}));
+
 // Test component that throws an error
 const ThrowError = ({ shouldThrow = true }: { shouldThrow?: boolean }) => {
   if (shouldThrow) {

@@ -78,6 +78,7 @@ export class UserService {
       const user: User = {
         id,
         email,
+        displayName: null,
         passwordHash,
         active: true,
         memberships: [membership],
@@ -122,6 +123,7 @@ export class UserService {
     const newUser: User = {
       id: createUserId(uuidv4()),
       email: normalizedEmail,
+      displayName: null,
       passwordHash: null,
       active: false,
       memberships: [],
@@ -208,6 +210,7 @@ export class UserService {
     const newUser: User = {
       id: createUserId(uuidv4()),
       email: normalizedEmail,
+      displayName: null,
       passwordHash: null,
       active: true,
       memberships: [],

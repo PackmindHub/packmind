@@ -2,16 +2,51 @@
 
 ## Added
 
+- Add a "Distribute all" button on the space deployment overview to redistribute all outdated packages in one batch action
+- Show the last distribution status and date for each package on the space deployment overview
+
+## Changed
+
+## Fixed
+
+- Skill descriptions longer than 1024 characters are now rejected with a clear 400 error on the playbook accept path instead of failing with a generic server error
+
+## Removed
+
+# [1.14.0] - 2026-05-06
+
+## Added
+
+- Support new Claude Code skill frontmatter fields: `when_to_use`, `paths`, and `shell` (validated to `bash` or `powershell`)
+- Added `--skip-installed-at` flag on `install` command to avoid merge issues when working with multiple branches.
+- Space admins can now configure space identity (name and color) from the space general settings page - Enterprise version only
+- Org admins can manage all spaces from a dedicated management page with search, filters, and per-space drawer - Enterprise version only
+
+## Changed
+
+- Default skill set reduced from 4 to 2: `packmind-create-package` and `packmind-cli-list-commands` are deprecated and removed from the setup page. Package creation is handled by `packmind-onboard`; artifact discovery is handled directly by the CLI (`packmind-cli packages list`, `standards list`, `commands list`, `skills list`).
+
+## Fixed
+
+- Make the skill files tree scrollable on skill details page
+
+# [1.13.1] - 2026-04-15
+
+## Fixed
+
+- Fix issue with feature-flag that prevented users to create new space
+
+# [1.13.0] - 2026-04-15
+
+## Added
+
 - Support OpenCode as a new AI coding agent: standards rendered in `AGENTS.md`, commands and skills deployed to `.opencode/commands/` and `.opencode/skills/`
 - Support Codex as a new AI coding agent: standards rendered in `AGENTS.md`, skills deployed to `.agents/skills/`
+- Introduce spaces to organize artifacts and packages in an organization - Enterprise version only
 
 ## Changed
 
 - Updated `packmind-playbook-update` skill to support the new `playbook` commands of the cli
-
-## Fixed
-
-## Removed
 
 # [1.12.0] - 2026-03-25
 
@@ -269,7 +304,10 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...HEAD
+[1.14.0]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...release/1.14.0
+[1.13.1]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...release/1.13.1
+[1.13.0]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...release/1.13.0
 [1.12.0]: https://github.com/PackmindHub/packmind/compare/release/1.11.1...release/1.12.0
 [1.11.1]: https://github.com/PackmindHub/packmind/compare/release/1.11.0...release/1.11.1
 [1.11.0]: https://github.com/PackmindHub/packmind/compare/release/1.10.0...release/1.11.0

@@ -36,3 +36,4 @@ testWithApi.describe('My super feature', () => {
 
 * Data which are not relevant to the test itself should be created using API
 * Always use the fixtures (testWithApi, testWithUser...) instead of the default `test` of Playwright
+* Specify "testWithApi.use({ underFeatureFlag: true });" in the test file is the tested feature is under a feature flag.

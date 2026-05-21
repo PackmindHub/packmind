@@ -10,6 +10,7 @@ export * from './PMEmptyState/PMEmptyState';
 export { PMBadge } from './PMBadge/PMBadge';
 export type { BadgeProps as PMBadgeProps } from './PMBadge/PMBadge';
 export { PMAvatar } from './PMAvatar/PMAvatar';
+export { PMAvatarGroup } from './PMAvatar/PMAvatarGroup';
 export { PMBreadcrumb } from './PMBreadcrumb/PMBreadcrumb';
 export { PMDrawer } from './PMDrawer/PMDrawer';
 export { PMCloseButton } from './PMCloseButton/PMCloseButton';

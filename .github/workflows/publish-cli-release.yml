@@ -84,7 +84,11 @@ jobs:
           
           if [ -f "$EXECUTABLE" ]; then
             cp "$EXECUTABLE" "$SIGNED_EXECUTABLE"
-            
+
+            # Bun 1.2+ embeds an ad-hoc signature in compiled executables.
+            # Strip it first so codesign can apply our Developer ID signature.
+            codesign --remove-signature "$SIGNED_EXECUTABLE"
+
             codesign \
               --entitlements apps/cli/entitlements.plist \
               --deep \

@@ -39,7 +39,8 @@ Example output format to show the user:
 | \`packmind-cli standards list\` | List coding standards |
 | \`packmind-cli commands list\` | List reusable commands |
 | \`packmind-cli skills list\` | List available skills |
-| \`packmind-cli install --list\` | List available packages |
+| \`packmind-cli packages list\` | List available packages |
+| \`packmind-cli packages show <package-slug>\` | Show content of a package |
 
 ## Prerequisites
 

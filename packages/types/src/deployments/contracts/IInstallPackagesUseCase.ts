@@ -16,6 +16,12 @@ export type InstallPackagesResponse = {
   missingAccess: string[];
   skillFolders: string[];
   targetId?: string;
+  sourceArtifacts: {
+    skillsCount: number;
+    standardsCount: number;
+    commandsCount: number;
+    recipesCount: number;
+  };
 };
 
 export type IInstallPackagesUseCase = IUseCase<

@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import {
   PMBox,
   PMButton,
@@ -13,7 +13,7 @@ import {
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_COMMAND_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
-import { LuBot, LuPencilLine } from 'react-icons/lu';
+import { LuBot, LuPencilLine, LuPlug } from 'react-icons/lu';
 import { RecipesExampleDialog } from './RecipesExampleDialog';
 
 interface RecipesBlankStateProps {
@@ -25,6 +25,7 @@ export const RecipesBlankState = ({
   orgSlug,
   spaceSlug,
 }: RecipesBlankStateProps) => {
+  const navigate = useNavigate();
   return (
     <PMBox
       borderRadius={'md'}
@@ -44,7 +45,44 @@ export const RecipesBlankState = ({
       <RecipesExampleDialog />
 
       <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
-        <PMGrid gridTemplateColumns={'repeat(2, 1fr)'} gap={4} width={'full'}>
+        <PMGrid gridTemplateColumns={'repeat(3, 1fr)'} gap={4} width={'full'}>
+          {/* Browse use cases */}
+          <PMGridItem>
+            <PMBox
+              backgroundColor={'background.primary'}
+              borderRadius={'md'}
+              p={6}
+              display={'flex'}
+              flexDirection={'column'}
+              gap={4}
+              height={'full'}
+              border={'solid 1px'}
+              borderColor={'border.tertiary'}
+            >
+              <PMBox>
+                <PMHStack mb={2}>
+                  <PMIcon color={'green.200'} size={'lg'}>
+                    <LuPlug />
+                  </PMIcon>
+                  <PMHeading level="h5" fontWeight={'bold'}>
+                    Browse use cases
+                  </PMHeading>
+                </PMHStack>
+                <PMBox fontSize={'sm'} color={'text.secondary'}>
+                  Auto-populate your playbook from GitHub, Slack, Jira and more
+                </PMBox>
+              </PMBox>
+              <PMButton
+                variant="tertiary"
+                size={'xs'}
+                onClick={() => navigate(routes.org.toSetupUseCases(orgSlug))}
+                marginTop={'auto'}
+                w={'fit-content'}
+              >
+                Browse
+              </PMButton>
+            </PMBox>
+          </PMGridItem>
           {/* Generate from your code */}
           <PMGridItem>
             <PMBox

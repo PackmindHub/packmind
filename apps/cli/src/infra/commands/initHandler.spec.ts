@@ -1,17 +1,20 @@
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import {
+  EnsureCliVersionFunction,
   initHandler,
   InitHandlerDependencies,
   InstallDefaultSkillsFunction,
 } from './initHandler';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as configAgentsHandlerModule from './config/configAgentsHandler';
+import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
   logConsole: jest.fn(),
   formatCommand: jest.fn((text: string) => `[CMD:${text}]`),
 }));
@@ -20,21 +23,32 @@ jest.mock('./config/configAgentsHandler', () => ({
   configAgentsHandler: jest.fn(),
 }));
 
+jest.mock('./skills/incompatibleSkillsHandler', () => ({
+  handleIncompatibleInstalledSkillsSilently: jest.fn(),
+}));
+
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 const mockConfigAgentsHandler =
   configAgentsHandlerModule.configAgentsHandler as jest.MockedFunction<
     typeof configAgentsHandlerModule.configAgentsHandler
   >;
+const mockIncompatibleSkillsHandler = incompatibleSkillsHandler as jest.Mocked<
+  typeof incompatibleSkillsHandler
+>;
 
 describe('initHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockAgentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
   let mockInstallDefaultSkills: jest.MockedFunction<InstallDefaultSkillsFunction>;
+  let mockEnsureCliVersion: jest.MockedFunction<EnsureCliVersionFunction>;
   let deps: InitHandlerDependencies;
 
   beforeEach(() => {
     mockConfigRepository = {
-      readConfig: jest.fn(),
+      readConfig: jest.fn().mockResolvedValue({
+        packages: {},
+        agents: ['claude'],
+      }),
       writeConfig: jest.fn(),
       configExists: jest.fn(),
       addPackagesToConfig: jest.fn(),
@@ -50,6 +64,7 @@ describe('initHandler', () => {
     } as unknown as jest.Mocked<IAgentArtifactDetectionService>;
 
     mockInstallDefaultSkills = jest.fn();
+    mockEnsureCliVersion = jest.fn().mockResolvedValue({ kind: 'no-lockfile' });
 
     deps = {
       configRepository: mockConfigRepository,
@@ -57,6 +72,7 @@ describe('initHandler', () => {
       packmindGateway: createMockPackmindGateway(),
       baseDirectory: '/project',
       installDefaultSkills: mockInstallDefaultSkills,
+      ensureCliVersion: mockEnsureCliVersion,
       cliVersion: '1.2.3',
       isTTY: true,
     };
@@ -75,6 +91,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -120,6 +138,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -151,6 +171,8 @@ describe('initHandler', () => {
         filesUpdated: 2,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       result = await initHandler(deps);
@@ -208,6 +230,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -233,6 +257,8 @@ describe('initHandler', () => {
         filesUpdated: 4,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -260,6 +286,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       result = await initHandler(deps);
@@ -311,6 +339,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: skillErrors,
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       result = await initHandler(deps);
@@ -351,6 +381,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -373,6 +405,8 @@ describe('initHandler', () => {
         filesUpdated: 0,
         errors: [],
         skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
       });
 
       await initHandler(deps);
@@ -384,6 +418,292 @@ describe('initHandler', () => {
           isTTY: undefined,
         }),
       );
+    });
+  });
+
+  describe('when configured agents do not support skills', () => {
+    let result: { success: boolean; errors: string[] };
+
+    beforeEach(async () => {
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['agents_md'],
+      });
+
+      result = await initHandler(deps);
+    });
+
+    it('does not call installDefaultSkills', () => {
+      expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+    });
+
+    it('does not display "Installing default skills..."', () => {
+      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
+        'Installing default skills...',
+      );
+    });
+
+    it('does not display "Default skills are already up to date."', () => {
+      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
+        'Default skills are already up to date.',
+      );
+    });
+
+    it('logs a warning explaining the configured agents do not support skills', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('do not support skills'),
+      );
+    });
+
+    it('lists the offending configured agent in the warning', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('agents_md'),
+      );
+    });
+
+    it('includes the actionable hint pointing to packmind-cli config agents', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('packmind-cli config agents'),
+      );
+    });
+
+    it('still displays "Packmind initialized successfully!"', () => {
+      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+        'Packmind initialized successfully!',
+      );
+    });
+
+    it('returns success true', () => {
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('when no agents are configured at all', () => {
+    beforeEach(async () => {
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+      });
+
+      await initHandler(deps);
+    });
+
+    it('does not call installDefaultSkills', () => {
+      expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+    });
+
+    it('logs a warning specific to having zero configured agents', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('no coding agents are configured'),
+      );
+    });
+  });
+
+  describe('when readConfig returns null', () => {
+    beforeEach(async () => {
+      mockConfigRepository.readConfig.mockResolvedValue(null);
+
+      await initHandler(deps);
+    });
+
+    it('does not call installDefaultSkills', () => {
+      expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
+    });
+
+    it('warns that no agents are configured', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        expect.stringContaining('no coding agents are configured'),
+      );
+    });
+  });
+
+  describe('when configured agents are mixed and include a capable one', () => {
+    beforeEach(async () => {
+      mockConfigRepository.readConfig.mockResolvedValue({
+        packages: {},
+        agents: ['agents_md', 'claude'],
+      });
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+      });
+
+      await initHandler(deps);
+    });
+
+    it('still calls installDefaultSkills', () => {
+      expect(mockInstallDefaultSkills).toHaveBeenCalled();
+    });
+
+    it('does not log the no-capable-agent warning', () => {
+      expect(mockConsoleLogger.logWarningConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('do not support skills'),
+      );
+    });
+  });
+
+  describe('when showOnboardHint is false', () => {
+    beforeEach(async () => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 1,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+
+      await initHandler({ ...deps, showOnboardHint: false });
+    });
+
+    it('still displays "Packmind initialized successfully!"', () => {
+      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+        'Packmind initialized successfully!',
+      );
+    });
+
+    it('does not display the /packmind-onboard hint', () => {
+      expect(mockConsoleLogger.logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('/packmind-onboard'),
+      );
+    });
+  });
+
+  describe('CLI version drift detection (ensureCliVersion)', () => {
+    beforeEach(() => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+    });
+
+    it('calls ensureCliVersion exactly once with the running CLI version', async () => {
+      await initHandler(deps);
+
+      expect(mockEnsureCliVersion).toHaveBeenCalledTimes(1);
+      expect(mockEnsureCliVersion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseDirectory: '/project',
+          currentCliVersion: '1.2.3',
+          includeBeta: false,
+        }),
+      );
+    });
+
+    it('emits a warning when ensureCliVersion returns "older"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'older',
+        lockVersion: '99.0.0',
+      });
+
+      await initHandler(deps);
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls.map(
+        ([msg]) => msg,
+      );
+      const driftWarnings = warnings.filter((msg: string) =>
+        msg.includes('older than the version recorded in packmind-lock.json'),
+      );
+      expect(driftWarnings).toHaveLength(1);
+      expect(driftWarnings[0]).toContain('99.0.0');
+    });
+
+    it('emits an info line when ensureCliVersion returns "newer"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({
+        kind: 'newer',
+        lockVersion: '0.0.1',
+        upgraded: true,
+      });
+
+      await initHandler(deps);
+
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('CLI upgrade detected'),
+      );
+    });
+
+    it('emits no drift-related output when ensureCliVersion returns "match"', async () => {
+      mockEnsureCliVersion.mockResolvedValue({ kind: 'match' });
+
+      await initHandler(deps);
+
+      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg: string) =>
+          msg.includes('older than the version recorded'),
+        );
+      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+        .map(([msg]) => msg)
+        .filter((msg: string) => msg.includes('CLI upgrade detected'));
+      expect(warnings).toHaveLength(0);
+      expect(upgradeInfos).toHaveLength(0);
+    });
+
+    it('continues init when ensureCliVersion throws', async () => {
+      mockEnsureCliVersion.mockRejectedValue(new Error('boom'));
+
+      const result = await initHandler(deps);
+
+      expect(result.success).toBe(true);
+      expect(mockInstallDefaultSkills).toHaveBeenCalled();
+    });
+
+    it('skips ensureCliVersion when no dependency is provided', async () => {
+      const depsWithoutEnsure: InitHandlerDependencies = {
+        ...deps,
+        ensureCliVersion: undefined,
+      };
+
+      await initHandler(depsWithoutEnsure);
+
+      expect(mockEnsureCliVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('silent cleanup of obsolete default skills', () => {
+    it('invokes the silent cleanup helper when default-skills reports obsolete skills', async () => {
+      const incompatibleInstalledSkills = [
+        {
+          skillName: 'obsolete-skill',
+          filePaths: ['.packmind/skills/obsolete-skill.md'],
+        },
+      ];
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills,
+      });
+
+      await initHandler(deps);
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).toHaveBeenCalledWith(incompatibleInstalledSkills, '/project');
+    });
+
+    it('does not invoke the silent cleanup helper when none are reported', async () => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+
+      await initHandler(deps);
+
+      expect(
+        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+      ).not.toHaveBeenCalled();
     });
   });
 });

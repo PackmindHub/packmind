@@ -35,6 +35,7 @@ const createMockDeployer = (
     deployDefaultSkills: jest.fn().mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skippedSkillsCount: 0,
+      deployedSkills: [],
     }),
     getSkillsFolderPath: jest.fn(),
     ...overrides,
@@ -70,6 +71,7 @@ describe('DeployDefaultSkillsUseCase', () => {
   let command: DeployDefaultSkillsCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
+  let logger: ReturnType<typeof stubLogger>;
 
   beforeEach(() => {
     renderModeConfigurationService = {
@@ -111,11 +113,12 @@ describe('DeployDefaultSkillsUseCase', () => {
       createUserWithMembership(command.userId, organization, 'member'),
     );
 
+    logger = stubLogger();
     useCase = new DeployDefaultSkillsUseCase(
       renderModeConfigurationService,
       codingAgentPort,
       accountsPort as unknown as IAccountsPort,
-      stubLogger(),
+      logger,
     );
   });
 
@@ -145,6 +148,10 @@ describe('DeployDefaultSkillsUseCase', () => {
       expect(result.skippedSkillsCount).toBe(0);
     });
 
+    it('returns an empty lockFileSlice', () => {
+      expect(result.lockFileSlice).toEqual({});
+    });
+
     it('calls resolveActiveCodingAgents with organization id', () => {
       expect(
         renderModeConfigurationService.resolveActiveCodingAgents,
@@ -163,11 +170,11 @@ describe('DeployDefaultSkillsUseCase', () => {
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
           {
-            path: '.claude/skills/packmind/skill-creator/SKILL.md',
+            path: '.claude/skills/skill-creator/SKILL.md',
             content: 'skill content',
           },
           {
-            path: '.claude/skills/packmind/skill-creator/README.md',
+            path: '.claude/skills/skill-creator/README.md',
             content: 'readme content',
           },
         ],
@@ -180,9 +187,17 @@ describe('DeployDefaultSkillsUseCase', () => {
         );
 
         mockDeployer = createMockDeployer({
-          deployDefaultSkills: jest
-            .fn()
-            .mockResolvedValue({ fileUpdates, skippedSkillsCount: 0 }),
+          deployDefaultSkills: jest.fn().mockResolvedValue({
+            fileUpdates,
+            skippedSkillsCount: 0,
+            deployedSkills: [
+              {
+                slug: 'skill-creator',
+                name: 'Skill Creator',
+                version: 1,
+              },
+            ],
+          }),
         });
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
@@ -190,12 +205,40 @@ describe('DeployDefaultSkillsUseCase', () => {
         result = await useCase.execute(command);
       });
 
-      it('returns file updates from deployer', () => {
-        expect(result.fileUpdates).toEqual(fileUpdates);
+      it('returns enriched file updates from deployer', () => {
+        expect(result.fileUpdates.createOrUpdate).toHaveLength(2);
+        expect(result.fileUpdates.createOrUpdate[0]).toMatchObject({
+          path: '.claude/skills/skill-creator/SKILL.md',
+          artifactType: 'skill',
+          artifactId: 'skill-creator',
+          artifactSlug: 'skill-creator',
+          artifactName: 'Skill Creator',
+          artifactVersion: 1,
+          source: 'default',
+        });
       });
 
       it('returns skipped skills count from deployer', () => {
         expect(result.skippedSkillsCount).toBe(0);
+      });
+
+      it('populates lockFileSlice with default-skill keyed entries', () => {
+        expect(Object.keys(result.lockFileSlice)).toEqual([
+          'default:skill:skill-creator',
+        ]);
+        expect(
+          result.lockFileSlice['default:skill:skill-creator'],
+        ).toMatchObject({
+          name: 'Skill Creator',
+          type: 'skill',
+          id: 'skill-creator',
+          version: 1,
+          source: 'default',
+        });
+      });
+
+      it('does not emit warn logs from the PackmindLockFileService gate', () => {
+        expect(logger.warn).not.toHaveBeenCalled();
       });
 
       it('calls getDeployer with claude', () => {
@@ -260,6 +303,7 @@ describe('DeployDefaultSkillsUseCase', () => {
             delete: [],
           },
           skippedSkillsCount: 0,
+          deployedSkills: [],
         }),
       });
 
@@ -319,6 +363,7 @@ describe('DeployDefaultSkillsUseCase', () => {
             delete: [],
           },
           skippedSkillsCount: 0,
+          deployedSkills: [],
         }),
       });
 
@@ -395,6 +440,47 @@ describe('DeployDefaultSkillsUseCase', () => {
     });
   });
 
+  describe('when command.excludeDeprecated is true', () => {
+    let mockDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      mockDeployer = createMockDeployer();
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: ['claude'] as CodingAgent[],
+        excludeDeprecated: true,
+      });
+    });
+
+    it('forwards excludeDeprecated to the deployer', () => {
+      expect(mockDeployer.deployDefaultSkills).toHaveBeenCalledWith(
+        expect.objectContaining({ excludeDeprecated: true }),
+      );
+    });
+  });
+
+  describe('when command.excludeDeprecated is not provided', () => {
+    let mockDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      mockDeployer = createMockDeployer();
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: ['claude'] as CodingAgent[],
+      });
+    });
+
+    it('does not set excludeDeprecated on the deployer call', () => {
+      expect(mockDeployer.deployDefaultSkills).toHaveBeenCalledWith(
+        expect.objectContaining({ excludeDeprecated: undefined }),
+      );
+    });
+  });
+
   describe('when command.agents has multiple agents', () => {
     let claudeDeployer: jest.Mocked<ICodingAgentDeployer>;
     let cursorDeployer: jest.Mocked<ICodingAgentDeployer>;
@@ -412,6 +498,7 @@ describe('DeployDefaultSkillsUseCase', () => {
             delete: [],
           },
           skippedSkillsCount: 2,
+          deployedSkills: [],
         }),
       });
 
@@ -427,6 +514,7 @@ describe('DeployDefaultSkillsUseCase', () => {
             delete: [],
           },
           skippedSkillsCount: 2,
+          deployedSkills: [],
         }),
       });
 

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Logger,
   HttpCode,
@@ -35,7 +36,7 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   TooManyLoginAttemptsError,
-  InvalidEmailOrPasswordError,
+  ExpectedAuthError,
   CreateCliLoginCodeResponse,
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
@@ -43,6 +44,7 @@ import {
   CliLoginCodeNotFoundError,
   InvalidTrialActivationTokenError,
   EmailAlreadyExistsError,
+  InvalidDisplayNameError,
 } from '@packmind/accounts';
 import {
   ActivateTrialAccountResult,
@@ -207,27 +209,35 @@ export class AuthController {
 
       return result;
     } catch (error) {
-      this.logger.error(`POST /auth/signin - Failed to sign in user`, {
-        email: maskEmail(signInRequest.email),
-        error: getErrorMessage(error),
-      });
+      // Expected auth errors are legitimate user-facing outcomes (wrong
+      // password, rate limit reached) — not application bugs. Log them at
+      // warn level without stack trace so Datadog error dashboards stay
+      // focused on real incidents.
+      if (error instanceof ExpectedAuthError) {
+        this.logger.warn(`POST /auth/signin - ${error.name}`, {
+          email: maskEmail(signInRequest.email),
+          reason: error.message,
+        });
 
-      // Handle rate limiting errors with 429 status
-      if (error instanceof TooManyLoginAttemptsError) {
-        throw new HttpException(
-          {
-            message: getErrorMessage(error),
-            bannedUntil: error.bannedUntil.toISOString(),
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
+        if (error instanceof TooManyLoginAttemptsError) {
+          throw new HttpException(
+            {
+              message: error.message,
+              bannedUntil: error.bannedUntil.toISOString(),
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
 
-      // Convert domain error to HTTP exception (prevents stack trace logging)
-      if (error instanceof InvalidEmailOrPasswordError) {
+        // InvalidEmailOrPasswordError (and future ExpectedAuthError subclasses)
         throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
       }
 
+      // Unexpected error: keep error-level logging and let NestJS map it to 500.
+      this.logger.error(`POST /auth/signin - Unexpected sign-in failure`, {
+        email: maskEmail(signInRequest.email),
+        error: getErrorMessage(error),
+      });
       throw error;
     }
   }
@@ -376,6 +386,42 @@ export class AuthController {
         message: 'Failed to get user info',
         authenticated: false,
       } as GetMeResponse;
+    }
+  }
+
+  @Patch('profile')
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { displayName?: string | null },
+  ): Promise<{ displayName: string | null }> {
+    this.logger.log('PATCH /auth/profile - Updating user profile', {
+      userId: request.user.userId,
+    });
+
+    try {
+      const result = await this.authService.updateUserDisplayName(
+        request,
+        body.displayName ?? null,
+      );
+
+      this.logger.log(
+        'PATCH /auth/profile - User profile updated successfully',
+        {
+          userId: request.user.userId,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error('PATCH /auth/profile - Failed to update user profile', {
+        userId: request.user.userId,
+        error: getErrorMessage(error),
+      });
+      if (error instanceof InvalidDisplayNameError) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+      throw error;
     }
   }
 
