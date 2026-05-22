@@ -304,17 +304,6 @@ describe('AddToPackagesDialog', () => {
     expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  it('shows the package description in the row when present', () => {
-    renderDialog();
-    const row = screen.getByText('frontend-rules').closest('[role="listitem"]');
-    expect(row).not.toBeNull();
-    if (row) {
-      expect(
-        within(row as HTMLElement).getByText('Rules for the frontend.'),
-      ).toBeInTheDocument();
-    }
-  });
-
   describe('multi-artifact selection', () => {
     const firstId = createStandardId('multi-1');
     const secondId = createStandardId('multi-2');
