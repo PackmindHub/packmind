@@ -4,6 +4,7 @@
 
 - Add a "Distribute all" button on the space deployment overview to redistribute all outdated packages in one batch action
 - Show the last distribution status and date for each package on the space deployment overview
+- Support new skill frontmatter fields: `arguments` for Claude Code, `paths` for Cursor, and `context` (experimental) for GitHub Copilot
 
 ## Changed
 
