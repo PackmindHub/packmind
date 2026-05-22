@@ -16,6 +16,7 @@ import {
   createSkillVersionId,
   createSkillFileId,
   DeleteItemType,
+  FileUpdates,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '@packmind/recipes/test';
@@ -58,7 +59,7 @@ describe('ClaudeDeployer', () => {
 
   describe('deployRecipes', () => {
     describe('when deploying a single recipe', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe = recipeFactory({
@@ -99,7 +100,7 @@ describe('ClaudeDeployer', () => {
 
       describe('when clearing legacy CLAUDE.md recipes section', () => {
         let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
-        let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const recipe = recipeFactory({
@@ -323,7 +324,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying empty recipe list', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
@@ -352,7 +353,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe1 = recipeFactory({
@@ -441,7 +442,7 @@ describe('ClaudeDeployer', () => {
 
   describe('deployStandards', () => {
     describe('when deploying standard with scope', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const standard = standardFactory({
@@ -487,7 +488,7 @@ describe('ClaudeDeployer', () => {
 
       describe('when clearing legacy CLAUDE.md standards section', () => {
         let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
-        let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const standard = standardFactory({
@@ -1148,7 +1149,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying empty standards list', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.deployStandards([], mockGitRepo, mockTarget);
@@ -1496,9 +1497,7 @@ describe('ClaudeDeployer', () => {
 
   describe('generateFileUpdatesForRecipes', () => {
     describe('when deploying a single recipe', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe = recipeFactory({
@@ -1584,9 +1583,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when no recipes', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.generateFileUpdatesForRecipes([]);
@@ -1615,9 +1612,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe1 = recipeFactory({
@@ -1734,9 +1729,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when no standards', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForStandards>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.generateFileUpdatesForStandards([]);
@@ -1763,7 +1756,7 @@ describe('ClaudeDeployer', () => {
   describe('deployArtifacts', () => {
     describe('when deploying both recipes and standards', () => {
       describe('when verifying file update count', () => {
-        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const recipe = recipeFactory({
@@ -1873,7 +1866,7 @@ describe('ClaudeDeployer', () => {
 
       describe('when clearing legacy CLAUDE.md sections', () => {
         let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
-        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const recipe = recipeFactory({
@@ -1999,7 +1992,7 @@ describe('ClaudeDeployer', () => {
 
     describe('when deploying only recipes', () => {
       describe('when verifying file update count', () => {
-        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const recipe = recipeFactory({
@@ -2110,7 +2103,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe1 = recipeFactory({
@@ -2181,7 +2174,7 @@ describe('ClaudeDeployer', () => {
 
     describe('when deploying only standards', () => {
       describe('when verifying file update count', () => {
-        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+        let result: FileUpdates;
 
         beforeEach(async () => {
           const standard = standardFactory({
@@ -2249,7 +2242,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying empty lists', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.deployArtifacts([], []);
@@ -3063,7 +3056,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when calling deploySkills', () => {
-      let fileUpdates: Awaited<ReturnType<typeof deployer.deploySkills>>;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         fileUpdates = await deployer.deploySkills(
@@ -3146,9 +3139,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when calling generateFileUpdatesForSkills', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         fileUpdates =
@@ -3650,9 +3641,7 @@ describe('ClaudeDeployer', () => {
       });
 
       describe('when SKILL.md is in SkillFile table', () => {
-        let fileUpdates: Awaited<
-          ReturnType<typeof deployer.generateFileUpdatesForSkills>
-        >;
+        let fileUpdates: FileUpdates;
 
         beforeEach(async () => {
           const skillVersionsWithFiles = [
@@ -3703,9 +3692,7 @@ describe('ClaudeDeployer', () => {
       });
 
       describe('when skill has no additional files', () => {
-        let fileUpdates: Awaited<
-          ReturnType<typeof deployer.generateFileUpdatesForSkills>
-        >;
+        let fileUpdates: FileUpdates;
 
         beforeEach(async () => {
           const skillVersionsWithFiles = [
@@ -3729,9 +3716,7 @@ describe('ClaudeDeployer', () => {
       });
 
       describe('when deploying two skills with one additional file each', () => {
-        let fileUpdates: Awaited<
-          ReturnType<typeof deployer.generateFileUpdatesForSkills>
-        >;
+        let fileUpdates: FileUpdates;
 
         beforeEach(async () => {
           const multipleSkillVersionsWithFiles = [
@@ -3809,7 +3794,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying artifacts with skills', () => {
-      let fileUpdates: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const recipe = recipeFactory({
@@ -3891,7 +3876,7 @@ describe('ClaudeDeployer', () => {
 
     describe('when deploying artifacts with multi-file skills', () => {
       describe('when deploying recipe, standard, and skill with additional files', () => {
-        let fileUpdates: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+        let fileUpdates: FileUpdates;
 
         beforeEach(async () => {
           const recipe = recipeFactory({
@@ -4000,9 +3985,7 @@ describe('ClaudeDeployer', () => {
 
   describe('generateAgentCleanupFileUpdates', () => {
     describe('when generating cleanup file updates', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
-      >;
+      let result: FileUpdates;
       let userPackageSkillVersions: SkillVersion[];
 
       beforeEach(async () => {
@@ -4066,9 +4049,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when recipes exist', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         const recipe1 = recipeFactory({
@@ -4142,9 +4123,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deleting default skills', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.generateAgentCleanupFileUpdates({
@@ -4216,9 +4195,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deleting user package skills', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
-      >;
+      let result: FileUpdates;
       let userPackageSkillVersions: SkillVersion[];
 
       beforeEach(async () => {
@@ -4256,9 +4233,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when user has skills not managed by Packmind', () => {
-      let result: Awaited<
-        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
-      >;
+      let result: FileUpdates;
 
       beforeEach(async () => {
         result = await deployer.generateAgentCleanupFileUpdates({
@@ -4290,9 +4265,7 @@ describe('ClaudeDeployer', () => {
 
   describe('when skill has additional properties', () => {
     describe('when additional property is a boolean', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4311,9 +4284,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is a string', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4332,9 +4303,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is effort', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4353,9 +4322,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is a nested object', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4376,9 +4343,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is an array', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4401,9 +4366,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is arguments as a scalar string', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4422,9 +4385,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is arguments as a YAML list', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4443,9 +4404,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when multiple additional properties are provided in reversed order', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4485,9 +4444,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when mixing known and unknown additional properties', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4519,9 +4476,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property has unordered nested object keys', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4551,9 +4506,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is a simple array', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4574,9 +4527,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is whenToUse', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4599,9 +4550,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is paths as an array', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4624,9 +4573,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is paths as a string', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4647,9 +4594,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property is shell', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
@@ -4668,9 +4613,7 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when additional property has deep nesting with arrays', () => {
-      let fileUpdates: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForSkills>
-      >;
+      let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         const skillVersions = [
