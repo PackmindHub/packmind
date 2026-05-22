@@ -236,7 +236,7 @@ Body.`;
     });
 
     describe('when arguments is provided', () => {
-      it('extracts arguments provided as a space-separated string', () => {
+      it('extracts arguments provided as a plain scalar string', () => {
         const contentWithArguments = `---
 name: 'My Skill'
 description: 'A helpful skill'

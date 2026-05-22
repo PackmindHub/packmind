@@ -4400,7 +4400,7 @@ describe('ClaudeDeployer', () => {
       });
     });
 
-    describe('when additional property is arguments', () => {
+    describe('when additional property is arguments as a scalar string', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateFileUpdatesForSkills>
       >;
@@ -4418,6 +4418,27 @@ describe('ClaudeDeployer', () => {
       it('renders arguments value with single quotes in YAML format', () => {
         const content = fileUpdates.createOrUpdate[0].content;
         expect(content).toContain("arguments: 'file format'");
+      });
+    });
+
+    describe('when additional property is arguments as a YAML list', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { arguments: ['file', 'format'] },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders arguments as an inline YAML array', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("arguments: ['file', 'format']");
       });
     });
 
