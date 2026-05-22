@@ -1069,6 +1069,54 @@ describe('CursorDeployer', () => {
       });
     });
 
+    describe('when additional property is paths as a YAML list', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              paths: ['src/**/*.ts', 'test/**/*.spec.ts'],
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders paths as an inline YAML array', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          "paths: ['src/**/*.ts', 'test/**/*.spec.ts']",
+        );
+      });
+    });
+
+    describe('when additional property is paths as a comma-separated string', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: {
+              paths: 'src/**/*.ts, test/**/*.spec.ts',
+            },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders paths as a quoted YAML scalar', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("paths: 'src/**/*.ts, test/**/*.spec.ts'");
+      });
+    });
+
     describe('when additional properties include unsupported fields', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateFileUpdatesForSkills>

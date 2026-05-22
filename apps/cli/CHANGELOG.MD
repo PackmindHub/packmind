@@ -2,6 +2,8 @@
 
 ## Added
 
+- Parse and preserve new skill frontmatter fields when syncing SKILL.md files: `arguments` (Claude Code), `paths` (Cursor), and `context` (GitHub Copilot, experimental)
+
 ## Changed
 
 ## Fixed
