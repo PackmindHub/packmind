@@ -239,6 +239,8 @@ export const StandardDetails = ({
             )}
             pendingCount={pendingCount}
             standardId={standard.id}
+            organizationId={organization?.id}
+            spaceId={spaceId}
             orgSlug={orgSlug}
             spaceSlug={spaceSlug}
           />
