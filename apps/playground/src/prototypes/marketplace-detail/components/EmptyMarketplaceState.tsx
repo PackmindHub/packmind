@@ -31,9 +31,9 @@ export function EmptyMarketplaceState() {
             No plugins yet
           </PMText>
           <PMText fontSize="sm" color="secondary" lineHeight={1.55}>
-            A plugin is a Packmind package this marketplace publishes to
-            consuming repos. Add one to start shipping standards, commands, or
-            skills to Claude Code and Copilot.
+            A plugin bundles the standards, commands, and skills this
+            marketplace publishes to consuming repos. Add one to start shipping
+            to Claude Code and Copilot.
           </PMText>
         </PMVStack>
         <PMHStack gap={3}>

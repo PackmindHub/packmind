@@ -52,6 +52,7 @@ export function MarketplaceDetailView({
         <PMBox flex="1" minW={0} bg="background.primary">
           {selectedPlugin ? (
             <PluginDetailPane
+              key={selectedPlugin.id}
               plugin={selectedPlugin}
               unreachable={marketplace.state === 'unreachable'}
             />

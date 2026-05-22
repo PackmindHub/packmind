@@ -572,8 +572,20 @@ export const STUB_MARKETPLACE: MarketplaceDetail = {
       lastPublishedRelative: '14d ago',
       state: 'drift',
       sourceSync: {
-        state: 'in-sync',
-        sourceVersion: '1.2.0',
+        state: 'behind',
+        sourceVersion: '1.3.0',
+        changes: [
+          {
+            kind: 'added',
+            target: 'Snapshot tests etiquette',
+            artifactKind: 'standard',
+          },
+          {
+            kind: 'updated',
+            target: 'Factories over fixtures',
+            artifactKind: 'standard',
+          },
+        ],
       },
       adoption: {
         reposOnVersion: 30,

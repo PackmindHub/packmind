@@ -11,7 +11,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { getSpaceColorPalette } from '../spaceColor';
-import { LuLock, LuSearch, LuTriangleAlert } from 'react-icons/lu';
+import { LuLock, LuSearch } from 'react-icons/lu';
 import type { Plugin } from '../types';
 
 type PluginMasterRailProps = {
@@ -133,9 +133,14 @@ function PluginRailRow({
   dimmed,
   onSelect,
 }: Readonly<PluginRailRowProps>) {
-  const { name, version, mandatory, state, adoption } = plugin;
+  const { name, version, mandatory, adoption, sourceSync } = plugin;
 
   const baseColor = dimmed ? 'text.faded' : 'text.primary';
+  const publishDriftCount =
+    sourceSync.state === 'behind' ? sourceSync.changes.length : 0;
+  const outdatedCount = adoption.outdatedRepos;
+  const driftTooltip = composeDriftTooltip(publishDriftCount, outdatedCount);
+  const hasDrift = !dimmed && driftTooltip !== null;
 
   return (
     <PMBox
@@ -187,7 +192,7 @@ function PluginRailRow({
             </PMText>
             {mandatory && (
               <PMTooltip
-                label="Mandatory plugin: consuming repos must adopt it"
+                label="Mandatory plugin: consuming repos must install it"
                 showArrow
                 openDelay={200}
               >
@@ -205,16 +210,29 @@ function PluginRailRow({
               </PMTooltip>
             )}
           </PMHStack>
-          <PMText
-            fontSize="xs"
-            color="text.faded"
-            fontVariantNumeric="tabular-nums"
-            flexShrink={0}
-          >
-            v{version}
-          </PMText>
+          <PMHStack gap={1.5} align="center" flexShrink={0}>
+            {hasDrift && driftTooltip && (
+              <PMTooltip label={driftTooltip} showArrow openDelay={200}>
+                <PMBox
+                  width="6px"
+                  height="6px"
+                  borderRadius="full"
+                  bg="orange.500"
+                  cursor="help"
+                  aria-label={driftTooltip}
+                />
+              </PMTooltip>
+            )}
+            <PMText
+              fontSize="xs"
+              color="text.faded"
+              fontVariantNumeric="tabular-nums"
+            >
+              v{version}
+            </PMText>
+          </PMHStack>
         </PMHStack>
-        <PMHStack gap={2} align="center" justify="space-between">
+        <PMHStack gap={2} align="center">
           <PMBadge size="sm" maxW="100%" minW={0}>
             <PMStatus.Root
               colorPalette={getSpaceColorPalette(plugin.owner.name)}
@@ -226,21 +244,6 @@ function PluginRailRow({
               {plugin.owner.name}
             </PMBox>
           </PMBadge>
-          {state === 'drift' && adoption.outdatedRepos > 0 && !dimmed && (
-            <PMHStack gap={1} align="center" flexShrink={0}>
-              <PMIcon fontSize="11px" color="orange.500">
-                <LuTriangleAlert />
-              </PMIcon>
-              <PMText
-                fontSize="xs"
-                color="orange.500"
-                fontVariantNumeric="tabular-nums"
-                fontWeight="medium"
-              >
-                {adoption.outdatedRepos} outdated
-              </PMText>
-            </PMHStack>
-          )}
         </PMHStack>
       </PMVStack>
     </PMBox>
@@ -251,6 +254,28 @@ type FilteredZeroProps = {
   query: string;
   onClear: () => void;
 };
+
+function composeDriftTooltip(
+  publishDriftCount: number,
+  outdatedCount: number,
+): string | null {
+  const parts: string[] = [];
+  if (publishDriftCount > 0) {
+    parts.push(
+      publishDriftCount === 1
+        ? '1 change ready to publish'
+        : `${publishDriftCount} changes ready to publish`,
+    );
+  }
+  if (outdatedCount > 0) {
+    parts.push(
+      outdatedCount === 1
+        ? '1 repo on an older version'
+        : `${outdatedCount} repos on older versions`,
+    );
+  }
+  return parts.length === 0 ? null : parts.join('. ');
+}
 
 function FilteredZero({ query, onClear }: Readonly<FilteredZeroProps>) {
   return (
