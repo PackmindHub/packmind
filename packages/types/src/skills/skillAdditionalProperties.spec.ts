@@ -201,4 +201,28 @@ describe('filterAdditionalProperties', () => {
       });
     });
   });
+
+  describe('cross-agent isolation for arguments, paths, and context', () => {
+    const props = {
+      arguments: 'file format',
+      paths: ['src/**/*.ts'],
+      context: 'fork',
+    };
+
+    it('keeps paths but drops arguments and context for Cursor', () => {
+      expect(
+        filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS),
+      ).toEqual({
+        paths: ['src/**/*.ts'],
+      });
+    });
+
+    it('keeps context but drops arguments and paths for Copilot', () => {
+      expect(
+        filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
+      ).toEqual({
+        context: 'fork',
+      });
+    });
+  });
 });
