@@ -110,7 +110,7 @@ export const RecipesList = ({
   };
 
   const renderAddToPackagesAction = React.useCallback<BatchAction<RecipeId>>(
-    ({ selectedIds }) => {
+    ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
@@ -121,6 +121,7 @@ export const RecipesList = ({
           spaceId={spaceId}
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
+          onSuccess={unselectAll}
         />
       );
     },

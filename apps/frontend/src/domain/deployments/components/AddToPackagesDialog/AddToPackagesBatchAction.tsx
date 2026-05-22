@@ -24,6 +24,7 @@ interface AddToPackagesBatchActionProps {
   spaceId: SpaceId;
   orgSlug?: string;
   spaceSlug?: string;
+  onSuccess: () => void;
 }
 
 export const AddToPackagesBatchAction = ({
@@ -34,6 +35,7 @@ export const AddToPackagesBatchAction = ({
   spaceId,
   orgSlug,
   spaceSlug,
+  onSuccess,
 }: AddToPackagesBatchActionProps) => {
   const [open, setOpen] = useState(false);
 
@@ -60,6 +62,7 @@ export const AddToPackagesBatchAction = ({
         spaceId={spaceId}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
+        onSuccess={onSuccess}
       />
     </>
   );

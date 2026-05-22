@@ -55,6 +55,7 @@ export const AddToPackagesButton = ({
         spaceId={spaceId}
         orgSlug={orgSlug}
         spaceSlug={spaceSlug}
+        onSuccess={() => undefined}
       />
     </>
   );
