@@ -155,12 +155,14 @@ describe('filterAdditionalProperties', () => {
       disableModelInvocation: true,
       model: 'opus',
       argumentHint: 'hint',
+      context: 'fork',
       effort: 'high',
     };
     expect(
       filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
     ).toEqual({
       argumentHint: 'hint',
+      context: 'fork',
       disableModelInvocation: true,
     });
   });

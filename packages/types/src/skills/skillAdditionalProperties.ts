@@ -98,9 +98,13 @@ export const CAMEL_TO_YAML_KEY: Record<string, string> = Object.fromEntries(
 
 /**
  * Additional properties supported by the GitHub Copilot agent (camelCase storage keys).
+ *
+ * Note: `context` is documented as experimental upstream
+ * (https://code.visualstudio.com/docs/copilot/customization/agent-skills).
  */
 export const COPILOT_ADDITIONAL_FIELDS: string[] = [
   'argumentHint',
+  'context',
   'disableModelInvocation',
   'userInvocable',
 ];
