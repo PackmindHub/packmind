@@ -179,10 +179,12 @@ describe('filterAdditionalProperties', () => {
       disableModelInvocation: true,
       argumentHint: 'hint',
       userInvocable: true,
+      paths: ['src/**/*.ts'],
     };
     expect(filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS)).toEqual(
       {
         disableModelInvocation: true,
+        paths: ['src/**/*.ts'],
       },
     );
   });

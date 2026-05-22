@@ -108,7 +108,10 @@ export const COPILOT_ADDITIONAL_FIELDS: string[] = [
 /**
  * Additional properties supported by the Cursor agent (camelCase storage keys).
  */
-export const CURSOR_ADDITIONAL_FIELDS: string[] = ['disableModelInvocation'];
+export const CURSOR_ADDITIONAL_FIELDS: string[] = [
+  'disableModelInvocation',
+  'paths',
+];
 
 /**
  * Filters additional properties to only include keys supported by a given agent.
