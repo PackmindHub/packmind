@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { CodingAgent } from '@packmind/types';
@@ -15,15 +16,24 @@ const AGENT_HOME_DIR_NAMES: Partial<Record<CodingAgent, string>> = {
   claude: '.claude',
 };
 
+function safeRealpath(target: string): string {
+  try {
+    return fs.realpathSync(target);
+  } catch {
+    return path.resolve(target);
+  }
+}
+
 export function isAgentHomeDirectory(cwd: string): CodingAgent | null {
   const home = os.homedir();
   if (!home) {
     return null;
   }
-  const resolvedCwd = path.resolve(cwd);
+  const resolvedCwd = safeRealpath(cwd);
+  const resolvedHome = safeRealpath(home);
   for (const [agent, dirName] of Object.entries(AGENT_HOME_DIR_NAMES)) {
     if (!dirName) continue;
-    if (resolvedCwd === path.join(home, dirName)) {
+    if (resolvedCwd === path.join(resolvedHome, dirName)) {
       return agent as CodingAgent;
     }
   }

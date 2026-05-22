@@ -4,6 +4,7 @@ import {
   ICaptureRecipeUseCase,
   ICreateInvitationsUseCase,
   ICreatePackageUseCase,
+  ICreateSkillUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
   IGetTargetsByOrganizationUseCase,
@@ -62,6 +63,10 @@ export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
 }
 
+export interface ISkillsGateway {
+  create: Gateway<ICreateSkillUseCase>;
+}
+
 export interface IPackmindGateway {
   auth: IAuthGateway;
   accounts: IAccountsGateway;
@@ -71,6 +76,7 @@ export interface IPackmindGateway {
   standards: IStandardGateway;
   changeProposals: IChangeProposalGateway;
   deployments: IDeploymentsGateway;
+  skills: ISkillsGateway;
 
   initializeWithApiKey(apiKey: string): void;
 }

@@ -48,3 +48,7 @@ export function fileExists(filePath: string, testDir: string): boolean {
   const fullPath = path.join(testDir, filePath);
   return fs.existsSync(fullPath);
 }
+
+export function createDirectory(workingDir: string, directoryPath: string) {
+  fs.mkdirSync(path.join(workingDir, directoryPath), { recursive: true });
+}

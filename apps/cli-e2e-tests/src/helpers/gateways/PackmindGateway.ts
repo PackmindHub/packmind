@@ -8,6 +8,7 @@ import {
   IChangeProposalGateway,
   IDeploymentsGateway,
   IAccountsGateway,
+  ISkillsGateway,
 } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { AuthGateway } from './AuthGateway';
@@ -18,6 +19,7 @@ import { StandardGateway } from './StandardGateway';
 import { ChangeProposalGateway } from './ChangeProposalGateway';
 import { DeploymentsGateway } from './DeploymentsGateway';
 import { AccountsGateway } from './AccountsGateway';
+import { SkillsGateway } from './SkillsGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private httpClient?: PackmindHttpClient;
@@ -29,6 +31,7 @@ export class PackmindGateway implements IPackmindGateway {
   private _standards?: IStandardGateway;
   private _changeProposals?: IChangeProposalGateway;
   private _deployments?: IDeploymentsGateway;
+  private _skills?: ISkillsGateway;
 
   constructor(
     private readonly baseUrl: string,
@@ -77,6 +80,11 @@ export class PackmindGateway implements IPackmindGateway {
   get deployments(): IDeploymentsGateway {
     this._deployments ??= new DeploymentsGateway(this.getHttpClient());
     return this._deployments;
+  }
+
+  get skills(): ISkillsGateway {
+    this._skills ??= new SkillsGateway(this.getHttpClient());
+    return this.skills;
   }
 
   /**
