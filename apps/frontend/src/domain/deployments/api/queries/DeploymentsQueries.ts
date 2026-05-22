@@ -1,4 +1,5 @@
 import {
+  AddArtefactsToPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   DeleteTargetCommand,
@@ -736,6 +737,69 @@ export const useUpdatePackageMutation = () => {
     },
     onError: (error) => {
       console.error('Error updating package:', error);
+    },
+  });
+};
+
+export type AddArtefactsToPackagesOutcome =
+  | { packageId: PackageId; ok: true; response: AddArtefactsToPackageResponse }
+  | { packageId: PackageId; ok: false; error: Error };
+
+export type AddArtefactsToPackagesEntry = {
+  packageId: PackageId;
+  standardIds?: StandardId[];
+  recipeIds?: RecipeId[];
+  skillIds?: SkillId[];
+};
+
+export const ADD_ARTEFACTS_TO_PACKAGES_MUTATION_KEY = 'addArtefactsToPackages';
+export const useAddArtefactsToPackagesMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [ADD_ARTEFACTS_TO_PACKAGES_MUTATION_KEY],
+    mutationFn: async ({
+      spaceId,
+      entries,
+    }: {
+      spaceId: SpaceId;
+      entries: AddArtefactsToPackagesEntry[];
+    }): Promise<AddArtefactsToPackagesOutcome[]> => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to add artifacts to a package',
+        );
+      }
+      const results = await Promise.allSettled(
+        entries.map((entry) =>
+          deploymentsGateways.addArtefactsToPackage({
+            organizationId: organization.id,
+            spaceId,
+            packageId: entry.packageId,
+            standardIds: entry.standardIds,
+            recipeIds: entry.recipeIds,
+            skillIds: entry.skillIds,
+          }),
+        ),
+      );
+      return results.map((result, index) => {
+        const packageId = entries[index].packageId;
+        if (result.status === 'fulfilled') {
+          return { packageId, ok: true, response: result.value };
+        }
+        const reason = result.reason;
+        const error =
+          reason instanceof Error ? reason : new Error(String(reason));
+        return { packageId, ok: false, error };
+      });
+    },
+    onSuccess: async (outcomes) => {
+      const anySuccess = outcomes.some((o) => o.ok);
+      if (!anySuccess) return;
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
     },
   });
 };
