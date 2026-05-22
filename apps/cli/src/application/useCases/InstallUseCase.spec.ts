@@ -1565,4 +1565,214 @@ Old packmind content
       expect(lockFileArg.cliVersion).toBe('0.0.0-test');
     });
   });
+
+  describe('when homeAgent is set (single-agent home install)', () => {
+    beforeEach(() => {
+      mockConfigFileRepository.readConfig.mockResolvedValue({
+        packages: { '@space/test-package': '*' },
+        agents: ['cursor', 'copilot'],
+      });
+    });
+
+    it('forces agents to the homeAgent and ignores agents from packmind.json', async () => {
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      expect(mockGateway.deployment.install).toHaveBeenCalledWith(
+        expect.objectContaining({
+          agents: ['claude'],
+        }),
+      );
+    });
+
+    it('strips the agent home directory prefix from created files', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'skill content',
+            },
+            {
+              path: '.claude/rules/packmind/standard-foo.md',
+              content: 'standard content',
+            },
+            {
+              path: '.claude/commands/bar.md',
+              content: 'command content',
+            },
+            { path: 'CLAUDE.md', content: 'claude md' },
+          ],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      const writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
+        ([p]: [string]) => p,
+      );
+
+      expect(writePaths).toEqual(
+        expect.arrayContaining([
+          '/test/skills/my-skill/SKILL.md',
+          '/test/rules/packmind/standard-foo.md',
+          '/test/commands/bar.md',
+          '/test/CLAUDE.md',
+        ]),
+      );
+      expect(writePaths).not.toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('/.claude/skills/'),
+          expect.stringContaining('/.claude/rules/'),
+          expect.stringContaining('/.claude/commands/'),
+        ]),
+      );
+    });
+
+    it('strips the agent home directory prefix from deleted files', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          delete: [
+            {
+              path: '.claude/skills/dropped/SKILL.md',
+              type: DeleteItemType.File,
+            },
+          ],
+        }),
+      );
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+        isFile: () => true,
+      });
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      const unlinkPaths = (fs.unlink as jest.Mock).mock.calls.map(
+        ([p]: [string]) => p,
+      );
+      expect(unlinkPaths).toContain('/test/skills/dropped/SKILL.md');
+    });
+
+    it('leaves non-prefixed paths untouched (CLAUDE.md, packmind-lock.json)', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'claude md content' }],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      const writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
+        ([p]: [string]) => p,
+      );
+      expect(writePaths).toContain('/test/CLAUDE.md');
+    });
+
+    it('strips the trailing "Full standard is available here" footer from standard content', async () => {
+      const standardBody = [
+        '# Standard: Frontend testing',
+        '',
+        'My summary :',
+        '* Rule one',
+        '* Rule two',
+        '',
+        'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
+      ].join('\n');
+
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: '.claude/rules/packmind/standard-frontend-testing.md',
+              content: standardBody,
+            },
+          ],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      const writeCall = (fs.writeFile as jest.Mock).mock.calls.find(
+        ([p]: [string]) =>
+          p === '/test/rules/packmind/standard-frontend-testing.md',
+      );
+      expect(writeCall).toBeDefined();
+      const writtenContent = writeCall[1] as string;
+      expect(writtenContent).not.toContain(
+        'Full standard is available here for further request:',
+      );
+      expect(writtenContent).not.toContain('.packmind/standards/');
+      expect(writtenContent).toContain('* Rule one');
+    });
+
+    it('drops .packmind/ mirror files emitted by the packmind agent renderer', async () => {
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'claude skill',
+            },
+            {
+              path: '.packmind/standards/foo.md',
+              content: 'mirror standard',
+            },
+            {
+              path: '.packmind/commands/bar.md',
+              content: 'mirror command',
+            },
+          ],
+          delete: [
+            { path: '.packmind/standards/old.md', type: DeleteItemType.File },
+          ],
+        }),
+      );
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+        isFile: () => true,
+      });
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      const writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
+        ([p]: [string]) => p,
+      );
+      const unlinkPaths = (fs.unlink as jest.Mock).mock.calls.map(
+        ([p]: [string]) => p,
+      );
+
+      expect(writePaths).toContain('/test/skills/my-skill/SKILL.md');
+      expect(writePaths.some((p: string) => p.includes('.packmind/'))).toBe(
+        false,
+      );
+      expect(writePaths).not.toContain('/test/standards/foo.md');
+      expect(writePaths).not.toContain('/test/commands/bar.md');
+      expect(unlinkPaths.some((p: string) => p.includes('.packmind/'))).toBe(
+        false,
+      );
+    });
+  });
 });
