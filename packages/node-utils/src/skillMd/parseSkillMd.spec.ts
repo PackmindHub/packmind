@@ -235,6 +235,39 @@ Body.`;
       });
     });
 
+    describe('when arguments is provided', () => {
+      it('extracts arguments provided as a space-separated string', () => {
+        const contentWithArguments = `---
+name: 'My Skill'
+description: 'A helpful skill'
+arguments: 'file format'
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithArguments);
+
+        expect(result?.additionalProperties['arguments']).toBe('"file format"');
+      });
+
+      it('preserves arguments provided as a YAML list', () => {
+        const contentWithArguments = `---
+name: 'My Skill'
+description: 'A helpful skill'
+arguments:
+  - file
+  - format
+---
+
+Body.`;
+        const result = parseSkillMd(contentWithArguments);
+
+        expect(JSON.parse(result!.additionalProperties['arguments'])).toEqual([
+          'file',
+          'format',
+        ]);
+      });
+    });
+
     describe('when shell is provided', () => {
       it('extracts the shell field', () => {
         const contentWithShell = `---

@@ -53,6 +53,7 @@ export function camelToKebab(str: string): string {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   'argument-hint': 'argumentHint',
+  arguments: 'arguments',
   when_to_use: 'whenToUse',
   'disable-model-invocation': 'disableModelInvocation',
   'user-invocable': 'userInvocable',
@@ -71,6 +72,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'argumentHint',
+  'arguments',
   'whenToUse',
   'disableModelInvocation',
   'userInvocable',

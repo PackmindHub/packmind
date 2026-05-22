@@ -4400,6 +4400,27 @@ describe('ClaudeDeployer', () => {
       });
     });
 
+    describe('when additional property is arguments', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { arguments: 'file format' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders arguments value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("arguments: 'file format'");
+      });
+    });
+
     describe('when multiple additional properties are provided in reversed order', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateFileUpdatesForSkills>
@@ -4411,6 +4432,7 @@ describe('ClaudeDeployer', () => {
             additionalProperties: {
               hooks: { preToolCall: 'validate' },
               model: 'opus',
+              arguments: 'file format',
               argumentHint: 'my hint',
             },
           }),
@@ -4419,9 +4441,16 @@ describe('ClaudeDeployer', () => {
           await deployer.generateFileUpdatesForSkills(skillVersions);
       });
 
-      it('renders argument-hint before model', () => {
+      it('renders argument-hint before arguments', () => {
         const content = fileUpdates.createOrUpdate[0].content;
         expect(content.indexOf('argument-hint:')).toBeLessThan(
+          content.indexOf('arguments:'),
+        );
+      });
+
+      it('renders arguments before model', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content.indexOf('arguments:')).toBeLessThan(
           content.indexOf('model:'),
         );
       });
