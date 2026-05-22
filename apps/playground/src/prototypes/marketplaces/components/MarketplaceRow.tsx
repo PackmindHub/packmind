@@ -48,7 +48,6 @@ export function MarketplaceRow({
     packageCount,
     agents,
     lastPublishedRelative,
-    lastPublishedBy,
     state,
     consumers,
   } = marketplace;
@@ -89,7 +88,7 @@ export function MarketplaceRow({
           <AgentBadges agents={agents} dimmed={isUnreachable} />
         </PMHStack>
         <PMText fontSize="xs" color="faded">
-          last by {lastPublishedBy} &middot; {lastPublishedRelative}
+          last update {lastPublishedRelative}
         </PMText>
       </PMVStack>
 

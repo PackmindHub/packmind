@@ -8,6 +8,7 @@ import StandardDetailRedesignPrototype from './standard-detail-redesign/Standard
 import PersonalHomePagePrototype from './personal-home-page/PersonalHomePagePrototype';
 import SpacesManagementPrototype from './spaces-management/SpacesManagementPrototype';
 import MarketplacesPrototype from './marketplaces/MarketplacesPrototype';
+import MarketplaceDetailPrototype from './marketplace-detail/MarketplaceDetailPrototype';
 
 export interface Prototype {
   name: string;
@@ -58,5 +59,11 @@ export const prototypes: Prototype[] = [
     description:
       'Governance-first index of Git-backed marketplaces that publish Packmind packages to Claude Code and Copilot',
     component: MarketplacesPrototype,
+  },
+  {
+    name: 'Marketplace detail',
+    description:
+      'Detail page of a single marketplace: master/detail split between plugin list and selected-plugin content with owner space, version, mandatory flag, and bundled artifacts',
+    component: MarketplaceDetailPrototype,
   },
 ];
