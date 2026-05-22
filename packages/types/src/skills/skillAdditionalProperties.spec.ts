@@ -79,6 +79,7 @@ describe('CAMEL_TO_YAML_KEY', () => {
   it('contains exactly the expected key mappings', () => {
     expect(CAMEL_TO_YAML_KEY).toEqual({
       argumentHint: 'argument-hint',
+      arguments: 'arguments',
       whenToUse: 'when_to_use',
       disableModelInvocation: 'disable-model-invocation',
       userInvocable: 'user-invocable',
@@ -130,6 +131,22 @@ describe('sortAdditionalPropertiesKeys', () => {
       'shell',
     ]);
   });
+
+  it('places arguments immediately after argumentHint in canonical order', () => {
+    const props = {
+      whenToUse: 'when editing TypeScript files',
+      argumentHint: '[file] [format]',
+      arguments: 'file format',
+      shell: 'bash',
+    };
+    const result = sortAdditionalPropertiesKeys(props);
+    expect(result.map(([k]) => k)).toEqual([
+      'argumentHint',
+      'arguments',
+      'whenToUse',
+      'shell',
+    ]);
+  });
 });
 
 describe('filterAdditionalProperties', () => {
@@ -138,12 +155,14 @@ describe('filterAdditionalProperties', () => {
       disableModelInvocation: true,
       model: 'opus',
       argumentHint: 'hint',
+      context: 'fork',
       effort: 'high',
     };
     expect(
       filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
     ).toEqual({
       argumentHint: 'hint',
+      context: 'fork',
       disableModelInvocation: true,
     });
   });
@@ -162,10 +181,12 @@ describe('filterAdditionalProperties', () => {
       disableModelInvocation: true,
       argumentHint: 'hint',
       userInvocable: true,
+      paths: ['src/**/*.ts'],
     };
     expect(filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS)).toEqual(
       {
         disableModelInvocation: true,
+        paths: ['src/**/*.ts'],
       },
     );
   });
@@ -177,6 +198,30 @@ describe('filterAdditionalProperties', () => {
         filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
       ).toEqual({
         disableModelInvocation: false,
+      });
+    });
+  });
+
+  describe('cross-agent isolation for arguments, paths, and context', () => {
+    const props = {
+      arguments: 'file format',
+      paths: ['src/**/*.ts'],
+      context: 'fork',
+    };
+
+    it('keeps paths but drops arguments and context for Cursor', () => {
+      expect(
+        filterAdditionalProperties(props, CURSOR_ADDITIONAL_FIELDS),
+      ).toEqual({
+        paths: ['src/**/*.ts'],
+      });
+    });
+
+    it('keeps context but drops arguments and paths for Copilot', () => {
+      expect(
+        filterAdditionalProperties(props, COPILOT_ADDITIONAL_FIELDS),
+      ).toEqual({
+        context: 'fork',
       });
     });
   });
