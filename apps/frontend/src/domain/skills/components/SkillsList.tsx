@@ -96,7 +96,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   };
 
   const renderAddToPackagesAction = React.useCallback<BatchAction<SkillId>>(
-    ({ selectedIds }) => {
+    ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
@@ -107,6 +107,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           spaceId={spaceId}
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
+          onSuccess={unselectAll}
         />
       );
     },

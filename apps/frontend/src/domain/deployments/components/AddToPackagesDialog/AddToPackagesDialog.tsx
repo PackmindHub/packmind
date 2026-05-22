@@ -49,6 +49,7 @@ interface AddToPackagesDialogProps {
   spaceId: SpaceId;
   orgSlug?: string;
   spaceSlug?: string;
+  onSuccess: () => void;
 }
 
 const ARTIFACT_KIND_PLURALS: Record<AddToPackagesArtifactKind, string> = {
@@ -95,6 +96,7 @@ export const AddToPackagesDialog = ({
   spaceId,
   orgSlug,
   spaceSlug,
+  onSuccess,
 }: AddToPackagesDialogProps) => {
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<PackageId>>(new Set());
@@ -187,6 +189,7 @@ export const AddToPackagesDialog = ({
           title,
           description: summarizePackageList(selectedPackages),
         });
+        onSuccess();
         onOpenChange(false);
         resetState();
         return;
