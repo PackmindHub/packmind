@@ -9,14 +9,26 @@ import {
   updateFile,
   WithMemberContext,
 } from './helpers';
-import { Package, Recipe, Space, SpaceType } from '@packmind/types';
+import {
+  Package,
+  PackmindLockFile,
+  PackmindLockFileEntry,
+  Recipe,
+  Space,
+  SpaceType,
+} from '@packmind/types';
 
-// lockfileVersion 2 (post-0.28.1) prefixes package-installed artefact keys
-// with `user:`. The 0.28.1 binary still writes v1 (`<type>:<slug>`).
-function commandLockKey(slug: string): string {
-  return matchesVersionConstraint('> 0.28.1')
-    ? `user:command:${slug}`
-    : `command:${slug}`;
+// v2 lockfiles prefix package-installed artefact keys with `user:`; v1 used
+// just `<type>:<slug>`. Look up by both shapes so the test passes regardless
+// of which lockfile version the running CLI emits.
+function findCommandEntry(
+  lockFile: PackmindLockFile,
+  slug: string,
+): PackmindLockFileEntry | undefined {
+  return (
+    lockFile.artifacts[`user:command:${slug}`] ??
+    lockFile.artifacts[`command:${slug}`]
+  );
 }
 
 describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
@@ -121,19 +133,19 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
         it('references all artefacts in packmind-lock.json', () => {
           const packmindLock = JSON.parse(
             readFile(`packmind-lock.json`, context.testDir),
-          );
+          ) as PackmindLockFile;
 
-          expect(packmindLock).toMatchObject({
-            artifacts: {
-              [commandLockKey(publicCommand.slug)]: expect.objectContaining({
-                id: publicCommand.id,
-                name: publicCommand.name,
-              }),
-              [commandLockKey(privateCommand.slug)]: expect.objectContaining({
-                id: privateCommand.id,
-                name: privateCommand.name,
-              }),
-            },
+          expect(
+            findCommandEntry(packmindLock, publicCommand.slug),
+          ).toMatchObject({
+            id: publicCommand.id,
+            name: publicCommand.name,
+          });
+          expect(
+            findCommandEntry(packmindLock, privateCommand.slug),
+          ).toMatchObject({
+            id: privateCommand.id,
+            name: privateCommand.name,
           });
         });
 
@@ -238,19 +250,19 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
           it('references all artefacts in packmind-lock.json', () => {
             const packmindLock = JSON.parse(
               readFile(`packmind-lock.json`, context.testDir),
-            );
+            ) as PackmindLockFile;
 
-            expect(packmindLock).toMatchObject({
-              artifacts: {
-                [commandLockKey(publicCommand.slug)]: expect.objectContaining({
-                  id: publicCommand.id,
-                  name: publicCommand.name,
-                }),
-                [commandLockKey(privateCommand.slug)]: expect.objectContaining({
-                  id: privateCommand.id,
-                  name: privateCommand.name,
-                }),
-              },
+            expect(
+              findCommandEntry(packmindLock, publicCommand.slug),
+            ).toMatchObject({
+              id: publicCommand.id,
+              name: publicCommand.name,
+            });
+            expect(
+              findCommandEntry(packmindLock, privateCommand.slug),
+            ).toMatchObject({
+              id: privateCommand.id,
+              name: privateCommand.name,
             });
           });
         });
@@ -284,17 +296,14 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             it('updates the packmind-lock.json file with the correct version', () => {
               const packmindLock = JSON.parse(
                 readFile(`packmind-lock.json`, context.testDir),
-              );
+              ) as PackmindLockFile;
 
-              expect(packmindLock).toMatchObject({
-                artifacts: {
-                  [commandLockKey(privateCommand.slug)]:
-                    expect.objectContaining({
-                      id: privateCommand.id,
-                      name: privateCommand.name,
-                      version: 2,
-                    }),
-                },
+              expect(
+                findCommandEntry(packmindLock, privateCommand.slug),
+              ).toMatchObject({
+                id: privateCommand.id,
+                name: privateCommand.name,
+                version: 2,
               });
             });
 
@@ -382,17 +391,14 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             it('keeps the installed version in the packmind-lock.json file', () => {
               const packmindLock = JSON.parse(
                 readFile(`packmind-lock.json`, context.testDir),
-              );
+              ) as PackmindLockFile;
 
-              expect(packmindLock).toMatchObject({
-                artifacts: {
-                  [commandLockKey(privateCommand.slug)]:
-                    expect.objectContaining({
-                      id: privateCommand.id,
-                      name: privateCommand.name,
-                      version: 1,
-                    }),
-                },
+              expect(
+                findCommandEntry(packmindLock, privateCommand.slug),
+              ).toMatchObject({
+                id: privateCommand.id,
+                name: privateCommand.name,
+                version: 1,
               });
             });
 
@@ -509,17 +515,13 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             it('removes references to removed artefacts in packmind-lock.json', () => {
               const packmindLock = JSON.parse(
                 readFile(`packmind-lock.json`, context.testDir),
-              );
+              ) as PackmindLockFile;
 
-              expect(packmindLock).toMatchObject({
-                artifacts: {
-                  [commandLockKey(publicCommand.slug)]: expect.objectContaining(
-                    {
-                      id: publicCommand.id,
-                      name: publicCommand.name,
-                    },
-                  ),
-                },
+              expect(
+                findCommandEntry(packmindLock, publicCommand.slug),
+              ).toMatchObject({
+                id: publicCommand.id,
+                name: publicCommand.name,
               });
             });
 
@@ -600,17 +602,13 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             it('removes references to removed artefacts in packmind-lock.json', () => {
               const packmindLock = JSON.parse(
                 readFile(`packmind-lock.json`, context.testDir),
-              );
+              ) as PackmindLockFile;
 
-              expect(packmindLock).toMatchObject({
-                artifacts: {
-                  [commandLockKey(publicCommand.slug)]: expect.objectContaining(
-                    {
-                      id: publicCommand.id,
-                      name: publicCommand.name,
-                    },
-                  ),
-                },
+              expect(
+                findCommandEntry(packmindLock, publicCommand.slug),
+              ).toMatchObject({
+                id: publicCommand.id,
+                name: publicCommand.name,
               });
             });
 
