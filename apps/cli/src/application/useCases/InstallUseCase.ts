@@ -7,7 +7,13 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { ISpaceService } from '../../domain/services/ISpaceService';
-import { CodingAgent, PackmindFileConfig, SpaceType } from '@packmind/types';
+import {
+  CodingAgent,
+  PackmindFileConfig,
+  PackmindLockFile,
+  PackmindLockFileEntry,
+  SpaceType,
+} from '@packmind/types';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -334,6 +340,13 @@ export class InstallUseCase implements IInstallUseCase {
 
       lockFileToPersist.cliVersion = command.cliVersion;
 
+      if (stripPathPrefix) {
+        lockFileToPersist = this.stripLockFileArtifactPaths(
+          lockFileToPersist,
+          stripPathPrefix,
+        );
+      }
+
       await this.lockFileRepository.write(baseDirectory, lockFileToPersist);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -376,6 +389,29 @@ export class InstallUseCase implements IInstallUseCase {
     return filePath.startsWith(prefix)
       ? filePath.slice(prefix.length)
       : filePath;
+  }
+
+  // In home-install mode the on-disk files live without the agent prefix
+  // (e.g. `commands/foo.md` instead of `.claude/commands/foo.md`) and the
+  // `.packmind/` mirror folder is not rendered. The lockfile content returned
+  // by the server still references the original paths, so we realign it here
+  // before persisting — otherwise `playbook status`/`add` can't match local
+  // files against the lockfile entries.
+  private stripLockFileArtifactPaths(
+    lockFile: PackmindLockFile,
+    prefix: string,
+  ): PackmindLockFile {
+    const remappedArtifacts: Record<string, PackmindLockFileEntry> = {};
+    for (const [key, entry] of Object.entries(lockFile.artifacts)) {
+      const remappedFiles = entry.files
+        .filter((file) => !file.path.startsWith('.packmind/'))
+        .map((file) => ({
+          ...file,
+          path: this.stripPrefix(file.path, prefix),
+        }));
+      remappedArtifacts[key] = { ...entry, files: remappedFiles };
+    }
+    return { ...lockFile, artifacts: remappedArtifacts };
   }
 
   // The server-side standard renderer appends a trailing

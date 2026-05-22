@@ -475,6 +475,7 @@ export async function playbookAddHandler(
     const deployedFiles = await fetchDeployedFiles(
       packmindCliHexa.getPackmindGateway(),
       earlyLockFile,
+      { projectDir: targetDir },
     );
 
     if (artifactType === 'skill') {

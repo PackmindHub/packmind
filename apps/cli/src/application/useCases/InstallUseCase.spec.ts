@@ -1774,5 +1774,86 @@ Old packmind content
         false,
       );
     });
+
+    it('strips the agent home directory prefix from lockfile artifact paths', async () => {
+      const serverLockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: ['@space/test-package'],
+        agents: ['claude'],
+        artifacts: {
+          'user:command:my-command': {
+            name: 'My command',
+            type: 'command',
+            id: 'cmd-1',
+            version: 1,
+            spaceId: 'space-1',
+            packageIds: ['pkg-1'],
+            source: 'user',
+            files: [
+              { path: '.claude/commands/my-command.md', agent: 'claude' },
+              { path: '.packmind/commands/my-command.md', agent: 'claude' },
+            ],
+          },
+          'user:standard:my-standard': {
+            name: 'My standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 1,
+            spaceId: 'space-1',
+            packageIds: ['pkg-1'],
+            source: 'user',
+            files: [
+              {
+                path: '.claude/rules/packmind/standard-my-standard.md',
+                agent: 'claude',
+              },
+              {
+                path: '.packmind/standards/my-standard.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      };
+
+      mockGateway.deployment.install.mockResolvedValue(
+        installResponseFactory({
+          createOrUpdate: [
+            {
+              path: 'packmind-lock.json',
+              content: JSON.stringify(serverLockFile),
+            },
+          ],
+        }),
+      );
+
+      await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+        homeAgent: 'claude',
+      });
+
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/test',
+        expect.objectContaining({
+          artifacts: {
+            'user:command:my-command': expect.objectContaining({
+              files: [
+                expect.objectContaining({
+                  path: 'commands/my-command.md',
+                }),
+              ],
+            }),
+            'user:standard:my-standard': expect.objectContaining({
+              files: [
+                expect.objectContaining({
+                  path: 'rules/packmind/standard-my-standard.md',
+                }),
+              ],
+            }),
+          },
+        }),
+      );
+    });
   });
 });
