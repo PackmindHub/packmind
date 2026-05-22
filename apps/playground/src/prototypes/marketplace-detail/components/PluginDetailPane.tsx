@@ -741,7 +741,6 @@ const ADOPTION_COLUMNS: PMTableColumn[] = [
     align: 'center',
     grow: true,
   },
-  { key: 'status', header: 'Status', align: 'center' },
 ];
 
 function toRepoRow(repo: RepoAdoption, latestVersion: string): PMTableRow {
@@ -756,7 +755,6 @@ function toRepoRow(repo: RepoAdoption, latestVersion: string): PMTableRow {
       latestVersion,
       repo.isOutdated,
     ),
-    status: renderStatusCell(repo.isOutdated),
   };
 }
 
@@ -772,7 +770,6 @@ function toPersonRow(entry: PersonEntry, latestVersion: string): PMTableRow {
       latestVersion,
       entry.isOutdated,
     ),
-    status: renderStatusCell(entry.isOutdated),
   };
 }
 
@@ -801,18 +798,6 @@ function renderVersionCell(
         {latest}
       </PMBadge>
     </PMHStack>
-  );
-}
-
-function renderStatusCell(isOutdated: boolean) {
-  return isOutdated ? (
-    <PMBadge colorPalette="red" size="sm">
-      Outdated
-    </PMBadge>
-  ) : (
-    <PMBadge colorPalette="green" size="sm">
-      Up-to-date
-    </PMBadge>
   );
 }
 
