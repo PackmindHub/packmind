@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@backend/hexagonal-architecture"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:back-end-repositories-sql-queries-using-typeorm": {
+    "user:standard:back-end-repositories-sql-queries-using-typeorm": {
       "name": "Back-end repositories SQL queries using TypeORM",
       "type": "standard",
       "id": "da23c189-71d8-44d8-b84b-e1598580da57",
@@ -21,6 +21,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-back-end-repositories-sql-queries-using-typeorm.md",
@@ -40,7 +41,7 @@
         }
       ]
     },
-    "standard:back-end-typescript-clean-code-practices": {
+    "user:standard:back-end-typescript-clean-code-practices": {
       "name": "Back-end TypeScript Clean Code Practices",
       "type": "standard",
       "id": "46fa4b47-0c11-42ee-9407-6cd0de6abd18",
@@ -49,6 +50,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-back-end-typescript-clean-code-practices.md",
@@ -68,7 +70,7 @@
         }
       ]
     },
-    "standard:domain-events": {
+    "user:standard:domain-events": {
       "name": "Domain Events",
       "type": "standard",
       "id": "1e6fea6d-88a1-48f8-8ede-942e0a96bb41",
@@ -77,6 +79,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-domain-events.md",
@@ -96,7 +99,7 @@
         }
       ]
     },
-    "standard:port-adapter-cross-domain-integration": {
+    "user:standard:port-adapter-cross-domain-integration": {
       "name": "Port-Adapter Cross-Domain Integration",
       "type": "standard",
       "id": "1ec016d4-e43e-4408-8d57-79f5378b70d6",
@@ -105,6 +108,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-port-adapter-cross-domain-integration.md",
@@ -124,7 +128,7 @@
         }
       ]
     },
-    "standard:scoped-repository-patterns": {
+    "user:standard:scoped-repository-patterns": {
       "name": "Scoped Repository Patterns",
       "type": "standard",
       "id": "cb383ce1-1884-48c1-aa19-871682658308",
@@ -133,6 +137,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-scoped-repository-patterns.md",
@@ -152,7 +157,7 @@
         }
       ]
     },
-    "standard:use-case-architecture-patterns": {
+    "user:standard:use-case-architecture-patterns": {
       "name": "Use Case Architecture Patterns",
       "type": "standard",
       "id": "0c52d6b4-4e4e-46b4-9eeb-fdbcb4f18e6b",
@@ -161,6 +166,7 @@
       "packageIds": [
         "a4fc787c-a97d-4e35-adbf-e1c7b1375dac"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-use-case-architecture-patterns.md",
@@ -180,5 +186,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }

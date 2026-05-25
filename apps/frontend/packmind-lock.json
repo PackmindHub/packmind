@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@frontend/react"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:frontend-data-flow": {
+    "user:standard:frontend-data-flow": {
       "name": "Frontend Data Flow",
       "type": "standard",
       "id": "fd08d95a-9a38-4187-95d1-b2b93b828819",
@@ -21,6 +21,7 @@
       "packageIds": [
         "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-frontend-data-flow.md",
@@ -40,7 +41,7 @@
         }
       ]
     },
-    "standard:frontend-error-management": {
+    "user:standard:frontend-error-management": {
       "name": "Frontend Error Management",
       "type": "standard",
       "id": "384d604c-b9bc-49c1-b4c3-106dc5a0507f",
@@ -49,6 +50,7 @@
       "packageIds": [
         "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-frontend-error-management.md",
@@ -68,7 +70,7 @@
         }
       ]
     },
-    "standard:frontend-navigation-with-react-router": {
+    "user:standard:frontend-navigation-with-react-router": {
       "name": "Frontend Navigation with React Router",
       "type": "standard",
       "id": "1ada3096-d94b-4f11-bbda-9b9b80938262",
@@ -77,6 +79,7 @@
       "packageIds": [
         "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-frontend-navigation-with-react-router.md",
@@ -96,7 +99,7 @@
         }
       ]
     },
-    "standard:tanstack-query-key-management": {
+    "user:standard:tanstack-query-key-management": {
       "name": "TanStack Query Key Management",
       "type": "standard",
       "id": "3eef6c4e-ad66-404e-a7b5-332148bafa41",
@@ -105,6 +108,7 @@
       "packageIds": [
         "36c05ccb-b4bc-4151-99ae-e43ed7023bf9"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-tanstack-query-key-management.md",
@@ -124,5 +128,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }
