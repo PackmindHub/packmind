@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@backend/generic",
     "@cli/generic",
@@ -18,7 +18,7 @@
     "packmind"
   ],
   "artifacts": {
-    "command:create-handoff": {
+    "user:command:create-handoff": {
       "name": "Create handoff",
       "type": "command",
       "id": "f7907029-f0c1-4c32-b488-bfac6fbaab1c",
@@ -27,6 +27,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/create-handoff.md",
@@ -46,7 +47,7 @@
         }
       ]
     },
-    "command:create-new-package-in-monorepo": {
+    "user:command:create-new-package-in-monorepo": {
       "name": "Create New Package",
       "type": "command",
       "id": "021984f7-09bf-48e5-81ac-70c7e68b13bf",
@@ -55,6 +56,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/create-new-package-in-monorepo.md",
@@ -74,7 +76,7 @@
         }
       ]
     },
-    "command:create-or-update-model-and-typeorm-schemas": {
+    "user:command:create-or-update-model-and-typeorm-schemas": {
       "name": "Create or update model and TypeORM schemas",
       "type": "command",
       "id": "d63a7443-51c4-4c08-8afc-1027f37215c7",
@@ -83,6 +85,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
@@ -102,7 +105,7 @@
         }
       ]
     },
-    "command:creating-end-user-documentation-for-packmind": {
+    "user:command:creating-end-user-documentation-for-packmind": {
       "name": "Creating End-User Documentation for Packmind",
       "type": "command",
       "id": "51fa2ad4-cb4d-4f27-a7d3-8aa55c91ff18",
@@ -111,6 +114,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/creating-end-user-documentation-for-packmind.md",
@@ -130,7 +134,7 @@
         }
       ]
     },
-    "command:gateway-pattern-implementation-in-packmind-frontend": {
+    "user:command:gateway-pattern-implementation-in-packmind-frontend": {
       "name": "Gateway Pattern Implementation in Packmind Frontend",
       "type": "command",
       "id": "6a7ef532-bf72-4350-8d9f-1f85e2cfbb1d",
@@ -139,6 +143,7 @@
       "packageIds": [
         "1a736454-c819-4060-8371-d34701181d0e"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/gateway-pattern-implementation-in-packmind-frontend.md",
@@ -158,7 +163,7 @@
         }
       ]
     },
-    "command:how-to-write-typeorm-migrations-in-packmind": {
+    "user:command:how-to-write-typeorm-migrations-in-packmind": {
       "name": "How to Write TypeORM Migrations in Packmind",
       "type": "command",
       "id": "52933de0-1479-44ba-82f0-ec203c97bdb9",
@@ -167,6 +172,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/how-to-write-typeorm-migrations-in-packmind.md",
@@ -186,7 +192,7 @@
         }
       ]
     },
-    "command:repository-implementation-and-testing-pattern": {
+    "user:command:repository-implementation-and-testing-pattern": {
       "name": "Repository Implementation and Testing Pattern",
       "type": "command",
       "id": "44474dab-be7d-4d3d-85ee-6f91f0a93410",
@@ -195,6 +201,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/repository-implementation-and-testing-pattern.md",
@@ -214,7 +221,7 @@
         }
       ]
     },
-    "command:resume-handoff": {
+    "user:command:resume-handoff": {
       "name": "Resume handoff",
       "type": "command",
       "id": "05c8b199-25d7-4cf6-9fe5-4835e1e3ae5e",
@@ -223,6 +230,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/resume-handoff.md",
@@ -242,7 +250,7 @@
         }
       ]
     },
-    "command:update-handoff": {
+    "user:command:update-handoff": {
       "name": "Update Handoff",
       "type": "command",
       "id": "fc2294fd-2bcd-4b09-a610-8dbad8459276",
@@ -251,6 +259,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/update-handoff.md",
@@ -270,7 +279,7 @@
         }
       ]
     },
-    "command:wrapping-chakra-ui-with-slot-components": {
+    "user:command:wrapping-chakra-ui-with-slot-components": {
       "name": "Wrapping Chakra UI with Slot Components",
       "type": "command",
       "id": "b1d36697-c69c-479e-b995-8a74db6eaf2e",
@@ -279,6 +288,7 @@
       "packageIds": [
         "1a736454-c819-4060-8371-d34701181d0e"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/wrapping-chakra-ui-with-slot-components.md",
@@ -298,7 +308,7 @@
         }
       ]
     },
-    "skill:adding-ai-agent-rendering-system": {
+    "user:skill:adding-ai-agent-rendering-system": {
       "name": "adding-ai-agent-rendering-system",
       "type": "skill",
       "id": "3fd90109-62dc-47de-803e-b311442808b2",
@@ -307,6 +317,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/adding-ai-agent-rendering-system/SKILL.md",
@@ -330,7 +341,40 @@
         }
       ]
     },
-    "skill:cli-e2e-test-authoring": {
+    "user:skill:agent-skill-frontmatter-audit": {
+      "name": "agent-skill-frontmatter-audit",
+      "type": "skill",
+      "id": "66ec2fbb-571a-4e4a-bc8e-8d0128bf3d5b",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/agent-skill-frontmatter-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/agent-skill-frontmatter-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/agent-skill-frontmatter-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/agent-skill-frontmatter-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
       "type": "skill",
       "id": "32da0e0f-5d0d-474e-9ae9-315378ef0463",
@@ -339,6 +383,7 @@
       "packageIds": [
         "55cfbdf0-0ce1-403b-8bd5-96344836f315"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/cli-e2e-test-authoring/SKILL.md",
@@ -362,7 +407,7 @@
         }
       ]
     },
-    "skill:create-em-spec": {
+    "user:skill:create-em-spec": {
       "name": "create-em-spec",
       "type": "skill",
       "id": "17153f49-2878-4351-b43b-c71704c17b89",
@@ -371,6 +416,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/create-em-spec/inputs/github-issue.md",
@@ -426,7 +472,7 @@
         }
       ]
     },
-    "skill:datadog-analysis": {
+    "user:skill:datadog-analysis": {
       "name": "datadog-analysis",
       "type": "skill",
       "id": "0bddffe8-a496-4cf2-85f5-5525453eb54b",
@@ -435,6 +481,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/datadog-analysis/references/datadog_mcp.md",
@@ -506,7 +553,7 @@
         }
       ]
     },
-    "skill:doc-audit": {
+    "user:skill:doc-audit": {
       "name": "doc-audit",
       "type": "skill",
       "id": "7683e9a7-4d61-40be-a993-9de987dba976",
@@ -515,6 +562,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/doc-audit/references/section-audit-instructions.md",
@@ -554,7 +602,7 @@
         }
       ]
     },
-    "skill:feature-flags-audit": {
+    "user:skill:feature-flags-audit": {
       "name": "feature-flags-audit",
       "type": "skill",
       "id": "dd6d38fe-3685-4256-855b-9467c5cf1c67",
@@ -563,6 +611,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/feature-flags-audit/SKILL.md",
@@ -586,15 +635,16 @@
         }
       ]
     },
-    "skill:git-commit-guidelines": {
+    "user:skill:git-commit-guidelines": {
       "name": "git-commit-guidelines",
       "type": "skill",
       "id": "f1133c02-d615-4520-9c51-3adf3e6932eb",
-      "version": 2,
+      "version": 3,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/git-commit-guidelines/SKILL.md",
@@ -618,7 +668,7 @@
         }
       ]
     },
-    "skill:hexagonal-architecture": {
+    "user:skill:hexagonal-architecture": {
       "name": "hexagonal-architecture",
       "type": "skill",
       "id": "3d5936bf-be09-4bd3-800d-60191185d2f5",
@@ -627,6 +677,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/hexagonal-architecture/components/adapter.md",
@@ -858,7 +909,7 @@
         }
       ]
     },
-    "skill:playbook-audit": {
+    "user:skill:playbook-audit": {
       "name": "playbook-audit",
       "type": "skill",
       "id": "a5199979-194b-436a-999c-88703ff3dd31",
@@ -867,6 +918,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/playbook-audit/references/commands-vs-skills-agent.md",
@@ -954,7 +1006,7 @@
         }
       ]
     },
-    "skill:playbook-cli-audit": {
+    "user:skill:playbook-cli-audit": {
       "name": "playbook-cli-audit",
       "type": "skill",
       "id": "dcfa9fec-ec46-40ea-b03a-e2f316cc0088",
@@ -963,6 +1015,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/playbook-cli-audit/SKILL.md",
@@ -986,7 +1039,7 @@
         }
       ]
     },
-    "skill:qa-review": {
+    "user:skill:qa-review": {
       "name": "qa-review",
       "type": "skill",
       "id": "468a3a08-d963-4c26-a600-c0bb755cdb14",
@@ -995,6 +1048,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/qa-review/agents/code-map-agent.md",
@@ -1082,7 +1136,7 @@
         }
       ]
     },
-    "skill:release-app": {
+    "user:skill:release-app": {
       "name": "release-app",
       "type": "skill",
       "id": "0ae1ae43-bbab-4af9-a693-854d61d7cf46",
@@ -1091,6 +1145,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/release-app/SKILL.md",
@@ -1114,7 +1169,7 @@
         }
       ]
     },
-    "skill:release-cli": {
+    "user:skill:release-cli": {
       "name": "release-cli",
       "type": "skill",
       "id": "20e7ef2b-d978-4065-b0be-bc3293e8a81b",
@@ -1123,6 +1178,7 @@
       "packageIds": [
         "7404d3b4-4ef5-4d7f-b32f-b3b40787a381"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/release-cli/SKILL.md",
@@ -1146,7 +1202,7 @@
         }
       ]
     },
-    "skill:ux-microcopy": {
+    "user:skill:ux-microcopy": {
       "name": "ux-microcopy",
       "type": "skill",
       "id": "e8211a60-03b4-41ed-b75e-94c999a7b226",
@@ -1155,6 +1211,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/ux-microcopy/SKILL.md",
@@ -1178,7 +1235,7 @@
         }
       ]
     },
-    "skill:working-with-playground-app": {
+    "user:skill:working-with-playground-app": {
       "name": "working-with-playground-app",
       "type": "skill",
       "id": "7e03d40b-9ae6-4a85-92b5-8183b9e8c558",
@@ -1187,6 +1244,7 @@
       "packageIds": [
         "ba8e2fbe-f00a-4490-9618-57b10d22470c"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/working-with-playground-app/references/frontend-domain-structure.md",
@@ -1226,7 +1284,7 @@
         }
       ]
     },
-    "skill:working-with-pm-design-kit": {
+    "user:skill:working-with-pm-design-kit": {
       "name": "working-with-pm-design-kit",
       "type": "skill",
       "id": "549a5890-64d0-428f-9e00-65ad4157837a",
@@ -1235,6 +1293,7 @@
       "packageIds": [
         "ba8e2fbe-f00a-4490-9618-57b10d22470c"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/skills/working-with-pm-design-kit/references/component-catalog.md",
@@ -1274,7 +1333,7 @@
         }
       ]
     },
-    "standard:changelog": {
+    "user:standard:changelog": {
       "name": "Changelog",
       "type": "standard",
       "id": "68528136-4310-4910-848c-89c9fce93739",
@@ -1283,6 +1342,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-changelog.md",
@@ -1302,7 +1362,7 @@
         }
       ]
     },
-    "standard:compliance-logging-personal-information": {
+    "user:standard:compliance-logging-personal-information": {
       "name": "Compliance - Logging Personal Information",
       "type": "standard",
       "id": "d984a9be-3e6d-4c22-a9e0-ad693f2a57a9",
@@ -1311,6 +1371,7 @@
       "packageIds": [
         "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-compliance-logging-personal-information.md",
@@ -1330,7 +1391,7 @@
         }
       ]
     },
-    "standard:packmind-proprietary": {
+    "user:standard:packmind-proprietary": {
       "name": "Packmind Proprietary",
       "type": "standard",
       "id": "6837ab47-2c56-49a0-aea4-e3c33b985393",
@@ -1339,6 +1400,7 @@
       "packageIds": [
         "72851a01-4230-4838-ba7a-fb26f3e95ff3"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-packmind-proprietary.md",
@@ -1358,7 +1420,7 @@
         }
       ]
     },
-    "standard:typescript-good-practices": {
+    "user:standard:typescript-good-practices": {
       "name": "Typescript good practices",
       "type": "standard",
       "id": "e26dc800-20ca-4378-beb7-aa1c773864e3",
@@ -1367,6 +1429,7 @@
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-typescript-good-practices.md",
@@ -1386,5 +1449,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }

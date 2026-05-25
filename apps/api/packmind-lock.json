@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@backend/nestjs"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:nestjs-module-hierarchy": {
+    "user:standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",
       "type": "standard",
       "id": "de5534ef-38f4-48ab-ab54-36538369727b",
@@ -21,6 +21,7 @@
       "packageIds": [
         "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-nestjs-module-hierarchy.md",
@@ -40,7 +41,7 @@
         }
       ]
     },
-    "standard:rest-api-endpoint-design": {
+    "user:standard:rest-api-endpoint-design": {
       "name": "REST API Endpoint Design",
       "type": "standard",
       "id": "0c6060b2-c18f-4813-a426-fbe9b360b3ef",
@@ -49,6 +50,7 @@
       "packageIds": [
         "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-rest-api-endpoint-design.md",
@@ -68,5 +70,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }

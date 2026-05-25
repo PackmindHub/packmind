@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@backend/migrations"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "command:create-or-update-model-and-typeorm-schemas": {
+    "user:command:create-or-update-model-and-typeorm-schemas": {
       "name": "Create or update model and TypeORM schemas",
       "type": "command",
       "id": "d63a7443-51c4-4c08-8afc-1027f37215c7",
@@ -21,6 +21,7 @@
       "packageIds": [
         "8932d029-67bc-4a1e-a5ce-0accd052ffa5"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/commands/create-or-update-model-and-typeorm-schemas.md",
@@ -40,5 +41,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }
