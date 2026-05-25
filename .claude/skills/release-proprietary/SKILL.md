@@ -5,7 +5,14 @@ description: 'Orchestrate a full Packmind proprietary release: verify Main CI/CD
 
 Create a full Packmind proprietary release with version `{{version}}`.
 
-This skill orchestrates a cross-repository release that spans the OSS fork (`/home/mcouaran/Code3/packmind3`) and the proprietary repo (current working directory, `/home/mcouaran/Code3/packmind-proprietary3`). All real release content lives on OSS; the proprietary side simply receives the OSS commit through the `oss-sync` workflow and gets the same `release/{{version}}` tag.
+This skill orchestrates a cross-repository release that spans the OSS fork (`/home/mcouaran/Code3/packmind3`) and the proprietary repo (current working directory, `/home/mcouaran/Code3/packmind-proprietary3`). All real release content (version bumps, CHANGELOG) lives on OSS; the proprietary side receives the OSS commit through the `oss-sync` workflow and gets its own `release/{{version}}` tag pointing at a **different SHA** than the OSS tag — see below.
+
+**Dual-SHA model — important:**
+
+* On **OSS**, the `release/{{version}}` tag points at the release commit itself (subject `chore: release {{version}}`). That commit's tree contains OSS code, which is what OSS deployments need.
+* On **proprietary**, the same tag points at the **sync-merge commit** that brought the OSS release into proprietary `main`. The OSS release commit has no proprietary-only files in its tree, so tagging it on proprietary would break deployments (the build can't find `@packmind/proprietary/*` modules). The sync-merge commit's tree combines OSS-at-release with the proprietary-only files, which is what proprietary deployments need.
+
+The wait/tag scripts handle this for you — Phase 2 emits the proprietary merge SHA, and Phase 3 tags that SHA.
 
 Hardcoded paths (will be parameterized in a later iteration):
 
@@ -119,21 +126,28 @@ node ./.claude/skills/release-proprietary/scripts/changelog-next.mjs {{version}}
 
 ## Phase 2 — Wait for oss-sync to land on proprietary
 
-The `sync-from-oss-repository.yml` workflow on the proprietary repo merges OSS commits into proprietary `main` automatically (usually under a minute). It will land BOTH the release commit AND the subsequent "prepare next development cycle" commit in the same sync, so the release commit will typically NOT be at `HEAD` by the time we detect it — we must capture its SHA explicitly.
+The `sync-from-oss-repository.yml` workflow on the proprietary repo merges OSS commits into proprietary `main` automatically (usually under a minute). It will land BOTH the release commit AND the subsequent "prepare next development cycle" commit; each goes through its own sync-merge commit on proprietary `main`.
 
 ```bash
-RELEASE_SHA=$(./.claude/skills/release-proprietary/scripts/wait-for-oss-sync.sh \
+PROP_TAG_SHA=$(./.claude/skills/release-proprietary/scripts/wait-for-oss-sync.sh \
   /home/mcouaran/Code3/packmind-proprietary3 {{version}})
 ```
 
-The script writes the SHA to stdout (captured into `RELEASE_SHA`) and progress to stderr. It polls `origin/main` every 5 seconds for a commit whose subject is exactly `chore: release {{version}}`, with a 10-minute timeout. Each iteration scans the last 500 commits on `origin/main` (covers any realistic backlog).
+The script writes the **proprietary sync-merge SHA** to stdout (captured into `PROP_TAG_SHA`) and progress to stderr. Internally it:
+
+1. Polls `origin/main` every 5 seconds for the OSS release commit (subject exactly `chore: release {{version}}`), with a 10-minute timeout.
+2. Once found, locates the proprietary merge commit whose **2nd parent** is that OSS commit — that's the upstream side of the sync merge. Requiring the OSS release to be the direct 2nd parent (not a grandparent) ensures the merge's tree is exactly "OSS at release + proprietary state at that moment" — i.e. version `{{version}}`, not `{{next}}-next`.
+
+This is the SHA you tag on proprietary. It is NOT the OSS release SHA — that one's tree contains only OSS code and would break proprietary deployments. See the "Dual-SHA model" note at the top.
 
 If it times out, abort and instruct the user to:
 
 * Check the `sync-from-oss-repository` workflow on `PackmindHub/packmind-proprietary`.
 * Check whether an open `oss-sync` PR appeared after Phase 0 ran.
 
-Once `RELEASE_SHA` is set, fast-forward the local proprietary checkout (purely to keep the working tree in sync — we do NOT rely on HEAD for the tag):
+If the script reports `OSS release commit … is on proprietary origin/main, but no merge commit has it as its direct upstream (2nd) parent`, the auto-sync either fast-forwarded or batched release + next-cycle into one merge. The operator must resolve manually before continuing — there is no merge commit with the right tree to tag.
+
+Once `PROP_TAG_SHA` is set, fast-forward the local proprietary checkout (purely to keep the working tree in sync — we do NOT rely on HEAD for the tag):
 
 ```bash
 git -C /home/mcouaran/Code3/packmind-proprietary3 checkout main
@@ -154,10 +168,10 @@ The sync just pushed new commits to proprietary main; the Phase 0 CI gate is now
 
 ```bash
 ./.claude/skills/release-proprietary/scripts/tag-release.sh \
-  /home/mcouaran/Code3/packmind-proprietary3 {{version}} "${RELEASE_SHA}"
+  /home/mcouaran/Code3/packmind-proprietary3 {{version}} "${PROP_TAG_SHA}"
 ```
 
-Passing the SHA explicitly is essential — tagging `HEAD` would tag the next-cycle commit. The script also re-verifies that the target commit's subject is exactly `chore: release {{version}}` and refuses to tag otherwise; it will not allow retagging an existing tag at a different commit.
+Passing the SHA explicitly is essential — tagging `HEAD` would tag a later sync-merge or the next-cycle commit. The script re-verifies that the target is either a direct release commit OR a merge commit whose 2nd parent is the release commit, and refuses to tag otherwise. It will not allow retagging an existing tag at a different commit.
 
 ### 3.3 Done
 
@@ -182,4 +196,10 @@ If the flow fails at a known phase, recover as follows:
 * **After 1.4, before 1.5** (release commit pushed, no OSS tag yet): re-run `tag-release.sh <oss-dir> {{version}}` from Phase 1.5. The script tags HEAD only if HEAD's subject is `chore: release {{version}}`.
 * **After 1.5, before 1.6** (OSS is tagged, no next-cycle commit): re-run `changelog-next.mjs` + `commit-next-cycle.sh`. Then proceed to Phase 2.
 * **After 1.6, Phase 2 timed out**: investigate the sync workflow / oss-sync PR. Once unstuck, re-run only Phase 2 + Phase 3.
-* **After Phase 3 failure** (OSS tagged, proprietary not tagged): once any blocker is cleared, re-run only Phase 3, passing the same `RELEASE_SHA` (recover it via `git log origin/main --format='%H %s' -500 | grep "chore: release {{version}}"`).
+* **After Phase 3 failure** (OSS tagged, proprietary not tagged): once any blocker is cleared, re-run only Phase 3, passing the same `PROP_TAG_SHA`. Recover it by re-running `wait-for-oss-sync.sh` (idempotent — it finds and emits the same merge SHA as before) or manually with:
+  ```bash
+  OSS_SHA=$(git -C /home/mcouaran/Code3/packmind-proprietary3 log origin/main \
+    --format='%H%x09%s' -500 | awk -F '\t' -v subj="chore: release {{version}}" '$2 == subj { print $1; exit }')
+  git -C /home/mcouaran/Code3/packmind-proprietary3 log origin/main --merges \
+    --format='%H %P' -500 | awk -v oss="${OSS_SHA}" '$3 == oss { print $1; exit }'
+  ```
