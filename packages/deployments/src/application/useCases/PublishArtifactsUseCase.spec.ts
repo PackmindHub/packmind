@@ -448,7 +448,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.lockfileVersion).toBe(1);
+      expect(parsed.lockfileVersion).toBe(2);
     });
 
     it('generates lock file with target id', async () => {
@@ -3989,7 +3989,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['command:test-recipe']).toEqual(
+      expect(parsed.artifacts['user:command:test-recipe']).toEqual(
         expect.objectContaining({
           type: 'command',
           version: 3,
@@ -4011,7 +4011,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['standard:test-standard']).toEqual(
+      expect(parsed.artifacts['user:standard:test-standard']).toEqual(
         expect.objectContaining({
           type: 'standard',
           version: 2,
@@ -4048,7 +4048,9 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['command:test-recipe'].spaceId).toBe(spaceId);
+      expect(parsed.artifacts['user:command:test-recipe'].spaceId).toBe(
+        spaceId,
+      );
     });
 
     it('includes package ids in lock file artifact entries', async () => {
@@ -4063,7 +4065,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['command:test-recipe'].packageIds).toEqual([
+      expect(parsed.artifacts['user:command:test-recipe'].packageIds).toEqual([
         pkgId,
       ]);
     });
@@ -4207,7 +4209,7 @@ describe('PublishArtifactsUseCase', () => {
       assert(lockFile.content, 'lockFile.content should be defined');
       const parsed = JSON.parse(lockFile.content);
 
-      expect(parsed.artifacts['command:test-recipe']).toBeDefined();
+      expect(parsed.artifacts['user:command:test-recipe']).toBeDefined();
     });
 
     it('preserves inaccessible package slugs in lock file', async () => {

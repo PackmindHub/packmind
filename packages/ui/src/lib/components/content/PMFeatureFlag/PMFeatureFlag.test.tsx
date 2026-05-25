@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {
+  ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
   PMFeatureFlag,
-  RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
   isFeatureFlagEnabled,
 } from './PMFeatureFlag';
 import { UIProvider } from '../../../UIProvider';
@@ -103,5 +103,15 @@ describe('PMFeatureFlag', () => {
 
       expect(isEnabled).toBe(false);
     });
+  });
+
+  it('enables the change-proposals-in-webapp feature for allowed domains', () => {
+    const isEnabled = isFeatureFlagEnabled({
+      featureKeys: [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY],
+      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+      userEmail: 'member@promyze.com',
+    });
+
+    expect(isEnabled).toBe(true);
   });
 });

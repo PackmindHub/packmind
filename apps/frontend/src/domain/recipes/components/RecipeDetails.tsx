@@ -26,6 +26,7 @@ import {
   useDeleteRecipeMutation,
 } from '../api/queries/RecipesQueries';
 
+import { AddToPackagesButton } from '../../deployments/components/AddToPackagesDialog';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -194,9 +195,20 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>
+          {organization?.id && spaceId ? (
+            <AddToPackagesButton
+              artifactId={recipe.id}
+              artifactType="recipe"
+              artifactKindLabel="command"
+              organizationId={organization.id}
+              spaceId={spaceId}
+              orgSlug={orgSlug}
+              spaceSlug={spaceSlug}
+            />
+          ) : null}
           <PMAlertDialog
             trigger={
-              <PMButton variant="tertiary" loading={deleteMutation.isPending}>
+              <PMButton variant="secondary" loading={deleteMutation.isPending}>
                 Delete
               </PMButton>
             }
