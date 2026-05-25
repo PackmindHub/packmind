@@ -53,6 +53,7 @@ export function camelToKebab(str: string): string {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   'argument-hint': 'argumentHint',
+  arguments: 'arguments',
   when_to_use: 'whenToUse',
   'disable-model-invocation': 'disableModelInvocation',
   'user-invocable': 'userInvocable',
@@ -71,6 +72,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
  */
 export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'argumentHint',
+  'arguments',
   'whenToUse',
   'disableModelInvocation',
   'userInvocable',
@@ -96,9 +98,13 @@ export const CAMEL_TO_YAML_KEY: Record<string, string> = Object.fromEntries(
 
 /**
  * Additional properties supported by the GitHub Copilot agent (camelCase storage keys).
+ *
+ * Note: `context` is documented as experimental upstream
+ * (https://code.visualstudio.com/docs/copilot/customization/agent-skills).
  */
 export const COPILOT_ADDITIONAL_FIELDS: string[] = [
   'argumentHint',
+  'context',
   'disableModelInvocation',
   'userInvocable',
 ];
@@ -106,7 +112,10 @@ export const COPILOT_ADDITIONAL_FIELDS: string[] = [
 /**
  * Additional properties supported by the Cursor agent (camelCase storage keys).
  */
-export const CURSOR_ADDITIONAL_FIELDS: string[] = ['disableModelInvocation'];
+export const CURSOR_ADDITIONAL_FIELDS: string[] = [
+  'disableModelInvocation',
+  'paths',
+];
 
 /**
  * Filters additional properties to only include keys supported by a given agent.

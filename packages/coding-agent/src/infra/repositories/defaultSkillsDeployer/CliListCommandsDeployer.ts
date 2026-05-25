@@ -13,6 +13,7 @@ export class CliListCommandsDeployer
 {
   protected override unsupportedFromVersion: SemVer = '0.27.0';
   public readonly slug = 'packmind-cli-list-commands';
+  public readonly name = skillMd.title;
   protected readonly minimumVersion = '0.15.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {

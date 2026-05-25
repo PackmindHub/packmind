@@ -10,6 +10,7 @@ import {
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
+  IAddArtefactsToPackageUseCase,
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
@@ -34,6 +35,7 @@ export interface IDeploymentsGateway {
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
+  addArtefactsToPackage: NewGateway<IAddArtefactsToPackageUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
   publishRecipes: NewGateway<IPublishRecipes>;
   publishStandards: NewGateway<IPublishStandards>;

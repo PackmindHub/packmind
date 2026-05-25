@@ -33,6 +33,10 @@ function buildLockFileWithObsoleteSkill(
   cliVersion: string,
   obsoleteSkillFilePath: string,
 ): PackmindLockFile {
+  // Hand-crafted v1 lockfile (pre-`source`-field schema). Cast through
+  // `unknown` because the current `PackmindLockFile` type mandates `source`
+  // on every entry — the on-disk JSON intentionally omits it so the CLI's
+  // silent v1→v2 migration in `LockFileRepository.read` is exercised.
   return {
     lockfileVersion: 1,
     cliVersion,
@@ -55,7 +59,7 @@ function buildLockFileWithObsoleteSkill(
         ],
       },
     },
-  };
+  } as unknown as PackmindLockFile;
 }
 
 function seedObsoleteSkillFile(testDir: string, relativePath: string): void {

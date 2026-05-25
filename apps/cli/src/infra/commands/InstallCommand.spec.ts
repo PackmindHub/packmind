@@ -944,6 +944,111 @@ describe('installCommand', () => {
       });
     });
 
+    describe('when installDefaultSkills is slow to resolve', () => {
+      let installDefaultSkillsResolved: boolean;
+      let handlerReturned: boolean;
+      let resolveInstallDefaultSkills: (value: unknown) => void;
+
+      beforeEach(async () => {
+        installDefaultSkillsResolved = false;
+        handlerReturned = false;
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        mockInstallDefaultSkills.mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              resolveInstallDefaultSkills = (value: unknown) => {
+                installDefaultSkillsResolved = true;
+                resolve(value);
+              };
+            }),
+        );
+
+        const handlerPromise = handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        }).then(() => {
+          handlerReturned = true;
+        });
+
+        // Drain the microtask queue so any non-awaited fire-and-forget call
+        // would have already resolved the handler. If the handler is properly
+        // awaiting installDefaultSkills, it should still be pending here.
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+
+        // At this point installDefaultSkills has been invoked but is still
+        // pending. If the handler were not awaiting it, handlerReturned would
+        // already be true.
+        expect(installDefaultSkillsResolved).toBe(false);
+        expect(handlerReturned).toBe(false);
+
+        resolveInstallDefaultSkills({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        await handlerPromise;
+      });
+
+      it('awaits installDefaultSkills before returning (no mid-flight return)', () => {
+        // The two flags must be set in this order: skills first, then handler.
+        // If the handler ran fire-and-forget, handlerReturned would be true
+        // before installDefaultSkillsResolved.
+        expect(installDefaultSkillsResolved).toBe(true);
+        expect(handlerReturned).toBe(true);
+      });
+    });
+
+    describe('on a fast-following second invocation', () => {
+      beforeEach(async () => {
+        mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+        // First invocation installs default skills.
+        mockInstallDefaultSkills.mockResolvedValueOnce({
+          filesCreated: 5,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+        // Second invocation: lockfile already merged, no new files.
+        mockInstallDefaultSkills.mockResolvedValueOnce({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+
+        await handler({
+          installPath: '',
+          packages: [],
+          list: false,
+          show: '',
+          status: false,
+        });
+      });
+
+      it('invokes installDefaultSkills on both invocations (lockfile merge is awaited each time)', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalledTimes(2);
+      });
+    });
+
     describe('when no configured agent supports skills', () => {
       beforeEach(async () => {
         MockedConfigFileRepository.mockImplementationOnce(() => ({

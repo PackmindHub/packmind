@@ -302,6 +302,10 @@ describeForVersion('>= 0.24.0', 'install command', () => {
           let result: RunCliResult;
 
           beforeEach(async () => {
+            // Hand-crafted v1 lockfile (pre-`source`-field schema). Cast
+            // through `unknown` because the current `PackmindLockFile` type
+            // mandates `source` on every entry — the on-disk JSON intentionally
+            // omits it so the CLI's silent v1→v2 migration is exercised.
             const lockFile: PackmindLockFile = {
               lockfileVersion: 1,
               cliVersion: '0.0.1',
@@ -324,7 +328,7 @@ describeForVersion('>= 0.24.0', 'install command', () => {
                   ],
                 },
               },
-            };
+            } as unknown as PackmindLockFile;
             updateFile(
               'packmind-lock.json',
               JSON.stringify(lockFile, null, 2) + '\n',
@@ -473,5 +477,212 @@ describeForVersion('>= 0.24.0', 'install command', () => {
         expect(packmindJson).toContain(pkg.slug);
       });
     });
+
+    // Default-skill lockfile tracking landed after 0.28.1. Gate so the
+    // production-CLI run (CI installs the published @packmind/cli) skips
+    // CLI versions that do not yet emit `default:skill:...` entries.
+    describeForVersion(
+      '> 0.28.1',
+      'default-skill lockfile tracking on install at git root',
+      () => {
+        let pkgWithStandard: Package;
+        let createdStandardSlug: string;
+
+        beforeEach(async () => {
+          // Seed a user-authored standard so the package install produces a
+          // `user:standard:...` lockfile entry alongside the default skills.
+          const standardResponse = await context.gateway.standards.create({
+            description: 'A standard for lockfile assertions',
+            name: 'My E2E standard',
+            rules: [],
+            scope: '',
+            spaceId: context.space.id,
+          });
+          createdStandardSlug = standardResponse.standard.slug;
+
+          const packageResponse = await context.gateway.packages.create({
+            name: 'Pkg with standard',
+            description: 'Standards-bearing package',
+            recipeIds: [],
+            standardIds: [standardResponse.standard.id],
+            spaceId: context.space.id,
+          });
+          pkgWithStandard = packageResponse.package;
+        });
+
+        describe('and the user runs install <package> at the git root', () => {
+          let result: RunCliResult;
+          let lockFile: PackmindLockFile;
+
+          beforeEach(async () => {
+            // Fresh test users default to coding agents ['packmind', 'agents_md']
+            // — neither has a default-skill deployer. Override via packmind.json
+            // so the claude default-skill deployers run alongside the package
+            // install and produce default:skill:<slug> lockfile entries.
+            updateFile(
+              'packmind.json',
+              JSON.stringify({ packages: {}, agents: ['claude'] }),
+              context.testDir,
+            );
+            result = await context.runCli(
+              `install @${context.space.slug}/${pkgWithStandard.slug}`,
+            );
+            const raw = readFile('packmind-lock.json', context.testDir);
+            lockFile = JSON.parse(raw) as PackmindLockFile;
+          });
+
+          it('exits successfully', () => {
+            expect(result.returnCode).toBe(0);
+          });
+
+          it('writes a lockfileVersion: 2 lockfile', () => {
+            expect(lockFile.lockfileVersion).toBe(2);
+          });
+
+          it('records the user standard under a user:standard:<slug> key', () => {
+            expect(
+              lockFile.artifacts[`user:standard:${createdStandardSlug}`],
+            ).toBeDefined();
+          });
+
+          it('tags the user standard entry with source: "user"', () => {
+            expect(
+              lockFile.artifacts[`user:standard:${createdStandardSlug}`].source,
+            ).toBe('user');
+          });
+
+          it('records every default skill under a default:skill:<slug> key', () => {
+            const defaultKeys = Object.keys(lockFile.artifacts).filter((k) =>
+              k.startsWith('default:skill:'),
+            );
+            expect(defaultKeys.length).toBeGreaterThan(0);
+          });
+
+          it('tags every default-skill entry with source: "default"', () => {
+            const defaultEntries = Object.entries(lockFile.artifacts)
+              .filter(([k]) => k.startsWith('default:skill:'))
+              .map(([, entry]) => entry);
+            expect(defaultEntries.length).toBeGreaterThan(0);
+            for (const entry of defaultEntries) {
+              expect(entry.source).toBe('default');
+            }
+          });
+
+          it('records the well-known packmind-create-skill default entry', () => {
+            expect(
+              lockFile.artifacts['default:skill:packmind-create-skill'],
+            ).toBeDefined();
+            expect(
+              lockFile.artifacts['default:skill:packmind-create-skill'].source,
+            ).toBe('default');
+          });
+        });
+      },
+    );
+
+    // v1 → v2 migration landed after 0.28.1.
+    describeForVersion(
+      '> 0.28.1',
+      'v1 → v2 lockfile migration on skills init',
+      () => {
+        let userSkillSlug: string;
+
+        beforeEach(async () => {
+          // Pre-seed a hand-crafted v1 lockfile with a user-skill entry keyed
+          // by the legacy `${type}:${slug}` format. After `skills init`, the
+          // entry must be re-keyed to `user:${type}:${slug}` and tagged
+          // source:'user'. We test against `skills init` (not `install <pkg>`)
+          // because the package install path rebuilds the lockfile from the
+          // server's response, which loses pre-existing entries (a separate
+          // pre-existing limitation tracked in the implementation-plan's
+          // Known Issues section).
+          userSkillSlug = 'legacy-user-skill';
+          const v1LockFile = {
+            lockfileVersion: 1,
+            cliVersion: '0.0.1',
+            packageSlugs: [],
+            agents: [],
+            artifacts: {
+              [`skill:${userSkillSlug}`]: {
+                name: 'legacy-user-skill',
+                type: 'skill',
+                id: 'artifact-legacy-user-skill',
+                version: 1,
+                spaceId: 'space-e2e-migration',
+                packageIds: [],
+                files: [
+                  {
+                    path: `.claude/skills/${userSkillSlug}/SKILL.md`,
+                    agent: 'claude',
+                    isSkillDefinition: true,
+                  },
+                ],
+              },
+            },
+          };
+          updateFile(
+            'packmind-lock.json',
+            JSON.stringify(v1LockFile, null, 2) + '\n',
+            context.testDir,
+          );
+        });
+
+        describe('after running skills init at the git root', () => {
+          let result: RunCliResult;
+          let lockFile: PackmindLockFile;
+
+          beforeEach(async () => {
+            // Fresh test users default to coding agents ['packmind', 'agents_md']
+            // — neither has a default-skill deployer. Override via packmind.json
+            // so the claude default-skill deployers run and produce
+            // default:skill:<slug> entries in the merged lockfile.
+            updateFile(
+              'packmind.json',
+              JSON.stringify({ packages: {}, agents: ['claude'] }),
+              context.testDir,
+            );
+            result = await context.runCli('skills init');
+            const raw = readFile('packmind-lock.json', context.testDir);
+            lockFile = JSON.parse(raw) as PackmindLockFile;
+          });
+
+          it('exits successfully', () => {
+            expect(result.returnCode).toBe(0);
+          });
+
+          it('bumps lockfileVersion to 2', () => {
+            expect(lockFile.lockfileVersion).toBe(2);
+          });
+
+          it('re-keys the legacy user-skill entry under the user: prefix', () => {
+            expect(
+              lockFile.artifacts[`user:skill:${userSkillSlug}`],
+            ).toBeDefined();
+          });
+
+          it('tags the migrated user-skill entry with source: "user"', () => {
+            expect(
+              lockFile.artifacts[`user:skill:${userSkillSlug}`].source,
+            ).toBe('user');
+          });
+
+          it('drops the legacy `${type}:${slug}` key', () => {
+            expect(
+              lockFile.artifacts[`skill:${userSkillSlug}`],
+            ).toBeUndefined();
+          });
+
+          it('adds default-skill entries tagged source: "default"', () => {
+            const defaultEntries = Object.entries(lockFile.artifacts)
+              .filter(([k]) => k.startsWith('default:skill:'))
+              .map(([, entry]) => entry);
+            expect(defaultEntries.length).toBeGreaterThan(0);
+            for (const entry of defaultEntries) {
+              expect(entry.source).toBe('default');
+            }
+          });
+        });
+      },
+    );
   });
 });

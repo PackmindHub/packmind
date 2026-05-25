@@ -50,6 +50,10 @@ describeForVersion('> 0.24.0', 'playbook add', () => {
           context.testDir,
         );
 
+        // Hand-crafted pre-`source`-field lockfile. Cast through `unknown`
+        // because the current `PackmindLockFile` type mandates `source` on
+        // every entry; this fixture deliberately omits it to mirror an older
+        // on-disk shape.
         const lockFile: PackmindLockFile = {
           agents: [],
           artifacts: {
@@ -71,7 +75,7 @@ describeForVersion('> 0.24.0', 'playbook add', () => {
           installedAt: '',
           lockfileVersion: 0,
           packageSlugs: ['@private/secret'],
-        };
+        } as unknown as PackmindLockFile;
         updateFile(
           'packmind-lock.json',
           JSON.stringify(lockFile),

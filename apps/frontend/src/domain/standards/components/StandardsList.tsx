@@ -28,9 +28,11 @@ import { PackageCountBadge } from '../../deployments/components/PackageCountBadg
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { AddToPackagesBatchAction } from '../../deployments/components/AddToPackagesDialog';
 import { useGetGroupedChangeProposalsQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { SpacesManagementActions } from '@packmind/proprietary/frontend/domain/spaces-management/components/SpacesManagementActions';
 import {
+  BatchAction,
   ItemsListing,
   ItemsListingProps,
 } from '../../../shared/components/ItemsListing';
@@ -106,6 +108,25 @@ export const StandardsList = ({
       setDeleteModalOpen(false);
     }
   };
+
+  const renderAddToPackagesAction = React.useCallback<BatchAction<StandardId>>(
+    ({ selectedIds, unselectAll }) => {
+      if (!organization?.id || !spaceId) return null;
+      return (
+        <AddToPackagesBatchAction
+          selectedIds={selectedIds}
+          artifactType="standard"
+          artifactKindLabel="standard"
+          organizationId={organization.id}
+          spaceId={spaceId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+          onSuccess={unselectAll}
+        />
+      );
+    },
+    [organization?.id, spaceId, orgSlug, spaceSlug],
+  );
 
   const hasStandards = (listStandardsResponse?.standards ?? []).length > 0;
 
@@ -243,6 +264,7 @@ export const StandardsList = ({
           />
         );
       },
+      renderAddToPackagesAction,
       ({ selectedIds, unselectAll }) => {
         return (
           <SpacesManagementActions

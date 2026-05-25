@@ -20,6 +20,18 @@ export type FileModification =
       packageIds?: string[];
       skillFileId?: string;
       skillFilePermissions?: string;
+      /**
+       * Origin discriminator propagated to the lockfile entry.
+       *
+       * When set to `'default'`, `PackmindLockFileService.buildLockFile` emits
+       * the entry under the `default:${type}:${slug}` key (default skills
+       * shipped by the CLI server). Otherwise the entry is emitted under the
+       * `user:${type}:${slug}` key (user-authored skills and
+       * package-distributed artifacts).
+       *
+       * See `PackmindLockFileEntrySource` in `PackmindLockFile.ts`.
+       */
+      source?: 'default' | 'user';
     }
   | {
       path: string;
@@ -34,6 +46,18 @@ export type FileModification =
       packageIds?: string[];
       skillFileId?: string;
       skillFilePermissions?: string;
+      /**
+       * Origin discriminator propagated to the lockfile entry.
+       *
+       * When set to `'default'`, `PackmindLockFileService.buildLockFile` emits
+       * the entry under the `default:${type}:${slug}` key (default skills
+       * shipped by the CLI server). Otherwise the entry is emitted under the
+       * `user:${type}:${slug}` key (user-authored skills and
+       * package-distributed artifacts).
+       *
+       * See `PackmindLockFileEntrySource` in `PackmindLockFile.ts`.
+       */
+      source?: 'default' | 'user';
     };
 
 export enum DeleteItemType {

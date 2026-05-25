@@ -4,6 +4,7 @@ import {
   FileModification,
   PackmindLockFile,
   PackmindLockFileEntry,
+  PackmindLockFileEntrySource,
   PackmindLockFileFile,
   RecipeVersion,
   SkillVersion,
@@ -82,7 +83,8 @@ export class PackmindLockFileService {
         continue;
       }
 
-      const artifactKey = `${versionInfo.type}:${versionInfo.slug}`;
+      const source: PackmindLockFileEntrySource = file.source ?? 'user';
+      const artifactKey = `${source}:${versionInfo.type}:${versionInfo.slug}`;
 
       const lockFileFile: PackmindLockFileFile = {
         path: file.path,
@@ -102,6 +104,7 @@ export class PackmindLockFileService {
             version: versionInfo.version,
             spaceId: params.artifactSpaceIds[file.artifactId] ?? '',
             packageIds: params.artifactPackageIds[file.artifactId] ?? [],
+            source,
           },
           files: [lockFileFile],
         });
@@ -125,7 +128,7 @@ export class PackmindLockFileService {
     }
 
     return {
-      lockfileVersion: 1,
+      lockfileVersion: 2,
       packageSlugs: [...params.packageSlugs].sort((a, b) => a.localeCompare(b)),
       agents: [...params.codingAgents].sort((a, b) => a.localeCompare(b)),
       ...(params.includeInstalledAt !== false

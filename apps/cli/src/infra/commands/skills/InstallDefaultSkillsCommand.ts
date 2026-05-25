@@ -15,6 +15,7 @@ import {
   buildSkillsSkippedWarning,
   configuredAgentsSupportSkills,
 } from '../skillsCapabilityWarning';
+import { isSkillsInitBootstrapError } from '../../../domain/errors/SkillsInitBootstrapError';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -46,6 +47,12 @@ export const installDefaultSkillsCommand = command({
       } catch {
         // Silently swallow drift-check failures; skills init must continue.
       }
+
+      // Bootstrap an empty directory (no packmind.json + no packmind-lock.json)
+      // from the org's active render modes before evaluating skill capability.
+      // Throws SkillsInitBootstrapError on gateway failure — handled by the
+      // outer catch below.
+      await packmindCliHexa.bootstrapSkillsInitDirectory({ baseDirectory });
 
       const config = await new ConfigFileRepository().readConfig(baseDirectory);
       const configuredAgents = config?.agents ?? [];
@@ -97,6 +104,10 @@ export const installDefaultSkillsCommand = command({
         }
       }
     } catch (error) {
+      if (isSkillsInitBootstrapError(error)) {
+        logErrorConsole(error.message);
+        process.exit(1);
+      }
       if (error instanceof Error) {
         logErrorConsole(`Installation failed: ${error.message}`);
       } else {

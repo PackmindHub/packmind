@@ -26,6 +26,7 @@ export class UpdatePlaybookDeployer
   implements ISkillDeployer
 {
   public readonly slug = 'packmind-update-playbook';
+  public readonly name = skillMd.title;
   protected readonly minimumVersion = '0.21.0';
   protected override unsupportedFromVersion = null;
 
