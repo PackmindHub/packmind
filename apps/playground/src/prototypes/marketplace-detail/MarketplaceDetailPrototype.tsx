@@ -240,9 +240,9 @@ export default function MarketplaceDetailPrototype() {
               title={
                 canSync
                   ? undefined
-                  : driftedPluginCount === 0
-                    ? 'Nothing to sync — every plugin matches its curated state.'
-                    : undefined
+                  : marketplace.plugins.length === 0
+                    ? 'No plugins to sync yet.'
+                    : 'Nothing to sync — every plugin matches its curated state.'
               }
             >
               <PMIcon fontSize="sm">

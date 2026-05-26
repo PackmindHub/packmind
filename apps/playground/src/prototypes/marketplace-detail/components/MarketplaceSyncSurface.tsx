@@ -214,7 +214,7 @@ export function MarketplaceSyncSurface({
       borderColor="border.tertiary"
       borderRadius="md"
       overflow="hidden"
-      animation="fadeIn 120ms ease-out"
+      animation="fade-in 120ms ease-out"
     >
       <PMBox
         as="header"
@@ -823,7 +823,7 @@ function SuccessSurface({
       borderColor="border.tertiary"
       borderRadius="md"
       overflow="hidden"
-      animation="fadeIn 160ms ease-out"
+      animation="fade-in 160ms ease-out"
     >
       <PMVStack
         align="flex-start"
@@ -935,7 +935,7 @@ function FailureSurface({
       borderColor="border.tertiary"
       borderRadius="md"
       overflow="hidden"
-      animation="fadeIn 160ms ease-out"
+      animation="fade-in 160ms ease-out"
     >
       <PMVStack
         align="flex-start"
