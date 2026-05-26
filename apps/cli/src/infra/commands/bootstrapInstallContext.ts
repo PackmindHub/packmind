@@ -28,6 +28,12 @@ export type BootstrapInstallContextDependencies = {
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
   runInit?: typeof initHandler;
+  /**
+   * When set, bootstrap runs in single-agent home-install mode: no interactive
+   * prompts, no organization-level render-mode prompt, and any auto-created
+   * `packmind.json` is written with just this agent.
+   */
+  homeAgent?: CodingAgent;
 };
 
 export type BootstrapInstallContextOutcome = {
@@ -59,6 +65,7 @@ export async function bootstrapInstallContext(
     installDefaultSkills,
     cliVersion,
     runInit = initHandler,
+    homeAgent,
   } = deps;
 
   const hierarchicalResult = await configRepository.readHierarchicalConfig(
@@ -72,6 +79,26 @@ export async function bootstrapInstallContext(
       warned: false,
       configCreated: false,
       packagesAdded: [],
+    };
+  }
+
+  if (homeAgent) {
+    const packagesMap: PackmindFileConfig['packages'] =
+      packages.length > 0
+        ? Object.fromEntries(packages.map((s) => [s, '*']))
+        : {};
+    await configRepository.writeConfig(baseDirectory, {
+      packages: packagesMap,
+      agents: [homeAgent],
+    });
+    logSuccessConsole(
+      `Created packmind.json at ${baseDirectory} for ${homeAgent} (home install).`,
+    );
+    return {
+      configReady: true,
+      warned: false,
+      configCreated: true,
+      packagesAdded: [...packages],
     };
   }
 

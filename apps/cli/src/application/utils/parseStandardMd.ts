@@ -25,6 +25,12 @@ const DEPLOYER_PARSERS: DeployerParser[] = [
     parse: parseContinueStandard,
   },
   { pattern: '.github/instructions/packmind-', parse: parseCopilotStandard },
+  // Home-install variant (e.g. `~/.claude`): the agent directory prefix is
+  // stripped from on-disk and lockfile paths. Only Claude supports home-install
+  // today, so an unprefixed `rules/packmind/standard-…` path is Claude-rendered.
+  // Keep this entry last so the prefixed patterns above still win for in-repo
+  // installs whose paths happen to contain this suffix.
+  { pattern: 'rules/packmind/standard-', parse: parseClaudeStandard },
 ];
 
 export function parseStandardMd(

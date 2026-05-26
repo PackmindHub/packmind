@@ -28,6 +28,8 @@
 - `install <package>` against a directory without `packmind.json` now reports `Created packmind.json with N package(s)` instead of the misleading `Nothing to install`.
 - `playbook add` and `playbook submit` now reject skills whose description exceeds 1024 characters with an actionable message, instead of failing later on the server.
 
+## Removed
+
 # [0.28.1] - 2026-05-04
 
 ## Fixed

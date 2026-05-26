@@ -565,6 +565,28 @@ describe('parseStandardMd', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('when file is in Claude home-install format', () => {
+    // In `~/.claude` installs the `.claude/` prefix is stripped from on-disk
+    // and lockfile paths. The parser must still recognise it as Claude.
+    const filePath = 'rules/packmind/standard-my-standard.md';
+
+    it('parses content using the Claude parser', () => {
+      const content =
+        "---\nname: 'My Standard'\nalwaysApply: true\ndescription: 'Summary'\n---\n# Standard: My Standard\n\nSome description :\n\n* Rule 1";
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'My Standard',
+        description: 'Some description',
+        scope: '',
+        rules: ['Rule 1'],
+        frontmatterName: 'My Standard',
+        frontmatterDescription: 'Summary',
+      });
+    });
+  });
 });
 
 describe('parseStandardMdForAgent', () => {

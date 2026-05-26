@@ -2,6 +2,8 @@
 
 ## Added
 
+- Enable rendering packmind artifacts in `~/.claude` #332
+
 ## Changed
 
 ## Fixed

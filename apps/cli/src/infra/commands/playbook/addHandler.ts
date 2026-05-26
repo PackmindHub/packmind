@@ -81,9 +81,13 @@ async function tryStageRemovedFromLockFile(
   if (!lockEntry) return false;
 
   const gitRoot = await deps.packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  // When there is no git repo (e.g. running inside `~/.claude` for a
+  // home-install), leave `configDir` undefined so the `?? '__cwd__'` fallbacks
+  // in statusHandler/targetContextResolver trigger consistently. Empty string
+  // is not nullish and would slip past those fallbacks.
   const configDir = gitRoot
     ? normalizePath(path.relative(gitRoot, targetDir))
-    : '';
+    : undefined;
 
   const deployedContext = await resolveDeployedContext(
     deps.packmindCliHexa,
@@ -327,11 +331,14 @@ export async function playbookAddHandler(
     return;
   }
 
-  // Compute configDir: relative path from git root to targetDir
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(targetDir);
+  // When there is no git repo (e.g. running inside `~/.claude` for a
+  // home-install), leave `configDir` undefined so the `?? '__cwd__'` fallbacks
+  // in statusHandler/targetContextResolver trigger consistently. Empty string
+  // is not nullish and would slip past those fallbacks.
   const configDir = gitRoot
     ? normalizePath(path.relative(gitRoot, targetDir))
-    : '';
+    : undefined;
 
   // Resolve deployed context
   const deployedContext = await resolveDeployedContext(
@@ -475,6 +482,7 @@ export async function playbookAddHandler(
     const deployedFiles = await fetchDeployedFiles(
       packmindCliHexa.getPackmindGateway(),
       earlyLockFile,
+      { projectDir: targetDir },
     );
 
     if (artifactType === 'skill') {
