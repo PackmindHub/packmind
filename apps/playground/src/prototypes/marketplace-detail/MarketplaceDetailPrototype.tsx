@@ -51,6 +51,7 @@ const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
   { label: 'Loading', value: 'loading' },
   { label: 'Repo unreachable', value: 'unreachable' },
   { label: 'No open suggestions', value: 'suggestions-cleared' },
+  { label: 'Sync push rejected', value: 'sync-fails' },
 ];
 
 const MARKETPLACE_SUBTITLE: Record<string, string> = {
@@ -269,7 +270,10 @@ export default function MarketplaceDetailPrototype() {
         <MarketplaceSyncSurface
           marketplace={marketplace}
           onCancel={() => setIsSyncOpen(false)}
-          onConfirm={() => setIsSyncOpen(false)}
+          onConfirm={() => {
+            /* surface handles its own success step; close happens via onCancel */
+          }}
+          simulateFailure={scenario === 'sync-fails'}
         />
       ) : (
         <MarketplaceDetailView

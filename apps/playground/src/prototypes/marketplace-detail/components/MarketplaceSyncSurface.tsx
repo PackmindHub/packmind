@@ -7,6 +7,7 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -14,11 +15,14 @@ import {
   LuArrowRight,
   LuCheck,
   LuChevronRight,
+  LuCircleCheck,
   LuCopy,
+  LuExternalLink,
   LuMinus,
   LuPencil,
   LuPlus,
   LuTerminal,
+  LuTriangleAlert,
   LuX,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
@@ -28,6 +32,8 @@ import type {
   Plugin,
   SourcePackageChange,
 } from '../types';
+
+type SyncStep = 'review' | 'syncing' | 'success' | 'failure';
 
 const ADMIN_NAME = 'Marc Reed';
 
@@ -49,12 +55,14 @@ type MarketplaceSyncSurfaceProps = {
   marketplace: MarketplaceDetail;
   onCancel: () => void;
   onConfirm: (selectedPluginIds: string[]) => void;
+  simulateFailure?: boolean;
 };
 
 export function MarketplaceSyncSurface({
   marketplace,
   onCancel,
   onConfirm,
+  simulateFailure = false,
 }: Readonly<MarketplaceSyncSurfaceProps>) {
   const driftedPlugins = useMemo(
     () => marketplace.plugins.filter((p) => p.sourceSync.state === 'behind'),
@@ -73,6 +81,9 @@ export function MarketplaceSyncSurface({
   );
   const [cliMode, setCliMode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [step, setStep] = useState<SyncStep>('review');
+  const [commitSha, setCommitSha] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const focusedPlugin = useMemo(
     () => driftedPlugins.find((p) => p.id === focusedId) ?? null,
@@ -97,18 +108,49 @@ export function MarketplaceSyncSurface({
 
   const handleConfirm = useCallback(() => {
     if (selectedCount === 0) return;
-    onConfirm(selectedDriftedPlugins.map((p) => p.id));
-  }, [onConfirm, selectedCount, selectedDriftedPlugins]);
+    setStep('syncing');
+    setErrorMessage(null);
+    setCommitSha(null);
+  }, [selectedCount]);
 
-  // Esc cancels, Cmd+Enter triggers
+  // Mock the push: 1.4s → success/failure.
+  useEffect(() => {
+    if (step !== 'syncing') return;
+    const timeoutId = window.setTimeout(() => {
+      if (simulateFailure) {
+        setErrorMessage(
+          'remote: error: GH006: Protected branch update failed for refs/heads/main.\nremote: error: At least 1 approving review is required by reviewers with write access.',
+        );
+        setStep('failure');
+        return;
+      }
+      setCommitSha(generateMockSha());
+      setStep('success');
+      onConfirm(selectedDriftedPlugins.map((p) => p.id));
+    }, 1400);
+    return () => window.clearTimeout(timeoutId);
+  }, [step, simulateFailure, onConfirm, selectedDriftedPlugins]);
+
+  const handleRetry = useCallback(() => {
+    setStep('review');
+    setErrorMessage(null);
+    setCommitSha(null);
+  }, []);
+
+  // Esc cancels (only in review); Cmd+Enter triggers Sync in review.
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (step === 'syncing') return;
         event.preventDefault();
         onCancel();
         return;
       }
-      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key === 'Enter' &&
+        step === 'review'
+      ) {
         if (selectedCount > 0 && !cliMode) {
           event.preventDefault();
           handleConfirm();
@@ -117,7 +159,7 @@ export function MarketplaceSyncSurface({
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [onCancel, handleConfirm, selectedCount, cliMode]);
+  }, [onCancel, handleConfirm, selectedCount, cliMode, step]);
 
   const cliCommand = useMemo(
     () => buildCliCommand(marketplace, selectedDriftedPlugins, driftedPlugins),
@@ -138,6 +180,32 @@ export function MarketplaceSyncSurface({
   }, [cliCommand]);
 
   const primaryDisabled = selectedCount === 0;
+  const isSyncing = step === 'syncing';
+
+  if (step === 'success') {
+    return (
+      <SuccessSurface
+        marketplace={marketplace}
+        commitSha={commitSha ?? ''}
+        commitMessage={commitMessage}
+        onClose={onCancel}
+      />
+    );
+  }
+
+  if (step === 'failure') {
+    return (
+      <FailureSurface
+        marketplace={marketplace}
+        errorMessage={errorMessage ?? 'Sync failed for an unknown reason.'}
+        cliCommand={cliCommand}
+        copied={copied}
+        onCopy={handleCopyCommand}
+        onRetry={handleRetry}
+        onCancel={onCancel}
+      />
+    );
+  }
 
   return (
     <PMBox
@@ -169,6 +237,7 @@ export function MarketplaceSyncSurface({
             as="button"
             type="button"
             onClick={onCancel}
+            disabled={isSyncing}
             display="inline-flex"
             alignItems="center"
             gap={2}
@@ -179,9 +248,14 @@ export function MarketplaceSyncSurface({
             paddingX={3}
             paddingY="6px"
             color="text.secondary"
-            cursor="pointer"
+            cursor={isSyncing ? 'not-allowed' : 'pointer'}
             transition="background-color 150ms ease-out, color 150ms ease-out"
-            _hover={{ color: 'text.primary', bg: 'background.tertiary' }}
+            _hover={
+              isSyncing
+                ? undefined
+                : { color: 'text.primary', bg: 'background.tertiary' }
+            }
+            _disabled={{ opacity: 0.5 }}
             aria-label="Cancel sync"
           >
             <PMIcon fontSize="sm">
@@ -194,65 +268,71 @@ export function MarketplaceSyncSurface({
         </PMHStack>
       </PMBox>
 
-      <PMHStack gap={0} align="stretch" minH="540px">
-        <PluginRail
-          driftedPlugins={driftedPlugins}
-          inSyncPlugins={inSyncPlugins}
-          selectedIds={selectedIds}
-          focusedId={focusedId}
-          onToggle={togglePlugin}
-          onFocus={setFocusedId}
-        />
-        <PMBox flex="1" minW={0} padding={6}>
-          {cliMode ? (
-            <CliPanel
-              command={cliCommand}
-              copied={copied}
-              onCopy={handleCopyCommand}
-              selectedCount={selectedCount}
-            />
-          ) : focusedPlugin ? (
-            <PluginChangesPanel plugin={focusedPlugin} />
-          ) : (
-            <EmptySelectionPanel />
-          )}
-        </PMBox>
-      </PMHStack>
-
       <PMBox
-        paddingX={6}
-        paddingY={5}
-        borderTopWidth="1px"
-        borderColor="border.tertiary"
-        bg="background.secondary"
+        opacity={isSyncing ? 0.55 : 1}
+        pointerEvents={isSyncing ? 'none' : 'auto'}
+        transition="opacity 200ms ease-out"
       >
-        <PMVStack align="stretch" gap={3}>
-          <PMText
-            fontSize="xs"
-            color="faded"
-            textTransform="uppercase"
-            letterSpacing="0.05em"
-            fontWeight="semibold"
-          >
-            Commit message
-          </PMText>
-          <PMBox
-            bg="background.primary"
-            borderWidth="1px"
-            borderColor="border.tertiary"
-            borderRadius="sm"
-            padding={4}
-            fontFamily="mono"
-            fontSize="xs"
-            color={selectedCount === 0 ? 'text.faded' : 'text.primary'}
-            whiteSpace="pre-wrap"
-            opacity={selectedCount === 0 ? 0.6 : 1}
-          >
-            {selectedCount === 0
-              ? 'Select at least one plugin to preview the commit message.'
-              : commitMessage}
+        <PMHStack gap={0} align="stretch" minH="540px">
+          <PluginRail
+            driftedPlugins={driftedPlugins}
+            inSyncPlugins={inSyncPlugins}
+            selectedIds={selectedIds}
+            focusedId={focusedId}
+            onToggle={togglePlugin}
+            onFocus={setFocusedId}
+          />
+          <PMBox flex="1" minW={0} padding={6}>
+            {cliMode ? (
+              <CliPanel
+                command={cliCommand}
+                copied={copied}
+                onCopy={handleCopyCommand}
+                selectedCount={selectedCount}
+              />
+            ) : focusedPlugin ? (
+              <PluginChangesPanel plugin={focusedPlugin} />
+            ) : (
+              <EmptySelectionPanel />
+            )}
           </PMBox>
-        </PMVStack>
+        </PMHStack>
+
+        <PMBox
+          paddingX={6}
+          paddingY={5}
+          borderTopWidth="1px"
+          borderColor="border.tertiary"
+          bg="background.secondary"
+        >
+          <PMVStack align="stretch" gap={3}>
+            <PMText
+              fontSize="xs"
+              color="faded"
+              textTransform="uppercase"
+              letterSpacing="0.05em"
+              fontWeight="semibold"
+            >
+              Commit message
+            </PMText>
+            <PMBox
+              bg="background.primary"
+              borderWidth="1px"
+              borderColor="border.tertiary"
+              borderRadius="sm"
+              padding={4}
+              fontFamily="mono"
+              fontSize="xs"
+              color={selectedCount === 0 ? 'text.faded' : 'text.primary'}
+              whiteSpace="pre-wrap"
+              opacity={selectedCount === 0 ? 0.6 : 1}
+            >
+              {selectedCount === 0
+                ? 'Select at least one plugin to preview the commit message.'
+                : commitMessage}
+            </PMBox>
+          </PMVStack>
+        </PMBox>
       </PMBox>
 
       <PMBox
@@ -265,29 +345,49 @@ export function MarketplaceSyncSurface({
         bg="background.primary"
       >
         <PMHStack justify="space-between" align="center" gap={4}>
-          <PMBox
-            as="button"
-            type="button"
-            onClick={() => setCliMode((prev) => !prev)}
-            display="inline-flex"
-            alignItems="center"
-            gap={2}
-            bg="transparent"
-            border="none"
-            padding={0}
-            color={cliMode ? 'branding.primary' : 'text.secondary'}
-            cursor="pointer"
-            fontSize="sm"
-            transition="color 150ms ease-out"
-            _hover={{ color: cliMode ? 'branding.primary' : 'text.primary' }}
-          >
-            <PMIcon fontSize="sm">
-              <LuTerminal />
-            </PMIcon>
-            {cliMode ? 'Back to summary' : 'Use packmind-cli instead'}
-          </PMBox>
+          {isSyncing ? (
+            <PMHStack gap={3} align="center">
+              <PMSpinner size="sm" color="branding.primary" />
+              <PMText fontSize="sm" color="secondary">
+                {selectedCount === 1
+                  ? 'Pushing 1 plugin to '
+                  : `Pushing ${selectedCount} plugins to `}
+                <PMBox as="span" fontFamily="mono" color="text.primary">
+                  {marketplace.repoPath}
+                </PMBox>
+                …
+              </PMText>
+            </PMHStack>
+          ) : (
+            <PMBox
+              as="button"
+              type="button"
+              onClick={() => setCliMode((prev) => !prev)}
+              display="inline-flex"
+              alignItems="center"
+              gap={2}
+              bg="transparent"
+              border="none"
+              padding={0}
+              color={cliMode ? 'branding.primary' : 'text.secondary'}
+              cursor="pointer"
+              fontSize="sm"
+              transition="color 150ms ease-out"
+              _hover={{ color: cliMode ? 'branding.primary' : 'text.primary' }}
+            >
+              <PMIcon fontSize="sm">
+                <LuTerminal />
+              </PMIcon>
+              {cliMode ? 'Back to summary' : 'Use packmind-cli instead'}
+            </PMBox>
+          )}
           <PMHStack gap={2} align="center">
-            <PMButton variant="secondary" size="sm" onClick={onCancel}>
+            <PMButton
+              variant="secondary"
+              size="sm"
+              onClick={onCancel}
+              disabled={isSyncing}
+            >
               Cancel
             </PMButton>
             {cliMode ? (
@@ -295,7 +395,7 @@ export function MarketplaceSyncSurface({
                 variant="primary"
                 size="sm"
                 onClick={handleCopyCommand}
-                disabled={primaryDisabled}
+                disabled={primaryDisabled || isSyncing}
               >
                 <PMIcon fontSize="sm">
                   {copied ? <LuCheck /> : <LuCopy />}
@@ -307,13 +407,15 @@ export function MarketplaceSyncSurface({
                 variant="primary"
                 size="sm"
                 onClick={handleConfirm}
-                disabled={primaryDisabled}
+                disabled={primaryDisabled || isSyncing}
               >
-                {primaryDisabled
-                  ? 'Select at least one plugin'
-                  : selectedCount === 1
-                    ? 'Sync 1 plugin to repo'
-                    : `Sync ${selectedCount} plugins to repo`}
+                {isSyncing
+                  ? 'Syncing…'
+                  : primaryDisabled
+                    ? 'Select at least one plugin'
+                    : selectedCount === 1
+                      ? 'Sync 1 plugin to repo'
+                      : `Sync ${selectedCount} plugins to repo`}
               </PMButton>
             )}
           </PMHStack>
@@ -696,6 +798,284 @@ function CliPanel({
       </PMText>
     </PMVStack>
   );
+}
+
+type SuccessSurfaceProps = {
+  marketplace: MarketplaceDetail;
+  commitSha: string;
+  commitMessage: string;
+  onClose: () => void;
+};
+
+function SuccessSurface({
+  marketplace,
+  commitSha,
+  commitMessage,
+  onClose,
+}: Readonly<SuccessSurfaceProps>) {
+  const firstLine = commitMessage.split('\n')[0] ?? 'Sync';
+  const shortSha = commitSha.slice(0, 7);
+
+  return (
+    <PMBox
+      bg="background.primary"
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      overflow="hidden"
+      animation="fadeIn 160ms ease-out"
+    >
+      <PMVStack
+        align="flex-start"
+        gap={5}
+        paddingX={8}
+        paddingY={9}
+        minH="420px"
+      >
+        <PMHStack gap={3} align="center">
+          <PMBox
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            width="32px"
+            height="32px"
+            borderRadius="full"
+            bg="green.500"
+            color="beige.0"
+            aria-hidden
+          >
+            <PMIcon fontSize="md">
+              <LuCircleCheck />
+            </PMIcon>
+          </PMBox>
+          <PMVStack align="flex-start" gap={0}>
+            <PMHeading level="h3">{firstLine}</PMHeading>
+            <PMHStack gap={2} align="center">
+              <PMText fontSize="sm" color="secondary">
+                Pushed to
+              </PMText>
+              <PMBox
+                as="span"
+                fontFamily="mono"
+                fontSize="sm"
+                color="text.primary"
+              >
+                {marketplace.repoPath}
+              </PMBox>
+              <PMText fontSize="sm" color="faded">
+                ·
+              </PMText>
+              <PMBox
+                as="span"
+                fontFamily="mono"
+                fontSize="sm"
+                color="branding.primary"
+              >
+                {shortSha}
+              </PMBox>
+            </PMHStack>
+          </PMVStack>
+        </PMHStack>
+
+        <PMBox
+          bg="background.secondary"
+          borderWidth="1px"
+          borderColor="border.tertiary"
+          borderRadius="sm"
+          padding={4}
+          fontFamily="mono"
+          fontSize="xs"
+          color="text.primary"
+          whiteSpace="pre-wrap"
+          maxWidth="68ch"
+          width="100%"
+        >
+          {commitMessage}
+        </PMBox>
+
+        <PMHStack gap={2} align="center">
+          <PMButton variant="outline" size="sm">
+            <PMIcon fontSize="sm">
+              <LuExternalLink />
+            </PMIcon>
+            View commit on GitHub
+          </PMButton>
+          <PMButton variant="primary" size="sm" onClick={onClose}>
+            Back to plugins
+          </PMButton>
+        </PMHStack>
+      </PMVStack>
+    </PMBox>
+  );
+}
+
+type FailureSurfaceProps = {
+  marketplace: MarketplaceDetail;
+  errorMessage: string;
+  cliCommand: string;
+  copied: boolean;
+  onCopy: () => void;
+  onRetry: () => void;
+  onCancel: () => void;
+};
+
+function FailureSurface({
+  marketplace,
+  errorMessage,
+  cliCommand,
+  copied,
+  onCopy,
+  onRetry,
+  onCancel,
+}: Readonly<FailureSurfaceProps>) {
+  return (
+    <PMBox
+      bg="background.primary"
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      overflow="hidden"
+      animation="fadeIn 160ms ease-out"
+    >
+      <PMVStack
+        align="flex-start"
+        gap={5}
+        paddingX={8}
+        paddingY={9}
+        minH="420px"
+      >
+        <PMHStack gap={3} align="center">
+          <PMBox
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            width="32px"
+            height="32px"
+            borderRadius="full"
+            bg="red.500"
+            color="beige.0"
+            aria-hidden
+          >
+            <PMIcon fontSize="md">
+              <LuTriangleAlert />
+            </PMIcon>
+          </PMBox>
+          <PMVStack align="flex-start" gap={0}>
+            <PMHeading level="h3">Sync failed</PMHeading>
+            <PMHStack gap={2} align="center">
+              <PMText fontSize="sm" color="secondary">
+                Push to
+              </PMText>
+              <PMBox
+                as="span"
+                fontFamily="mono"
+                fontSize="sm"
+                color="text.primary"
+              >
+                {marketplace.repoPath}
+              </PMBox>
+              <PMText fontSize="sm" color="secondary">
+                was rejected.
+              </PMText>
+            </PMHStack>
+          </PMVStack>
+        </PMHStack>
+
+        <PMBox
+          bg="background.secondary"
+          borderWidth="1px"
+          borderColor="red.500"
+          borderRadius="sm"
+          padding={4}
+          fontFamily="mono"
+          fontSize="xs"
+          color="text.primary"
+          whiteSpace="pre-wrap"
+          maxWidth="68ch"
+          width="100%"
+        >
+          {errorMessage}
+        </PMBox>
+
+        <PMVStack align="flex-start" gap={3} width="100%">
+          <PMText fontSize="sm" color="secondary">
+            Or run this from your repo instead:
+          </PMText>
+          <PMBox
+            bg="background.tertiary"
+            borderWidth="1px"
+            borderColor="border.tertiary"
+            borderRadius="sm"
+            padding={4}
+            maxWidth="68ch"
+            width="100%"
+          >
+            <PMHStack gap={3} align="flex-start" justify="space-between">
+              <PMBox
+                as="code"
+                fontFamily="mono"
+                fontSize="xs"
+                color="text.primary"
+                whiteSpace="pre-wrap"
+                wordBreak="break-all"
+                flex="1"
+                minW={0}
+              >
+                {cliCommand}
+              </PMBox>
+              <PMBox
+                as="button"
+                type="button"
+                onClick={onCopy}
+                display="inline-flex"
+                alignItems="center"
+                gap="6px"
+                bg="transparent"
+                border="1px solid"
+                borderColor="border.tertiary"
+                borderRadius="sm"
+                paddingX={2.5}
+                paddingY="6px"
+                color="text.secondary"
+                cursor="pointer"
+                transition="color 150ms ease-out, background-color 150ms ease-out"
+                _hover={{
+                  color: 'text.primary',
+                  bg: 'background.secondary',
+                }}
+                aria-label="Copy fallback command"
+              >
+                <PMIcon fontSize="sm">
+                  {copied ? <LuCheck /> : <LuCopy />}
+                </PMIcon>
+                <PMText fontSize="xs" color="inherit">
+                  {copied ? 'Copied' : 'Copy'}
+                </PMText>
+              </PMBox>
+            </PMHStack>
+          </PMBox>
+        </PMVStack>
+
+        <PMHStack gap={2} align="center">
+          <PMButton variant="secondary" size="sm" onClick={onCancel}>
+            Cancel
+          </PMButton>
+          <PMButton variant="primary" size="sm" onClick={onRetry}>
+            Retry sync
+          </PMButton>
+        </PMHStack>
+      </PMVStack>
+    </PMBox>
+  );
+}
+
+function generateMockSha(): string {
+  const hex = 'abcdef0123456789';
+  let result = '';
+  for (let i = 0; i < 40; i += 1) {
+    result += hex[Math.floor(Math.random() * hex.length)];
+  }
+  return result;
 }
 
 function buildCliCommand(

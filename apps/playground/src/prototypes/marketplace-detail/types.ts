@@ -100,7 +100,8 @@ export type Scenario =
   | 'empty'
   | 'loading'
   | 'unreachable'
-  | 'suggestions-cleared';
+  | 'suggestions-cleared'
+  | 'sync-fails';
 
 export type SuggestionState = 'pending' | 'in-review' | 'approved' | 'rejected';
 
