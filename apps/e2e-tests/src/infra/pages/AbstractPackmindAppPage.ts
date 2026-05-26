@@ -111,10 +111,19 @@ export abstract class AbstractPackmindAppPage
       .first()
       .click();
 
-    // Click "Dashboard" link inside the drawer to navigate to that space
+    // Wait for the drawer to be fully open (data-state="open" on the content)
+    // before clicking inside it — otherwise the slide-in animation can detach
+    // the link's DOM mid-click and Playwright fails with "element is not stable".
     const drawer = this.page.locator('[role="dialog"]').filter({
       hasText: spaceName,
     });
+    await drawer.waitFor({ state: 'visible' });
+    await drawer
+      .locator('[data-state="open"]')
+      .first()
+      .waitFor({ state: 'visible' });
+
+    // Click "Dashboard" link inside the drawer to navigate to that space
     await drawer.getByRole('link', { name: 'Dashboard' }).click();
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)

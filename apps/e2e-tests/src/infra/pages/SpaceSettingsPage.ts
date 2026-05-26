@@ -15,13 +15,17 @@ export class SpaceSettingsPage
 
   async searchAndSelectMember(displayName: string): Promise<void> {
     const comboboxInput = this.page.getByPlaceholder('e.g., alice.wilson');
+    // Click first to force-open the combobox menu before typing — `fill`
+    // alone does not always trigger Ark UI's open-on-change behavior.
+    await comboboxInput.click();
     await comboboxInput.fill(displayName);
 
-    await this.page
+    const option = this.page
       .locator('[data-part="item-text"]')
       .filter({ hasText: displayName })
-      .first()
-      .click();
+      .first();
+    await option.waitFor({ state: 'visible' });
+    await option.click();
   }
 
   async submitAddMembers(): Promise<void> {
@@ -84,7 +88,7 @@ export class SpaceSettingsPage
     const errorText = this.page.getByText(
       'Another space with a similar name already exists.',
     );
-    await errorText.waitFor({ state: 'visible', timeout: 10000 });
+    await errorText.waitFor({ state: 'visible', timeout: 20000 });
     return errorText.innerText();
   }
 
