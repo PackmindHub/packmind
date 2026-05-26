@@ -36,6 +36,11 @@ jest.mock('@packmind/logger', () => ({
   LogLevel: { INFO: 'INFO' },
 }));
 
+jest.mock('../utils/agentHomeDirectory', () => ({
+  isAgentHomeDirectory: jest.fn().mockReturnValue(null),
+  getAgentHomeDirPrefix: jest.fn().mockReturnValue(null),
+}));
+
 jest.mock('./bootstrapInstallContext', () => ({
   bootstrapInstallContext: jest.fn().mockResolvedValue({
     configReady: true,
@@ -66,6 +71,7 @@ import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
+import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 
 const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
   typeof bootstrapInstallContext
@@ -1383,6 +1389,93 @@ describe('installCommand', () => {
       expect(mockInstall).toHaveBeenCalledWith(
         expect.objectContaining({ cliVersion: expect.any(String) }),
       );
+    });
+  });
+
+  describe('when cwd is an agent home directory', () => {
+    const mockIsAgentHomeDirectory =
+      isAgentHomeDirectory as jest.MockedFunction<typeof isAgentHomeDirectory>;
+
+    beforeEach(() => {
+      mockFs.existsSync.mockImplementation((p) =>
+        String(p).endsWith('packmind.json'),
+      );
+      mockFs.readdirSync.mockReturnValue([]);
+      mockIsAgentHomeDirectory.mockReturnValue('claude');
+      mockTryGetGitRepositoryRoot.mockResolvedValue(process.cwd());
+    });
+
+    afterEach(() => {
+      mockIsAgentHomeDirectory.mockReturnValue(null);
+    });
+
+    it('passes homeAgent through to install', async () => {
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstall).toHaveBeenCalledWith(
+        expect.objectContaining({ homeAgent: 'claude' }),
+      );
+    });
+
+    it('passes homeAgent through to bootstrap', async () => {
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockBootstrap).toHaveBeenCalledWith(
+        expect.objectContaining({ homeAgent: 'claude' }),
+      );
+    });
+
+    it('does not notify distribution even when in a git repo', async () => {
+      const mockNotifyArtefactsDistribution = jest.fn();
+      const mockGetGitRemoteUrlFromPath = jest.fn().mockReturnValue('url');
+      const mockGetCurrentBranch = jest.fn().mockReturnValue('main');
+      MockPackmindCliHexa.mockImplementation(
+        () =>
+          ({
+            install: mockInstall,
+            tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+            installDefaultSkills: mockInstallDefaultSkills,
+            getPackmindGateway: jest.fn().mockReturnValue({}),
+            ensureCliVersion: mockEnsureCliVersion,
+            notifyArtefactsDistribution: mockNotifyArtefactsDistribution,
+            getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
+            getCurrentBranch: mockGetCurrentBranch,
+          }) as unknown as PackmindCliHexa,
+      );
+
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockNotifyArtefactsDistribution).not.toHaveBeenCalled();
+    });
+
+    it('does not call installDefaultSkills even when cwd looks like a git root', async () => {
+      await handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: '',
+        status: false,
+      });
+
+      expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
     });
   });
 });

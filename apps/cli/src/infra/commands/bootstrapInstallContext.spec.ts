@@ -636,4 +636,80 @@ describe('bootstrapInstallContext', () => {
       delete process.env.PACKMIND_SIMPLE_PROMPT;
     });
   });
+
+  describe('homeAgent (single-agent home install)', () => {
+    it('writes packmind.json with just the home agent and skips agent detection', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService();
+      const runInit = jest.fn();
+
+      const result = await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        packages: ['@space/pkg'],
+        isTTY: true,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        runInit,
+        homeAgent: 'claude',
+      });
+
+      expect(configRepository.writeConfig).toHaveBeenCalledWith(baseDirectory, {
+        packages: { '@space/pkg': '*' },
+        agents: ['claude'],
+      });
+      expect(agentDetectionService.detectAgentArtifacts).not.toHaveBeenCalled();
+      expect(runInit).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        configReady: true,
+        warned: false,
+        configCreated: true,
+        packagesAdded: ['@space/pkg'],
+      });
+    });
+
+    it('does not prompt for organization-level render modes', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService();
+      const getRenderModeConfiguration = jest.fn();
+
+      await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway({
+          getRenderModeConfiguration,
+        }),
+        baseDirectory,
+        packages: [],
+        isTTY: true,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        homeAgent: 'claude',
+      });
+
+      expect(getRenderModeConfiguration).not.toHaveBeenCalled();
+      expect(mockInquirerPrompt).not.toHaveBeenCalled();
+    });
+
+    it('returns configReady:true without prompting when no packmind.json exists', async () => {
+      const configRepository = makeConfigRepository();
+      const result = await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService: makeDetectionService(),
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        packages: [],
+        isTTY: false,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        homeAgent: 'claude',
+      });
+
+      expect(result.configReady).toBe(true);
+      expect(result.warned).toBe(false);
+      expect(result.configCreated).toBe(true);
+    });
+  });
 });

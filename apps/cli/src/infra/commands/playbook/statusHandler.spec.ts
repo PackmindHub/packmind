@@ -1685,4 +1685,74 @@ describe('playbookStatusHandler', () => {
       );
     });
   });
+
+  describe('when the project directory is outside any git repository', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 2,
+      packageSlugs: ['my-package'],
+      agents: ['claude'],
+      installedAt: '2026-03-17T00:00:00.000Z',
+      cliVersion: '1.0.0',
+      artifacts: {
+        'user:command:my-command': {
+          name: 'My command',
+          type: 'command',
+          id: 'cmd-1',
+          version: 1,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          source: 'user',
+          files: [
+            {
+              path: 'commands/my-command.md',
+              agent: 'claude',
+            },
+          ],
+        },
+      },
+    };
+
+    beforeEach(() => {
+      (mockPackmindCliHexa.configExists as jest.Mock).mockImplementation(
+        (dir: string) => Promise.resolve(dir === '/home/user/.claude'),
+      );
+      (
+        mockPackmindCliHexa.tryGetGitRepositoryRoot as jest.Mock
+      ).mockResolvedValue(null);
+
+      mockLockFileRepository.read.mockImplementation((dir: string) =>
+        Promise.resolve(dir === '/home/user/.claude' ? lockFile : null),
+      );
+      mockGetContentByVersions.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'commands/my-command.md',
+              content: 'deployed content',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+        resolvedAgents: [],
+      });
+      mockReadFile.mockReturnValue('locally modified content');
+    });
+
+    it('detects the local modification as an untracked change', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/home/user/.claude' }));
+
+      expect(mockLogConsole).toHaveBeenCalledWith(
+        '  - Command "My command" commands/my-command.md',
+      );
+    });
+
+    it('reads the local file from the project directory', async () => {
+      await playbookStatusHandler(buildDeps({ cwd: '/home/user/.claude' }));
+
+      expect(mockReadFile).toHaveBeenCalledWith(
+        '/home/user/.claude/commands/my-command.md',
+      );
+    });
+  });
 });
