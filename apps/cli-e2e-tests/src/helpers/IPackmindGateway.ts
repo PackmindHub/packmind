@@ -15,6 +15,7 @@ import {
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   IUpdateRecipeFromUIUseCase,
+  IUploadSkillUseCase,
   PublicGateway,
   RecipeId,
   Space,
@@ -64,7 +65,7 @@ export interface IDeploymentsGateway {
 }
 
 export interface ISkillsGateway {
-  create: Gateway<ICreateSkillUseCase>;
+  upload: Gateway<IUploadSkillUseCase>;
 }
 
 export interface IPackmindGateway {

@@ -84,7 +84,7 @@ export class PackmindGateway implements IPackmindGateway {
 
   get skills(): ISkillsGateway {
     this._skills ??= new SkillsGateway(this.getHttpClient());
-    return this.skills;
+    return this._skills;
   }
 
   /**

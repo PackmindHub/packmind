@@ -1,18 +1,18 @@
 import { ISkillsGateway } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import {
-  CreateSkillResponse,
   Gateway,
-  ICreateSkillUseCase,
+  IUploadSkillUseCase,
+  UploadSkillResponse,
 } from '@packmind/types';
 
 export class SkillsGateway implements ISkillsGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
 
-  create: Gateway<ICreateSkillUseCase> = async (params) => {
+  upload: Gateway<IUploadSkillUseCase> = async (params) => {
     const organizationId = this.httpClient.getOrganizationId();
-    return this.httpClient.request<CreateSkillResponse>(
-      `/api/v0/organizations/${organizationId}/spaces-management`,
+    return this.httpClient.request<UploadSkillResponse>(
+      `/api/v0//organizations/${organizationId}/spaces/${params.spaceId}/skills/upload`,
       { method: 'POST', body: params },
     );
   };

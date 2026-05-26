@@ -1648,11 +1648,11 @@ describe('playbookAddHandler', () => {
         ).mockResolvedValue(null);
       });
 
-      it('stores configDir as empty string', async () => {
+      it('leaves configDir undefined so read sites fall back to the __cwd__ sentinel', async () => {
         await playbookAddHandler(buildDeps());
 
         const callArg = mockPlaybookLocalRepository.addChange.mock.calls[0][0];
-        expect(callArg.configDir).toBe('');
+        expect(callArg.configDir).toBeUndefined();
       });
     });
 
