@@ -150,10 +150,15 @@ export async function playbookStatusHandler(
 
   const configDirs = new Set([...stagedByConfigDir.keys()]);
   if (fallbackConfigDir && !configDirs.has('__cwd__')) {
-    const rel = gitRoot
+    // When the config dir lives outside a git repo (e.g. `~/.claude` for a
+    // home-install) there is no meaningful git-relative path, so use the
+    // `__cwd__` sentinel — the loop below resolves it back to
+    // `fallbackConfigDir`. Otherwise we'd land in the `else { continue; }`
+    // branch and silently skip the only target.
+    const key = gitRoot
       ? normalizePath(path.relative(gitRoot, fallbackConfigDir))
-      : '';
-    if (!configDirs.has(rel)) configDirs.add(rel);
+      : '__cwd__';
+    if (!configDirs.has(key)) configDirs.add(key);
   }
 
   // Also scan descendant targets (sub-targets below cwd)
@@ -182,6 +187,7 @@ export async function playbookStatusHandler(
     const deployedFiles = await fetchDeployedFiles(
       packmindCliHexa.getPackmindGateway(),
       lockFile,
+      { projectDir },
     );
     // Build staged path set for this target
     const targetStagedPaths = new Set(

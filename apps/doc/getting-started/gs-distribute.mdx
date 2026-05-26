@@ -179,6 +179,12 @@ my-project/
 
 Each `packmind.json` file operates independently. When you run `packmind-cli install` in a directory, it only affects that directory's configuration.
 
+## Alternative: Install globally for Claude Code
+
+If you use Claude Code and want a package available across every project on your machine — not just one repository — you can run `packmind-cli install` inside your `~/.claude` directory. The CLI detects this and switches to a home-install mode that renders artifacts directly into `~/.claude/{skills,rules,commands}/...`, skips the agent prompt, and avoids creating a `.packmind/` mirror in your home folder.
+
+See [Install Globally for Claude Code](/tools/cli#install-globally-for-claude-code-claude) for the full benefits and behavior.
+
 ## Alternative: Distribute to Git repositories
 
 Instead of pulling locally, you can distribute packages directly to your Git repositories. This pushes standards and commands as files that are committed to your codebase.

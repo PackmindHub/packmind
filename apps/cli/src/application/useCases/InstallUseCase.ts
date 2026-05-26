@@ -7,7 +7,13 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ILockFileRepository } from '../../domain/repositories/ILockFileRepository';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { ISpaceService } from '../../domain/services/ISpaceService';
-import { PackmindFileConfig, SpaceType } from '@packmind/types';
+import {
+  CodingAgent,
+  PackmindFileConfig,
+  PackmindLockFile,
+  PackmindLockFileEntry,
+  SpaceType,
+} from '@packmind/types';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -16,6 +22,7 @@ import {
   supportsUnixPermissions,
 } from '../../infra/utils/permissions';
 import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
+import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -130,11 +137,49 @@ export class InstallUseCase implements IInstallUseCase {
       return result;
     }
 
+    const installAgents = this.resolveInstallAgents(command, config);
+    const stripPathPrefix = command.homeAgent
+      ? (getAgentHomeDirPrefix(command.homeAgent) ?? undefined)
+      : undefined;
+
     const response = await this.packmindGateway.deployment.install({
       packagesSlugs,
       packmindLockFile: effectiveLockFile,
-      agents: config?.agents,
+      agents: installAgents,
     });
+
+    if (stripPathPrefix) {
+      // The packmind agent renderer always runs server-side and emits
+      // `.packmind/...` mirror files. Those aren't useful in a home-install
+      // (their referencing relative links are anchored to a repo layout, not
+      // the user's home), so we drop them entirely instead of rendering them
+      // under `~/.claude/.packmind/...`.
+      const isPackmindMirrorPath = (p: string) => p.startsWith('.packmind/');
+
+      response.fileUpdates.createOrUpdate = response.fileUpdates.createOrUpdate
+        .filter((file) => !isPackmindMirrorPath(file.path))
+        .map((file) => {
+          const remapped = {
+            ...file,
+            path: this.stripPrefix(file.path, stripPathPrefix),
+          };
+          if (remapped.content !== undefined) {
+            remapped.content = this.stripFullStandardLinkFooter(
+              remapped.content,
+            );
+          }
+          return remapped;
+        });
+      response.fileUpdates.delete = response.fileUpdates.delete
+        .filter((file) => !isPackmindMirrorPath(file.path))
+        .map((file) => ({
+          ...file,
+          path: this.stripPrefix(file.path, stripPathPrefix),
+        }));
+      response.skillFolders = response.skillFolders
+        .filter((folder) => !isPackmindMirrorPath(folder))
+        .map((folder) => this.stripPrefix(folder, stripPathPrefix));
+    }
 
     result.missingAccess = response.missingAccess;
     result.resolvedAgents = response.resolvedAgents;
@@ -295,6 +340,13 @@ export class InstallUseCase implements IInstallUseCase {
 
       lockFileToPersist.cliVersion = command.cliVersion;
 
+      if (stripPathPrefix) {
+        lockFileToPersist = this.stripLockFileArtifactPaths(
+          lockFileToPersist,
+          stripPathPrefix,
+        );
+      }
+
       await this.lockFileRepository.write(baseDirectory, lockFileToPersist);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -321,6 +373,56 @@ export class InstallUseCase implements IInstallUseCase {
 
   private async normalizePackageSlugs(slugs: string[]): Promise<string[]> {
     return normalizePackageSlugs(slugs, this.spaceService);
+  }
+
+  private resolveInstallAgents(
+    command: IInstallCommand,
+    config: PackmindFileConfig | null | undefined,
+  ): CodingAgent[] | undefined {
+    if (command.homeAgent) {
+      return [command.homeAgent];
+    }
+    return config?.agents;
+  }
+
+  private stripPrefix(filePath: string, prefix: string): string {
+    return filePath.startsWith(prefix)
+      ? filePath.slice(prefix.length)
+      : filePath;
+  }
+
+  // In home-install mode the on-disk files live without the agent prefix
+  // (e.g. `commands/foo.md` instead of `.claude/commands/foo.md`) and the
+  // `.packmind/` mirror folder is not rendered. The lockfile content returned
+  // by the server still references the original paths, so we realign it here
+  // before persisting — otherwise `playbook status`/`add` can't match local
+  // files against the lockfile entries.
+  private stripLockFileArtifactPaths(
+    lockFile: PackmindLockFile,
+    prefix: string,
+  ): PackmindLockFile {
+    const remappedArtifacts: Record<string, PackmindLockFileEntry> = {};
+    for (const [key, entry] of Object.entries(lockFile.artifacts)) {
+      const remappedFiles = entry.files
+        .filter((file) => !file.path.startsWith('.packmind/'))
+        .map((file) => ({
+          ...file,
+          path: this.stripPrefix(file.path, prefix),
+        }));
+      remappedArtifacts[key] = { ...entry, files: remappedFiles };
+    }
+    return { ...lockFile, artifacts: remappedArtifacts };
+  }
+
+  // The server-side standard renderer appends a trailing
+  // `Full standard is available here for further request: [name](.../.packmind/standards/<slug>.md)`
+  // line. In home-install mode we drop the `.packmind/` mirror folder, so that
+  // link target never exists — strip the dangling footer.
+  private stripFullStandardLinkFooter(content: string): string {
+    return content.replace(
+      /\n+Full standard is available here for further request: \[.+?]\(.+?\.packmind\/standards\/.+?\)\s*$/,
+      '',
+    );
   }
 
   private async normalizeAndSaveConfigPackages(

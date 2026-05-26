@@ -1,3 +1,6 @@
+import * as os from 'os';
+import * as path from 'path';
+
 import {
   DeploymentGateway,
   fetchDeployedFiles,
@@ -109,5 +112,88 @@ describe('fetchDeployedFiles', () => {
 
     const result = await fetchDeployedFiles(gateway, lockFile);
     expect(result).toEqual([]);
+  });
+
+  describe('when projectDir is the claude home agent directory', () => {
+    const homeClaudeDir = path.join(os.homedir(), '.claude');
+    const serverFiles = [
+      { path: '.claude/commands/my-command.md', content: 'deployed cmd' },
+      {
+        path: '.claude/rules/packmind/standard-foo.md',
+        content: 'deployed std',
+      },
+      { path: '.claude/skills/my-skill/SKILL.md', content: 'deployed skill' },
+      { path: '.packmind/standards/foo.md', content: 'mirror' },
+      { path: 'CLAUDE.md', content: 'root claude md' },
+    ];
+    let gateway: DeploymentGateway;
+    let lockFile: PackmindLockFile;
+
+    beforeEach(() => {
+      gateway = {
+        deployment: {
+          getContentByVersions: jest.fn().mockResolvedValue({
+            fileUpdates: { createOrUpdate: serverFiles },
+          }),
+        },
+      };
+      lockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: ['claude'],
+        installedAt: '2026-01-01',
+        artifacts: {},
+      };
+    });
+
+    it('strips the agent home prefix from returned file paths', async () => {
+      const result = await fetchDeployedFiles(gateway, lockFile, {
+        projectDir: homeClaudeDir,
+      });
+      const paths = result.map((f) => f.path);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          'commands/my-command.md',
+          'rules/packmind/standard-foo.md',
+          'skills/my-skill/SKILL.md',
+          'CLAUDE.md',
+        ]),
+      );
+    });
+
+    it('drops .packmind/ mirror entries', async () => {
+      const result = await fetchDeployedFiles(gateway, lockFile, {
+        projectDir: homeClaudeDir,
+      });
+      expect(result.some((f) => f.path.startsWith('.packmind/'))).toBe(false);
+    });
+  });
+
+  describe('when projectDir is a normal repo directory', () => {
+    it('does not remap paths', async () => {
+      const serverFiles = [
+        { path: '.claude/commands/my-command.md', content: 'cmd' },
+        { path: '.packmind/standards/foo.md', content: 'mirror' },
+      ];
+      const gateway: DeploymentGateway = {
+        deployment: {
+          getContentByVersions: jest.fn().mockResolvedValue({
+            fileUpdates: { createOrUpdate: serverFiles },
+          }),
+        },
+      };
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: ['claude'],
+        installedAt: '2026-01-01',
+        artifacts: {},
+      };
+
+      const result = await fetchDeployedFiles(gateway, lockFile, {
+        projectDir: '/some/repo',
+      });
+      expect(result).toEqual(serverFiles);
+    });
   });
 });

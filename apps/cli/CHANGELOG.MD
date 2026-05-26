@@ -2,6 +2,18 @@
 
 ## Added
 
+- Parse and preserve new skill frontmatter fields when syncing SKILL.md files: `arguments` (Claude Code), `paths` (Cursor), and `context` (GitHub Copilot, experimental)
+
+## Changed
+
+## Fixed
+
+## Removed
+
+# [0.29.0] - 2026-05-22
+
+## Added
+
 - Default skills are now tracked in `packmind-lock.json` as first-class entries with a `source: 'default'` discriminator, alongside user-authored and package-distributed entries (`source: 'user'`).
 
 ## Changed
@@ -358,7 +370,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.0...HEAD
+[0.29.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...release-cli/0.29.0
 [0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1
 [0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
 [0.27.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.26.1...release-cli/0.27.0

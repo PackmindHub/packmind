@@ -49,6 +49,7 @@ export async function createTargetContextResolver(deps: {
           ? await fetchDeployedFiles(
               packmindCliHexa.getPackmindGateway(),
               lockFile,
+              { projectDir: projectDir ?? undefined },
             )
           : [];
 

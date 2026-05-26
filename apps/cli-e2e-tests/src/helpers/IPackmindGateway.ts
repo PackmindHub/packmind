@@ -14,6 +14,7 @@ import {
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
   IUpdateRecipeFromUIUseCase,
+  IUploadSkillUseCase,
   PublicGateway,
   RecipeId,
   Space,
@@ -62,6 +63,10 @@ export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
 }
 
+export interface ISkillsGateway {
+  upload: Gateway<IUploadSkillUseCase>;
+}
+
 export interface IPackmindGateway {
   auth: IAuthGateway;
   accounts: IAccountsGateway;
@@ -71,6 +76,7 @@ export interface IPackmindGateway {
   standards: IStandardGateway;
   changeProposals: IChangeProposalGateway;
   deployments: IDeploymentsGateway;
+  skills: ISkillsGateway;
 
   initializeWithApiKey(apiKey: string): void;
 }

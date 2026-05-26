@@ -9,7 +9,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 8,
     agents: ['Claude Code', 'Copilot'],
     lastPublishedRelative: '2d ago',
-    lastPublishedBy: 'Lena',
     state: 'healthy',
     consumers: {
       repoCount: 47,
@@ -26,7 +25,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 14,
     agents: ['Claude Code', 'Copilot'],
     lastPublishedRelative: '6h ago',
-    lastPublishedBy: 'Hassan',
     state: 'healthy',
     consumers: {
       repoCount: 83,
@@ -43,7 +41,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 6,
     agents: ['Claude Code'],
     lastPublishedRelative: '11d ago',
-    lastPublishedBy: 'Priya',
     state: 'drift',
     consumers: {
       repoCount: 19,
@@ -60,7 +57,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 4,
     agents: ['Copilot'],
     lastPublishedRelative: '1d ago',
-    lastPublishedBy: 'Mei',
     state: 'healthy',
     consumers: {
       repoCount: 12,
@@ -77,7 +73,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 11,
     agents: ['Claude Code', 'Copilot'],
     lastPublishedRelative: '3h ago',
-    lastPublishedBy: 'Diego',
     state: 'healthy',
     consumers: {
       repoCount: 114,
@@ -94,7 +89,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 22,
     agents: ['Claude Code', 'Copilot'],
     lastPublishedRelative: '4d ago',
-    lastPublishedBy: 'Rita',
     state: 'healthy',
     consumers: {
       repoCount: 38,
@@ -111,7 +105,6 @@ export const STUB_MARKETPLACES: Marketplace[] = [
     packageCount: 5,
     agents: ['Copilot'],
     lastPublishedRelative: '9d ago',
-    lastPublishedBy: 'Jonas',
     state: 'drift',
     consumers: {
       repoCount: 22,

@@ -2,16 +2,26 @@
 
 ## Added
 
-- Add a "Distribute all" button on the space deployment overview to redistribute all outdated packages in one batch action
-- Show the last distribution status and date for each package on the space deployment overview
+- Enable rendering packmind artifacts in `~/.claude` #332
 
 ## Changed
 
 ## Fixed
 
-- Skill descriptions longer than 1024 characters are now rejected with a clear 400 error on the playbook accept path instead of failing with a generic server error
-
 ## Removed
+
+# [1.15.0] - 2026-05-23
+
+## Added
+
+- Add a "Distribute all" button on the space deployment overview to redistribute all outdated packages in one batch action
+- Show the last distribution status and date for each package on the space deployment overview
+- Support new skill frontmatter fields: `arguments` for Claude Code, `paths` for Cursor, and `context` (experimental) for GitHub Copilot
+- Add a button to add artifacts to packages from the standards/commands/skills lists and detail pages
+
+## Fixed
+
+- Skill descriptions longer than 1024 characters are now rejected with a clear 400 error on the playbook accept path instead of failing with a generic server error
 
 # [1.14.0] - 2026-05-06
 
@@ -304,7 +314,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.15.0...HEAD
+[1.15.0]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...release/1.15.0
 [1.14.0]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...release/1.14.0
 [1.13.1]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...release/1.13.1
 [1.13.0]: https://github.com/PackmindHub/packmind/compare/release/1.12.0...release/1.13.0
