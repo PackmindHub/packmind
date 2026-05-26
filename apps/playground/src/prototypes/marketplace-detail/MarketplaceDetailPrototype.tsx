@@ -233,7 +233,7 @@ export default function MarketplaceDetailPrototype() {
             </PMButton>
           ) : isSyncOpen ? null : (
             <PMButton
-              variant={canSync ? 'outline' : 'tertiary'}
+              variant="primary"
               size="sm"
               disabled={!canSync}
               onClick={() => setIsSyncOpen(true)}
