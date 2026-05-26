@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   PMBox,
   PMButton,
@@ -19,14 +19,37 @@ import {
   LuTrash2,
 } from 'react-icons/lu';
 import { MarketplaceDetailView } from './components/MarketplaceDetailView';
-import { EMPTY_MARKETPLACE, STUB_MARKETPLACE } from './data';
-import type { MarketplaceDetail, Scenario } from './types';
+import {
+  EMPTY_MARKETPLACE,
+  STUB_MARKETPLACE,
+  STUB_SUGGESTIONS_CLEARED,
+  STUB_SUGGESTIONS_DEFAULT,
+} from './data';
+import type {
+  MarketplaceDetail,
+  Plugin,
+  PolicyKey,
+  Scenario,
+  Suggestion,
+  SuggestionComment,
+} from './types';
+
+// Approve/reject are terminal: we assume the plugin is published into the
+// marketplace (approve) or simply dropped (reject), so the suggestion leaves
+// the queue. Only request-changes keeps it around in `in-review`.
+
+type PolicyOverrides = Record<string, Partial<Record<PolicyKey, boolean>>>;
+
+type ActiveTab = 'plugins' | 'suggestions';
+
+const ADMIN_NAME = 'Marc Reed';
 
 const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
-  { label: 'Default (6 plugins)', value: 'default' },
+  { label: 'Default (6 plugins, 2 pending)', value: 'default' },
   { label: 'Empty (first plugin)', value: 'empty' },
   { label: 'Loading', value: 'loading' },
   { label: 'Repo unreachable', value: 'unreachable' },
+  { label: 'No open suggestions', value: 'suggestions-cleared' },
 ];
 
 const MARKETPLACE_SUBTITLE: Record<string, string> = {
@@ -38,22 +61,119 @@ const MARKETPLACE_SUBTITLE: Record<string, string> = {
 
 export default function MarketplaceDetailPrototype() {
   const [scenario, setScenario] = useState<Scenario>('default');
+  const [policyOverrides, setPolicyOverrides] = useState<PolicyOverrides>({});
+  const [activeTab, setActiveTab] = useState<ActiveTab>('plugins');
+  const [suggestionsByScenario, setSuggestionsByScenario] = useState<
+    Partial<Record<Scenario, Suggestion[]>>
+  >({});
 
-  const marketplace = useMemo<MarketplaceDetail>(() => {
+  const baseMarketplace = useMemo<MarketplaceDetail>(() => {
     if (scenario === 'empty') return EMPTY_MARKETPLACE;
     if (scenario === 'unreachable') {
       return { ...STUB_MARKETPLACE, state: 'unreachable' };
     }
-    return STUB_MARKETPLACE;
+    if (scenario === 'suggestions-cleared') {
+      return { ...STUB_MARKETPLACE, suggestions: STUB_SUGGESTIONS_CLEARED };
+    }
+    return { ...STUB_MARKETPLACE, suggestions: STUB_SUGGESTIONS_DEFAULT };
   }, [scenario]);
+
+  const marketplace = useMemo<MarketplaceDetail>(() => {
+    const withPolicies = applyPolicyOverrides(baseMarketplace, policyOverrides);
+    const liveSuggestions = suggestionsByScenario[scenario];
+    if (!liveSuggestions) return withPolicies;
+    return { ...withPolicies, suggestions: liveSuggestions };
+  }, [baseMarketplace, policyOverrides, scenario, suggestionsByScenario]);
 
   const [selectedPluginId, setSelectedPluginId] = useState<string | null>(
     marketplace.plugins[0]?.id ?? null,
   );
+  const [selectedSuggestionId, setSelectedSuggestionId] = useState<
+    string | null
+  >(() => pickInitialSuggestionId(marketplace.suggestions));
 
   useEffect(() => {
     setSelectedPluginId(marketplace.plugins[0]?.id ?? null);
   }, [marketplace.id]);
+
+  useEffect(() => {
+    setSelectedSuggestionId(
+      pickInitialSuggestionId(baseMarketplace.suggestions),
+    );
+  }, [baseMarketplace.suggestions, scenario]);
+
+  const handlePolicyChange = useCallback(
+    (pluginId: string, key: PolicyKey, value: boolean) => {
+      setPolicyOverrides((prev) => ({
+        ...prev,
+        [pluginId]: { ...prev[pluginId], [key]: value },
+      }));
+    },
+    [],
+  );
+
+  const mutateSuggestions = useCallback(
+    (mutator: (current: Suggestion[]) => Suggestion[]) => {
+      setSuggestionsByScenario((prev) => {
+        const current = prev[scenario] ?? baseMarketplace.suggestions;
+        return { ...prev, [scenario]: mutator(current) };
+      });
+    },
+    [scenario, baseMarketplace.suggestions],
+  );
+
+  const handleApprove = useCallback(
+    (id: string, policy: { mandatory: boolean; autoUpdate: boolean }) => {
+      void policy;
+      mutateSuggestions((current) => current.filter((s) => s.id !== id));
+      advanceAfterAction(id);
+    },
+    [mutateSuggestions, marketplace.suggestions],
+  );
+
+  const handleReject = useCallback(
+    (id: string, reason: string) => {
+      void reason;
+      mutateSuggestions((current) => current.filter((s) => s.id !== id));
+      advanceAfterAction(id);
+    },
+    [mutateSuggestions, marketplace.suggestions],
+  );
+
+  const handleRequestChanges = useCallback(
+    (id: string, body: string) => {
+      const comment: SuggestionComment = {
+        author: 'admin',
+        authorName: ADMIN_NAME,
+        at: 'just now',
+        body,
+      };
+      mutateSuggestions((current) =>
+        current.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                state: 'in-review',
+                comments: [...s.comments, comment],
+              }
+            : s,
+        ),
+      );
+      advanceAfterAction(id);
+    },
+    [mutateSuggestions, marketplace.suggestions],
+  );
+
+  function advanceAfterAction(actedId: string) {
+    const others = marketplace.suggestions.filter((s) => s.id !== actedId);
+    const pending = others.find((s) => s.state === 'pending');
+    if (pending) {
+      setSelectedSuggestionId(pending.id);
+      return;
+    }
+    const inReview = others.find((s) => s.state === 'in-review');
+    setSelectedSuggestionId(inReview?.id ?? null);
+  }
 
   const title =
     scenario === 'loading' ? STUB_MARKETPLACE.name : marketplace.name;
@@ -113,11 +233,56 @@ export default function MarketplaceDetailPrototype() {
       <MarketplaceDetailView
         scenario={scenario}
         marketplace={marketplace}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
         selectedPluginId={selectedPluginId}
         onSelectPlugin={setSelectedPluginId}
+        onChangePolicy={handlePolicyChange}
+        selectedSuggestionId={selectedSuggestionId}
+        onSelectSuggestion={setSelectedSuggestionId}
+        onApproveSuggestion={handleApprove}
+        onRejectSuggestion={handleReject}
+        onRequestChangesOnSuggestion={handleRequestChanges}
       />
     </PMPage>
   );
+}
+
+function pickInitialSuggestionId(suggestions: Suggestion[]): string | null {
+  const pending = suggestions.find((s) => s.state === 'pending');
+  if (pending) return pending.id;
+  const inReview = suggestions.find((s) => s.state === 'in-review');
+  if (inReview) return inReview.id;
+  return suggestions[0]?.id ?? null;
+}
+
+function applyPolicyOverrides(
+  marketplace: MarketplaceDetail,
+  overrides: PolicyOverrides,
+): MarketplaceDetail {
+  if (Object.keys(overrides).length === 0) return marketplace;
+  return {
+    ...marketplace,
+    plugins: marketplace.plugins.map((plugin) =>
+      mergePolicy(plugin, overrides[plugin.id]),
+    ),
+  };
+}
+
+function mergePolicy(
+  plugin: Plugin,
+  override: Partial<Record<PolicyKey, boolean>> | undefined,
+): Plugin {
+  if (!override) return plugin;
+  return {
+    ...plugin,
+    ...(override.autoUpdate !== undefined
+      ? { autoUpdate: override.autoUpdate }
+      : {}),
+    ...(override.mandatory !== undefined
+      ? { mandatory: override.mandatory }
+      : {}),
+  };
 }
 
 function Backlink() {
