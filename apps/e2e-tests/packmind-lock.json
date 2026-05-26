@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@testing/e2e"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:e2e-page-object": {
+    "user:standard:e2e-page-object": {
       "name": "[E2E] Page object",
       "type": "standard",
       "id": "18b55187-d87e-43c1-987d-e66cf2b0af6f",
@@ -21,6 +21,7 @@
       "packageIds": [
         "05033877-0641-4cc3-a87c-0926ef8f5283"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-e2e-page-object.md",
@@ -40,7 +41,7 @@
         }
       ]
     },
-    "standard:e2e-writing-e2e-tests": {
+    "user:standard:e2e-writing-e2e-tests": {
       "name": "[E2E] Writing E2E tests",
       "type": "standard",
       "id": "85e36b83-e56b-49ba-a8b8-f4dc7523b0f1",
@@ -49,6 +50,7 @@
       "packageIds": [
         "05033877-0641-4cc3-a87c-0926ef8f5283"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-e2e-writing-e2e-tests.md",
@@ -68,5 +70,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }

@@ -15,7 +15,6 @@ export type Marketplace = {
   packageCount: number;
   agents: Agent[];
   lastPublishedRelative: string;
-  lastPublishedBy: string;
   state: MarketplaceState;
   consumers: {
     repoCount: number;

@@ -110,7 +110,7 @@ export const StandardsList = ({
   };
 
   const renderAddToPackagesAction = React.useCallback<BatchAction<StandardId>>(
-    ({ selectedIds }) => {
+    ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
@@ -121,6 +121,7 @@ export const StandardsList = ({
           spaceId={spaceId}
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
+          onSuccess={unselectAll}
         />
       );
     },

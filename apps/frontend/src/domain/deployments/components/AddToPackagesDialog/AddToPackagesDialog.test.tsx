@@ -121,6 +121,7 @@ const renderDialog = (
     spaceId,
     orgSlug: 'acme',
     spaceSlug: 'main',
+    onSuccess: jest.fn(),
     ...overrides,
   };
   return {
@@ -304,15 +305,77 @@ describe('AddToPackagesDialog', () => {
     expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  it('shows the package description in the row when present', () => {
-    renderDialog();
-    const row = screen.getByText('frontend-rules').closest('[role="listitem"]');
-    expect(row).not.toBeNull();
-    if (row) {
-      expect(
-        within(row as HTMLElement).getByText('Rules for the frontend.'),
-      ).toBeInTheDocument();
-    }
+  it('invokes onSuccess after a full-success submission', async () => {
+    const mutateAsync = jest.fn().mockResolvedValue([
+      { packageId: packageA.id, ok: true, response: { package: packageA } },
+      { packageId: packageB.id, ok: true, response: { package: packageB } },
+    ] as AddArtefactsToPackagesOutcome[]);
+    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+      createMockMutation({ mutateAsync }),
+    );
+    const onSuccess = jest.fn();
+
+    renderDialog({ onSuccess });
+
+    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+    fireEvent.click(screen.getByLabelText('Add to security-baseline'));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /^Add to 2 packages$/i }),
+    );
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('does not invoke onSuccess when every package call fails', async () => {
+    const failure = new Error('boom');
+    const mutateAsync = jest
+      .fn()
+      .mockResolvedValue([
+        { packageId: packageA.id, ok: false, error: failure },
+      ] as AddArtefactsToPackagesOutcome[]);
+    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+      createMockMutation({ mutateAsync }),
+    );
+    const onSuccess = jest.fn();
+
+    renderDialog({ onSuccess });
+
+    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /^Add to 1 package$/i }),
+    );
+
+    await waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalled();
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('does not invoke onSuccess on partial success', async () => {
+    const failure = new Error('boom');
+    const mutateAsync = jest.fn().mockResolvedValue([
+      { packageId: packageA.id, ok: true, response: { package: packageA } },
+      { packageId: packageB.id, ok: false, error: failure },
+    ] as AddArtefactsToPackagesOutcome[]);
+    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+      createMockMutation({ mutateAsync }),
+    );
+    const onSuccess = jest.fn();
+
+    renderDialog({ onSuccess });
+
+    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+    fireEvent.click(screen.getByLabelText('Add to security-baseline'));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /^Add to 2 packages$/i }),
+    );
+
+    await waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalled();
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
   });
 
   describe('multi-artifact selection', () => {

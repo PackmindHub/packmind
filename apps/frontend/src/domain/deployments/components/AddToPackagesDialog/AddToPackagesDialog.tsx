@@ -49,6 +49,7 @@ interface AddToPackagesDialogProps {
   spaceId: SpaceId;
   orgSlug?: string;
   spaceSlug?: string;
+  onSuccess: () => void;
 }
 
 const ARTIFACT_KIND_PLURALS: Record<AddToPackagesArtifactKind, string> = {
@@ -95,6 +96,7 @@ export const AddToPackagesDialog = ({
   spaceId,
   orgSlug,
   spaceSlug,
+  onSuccess,
 }: AddToPackagesDialogProps) => {
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<PackageId>>(new Set());
@@ -117,9 +119,13 @@ export const AddToPackagesDialog = ({
 
   const filteredPackages = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return addablePackages;
-    return addablePackages.filter((pkg) =>
-      pkg.name.toLowerCase().includes(trimmed),
+    const base = trimmed
+      ? addablePackages.filter((pkg) =>
+          pkg.name.toLowerCase().includes(trimmed),
+        )
+      : addablePackages;
+    return [...base].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
     );
   }, [addablePackages, query]);
 
@@ -183,6 +189,7 @@ export const AddToPackagesDialog = ({
           title,
           description: summarizePackageList(selectedPackages),
         });
+        onSuccess();
         onOpenChange(false);
         resetState();
         return;
@@ -325,10 +332,6 @@ export const AddToPackagesDialog = ({
                 {showOverlapHint ? (
                   <PMText variant="small" color="faded">
                     Already includes {presentCount} of {artifactCount}
-                  </PMText>
-                ) : pkg.description ? (
-                  <PMText variant="small" color="secondary" lineClamp={1}>
-                    {pkg.description}
                   </PMText>
                 ) : null}
               </PMVStack>

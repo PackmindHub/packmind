@@ -442,6 +442,27 @@ describe('CopilotDeployer', () => {
       });
     });
 
+    describe('when additional property is a supported string (context)', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        const skillVersions = [
+          skillVersionFactory({
+            additionalProperties: { context: 'fork' },
+          }),
+        ];
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('renders context value with single quotes in YAML format', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("context: 'fork'");
+      });
+    });
+
     describe('when additional properties include unsupported fields', () => {
       let fileUpdates: Awaited<
         ReturnType<typeof deployer.generateFileUpdatesForSkills>
@@ -452,9 +473,9 @@ describe('CopilotDeployer', () => {
           skillVersionFactory({
             additionalProperties: {
               disableModelInvocation: true,
+              context: 'fork',
               model: 'opus',
               effort: 'high',
-              context: 'some-context',
             },
           }),
         ];
@@ -467,6 +488,11 @@ describe('CopilotDeployer', () => {
         expect(content).toContain('disable-model-invocation: true');
       });
 
+      it('renders supported context property', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("context: 'fork'");
+      });
+
       it('does not render unsupported model property', () => {
         const content = fileUpdates.createOrUpdate[0].content;
         expect(content).not.toContain('model:');
@@ -475,11 +501,6 @@ describe('CopilotDeployer', () => {
       it('does not render unsupported effort property', () => {
         const content = fileUpdates.createOrUpdate[0].content;
         expect(content).not.toContain('effort:');
-      });
-
-      it('does not render unsupported context property', () => {
-        const content = fileUpdates.createOrUpdate[0].content;
-        expect(content).not.toContain('context:');
       });
     });
 

@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@frontend/ui-components"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:front-end-ui-and-design-systems": {
+    "user:standard:front-end-ui-and-design-systems": {
       "name": "Front-end UI and Design Systems",
       "type": "standard",
       "id": "d7d5254e-ba15-49eb-b6af-82678074d598",
@@ -21,6 +21,7 @@
       "packageIds": [
         "720cc588-f184-4029-9d13-027f18da2ab3"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-front-end-ui-and-design-systems.md",
@@ -40,5 +41,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }

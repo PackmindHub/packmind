@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@cli/implementation"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:cli-command-structure": {
+    "user:standard:cli-command-structure": {
       "name": "CLI Command Structure",
       "type": "standard",
       "id": "c2e51769-e829-49cd-98cc-543462db6fe7",
@@ -21,6 +21,7 @@
       "packageIds": [
         "3b20fba1-2669-415f-8433-f3b2bd86c70b"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-cli-command-structure.md",
@@ -40,7 +41,7 @@
         }
       ]
     },
-    "standard:cli-packmindgateway-method-implementation": {
+    "user:standard:cli-packmindgateway-method-implementation": {
       "name": "CLI Gateway Implementation",
       "type": "standard",
       "id": "7cf59fd6-6609-4bc9-9a2c-a6cd247b579f",
@@ -49,6 +50,7 @@
       "packageIds": [
         "3b20fba1-2669-415f-8433-f3b2bd86c70b"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-cli-packmindgateway-method-implementation.md",
@@ -68,7 +70,7 @@
         }
       ]
     },
-    "standard:cli-use-case-structure": {
+    "user:standard:cli-use-case-structure": {
       "name": "CLI Use Case Structure",
       "type": "standard",
       "id": "8c908c7b-f1b1-4496-8465-98651785390b",
@@ -77,6 +79,7 @@
       "packageIds": [
         "3b20fba1-2669-415f-8433-f3b2bd86c70b"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-cli-use-case-structure.md",
@@ -96,5 +99,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }
