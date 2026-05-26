@@ -9,6 +9,7 @@ const origin = 'GitFileUtils';
 export function getFilePathForAgent(agent: CodingAgent): string {
   const agentToFile: Record<CodingAgent, string> = {
     claude: 'CLAUDE.md',
+    claude_plugin: '',
     agents_md: 'AGENTS.md',
     cursor: '.cursor/rules/packmind/recipes-index.mdc',
     copilot: '.github/copilot-instructions.md',

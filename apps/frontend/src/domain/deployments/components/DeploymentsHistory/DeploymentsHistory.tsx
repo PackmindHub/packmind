@@ -340,6 +340,7 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     [RenderMode.JUNIE]: 'Junie',
     [RenderMode.GH_COPILOT]: 'Github Copilot',
     [RenderMode.CLAUDE]: 'Claude',
+    [RenderMode.CLAUDE_PLUGIN]: 'Claude Plugin',
     [RenderMode.CURSOR]: 'Cursor',
     [RenderMode.PACKMIND]: 'Packmind',
     [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
