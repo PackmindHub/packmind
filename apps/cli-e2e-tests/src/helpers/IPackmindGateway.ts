@@ -4,7 +4,6 @@ import {
   ICaptureRecipeUseCase,
   ICreateInvitationsUseCase,
   ICreatePackageUseCase,
-  ICreateSkillUseCase,
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
   IGetTargetsByOrganizationUseCase,
