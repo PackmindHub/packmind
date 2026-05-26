@@ -32,17 +32,36 @@ jobs:
             echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
+      - name: Extract changelog for version
+        id: extract-changelog
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: |
+          CHANGELOG_FILE="CHANGELOG.MD"
+
+          # Extract section for this version
+          CHANGELOG_SECTION=$(awk -v ver="$VERSION" '
+            /^# \[/ {
+              if (found) exit;
+              if ($0 ~ "\\[" ver "\\]") found=1;
+              next;
+            }
+            found { print }
+          ' "$CHANGELOG_FILE")
+
+          # Save to output with proper escaping
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_SECTION" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release v${{ steps.get-version.outputs.version }}
+          name: Release v${{ steps.get-version.outputs.version }}
           body: |
-            ## Release Notes
-
-            Upgrade to ${{ steps.get-version.outputs.version }}
+            ## Changes
+            ${{ steps.extract-changelog.outputs.changelog }}
 
             ## Docker Images
 
