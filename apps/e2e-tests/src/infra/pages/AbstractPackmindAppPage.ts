@@ -111,19 +111,23 @@ export abstract class AbstractPackmindAppPage
       .first()
       .click();
 
-    // Wait for the drawer to be fully open (data-state="open" on the content)
-    // before clicking inside it — otherwise the slide-in animation can detach
-    // the link's DOM mid-click and Playwright fails with "element is not stable".
-    const drawer = this.page.locator('[role="dialog"]').filter({
-      hasText: spaceName,
-    });
+    // Wait for the drawer Content to be in `data-state="open"`. zag-js puts
+    // `data-state` on the same node as `role="dialog"`, so the attribute must
+    // be combined into one selector — a descendant search finds nothing.
+    const drawer = this.page
+      .locator('[role="dialog"][data-state="open"]')
+      .filter({ hasText: spaceName });
     await drawer.waitFor({ state: 'visible' });
-    await drawer
-      .locator('[data-state="open"]')
-      .first()
-      .waitFor({ state: 'visible' });
 
-    // Click "Dashboard" link inside the drawer to navigate to that space
+    // Wait for the drawer's open animation to finish before clicking inside,
+    // otherwise the slide-in transform can detach the link mid-click and
+    // Playwright fails with "element is not stable".
+    await drawer.first().evaluate((el) =>
+      Promise.all(
+        el.getAnimations({ subtree: true }).map((a) => a.finished),
+      ),
+    );
+
     await drawer.getByRole('link', { name: 'Dashboard' }).click();
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
