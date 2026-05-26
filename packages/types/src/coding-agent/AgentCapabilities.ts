@@ -32,6 +32,12 @@ export const AGENT_CAPABILITIES: Record<CodingAgent, AgentCapabilityFlags> = {
     recipes: false,
   },
   claude: { skills: true, standards: true, commands: true, recipes: true },
+  claude_plugin: {
+    skills: true,
+    standards: false,
+    commands: true,
+    recipes: true,
+  },
   cursor: { skills: true, standards: true, commands: true, recipes: true },
   copilot: { skills: true, standards: true, commands: true, recipes: true },
   continue: { skills: false, standards: true, commands: true, recipes: true },

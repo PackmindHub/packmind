@@ -8,6 +8,7 @@ export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
   'packmind',
   'junie',
   'claude',
+  'claude_plugin',
   'cursor',
   'copilot',
   'agents_md',

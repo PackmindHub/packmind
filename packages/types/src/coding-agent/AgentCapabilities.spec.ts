@@ -92,9 +92,15 @@ describe('capableAgentsFor', () => {
     expect(result).not.toContain<CodingAgent>('packmind');
   });
 
-  it('returns the right agents for standards (every agent supports standards in this design)', () => {
+  it('returns every agent that supports standards (all agents except claude_plugin, which intentionally skips standards)', () => {
+    const agentsWithStandards = VALID_CODING_AGENTS.filter(
+      (agent) => agent !== 'claude_plugin',
+    );
     expect(capableAgentsFor('standards')).toEqual(
-      expect.arrayContaining([...VALID_CODING_AGENTS]),
+      expect.arrayContaining([...agentsWithStandards]),
+    );
+    expect(capableAgentsFor('standards')).not.toContain<CodingAgent>(
+      'claude_plugin',
     );
   });
 });

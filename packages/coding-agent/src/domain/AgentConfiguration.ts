@@ -6,6 +6,7 @@ import { CodingAgent } from '@packmind/types';
  */
 export const AGENT_FILE_PATHS: Record<CodingAgent, string> = {
   claude: 'CLAUDE.md',
+  claude_plugin: '',
   agents_md: 'AGENTS.md',
   cursor: '.cursor/rules/packmind/recipes-index.mdc',
   copilot: '.github/copilot-instructions.md',

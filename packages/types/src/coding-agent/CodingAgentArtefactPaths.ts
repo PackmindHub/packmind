@@ -18,6 +18,7 @@ export type CodingAgentArtefactPaths = {
 export type MultiFileCodingAgent = Extract<
   CodingAgent,
   | 'claude'
+  | 'claude_plugin'
   | 'cursor'
   | 'copilot'
   | 'continue'
@@ -45,6 +46,11 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
     command: '.claude/commands/',
     standard: '.claude/rules/',
     skill: '.claude/skills/',
+  },
+  claude_plugin: {
+    command: '',
+    standard: '',
+    skill: '',
   },
   cursor: {
     command: '.cursor/commands/',
