@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 1,
+  "lockfileVersion": 2,
   "packageSlugs": [
     "@testing/integration-tests"
   ],
@@ -12,7 +12,7 @@
     "packmind"
   ],
   "artifacts": {
-    "standard:integration-tests-structure-and-patterns": {
+    "user:standard:integration-tests-structure-and-patterns": {
       "name": "Integration Tests Structure and Patterns",
       "type": "standard",
       "id": "80eceb6f-2b84-412a-8a04-448f773c55a2",
@@ -21,6 +21,7 @@
       "packageIds": [
         "cf48e722-dd33-484b-b247-78dd427ef1c3"
       ],
+      "source": "user",
       "files": [
         {
           "path": ".claude/rules/packmind/standard-integration-tests-structure-and-patterns.md",
@@ -40,5 +41,6 @@
         }
       ]
     }
-  }
+  },
+  "cliVersion": "0.29.0"
 }
