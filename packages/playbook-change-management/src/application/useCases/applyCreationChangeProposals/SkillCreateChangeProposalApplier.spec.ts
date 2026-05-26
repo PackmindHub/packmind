@@ -9,7 +9,7 @@ import {
   createUserId,
   ISkillsPort,
 } from '@packmind/types';
-import { changeProposalFactory } from '@packmind/playbook-change-management/test/changeProposalFactory';
+import { changeProposalFactory } from '../../../../test/changeProposalFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { SkillCreateChangeProposalApplier } from './SkillCreateChangeProposalApplier';
 
