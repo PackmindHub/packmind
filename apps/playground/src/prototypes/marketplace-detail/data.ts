@@ -4,6 +4,8 @@ import type {
   Installer,
   MarketplaceDetail,
   Space,
+  Suggester,
+  Suggestion,
 } from './types';
 
 const SPACES: Record<string, Space> = {
@@ -1059,6 +1061,7 @@ export const STUB_MARKETPLACE: MarketplaceDetail = {
   agents: ['Claude Code', 'Copilot'],
   lastPublishedRelative: '2d ago',
   state: 'drift',
+  suggestions: [],
   consumers: {
     repoCount: 47,
     outdatedRepos: 5,
@@ -1569,4 +1572,182 @@ export const EMPTY_MARKETPLACE: MarketplaceDetail = {
   state: 'healthy',
   consumers: { repoCount: 0, outdatedRepos: 0 },
   plugins: [],
+  suggestions: [],
 };
+
+const SUGGESTERS: Record<string, Suggester> = {
+  iva: { name: 'Iva Rocha', initials: 'IR' },
+  daniel: { name: 'Daniel Okoye', initials: 'DO' },
+  pia: { name: 'Pia Lindgren', initials: 'PL' },
+  thomas: { name: 'Thomas Renard', initials: 'TR' },
+  yumi: { name: 'Yumi Sato', initials: 'YS' },
+  greg: { name: 'Greg Halloran', initials: 'GH' },
+};
+
+const FORMS_SUGGESTION_ARTIFACTS: Artifact[] = [
+  {
+    id: 'sg-forms-cmd-1',
+    kind: 'command',
+    name: '/scaffold-form',
+    summary:
+      'Generate a typed form with react-hook-form, our validator wiring, and submit-state plumbing.',
+  },
+  {
+    id: 'sg-forms-cmd-2',
+    kind: 'command',
+    name: '/diagnose-rerender',
+    summary:
+      'Trace why a form field re-renders on unrelated state changes and propose a fix.',
+  },
+  {
+    id: 'sg-forms-skill-1',
+    kind: 'skill',
+    name: 'form-state-ownership',
+    summary:
+      'When form state belongs to the form, when to the parent route, and how to keep server-truth in sync.',
+  },
+  {
+    id: 'sg-forms-skill-2',
+    kind: 'skill',
+    name: 'inline-validation-rules',
+    summary:
+      'When inline validation helps the user vs. when it just nags them mid-typing.',
+  },
+  {
+    id: 'sg-forms-hook-1',
+    kind: 'hook',
+    name: 'PreToolUse · *Form.tsx',
+    summary:
+      'Refuse a form component that does not wire react-hook-form or its agreed alternative.',
+  },
+];
+
+const PII_SUGGESTION_ARTIFACTS: Artifact[] = [
+  {
+    id: 'sg-pii-cmd-1',
+    kind: 'command',
+    name: '/audit-pii-logging',
+    summary:
+      'Walk the diff for log statements that emit identifiers without the agreed masking format.',
+  },
+  {
+    id: 'sg-pii-skill-1',
+    kind: 'skill',
+    name: 'pii-masking-format',
+    summary:
+      'First-6-characters plus * for emails, and the matching shape for phone numbers and IPs.',
+  },
+  {
+    id: 'sg-pii-skill-2',
+    kind: 'skill',
+    name: 'log-level-and-pii',
+    summary:
+      'Why "redact at all levels" is the rule, not just at info; what auditors look at.',
+  },
+  {
+    id: 'sg-pii-hook-1',
+    kind: 'hook',
+    name: 'PreCommit · *.ts',
+    summary:
+      'Refuse a commit that adds a logger.info(user.email) line without the masking helper.',
+  },
+];
+
+const PERF_SUGGESTION_ARTIFACTS: Artifact[] = [
+  {
+    id: 'sg-perf-cmd-1',
+    kind: 'command',
+    name: '/profile-route',
+    summary:
+      'Open the React Profiler over the current route and surface the heaviest commits.',
+  },
+  {
+    id: 'sg-perf-cmd-2',
+    kind: 'command',
+    name: '/audit-bundle-route',
+    summary:
+      'Report what ships in this route bundle and which deps deserve a dynamic import.',
+  },
+  {
+    id: 'sg-perf-skill-1',
+    kind: 'skill',
+    name: 'render-cost-budget',
+    summary:
+      'The per-route render budget we hold ourselves to, and what to do when a feature crosses it.',
+  },
+  {
+    id: 'sg-perf-subagent-1',
+    kind: 'subagent',
+    name: 'lighthouse-runner',
+    summary:
+      'Run Lighthouse against a preview deploy and flag regressions against the route baseline.',
+  },
+];
+
+const STUB_SUGGESTIONS: Suggestion[] = [
+  {
+    id: 'sg-forms',
+    pluginName: 'Form patterns',
+    proposedVersion: '0.4.0',
+    packageSlug: 'acme/frontend-form-patterns',
+    description:
+      'We have rebuilt three forms in the last sprint and each time the same questions come back: where does form state live, when do we validate inline, how do we keep server-truth in sync. This plugin pulls the answers we keep agreeing on into a small set of commands, two skills, and one hook. It has been the de-facto practice inside the frontend guild for the last quarter and the on-call rotations stopped asking us at review time.',
+    suggester: SUGGESTERS.iva,
+    originSpace: SPACES.frontendGuild,
+    originUsage: { installsInSpace: 9 },
+    suggestedRelative: '3d ago',
+    state: 'pending',
+    artifacts: FORMS_SUGGESTION_ARTIFACTS,
+    comments: [],
+    decision: null,
+  },
+  {
+    id: 'sg-pii',
+    pluginName: 'PII logging guardrails',
+    proposedVersion: '1.0.0',
+    packageSlug: 'acme/security-pii-logging',
+    description:
+      'Last quarter audit flagged two services for logging full emails. We fixed them by hand. The standard says "first six characters plus star" but no one had wired it into the agents. This plugin is the smallest version that covers the gap: one audit command, two skills, one pre-commit hook that refuses the regression. It runs against our own services with zero false positives so far.',
+    suggester: SUGGESTERS.daniel,
+    originSpace: SPACES.security,
+    originUsage: { installsInSpace: 6 },
+    suggestedRelative: '1d ago',
+    state: 'pending',
+    artifacts: PII_SUGGESTION_ARTIFACTS,
+    comments: [],
+    decision: null,
+  },
+  {
+    id: 'sg-perf',
+    pluginName: 'Route performance budgets',
+    proposedVersion: '0.2.0',
+    packageSlug: 'acme/frontend-perf-budgets',
+    description:
+      'Two routes regressed past the budget in the last release and we caught it after the fact. The plugin wraps the Profiler workflow we have been running by hand plus the Lighthouse subagent we already use on the platform side. Lifting it into a marketplace plugin would let the consumer apps run the same check in PRs instead of waiting for a Friday round of tuning.',
+    suggester: SUGGESTERS.pia,
+    originSpace: SPACES.frontendGuild,
+    originUsage: { installsInSpace: 4 },
+    suggestedRelative: '5d ago',
+    state: 'in-review',
+    artifacts: PERF_SUGGESTION_ARTIFACTS,
+    comments: [
+      {
+        author: 'admin',
+        authorName: 'Marc Reed',
+        at: '4d ago',
+        body: 'I want this, but the subagent currently has hardcoded API keys for the Lighthouse runner. Can you move the credentials behind an MCP server config block before we publish?',
+      },
+      {
+        author: 'suggester',
+        authorName: 'Pia Lindgren',
+        at: '2d ago',
+        body: 'Fair. I am pulling the keys into a config-only MCP block this week; will resubmit v0.2.1 once that is in. Want to keep the rest of the plugin shape the same.',
+      },
+    ],
+    decision: null,
+  },
+];
+
+export const STUB_SUGGESTIONS_DEFAULT: Suggestion[] = STUB_SUGGESTIONS;
+
+export const STUB_SUGGESTIONS_CLEARED: Suggestion[] = [];
