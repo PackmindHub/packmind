@@ -1,4 +1,4 @@
-import type { Meta } from '@storybook/react';
+import type { Meta } from '@storybook/react-vite';
 import { PMToaster, pmToaster } from './PMToaster';
 import { PMButton } from '../../form/PMButton/PMButton';
 import { PMHStack } from '../../layout';

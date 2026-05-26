@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMBadge } from './PMBadge';
 
 const meta: Meta<typeof PMBadge> = {

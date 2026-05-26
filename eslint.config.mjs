@@ -62,7 +62,8 @@ export default [
           enforceBuildableLibDependency: true,
           allow: [
             '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
-            '^@packmind/(deployments|git|recipes|standards|linter|analytics|spaces)/test',
+            '^@packmind/(deployments|git|recipes|skills|standards|linter|analytics|spaces)/test',
+            '^@packmind/test-utils',
           ],
           depConstraints: [
             {
@@ -96,5 +97,12 @@ export default [
     ],
     // Override or add rules here
     rules: {},
+  },
+  {
+    files: ['**/jest.config.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      '@nx/enforce-module-boundaries': 'off',
+    },
   },
 ];

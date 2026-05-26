@@ -6,13 +6,13 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "typeorm": "0.3.28",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "uuid": "^11.1.0",
-    "slug": "^11.0.0",
     "@packmind/accounts": "*",
-    "@packmind/test-utils": "*"
+    "@packmind/test-utils": "*",
+    "typeorm": "0.3.28",
+    "slug": "^11.0.0",
+    "uuid": "^11.1.0"
   }
 }

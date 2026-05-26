@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Box, HStack, VStack } from '@chakra-ui/react';
 import { PMSegmentGroup } from './PMSegmentedControl';
 import { PMButton } from '../PMButton/PMButton';
