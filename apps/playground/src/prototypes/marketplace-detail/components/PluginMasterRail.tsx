@@ -11,7 +11,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { getSpaceColorPalette } from '../spaceColor';
-import { LuLock, LuSearch } from 'react-icons/lu';
+import { LuPin, LuRefreshCw, LuSearch } from 'react-icons/lu';
 import type { Plugin } from '../types';
 
 type PluginMasterRailProps = {
@@ -133,7 +133,7 @@ function PluginRailRow({
   dimmed,
   onSelect,
 }: Readonly<PluginRailRowProps>) {
-  const { name, version, mandatory, adoption, sourceSync } = plugin;
+  const { name, version, mandatory, autoUpdate, adoption, sourceSync } = plugin;
 
   const baseColor = dimmed ? 'text.faded' : 'text.primary';
   const publishDriftCount =
@@ -190,21 +190,48 @@ function PluginRailRow({
             >
               {name}
             </PMText>
-            {mandatory && (
+            {autoUpdate && (
               <PMTooltip
-                label="Mandatory plugin: consuming repos must install it"
+                label="Auto-update: consumers receive every new version on the next sync"
                 showArrow
                 openDelay={200}
+                closeDelay={120}
               >
                 <PMBox
+                  width="14px"
+                  height="14px"
                   display="inline-flex"
                   alignItems="center"
                   justifyContent="center"
                   color={dimmed ? 'text.faded' : 'text.secondary'}
+                  cursor="help"
+                  aria-label="Auto-update"
+                >
+                  <PMIcon fontSize="11px">
+                    <LuRefreshCw />
+                  </PMIcon>
+                </PMBox>
+              </PMTooltip>
+            )}
+            {mandatory && (
+              <PMTooltip
+                label="Mandatory plugin: consumers cannot uninstall it"
+                showArrow
+                openDelay={200}
+                closeDelay={120}
+              >
+                <PMBox
+                  width="14px"
+                  height="14px"
+                  display="inline-flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  color={dimmed ? 'text.faded' : 'text.secondary'}
+                  cursor="help"
                   aria-label="Mandatory"
                 >
                   <PMIcon fontSize="11px">
-                    <LuLock />
+                    <LuPin />
                   </PMIcon>
                 </PMBox>
               </PMTooltip>

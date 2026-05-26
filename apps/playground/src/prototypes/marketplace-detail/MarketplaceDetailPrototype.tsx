@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   PMBox,
   PMButton,
@@ -20,7 +20,9 @@ import {
 } from 'react-icons/lu';
 import { MarketplaceDetailView } from './components/MarketplaceDetailView';
 import { EMPTY_MARKETPLACE, STUB_MARKETPLACE } from './data';
-import type { MarketplaceDetail, Scenario } from './types';
+import type { MarketplaceDetail, Plugin, PolicyKey, Scenario } from './types';
+
+type PolicyOverrides = Record<string, Partial<Record<PolicyKey, boolean>>>;
 
 const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
   { label: 'Default (6 plugins)', value: 'default' },
@@ -38,14 +40,20 @@ const MARKETPLACE_SUBTITLE: Record<string, string> = {
 
 export default function MarketplaceDetailPrototype() {
   const [scenario, setScenario] = useState<Scenario>('default');
+  const [policyOverrides, setPolicyOverrides] = useState<PolicyOverrides>({});
 
-  const marketplace = useMemo<MarketplaceDetail>(() => {
+  const baseMarketplace = useMemo<MarketplaceDetail>(() => {
     if (scenario === 'empty') return EMPTY_MARKETPLACE;
     if (scenario === 'unreachable') {
       return { ...STUB_MARKETPLACE, state: 'unreachable' };
     }
     return STUB_MARKETPLACE;
   }, [scenario]);
+
+  const marketplace = useMemo<MarketplaceDetail>(
+    () => applyPolicyOverrides(baseMarketplace, policyOverrides),
+    [baseMarketplace, policyOverrides],
+  );
 
   const [selectedPluginId, setSelectedPluginId] = useState<string | null>(
     marketplace.plugins[0]?.id ?? null,
@@ -54,6 +62,16 @@ export default function MarketplaceDetailPrototype() {
   useEffect(() => {
     setSelectedPluginId(marketplace.plugins[0]?.id ?? null);
   }, [marketplace.id]);
+
+  const handlePolicyChange = useCallback(
+    (pluginId: string, key: PolicyKey, value: boolean) => {
+      setPolicyOverrides((prev) => ({
+        ...prev,
+        [pluginId]: { ...prev[pluginId], [key]: value },
+      }));
+    },
+    [],
+  );
 
   const title =
     scenario === 'loading' ? STUB_MARKETPLACE.name : marketplace.name;
@@ -115,9 +133,39 @@ export default function MarketplaceDetailPrototype() {
         marketplace={marketplace}
         selectedPluginId={selectedPluginId}
         onSelectPlugin={setSelectedPluginId}
+        onChangePolicy={handlePolicyChange}
       />
     </PMPage>
   );
+}
+
+function applyPolicyOverrides(
+  marketplace: MarketplaceDetail,
+  overrides: PolicyOverrides,
+): MarketplaceDetail {
+  if (Object.keys(overrides).length === 0) return marketplace;
+  return {
+    ...marketplace,
+    plugins: marketplace.plugins.map((plugin) =>
+      mergePolicy(plugin, overrides[plugin.id]),
+    ),
+  };
+}
+
+function mergePolicy(
+  plugin: Plugin,
+  override: Partial<Record<PolicyKey, boolean>> | undefined,
+): Plugin {
+  if (!override) return plugin;
+  return {
+    ...plugin,
+    ...(override.autoUpdate !== undefined
+      ? { autoUpdate: override.autoUpdate }
+      : {}),
+    ...(override.mandatory !== undefined
+      ? { mandatory: override.mandatory }
+      : {}),
+  };
 }
 
 function Backlink() {

@@ -1,6 +1,6 @@
 import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import { LuPlug } from 'react-icons/lu';
-import type { MarketplaceDetail, Scenario } from '../types';
+import type { MarketplaceDetail, PolicyKey, Scenario } from '../types';
 import { PluginMasterRail } from './PluginMasterRail';
 import { PluginDetailPane } from './PluginDetailPane';
 import { LoadingState } from './LoadingState';
@@ -11,6 +11,7 @@ type MarketplaceDetailViewProps = {
   marketplace: MarketplaceDetail;
   selectedPluginId: string | null;
   onSelectPlugin: (pluginId: string) => void;
+  onChangePolicy: (pluginId: string, key: PolicyKey, value: boolean) => void;
 };
 
 export function MarketplaceDetailView({
@@ -18,6 +19,7 @@ export function MarketplaceDetailView({
   marketplace,
   selectedPluginId,
   onSelectPlugin,
+  onChangePolicy,
 }: Readonly<MarketplaceDetailViewProps>) {
   if (scenario === 'loading') {
     return (
@@ -55,6 +57,9 @@ export function MarketplaceDetailView({
               key={selectedPlugin.id}
               plugin={selectedPlugin}
               unreachable={marketplace.state === 'unreachable'}
+              onChangePolicy={(key, value) =>
+                onChangePolicy(selectedPlugin.id, key, value)
+              }
             />
           ) : (
             <PMVStack gap={2} padding={10} align="start">
