@@ -29,6 +29,7 @@ import {
   buildSkillsSkippedWarning,
   configuredAgentsSupportSkills,
 } from './skillsCapabilityWarning';
+import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -302,6 +303,7 @@ export async function installHandler({
   }
 
   const configRepository = new ConfigFileRepository();
+  const cwdHomeAgent = isAgentHomeDirectory(cwd) ?? undefined;
 
   const bootstrap = await bootstrapInstallContext({
     configRepository,
@@ -313,6 +315,7 @@ export async function installHandler({
     installDefaultSkills:
       packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
     cliVersion: CLI_VERSION,
+    homeAgent: cwdHomeAgent,
   });
 
   // Determine target directories
@@ -354,18 +357,22 @@ export async function installHandler({
 
   for (const dir of targetDirs) {
     try {
+      const dirHomeAgent = isAgentHomeDirectory(dir) ?? undefined;
       const result = await packmindCliHexa.install({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
         skipInstalledAt,
         cliVersion: CLI_VERSION,
+        homeAgent: dirHomeAgent,
       });
       results.push(result);
 
-      await notifyArtefactsDistributionIfInGitRepo({
-        packmindCliHexa,
-        dir,
-      });
+      if (!dirHomeAgent) {
+        await notifyArtefactsDistributionIfInGitRepo({
+          packmindCliHexa,
+          dir,
+        });
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -409,11 +416,13 @@ export async function installHandler({
       logWarningConsole(capabilityWarning);
     }
     logConsole(buildInstallSummary(combined));
-    await installDefaultSkillsIfAtGitRoot({
-      packmindCliHexa,
-      cwd,
-      configRepository,
-    });
+    if (!cwdHomeAgent) {
+      await installDefaultSkillsIfAtGitRoot({
+        packmindCliHexa,
+        cwd,
+        configRepository,
+      });
+    }
   }
 
   const allErrors = [...combined.errors, ...thrownErrors];

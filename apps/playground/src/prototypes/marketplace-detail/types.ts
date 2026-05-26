@@ -12,7 +12,12 @@ export type Space = {
   name: string;
 };
 
-export type ArtifactKind = 'standard' | 'command' | 'skill';
+export type ArtifactKind =
+  | 'command'
+  | 'skill'
+  | 'subagent'
+  | 'hook'
+  | 'mcp-server';
 
 export type Artifact = {
   id: string;
@@ -52,12 +57,15 @@ export type RepoAdoption = {
   isOutdated: boolean;
 };
 
+export type PolicyKey = 'autoUpdate' | 'mandatory';
+
 export type Plugin = {
   id: string;
   name: string;
   packageSlug: string;
   version: string;
   mandatory: boolean;
+  autoUpdate: boolean;
   owner: Space;
   description: string;
   lastPublishedRelative: string;
@@ -84,6 +92,63 @@ export type MarketplaceDetail = {
     outdatedRepos: number;
   };
   plugins: Plugin[];
+  suggestions: Suggestion[];
 };
 
-export type Scenario = 'default' | 'empty' | 'loading' | 'unreachable';
+export type Scenario =
+  | 'default'
+  | 'empty'
+  | 'loading'
+  | 'unreachable'
+  | 'suggestions-cleared';
+
+export type SuggestionState = 'pending' | 'in-review' | 'approved' | 'rejected';
+
+export type Suggester = {
+  name: string;
+  initials: string;
+};
+
+export type SuggestionComment = {
+  author: 'admin' | 'suggester';
+  authorName: string;
+  at: string;
+  body: string;
+};
+
+export type SuggestionDecision =
+  | {
+      kind: 'approved';
+      by: string;
+      at: string;
+      appliedPolicy: {
+        mandatory: boolean;
+        autoUpdate: boolean;
+      };
+    }
+  | {
+      kind: 'rejected';
+      by: string;
+      at: string;
+      reason: string;
+    };
+
+export type Suggestion = {
+  id: string;
+  pluginName: string;
+  proposedVersion: string;
+  packageSlug: string;
+  description: string;
+  suggester: Suggester;
+  originSpace: Space;
+  originUsage: {
+    installsInSpace: number;
+  };
+  suggestedRelative: string;
+  state: SuggestionState;
+  artifacts: Artifact[];
+  comments: SuggestionComment[];
+  decision: SuggestionDecision | null;
+};
+
+export type SuggestionGroupKey = 'pending' | 'in-review' | 'decided';

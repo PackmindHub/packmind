@@ -477,6 +477,33 @@ packmind-cli install --path apps/frontend
   enabled, see [Manage AI Agent Rendering](/administration/manage-ai-agents).
 </Tip>
 
+### Install Globally for Claude Code (`~/.claude`)
+
+When you run `packmind-cli install` from inside your `~/.claude` directory, the CLI switches into **home-install mode** — a streamlined flow optimized for sharing Packmind artifacts across every project you open in Claude Code, rather than tying them to a single repository.
+
+```bash
+cd ~/.claude
+packmind-cli install <package-slug>
+```
+
+**Why install here:**
+
+- **Global availability across projects** — Skills, rules, and commands land directly under `~/.claude/skills/`, `~/.claude/rules/`, and `~/.claude/commands/`, so Claude Code picks them up in any repository you open, not just one you have initialized with Packmind.
+- **Single-agent rendering** — Only Claude Code artifacts are generated. Any `agents` entries in `packmind.json` and your organization's render modes are ignored, since `~/.claude` is by definition Claude-specific.
+- **Zero-prompt setup** — If no `packmind.json` exists in `~/.claude`, the CLI auto-creates one with `{"agents": ["claude"]}` and skips the interactive agent prompt entirely.
+- **Clean file layout** — The `.claude/` path prefix is stripped from rendered files, so artifacts do not nest under a redundant `~/.claude/.claude/` subfolder.
+- **No `.packmind/` mirror** — The server-side `.packmind/` directory (whose internal links assume a repository layout) is skipped, keeping your home directory uncluttered.
+- **No distribution notifications** — Even if `~/.claude` happens to live inside a git repository, the CLI does not notify Packmind that a distribution occurred — these artifacts are personal to your machine, not a team deployment.
+
+<Tip>
+  **When to use this mode** — Reach for `~/.claude` installs when you want a
+  package available to Claude Code everywhere: personal coding preferences,
+  cross-project organizational defaults, or experimental skills you want to try
+  without modifying any repository. Per-repo `packmind-cli install` remains the
+  right choice for project-specific standards that should be shared with
+  teammates and committed to source control.
+</Tip>
+
 ## Lint Command
 
 <Info>
