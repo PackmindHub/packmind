@@ -12,7 +12,12 @@ export type Space = {
   name: string;
 };
 
-export type ArtifactKind = 'standard' | 'command' | 'skill';
+export type ArtifactKind =
+  | 'command'
+  | 'skill'
+  | 'subagent'
+  | 'hook'
+  | 'mcp-server';
 
 export type Artifact = {
   id: string;
@@ -52,12 +57,15 @@ export type RepoAdoption = {
   isOutdated: boolean;
 };
 
+export type PolicyKey = 'autoUpdate' | 'mandatory';
+
 export type Plugin = {
   id: string;
   name: string;
   packageSlug: string;
   version: string;
   mandatory: boolean;
+  autoUpdate: boolean;
   owner: Space;
   description: string;
   lastPublishedRelative: string;

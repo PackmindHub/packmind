@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   PMBadge,
   PMBox,
@@ -6,7 +6,9 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMInput,
   PMStatus,
+  PMSwitch,
   PMTable,
   PMText,
   PMVStack,
@@ -15,16 +17,22 @@ import {
 } from '@packmind/ui';
 import { getSpaceColorPalette } from '../spaceColor';
 import {
-  LuBookCheck,
+  LuBot,
   LuChevronRight,
-  LuLock,
   LuMinus,
   LuPencil,
+  LuPin,
+  LuPinOff,
+  LuPlug,
   LuPlus,
+  LuRefreshCw,
+  LuRefreshCwOff,
   LuRotateCw,
+  LuSearch,
   LuTerminal,
   LuTriangleAlert,
   LuWandSparkles,
+  LuWebhook,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import type {
@@ -32,6 +40,7 @@ import type {
   ArtifactKind,
   Installer,
   Plugin,
+  PolicyKey,
   RepoAdoption,
   SourcePackageChange,
   SourcePackageSync,
@@ -40,38 +49,59 @@ import type {
 type PluginDetailPaneProps = {
   plugin: Plugin;
   unreachable: boolean;
+  onChangePolicy: (key: PolicyKey, value: boolean) => void;
 };
 
 const KIND_ICON: Record<ArtifactKind, IconType> = {
-  standard: LuBookCheck,
   command: LuTerminal,
   skill: LuWandSparkles,
+  subagent: LuBot,
+  hook: LuWebhook,
+  'mcp-server': LuPlug,
 };
 
 const KIND_LABEL: Record<ArtifactKind, string> = {
-  standard: 'Standards',
   command: 'Commands',
   skill: 'Skills',
+  subagent: 'Subagents',
+  hook: 'Hooks',
+  'mcp-server': 'MCP servers',
 };
 
 const KIND_LABEL_SINGULAR: Record<ArtifactKind, string> = {
-  standard: 'Standard',
   command: 'Command',
   skill: 'Skill',
+  subagent: 'Subagent',
+  hook: 'Hook',
+  'mcp-server': 'MCP server',
 };
 
-const KIND_ORDER: ArtifactKind[] = ['standard', 'command', 'skill'];
+const KIND_ORDER: ArtifactKind[] = [
+  'command',
+  'skill',
+  'subagent',
+  'hook',
+  'mcp-server',
+];
 
-type DetailTabId = 'overview' | 'changes' | 'adoption';
+const MONO_KINDS: ReadonlySet<ArtifactKind> = new Set<ArtifactKind>([
+  'command',
+  'hook',
+  'mcp-server',
+]);
+
+type DetailTabId = 'overview' | 'changes' | 'adoption' | 'settings';
 
 export function PluginDetailPane({
   plugin,
   unreachable,
+  onChangePolicy,
 }: Readonly<PluginDetailPaneProps>) {
   const {
     name,
     version,
     mandatory,
+    autoUpdate,
     owner,
     description,
     lastPublishedRelative,
@@ -104,6 +134,7 @@ export function PluginDetailPane({
         <IdentityStrip
           name={name}
           mandatory={mandatory}
+          autoUpdate={autoUpdate}
           ownerName={owner.name}
           lastPublishedRelative={lastPublishedRelative}
         />
@@ -112,6 +143,7 @@ export function PluginDetailPane({
           publishedVersion={version}
           sourceSync={sourceSync}
           adoption={adoption}
+          autoUpdate={autoUpdate}
           unreachable={unreachable}
           onViewChanges={handleViewChanges}
           onViewOutdated={handleViewOutdated}
@@ -132,9 +164,19 @@ export function PluginDetailPane({
           <AdoptionBlock
             adoption={adoption}
             version={version}
+            autoUpdate={autoUpdate}
             unreachable={unreachable}
             outdatedOnly={outdatedOnly}
             onClearFilter={() => setOutdatedOnly(false)}
+          />
+        )}
+        {tab === 'settings' && (
+          <SettingsBlock
+            autoUpdate={autoUpdate}
+            mandatory={mandatory}
+            ownerName={owner.name}
+            unreachable={unreachable}
+            onChangePolicy={onChangePolicy}
           />
         )}
       </PMVStack>
@@ -176,6 +218,13 @@ function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
       >
         Adoption
       </TabButton>
+      <TabButton
+        active={active === 'settings'}
+        onClick={() => onChange('settings')}
+        paddingY={3}
+      >
+        Settings
+      </TabButton>
     </PMHStack>
   );
 }
@@ -183,6 +232,7 @@ function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
 type IdentityStripProps = {
   name: string;
   mandatory: boolean;
+  autoUpdate: boolean;
   ownerName: string;
   lastPublishedRelative: string;
 };
@@ -190,6 +240,7 @@ type IdentityStripProps = {
 function IdentityStrip({
   name,
   mandatory,
+  autoUpdate,
   ownerName,
   lastPublishedRelative,
 }: Readonly<IdentityStripProps>) {
@@ -199,7 +250,18 @@ function IdentityStrip({
         <PMHeading size="lg" color="primary">
           {name}
         </PMHeading>
-        {mandatory && <MandatoryChip />}
+        <PolicyChip
+          on={autoUpdate}
+          label="auto-update"
+          OnIcon={LuRefreshCw}
+          OffIcon={LuRefreshCwOff}
+        />
+        <PolicyChip
+          on={mandatory}
+          label="mandatory"
+          OnIcon={LuPin}
+          OffIcon={LuPinOff}
+        />
       </PMHStack>
       <PMHStack gap={2} align="center" wrap="wrap">
         <OwnerChip name={ownerName} />
@@ -212,7 +274,16 @@ function IdentityStrip({
   );
 }
 
-function MandatoryChip() {
+type PolicyChipProps = {
+  on: boolean;
+  label: string;
+  OnIcon: IconType;
+  OffIcon: IconType;
+};
+
+function PolicyChip({ on, label, OnIcon, OffIcon }: Readonly<PolicyChipProps>) {
+  const Icon = on ? OnIcon : OffIcon;
+  const color = on ? 'text.secondary' : 'text.faded';
   return (
     <PMHStack
       gap={1}
@@ -221,17 +292,18 @@ function MandatoryChip() {
       paddingX="6px"
       paddingY="2px"
       borderRadius="sm"
+      aria-label={`${label} ${on ? 'on' : 'off'}`}
     >
-      <PMIcon fontSize="11px" color="text.secondary">
-        <LuLock />
+      <PMIcon fontSize="11px" color={color}>
+        <Icon />
       </PMIcon>
       <PMText
         fontSize="xs"
-        color="text.secondary"
+        color={color}
         fontWeight="medium"
         letterSpacing="0.025em"
       >
-        mandatory
+        {label}
       </PMText>
     </PMHStack>
   );
@@ -268,6 +340,7 @@ type VersionTrailProps = {
   publishedVersion: string;
   sourceSync: SourcePackageSync;
   adoption: Plugin['adoption'];
+  autoUpdate: boolean;
   unreachable: boolean;
   onViewChanges: () => void;
   onViewOutdated: () => void;
@@ -277,6 +350,7 @@ function VersionTrail({
   publishedVersion,
   sourceSync,
   adoption,
+  autoUpdate,
   unreachable,
   onViewChanges,
   onViewOutdated,
@@ -289,7 +363,8 @@ function VersionTrail({
   const latestCount = reposOnVersion;
   const behindCount = outdatedRepos;
   const totalCount = latestCount + behindCount;
-  const hasAdoptionDrift = behindCount > 0;
+  const adoptionAutoSyncing = autoUpdate && !unreachable;
+  const showAdoptionDrift = behindCount > 0 && !adoptionAutoSyncing;
 
   const installedValue =
     totalCount === 0
@@ -301,9 +376,11 @@ function VersionTrail({
   const installedSub =
     totalCount === 0
       ? 'no consumers yet'
-      : behindCount === 0
-        ? 'all on latest'
-        : 'on latest';
+      : adoptionAutoSyncing
+        ? 'syncs on next publish'
+        : behindCount === 0
+          ? 'all on latest'
+          : 'on latest';
 
   return (
     <PMVStack
@@ -353,7 +430,8 @@ function VersionTrail({
           sub="in marketplace"
         />
         <TrailConnector
-          drift={hasAdoptionDrift && !unreachable}
+          drift={showAdoptionDrift}
+          autoSyncing={adoptionAutoSyncing}
           driftLabel={
             behindCount === 1 ? '1 repo behind' : `${behindCount} repos behind`
           }
@@ -365,7 +443,7 @@ function VersionTrail({
                 : 'all on latest'
           }
           action={
-            hasAdoptionDrift && !unreachable
+            showAdoptionDrift
               ? {
                   label: `View ${behindCount} behind`,
                   onClick: onViewOutdated,
@@ -419,6 +497,7 @@ function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
 
 type TrailConnectorProps = {
   drift: boolean;
+  autoSyncing?: boolean;
   driftLabel: string;
   inSyncLabel: string;
   action?: { label: string; onClick: () => void };
@@ -427,11 +506,34 @@ type TrailConnectorProps = {
 
 function TrailConnector({
   drift,
+  autoSyncing = false,
   driftLabel,
   inSyncLabel,
   action,
   dimmed,
 }: Readonly<TrailConnectorProps>) {
+  if (autoSyncing) {
+    return (
+      <PMVStack gap={2} align="center" minW="120px" paddingTop="18px">
+        <PMIcon fontSize="lg" color="text.secondary" aria-hidden>
+          <LuRefreshCw />
+        </PMIcon>
+        <PMHStack gap={1.5} align="center">
+          <PMBox
+            width="6px"
+            height="6px"
+            borderRadius="full"
+            bg="branding.primary"
+            aria-hidden
+          />
+          <PMText fontSize="xs" color="text.secondary">
+            auto-syncing
+          </PMText>
+        </PMHStack>
+      </PMVStack>
+    );
+  }
+
   return (
     <PMVStack gap={2} align="center" minW="120px" paddingTop="18px">
       <PMIcon
@@ -592,7 +694,7 @@ function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
         color="text.primary"
         fontWeight="medium"
         truncate
-        fontFamily={change.artifactKind === 'command' ? 'mono' : undefined}
+        fontFamily={MONO_KINDS.has(change.artifactKind) ? 'mono' : undefined}
       >
         {change.target}
       </PMText>
@@ -620,6 +722,7 @@ type AdoptionAxis = 'repo' | 'person';
 type AdoptionBlockProps = {
   adoption: Plugin['adoption'];
   version: string;
+  autoUpdate: boolean;
   unreachable: boolean;
   outdatedOnly: boolean;
   onClearFilter: () => void;
@@ -628,6 +731,7 @@ type AdoptionBlockProps = {
 function AdoptionBlock({
   adoption,
   version,
+  autoUpdate,
   unreachable,
   outdatedOnly,
   onClearFilter,
@@ -662,6 +766,24 @@ function AdoptionBlock({
 
   return (
     <PMVStack gap={3} align="stretch">
+      {autoUpdate && (
+        <PMHStack
+          gap={2}
+          align="center"
+          bg="background.secondary"
+          paddingX={3}
+          paddingY={2}
+          borderRadius="sm"
+        >
+          <PMIcon fontSize="sm" color="text.secondary">
+            <LuRefreshCw />
+          </PMIcon>
+          <PMText fontSize="xs" color="text.secondary">
+            Auto-update is on. Repos sync to the published version on the next
+            pull.
+          </PMText>
+        </PMHStack>
+      )}
       {outdatedOnly && (
         <PMHStack
           gap={3}
@@ -679,21 +801,23 @@ function AdoptionBlock({
             Showing {outdatedRepoCount}{' '}
             {outdatedRepoCount === 1 ? 'repo' : 'repos'} behind
           </PMText>
-          <PMBox
-            as="button"
-            type="button"
-            fontSize="xs"
-            color="branding.primary"
-            bg="transparent"
-            border="none"
-            cursor="pointer"
-            padding={0}
-            onClick={onClearFilter}
-            transition="color 120ms ease-out"
-            _hover={{ color: 'blue.300' }}
-          >
-            Show all
-          </PMBox>
+          {!autoUpdate && (
+            <PMBox
+              as="button"
+              type="button"
+              fontSize="xs"
+              color="branding.primary"
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding={0}
+              onClick={onClearFilter}
+              transition="color 120ms ease-out"
+              _hover={{ color: 'blue.300' }}
+            >
+              Show all
+            </PMBox>
+          )}
         </PMHStack>
       )}
       {visibleRepos.length > 0 ? (
@@ -725,7 +849,9 @@ function AdoptionBlock({
       ) : (
         <PMText fontSize="sm" color="text.faded">
           {outdatedOnly
-            ? 'No repos behind. Everyone is on the published version.'
+            ? autoUpdate
+              ? 'Auto-update is on. Repos sync to the published version on the next pull.'
+              : 'No repos behind. Everyone is on the published version.'
             : 'No consumers yet.'}
         </PMText>
       )}
@@ -951,71 +1077,539 @@ function aggregateByPerson(repos: RepoAdoption[]): PersonEntry[] {
     });
 }
 
+type SettingsBlockProps = {
+  autoUpdate: boolean;
+  mandatory: boolean;
+  ownerName: string;
+  unreachable: boolean;
+  onChangePolicy: (key: PolicyKey, value: boolean) => void;
+};
+
+type PendingChange = { key: PolicyKey; nextValue: boolean };
+type RecentChange = { key: PolicyKey; previousValue: boolean };
+
+function SettingsBlock({
+  autoUpdate,
+  mandatory,
+  ownerName,
+  unreachable,
+  onChangePolicy,
+}: Readonly<SettingsBlockProps>) {
+  const [pending, setPending] = useState<PendingChange | null>(null);
+  const [recent, setRecent] = useState<RecentChange | null>(null);
+
+  useEffect(() => {
+    if (!recent) return;
+    const timer = window.setTimeout(() => setRecent(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [recent]);
+
+  const valueOf = (key: PolicyKey) =>
+    key === 'autoUpdate' ? autoUpdate : mandatory;
+
+  const requiresConfirm = (key: PolicyKey, nextValue: boolean) =>
+    key === 'autoUpdate' ? true : nextValue === true;
+
+  const handleAttempt = (key: PolicyKey, nextValue: boolean) => {
+    setRecent(null);
+    if (nextValue === valueOf(key)) return;
+    if (requiresConfirm(key, nextValue)) {
+      setPending({ key, nextValue });
+      return;
+    }
+    onChangePolicy(key, nextValue);
+    setRecent({ key, previousValue: !nextValue });
+  };
+
+  const handleConfirm = () => {
+    if (!pending) return;
+    const previousValue = valueOf(pending.key);
+    onChangePolicy(pending.key, pending.nextValue);
+    setRecent({ key: pending.key, previousValue });
+    setPending(null);
+  };
+
+  const handleCancel = () => setPending(null);
+
+  const handleUndo = () => {
+    if (!recent) return;
+    onChangePolicy(recent.key, recent.previousValue);
+    setRecent(null);
+  };
+
+  return (
+    <PMVStack gap={6} align="stretch" maxW="70ch">
+      <PMVStack gap={1} align="start">
+        <SectionLabel>Distribution policy</SectionLabel>
+        <PMText fontSize="xs" color="text.faded">
+          Owned by {ownerName}. Changes apply to every consumer repo.
+        </PMText>
+      </PMVStack>
+
+      <PMVStack gap={6} align="stretch">
+        <SettingRow
+          label="Auto-update"
+          explanation="Consumers receive every new version on their next sync."
+          checked={autoUpdate}
+          disabled={unreachable}
+          onAttempt={(next) => handleAttempt('autoUpdate', next)}
+          footer={
+            <>
+              {pending?.key === 'autoUpdate' && (
+                <ConfirmFooter
+                  body={
+                    pending.nextValue
+                      ? 'Consumers will receive every new version you publish, automatically. They will not be asked.'
+                      : 'Consumers will stay on whatever version they currently have installed until they update manually.'
+                  }
+                  confirmLabel={
+                    pending.nextValue
+                      ? 'Turn on auto-update'
+                      : 'Turn off auto-update'
+                  }
+                  onConfirm={handleConfirm}
+                  onCancel={handleCancel}
+                />
+              )}
+              {recent?.key === 'autoUpdate' && !pending && (
+                <UndoFooter
+                  message={
+                    valueOf('autoUpdate')
+                      ? 'Auto-update is on.'
+                      : 'Auto-update is off.'
+                  }
+                  onUndo={handleUndo}
+                />
+              )}
+            </>
+          }
+        />
+        <SettingRow
+          label="Mandatory"
+          explanation="Consumers cannot uninstall this plugin from their repo."
+          checked={mandatory}
+          disabled={unreachable}
+          onAttempt={(next) => handleAttempt('mandatory', next)}
+          footer={
+            <>
+              {pending?.key === 'mandatory' && (
+                <ConfirmFooter
+                  body="Turning this on locks the plugin in every consumer repo. Existing installs cannot be removed until you turn it off."
+                  confirmLabel="Make mandatory"
+                  onConfirm={handleConfirm}
+                  onCancel={handleCancel}
+                />
+              )}
+              {recent?.key === 'mandatory' && !pending && (
+                <UndoFooter
+                  message={
+                    valueOf('mandatory')
+                      ? 'Plugin is now mandatory.'
+                      : 'Plugin is no longer mandatory.'
+                  }
+                  onUndo={handleUndo}
+                />
+              )}
+            </>
+          }
+        />
+      </PMVStack>
+    </PMVStack>
+  );
+}
+
+type SettingRowProps = {
+  label: string;
+  explanation: string;
+  checked: boolean;
+  disabled: boolean;
+  onAttempt: (nextValue: boolean) => void;
+  footer: React.ReactNode;
+};
+
+function SettingRow({
+  label,
+  explanation,
+  checked,
+  disabled,
+  onAttempt,
+  footer,
+}: Readonly<SettingRowProps>) {
+  return (
+    <PMVStack gap={3} align="stretch">
+      <PMHStack gap={4} align="center" justify="space-between">
+        <PMVStack gap={1} align="start" flex={1} minW={0}>
+          <PMText fontSize="sm" color="text.primary" fontWeight="medium">
+            {label}
+          </PMText>
+          <PMText fontSize="xs" color="text.secondary">
+            {explanation}
+          </PMText>
+        </PMVStack>
+        <PMSwitch
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={(details) => onAttempt(details.checked)}
+          colorPalette="blue"
+          aria-label={label}
+        />
+      </PMHStack>
+      {footer}
+    </PMVStack>
+  );
+}
+
+type ConfirmFooterProps = {
+  body: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+function ConfirmFooter({
+  body,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+}: Readonly<ConfirmFooterProps>) {
+  return (
+    <PMVStack
+      gap={3}
+      align="stretch"
+      bg="background.secondary"
+      paddingX={4}
+      paddingY={3}
+      borderRadius="sm"
+    >
+      <PMText fontSize="sm" color="text.secondary" lineHeight={1.5}>
+        {body}
+      </PMText>
+      <PMHStack gap={2} justify="flex-end">
+        <PMButton variant="tertiary" size="sm" onClick={onCancel}>
+          Cancel
+        </PMButton>
+        <PMButton variant="primary" size="sm" onClick={onConfirm}>
+          {confirmLabel}
+        </PMButton>
+      </PMHStack>
+    </PMVStack>
+  );
+}
+
+type UndoFooterProps = {
+  message: string;
+  onUndo: () => void;
+};
+
+function UndoFooter({ message, onUndo }: Readonly<UndoFooterProps>) {
+  return (
+    <PMHStack
+      gap={3}
+      align="center"
+      justify="space-between"
+      bg="background.secondary"
+      paddingX={3}
+      paddingY={2}
+      borderRadius="sm"
+    >
+      <PMText fontSize="xs" color="text.secondary">
+        {message}
+      </PMText>
+      <PMBox
+        as="button"
+        type="button"
+        fontSize="xs"
+        color="branding.primary"
+        bg="transparent"
+        border="none"
+        cursor="pointer"
+        padding={0}
+        onClick={onUndo}
+        transition="color 120ms ease-out"
+        _hover={{ color: 'blue.300' }}
+        _focusVisible={{
+          outline: '2px solid',
+          outlineColor: 'branding.primary',
+          outlineOffset: '2px',
+          borderRadius: 'sm',
+        }}
+      >
+        Undo
+      </PMBox>
+    </PMHStack>
+  );
+}
+
 type ArtifactsBlockProps = {
   grouped: Record<ArtifactKind, Artifact[]>;
 };
 
+type ArtifactFilter = ArtifactKind | 'all';
+
 function ArtifactsBlock({ grouped }: Readonly<ArtifactsBlockProps>) {
   const total = KIND_ORDER.reduce((sum, k) => sum + grouped[k].length, 0);
+  const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<ArtifactFilter>('all');
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchesQuery = (a: Artifact) =>
+    !normalizedQuery ||
+    a.name.toLowerCase().includes(normalizedQuery) ||
+    a.summary.toLowerCase().includes(normalizedQuery);
+
+  const visibleKinds: ArtifactKind[] =
+    activeFilter === 'all' ? KIND_ORDER : [activeFilter];
+
+  const filteredGroups = visibleKinds.map((kind) => ({
+    kind,
+    items: grouped[kind].filter(matchesQuery),
+  }));
+
+  const visibleCount = filteredGroups.reduce((s, g) => s + g.items.length, 0);
+  const isFiltering = normalizedQuery.length > 0 || activeFilter !== 'all';
+
+  const handleReset = () => {
+    setQuery('');
+    setActiveFilter('all');
+  };
 
   return (
     <PMVStack gap={4} align="stretch">
-      <PMHStack gap={2} align="baseline">
+      <PMHStack gap={3} align="baseline" justify="space-between">
         <SectionLabel>Bundled artifacts</SectionLabel>
         <PMText
           fontSize="xs"
           color="text.faded"
           fontVariantNumeric="tabular-nums"
         >
-          {total} {total === 1 ? 'item' : 'items'}
+          {isFiltering
+            ? `${visibleCount} of ${total}`
+            : `${total} ${total === 1 ? 'item' : 'items'}`}
         </PMText>
       </PMHStack>
 
-      {KIND_ORDER.map((kind) => {
-        const items = grouped[kind];
-        if (items.length === 0) return null;
-        return <ArtifactGroup key={kind} kind={kind} items={items} />;
-      })}
+      <ArtifactToolbar
+        query={query}
+        onQueryChange={setQuery}
+        total={total}
+        grouped={grouped}
+        active={activeFilter}
+        onFilterChange={setActiveFilter}
+      />
+
+      {visibleCount === 0 ? (
+        <ArtifactsEmpty query={normalizedQuery} onReset={handleReset} />
+      ) : (
+        <PMVStack gap={5} align="stretch">
+          {filteredGroups.map(({ kind, items }) =>
+            items.length === 0 ? null : (
+              <ArtifactGroup
+                key={kind}
+                kind={kind}
+                items={items}
+                totalInKind={grouped[kind].length}
+                showHeader={activeFilter === 'all'}
+              />
+            ),
+          )}
+        </PMVStack>
+      )}
     </PMVStack>
+  );
+}
+
+type ArtifactToolbarProps = {
+  query: string;
+  onQueryChange: (next: string) => void;
+  total: number;
+  grouped: Record<ArtifactKind, Artifact[]>;
+  active: ArtifactFilter;
+  onFilterChange: (next: ArtifactFilter) => void;
+};
+
+function ArtifactToolbar({
+  query,
+  onQueryChange,
+  total,
+  grouped,
+  active,
+  onFilterChange,
+}: Readonly<ArtifactToolbarProps>) {
+  return (
+    <PMVStack gap={2.5} align="stretch">
+      <PMBox position="relative">
+        <PMBox
+          position="absolute"
+          left="10px"
+          top="50%"
+          transform="translateY(-50%)"
+          color="text.faded"
+          pointerEvents="none"
+          display="flex"
+          alignItems="center"
+          zIndex={1}
+          aria-hidden
+        >
+          <PMIcon fontSize="sm">
+            <LuSearch />
+          </PMIcon>
+        </PMBox>
+        <PMInput
+          placeholder="Filter artifacts by name or description"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          size="sm"
+          paddingLeft="32px"
+          aria-label="Filter artifacts"
+        />
+      </PMBox>
+      <PMHStack gap={1.5} wrap="wrap" align="center">
+        <FacetChip
+          active={active === 'all'}
+          onClick={() => onFilterChange('all')}
+          count={total}
+        >
+          All
+        </FacetChip>
+        {KIND_ORDER.map((kind) => {
+          const count = grouped[kind].length;
+          if (count === 0) return null;
+          const Icon = KIND_ICON[kind];
+          return (
+            <FacetChip
+              key={kind}
+              active={active === kind}
+              onClick={() => onFilterChange(kind)}
+              count={count}
+              icon={Icon}
+            >
+              {KIND_LABEL[kind]}
+            </FacetChip>
+          );
+        })}
+      </PMHStack>
+    </PMVStack>
+  );
+}
+
+type FacetChipProps = {
+  active: boolean;
+  onClick: () => void;
+  count: number;
+  icon?: IconType;
+  children: React.ReactNode;
+};
+
+function FacetChip({
+  active,
+  onClick,
+  count,
+  icon: Icon,
+  children,
+}: Readonly<FacetChipProps>) {
+  return (
+    <PMBox
+      as="button"
+      type="button"
+      onClick={onClick}
+      display="inline-flex"
+      alignItems="center"
+      gap={1.5}
+      paddingX="10px"
+      paddingY="3px"
+      borderRadius="sm"
+      bg={active ? 'branding.primary' : 'background.tertiary'}
+      color={active ? 'beige.1000' : 'text.secondary'}
+      fontSize="xs"
+      fontWeight="medium"
+      cursor="pointer"
+      border="none"
+      transition="background-color 120ms ease-out, color 120ms ease-out"
+      _hover={
+        active
+          ? { bg: 'branding.primary' }
+          : { bg: 'background.secondary', color: 'text.primary' }
+      }
+      _focusVisible={{
+        outline: '2px solid',
+        outlineColor: 'branding.primary',
+        outlineOffset: '2px',
+      }}
+      aria-pressed={active}
+    >
+      {Icon && (
+        <PMIcon fontSize="11px" color="inherit">
+          <Icon />
+        </PMIcon>
+      )}
+      <PMBox as="span" color="inherit">
+        {children}
+      </PMBox>
+      <PMBox
+        as="span"
+        color="inherit"
+        opacity={active ? 0.7 : 0.65}
+        fontVariantNumeric="tabular-nums"
+      >
+        {count}
+      </PMBox>
+    </PMBox>
   );
 }
 
 type ArtifactGroupProps = {
   kind: ArtifactKind;
   items: Artifact[];
+  totalInKind: number;
+  showHeader: boolean;
 };
 
-function ArtifactGroup({ kind, items }: Readonly<ArtifactGroupProps>) {
+function ArtifactGroup({
+  kind,
+  items,
+  totalInKind,
+  showHeader,
+}: Readonly<ArtifactGroupProps>) {
   const Icon = KIND_ICON[kind];
   return (
-    <PMVStack gap={1} align="stretch">
-      <PMHStack
-        gap={2}
-        align="center"
-        paddingY={1.5}
-        borderBottom="1px solid"
-        borderColor="border.tertiary"
-      >
-        <PMIcon fontSize="sm" color="text.faded">
-          <Icon />
-        </PMIcon>
-        <PMText
-          fontSize="xs"
-          color="text.secondary"
-          textTransform="uppercase"
-          letterSpacing="wider"
-          fontWeight="semibold"
+    <PMVStack gap={0} align="stretch">
+      {showHeader && (
+        <PMHStack
+          gap={2}
+          align="center"
+          paddingY={1.5}
+          paddingX={2}
+          marginX={-2}
+          borderBottom="1px solid"
+          borderColor="border.tertiary"
+          position="sticky"
+          top={0}
+          bg="background.primary"
+          zIndex={1}
         >
-          {KIND_LABEL[kind]}
-        </PMText>
-        <PMText
-          fontSize="xs"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
-          {items.length}
-        </PMText>
-      </PMHStack>
+          <PMIcon fontSize="sm" color="text.faded">
+            <Icon />
+          </PMIcon>
+          <PMText
+            fontSize="xs"
+            color="text.secondary"
+            textTransform="uppercase"
+            letterSpacing="wider"
+            fontWeight="semibold"
+          >
+            {KIND_LABEL[kind]}
+          </PMText>
+          <PMText
+            fontSize="xs"
+            color="text.faded"
+            fontVariantNumeric="tabular-nums"
+          >
+            {items.length === totalInKind
+              ? items.length
+              : `${items.length} / ${totalInKind}`}
+          </PMText>
+        </PMHStack>
+      )}
       <PMVStack gap={0} align="stretch">
         {items.map((a) => (
           <ArtifactRow key={a.id} artifact={a} />
@@ -1026,6 +1620,8 @@ function ArtifactGroup({ kind, items }: Readonly<ArtifactGroupProps>) {
 }
 
 function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
+  const Icon = KIND_ICON[artifact.kind];
+  const mono = MONO_KINDS.has(artifact.kind);
   return (
     <PMBox
       as="button"
@@ -1034,10 +1630,14 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
       border="none"
       textAlign="left"
       width="100%"
-      paddingY={2.5}
+      paddingY="6px"
       paddingX={2}
       cursor="pointer"
       borderRadius="sm"
+      display="grid"
+      gridTemplateColumns="14px minmax(0, 32ch) minmax(0, 1fr) 14px"
+      alignItems="center"
+      columnGap={3}
       transition="background-color 120ms ease-out"
       _hover={{ bg: 'background.secondary' }}
       _focusVisible={{
@@ -1045,28 +1645,97 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
         outlineColor: 'branding.primary',
         outlineOffset: '-2px',
       }}
+      sx={{
+        '&:hover [data-row-chevron]': { opacity: 1 },
+        '&:focus-visible [data-row-chevron]': { opacity: 1 },
+      }}
       aria-label={`Open ${artifact.name}`}
     >
-      <PMHStack gap={3} align="center" justify="space-between">
-        <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-          <PMText
-            fontSize="sm"
-            fontWeight="medium"
-            color="text.primary"
-            truncate
-            fontFamily={artifact.kind === 'command' ? 'mono' : undefined}
-          >
-            {artifact.name}
-          </PMText>
-          <PMText fontSize="xs" color="text.secondary" lineHeight={1.5}>
-            {artifact.summary}
-          </PMText>
-        </PMVStack>
-        <PMIcon fontSize="sm" color="text.faded" flexShrink={0}>
+      <PMBox
+        as="span"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        color="text.faded"
+        aria-hidden
+      >
+        <PMIcon fontSize="sm">
+          <Icon />
+        </PMIcon>
+      </PMBox>
+      <PMText
+        fontSize="sm"
+        fontWeight="medium"
+        color="text.primary"
+        truncate
+        fontFamily={mono ? 'mono' : undefined}
+      >
+        {artifact.name}
+      </PMText>
+      <PMText fontSize="xs" color="text.secondary" lineHeight={1.4} truncate>
+        {artifact.summary}
+      </PMText>
+      <PMBox
+        as="span"
+        data-row-chevron
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        color="text.faded"
+        opacity={0}
+        transition="opacity 120ms ease-out"
+        aria-hidden
+      >
+        <PMIcon fontSize="sm">
           <LuChevronRight />
         </PMIcon>
-      </PMHStack>
+      </PMBox>
     </PMBox>
+  );
+}
+
+type ArtifactsEmptyProps = {
+  query: string;
+  onReset: () => void;
+};
+
+function ArtifactsEmpty({ query, onReset }: Readonly<ArtifactsEmptyProps>) {
+  return (
+    <PMVStack
+      gap={2}
+      align="start"
+      paddingY={6}
+      paddingX={3}
+      bg="background.secondary"
+      borderRadius="sm"
+    >
+      <PMText fontSize="sm" color="text.secondary">
+        {query
+          ? `Nothing in this bundle matches "${query}".`
+          : 'No artifacts in the selected kind.'}
+      </PMText>
+      <PMBox
+        as="button"
+        type="button"
+        fontSize="xs"
+        color="branding.primary"
+        bg="transparent"
+        border="none"
+        cursor="pointer"
+        padding={0}
+        onClick={onReset}
+        transition="color 120ms ease-out"
+        _hover={{ color: 'blue.300' }}
+        _focusVisible={{
+          outline: '2px solid',
+          outlineColor: 'branding.primary',
+          outlineOffset: '2px',
+          borderRadius: 'sm',
+        }}
+      >
+        Clear filters
+      </PMBox>
+    </PMVStack>
   );
 }
 
@@ -1088,9 +1757,11 @@ function groupArtifacts(
   artifacts: Artifact[],
 ): Record<ArtifactKind, Artifact[]> {
   const init: Record<ArtifactKind, Artifact[]> = {
-    standard: [],
     command: [],
     skill: [],
+    subagent: [],
+    hook: [],
+    'mcp-server': [],
   };
   for (const a of artifacts) {
     init[a.kind].push(a);
