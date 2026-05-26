@@ -7,6 +7,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
+import { reportEnsureCliVersionOutcome } from './ensureCliVersionReporter';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -54,6 +55,17 @@ export const uninstallCommand = command({
 
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+    try {
+      const ensureOutcome = await packmindCliHexa.ensureCliVersion({
+        baseDirectory: process.cwd(),
+        currentCliVersion: CLI_VERSION,
+        includeBeta: false,
+      });
+      reportEnsureCliVersionOutcome(ensureOutcome, CLI_VERSION);
+    } catch {
+      // Silently swallow drift-check failures; uninstall must continue.
+    }
 
     try {
       const result = await packmindCliHexa.uninstall({
