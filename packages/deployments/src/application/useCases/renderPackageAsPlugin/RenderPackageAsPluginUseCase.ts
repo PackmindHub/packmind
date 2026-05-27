@@ -181,7 +181,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     pkg: PackageWithArtefacts,
   ): Promise<SkillVersion[]> {
     const versions = await Promise.all(
-      pkg.skills.map(async (skill) => {
+      pkg.skills.map(async (skill): Promise<SkillVersion | null> => {
         const latest = await this.skillsPort.getLatestSkillVersion(skill.id);
         if (!latest) {
           return null;
@@ -217,10 +217,15 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     updates: FileUpdates[],
   ): RenderPackageAsPluginResponse['files'] {
     return updates.flatMap((update) =>
-      update.createOrUpdate.map((file) => ({
-        path: file.path,
-        content: file.content,
-      })),
+      update.createOrUpdate
+        .filter(
+          (file): file is typeof file & { content: string } =>
+            typeof file.content === 'string',
+        )
+        .map((file) => ({
+          path: file.path,
+          content: file.content,
+        })),
     );
   }
 }

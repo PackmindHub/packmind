@@ -86,6 +86,8 @@ import {
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
+  RenderPackageAsPluginCommand,
+  RenderPackageAsPluginResponse,
   Target,
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
@@ -133,6 +135,7 @@ import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetD
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
+import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -188,6 +191,7 @@ export class DeploymentsAdapter
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
+  private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
 
   constructor(
@@ -380,6 +384,15 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.spacesPort,
       ports.eventEmitterService,
+    );
+
+    this._renderPackageAsPluginUseCase = new RenderPackageAsPluginUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.recipesPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.spacesPort,
+      this.accountsPort,
     );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
@@ -677,6 +690,12 @@ export class DeploymentsAdapter
     command: InstallPackagesCommand,
   ): Promise<InstallPackagesResponse> {
     return this._installPackagesUseCase.execute(command);
+  }
+
+  async renderPackageAsPlugin(
+    command: RenderPackageAsPluginCommand,
+  ): Promise<RenderPackageAsPluginResponse> {
+    return this._renderPackageAsPluginUseCase.execute(command);
   }
 
   async listPackagesBySpace(

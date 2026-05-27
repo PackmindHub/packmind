@@ -60,6 +60,8 @@ import {
   PullContentCommand,
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
+  RenderPackageAsPluginCommand,
+  RenderPackageAsPluginResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   UpdateRenderModeConfigurationCommand,
@@ -303,6 +305,20 @@ export interface IDeploymentPort {
   installPackages(
     command: InstallPackagesCommand,
   ): Promise<InstallPackagesResponse>;
+
+  /**
+   * Renders a single package as a Claude plugin.
+   *
+   * Resolves the package by slug, fetches the latest artefact versions, and
+   * renders them under the provided plugin root. Standards are skipped; the
+   * skipped count is returned so callers can surface it to users.
+   *
+   * @param command - Command containing packageSlug, mode, pluginRoot, and pluginName
+   * @returns Promise resolving to the rendered files and plugin metadata
+   */
+  renderPackageAsPlugin(
+    command: RenderPackageAsPluginCommand,
+  ): Promise<RenderPackageAsPluginResponse>;
 
   /**
    * Lists all packages in a specific space
