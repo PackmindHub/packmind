@@ -76,6 +76,7 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IRenderPackageAsPluginUseCase,
+  ITrackPluginDeletedUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
@@ -384,6 +385,14 @@ export class PackmindCliHexa {
     command,
   ) => {
     return this.hexa.repositories.packmindGateway.deployment.renderPlugin(
+      command,
+    );
+  };
+
+  public trackPluginDeleted: Gateway<ITrackPluginDeletedUseCase> = async (
+    command,
+  ) => {
+    return this.hexa.repositories.packmindGateway.deployment.trackPluginDeleted(
       command,
     );
   };

@@ -270,6 +270,8 @@ describe('DeploymentGateway', () => {
       mode: 'marketplace' as const,
       pluginRoot: 'plugins/security/',
       pluginName: 'security',
+      gitRemoteUrl: 'github.com/user/repo',
+      gitBranch: 'main',
     };
 
     beforeEach(() => {
@@ -293,6 +295,8 @@ describe('DeploymentGateway', () => {
             mode: 'marketplace',
             pluginRoot: 'plugins/security/',
             pluginName: 'security',
+            gitRemoteUrl: 'github.com/user/repo',
+            gitBranch: 'main',
           },
         },
       );
@@ -316,6 +320,50 @@ describe('DeploymentGateway', () => {
         );
 
         await expect(gateway.renderPlugin(command)).rejects.toThrow(
+          'Package not found',
+        );
+      });
+    });
+  });
+
+  describe('trackPluginDeleted', () => {
+    const command = {
+      packageSlug: 'security',
+      gitRemoteUrl: 'github.com/user/repo',
+    };
+
+    beforeEach(() => {
+      mockHttpClient.request.mockResolvedValue({ tracked: true });
+    });
+
+    it('POSTs to the plugins track-deleted endpoint with the command body', async () => {
+      await gateway.trackPluginDeleted(command);
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/plugins/track-deleted`,
+        {
+          method: 'POST',
+          body: {
+            packageSlug: 'security',
+            gitRemoteUrl: 'github.com/user/repo',
+          },
+        },
+      );
+    });
+
+    it('returns the tracking response', async () => {
+      const result = await gateway.trackPluginDeleted(command);
+
+      expect(result).toEqual({ tracked: true });
+    });
+
+    describe('when API request fails', () => {
+      it('propagates the error from httpClient', async () => {
+        mockHttpClient.request.mockRejectedValue(
+          new Error('Package not found'),
+        );
+
+        await expect(gateway.trackPluginDeleted(command)).rejects.toThrow(
           'Package not found',
         );
       });
