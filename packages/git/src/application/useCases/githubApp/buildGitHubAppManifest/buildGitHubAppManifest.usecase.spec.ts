@@ -107,7 +107,7 @@ describe('BuildGitHubAppManifestUseCase', () => {
     it('returns the correct webhook hook_attributes url', async () => {
       const result = await useCase.execute(buildCommand());
       expect(result.manifest.hook_attributes.url).toBe(
-        'https://packmind.io/api/v1/hooks/github-app',
+        'https://packmind.io/api/v0/hooks/github-app',
       );
     });
 

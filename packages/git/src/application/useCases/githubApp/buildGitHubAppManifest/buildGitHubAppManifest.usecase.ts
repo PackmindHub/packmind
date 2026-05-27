@@ -45,7 +45,7 @@ export class BuildGitHubAppManifestUseCase
       redirect_url: `${appWebUrl}/integrations/github-app/manifest-callback`,
       callback_urls: [`${appWebUrl}/integrations/github-app/install-callback`],
       hook_attributes: {
-        url: `${appWebUrl}/api/v1/hooks/github-app`,
+        url: `${appWebUrl}/api/v0/hooks/github-app`,
       },
       public: false,
       default_permissions: {
