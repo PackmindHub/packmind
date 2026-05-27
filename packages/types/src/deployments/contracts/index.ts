@@ -38,4 +38,5 @@ export * from './IGetContentByVersionsUseCase';
 export * from './IGetDashboardKpi';
 export * from './IGetDashboardNonLive';
 export * from './IInstallPackagesUseCase';
+export * from './IRenderPackageAsPluginUseCase';
 export * from './IListActiveDistributedPackagesBySpace';
