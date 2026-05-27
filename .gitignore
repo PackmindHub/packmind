@@ -46,8 +46,6 @@ apps/mcp-server/key.pem
 .claude/worktrees
 .claude/settings.local.json
 
-# GitLab Duo skills (managed locally)
-.gitlab/
 docker/nginx/ssl
 
 .nx/polygraph
