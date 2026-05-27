@@ -61,7 +61,7 @@ export class TrackPluginDeletedUseCase extends AbstractMemberUseCase<
       package_slug: pkg.slug,
     };
     if (gitRemoteUrl) {
-      metadata.marketplace_repo = gitRemoteUrl;
+      metadata['marketplace_repo'] = gitRemoteUrl;
     }
 
     await this.eventTrackingPort.trackEvent(

@@ -50,6 +50,8 @@ import {
   ICodingAgentPort,
   ICodingAgentPortName,
   IDeploymentPort,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   InstallPackagesCommand,
@@ -90,6 +92,8 @@ import {
   RenderPackageAsPluginResponse,
   Target,
   TargetWithRepository,
+  TrackPluginDeletedCommand,
+  TrackPluginDeletedResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
@@ -136,6 +140,7 @@ import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase
 import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase';
+import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -152,6 +157,7 @@ export class DeploymentsAdapter
   private skillsPort: ISkillsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private accountsPort: IAccountsPort | null = null;
+  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Use cases - initialized in initialize()
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
@@ -192,6 +198,7 @@ export class DeploymentsAdapter
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
+  private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
 
   constructor(
@@ -213,6 +220,7 @@ export class DeploymentsAdapter
     [ISkillsPortName]: ISkillsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
+    [IEventTrackingPortName]: IEventTrackingPort;
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
@@ -224,6 +232,7 @@ export class DeploymentsAdapter
     this.skillsPort = ports[ISkillsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
+    this.eventTrackingPort = ports[IEventTrackingPortName];
 
     // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
@@ -239,6 +248,7 @@ export class DeploymentsAdapter
       !this.skillsPort &&
       !this.spacesPort &&
       !this.accountsPort &&
+      !this.eventTrackingPort &&
       !this.deploymentsServices
     ) {
       throw new Error('DeploymentsAdapter: Required ports not provided');
@@ -393,6 +403,17 @@ export class DeploymentsAdapter
       this.skillsPort,
       this.spacesPort,
       this.accountsPort,
+      targetResolutionService,
+      this.distributionRepository,
+      this.distributedPackageRepository,
+      this.eventTrackingPort,
+    );
+
+    this._trackPluginDeletedUseCase = new TrackPluginDeletedUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.spacesPort,
+      this.accountsPort,
+      this.eventTrackingPort,
     );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
@@ -696,6 +717,12 @@ export class DeploymentsAdapter
     command: RenderPackageAsPluginCommand,
   ): Promise<RenderPackageAsPluginResponse> {
     return this._renderPackageAsPluginUseCase.execute(command);
+  }
+
+  async trackPluginDeleted(
+    command: TrackPluginDeletedCommand,
+  ): Promise<TrackPluginDeletedResponse> {
+    return this._trackPluginDeletedUseCase.execute(command);
   }
 
   async listPackagesBySpace(

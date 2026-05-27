@@ -189,7 +189,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
         target_path: command.pluginRoot,
       };
       if (gitRemoteUrl) {
-        metadata.marketplace_repo = gitRemoteUrl;
+        metadata['marketplace_repo'] = gitRemoteUrl;
       }
 
       await this.eventTrackingPort.trackEvent(
