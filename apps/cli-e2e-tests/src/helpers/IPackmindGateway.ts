@@ -1,4 +1,5 @@
 import {
+  Distribution,
   Gateway,
   IActivateUserAccountUseCase,
   ICaptureRecipeUseCase,
@@ -61,6 +62,7 @@ export interface IChangeProposalGateway {
 
 export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
+  listDeploymentsByPackage(packageId: string): Promise<Distribution[]>;
 }
 
 export interface ISkillsGateway {

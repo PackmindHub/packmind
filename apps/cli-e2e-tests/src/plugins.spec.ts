@@ -6,7 +6,7 @@ import {
   fileExists,
   UserSignedUpContext,
 } from './helpers';
-import { Package } from '@packmind/types';
+import { Distribution, Package, RenderMode } from '@packmind/types';
 import fs from 'fs';
 import path from 'path';
 
@@ -107,6 +107,12 @@ async function seedPackage(
   });
 
   return packageResponse.package;
+}
+
+function hasClaudePluginDistribution(distributions: Distribution[]): boolean {
+  return distributions.some((distribution) =>
+    distribution.renderModes.includes(RenderMode.CLAUDE_PLUGIN),
+  );
 }
 
 describeWithUserSignedUp('plugins render/delete commands', (getContext) => {
@@ -418,5 +424,116 @@ describeWithUserSignedUp('plugins render/delete commands', (getContext) => {
         );
       });
     });
+  });
+
+  describe('Rule 4: distribution tracking', () => {
+    let pkg: Package;
+    let scopedSlug: string;
+
+    beforeEach(async () => {
+      pkg = await seedPackage(context);
+      scopedSlug = `@${context.space.slug}/${pkg.slug}`;
+    });
+
+    describe('when rendering in marketplace mode inside a git repo', () => {
+      let result: RunCliResult;
+      let distributions: Distribution[];
+
+      beforeEach(async () => {
+        writeMarketplace(context.testDir, { plugins: [] });
+        result = await context.runCli(`plugins render ${scopedSlug}`);
+        distributions =
+          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+      });
+
+      it('exits successfully', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('records a CLAUDE_PLUGIN distribution for the package', () => {
+        expect(hasClaudePluginDistribution(distributions)).toBe(true);
+      });
+    });
+
+    describe('when rendering in standalone mode inside a git repo', () => {
+      let result: RunCliResult;
+      let distributions: Distribution[];
+
+      beforeEach(async () => {
+        writeStandaloneManifest(context.testDir, pkg.slug);
+        result = await context.runCli(`plugins render ${scopedSlug}`, {
+          stdin: 'y\n',
+        });
+        distributions =
+          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+      });
+
+      it('exits successfully', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('records a CLAUDE_PLUGIN distribution for the package', () => {
+        expect(hasClaudePluginDistribution(distributions)).toBe(true);
+      });
+    });
+
+    describe('when deleting after a render', () => {
+      let result: RunCliResult;
+
+      beforeEach(async () => {
+        writeMarketplace(context.testDir, { plugins: [] });
+        await context.runCli(`plugins render ${scopedSlug}`);
+        result = await context.runCli(`plugins delete ${scopedSlug}`);
+      });
+
+      it('exits successfully despite best-effort tracking', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('removes the rendered plugin folder', () => {
+        expect(fileExists(`plugins/${pkg.slug}`, context.testDir)).toBe(false);
+      });
+
+      it('removes the entry from marketplace.json', () => {
+        const marketplace = readMarketplace(context.testDir);
+        expect(marketplace.plugins.find((p) => p.name === pkg.slug)).toBe(
+          undefined,
+        );
+      });
+    });
+  });
+});
+
+describeWithUserSignedUp('plugins render outside a git repo', (getContext) => {
+  let context: UserSignedUpContext;
+  let pkg: Package;
+  let scopedSlug: string;
+  let result: RunCliResult;
+
+  beforeEach(async () => {
+    context = await getContext();
+    pkg = await seedPackage(context);
+    scopedSlug = `@${context.space.slug}/${pkg.slug}`;
+    writeMarketplace(context.testDir, { plugins: [] });
+    result = await context.runCli(`plugins render ${scopedSlug}`);
+  });
+
+  it('exits successfully', () => {
+    expect(result.returnCode).toBe(0);
+  });
+
+  it('renders the plugin manifest into plugins/<slug>/', () => {
+    expect(
+      fileExists(
+        `plugins/${pkg.slug}/.claude-plugin/plugin.json`,
+        context.testDir,
+      ),
+    ).toBe(true);
+  });
+
+  it('does not record a CLAUDE_PLUGIN distribution for the package', async () => {
+    const distributions =
+      await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+    expect(hasClaudePluginDistribution(distributions)).toBe(false);
   });
 });
