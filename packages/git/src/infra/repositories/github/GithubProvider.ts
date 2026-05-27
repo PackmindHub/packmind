@@ -9,13 +9,12 @@ export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
 
   constructor(
-    private readonly token: string,
+    private readonly getToken: () => Promise<string>,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.client = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
@@ -34,10 +33,14 @@ export class GithubProvider implements IGitProvider {
     }[]
   > {
     try {
+      const token = await this.getToken();
       const response = await this.client.get('/user/repos', {
         params: {
           sort: 'updated',
           per_page: 100,
+        },
+        headers: {
+          Authorization: `token ${token}`,
         },
       });
 
@@ -48,8 +51,6 @@ export class GithubProvider implements IGitProvider {
       return response.data
         .filter((repo) => repo && repo.name && repo.owner && repo.owner.login)
         .filter((repo) => {
-          // Always filter for write-only repositories
-          // Check if permissions object exists and has the push property
           if (!repo.permissions) {
             this.logger.warn(
               'Repository missing permissions object, excluding from results',
@@ -104,13 +105,17 @@ export class GithubProvider implements IGitProvider {
         branch,
       });
 
-      await this.client.get(`/repos/${owner}/${repo}/branches/${branch}`);
+      const token = await this.getToken();
+      await this.client.get(`/repos/${owner}/${repo}/branches/${branch}`, {
+        headers: {
+          Authorization: `token ${token}`,
+        },
+      });
 
       this.logger.debug('Branch exists on GitHub', { owner, repo, branch });
       return true;
     } catch (error) {
       if (isNativeError(error)) {
-        // Check for specific GitHub API errors
         if (error.message.includes('404')) {
           this.logger.debug('Branch not found on GitHub', {
             owner,

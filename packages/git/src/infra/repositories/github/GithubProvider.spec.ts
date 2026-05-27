@@ -11,6 +11,7 @@ describe('GithubProvider', () => {
   let mockLogger: jest.Mocked<PackmindLogger>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAxiosInstance: jest.Mocked<any>;
+  let getToken: jest.Mock<Promise<string>>;
 
   beforeEach(() => {
     mockLogger = stubLogger();
@@ -21,7 +22,8 @@ describe('GithubProvider', () => {
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
-    githubProvider = new GithubProvider('fake-token', mockLogger);
+    getToken = jest.fn().mockResolvedValue('fake-token');
+    githubProvider = new GithubProvider(getToken, mockLogger);
   });
 
   afterEach(() => {
@@ -78,6 +80,9 @@ describe('GithubProvider', () => {
           params: {
             sort: 'updated',
             per_page: 100,
+          },
+          headers: {
+            Authorization: 'token fake-token',
           },
         });
       });
@@ -342,6 +347,11 @@ describe('GithubProvider', () => {
       it('calls the correct API endpoint', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${owner}/${repo}/branches/${branch}`,
+          {
+            headers: {
+              Authorization: 'token fake-token',
+            },
+          },
         );
       });
 

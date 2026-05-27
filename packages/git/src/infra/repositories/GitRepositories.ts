@@ -10,9 +10,11 @@ import { GitRepoRepository } from './GitRepoRepository';
 import { GitCommitRepository } from './GitCommitRepository';
 import { GitRepoFactory } from './GitRepoFactory';
 import { GitProviderFactory } from './GitProviderFactory';
+import { GitHubAppConfigRepository } from './GitHubAppConfigRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
+import { GitHubAppConfigSchema } from '../schemas/GitHubAppConfigSchema';
 import { GitHexaOpts } from '../../GitHexa';
 
 /**
@@ -46,7 +48,10 @@ export class GitRepositories implements IGitRepositories {
 
     // Initialize the factories
     this.gitRepoFactory = opts?.gitRepoFactory ?? new GitRepoFactory();
-    this.gitProviderFactory = new GitProviderFactory();
+    const gitHubAppConfigRepository = new GitHubAppConfigRepository(
+      this.dataSource.getRepository(GitHubAppConfigSchema),
+    );
+    this.gitProviderFactory = new GitProviderFactory(gitHubAppConfigRepository);
   }
 
   getGitProviderRepository(): IGitProviderRepository {
