@@ -159,4 +159,114 @@ describe('renderPluginHandler', () => {
       expect(exit).toHaveBeenCalledWith(0);
     });
   });
+
+  describe('marketplace mode with an existing local entry', () => {
+    beforeEach(() => {
+      writeMarketplaceManifest({
+        name: 'mp',
+        plugins: [
+          {
+            name: 'security',
+            source: './backend/plugins/security',
+            description: 'Old description',
+          },
+        ],
+      });
+    });
+
+    it('prompts the user before overwriting', async () => {
+      confirmOverwrite.mockResolvedValue(true);
+
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(confirmOverwrite).toHaveBeenCalledWith(
+        expect.stringContaining('./backend/plugins/security'),
+      );
+    });
+
+    describe('when the user confirms', () => {
+      beforeEach(() => {
+        confirmOverwrite.mockResolvedValue(true);
+      });
+
+      it('re-renders using the existing entry path', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(renderPlugin).toHaveBeenCalledWith({
+          packageSlug: 'security',
+          mode: 'marketplace',
+          pluginRoot: 'backend/plugins/security/',
+          pluginName: 'security',
+        });
+      });
+
+      it('writes files at the existing entry path', async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({
+            files: [
+              {
+                path: 'backend/plugins/security/commands/a.md',
+                content: 'A',
+              },
+            ],
+          }),
+        );
+
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(
+          readFileSync(
+            join(tmp, 'backend/plugins/security/commands/a.md'),
+            'utf8',
+          ),
+        ).toBe('A');
+      });
+
+      it('updates the description when it changed', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        const entry = findPluginEntry(mp, 'security');
+        expect(entry?.source).toBe('./backend/plugins/security');
+        expect(entry?.description).toBe('Security plugin');
+      });
+
+      it('exits zero', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when the user declines', () => {
+      beforeEach(() => {
+        confirmOverwrite.mockResolvedValue(false);
+      });
+
+      it('does not render', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(renderPlugin).not.toHaveBeenCalled();
+      });
+
+      it('does not mutate marketplace.json', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        expect(findPluginEntry(mp, 'security')?.description).toBe(
+          'Old description',
+        );
+      });
+
+      it('exits zero', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
+  });
 });
