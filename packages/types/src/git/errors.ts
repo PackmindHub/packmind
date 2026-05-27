@@ -164,3 +164,40 @@ export class AppAlreadyRegisteredError extends Error {
     }
   }
 }
+
+export class NoGitHubAppRegisteredError extends Error {
+  constructor() {
+    super('No GitHub App is registered for this Packmind instance');
+    this.name = 'NoGitHubAppRegisteredError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, NoGitHubAppRegisteredError);
+    }
+  }
+}
+
+export class GitHubInstallationNotFoundError extends Error {
+  constructor(public readonly installationId: number) {
+    super(
+      `GitHub App installation '${installationId}' was not found or is not accessible`,
+    );
+    this.name = 'GitHubInstallationNotFoundError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitHubInstallationNotFoundError);
+    }
+  }
+}
+
+export class NotAGitHubAppProviderError extends Error {
+  constructor(public readonly gitProviderId: string) {
+    super(
+      `Git provider '${gitProviderId}' is not a GitHub App provider or has no installation linked`,
+    );
+    this.name = 'NotAGitHubAppProviderError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, NotAGitHubAppProviderError);
+    }
+  }
+}

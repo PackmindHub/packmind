@@ -31,12 +31,18 @@ import {
   IDeploymentPortName,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
   IGitPort,
+  LinkGitHubAppInstallationCommand,
+  LinkGitHubAppInstallationResponse,
+  ListInstallationRepositoriesCommand,
+  ListInstallationRepositoriesResponse,
   ListProvidersCommand,
   ListProvidersResponse,
   OrganizationId,
   QueryOption,
   RegisterGitHubAppFromManifestCommand,
   RegisterGitHubAppFromManifestResponse,
+  UnlinkGitHubAppInstallationCommand,
+  UnlinkGitHubAppInstallationResponse,
   UserId,
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
@@ -60,7 +66,11 @@ import { HandleWebHook } from '../useCases/handleWebHook/handleWebHook.usecase';
 import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
 import { BuildGitHubAppManifestUseCase } from '../useCases/githubApp/buildGitHubAppManifest/buildGitHubAppManifest.usecase';
 import { GetGitHubAppStatusUseCase } from '../useCases/githubApp/getGitHubAppStatus/getGitHubAppStatus.usecase';
+import { LinkGitHubAppInstallationUseCase } from '../useCases/githubApp/linkGitHubAppInstallation/linkGitHubAppInstallation.usecase';
+import { ListInstallationRepositoriesUseCase } from '../useCases/githubApp/listInstallationRepositories/listInstallationRepositories.usecase';
 import { RegisterGitHubAppFromManifestUseCase } from '../useCases/githubApp/registerGitHubAppFromManifest/registerGitHubAppFromManifest.usecase';
+import { UnlinkGitHubAppInstallationUseCase } from '../useCases/githubApp/unlinkGitHubAppInstallation/unlinkGitHubAppInstallation.usecase';
+import { GithubAppTokenService } from '../services/GithubAppTokenService';
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAvailableRepos.usecase';
 import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
 import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
@@ -96,6 +106,9 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _buildGitHubAppManifest!: BuildGitHubAppManifestUseCase;
   private _registerGitHubAppFromManifest!: RegisterGitHubAppFromManifestUseCase;
   private _getGitHubAppStatus!: GetGitHubAppStatusUseCase;
+  private _linkGitHubAppInstallation!: LinkGitHubAppInstallationUseCase;
+  private _unlinkGitHubAppInstallation!: UnlinkGitHubAppInstallationUseCase;
+  private _listInstallationRepositories!: ListInstallationRepositoriesUseCase;
   private readonly _manifestStateService: GitHubAppManifestStateService;
 
   constructor(
@@ -252,6 +265,28 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.accountsPort,
       gitHubAppConfigRepository,
     );
+
+    const githubAppTokenService = new GithubAppTokenService();
+
+    this._linkGitHubAppInstallation = new LinkGitHubAppInstallationUseCase(
+      this.accountsPort,
+      gitHubAppConfigRepository,
+      githubAppTokenService,
+      this.gitServices.getGitProviderService(),
+    );
+
+    this._unlinkGitHubAppInstallation = new UnlinkGitHubAppInstallationUseCase(
+      this.accountsPort,
+      this.gitServices.getGitProviderService(),
+    );
+
+    this._listInstallationRepositories =
+      new ListInstallationRepositoriesUseCase(
+        this.accountsPort,
+        gitHubAppConfigRepository,
+        githubAppTokenService,
+        this.gitServices.getGitProviderService(),
+      );
 
     this.logger.info('GitAdapter initialized successfully with all use cases');
   }
@@ -514,5 +549,23 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     command: GetGitHubAppStatusCommand,
   ): Promise<GetGitHubAppStatusResponse> {
     return this._getGitHubAppStatus.execute(command);
+  }
+
+  public async linkGitHubAppInstallation(
+    command: LinkGitHubAppInstallationCommand,
+  ): Promise<LinkGitHubAppInstallationResponse> {
+    return this._linkGitHubAppInstallation.execute(command);
+  }
+
+  public async unlinkGitHubAppInstallation(
+    command: UnlinkGitHubAppInstallationCommand,
+  ): Promise<UnlinkGitHubAppInstallationResponse> {
+    return this._unlinkGitHubAppInstallation.execute(command);
+  }
+
+  public async listInstallationRepositories(
+    command: ListInstallationRepositoriesCommand,
+  ): Promise<ListInstallationRepositoriesResponse> {
+    return this._listInstallationRepositories.execute(command);
   }
 }
