@@ -62,6 +62,8 @@ import {
   RemovePackageFromTargetsResponse,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginResponse,
+  TrackPluginDeletedCommand,
+  TrackPluginDeletedResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   UpdateRenderModeConfigurationCommand,
@@ -319,6 +321,20 @@ export interface IDeploymentPort {
   renderPackageAsPlugin(
     command: RenderPackageAsPluginCommand,
   ): Promise<RenderPackageAsPluginResponse>;
+
+  /**
+   * Tracks the deletion of a rendered plugin.
+   *
+   * Resolves the package by slug and emits a `plugin_deleted` analytics event.
+   * No distribution row is written. Tracking is best-effort and callers should
+   * not treat failures as fatal.
+   *
+   * @param command - Command containing packageSlug and optional gitRemoteUrl
+   * @returns Promise resolving to whether the deletion was tracked
+   */
+  trackPluginDeleted(
+    command: TrackPluginDeletedCommand,
+  ): Promise<TrackPluginDeletedResponse>;
 
   /**
    * Lists all packages in a specific space

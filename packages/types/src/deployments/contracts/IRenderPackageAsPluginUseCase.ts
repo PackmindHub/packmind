@@ -11,6 +11,10 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   pluginRoot: string;
   /** Requested plugin name; may differ from the package slug. */
   pluginName: string;
+  /** Git remote URL of the render target; empty/undefined when the CLI is not in a git repo. */
+  gitRemoteUrl?: string;
+  /** Git branch of the render target. */
+  gitBranch?: string;
 };
 
 export type RenderedPluginFile = {
@@ -24,6 +28,8 @@ export type RenderPackageAsPluginResponse = {
   pluginName: string;
   pluginDescription?: string;
   pluginVersion: string;
+  /** Id of the distribution written by best-effort tracking; absent when no distribution was created. */
+  distributionId?: string;
 };
 
 export type IRenderPackageAsPluginUseCase = IUseCase<
