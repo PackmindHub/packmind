@@ -1,4 +1,4 @@
-import { rmSync } from 'fs';
+import { rmSync, readFileSync } from 'fs';
 import { join } from 'path';
 import {
   detectPluginMode,
@@ -62,6 +62,34 @@ export async function deletePluginHandler(
     rmSync(join(cwd, entry.source), { recursive: true, force: true });
     writeMarketplace(manifestPath, removePluginEntry(marketplace, pluginName));
     deps.log(`Removed ${entry.source} and updated marketplace.json`);
+    deps.exit(0);
+    return;
+  }
+
+  if (ctx.mode === 'standalone') {
+    const manifestPath = ctx.manifestPath as string;
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      name?: string;
+    };
+
+    if (manifest.name !== pluginName) {
+      deps.error(`The plugin '${pluginName}' is not handled in this repo.`);
+      deps.exit(1);
+      return;
+    }
+
+    const confirmed = await deps.confirmOverwrite(
+      `Remove rendered files for plugin "${pluginName}" from this workspace? [y/N] `,
+    );
+    if (!confirmed) {
+      deps.log('No changes made.');
+      deps.exit(0);
+      return;
+    }
+
+    rmSync(join(cwd, 'commands'), { recursive: true, force: true });
+    rmSync(join(cwd, 'skills'), { recursive: true, force: true });
+    deps.log(`Removed rendered files for "${pluginName}"`);
     deps.exit(0);
     return;
   }

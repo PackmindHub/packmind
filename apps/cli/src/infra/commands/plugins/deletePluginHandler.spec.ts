@@ -140,4 +140,86 @@ describe('deletePluginHandler', () => {
       expect(mp.plugins).toHaveLength(1);
     });
   });
+
+  describe('standalone mode', () => {
+    const writeStandaloneManifest = (content: unknown) => {
+      mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+      writeFileSync(
+        join(tmp, '.claude-plugin/plugin.json'),
+        JSON.stringify(content, null, 2),
+      );
+    };
+
+    describe('when the name matches and the user confirms', () => {
+      beforeEach(() => {
+        writeStandaloneManifest({ name: 'security' });
+        mkdirSync(join(tmp, 'commands'), { recursive: true });
+        writeFileSync(join(tmp, 'commands/a.md'), 'A');
+        mkdirSync(join(tmp, 'skills/b'), { recursive: true });
+        writeFileSync(join(tmp, 'skills/b/SKILL.md'), 'B');
+        confirmOverwrite.mockResolvedValue(true);
+      });
+
+      it('removes commands and skills directories', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(existsSync(join(tmp, 'commands'))).toBe(false);
+        expect(existsSync(join(tmp, 'skills'))).toBe(false);
+      });
+
+      it('leaves plugin.json untouched', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(existsSync(join(tmp, '.claude-plugin/plugin.json'))).toBe(true);
+      });
+
+      it('exits zero', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when the name matches and the user declines', () => {
+      beforeEach(() => {
+        writeStandaloneManifest({ name: 'security' });
+        mkdirSync(join(tmp, 'commands'), { recursive: true });
+        writeFileSync(join(tmp, 'commands/a.md'), 'A');
+        confirmOverwrite.mockResolvedValue(false);
+      });
+
+      it('does not remove the rendered files', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(existsSync(join(tmp, 'commands/a.md'))).toBe(true);
+      });
+
+      it('exits zero', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when the name does not match', () => {
+      beforeEach(() => {
+        writeStandaloneManifest({ name: 'frontend' });
+      });
+
+      it('exits non-zero with the documented message', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(error).toHaveBeenCalledWith(
+          "The plugin 'security' is not handled in this repo.",
+        );
+        expect(exit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not prompt', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(confirmOverwrite).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
