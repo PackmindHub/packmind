@@ -47,48 +47,54 @@ export async function renderPluginHandler(
     const existing = findPluginEntry(marketplace, pluginName);
 
     if (existing) {
-      if (!isRemoteSource(existing.source)) {
-        const confirmed = await deps.confirmOverwrite(
-          `Plugin "${pluginName}" already exists at "${existing.source}". Overwrite? [y/N] `,
+      if (isRemoteSource(existing.source)) {
+        deps.error(
+          `Plugin "${pluginName}" has a remote source. Run this command in the workspace of the remote plugin.`,
         );
-        if (!confirmed) {
-          deps.log('No changes made.');
-          deps.exit(0);
-          return;
-        }
+        deps.exit(1);
+        return;
+      }
 
-        const existingPluginRoot = existing.source
-          .replace(/^\.?\//, '')
-          .replace(/\/?$/, '/');
-        const response = await deps.packmindCliHexa.renderPlugin({
-          packageSlug: args.packageSlug,
-          mode: 'marketplace',
-          pluginRoot: existingPluginRoot,
-          pluginName,
-        });
-
-        writeFiles(cwd, response.files);
-
-        if (
-          response.pluginDescription &&
-          response.pluginDescription !== existing.description
-        ) {
-          writeMarketplace(
-            manifestPath,
-            upsertPluginEntry(marketplace, {
-              ...existing,
-              description: response.pluginDescription,
-            }),
-          );
-        }
-
-        deps.log(
-          `Re-rendered ${response.files.length} files into ${existing.source}`,
-        );
-        reportSkippedStandards(deps, response.skippedStandardsCount);
+      const confirmed = await deps.confirmOverwrite(
+        `Plugin "${pluginName}" already exists at "${existing.source}". Overwrite? [y/N] `,
+      );
+      if (!confirmed) {
+        deps.log('No changes made.');
         deps.exit(0);
         return;
       }
+
+      const existingPluginRoot = existing.source
+        .replace(/^\.?\//, '')
+        .replace(/\/?$/, '/');
+      const response = await deps.packmindCliHexa.renderPlugin({
+        packageSlug: args.packageSlug,
+        mode: 'marketplace',
+        pluginRoot: existingPluginRoot,
+        pluginName,
+      });
+
+      writeFiles(cwd, response.files);
+
+      if (
+        response.pluginDescription &&
+        response.pluginDescription !== existing.description
+      ) {
+        writeMarketplace(
+          manifestPath,
+          upsertPluginEntry(marketplace, {
+            ...existing,
+            description: response.pluginDescription,
+          }),
+        );
+      }
+
+      deps.log(
+        `Re-rendered ${response.files.length} files into ${existing.source}`,
+      );
+      reportSkippedStandards(deps, response.skippedStandardsCount);
+      deps.exit(0);
+      return;
     }
 
     const pluginRoot = `plugins/${pluginName}/`;

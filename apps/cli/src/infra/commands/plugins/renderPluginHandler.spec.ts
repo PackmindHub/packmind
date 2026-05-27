@@ -269,4 +269,47 @@ describe('renderPluginHandler', () => {
       });
     });
   });
+
+  describe('marketplace mode with an existing remote entry', () => {
+    beforeEach(() => {
+      writeMarketplaceManifest({
+        name: 'mp',
+        plugins: [
+          {
+            name: 'security',
+            source: 'git@my-provider.com/security-repo.git',
+          },
+        ],
+      });
+    });
+
+    it('exits non-zero with a remote-source error', async () => {
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(error).toHaveBeenCalledWith(
+        'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
+      );
+      expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not render or prompt', async () => {
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(renderPlugin).not.toHaveBeenCalled();
+      expect(confirmOverwrite).not.toHaveBeenCalled();
+    });
+
+    it('does not mutate marketplace.json', async () => {
+      const before = readFileSync(
+        join(tmp, '.claude-plugin/marketplace.json'),
+        'utf8',
+      );
+
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(
+        readFileSync(join(tmp, '.claude-plugin/marketplace.json'), 'utf8'),
+      ).toBe(before);
+    });
+  });
 });
