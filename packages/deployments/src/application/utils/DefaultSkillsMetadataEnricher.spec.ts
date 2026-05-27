@@ -1,6 +1,7 @@
 import { DefaultSkillsDeployer } from '@packmind/coding-agent';
 import { DeleteItemType, FileUpdates } from '@packmind/types';
 import { enrichDefaultSkillsFileModifications } from './DefaultSkillsMetadataEnricher';
+import { getDefaultSkillId } from './defaultSkillIdUtils';
 
 describe('DefaultSkillsMetadataEnricher', () => {
   describe('enrichDefaultSkillsFileModifications', () => {
@@ -31,16 +32,19 @@ describe('DefaultSkillsMetadataEnricher', () => {
         }
       });
 
-      it('stamps artifactId equal to the skill slug for every file', () => {
+      it('stamps a slug-derived artifactId on every file', () => {
         for (const file of result.createOrUpdate) {
           expect(file.artifactId).toBeDefined();
-          expect(file.path).toContain(`/${file.artifactId}/`);
+          expect(file.artifactId).toBe(
+            getDefaultSkillId(file.artifactSlug as string),
+          );
         }
       });
 
       it('stamps artifactSlug equal to the skill slug for every file', () => {
         for (const file of result.createOrUpdate) {
-          expect(file.artifactSlug).toBe(file.artifactId);
+          expect(file.artifactSlug).toBeDefined();
+          expect(file.path).toContain(`/${file.artifactSlug}/`);
         }
       });
 
@@ -222,7 +226,7 @@ describe('DefaultSkillsMetadataEnricher', () => {
           path: '.test/skills/packmind-create-skill/SKILL.md',
           content: 'body',
           artifactType: 'skill',
-          artifactId: 'packmind-create-skill',
+          artifactId: getDefaultSkillId('packmind-create-skill'),
           artifactSlug: 'packmind-create-skill',
           artifactName: 'Create skill',
           artifactVersion: 1,

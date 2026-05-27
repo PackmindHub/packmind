@@ -1,3 +1,4 @@
+import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   ArtifactVersionEntry,
@@ -6,6 +7,7 @@ import {
   GetContentByVersionsCommand,
   IAccountsPort,
   ICodingAgentPort,
+  InvalidArtifactIdError,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -30,6 +32,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { getDefaultSkillId } from '../utils/defaultSkillIdUtils';
 import { GetContentByVersionsUseCase } from './GetContentByVersionsUseCase';
 
 const createUserWithMembership = (
@@ -59,6 +62,7 @@ describe('GetContentByVersionsUseCase', () => {
   let recipesPort: jest.Mocked<IRecipesPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let logger: jest.Mocked<PackmindLogger>;
   let useCase: GetContentByVersionsUseCase;
   let command: GetContentByVersionsCommand;
   let organizationId: OrganizationId;
@@ -130,6 +134,7 @@ describe('GetContentByVersionsUseCase', () => {
     accountsPort.getUserById.mockResolvedValue(user);
     accountsPort.getOrganizationById.mockResolvedValue(organization);
 
+    logger = stubLogger();
     useCase = new GetContentByVersionsUseCase(
       codingAgentPort,
       renderModeConfigurationService,
@@ -138,7 +143,7 @@ describe('GetContentByVersionsUseCase', () => {
       recipesPort,
       spacesPort,
       accountsPort,
-      stubLogger(),
+      logger,
     );
   });
 
@@ -381,6 +386,204 @@ describe('GetContentByVersionsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+  });
+
+  describe('when a skill artifact is a default skill', () => {
+    const spaceId = createSpaceId(uuidv4());
+    const defaultSkillId = getDefaultSkillId('packmind-create-skill');
+
+    beforeEach(() => {
+      command.artifacts = [
+        {
+          name: 'packmind-create-skill',
+          type: 'skill',
+          id: defaultSkillId,
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+    });
+
+    it('does not query the skills port for the default-skill id', async () => {
+      await useCase.execute(command);
+
+      expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
+      expect(skillsPort.getSkillFiles).not.toHaveBeenCalled();
+    });
+
+    it('does not emit a "Skill version not found" warning', async () => {
+      await useCase.execute(command);
+
+      const warnCalls = logger.warn.mock.calls.map(([message]) => message);
+      expect(warnCalls).not.toContain('Skill version not found');
+    });
+
+    it('still resolves the response cleanly', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+  });
+
+  describe('when a skill artifact uses a legacy slug id (pre-316404566 lockfile)', () => {
+    const spaceId = createSpaceId(uuidv4());
+    const legacySlug = 'packmind-create-skill';
+
+    it('does not throw InvalidArtifactIdError for the slug', async () => {
+      command.artifacts = [
+        {
+          name: legacySlug,
+          type: 'skill',
+          id: legacySlug,
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await expect(useCase.execute(command)).resolves.toBeDefined();
+    });
+
+    it('does not query the skills port and does not warn', async () => {
+      command.artifacts = [
+        {
+          name: legacySlug,
+          type: 'skill',
+          id: legacySlug,
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await useCase.execute(command);
+
+      expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
+      const warnMessages = logger.warn.mock.calls.map(([message]) => message);
+      expect(warnMessages).not.toContain('Skill version not found');
+    });
+
+    it('still processes a real standard in the same batch', async () => {
+      const realStandardId = createStandardId(uuidv4());
+      const realStandardVersion: StandardVersion = {
+        id: createStandardVersionId(uuidv4()),
+        standardId: realStandardId,
+        name: 'real-standard',
+        slug: 'real-standard',
+        description: 'desc',
+        version: 1,
+        scope: null,
+        rules: [],
+      };
+      standardsPort.getStandardVersionByNumber.mockResolvedValue(
+        realStandardVersion,
+      );
+
+      command.artifacts = [
+        {
+          name: legacySlug,
+          type: 'skill',
+          id: legacySlug,
+          version: 1,
+          spaceId: spaceId as string,
+        },
+        {
+          name: 'real-standard',
+          type: 'standard',
+          id: realStandardId as string,
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await useCase.execute(command);
+
+      expect(standardsPort.getStandardVersionByNumber).toHaveBeenCalledWith(
+        realStandardId,
+        1,
+        [orgSpaceId],
+      );
+    });
+  });
+
+  describe('when an artifact id is not a valid UUID', () => {
+    const spaceId = createSpaceId(uuidv4());
+
+    it('rejects with InvalidArtifactIdError', async () => {
+      command.artifacts = [
+        {
+          name: 'bad',
+          type: 'skill',
+          id: 'arbitrary-non-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidArtifactIdError,
+      );
+    });
+
+    it('carries the offending id on the thrown error', async () => {
+      command.artifacts = [
+        {
+          name: 'bad',
+          type: 'standard',
+          id: 'not-a-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        name: 'InvalidArtifactIdError',
+        invalidId: 'not-a-uuid',
+      });
+    });
+
+    it('throws before calling any port', async () => {
+      command.artifacts = [
+        {
+          name: 'bad',
+          type: 'command',
+          id: 'still-not-a-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidArtifactIdError,
+      );
+
+      expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
+      expect(standardsPort.getStandardVersionByNumber).not.toHaveBeenCalled();
+      expect(recipesPort.getRecipeVersion).not.toHaveBeenCalled();
+      expect(spacesPort.listSpacesByOrganization).not.toHaveBeenCalled();
+    });
+
+    it('rejects when a valid uuid sits alongside an invalid one', async () => {
+      command.artifacts = [
+        {
+          name: 'good',
+          type: 'skill',
+          id: uuidv4(),
+          version: 1,
+          spaceId: spaceId as string,
+        },
+        {
+          name: 'bad',
+          type: 'skill',
+          id: 'still-not-a-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        name: 'InvalidArtifactIdError',
+        invalidId: 'still-not-a-uuid',
+      });
     });
   });
 

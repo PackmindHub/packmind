@@ -6,6 +6,7 @@ import {
   GetContentByVersionsResponse,
   IAccountsPort,
   ICodingAgentPort,
+  InvalidArtifactIdError,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -19,11 +20,16 @@ import {
   createSkillId,
   createStandardId,
 } from '@packmind/types';
+import { validate as isUuid } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
   buildArtifactMetadataMap,
   enrichFileModificationsWithMetadata,
 } from '../utils/ArtifactMetadataUtils';
+import {
+  isDefaultSkillId,
+  isDefaultSkillSlug,
+} from '../utils/defaultSkillIdUtils';
 
 const origin = 'GetContentByVersionsUseCase';
 
@@ -51,6 +57,15 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
       organizationId: command.organizationId,
       artifactCount: command.artifacts.length,
     });
+
+    for (const artifact of command.artifacts) {
+      if (isUuid(artifact.id)) continue;
+      // Pre-316404566 lockfiles stored default-skill artifact ids as slugs.
+      // Tolerate them here so an old lockfile doesn't reject the whole batch
+      // (the entry is silently dropped further down in fetchSkillVersionsWithFiles).
+      if (isDefaultSkillSlug(artifact.id)) continue;
+      throw new InvalidArtifactIdError(artifact.id);
+    }
 
     // Step 1: Fetch allowed spaces for the organization (IDOR protection)
     const spaces = await this.spacesPort.listSpacesByOrganization(
@@ -202,6 +217,14 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
   ): Promise<SkillVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
+        // Default skills live in the CLI's embedded assets, not the DB. The
+        // lockfile still ships their identifiers back through this endpoint —
+        // synthetic UUIDs in new lockfiles, raw slugs in pre-316404566 ones —
+        // so we short-circuit before the lookup to avoid both a wasted query
+        // and a misleading "Skill version not found" warn.
+        if (isDefaultSkillId(entry.id) || isDefaultSkillSlug(entry.id)) {
+          return null;
+        }
         const skillId = createSkillId(entry.id);
         const matchingVersion = await this.skillsPort.getSkillVersionByNumber(
           skillId,

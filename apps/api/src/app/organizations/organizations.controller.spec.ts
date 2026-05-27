@@ -14,6 +14,7 @@ import {
   ListUserSpacesResponse,
 } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
+import { InvalidArtifactIdError } from '@packmind/types';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
@@ -642,6 +643,32 @@ describe('OrganizationsController', () => {
             agents: undefined,
           }),
         );
+      });
+    });
+
+    describe('when the adapter throws InvalidArtifactIdError', () => {
+      it('translates it to a BadRequestException', async () => {
+        mockDeploymentAdapter.getContentByVersions.mockRejectedValue(
+          new InvalidArtifactIdError('packmind-cli-list-commands'),
+        );
+
+        await expect(
+          controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: defaultArtifacts,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('includes the invalid id in the BadRequestException message', async () => {
+        mockDeploymentAdapter.getContentByVersions.mockRejectedValue(
+          new InvalidArtifactIdError('packmind-cli-list-commands'),
+        );
+
+        await expect(
+          controller.getContentByVersions(orgId, mockRequest, {
+            artifacts: defaultArtifacts,
+          }),
+        ).rejects.toThrow(/packmind-cli-list-commands/);
       });
     });
   });
