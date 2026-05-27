@@ -1,72 +1,96 @@
 import {
   createOrganizationId,
   createSpaceId,
-  Space,
+  createUserId,
+  SpaceManagementListItem,
   SpaceType,
 } from '@packmind/types';
-import { SPACE_COLOR_PALETTE } from './spaceColor';
 import { toSpaceListItem } from './toSpaceListItem';
 
-const buildSpace = (overrides: Partial<Space> = {}): Space => ({
-  id: createSpaceId('00000000-0000-0000-0000-000000000001'),
-  name: 'Frontend',
-  slug: 'frontend',
-  type: SpaceType.open,
-  organizationId: createOrganizationId('11111111-1111-1111-1111-111111111111'),
-  isDefaultSpace: false,
-  ...overrides,
-});
+const buildDto = (
+  overrides: Partial<SpaceManagementListItem> = {},
+): SpaceManagementListItem =>
+  ({
+    id: createSpaceId('00000000-0000-0000-0000-000000000001'),
+    name: 'Engineering',
+    slug: 'engineering',
+    type: SpaceType.open,
+    organizationId: createOrganizationId(
+      '11111111-1111-1111-1111-111111111111',
+    ),
+    isDefaultSpace: false,
+    color: 'green',
+    admins: [
+      {
+        id: createUserId('22222222-2222-2222-2222-222222222222'),
+        displayName: 'Alice',
+      },
+    ],
+    membersCount: 12,
+    artifactsCount: 9,
+    createdAt: '2025-01-12T10:00:00.000Z',
+    ...overrides,
+  }) as SpaceManagementListItem;
 
 describe('toSpaceListItem', () => {
-  it('marks a default space as org-wide and assigns the blue color token', () => {
-    const space = buildSpace({ isDefaultSpace: true, name: 'Global' });
-    const item = toSpaceListItem(space);
-    expect(item.isOrgWide).toBe(true);
-    expect(item.colorToken).toBe('blue');
+  it('preserves the backend-provided color', () => {
+    const dto = buildDto({ color: 'pink' });
+    const row = toSpaceListItem(dto);
+
+    expect(row.color).toBe('pink');
   });
 
-  it('marks a non-default space as not org-wide and derives a palette color', () => {
-    const space = buildSpace({ isDefaultSpace: false });
-    const item = toSpaceListItem(space);
-    expect(item.isOrgWide).toBe(false);
-    expect(SPACE_COLOR_PALETTE).toContain(item.colorToken);
+  it('flags non-default spaces correctly and forwards aggregated fields', () => {
+    const dto = buildDto();
+    const row = toSpaceListItem(dto);
+
+    expect(row.isDefaultSpace).toBe(false);
+    expect(row.admins).toEqual([
+      { id: '22222222-2222-2222-2222-222222222222', displayName: 'Alice' },
+    ]);
+    expect(row.membersCount).toBe(12);
+    expect(row.artifactsCount).toBe(9);
+    expect(row.createdAt).toBe('2025-01-12T10:00:00.000Z');
   });
 
-  it('keeps isOrgWide tied solely to isDefaultSpace, regardless of space type', () => {
-    const restrictedDefault = buildSpace({
+  it('marks the default space correctly', () => {
+    const dto = buildDto({ isDefaultSpace: true, name: 'Global' });
+    const row = toSpaceListItem(dto);
+
+    expect(row.isDefaultSpace).toBe(true);
+  });
+
+  it('isDefaultSpace is independent of space type', () => {
+    const restrictedDefault = buildDto({
       isDefaultSpace: true,
       type: SpaceType.restricted,
     });
-    expect(toSpaceListItem(restrictedDefault).isOrgWide).toBe(true);
+
+    expect(toSpaceListItem(restrictedDefault).isDefaultSpace).toBe(true);
   });
 
-  it('leaves API-unsourced fields empty or null', () => {
-    const item = toSpaceListItem(buildSpace());
-    expect(item.admins).toEqual([]);
-    expect(item.membersCount).toBeNull();
-    expect(item.artifactsCount).toBeNull();
-    expect(item.createdAt).toBeNull();
-  });
-
-  it('preserves every field from the source Space', () => {
-    const space = buildSpace({
-      id: createSpaceId('22222222-2222-2222-2222-222222222222'),
+  it('preserves every field from the source space management item', () => {
+    const dto = buildDto({
+      id: createSpaceId('33333333-3333-3333-3333-333333333333'),
       name: 'Mobile',
       slug: 'mobile',
       type: SpaceType.restricted,
       organizationId: createOrganizationId(
-        '33333333-3333-3333-3333-333333333333',
+        '44444444-4444-4444-4444-444444444444',
       ),
       isDefaultSpace: false,
+      color: 'cyan',
     });
-    const item = toSpaceListItem(space);
-    expect(item).toMatchObject({
-      id: space.id,
-      name: space.name,
-      slug: space.slug,
-      type: space.type,
-      organizationId: space.organizationId,
-      isDefaultSpace: space.isDefaultSpace,
+    const row = toSpaceListItem(dto);
+
+    expect(row).toMatchObject({
+      id: dto.id,
+      name: dto.name,
+      slug: dto.slug,
+      type: dto.type,
+      organizationId: dto.organizationId,
+      isDefaultSpace: dto.isDefaultSpace,
+      color: dto.color,
     });
   });
 });

@@ -3,23 +3,36 @@ import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 import { PMButton, PMHStack, PMIcon, PMText } from '@packmind/ui';
 
 interface SpacesPaginationProps {
-  totalCount: number;
+  page: number;
   pageSize: number;
-  currentPage: number;
-  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
 }
 
 export const SpacesPagination: React.FC<SpacesPaginationProps> = ({
-  totalCount,
+  page,
   pageSize,
-  currentPage,
-  totalPages,
+  totalCount,
+  onPageChange,
 }) => {
-  const start = (currentPage - 1) * pageSize + 1;
-  const end = Math.min(currentPage * pageSize, totalCount);
+  if (totalCount <= pageSize) {
+    return null;
+  }
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, totalCount);
+  const isFirstPage = page <= 1;
+  const isLastPage = page >= totalPages;
 
   return (
-    <PMHStack justify="space-between" align="center" width="full">
+    <PMHStack
+      as="nav"
+      aria-label="Spaces pagination"
+      justify="space-between"
+      align="center"
+      width="full"
+    >
       <PMText color="faded" fontSize="sm">
         Showing {start}–{end} of {totalCount}
       </PMText>
@@ -28,29 +41,33 @@ export const SpacesPagination: React.FC<SpacesPaginationProps> = ({
           variant="secondary"
           size="sm"
           aria-label="Previous page"
-          onClick={() => undefined}
+          disabled={isFirstPage}
+          onClick={() => onPageChange(page - 1)}
         >
           <PMIcon>
             <LuChevronLeft />
           </PMIcon>
         </PMButton>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <PMButton
-            key={page}
-            variant={page === currentPage ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => undefined}
-            aria-label={`Page ${page}`}
-            aria-current={page === currentPage ? 'page' : undefined}
-          >
-            {page}
-          </PMButton>
-        ))}
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+          (pageNumber) => (
+            <PMButton
+              key={pageNumber}
+              variant={pageNumber === page ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => onPageChange(pageNumber)}
+              aria-label={`Page ${pageNumber}`}
+              aria-current={pageNumber === page ? 'page' : undefined}
+            >
+              {pageNumber}
+            </PMButton>
+          ),
+        )}
         <PMButton
           variant="secondary"
           size="sm"
           aria-label="Next page"
-          onClick={() => undefined}
+          disabled={isLastPage}
+          onClick={() => onPageChange(page + 1)}
         >
           <PMIcon>
             <LuChevronRight />

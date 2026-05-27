@@ -7,6 +7,7 @@ import {
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
   IGetTargetsByOrganizationUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   IListChangeProposalsByArtefact,
   IListChangeProposalsBySpace,
   IListPackagesBySpaceUseCase,
@@ -61,6 +62,7 @@ export interface IChangeProposalGateway {
 
 export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
+  listActiveDistributedPackagesBySpace: Gateway<IListActiveDistributedPackagesBySpaceUseCase>;
 }
 
 export interface ISkillsGateway {
