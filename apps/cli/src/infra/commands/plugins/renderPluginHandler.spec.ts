@@ -312,4 +312,86 @@ describe('renderPluginHandler', () => {
       ).toBe(before);
     });
   });
+
+  describe('standalone mode', () => {
+    const writeStandaloneManifest = (content: unknown) => {
+      mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+      writeFileSync(
+        join(tmp, '.claude-plugin/plugin.json'),
+        JSON.stringify(content, null, 2),
+      );
+    };
+
+    describe('when the manifest name matches', () => {
+      beforeEach(() => {
+        writeStandaloneManifest({ name: 'security' });
+      });
+
+      it('prompts before overwriting', async () => {
+        confirmOverwrite.mockResolvedValue(true);
+
+        await renderPluginHandler(
+          { packageSlug: '@global/security' },
+          buildDeps(),
+        );
+
+        expect(confirmOverwrite).toHaveBeenCalledWith(
+          expect.stringContaining('security'),
+        );
+      });
+
+      describe('when the user confirms', () => {
+        beforeEach(() => {
+          confirmOverwrite.mockResolvedValue(true);
+        });
+
+        it('renders in standalone mode at the workspace root', async () => {
+          await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+          expect(renderPlugin).toHaveBeenCalledWith({
+            packageSlug: 'security',
+            mode: 'standalone',
+            pluginRoot: '/',
+            pluginName: 'security',
+          });
+        });
+
+        it('writes the rendered files', async () => {
+          renderPlugin.mockResolvedValue(
+            buildResponse({
+              files: [{ path: 'commands/a.md', content: 'A' }],
+            }),
+          );
+
+          await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+          expect(readFileSync(join(tmp, 'commands/a.md'), 'utf8')).toBe('A');
+        });
+
+        it('exits zero', async () => {
+          await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+          expect(exit).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('when the user declines', () => {
+        beforeEach(() => {
+          confirmOverwrite.mockResolvedValue(false);
+        });
+
+        it('does not render', async () => {
+          await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+          expect(renderPlugin).not.toHaveBeenCalled();
+        });
+
+        it('exits zero', async () => {
+          await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+          expect(exit).toHaveBeenCalledWith(0);
+        });
+      });
+    });
+  });
 });

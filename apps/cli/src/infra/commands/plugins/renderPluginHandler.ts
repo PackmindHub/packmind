@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { RenderedPluginFile } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
@@ -117,6 +117,42 @@ export async function renderPluginHandler(
     deps.log(`Rendered ${response.files.length} files into ./${pluginRoot}`);
     reportSkippedStandards(deps, response.skippedStandardsCount);
     deps.log('Updated .claude-plugin/marketplace.json');
+    deps.exit(0);
+    return;
+  }
+
+  if (ctx.mode === 'standalone') {
+    const manifestPath = ctx.manifestPath as string;
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      name?: string;
+    };
+
+    if (manifest.name !== pluginName) {
+      deps.error(`The plugin '${pluginName}' is not handled in this repo.`);
+      deps.exit(1);
+      return;
+    }
+
+    const confirmed = await deps.confirmOverwrite(
+      `Plugin "${pluginName}" already exists in this workspace. Overwrite? [y/N] `,
+    );
+    if (!confirmed) {
+      deps.log('No changes made.');
+      deps.exit(0);
+      return;
+    }
+
+    const response = await deps.packmindCliHexa.renderPlugin({
+      packageSlug: args.packageSlug,
+      mode: 'standalone',
+      pluginRoot: '/',
+      pluginName,
+    });
+
+    writeFiles(cwd, response.files);
+
+    deps.log(`Re-rendered ${response.files.length} files into ./`);
+    reportSkippedStandards(deps, response.skippedStandardsCount);
     deps.exit(0);
     return;
   }
