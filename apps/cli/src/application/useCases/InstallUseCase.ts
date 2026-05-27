@@ -23,6 +23,7 @@ import {
 } from '../../infra/utils/permissions';
 import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
 import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
+import { stripFullStandardLinkFooter } from '../../infra/utils/stripFullStandardLinkFooter';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -164,9 +165,7 @@ export class InstallUseCase implements IInstallUseCase {
             path: this.stripPrefix(file.path, stripPathPrefix),
           };
           if (remapped.content !== undefined) {
-            remapped.content = this.stripFullStandardLinkFooter(
-              remapped.content,
-            );
+            remapped.content = stripFullStandardLinkFooter(remapped.content);
           }
           return remapped;
         });
@@ -412,17 +411,6 @@ export class InstallUseCase implements IInstallUseCase {
       remappedArtifacts[key] = { ...entry, files: remappedFiles };
     }
     return { ...lockFile, artifacts: remappedArtifacts };
-  }
-
-  // The server-side standard renderer appends a trailing
-  // `Full standard is available here for further request: [name](.../.packmind/standards/<slug>.md)`
-  // line. In home-install mode we drop the `.packmind/` mirror folder, so that
-  // link target never exists — strip the dangling footer.
-  private stripFullStandardLinkFooter(content: string): string {
-    return content.replace(
-      /\n+Full standard is available here for further request: \[.+?]\(.+?\.packmind\/standards\/.+?\)\s*$/,
-      '',
-    );
   }
 
   private async normalizeAndSaveConfigPackages(

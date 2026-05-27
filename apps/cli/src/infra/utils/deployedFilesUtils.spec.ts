@@ -167,6 +167,41 @@ describe('fetchDeployedFiles', () => {
       });
       expect(result.some((f) => f.path.startsWith('.packmind/'))).toBe(false);
     });
+
+    it('strips the "Full standard is available here" footer from deployed content', async () => {
+      const standardBody = [
+        '# Standard: Frontend testing',
+        '',
+        'My summary :',
+        '* Rule one',
+        '',
+        'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
+      ].join('\n');
+      gateway = {
+        deployment: {
+          getContentByVersions: jest.fn().mockResolvedValue({
+            fileUpdates: {
+              createOrUpdate: [
+                {
+                  path: '.claude/rules/packmind/standard-frontend-testing.md',
+                  content: standardBody,
+                },
+              ],
+            },
+          }),
+        },
+      };
+
+      const result = await fetchDeployedFiles(gateway, lockFile, {
+        projectDir: homeClaudeDir,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].content).not.toContain(
+        'Full standard is available here for further request:',
+      );
+      expect(result[0].content).toContain('* Rule one');
+    });
   });
 
   describe('when projectDir is a normal repo directory', () => {
