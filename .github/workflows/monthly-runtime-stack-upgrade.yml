@@ -132,6 +132,7 @@ jobs:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           payload: ${{ env.SLACK_PAYLOAD }}
+          errors: true
 
       - name: Upload report artifact
         if: always()
