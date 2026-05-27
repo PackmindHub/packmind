@@ -3,6 +3,7 @@ import { readMarketplace, findPluginEntry } from './pluginsContext';
 import {
   writeFileSync,
   readFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   rmSync,
@@ -391,6 +392,45 @@ describe('renderPluginHandler', () => {
 
           expect(exit).toHaveBeenCalledWith(0);
         });
+      });
+    });
+
+    describe('when the manifest name does not match', () => {
+      beforeEach(() => {
+        writeStandaloneManifest({ name: 'frontend' });
+      });
+
+      it('exits non-zero with the documented message', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(error).toHaveBeenCalledWith(
+          "The plugin 'security' is not handled in this repo.",
+        );
+        expect(exit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not call the gateway', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(renderPlugin).not.toHaveBeenCalled();
+      });
+
+      it('does not prompt for overwrite', async () => {
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(confirmOverwrite).not.toHaveBeenCalled();
+      });
+
+      it('writes no files', async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({
+            files: [{ path: 'commands/a.md', content: 'A' }],
+          }),
+        );
+
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(existsSync(join(tmp, 'commands/a.md'))).toBe(false);
       });
     });
   });
