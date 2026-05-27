@@ -21,6 +21,11 @@ import {
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PackmindLockFileService } from '../services/PackmindLockFileService';
 import { enrichDefaultSkillsFileModifications } from '../utils/DefaultSkillsMetadataEnricher';
+import {
+  getDefaultSkillAuthorUserId,
+  getDefaultSkillId,
+  getDefaultSkillVersionId,
+} from '../utils/defaultSkillIdUtils';
 
 const origin = 'DeployDefaultSkillsUseCase';
 
@@ -163,10 +168,12 @@ export class DeployDefaultSkillsUseCase
     deployedSkills: DefaultSkillMetadata[],
     codingAgents: CodingAgent[],
   ): Record<string, PackmindLockFileEntry> {
-    const syntheticUserId = createUserId('default-skill-author');
+    const syntheticUserId = createUserId(getDefaultSkillAuthorUserId());
     const skillVersions: SkillVersion[] = deployedSkills.map((skill) => ({
-      id: createSkillVersionId(`default-${skill.slug}-${skill.version}`),
-      skillId: createSkillId(skill.slug),
+      id: createSkillVersionId(
+        getDefaultSkillVersionId(skill.slug, skill.version),
+      ),
+      skillId: createSkillId(getDefaultSkillId(skill.slug)),
       version: skill.version,
       userId: syntheticUserId,
       name: skill.name,

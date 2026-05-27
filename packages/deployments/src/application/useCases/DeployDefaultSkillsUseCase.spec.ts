@@ -17,6 +17,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { getDefaultSkillId } from '../utils/defaultSkillIdUtils';
 import { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 
 const createMockDeployer = (
@@ -210,7 +211,7 @@ describe('DeployDefaultSkillsUseCase', () => {
         expect(result.fileUpdates.createOrUpdate[0]).toMatchObject({
           path: '.claude/skills/skill-creator/SKILL.md',
           artifactType: 'skill',
-          artifactId: 'skill-creator',
+          artifactId: getDefaultSkillId('skill-creator'),
           artifactSlug: 'skill-creator',
           artifactName: 'Skill Creator',
           artifactVersion: 1,
@@ -231,10 +232,17 @@ describe('DeployDefaultSkillsUseCase', () => {
         ).toMatchObject({
           name: 'Skill Creator',
           type: 'skill',
-          id: 'skill-creator',
+          id: getDefaultSkillId('skill-creator'),
           version: 1,
           source: 'default',
         });
+      });
+
+      it('reuses the same id for the same slug across runs in-process', async () => {
+        const secondResult = await useCase.execute(command);
+        expect(
+          secondResult.lockFileSlice['default:skill:skill-creator'].id,
+        ).toBe(result.lockFileSlice['default:skill:skill-creator'].id);
       });
 
       it('does not emit warn logs from the PackmindLockFileService gate', () => {

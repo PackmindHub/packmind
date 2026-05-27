@@ -29,6 +29,7 @@ import {
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  InvalidArtifactIdError,
   NoPackageSlugsProvidedError,
   PackagesNotFoundError,
 } from '@packmind/deployments';
@@ -383,6 +384,11 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
+
+      if (error instanceof InvalidArtifactIdError) {
+        throw new BadRequestException(error.message);
+      }
+
       throw error;
     }
   }

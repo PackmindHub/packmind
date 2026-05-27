@@ -19,11 +19,23 @@ import {
   createSkillId,
   createStandardId,
 } from '@packmind/types';
+import { QueryFailedError } from 'typeorm';
+import { InvalidArtifactIdError } from '../../domain/errors/InvalidArtifactIdError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
   buildArtifactMetadataMap,
   enrichFileModificationsWithMetadata,
 } from '../utils/ArtifactMetadataUtils';
+
+const POSTGRES_INVALID_TEXT_REPRESENTATION = '22P02';
+
+function isInvalidUuidError(error: unknown): boolean {
+  if (!(error instanceof QueryFailedError)) {
+    return false;
+  }
+  const driverError = (error as QueryFailedError & { code?: string }).code;
+  return driverError === POSTGRES_INVALID_TEXT_REPRESENTATION;
+}
 
 const origin = 'GetContentByVersionsUseCase';
 
@@ -150,18 +162,25 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const results = await Promise.all(
       entries.map(async (entry) => {
         const recipeId = createRecipeId(entry.id);
-        const version = await this.recipesPort.getRecipeVersion(
-          recipeId,
-          entry.version,
-          allowedSpaceIds,
-        );
-        if (!version) {
-          this.logger.warn('Recipe version not found', {
-            recipeId: entry.id,
-            version: entry.version,
-          });
+        try {
+          const version = await this.recipesPort.getRecipeVersion(
+            recipeId,
+            entry.version,
+            allowedSpaceIds,
+          );
+          if (!version) {
+            this.logger.warn('Recipe version not found', {
+              recipeId: entry.id,
+              version: entry.version,
+            });
+          }
+          return version;
+        } catch (error) {
+          if (isInvalidUuidError(error)) {
+            throw new InvalidArtifactIdError(entry.id);
+          }
+          throw error;
         }
-        return version;
       }),
     );
     return results.filter((v): v is RecipeVersion => v !== null);
@@ -174,23 +193,30 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const results = await Promise.all(
       entries.map(async (entry) => {
         const standardId = createStandardId(entry.id);
-        const matchingVersion =
-          await this.standardsPort.getStandardVersionByNumber(
-            standardId,
-            entry.version,
-            allowedSpaceIds,
+        try {
+          const matchingVersion =
+            await this.standardsPort.getStandardVersionByNumber(
+              standardId,
+              entry.version,
+              allowedSpaceIds,
+            );
+          if (!matchingVersion) {
+            this.logger.warn('Standard version not found', {
+              standardId: entry.id,
+              version: entry.version,
+            });
+            return null;
+          }
+          const rules = await this.standardsPort.getRulesByVersionId(
+            matchingVersion.id,
           );
-        if (!matchingVersion) {
-          this.logger.warn('Standard version not found', {
-            standardId: entry.id,
-            version: entry.version,
-          });
-          return null;
+          return { ...matchingVersion, rules };
+        } catch (error) {
+          if (isInvalidUuidError(error)) {
+            throw new InvalidArtifactIdError(entry.id);
+          }
+          throw error;
         }
-        const rules = await this.standardsPort.getRulesByVersionId(
-          matchingVersion.id,
-        );
-        return { ...matchingVersion, rules };
       }),
     );
     return results.filter((v) => v !== null) as StandardVersion[];
@@ -203,20 +229,27 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const results = await Promise.all(
       entries.map(async (entry) => {
         const skillId = createSkillId(entry.id);
-        const matchingVersion = await this.skillsPort.getSkillVersionByNumber(
-          skillId,
-          entry.version,
-          allowedSpaceIds,
-        );
-        if (!matchingVersion) {
-          this.logger.warn('Skill version not found', {
-            skillId: entry.id,
-            version: entry.version,
-          });
-          return null;
+        try {
+          const matchingVersion = await this.skillsPort.getSkillVersionByNumber(
+            skillId,
+            entry.version,
+            allowedSpaceIds,
+          );
+          if (!matchingVersion) {
+            this.logger.warn('Skill version not found', {
+              skillId: entry.id,
+              version: entry.version,
+            });
+            return null;
+          }
+          const files = await this.skillsPort.getSkillFiles(matchingVersion.id);
+          return { ...matchingVersion, files };
+        } catch (error) {
+          if (isInvalidUuidError(error)) {
+            throw new InvalidArtifactIdError(entry.id);
+          }
+          throw error;
         }
-        const files = await this.skillsPort.getSkillFiles(matchingVersion.id);
-        return { ...matchingVersion, files };
       }),
     );
     return results.filter((v) => v !== null) as SkillVersion[];

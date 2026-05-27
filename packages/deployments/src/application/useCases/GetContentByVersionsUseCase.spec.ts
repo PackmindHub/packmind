@@ -29,8 +29,20 @@ import {
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { QueryFailedError } from 'typeorm';
+import { InvalidArtifactIdError } from '../../domain/errors/InvalidArtifactIdError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { GetContentByVersionsUseCase } from './GetContentByVersionsUseCase';
+
+const createInvalidUuidQueryFailedError = (id: string): QueryFailedError => {
+  const error = new QueryFailedError(
+    `SELECT ... WHERE id = '${id}'`,
+    [],
+    new Error(`invalid input syntax for type uuid: "${id}"`),
+  );
+  (error as QueryFailedError & { code?: string }).code = '22P02';
+  return error;
+};
 
 const createUserWithMembership = (
   userId: string,
@@ -381,6 +393,112 @@ describe('GetContentByVersionsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.fileUpdates).toEqual({ createOrUpdate: [], delete: [] });
+    });
+  });
+
+  describe('when a repository rejects with a 22P02 (invalid uuid) error', () => {
+    const spaceId = createSpaceId(uuidv4());
+
+    it('rethrows as InvalidArtifactIdError for skill artifacts', async () => {
+      command.artifacts = [
+        {
+          name: 'bad-skill',
+          type: 'skill',
+          id: 'not-a-uuid-slug',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      skillsPort.getSkillVersionByNumber.mockRejectedValue(
+        createInvalidUuidQueryFailedError('not-a-uuid-slug'),
+      );
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidArtifactIdError,
+      );
+    });
+
+    it('rethrows as InvalidArtifactIdError for standard artifacts', async () => {
+      command.artifacts = [
+        {
+          name: 'bad-standard',
+          type: 'standard',
+          id: 'not-a-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      standardsPort.getStandardVersionByNumber.mockRejectedValue(
+        createInvalidUuidQueryFailedError('not-a-uuid'),
+      );
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidArtifactIdError,
+      );
+    });
+
+    it('rethrows as InvalidArtifactIdError for recipe (command) artifacts', async () => {
+      command.artifacts = [
+        {
+          name: 'bad-recipe',
+          type: 'command',
+          id: 'not-a-uuid',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      recipesPort.getRecipeVersion.mockRejectedValue(
+        createInvalidUuidQueryFailedError('not-a-uuid'),
+      );
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvalidArtifactIdError,
+      );
+    });
+
+    it('preserves the offending id on the thrown error', async () => {
+      command.artifacts = [
+        {
+          name: 'bad-skill',
+          type: 'skill',
+          id: 'packmind-cli-list-commands',
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      skillsPort.getSkillVersionByNumber.mockRejectedValue(
+        createInvalidUuidQueryFailedError('packmind-cli-list-commands'),
+      );
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        name: 'InvalidArtifactIdError',
+        invalidId: 'packmind-cli-list-commands',
+      });
+    });
+  });
+
+  describe('when a repository rejects with a non-22P02 error', () => {
+    const spaceId = createSpaceId(uuidv4());
+
+    it('rethrows the original error unchanged', async () => {
+      command.artifacts = [
+        {
+          name: 'some-skill',
+          type: 'skill',
+          id: uuidv4(),
+          version: 1,
+          spaceId: spaceId as string,
+        },
+      ];
+
+      const dbDownError = new Error('connection refused');
+      skillsPort.getSkillVersionByNumber.mockRejectedValue(dbDownError);
+
+      await expect(useCase.execute(command)).rejects.toBe(dbDownError);
     });
   });
 

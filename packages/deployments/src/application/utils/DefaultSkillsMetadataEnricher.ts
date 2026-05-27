@@ -1,5 +1,6 @@
 import { FileModification, FileUpdates } from '@packmind/types';
 import { DefaultSkillMetadata } from '@packmind/coding-agent';
+import { getDefaultSkillId } from './defaultSkillIdUtils';
 
 /**
  * Pure-function enricher that stamps default-skill artifact metadata onto the
@@ -21,9 +22,12 @@ import { DefaultSkillMetadata } from '@packmind/coding-agent';
  * Output guarantees
  * -----------------
  * - Files matched to a deployed skill receive `artifactType: 'skill'`,
- *   `artifactId: slug`, `artifactSlug: slug`, `artifactName`, `artifactVersion`,
- *   `source: 'default'`, plus zeroed `spaceId: ''` and `packageIds: []` (default
- *   skills are not scoped to a Packmind space or package).
+ *   `artifactId: getDefaultSkillId(slug)` (a deterministic UUID — the
+ *   content-by-versions endpoint queries a uuid-typed column, so even
+ *   synthetic default-skill ids must be valid UUIDs), `artifactSlug: slug`,
+ *   `artifactName`, `artifactVersion`, `source: 'default'`, plus zeroed
+ *   `spaceId: ''` and `packageIds: []` (default skills are not scoped to a
+ *   Packmind space or package).
  * - Files NOT matched to any deployed skill are returned untouched. This is
  *   defensive — in practice the deployer's output and `deployedSkills` should
  *   be 1:1 — but it guarantees the enricher can never accidentally mis-tag a
@@ -60,7 +64,7 @@ function enrichFileModification(
   return {
     ...file,
     artifactType: 'skill',
-    artifactId: match.slug,
+    artifactId: getDefaultSkillId(match.slug),
     artifactSlug: match.slug,
     artifactName: match.name,
     artifactVersion: match.version,
