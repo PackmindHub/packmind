@@ -10,12 +10,30 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
+import {
+  buildPluginManifest,
+  PluginManifestInput,
+} from './buildPluginManifest';
 
 const origin = 'ClaudePluginDeployer';
 
 const EMPTY_UPDATES: FileUpdates = { createOrUpdate: [], delete: [] };
 
+/**
+ * Returns the plugin-root prefix for paths emitted by this deployer.
+ * - '/' or empty target.path => '' (no prefix)
+ * - 'plugins/security' => 'plugins/security/'
+ * - 'plugins/security/' => 'plugins/security/'
+ */
+function pluginRoot(target: Target): string {
+  const path = target.path ?? '';
+  if (path === '' || path === '/') return '';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
 export class ClaudePluginDeployer implements ICodingAgentDeployer {
+  private lastSkippedStandardsCount = 0;
+
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly gitPort?: IGitPort,
@@ -23,7 +41,6 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
   ) {
     void this.standardsPort;
     void this.gitPort;
-    void this.logger;
   }
 
   async deployRecipes(
@@ -31,10 +48,23 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
-    void recipeVersions;
-    void gitRepo;
-    void target;
-    return EMPTY_UPDATES;
+    this.logger.info('Rendering recipes for Claude plugin', {
+      recipesCount: recipeVersions.length,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+    const root = pluginRoot(target);
+    return {
+      createOrUpdate: recipeVersions.map((rv) => ({
+        path: `${root}commands/${rv.slug}.md`,
+        content: rv.content,
+        artifactType: 'command' as const,
+        artifactName: rv.name,
+        artifactId: rv.recipeId as string,
+      })),
+      delete: [],
+    };
   }
 
   async deploySkills(
@@ -42,10 +72,47 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
-    void skillVersions;
-    void gitRepo;
-    void target;
-    return EMPTY_UPDATES;
+    this.logger.info('Rendering skills for Claude plugin', {
+      skillsCount: skillVersions.length,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+    const root = pluginRoot(target);
+    const createOrUpdate: FileUpdates['createOrUpdate'] = [];
+    for (const skillVersion of skillVersions) {
+      const files =
+        skillVersion.files && skillVersion.files.length > 0
+          ? skillVersion.files.map((file) => ({
+              path: file.path,
+              content: file.content,
+              isBase64: file.isBase64,
+              skillFileId: file.id as string,
+              skillFilePermissions: file.permissions,
+            }))
+          : [
+              {
+                path: 'SKILL.md',
+                content: skillVersion.prompt,
+                isBase64: undefined as boolean | undefined,
+                skillFileId: undefined as string | undefined,
+                skillFilePermissions: undefined as string | undefined,
+              },
+            ];
+      for (const file of files) {
+        createOrUpdate.push({
+          path: `${root}skills/${skillVersion.slug}/${file.path}`,
+          content: file.content,
+          isBase64: file.isBase64,
+          artifactType: 'skill' as const,
+          artifactName: skillVersion.name,
+          artifactId: skillVersion.skillId as string,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
+        });
+      }
+    }
+    return { createOrUpdate, delete: [] };
   }
 
   async deployStandards(
@@ -53,10 +120,46 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
-    void standardVersions;
-    void gitRepo;
-    void target;
-    return EMPTY_UPDATES;
+    this.lastSkippedStandardsCount = standardVersions.length;
+    this.logger.info('Standards skipped in Claude plugin rendering', {
+      count: this.lastSkippedStandardsCount,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+    return { createOrUpdate: [], delete: [] };
+  }
+
+  /**
+   * Returns the number of standards skipped by the most recent
+   * `deployStandards` invocation. Plugins do not support standards (Rule 3);
+   * callers surface this count to users as a "skipped" notice.
+   */
+  getLastSkippedStandardsCount(): number {
+    return this.lastSkippedStandardsCount;
+  }
+
+  /**
+   * Emits the Claude plugin manifest at `<plugin-root>/.claude-plugin/plugin.json`.
+   * This file is specific to the plugin rendering mode and lives outside the
+   * shared `ICodingAgentDeployer` contract.
+   */
+  deployPluginManifest(
+    input: PluginManifestInput,
+    target: Target,
+  ): FileUpdates {
+    const root = pluginRoot(target);
+    return {
+      createOrUpdate: [
+        {
+          path: `${root}.claude-plugin/plugin.json`,
+          content: buildPluginManifest(input),
+          artifactName: input.name,
+          artifactId: input.name,
+        },
+      ],
+      delete: [],
+    };
   }
 
   async generateFileUpdatesForRecipes(
