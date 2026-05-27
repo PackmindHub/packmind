@@ -7,6 +7,7 @@ import { OrganizationDeploymentsModule } from './deployments/deployments.module'
 import { OrganizationGitModule } from './git/git.module';
 import { OrganizationLlmModule } from './llm/llm.module';
 import { OrganizationMcpModule } from './mcp/mcp.module';
+import { OrganizationPluginsModule } from './plugins/plugins.module';
 import { OrganizationSkillsModule } from './skills/skills.module';
 import { SpacesManagementModule } from '@packmind/spaces-management';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -39,6 +40,7 @@ import { PlaybookModule } from './playbook/playbook.module';
     OrganizationGitModule,
     OrganizationLlmModule,
     OrganizationMcpModule,
+    OrganizationPluginsModule,
     OrganizationSkillsModule,
     SpacesManagementModule,
     PlaybookModule,
