@@ -1,6 +1,9 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  Distribution,
+  DistributionStatus,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -10,6 +13,7 @@ import {
   PackageWithArtefacts,
   Recipe,
   RecipeVersion,
+  RenderMode,
   RenderPackageAsPluginCommand,
   Skill,
   SkillVersion,
@@ -17,8 +21,10 @@ import {
   SpaceType,
   Standard,
   StandardVersion,
+  Target,
   User,
   UserOrganizationMembership,
+  createGitRepoId,
   createOrganizationId,
   createPackageId,
   createRecipeId,
@@ -28,10 +34,14 @@ import {
   createSpaceId,
   createStandardId,
   createStandardVersionId,
+  createTargetId,
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../../services/PackageService';
+import { TargetResolutionService } from '../../services/TargetResolutionService';
+import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 import { RenderPackageAsPluginUseCase } from './RenderPackageAsPluginUseCase';
 
@@ -61,11 +71,22 @@ describe('RenderPackageAsPluginUseCase', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let targetResolutionService: jest.Mocked<TargetResolutionService>;
+  let distributionRepository: jest.Mocked<IDistributionRepository>;
+  let distributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let useCase: RenderPackageAsPluginUseCase;
   let organizationId: OrganizationId;
   let organization: Organization;
   let defaultSpace: Space;
   let userId: string;
+
+  const buildTarget = (): Target => ({
+    id: createTargetId(uuidv4()),
+    name: 'plugins/security',
+    path: 'plugins/security/',
+    gitRepoId: createGitRepoId(uuidv4()),
+  });
 
   const buildCommand = (
     overrides: Partial<RenderPackageAsPluginCommand> = {},
@@ -207,6 +228,28 @@ describe('RenderPackageAsPluginUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    targetResolutionService = {
+      findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
+    } as unknown as jest.Mocked<TargetResolutionService>;
+
+    distributionRepository = {
+      add: jest
+        .fn()
+        .mockImplementation((d: Distribution) => Promise.resolve(d)),
+    } as unknown as jest.Mocked<IDistributionRepository>;
+
+    distributedPackageRepository = {
+      add: jest.fn().mockResolvedValue(undefined),
+      addStandardVersions: jest.fn().mockResolvedValue(undefined),
+      addRecipeVersions: jest.fn().mockResolvedValue(undefined),
+      addSkillVersions: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IDistributedPackageRepository>;
+
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+      identifyOrganizationGroup: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     useCase = new RenderPackageAsPluginUseCase(
       packageService,
       recipesPort,
@@ -214,6 +257,10 @@ describe('RenderPackageAsPluginUseCase', () => {
       skillsPort,
       spacesPort,
       accountsPort,
+      targetResolutionService,
+      distributionRepository,
+      distributedPackageRepository,
+      eventTrackingPort,
       stubLogger(),
     );
   });
@@ -319,6 +366,201 @@ describe('RenderPackageAsPluginUseCase', () => {
       expect(result.pluginName).toBe('security');
       expect(result.pluginDescription).toBe('Security helpers');
       expect(result.pluginVersion).toBe('0.1.0');
+    });
+  });
+
+  describe('tracking', () => {
+    let pkg: PackageWithArtefacts;
+    let recipeVersionId: ReturnType<typeof createRecipeVersionId>;
+    let skillVersionId: ReturnType<typeof createSkillVersionId>;
+    let standardVersionId: ReturnType<typeof createStandardVersionId>;
+
+    beforeEach(() => {
+      const recipes = [buildRecipe('r1', 'audit')];
+      const skills = [buildSkill('sk1', 'threat-model')];
+      const standards = [buildStandard('s1', 'std-one')];
+      pkg = buildPackage({ recipes, skills, standards });
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        pkg,
+      ]);
+
+      const recipeVersion = buildRecipeVersion('r1', 'audit', '# audit');
+      recipeVersionId = recipeVersion.id;
+      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+
+      const skillVersion = buildSkillVersion('sk1', 'threat-model', '# tm');
+      skillVersionId = skillVersion.id;
+      skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+
+      const standardVersion = buildStandardVersion('s1', 'std-one');
+      standardVersionId = standardVersion.id;
+      standardsPort.getLatestStandardVersion.mockResolvedValue(standardVersion);
+    });
+
+    describe('when a git remote url is provided', () => {
+      it('resolves a target from git info with the command path', async () => {
+        await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            gitBranch: 'develop',
+          }),
+        );
+
+        expect(
+          targetResolutionService.findOrCreateTargetFromGitInfo,
+        ).toHaveBeenCalledWith(
+          organizationId,
+          userId,
+          'https://github.com/acme/marketplace.git',
+          'develop',
+          'plugins/security/',
+        );
+      });
+
+      it('defaults the git branch to main when omitted', async () => {
+        await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(
+          targetResolutionService.findOrCreateTargetFromGitInfo,
+        ).toHaveBeenCalledWith(
+          organizationId,
+          userId,
+          'https://github.com/acme/marketplace.git',
+          'main',
+          'plugins/security/',
+        );
+      });
+
+      it('writes a single CLAUDE_PLUGIN add distribution from the cli', async () => {
+        await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(distributionRepository.add).toHaveBeenCalledTimes(1);
+        const distribution = distributionRepository.add.mock
+          .calls[0][0] as Distribution;
+        expect(distribution.renderModes).toEqual([RenderMode.CLAUDE_PLUGIN]);
+        expect(distribution.source).toBe('cli');
+        expect(distribution.status).toBe(DistributionStatus.success);
+        expect(distribution.distributedPackages).toHaveLength(1);
+        expect(distribution.distributedPackages[0].operation).toBe('add');
+        expect(distribution.distributedPackages[0].packageId).toBe(pkg.id);
+      });
+
+      it('persists the distributed package with the fetched version ids', async () => {
+        await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(distributedPackageRepository.add).toHaveBeenCalledTimes(1);
+        const distributedPackageId =
+          distributedPackageRepository.add.mock.calls[0][0].id;
+        expect(
+          distributedPackageRepository.addRecipeVersions,
+        ).toHaveBeenCalledWith(distributedPackageId, [recipeVersionId]);
+        expect(
+          distributedPackageRepository.addSkillVersions,
+        ).toHaveBeenCalledWith(distributedPackageId, [skillVersionId]);
+        expect(
+          distributedPackageRepository.addStandardVersions,
+        ).toHaveBeenCalledWith(distributedPackageId, [standardVersionId]);
+      });
+
+      it('emits package_rendered_as_plugin with the marketplace metadata', async () => {
+        await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'package_rendered_as_plugin',
+          {
+            package_id: pkg.id,
+            package_slug: pkg.slug,
+            target_mode: 'marketplace',
+            target_path: 'plugins/security/',
+            marketplace_repo: 'https://github.com/acme/marketplace.git',
+          },
+        );
+      });
+
+      it('returns the rendered files and the distribution id', async () => {
+        const result = await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(result.files.length).toBeGreaterThan(0);
+        const distribution = distributionRepository.add.mock
+          .calls[0][0] as Distribution;
+        expect(result.distributionId).toBe(distribution.id);
+      });
+    });
+
+    describe('when no git remote url is provided', () => {
+      it('does not write a distribution', async () => {
+        await useCase.execute(buildCommand({ gitRemoteUrl: '   ' }));
+
+        expect(distributionRepository.add).not.toHaveBeenCalled();
+        expect(
+          targetResolutionService.findOrCreateTargetFromGitInfo,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('still emits the event without the marketplace repo', async () => {
+        await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
+
+        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'package_rendered_as_plugin',
+          {
+            package_id: pkg.id,
+            package_slug: pkg.slug,
+            target_mode: 'marketplace',
+            target_path: 'plugins/security/',
+          },
+        );
+      });
+
+      it('returns the files with no distribution id', async () => {
+        const result = await useCase.execute(
+          buildCommand({ gitRemoteUrl: undefined }),
+        );
+
+        expect(result.files.length).toBeGreaterThan(0);
+        expect(result.distributionId).toBeUndefined();
+      });
+    });
+
+    describe('when tracking fails', () => {
+      it('does not reject and still returns the rendered files', async () => {
+        targetResolutionService.findOrCreateTargetFromGitInfo.mockRejectedValue(
+          new Error('git resolution failed'),
+        );
+
+        const result = await useCase.execute(
+          buildCommand({
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+
+        expect(result.files.length).toBeGreaterThan(0);
+        expect(result.distributionId).toBeUndefined();
+      });
     });
   });
 });

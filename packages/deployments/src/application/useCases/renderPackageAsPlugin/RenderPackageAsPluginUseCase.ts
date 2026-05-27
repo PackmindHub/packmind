@@ -2,9 +2,13 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { ClaudePluginDeployer } from '@packmind/coding-agent';
 import {
+  Distribution,
+  DistributedPackage,
+  DistributionStatus,
   FileUpdates,
   GitRepo,
   IAccountsPort,
+  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -12,22 +16,33 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   RecipeVersion,
+  RenderMode,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginResponse,
   SkillVersion,
   SpaceId,
   StandardVersion,
   Target,
+  UserId,
+  createDistributedPackageId,
+  createDistributionId,
   createGitRepoId,
   createTargetId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { parsePackageSlug } from '../../services/packageSlugHelpers';
 import { PackageService } from '../../services/PackageService';
+import { TargetResolutionService } from '../../services/TargetResolutionService';
+import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundError';
 
 const origin = 'RenderPackageAsPluginUseCase';
 
 const PLUGIN_VERSION = '0.1.0';
+
+const RENDER_PLUGIN_EVENT = 'package_rendered_as_plugin';
+const DEFAULT_GIT_BRANCH = 'main';
 
 /**
  * Renders a single Packmind package as a Claude plugin.
@@ -47,6 +62,10 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     private readonly skillsPort: ISkillsPort,
     private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
+    private readonly targetResolutionService: TargetResolutionService,
+    private readonly distributionRepository: IDistributionRepository,
+    private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly eventTrackingPort: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -109,13 +128,167 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
     });
 
+    const distributionId = await this.trackRender({
+      command,
+      pkg,
+      recipeVersions,
+      skillVersions,
+      standardVersions,
+    });
+
     return {
       files,
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
       pluginName: command.pluginName,
       pluginDescription: pkg.description || undefined,
       pluginVersion: PLUGIN_VERSION,
+      distributionId,
     };
+  }
+
+  /**
+   * Best-effort tracking: writes a distribution row (only when a git remote is
+   * known) and emits the render analytics event. A failure here must never fail
+   * the render — the caller still receives its rendered files.
+   */
+  private async trackRender(params: {
+    command: RenderPackageAsPluginCommand & MemberContext;
+    pkg: PackageWithArtefacts;
+    recipeVersions: RecipeVersion[];
+    skillVersions: SkillVersion[];
+    standardVersions: StandardVersion[];
+  }): Promise<string | undefined> {
+    const { command, pkg, recipeVersions, skillVersions, standardVersions } =
+      params;
+    const userId = command.user.id;
+    const organizationId = command.organization.id;
+    const gitRemoteUrl = command.gitRemoteUrl?.trim()
+      ? command.gitRemoteUrl
+      : undefined;
+
+    try {
+      let distributionId: string | undefined;
+
+      if (gitRemoteUrl) {
+        distributionId = await this.writeDistribution({
+          command,
+          pkg,
+          userId,
+          organizationId,
+          gitRemoteUrl,
+          recipeVersions,
+          skillVersions,
+          standardVersions,
+        });
+      }
+
+      const metadata: Record<string, string | number> = {
+        package_id: pkg.id,
+        package_slug: pkg.slug,
+        target_mode: command.mode,
+        target_path: command.pluginRoot,
+      };
+      if (gitRemoteUrl) {
+        metadata.marketplace_repo = gitRemoteUrl;
+      }
+
+      await this.eventTrackingPort.trackEvent(
+        userId,
+        organizationId,
+        RENDER_PLUGIN_EVENT,
+        metadata,
+      );
+
+      return distributionId;
+    } catch (error) {
+      this.logger.warn('Failed to track plugin render; continuing', { error });
+      return undefined;
+    }
+  }
+
+  private async writeDistribution(params: {
+    command: RenderPackageAsPluginCommand & MemberContext;
+    pkg: PackageWithArtefacts;
+    userId: UserId;
+    organizationId: OrganizationId;
+    gitRemoteUrl: string;
+    recipeVersions: RecipeVersion[];
+    skillVersions: SkillVersion[];
+    standardVersions: StandardVersion[];
+  }): Promise<string> {
+    const {
+      command,
+      pkg,
+      userId,
+      organizationId,
+      gitRemoteUrl,
+      recipeVersions,
+      skillVersions,
+      standardVersions,
+    } = params;
+
+    const target =
+      await this.targetResolutionService.findOrCreateTargetFromGitInfo(
+        organizationId,
+        userId,
+        gitRemoteUrl,
+        command.gitBranch ?? DEFAULT_GIT_BRANCH,
+        command.pluginRoot,
+      );
+
+    const distributionId = createDistributionId(uuidv4());
+    const distributedPackage: DistributedPackage = {
+      id: createDistributedPackageId(uuidv4()),
+      distributionId,
+      packageId: pkg.id,
+      standardVersions: [],
+      recipeVersions: [],
+      skillVersions: [],
+      operation: 'add',
+    };
+
+    const distribution: Distribution = {
+      id: distributionId,
+      distributedPackages: [distributedPackage],
+      createdAt: new Date().toISOString(),
+      authorId: userId,
+      organizationId,
+      target,
+      status: DistributionStatus.success,
+      renderModes: [RenderMode.CLAUDE_PLUGIN],
+      source: 'cli',
+    };
+
+    await this.distributionRepository.add(distribution);
+
+    await this.distributedPackageRepository.add(distributedPackage);
+
+    const recipeVersionIds = recipeVersions.map((v) => v.id);
+    const skillVersionIds = skillVersions.map((v) => v.id);
+    const standardVersionIds = standardVersions.map((v) => v.id);
+
+    if (recipeVersionIds.length > 0) {
+      await this.distributedPackageRepository.addRecipeVersions(
+        distributedPackage.id,
+        recipeVersionIds,
+      );
+    }
+    if (skillVersionIds.length > 0) {
+      await this.distributedPackageRepository.addSkillVersions(
+        distributedPackage.id,
+        skillVersionIds,
+      );
+    }
+    if (standardVersionIds.length > 0) {
+      await this.distributedPackageRepository.addStandardVersions(
+        distributedPackage.id,
+        standardVersionIds,
+      );
+    }
+
+    this.logger.info('Created plugin render distribution', { distributionId });
+
+    return distributionId;
   }
 
   private async resolvePackageBySlug(
