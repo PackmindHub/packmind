@@ -3,6 +3,7 @@ import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAge
 import { PackmindDeployer } from './packmind/PackmindDeployer';
 import { JunieDeployer } from './junie/JunieDeployer';
 import { ClaudeDeployer } from './claude/ClaudeDeployer';
+import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
 import { CursorDeployer } from './cursor/CursorDeployer';
 import { CopilotDeployer } from './copilot/CopilotDeployer';
 import { AgentsMDDeployer } from './agentsmd/AgentsMDDeployer';
@@ -47,6 +48,8 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
         return new JunieDeployer(this.standardsPort, this.gitPort);
       case 'claude':
         return new ClaudeDeployer(this.standardsPort, this.gitPort);
+      case 'claude_plugin':
+        return new ClaudePluginDeployer(this.standardsPort, this.gitPort);
       case 'cursor':
         return new CursorDeployer(this.standardsPort, this.gitPort);
       case 'copilot':
@@ -71,6 +74,7 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
       agent === 'packmind' ||
       agent === 'junie' ||
       agent === 'claude' ||
+      agent === 'claude_plugin' ||
       agent === 'cursor' ||
       agent === 'copilot' ||
       agent === 'agents_md' ||

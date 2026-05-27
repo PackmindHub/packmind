@@ -300,4 +300,10 @@ describe('ClaudePluginDeployer', () => {
       expect(updates.createOrUpdate[0].artifactName).toBe('security');
     });
   });
+
+  describe('getSkillsFolderPath', () => {
+    it('returns the plugin-relative skills folder so the capability flag matches', () => {
+      expect(new ClaudePluginDeployer().getSkillsFolderPath()).toBe('skills/');
+    });
+  });
 });

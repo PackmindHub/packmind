@@ -12,6 +12,8 @@ export * from './application/useCases';
 export * from './infra/repositories/packmind/PackmindDeployer';
 export * from './infra/repositories/junie/JunieDeployer';
 export * from './infra/repositories/claude/ClaudeDeployer';
+export * from './infra/repositories/claudePlugin/ClaudePluginDeployer';
+export * from './infra/repositories/claudePlugin/buildPluginManifest';
 export * from './infra/repositories/cursor/CursorDeployer';
 export * from './infra/repositories/copilot/CopilotDeployer';
 export * from './infra/repositories/continue/ContinueDeployer';

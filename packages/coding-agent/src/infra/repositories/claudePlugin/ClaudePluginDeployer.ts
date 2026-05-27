@@ -32,6 +32,13 @@ function pluginRoot(target: Target): string {
 }
 
 export class ClaudePluginDeployer implements ICodingAgentDeployer {
+  /**
+   * Skills are rendered under `<plugin-root>/skills/<slug>/`. The folder path is
+   * relative to the plugin root and is used by the burn-and-rebuild strategy to
+   * clean up stale skill files.
+   */
+  private static readonly SKILLS_FOLDER_PATH = 'skills/';
+
   private lastSkippedStandardsCount = 0;
 
   constructor(
@@ -101,7 +108,7 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
             ];
       for (const file of files) {
         createOrUpdate.push({
-          path: `${root}skills/${skillVersion.slug}/${file.path}`,
+          path: `${root}${ClaudePluginDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
           artifactType: 'skill' as const,
@@ -202,7 +209,7 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     return EMPTY_UPDATES;
   }
 
-  getSkillsFolderPath(): string | undefined {
-    return undefined;
+  getSkillsFolderPath(): string {
+    return ClaudePluginDeployer.SKILLS_FOLDER_PATH;
   }
 }
