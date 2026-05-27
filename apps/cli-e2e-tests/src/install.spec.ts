@@ -9,7 +9,7 @@ import {
   fileExists,
   UserSignedUpContext,
 } from './helpers';
-import { Package, PackmindLockFile } from '@packmind/types';
+import { Package, PackmindLockFile, Skill } from '@packmind/types';
 import fs from 'fs';
 import path from 'path';
 
@@ -680,6 +680,138 @@ describeForVersion('>= 0.24.0', 'install command', () => {
             for (const entry of defaultEntries) {
               expect(entry.source).toBe('default');
             }
+          });
+        });
+      },
+    );
+
+    // Regressions: (1) `install` printed "Already up to date" even when an
+    // agent-rendered file referenced by the lockfile had been deleted from
+    // disk; (2) a second idempotent `install` printed "Synced N standard, M
+    // command, K skill" instead of "Already up to date"; (3) when only a skill
+    // file was deleted, the Synced summary listed every artifact in the
+    // package rather than just the one that actually changed.
+    //
+    // The user reproduction is `cd /tmp && install … && install` — `/tmp`
+    // isn't a git repo, so the default-skills installer never runs and the
+    // lockfile only contains the package's own artifact. We mirror that here
+    // by running install in a sub-directory of the e2e test workspace
+    // (`workspace/`), so we're *inside* the test's git repo but not *at* its
+    // root and `installDefaultSkillsIfAtGitRoot` short-circuits.
+    describeForVersion(
+      '> 0.29.0',
+      'install summary accuracy after lockfile/filesystem drift',
+      () => {
+        let skill: Skill;
+        let pkg: Package;
+        let workspaceDir: string;
+        const skillFilePath = (slug: string) =>
+          `.claude/skills/${slug}/SKILL.md`;
+
+        beforeEach(async () => {
+          workspaceDir = path.join(context.testDir, 'workspace');
+          fs.mkdirSync(workspaceDir, { recursive: true });
+
+          const uploadSkillResponse = await context.gateway.skills.upload({
+            spaceId: context.space.id,
+            files: [
+              {
+                path: 'SKILL.md',
+                content:
+                  '---\nname: my-skill\ndescription: Regression skill for install\n---\n\nHello world\n',
+                permissions: '0644',
+                isBase64: false,
+              },
+            ],
+          });
+          skill = uploadSkillResponse.skill;
+
+          const standardResponse = await context.gateway.standards.create({
+            description: 'Standard alongside the regression skill',
+            name: 'Regression standard',
+            rules: [],
+            scope: '',
+            spaceId: context.space.id,
+          });
+
+          const createPackageResponse = await context.gateway.packages.create({
+            name: 'Pkg with skill and standard',
+            description: 'Two artifact types so we can assert selectivity',
+            recipeIds: [],
+            standardIds: [standardResponse.standard.id],
+            skillIds: [skill.id],
+            spaceId: context.space.id,
+          });
+          pkg = createPackageResponse.package;
+
+          // Default coding agents are ['packmind', 'agents_md'], neither of
+          // which renders skills. Force claude so the package install produces
+          // the `.claude/skills/<slug>/SKILL.md` file we'll delete.
+          updateFile(
+            'workspace/packmind.json',
+            JSON.stringify({ packages: {}, agents: ['claude'] }),
+            context.testDir,
+          );
+
+          const firstInstall = await context.runCli(
+            `install @${context.space.slug}/${pkg.slug}`,
+            { cwd: workspaceDir },
+          );
+          expect(firstInstall.returnCode).toBe(0);
+          expect(fileExists(skillFilePath(skill.slug), workspaceDir)).toBe(
+            true,
+          );
+        });
+
+        describe('when the user re-runs install with no on-disk changes', () => {
+          let result: RunCliResult;
+
+          beforeEach(async () => {
+            result = await context.runCli('install', { cwd: workspaceDir });
+          });
+
+          it('exits successfully', () => {
+            expect(result.returnCode).toBe(0);
+          });
+
+          it('prints the bare "Already up to date" as the summary line', () => {
+            const summaryLine = result.stdout
+              .split('\n')
+              .find((line) => line.startsWith('✅'));
+            expect(summaryLine).toBe('✅ Already up to date');
+          });
+        });
+
+        describe('when only the agent-rendered skill file is deleted', () => {
+          let result: RunCliResult;
+
+          beforeEach(async () => {
+            fs.rmSync(path.join(workspaceDir, '.claude/skills'), {
+              recursive: true,
+              force: true,
+            });
+            expect(fileExists(skillFilePath(skill.slug), workspaceDir)).toBe(
+              false,
+            );
+
+            result = await context.runCli('install', { cwd: workspaceDir });
+          });
+
+          it('exits successfully', () => {
+            expect(result.returnCode).toBe(0);
+          });
+
+          it('restores the deleted agent-rendered skill file', () => {
+            expect(fileExists(skillFilePath(skill.slug), workspaceDir)).toBe(
+              true,
+            );
+          });
+
+          it('prints exactly "Synced 1 skill" as the summary line', () => {
+            const summaryLine = result.stdout
+              .split('\n')
+              .find((line) => line.startsWith('✅'));
+            expect(summaryLine).toBe('✅ Synced 1 skill');
           });
         });
       },

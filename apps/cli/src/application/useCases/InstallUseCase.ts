@@ -46,6 +46,9 @@ export class InstallUseCase implements IInstallUseCase {
       standardsCount: 0,
       commandsCount: 0,
       skillsCount: 0,
+      skillsChanged: 0,
+      standardsChanged: 0,
+      commandsChanged: 0,
       recipesRemoved: 0,
       standardsRemoved: 0,
       commandsRemoved: 0,
@@ -213,6 +216,8 @@ export class InstallUseCase implements IInstallUseCase {
         content?: string;
         sections?: { key: string; content: string }[];
         skillFilePermissions?: string;
+        artifactType?: 'skill' | 'standard' | 'command';
+        artifactId?: string;
       }
     >();
 
@@ -221,6 +226,41 @@ export class InstallUseCase implements IInstallUseCase {
     }
 
     const uniqueFiles = Array.from(uniqueFilesMap.values());
+
+    // Per-artifact change tracking, deduplicated by artifactId so multiple
+    // files belonging to the same artifact (mirror + agent rendering) count
+    // once. The summary uses these to print "Synced N skill(s)" reflecting
+    // what actually changed, vs the path-based `*Count` totals.
+    const changedArtifactIds: Record<
+      'skill' | 'standard' | 'command',
+      Set<string>
+    > = {
+      skill: new Set(),
+      standard: new Set(),
+      command: new Set(),
+    };
+
+    // Skills are always re-rendered via blast-and-recreate (deleteSkillFolders
+    // below removes the folder before the file loop writes the new versions),
+    // which means filesCreated is always > 0 for skill files even on an
+    // otherwise no-op install. To produce an accurate "Synced X" summary, we
+    // snapshot the on-disk content *before* any deletion and skip change
+    // tracking for artifacts whose every file already matched the server
+    // response.
+    const filesByArtifactId = new Map<string, typeof uniqueFiles>();
+    for (const file of uniqueFiles) {
+      if (file.artifactType && file.artifactId) {
+        const list = filesByArtifactId.get(file.artifactId) ?? [];
+        list.push(file);
+        filesByArtifactId.set(file.artifactId, list);
+      }
+    }
+    const unchangedArtifactIds = new Set<string>();
+    for (const [artifactId, files] of filesByArtifactId) {
+      if (await this.allFilesAlreadyMatch(baseDirectory, files)) {
+        unchangedArtifactIds.add(artifactId);
+      }
+    }
 
     // Count artifact types
     for (const file of uniqueFiles) {
@@ -262,11 +302,18 @@ export class InstallUseCase implements IInstallUseCase {
             result,
             file.skillFilePermissions,
           );
-          if (
-            result.filesCreated + result.filesUpdated > changesBefore &&
-            this.isContentFile(file.path)
-          ) {
+          const fileActuallyChanged =
+            result.filesCreated + result.filesUpdated > changesBefore;
+          if (fileActuallyChanged && this.isContentFile(file.path)) {
             result.contentFilesChanged++;
+          }
+          if (
+            fileActuallyChanged &&
+            file.artifactType &&
+            file.artifactId &&
+            !unchangedArtifactIds.has(file.artifactId)
+          ) {
+            changedArtifactIds[file.artifactType].add(file.artifactId);
           }
         } catch (error) {
           const errorMsg =
@@ -318,6 +365,10 @@ export class InstallUseCase implements IInstallUseCase {
       const errorMsg = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to install packages: ${errorMsg}`);
     }
+
+    result.skillsChanged = changedArtifactIds.skill.size;
+    result.standardsChanged = changedArtifactIds.standard.size;
+    result.commandsChanged = changedArtifactIds.command.size;
 
     // Persist the lockfile through the port so we can inject the running CLI
     // version. Prefer the server's lockfile content as the base (it reflects
@@ -649,6 +700,39 @@ export class InstallUseCase implements IInstallUseCase {
     } catch {
       return false;
     }
+  }
+
+  // Returns true iff every file in `files` already exists on disk with the
+  // exact content the server is about to write. Used to decide whether an
+  // artifact (skill/standard/command) is genuinely changing this install.
+  // Files with `sections` (index files like CLAUDE.md) carry no artifactType
+  // and never reach this helper.
+  private async allFilesAlreadyMatch(
+    baseDirectory: string,
+    files: Array<{
+      path: string;
+      content?: string;
+      sections?: { key: string; content: string }[];
+      isBase64?: boolean;
+    }>,
+  ): Promise<boolean> {
+    for (const file of files) {
+      if (file.content === undefined) return false;
+      const fullPath = path.join(baseDirectory, file.path);
+      try {
+        if (file.isBase64) {
+          const expected = Buffer.from(file.content, 'base64');
+          const actual = await fs.readFile(fullPath);
+          if (!expected.equals(actual)) return false;
+        } else {
+          const actual = await fs.readFile(fullPath, 'utf-8');
+          if (actual !== file.content) return false;
+        }
+      } catch {
+        return false;
+      }
+    }
+    return true;
   }
 
   private extractCommentMarker(content: string): string | null {

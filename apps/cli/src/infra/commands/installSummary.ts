@@ -18,21 +18,25 @@ function nounFor(
   return `${count} ${pluralize(type, count)}`;
 }
 
-function contentParts(result: IInstallResult): string[] {
+function changedParts(result: IInstallResult): string[] {
   const parts: string[] = [];
-  if (result.standardsCount > 0)
-    parts.push(nounFor('standard', result.standardsCount));
-  if (result.commandsCount > 0)
-    parts.push(nounFor('command', result.commandsCount));
-  if (result.skillsCount > 0) parts.push(nounFor('skill', result.skillsCount));
-  if (result.recipesCount > 0)
-    parts.push(nounFor('recipe', result.recipesCount));
+  if (result.standardsChanged > 0)
+    parts.push(nounFor('standard', result.standardsChanged));
+  if (result.commandsChanged > 0)
+    parts.push(nounFor('command', result.commandsChanged));
+  if (result.skillsChanged > 0)
+    parts.push(nounFor('skill', result.skillsChanged));
   return parts;
 }
 
 export function buildInstallSummary(result: IInstallResult): string {
-  const contentChanged = result.contentFilesChanged > 0;
-  const parts = contentParts(result);
+  // "Did any artifact actually change on disk?" — driven by the per-artifact
+  // change tracker so we don't flip to "Synced …" when only an unrelated
+  // agent-index file (CLAUDE.md, AGENTS.md, …) was rewritten.
+  const contentChanged =
+    result.skillsChanged > 0 ||
+    result.standardsChanged > 0 ||
+    result.commandsChanged > 0;
   const filesDeleted = result.filesDeleted > 0;
   const configCreated = result.configCreated;
   const packagesAdded = result.packagesAdded.length > 0;
@@ -41,9 +45,6 @@ export function buildInstallSummary(result: IInstallResult): string {
     !configCreated && !packagesAdded && !contentChanged && !filesDeleted;
 
   if (nothingHappened) {
-    if (parts.length > 0) {
-      return `✅ Already up to date — ${parts.join(', ')}`;
-    }
     return '✅ Already up to date';
   }
 
@@ -66,7 +67,10 @@ export function buildInstallSummary(result: IInstallResult): string {
   }
 
   if (contentChanged) {
-    lines.push(`✅ Synced ${parts.join(', ')}`);
+    const changed = changedParts(result);
+    if (changed.length > 0) {
+      lines.push(`✅ Synced ${changed.join(', ')}`);
+    }
   }
 
   if (filesDeleted && !contentChanged) {

@@ -36,6 +36,17 @@ export type IInstallResult = Pick<
   standardsCount: number;
   commandsCount: number;
   skillsCount: number;
+  /**
+   * Unique artifact IDs (skills/standards/commands) whose on-disk files were
+   * created or updated by this install. Used by the summary to report only
+   * what *actually* changed, vs `*Count` which counts what's *in* the install.
+   * Standalone counters (e.g. agent-only renderings like
+   * `.claude/skills/<slug>/SKILL.md`) are captured here even when there is no
+   * `.packmind/` mirror.
+   */
+  skillsChanged: number;
+  standardsChanged: number;
+  commandsChanged: number;
   recipesRemoved: number;
   standardsRemoved: number;
   commandsRemoved: number;

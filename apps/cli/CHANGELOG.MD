@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- `install` summary now reports exactly which artifacts changed on disk. Previously, re-running `install` after deleting an agent-rendered file (e.g. `rm -rf .claude/skills/*`) printed `Already up to date`, and a fully idempotent second `install` could print `Synced N standard, M command, K skill` even though nothing on disk had changed. The summary is now driven by per-artifact change tracking (skill / standard / command), so the output reflects what actually moved.
+
 ## Removed
 
 # [0.29.0] - 2026-05-22

@@ -568,7 +568,9 @@ describe('installCommand', () => {
           if (cmd.baseDirectory === frontendDir) {
             return Promise.reject(new Error('network failure'));
           }
-          return Promise.resolve(makeResult({ standardsCount: 2 }));
+          return Promise.resolve(
+            makeResult({ standardsCount: 2, standardsChanged: 2 }),
+          );
         });
         await handler({
           installPath: 'apps',

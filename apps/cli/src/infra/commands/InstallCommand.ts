@@ -74,6 +74,9 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     standardsCount: 0,
     commandsCount: 0,
     skillsCount: 0,
+    skillsChanged: 0,
+    standardsChanged: 0,
+    commandsChanged: 0,
     recipesRemoved: 0,
     standardsRemoved: 0,
     commandsRemoved: 0,
@@ -105,6 +108,9 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
     merged.standardsCount += r.standardsCount;
     merged.commandsCount += r.commandsCount;
     merged.skillsCount += r.skillsCount;
+    merged.skillsChanged += r.skillsChanged;
+    merged.standardsChanged += r.standardsChanged;
+    merged.commandsChanged += r.commandsChanged;
     merged.recipesRemoved += r.recipesRemoved;
     merged.standardsRemoved += r.standardsRemoved;
     merged.commandsRemoved += r.commandsRemoved;
