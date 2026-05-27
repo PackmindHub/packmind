@@ -10,7 +10,9 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('GithubRepository', () => {
   let githubRepository: GithubRepository;
   let mockAxiosInstance: jest.Mocked<typeof axios>;
+  let requestUseMock: jest.Mock;
   const githubToken = 'test-github-token';
+  let getToken: jest.Mock<Promise<string>>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const options: GithubRepositoryOptions = {
@@ -52,15 +54,15 @@ describe('GithubRepository', () => {
   };
 
   beforeEach(() => {
-    mockAxiosInstance = {} as jest.Mocked<typeof axios>;
+    requestUseMock = jest.fn();
+    mockAxiosInstance = {
+      interceptors: { request: { use: requestUseMock } },
+    } as unknown as jest.Mocked<typeof axios>;
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
+    getToken = jest.fn().mockResolvedValue(githubToken);
     stubbedLogger = stubLogger();
-    githubRepository = new GithubRepository(
-      githubToken,
-      options,
-      stubbedLogger,
-    );
+    githubRepository = new GithubRepository(getToken, options, stubbedLogger);
   });
 
   afterEach(() => {
@@ -72,11 +74,22 @@ describe('GithubRepository', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://api.github.com',
         headers: {
-          Authorization: `token ${githubToken}`,
           'Content-Type': 'application/json',
           Accept: 'application/vnd.github.v3+json',
         },
       });
+    });
+
+    it('registers a request interceptor that resolves the token via getToken', async () => {
+      expect(requestUseMock).toHaveBeenCalledTimes(1);
+      const interceptor = requestUseMock.mock.calls[0][0];
+      const headers = { set: jest.fn() };
+      await interceptor({ headers });
+      expect(getToken).toHaveBeenCalledTimes(1);
+      expect(headers.set).toHaveBeenCalledWith(
+        'Authorization',
+        `token ${githubToken}`,
+      );
     });
   });
 
@@ -301,7 +314,7 @@ describe('GithubRepository', () => {
       beforeEach(async () => {
         stubbedLogger = stubLogger();
         githubRepository = new GithubRepository(
-          githubToken,
+          getToken,
           {
             ...options,
             branch: customBranch,

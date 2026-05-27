@@ -11,6 +11,7 @@ import { GitCommitRepository } from './GitCommitRepository';
 import { GitRepoFactory } from './GitRepoFactory';
 import { GitProviderFactory } from './GitProviderFactory';
 import { GitHubAppConfigRepository } from './GitHubAppConfigRepository';
+import { GithubAppTokenService } from '../../application/services/GithubAppTokenService';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
@@ -31,6 +32,7 @@ export class GitRepositories implements IGitRepositories {
   private readonly gitRepoFactory: IGitRepoFactory;
   private readonly gitProviderFactory: IGitProviderFactory;
   private readonly _gitHubAppConfigRepository: GitHubAppConfigRepository;
+  private readonly _githubAppTokenService: GithubAppTokenService;
 
   constructor(
     private readonly dataSource: DataSource,
@@ -47,13 +49,23 @@ export class GitRepositories implements IGitRepositories {
       this.dataSource.getRepository(GitCommitSchema),
     );
 
-    // Initialize the factories
-    this.gitRepoFactory = opts?.gitRepoFactory ?? new GitRepoFactory();
+    // Initialize the GitHub App config repository and shared token service first
+    // so both factories can be wired with the same service instance
+    // (shared in-process token cache).
     this._gitHubAppConfigRepository = new GitHubAppConfigRepository(
       this.dataSource.getRepository(GitHubAppConfigSchema),
     );
+    this._githubAppTokenService = new GithubAppTokenService();
+
+    this.gitRepoFactory =
+      opts?.gitRepoFactory ??
+      new GitRepoFactory(
+        this._gitHubAppConfigRepository,
+        this._githubAppTokenService,
+      );
     this.gitProviderFactory = new GitProviderFactory(
       this._gitHubAppConfigRepository,
+      this._githubAppTokenService,
     );
   }
 

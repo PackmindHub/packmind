@@ -17,7 +17,7 @@ export class GithubRepository implements IGitRepo {
   private readonly options: GithubRepositoryOptions;
 
   constructor(
-    private readonly token: string,
+    private readonly getToken: () => Promise<string>,
     options: GithubRepositoryOptions,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -38,10 +38,15 @@ export class GithubRepository implements IGitRepo {
     this.axiosInstance = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
+    });
+
+    this.axiosInstance.interceptors.request.use(async (config) => {
+      const token = await this.getToken();
+      config.headers.set('Authorization', `token ${token}`);
+      return config;
     });
 
     this.logger.info('GithubRepository initialized successfully', {
