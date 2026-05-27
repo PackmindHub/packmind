@@ -138,6 +138,13 @@ Say "Hello world"
               ),
             ).toEqual(true);
           });
+
+          it('reports a clean playbook status right after install', async () => {
+            const { stdout } = await context.runCli('playbook status', {
+              cwd: claudeHome,
+            });
+            expect(stdout).toMatchOutput('No changes detected.');
+          });
         });
 
         describe('when there is a packmind.json file available', () => {

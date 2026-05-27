@@ -4,6 +4,7 @@ import {
   getAgentHomeDirPrefix,
   isAgentHomeDirectory,
 } from './agentHomeDirectory';
+import { stripFullStandardLinkFooter } from './stripFullStandardLinkFooter';
 
 export type DeploymentGateway = {
   deployment: {
@@ -68,9 +69,18 @@ function remapDeployedFilesForHomeInstall(
 
   return files
     .filter((file) => !file.path.startsWith('.packmind/'))
-    .map((file) =>
-      file.path.startsWith(prefix)
+    .map((file) => {
+      const remapped = file.path.startsWith(prefix)
         ? { ...file, path: file.path.slice(prefix.length) }
-        : file,
-    );
+        : { ...file };
+      if (remapped.content !== undefined) {
+        // Mirror the strip applied by InstallUseCase when rendering content to
+        // a home-install dir: the deployed bytes still include the footer link
+        // into `.packmind/standards/...`, but the on-disk file does not. Strip
+        // here so callers comparing deployed-vs-disk (playbook status/add/
+        // submit) see the same normalized content on both sides.
+        remapped.content = stripFullStandardLinkFooter(remapped.content);
+      }
+      return remapped;
+    });
 }
