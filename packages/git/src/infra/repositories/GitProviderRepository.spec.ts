@@ -483,4 +483,33 @@ describe('GitProviderRepository', () => {
       expect(rawProvider?.token).toBeDefined();
     });
   });
+
+  describe('findByGithubAppInstallationId', () => {
+    describe('when a provider with the given installation id exists', () => {
+      let provider: ReturnType<typeof gitProviderFactory>;
+
+      beforeEach(async () => {
+        provider = gitProviderFactory({
+          organizationId: testOrganization.id,
+          authType: 'github_app',
+          githubAppInstallationId: 12345,
+        });
+        await gitProviderRepository.add(provider);
+      });
+
+      it('returns the matching git provider', async () => {
+        const found =
+          await gitProviderRepository.findByGithubAppInstallationId(12345);
+        expect(found?.id).toBe(provider.id);
+      });
+    });
+
+    describe('when no provider matches the given installation id', () => {
+      it('returns null', async () => {
+        const found =
+          await gitProviderRepository.findByGithubAppInstallationId(99999);
+        expect(found).toBeNull();
+      });
+    });
+  });
 });

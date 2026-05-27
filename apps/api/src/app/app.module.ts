@@ -16,6 +16,7 @@ import { SkillsHexa, skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
+import { GitHubAppModule } from './integrations/github-app/github-app.module';
 import { AmplitudeModule } from '@packmind/amplitude';
 import {
   ImportLegacyModule,
@@ -126,6 +127,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       ],
     }),
     HooksModule,
+    GitHubAppModule,
     AuthModule,
     AccountsOrganizationsModule,
     OrganizationsModule,

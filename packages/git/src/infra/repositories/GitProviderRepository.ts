@@ -1,7 +1,7 @@
 import { GitProvider, GitProviderId } from '@packmind/types';
 import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
@@ -154,6 +154,47 @@ export class GitProviderRepository
         organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
+  }
+
+  async findByGithubAppInstallationId(
+    installationId: number,
+  ): Promise<GitProvider | null> {
+    this.logger.info('Finding git provider by GitHub App installation ID', {
+      installationId,
+    });
+
+    try {
+      const result = await this.repository.findOne({
+        where: {
+          githubAppInstallationId: installationId,
+          deletedAt: IsNull(),
+        } as never,
+      });
+
+      if (!result) {
+        this.logger.info(
+          'No git provider found for GitHub App installation ID',
+          { installationId },
+        );
+        return null;
+      }
+
+      const decryptedResult = await this.decryptGitProvider(result);
+      this.logger.info('Git provider found by GitHub App installation ID', {
+        installationId,
+        id: decryptedResult.id,
+      });
+      return decryptedResult;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find git provider by GitHub App installation ID',
+        {
+          installationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw error;
     }
   }

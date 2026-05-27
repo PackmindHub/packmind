@@ -4,6 +4,8 @@ import type { QueryOption } from '../../database/types';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,
+  BuildGitHubAppManifestCommand,
+  BuildGitHubAppManifestResponse,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   ExternalRepository,
@@ -12,12 +14,22 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
+  GetGitHubAppStatusCommand,
+  GetGitHubAppStatusResponse,
   HandleWebHookCommand,
   HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  LinkGitHubAppInstallationCommand,
+  LinkGitHubAppInstallationResponse,
+  ListInstallationRepositoriesCommand,
+  ListInstallationRepositoriesResponse,
   ListProvidersCommand,
   ListProvidersResponse,
+  RegisterGitHubAppFromManifestCommand,
+  RegisterGitHubAppFromManifestResponse,
+  UnlinkGitHubAppInstallationCommand,
+  UnlinkGitHubAppInstallationResponse,
 } from '../contracts';
 import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
@@ -272,4 +284,28 @@ export interface IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string>;
+
+  buildGitHubAppManifest(
+    command: BuildGitHubAppManifestCommand,
+  ): Promise<BuildGitHubAppManifestResponse>;
+
+  registerGitHubAppFromManifest(
+    command: RegisterGitHubAppFromManifestCommand,
+  ): Promise<RegisterGitHubAppFromManifestResponse>;
+
+  getGitHubAppStatus(
+    command: GetGitHubAppStatusCommand,
+  ): Promise<GetGitHubAppStatusResponse>;
+
+  linkGitHubAppInstallation(
+    command: LinkGitHubAppInstallationCommand,
+  ): Promise<LinkGitHubAppInstallationResponse>;
+
+  unlinkGitHubAppInstallation(
+    command: UnlinkGitHubAppInstallationCommand,
+  ): Promise<UnlinkGitHubAppInstallationResponse>;
+
+  listInstallationRepositories(
+    command: ListInstallationRepositoriesCommand,
+  ): Promise<ListInstallationRepositoriesResponse>;
 }

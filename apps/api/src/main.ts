@@ -86,6 +86,7 @@ async function bootstrap() {
 
     const app = await NestFactory.create(AppModule, {
       logger: ['error', 'warn'],
+      rawBody: true,
     });
 
     // Enable Amplitude proxy BEFORE body-parser (proxy needs raw body stream)

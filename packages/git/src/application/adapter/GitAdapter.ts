@@ -17,6 +17,7 @@ import {
   GetGitHubAppStatusCommand,
   GetGitHubAppStatusResponse,
   GitCommit,
+  GitHubAppConfig,
   GitProvider,
   GitProviderId,
   GitRepo,
@@ -567,5 +568,21 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     command: ListInstallationRepositoriesCommand,
   ): Promise<ListInstallationRepositoriesResponse> {
     return this._listInstallationRepositories.execute(command);
+  }
+
+  // ===========================
+  // Webhook support methods
+  // ===========================
+
+  public async getGitHubAppConfig(): Promise<GitHubAppConfig | null> {
+    return this.gitServices.getGitHubAppConfigRepository().findActive();
+  }
+
+  public async getGitProviderByInstallationId(
+    installationId: number,
+  ): Promise<GitProvider | null> {
+    return this.gitServices
+      .getGitProviderRepository()
+      .findByGithubAppInstallationId(installationId);
   }
 }

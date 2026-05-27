@@ -2,6 +2,7 @@ import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
+import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { IGitHubAppConfigRepository } from '../domain/repositories/IGitHubAppConfigRepository';
@@ -51,6 +52,10 @@ export class GitServices {
 
   getGitProviderFactory(): IGitProviderFactory {
     return this.gitRepositories.getGitProviderFactory();
+  }
+
+  getGitProviderRepository(): IGitProviderRepository {
+    return this.gitRepositories.getGitProviderRepository();
   }
 
   getGitHubAppConfigRepository(): IGitHubAppConfigRepository {
