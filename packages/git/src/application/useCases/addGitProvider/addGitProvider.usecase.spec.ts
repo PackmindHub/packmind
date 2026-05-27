@@ -92,6 +92,8 @@ describe('AddGitProviderUseCase', () => {
       expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith({
         ...input.gitProvider,
         organizationId: input.organizationId,
+        authType: 'pat',
+        githubAppInstallationId: null,
       });
     });
 

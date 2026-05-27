@@ -14,12 +14,31 @@ export const GitProviderVendors: Record<GitProviderVendor, GitProviderVendor> =
 export type GitProviderId = Branded<'GitProviderId'>;
 export const createGitProviderId = brandedIdFactory<GitProviderId>();
 
+export type GitProviderAuthType = 'pat' | 'github_app';
+
+export const GitProviderAuthTypes: Record<
+  GitProviderAuthType,
+  GitProviderAuthType
+> = {
+  pat: 'pat',
+  github_app: 'github_app',
+};
+
 export type GitProvider = {
   id: GitProviderId;
   source: GitProviderVendor;
   organizationId: OrganizationId;
   url: string | null;
   token: string | null;
+  /**
+   * Defaults to 'pat' at the DB level — always present at runtime.
+   * Optional in the TS type so existing literal mocks compile.
+   */
+  authType?: GitProviderAuthType;
+  /**
+   * GitHub App installation id when authType === 'github_app'. Null otherwise.
+   */
+  githubAppInstallationId?: number | null;
   organization?: Organization;
   repos?: GitRepo[];
 };

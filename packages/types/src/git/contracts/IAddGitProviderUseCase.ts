@@ -1,8 +1,14 @@
 import { PackmindCommand, IUseCase } from '../../UseCase';
-import { GitProvider } from '../GitProvider';
+import { GitProvider, GitProviderAuthType } from '../GitProvider';
 
 export type AddGitProviderCommand = PackmindCommand & {
-  gitProvider: Omit<GitProvider, 'id' | 'organizationId'>;
+  gitProvider: Omit<
+    GitProvider,
+    'id' | 'organizationId' | 'authType' | 'githubAppInstallationId'
+  > & {
+    authType?: GitProviderAuthType;
+    githubAppInstallationId?: number | null;
+  };
   /**
    * Optional flag to allow creating providers without tokens.
    * This is used internally by the CLI for tokenless distribution tracking.

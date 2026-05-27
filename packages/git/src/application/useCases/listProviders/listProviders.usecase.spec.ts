@@ -80,6 +80,8 @@ describe('ListProvidersUseCase', () => {
             source: provider.source,
             organizationId: provider.organizationId,
             url: provider.url,
+            authType: 'pat',
+            githubAppInstallationId: null,
             hasToken: true,
           },
         ]);

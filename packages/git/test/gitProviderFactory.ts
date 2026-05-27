@@ -1,6 +1,7 @@
 import { Factory } from '@packmind/test-utils';
 import {
   GitProvider,
+  GitProviderAuthTypes,
   GitProviderVendors,
   createGitProviderId,
   createOrganizationId,
@@ -16,6 +17,8 @@ export const gitProviderFactory: Factory<GitProvider> = (
     organizationId: createOrganizationId(uuidv4()),
     url: 'https://api.github.com',
     token: 'test-token',
+    authType: GitProviderAuthTypes.pat,
+    githubAppInstallationId: null,
     ...gitProvider,
   };
 };
@@ -29,6 +32,8 @@ export const gitlabProviderFactory: Factory<GitProvider> = (
     organizationId: createOrganizationId(uuidv4()),
     url: 'https://gitlab.com',
     token: 'glpat-test-token',
+    authType: GitProviderAuthTypes.pat,
+    githubAppInstallationId: null,
     ...gitProvider,
   };
 };

@@ -35,6 +35,26 @@ export const GitProviderSchema = new EntitySchema<
       type: 'varchar',
       nullable: true,
     },
+    authType: {
+      name: 'auth_type',
+      type: 'varchar',
+      length: 32,
+      default: 'pat',
+    },
+    githubAppInstallationId: {
+      name: 'github_app_installation_id',
+      type: 'bigint',
+      nullable: true,
+      transformer: {
+        to: (value: number | null) => value,
+        from: (value: string | number | null) =>
+          value === null || value === undefined
+            ? null
+            : typeof value === 'string'
+              ? Number(value)
+              : value,
+      },
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

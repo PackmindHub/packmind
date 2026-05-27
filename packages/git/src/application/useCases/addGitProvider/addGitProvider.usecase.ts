@@ -3,6 +3,7 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   GitProvider,
+  GitProviderAuthTypes,
   IAccountsPort,
   IAddGitProviderUseCase,
 } from '@packmind/types';
@@ -46,6 +47,8 @@ export class AddGitProviderUseCase
     const gitProviderWithOrg = {
       ...gitProvider,
       organizationId: organization.id,
+      authType: gitProvider.authType ?? GitProviderAuthTypes.pat,
+      githubAppInstallationId: gitProvider.githubAppInstallationId ?? null,
     };
 
     return this.gitProviderService.addGitProvider(gitProviderWithOrg);
