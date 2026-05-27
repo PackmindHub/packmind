@@ -14,6 +14,9 @@ const baseResult: IInstallResult = {
   standardsCount: 0,
   commandsCount: 0,
   skillsCount: 0,
+  skillsChanged: 0,
+  standardsChanged: 0,
+  commandsChanged: 0,
   recipesRemoved: 0,
   standardsRemoved: 0,
   commandsRemoved: 0,
@@ -44,16 +47,11 @@ describe('buildInstallSummary', () => {
   });
 
   describe('when nothing changed but artifacts exist in lock', () => {
-    it('returns "Already up to date — N standards, N commands"', () => {
+    it('returns the bare "Already up to date" without listing totals', () => {
       const summary = buildInstallSummary(
         make({ standardsCount: 5, commandsCount: 2 }),
       );
-      expect(summary).toBe('✅ Already up to date — 5 standards, 2 commands');
-    });
-
-    it('uses singular form for 1', () => {
-      const summary = buildInstallSummary(make({ standardsCount: 1 }));
-      expect(summary).toBe('✅ Already up to date — 1 standard');
+      expect(summary).toBe('✅ Already up to date');
     });
   });
 
@@ -94,15 +92,47 @@ describe('buildInstallSummary', () => {
   });
 
   describe('when content was synced', () => {
-    it('reports synced artifacts', () => {
+    it('reports synced artifacts based on per-type change counts', () => {
       const summary = buildInstallSummary(
         make({
-          contentFilesChanged: 3,
-          standardsCount: 2,
-          skillsCount: 1,
+          standardsChanged: 2,
+          skillsChanged: 1,
         }),
       );
       expect(summary).toContain('✅ Synced 2 standards, 1 skill');
+    });
+
+    it('reports only the artifact types that actually changed', () => {
+      const summary = buildInstallSummary(
+        make({
+          // Totals: 1 of each artifact in the install...
+          standardsCount: 1,
+          commandsCount: 1,
+          skillsCount: 1,
+          sourceArtifacts: {
+            skillsCount: 1,
+            standardsCount: 1,
+            commandsCount: 0,
+            recipesCount: 1,
+          },
+          // ...but only the skill was re-written.
+          skillsChanged: 1,
+        }),
+      );
+      expect(summary).toBe('✅ Synced 1 skill');
+    });
+
+    it('does not flip to "Synced" when only an unrelated file (e.g. CLAUDE.md index) was rewritten', () => {
+      const summary = buildInstallSummary(
+        make({
+          filesCreated: 1,
+          filesUpdated: 1,
+          standardsCount: 1,
+          skillsCount: 1,
+        }),
+      );
+      expect(summary).toContain('✅ Already up to date');
+      expect(summary).not.toContain('Synced');
     });
   });
 
@@ -132,14 +162,35 @@ describe('buildInstallSummary', () => {
     });
   });
 
+  describe('when an agent rendering was re-created (e.g. .claude/skills was rm -rf-ed)', () => {
+    it('reports the restored artifact and does not say "Already up to date"', () => {
+      // Agent-only rendering: no `.packmind/` mirror so `skillsCount` stays 0,
+      // but the InstallUseCase tracked the skill as changed via artifactId.
+      const summary = buildInstallSummary(
+        make({
+          filesCreated: 1,
+          skillsCount: 0,
+          skillsChanged: 1,
+          sourceArtifacts: {
+            skillsCount: 1,
+            standardsCount: 0,
+            commandsCount: 0,
+            recipesCount: 0,
+          },
+        }),
+      );
+      expect(summary).toContain('✅ Synced 1 skill');
+      expect(summary).not.toContain('Already up to date');
+    });
+  });
+
   describe('when both config created and content synced', () => {
     it('combines both lines', () => {
       const summary = buildInstallSummary(
         make({
           configCreated: true,
           packagesAdded: ['@a/b'],
-          contentFilesChanged: 2,
-          standardsCount: 2,
+          standardsChanged: 2,
         }),
       );
       expect(summary).toContain('Created packmind.json');
