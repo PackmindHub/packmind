@@ -2,7 +2,8 @@ export type GitHubAppManifest = {
   name: string;
   url: string;
   redirect_url: string;
-  callback_urls: string[];
+  setup_url: string;
+  setup_on_update: boolean;
   hook_attributes: {
     url: string;
   };

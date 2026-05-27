@@ -97,11 +97,16 @@ describe('BuildGitHubAppManifestUseCase', () => {
       );
     });
 
-    it('returns the correct callback_urls', async () => {
+    it('returns the correct setup_url', async () => {
       const result = await useCase.execute(buildCommand());
-      expect(result.manifest.callback_urls).toEqual([
+      expect(result.manifest.setup_url).toBe(
         'https://packmind.io/integrations/github-app/install-callback',
-      ]);
+      );
+    });
+
+    it('sets setup_on_update to true so re-configured installs round-trip', async () => {
+      const result = await useCase.execute(buildCommand());
+      expect(result.manifest.setup_on_update).toBe(true);
     });
 
     it('returns the correct webhook hook_attributes url', async () => {

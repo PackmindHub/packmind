@@ -36,6 +36,11 @@ export class BuildGitHubAppManifestUseCase
     const appName =
       (await Configuration.getConfig('PACKMIND_GITHUB_APP_NAME')) || 'packmind';
     const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
+    if (!appWebUrl) {
+      throw new Error(
+        'APP_WEB_URL must be configured to build a GitHub App manifest',
+      );
+    }
 
     const state = this.manifestStateService.issue();
 
@@ -43,7 +48,8 @@ export class BuildGitHubAppManifestUseCase
       name: appName,
       url: appWebUrl,
       redirect_url: `${appWebUrl}/integrations/github-app/manifest-callback`,
-      callback_urls: [`${appWebUrl}/integrations/github-app/install-callback`],
+      setup_url: `${appWebUrl}/integrations/github-app/install-callback`,
+      setup_on_update: true,
       hook_attributes: {
         url: `${appWebUrl}/api/v0/hooks/github-app`,
       },
