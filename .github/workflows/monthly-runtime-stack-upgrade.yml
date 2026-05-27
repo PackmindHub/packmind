@@ -82,17 +82,44 @@ jobs:
         if: always() && hashFiles('upgrade-plan.md') != ''
         run: |
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          MAX_LENGTH=3800
-          REPORT=$(cat upgrade-plan.md)
-          if [ ${#REPORT} -gt $MAX_LENGTH ]; then
-            REPORT="${REPORT:0:$MAX_LENGTH}..."$'\n\n'"Full report: $RUN_URL"
-          else
-            REPORT="$REPORT"$'\n\n'"View run: $RUN_URL"
+          STATUS="${{ steps.status.outputs.status }}"
+
+          # Headline: status emoji + plain text.
+          case "$STATUS" in
+            available)              HEADLINE=":rocket: Runtime stack upgrades available" ;;
+            none)                   HEADLINE=":white_check_mark: Runtime stack is up to date" ;;
+            partial-fetch-failure)  HEADLINE=":warning: Runtime stack check ran with fetch failures" ;;
+            *)                      HEADLINE=":grey_question: Runtime stack check produced an unrecognised status" ;;
+          esac
+
+          # Extract the Summary section (between "## Summary" and the next "## ").
+          # Cap at 2500 chars to stay well below Slack's 3000-char per-block limit.
+          SUMMARY=$(awk '/^## Summary$/{flag=1; next} /^## /{flag=0} flag' upgrade-plan.md)
+          MAX_SUMMARY_LENGTH=2500
+          if [ ${#SUMMARY} -gt $MAX_SUMMARY_LENGTH ]; then
+            SUMMARY="${SUMMARY:0:$MAX_SUMMARY_LENGTH}..."
           fi
+
+          ARTIFACT_LINK="$RUN_URL#artifacts"
+
           PAYLOAD=$(jq -n \
             --arg channel "${{ secrets.SLACK_CHANNEL_PACKMIND_SKILL_ID }}" \
-            --arg text "$REPORT" \
-            '{channel: $channel, text: $text}')
+            --arg headline "$HEADLINE" \
+            --arg summary "$SUMMARY" \
+            --arg run_url "$RUN_URL" \
+            --arg artifact_url "$ARTIFACT_LINK" \
+            '{
+              channel: $channel,
+              text: $headline,
+              blocks: [
+                { type: "header", text: { type: "plain_text", text: $headline } },
+                { type: "section", text: { type: "mrkdwn", text: ($summary | if . == "" then "_(no Summary section found in upgrade-plan.md)_" else . end) } },
+                { type: "context", elements: [
+                    { type: "mrkdwn", text: ("<" + $run_url + "|View workflow run>  •  <" + $artifact_url + "|Download upgrade-plan.md>") }
+                  ] }
+              ]
+            }')
+
           EOF_DELIMITER="SLACKEOF_$(openssl rand -hex 8)"
           echo "SLACK_PAYLOAD<<${EOF_DELIMITER}" >> "$GITHUB_ENV"
           echo "$PAYLOAD" >> "$GITHUB_ENV"
