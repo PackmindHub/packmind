@@ -3,6 +3,8 @@ import {
   IDeploymentPort,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginResponse,
+  TrackPluginDeletedCommand,
+  TrackPluginDeletedResponse,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
 
@@ -17,5 +19,11 @@ export class PluginsService {
     command: RenderPackageAsPluginCommand,
   ): Promise<RenderPackageAsPluginResponse> {
     return this.deploymentAdapter.renderPackageAsPlugin(command);
+  }
+
+  async trackPluginDeleted(
+    command: TrackPluginDeletedCommand,
+  ): Promise<TrackPluginDeletedResponse> {
+    return this.deploymentAdapter.trackPluginDeleted(command);
   }
 }

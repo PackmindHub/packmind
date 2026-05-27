@@ -1,7 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
-import { OrganizationId, RenderPackageAsPluginResponse } from '@packmind/types';
+import {
+  OrganizationId,
+  RenderPackageAsPluginResponse,
+  TrackPluginDeletedResponse,
+} from '@packmind/types';
 
 import { PluginsController } from './plugins.controller';
 import { PluginsService } from './plugins.service';
@@ -26,6 +30,7 @@ describe('PluginsController', () => {
   beforeEach(() => {
     service = {
       renderPlugin: jest.fn(),
+      trackPluginDeleted: jest.fn(),
     } as unknown as jest.Mocked<PluginsService>;
     controller = new PluginsController(service);
   });
@@ -54,8 +59,37 @@ describe('PluginsController', () => {
         mode: 'marketplace',
         pluginRoot: 'plugins/security/',
         pluginName: 'security',
+        gitRemoteUrl: undefined,
+        gitBranch: undefined,
       });
       expect(result).toBe(response);
+    });
+
+    it('passes gitRemoteUrl and gitBranch from the body into the command', async () => {
+      const response: RenderPackageAsPluginResponse = {
+        files: [],
+        skippedStandardsCount: 0,
+        pluginName: 'security',
+        pluginVersion: '0.1.0',
+      };
+      service.renderPlugin.mockResolvedValue(response);
+
+      await controller.render(
+        orgId,
+        {
+          ...body,
+          gitRemoteUrl: 'git@github.com:acme/repo.git',
+          gitBranch: 'main',
+        },
+        request,
+      );
+
+      expect(service.renderPlugin).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gitRemoteUrl: 'git@github.com:acme/repo.git',
+          gitBranch: 'main',
+        }),
+      );
     });
 
     it('translates PackagesNotFoundError to a NotFoundException', async () => {
@@ -66,6 +100,38 @@ describe('PluginsController', () => {
       await expect(controller.render(orgId, body, request)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('trackDeleted', () => {
+    const trackBody = {
+      packageSlug: 'security',
+      gitRemoteUrl: 'git@github.com:acme/repo.git',
+    };
+
+    it('maps the body into the command and returns the service result', async () => {
+      const response: TrackPluginDeletedResponse = { tracked: true };
+      service.trackPluginDeleted.mockResolvedValue(response);
+
+      const result = await controller.trackDeleted(orgId, trackBody, request);
+
+      expect(service.trackPluginDeleted).toHaveBeenCalledWith({
+        userId,
+        organizationId: orgId,
+        packageSlug: 'security',
+        gitRemoteUrl: 'git@github.com:acme/repo.git',
+      });
+      expect(result).toBe(response);
+    });
+
+    it('translates PackagesNotFoundError to a NotFoundException', async () => {
+      service.trackPluginDeleted.mockRejectedValue(
+        new PackagesNotFoundError(['security']),
+      );
+
+      await expect(
+        controller.trackDeleted(orgId, trackBody, request),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
