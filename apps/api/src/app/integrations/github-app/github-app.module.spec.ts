@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GitHubAppController } from './github-app.controller';
 import { GitHubAppWebhookController } from './github-app-webhook.controller';
-import { GIT_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
+import {
+  ACCOUNTS_ADAPTER_TOKEN,
+  GIT_ADAPTER_TOKEN,
+} from '../../shared/HexaRegistryModule';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { RecipesService } from '../../organizations/spaces/recipes/recipes.service';
@@ -22,8 +25,15 @@ describe('GitHubAppModule', () => {
             linkGitHubAppInstallation: jest.fn(),
             unlinkGitHubAppInstallation: jest.fn(),
             listInstallationRepositories: jest.fn(),
+            importInstallationRepositories: jest.fn(),
             getGitHubAppConfig: jest.fn(),
             getGitProviderByInstallationId: jest.fn(),
+          },
+        },
+        {
+          provide: ACCOUNTS_ADAPTER_TOKEN,
+          useValue: {
+            findOrganizationAdmins: jest.fn(),
           },
         },
         {

@@ -2,6 +2,7 @@ import axios from 'axios';
 import {
   GitHubInstallationNotFoundError,
   IAccountsPort,
+  IImportInstallationRepositoriesUseCase,
   NoGitHubAppRegisteredError,
   Organization,
   User,
@@ -62,6 +63,7 @@ describe('LinkGitHubAppInstallationUseCase', () => {
   let githubAppTokenService: jest.Mocked<GithubAppTokenService>;
   let gitProviderService: jest.Mocked<GitProviderService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let importInstallationRepositoriesUseCase: jest.Mocked<IImportInstallationRepositoriesUseCase>;
 
   beforeEach(() => {
     accountsPort = {
@@ -91,11 +93,18 @@ describe('LinkGitHubAppInstallationUseCase', () => {
       .mockResolvedValue({ data: githubInstallationResponse });
     mockedAxios.isAxiosError = jest.fn().mockReturnValue(false);
 
+    importInstallationRepositoriesUseCase = {
+      execute: jest
+        .fn()
+        .mockResolvedValue({ importedCount: 0, skippedCount: 0 }),
+    } as jest.Mocked<IImportInstallationRepositoriesUseCase>;
+
     useCase = new LinkGitHubAppInstallationUseCase(
       accountsPort,
       gitHubAppConfigRepository,
       githubAppTokenService,
       gitProviderService,
+      importInstallationRepositoriesUseCase,
       stubLogger(),
     );
   });

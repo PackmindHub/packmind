@@ -8,6 +8,7 @@ export * from './IGetAvailableTargets';
 export * from './IGetGitHubAppStatusUseCase';
 export * from './IHandleWebHookUseCase';
 export * from './IHandleWebHookWithoutContentUseCase';
+export * from './IImportInstallationRepositoriesUseCase';
 export * from './ILinkGitHubAppInstallationUseCase';
 export * from './IListAvailableReposUseCase';
 export * from './IListInstallationRepositoriesUseCase';

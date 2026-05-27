@@ -42,3 +42,22 @@ export type GitProvider = {
   organization?: Organization;
   repos?: GitRepo[];
 };
+
+export type GitProviderCredentialFields = Pick<
+  GitProvider,
+  'token' | 'authType' | 'githubAppInstallationId'
+>;
+
+export const gitProviderHasCredentials = (
+  provider: GitProviderCredentialFields,
+): boolean => {
+  const hasPatToken =
+    provider.token !== null &&
+    provider.token !== undefined &&
+    provider.token.length > 0;
+  const hasGithubAppInstallation =
+    provider.authType === GitProviderAuthTypes.github_app &&
+    provider.githubAppInstallationId !== null &&
+    provider.githubAppInstallationId !== undefined;
+  return hasPatToken || hasGithubAppInstallation;
+};

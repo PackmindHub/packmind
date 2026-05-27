@@ -20,6 +20,8 @@ import {
   HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  ImportInstallationRepositoriesCommand,
+  ImportInstallationRepositoriesResponse,
   LinkGitHubAppInstallationCommand,
   LinkGitHubAppInstallationResponse,
   ListInstallationRepositoriesCommand,
@@ -308,4 +310,8 @@ export interface IGitPort {
   listInstallationRepositories(
     command: ListInstallationRepositoriesCommand,
   ): Promise<ListInstallationRepositoriesResponse>;
+
+  importInstallationRepositories(
+    command: ImportInstallationRepositoriesCommand,
+  ): Promise<ImportInstallationRepositoriesResponse>;
 }

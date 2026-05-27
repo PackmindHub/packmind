@@ -75,6 +75,13 @@ import {
 export const IAccountsPortName = 'IAccountsPort' as const;
 
 export interface IAccountsPort {
+  /**
+   * System-level lookup: finds all admin users for an organization without
+   * requiring an authenticated actor. Used by unauthenticated entry points
+   * (e.g. webhooks) that need to resolve a system actor.
+   */
+  findOrganizationAdmins(organizationId: OrganizationId): Promise<User[]>;
+
   // User-related operations
   signUpWithOrganization(
     command: SignUpWithOrganizationCommand,

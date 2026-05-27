@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { GitHubAppWebhookController } from './github-app-webhook.controller';
 import { PackmindLogger } from '@packmind/logger';
-import { GIT_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
+import {
+  ACCOUNTS_ADAPTER_TOKEN,
+  GIT_ADAPTER_TOKEN,
+} from '../../shared/HexaRegistryModule';
 import { stubLogger } from '@packmind/test-utils';
 import { RecipesService } from '../../organizations/spaces/recipes/recipes.service';
 import type { RawBodyRequest } from '@nestjs/common';
@@ -35,6 +38,10 @@ describe('GitHubAppWebhookController', () => {
   let mockGitAdapter: {
     getGitHubAppConfig: jest.Mock;
     getGitProviderByInstallationId: jest.Mock;
+    importInstallationRepositories: jest.Mock;
+  };
+  let mockAccountsAdapter: {
+    findOrganizationAdmins: jest.Mock;
   };
   let mockVerifier: jest.Mocked<GitHubWebhookSignatureVerifier>;
 
@@ -48,6 +55,13 @@ describe('GitHubAppWebhookController', () => {
         webhookSecret: WEBHOOK_SECRET,
       }),
       getGitProviderByInstallationId: jest.fn(),
+      importInstallationRepositories: jest
+        .fn()
+        .mockResolvedValue({ importedCount: 0, skippedCount: 0 }),
+    };
+
+    mockAccountsAdapter = {
+      findOrganizationAdmins: jest.fn().mockResolvedValue([]),
     };
 
     mockVerifier = {
@@ -60,6 +74,10 @@ describe('GitHubAppWebhookController', () => {
         {
           provide: GIT_ADAPTER_TOKEN,
           useValue: mockGitAdapter,
+        },
+        {
+          provide: ACCOUNTS_ADAPTER_TOKEN,
+          useValue: mockAccountsAdapter,
         },
         {
           provide: RecipesService,

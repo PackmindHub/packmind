@@ -11,8 +11,11 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Public } from '@packmind/node-utils';
 import { GitAdapter, GitHubWebhookSignatureVerifier } from '@packmind/git';
-import { IGitPort } from '@packmind/types';
-import { InjectGitAdapter } from '../../shared/HexaInjection';
+import { IAccountsPort, IGitPort } from '@packmind/types';
+import {
+  InjectAccountsAdapter,
+  InjectGitAdapter,
+} from '../../shared/HexaInjection';
 import { RecipesService } from '../../organizations/spaces/recipes/recipes.service';
 import { createOrganizationId } from '@packmind/types';
 import type { Request } from 'express';
@@ -25,6 +28,11 @@ type GitHubPushPayload = {
   ref?: string;
 };
 
+type GitHubInstallationRepositoriesPayload = {
+  action?: string;
+  installation?: { id: number };
+};
+
 @Public()
 @Controller('hooks')
 export class GitHubAppWebhookController {
@@ -32,6 +40,7 @@ export class GitHubAppWebhookController {
 
   constructor(
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     private readonly recipesService: RecipesService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -85,12 +94,17 @@ export class GitHubAppWebhookController {
 
     const event = eventHeader;
 
-    if (event === 'installation' || event === 'installation_repositories') {
+    if (event === 'installation_repositories') {
+      await this.handleInstallationRepositoriesEvent(
+        req.body as GitHubInstallationRepositoriesPayload,
+      );
+      return;
+    }
+
+    if (event === 'installation') {
       this.logger.info(
         'POST /hooks/github-app - Installation event, ignoring',
-        {
-          event,
-        },
+        { event },
       );
       return;
     }
@@ -102,6 +116,70 @@ export class GitHubAppWebhookController {
 
     this.logger.debug('POST /hooks/github-app - Unhandled event, ignoring', {
       event,
+    });
+  }
+
+  private async handleInstallationRepositoriesEvent(
+    payload: GitHubInstallationRepositoriesPayload,
+  ): Promise<void> {
+    const action = payload.action;
+
+    if (action !== 'added') {
+      this.logger.debug(
+        'POST /hooks/github-app - installation_repositories action ignored',
+        { action },
+      );
+      return;
+    }
+
+    const installationId = payload.installation?.id;
+    if (!installationId) {
+      this.logger.warn(
+        'POST /hooks/github-app - installation_repositories missing installation id',
+      );
+      return;
+    }
+
+    const adapter = this.gitAdapter as unknown as GitAdapter;
+    const gitProvider =
+      await adapter.getGitProviderByInstallationId(installationId);
+
+    if (!gitProvider) {
+      this.logger.info(
+        'POST /hooks/github-app - No provider for installation_repositories, install-callback will catch it',
+        { installationId },
+      );
+      return;
+    }
+
+    const admins = await this.accountsAdapter.findOrganizationAdmins(
+      gitProvider.organizationId,
+    );
+
+    const actor = admins[0];
+    if (!actor) {
+      this.logger.warn(
+        'POST /hooks/github-app - No admin found for organization, cannot import',
+        {
+          installationId,
+          organizationId: gitProvider.organizationId,
+        },
+      );
+      return;
+    }
+
+    this.logger.info(
+      'POST /hooks/github-app - Importing newly added installation repositories',
+      {
+        installationId,
+        providerId: gitProvider.id,
+      },
+    );
+
+    await this.gitAdapter.importInstallationRepositories({
+      userId: actor.id,
+      organizationId: gitProvider.organizationId,
+      gitProviderId: gitProvider.id,
     });
   }
 

@@ -3,6 +3,7 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
   createUserId,
+  gitProviderHasCredentials,
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
@@ -80,9 +81,9 @@ export class AddGitRepoUseCase
       );
     }
 
-    // Business rule: git provider must have a token configured (unless explicitly allowed)
-    if (!gitProvider.token && !allowTokenlessProvider) {
-      this.logger.error('Git provider has no token configured', {
+    // Business rule: git provider must have usable credentials (PAT token or GitHub App installation)
+    if (!gitProviderHasCredentials(gitProvider) && !allowTokenlessProvider) {
+      this.logger.error('Git provider has no usable credentials', {
         gitProviderId,
         organizationId: organization.id,
         userId,

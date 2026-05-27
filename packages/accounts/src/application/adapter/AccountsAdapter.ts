@@ -472,6 +472,22 @@ export class AccountsAdapter
     return await this._listOrganizationUsers.execute(command);
   }
 
+  public async findOrganizationAdmins(
+    organizationId: OrganizationId,
+  ): Promise<User[]> {
+    const users = await this.accountsServices
+      .getUserService()
+      .listUsersByOrganization(organizationId);
+
+    return users.filter((user) =>
+      user.memberships.some(
+        (membership) =>
+          membership.organizationId === organizationId &&
+          membership.role === 'admin',
+      ),
+    );
+  }
+
   public async validatePassword(command: ValidatePasswordCommand) {
     const result = await this._validatePassword.execute(command);
     return result.isValid;

@@ -5,6 +5,7 @@ import {
   GitHubInstallationNotFoundError,
   GitProvider,
   IAccountsPort,
+  IImportInstallationRepositoriesUseCase,
   ILinkGitHubAppInstallationUseCase,
   InstallationAccount,
   LinkGitHubAppInstallationCommand,
@@ -38,6 +39,7 @@ export class LinkGitHubAppInstallationUseCase
     private readonly gitHubAppConfigRepository: IGitHubAppConfigRepository,
     private readonly githubAppTokenService: GithubAppTokenService,
     private readonly gitProviderService: GitProviderService,
+    private readonly importInstallationRepositoriesUseCase: IImportInstallationRepositoriesUseCase,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -118,6 +120,27 @@ export class LinkGitHubAppInstallationUseCase
       installationId,
       providerId: gitProvider.id,
     });
+
+    try {
+      const importResult =
+        await this.importInstallationRepositoriesUseCase.execute({
+          userId: command.userId,
+          organizationId: command.organizationId,
+          gitProviderId: gitProvider.id,
+        });
+      this.logger.info('Auto-imported installation repositories', {
+        installationId,
+        providerId: gitProvider.id,
+        importedCount: importResult.importedCount,
+        skippedCount: importResult.skippedCount,
+      });
+    } catch (error) {
+      this.logger.warn('Failed to auto-import installation repositories', {
+        installationId,
+        providerId: gitProvider.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     return { gitProvider, installationAccount };
   }

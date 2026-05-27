@@ -1,30 +1,57 @@
 import React, { useState } from 'react';
 import {
-  PMBox,
   PMVStack,
   PMHStack,
-  PMHeading,
   PMText,
   PMButton,
   PMSpinner,
   PMAlert,
-  PMEmptyState,
   PMAlertDialog,
   PMTooltip,
   PMLink,
+  PMPageSection,
+  PMBadge,
+  PMDataList,
 } from '@packmind/ui';
-import { GitProvider } from '@packmind/types';
-import { useGetGitHubAppStatusQuery } from '../api/queries/GitHubAppQueries';
+import { GitProviderWithoutToken } from '@packmind/types';
 import { useGetGitProvidersQuery } from '../api/queries/GitProviderQueries';
 import {
-  useUnlinkGitHubAppInstallationMutation,
+  useGetGitHubAppStatusQuery,
   useGetGitHubAppInstallationRepositoriesQuery,
+  useUnlinkGitHubAppInstallationMutation,
 } from '../api/queries/GitHubAppQueries';
 import { gitHubAppGateway } from '../api/gateways';
 
 interface GitHubAppTabProps {
   isAdmin: boolean;
 }
+
+type StatusTone = 'gray' | 'yellow' | 'green' | 'red';
+
+const StatusChip: React.FC<{ tone: StatusTone; label: string }> = ({
+  tone,
+  label,
+}) => (
+  <PMBadge variant="subtle" colorPalette={tone}>
+    {label}
+  </PMBadge>
+);
+
+const Shell: React.FC<{
+  chip?: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ chip, children }) => (
+  <PMPageSection
+    variant="outline"
+    backgroundColor="primary"
+    title="GitHub App"
+    cta={chip}
+  >
+    <PMVStack gap={4} align="start" width="full">
+      {children}
+    </PMVStack>
+  </PMPageSection>
+);
 
 const AppNotRegistered: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -53,8 +80,7 @@ const AppNotRegistered: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
   };
 
   return (
-    <PMVStack gap={4} align="start">
-      <PMHeading level="h3">Register a GitHub App</PMHeading>
+    <Shell chip={<StatusChip tone="gray" label="Not configured" />}>
       <PMText color="secondary">
         Connect Packmind to GitHub by registering a dedicated GitHub App for
         your instance. This enables secure, installation-scoped repository
@@ -82,7 +108,7 @@ const AppNotRegistered: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => {
           Register on GitHub
         </PMButton>
       </PMTooltip>
-    </PMVStack>
+    </Shell>
   );
 };
 
@@ -96,13 +122,19 @@ const AppRegisteredNoInstallation: React.FC<{
   };
 
   return (
-    <PMVStack gap={4} align="start">
-      <PMHStack gap={2}>
-        <PMText variant="body-important">GitHub App registered:</PMText>
-        <PMLink href={htmlUrl} target="_blank" rel="noopener noreferrer">
-          {slug}
-        </PMLink>
-      </PMHStack>
+    <Shell chip={<StatusChip tone="yellow" label="Awaiting installation" />}>
+      <PMDataList
+        items={[
+          {
+            label: 'App',
+            value: (
+              <PMLink href={htmlUrl} target="_blank" rel="noopener noreferrer">
+                {slug}
+              </PMLink>
+            ),
+          },
+        ]}
+      />
       <PMText color="secondary">
         The app is registered but not yet installed on any GitHub organization.
         Install it to grant Packmind access to your repositories.
@@ -110,12 +142,12 @@ const AppRegisteredNoInstallation: React.FC<{
       <PMButton onClick={handleInstall}>
         Install on a GitHub organization
       </PMButton>
-    </PMVStack>
+    </Shell>
   );
 };
 
 const InstallationRepositoryCount: React.FC<{
-  provider: GitProvider;
+  provider: GitProviderWithoutToken;
   onRetry: () => void;
 }> = ({ provider, onRetry }) => {
   const { data, isLoading, isError, refetch } =
@@ -129,7 +161,7 @@ const InstallationRepositoryCount: React.FC<{
     return (
       <PMHStack gap={2}>
         <PMText color="error" variant="small">
-          Unable to load repositories
+          Unable to load
         </PMText>
         <PMButton
           size="xs"
@@ -147,19 +179,18 @@ const InstallationRepositoryCount: React.FC<{
 
   const count = data?.repositories.length ?? 0;
   return (
-    <PMText color="secondary" variant="small">
-      {provider.githubAppInstallationId
-        ? `Installation · ${count} ${count === 1 ? 'repository' : 'repositories'} accessible`
-        : `${count} ${count === 1 ? 'repository' : 'repositories'} accessible`}
+    <PMText>
+      {count} {count === 1 ? 'repository' : 'repositories'} accessible
     </PMText>
   );
 };
 
 const InstallationLinked: React.FC<{
-  provider: GitProvider;
+  provider: GitProviderWithoutToken;
+  slug: string;
   htmlUrl: string;
   isAdmin: boolean;
-}> = ({ provider, htmlUrl, isAdmin }) => {
+}> = ({ provider, slug, htmlUrl, isAdmin }) => {
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const unlinkMutation = useUnlinkGitHubAppInstallationMutation();
@@ -177,31 +208,42 @@ const InstallationLinked: React.FC<{
     });
   };
 
+  const items = [
+    {
+      label: 'App',
+      value: (
+        <PMLink href={htmlUrl} target="_blank" rel="noopener noreferrer">
+          {slug}
+        </PMLink>
+      ),
+    },
+    ...(provider.githubAppInstallationId
+      ? [
+          {
+            label: 'Installation',
+            value: `#${provider.githubAppInstallationId}`,
+          },
+        ]
+      : []),
+    {
+      label: 'Repositories',
+      value: (
+        <InstallationRepositoryCount
+          provider={provider}
+          onRetry={() => setRetryKey((k) => k + 1)}
+          key={retryKey}
+        />
+      ),
+    },
+  ];
+
   return (
-    <PMVStack gap={4} align="start">
-      <PMBox
-        p={4}
-        borderWidth="1px"
-        borderRadius="md"
-        borderColor="border.default"
-        width="full"
-      >
-        <PMVStack gap={2} align="start">
-          <PMText variant="body-important">
-            {provider.githubAppInstallationId
-              ? `Installation #${provider.githubAppInstallationId}`
-              : 'GitHub App installation'}
-          </PMText>
-          <InstallationRepositoryCount
-            provider={provider}
-            onRetry={() => setRetryKey((k) => k + 1)}
-            key={retryKey}
-          />
-          <PMLink href={manageUrl} target="_blank" rel="noopener noreferrer">
-            Manage on GitHub
-          </PMLink>
-        </PMVStack>
-      </PMBox>
+    <Shell chip={<StatusChip tone="green" label="Connected" />}>
+      <PMDataList items={items} />
+
+      <PMLink href={manageUrl} target="_blank" rel="noopener noreferrer">
+        Manage on GitHub
+      </PMLink>
 
       {unlinkMutation.isError && (
         <PMAlert.Root status="error" width="full">
@@ -213,24 +255,26 @@ const InstallationLinked: React.FC<{
       )}
 
       {isAdmin && (
-        <PMAlertDialog
-          trigger={
-            <PMButton variant="secondary" colorScheme="red">
-              Disconnect
-            </PMButton>
-          }
-          title="Disconnect GitHub App installation"
-          message="This stops Packmind from accessing this GitHub installation. The App stays installed on GitHub; uninstall it there to fully revoke."
-          confirmText="Disconnect"
-          cancelText="Cancel"
-          confirmColorScheme="red"
-          onConfirm={handleDisconnect}
-          open={disconnectOpen}
-          onOpenChange={({ open }) => setDisconnectOpen(open)}
-          isLoading={unlinkMutation.isPending}
-        />
+        <PMHStack width="full" justify="flex-end">
+          <PMAlertDialog
+            trigger={
+              <PMButton variant="secondary" colorScheme="red">
+                Disconnect
+              </PMButton>
+            }
+            title="Disconnect GitHub App installation"
+            message="This stops Packmind from accessing this GitHub installation. The App stays installed on GitHub; uninstall it there to fully revoke."
+            confirmText="Disconnect"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={handleDisconnect}
+            open={disconnectOpen}
+            onOpenChange={({ open }) => setDisconnectOpen(open)}
+            isLoading={unlinkMutation.isPending}
+          />
+        </PMHStack>
       )}
-    </PMVStack>
+    </Shell>
   );
 };
 
@@ -249,20 +293,27 @@ export const GitHubAppTab: React.FC<GitHubAppTabProps> = ({ isAdmin }) => {
 
   if (statusLoading || providersLoading) {
     return (
-      <PMEmptyState icon={<PMSpinner />} title="Loading GitHub App status..." />
+      <Shell>
+        <PMHStack gap={2}>
+          <PMSpinner size="sm" />
+          <PMText color="secondary">Loading GitHub App status...</PMText>
+        </PMHStack>
+      </Shell>
     );
   }
 
   if (statusError || providersError) {
     return (
-      <PMAlert.Root status="error" my={4}>
-        <PMAlert.Indicator />
-        <PMAlert.Title>Error loading GitHub App status</PMAlert.Title>
-        <PMAlert.Description>
-          Unable to retrieve the GitHub App configuration. Please refresh the
-          page.
-        </PMAlert.Description>
-      </PMAlert.Root>
+      <Shell chip={<StatusChip tone="red" label="Error" />}>
+        <PMAlert.Root status="error" width="full">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Error loading GitHub App status</PMAlert.Title>
+          <PMAlert.Description>
+            Unable to retrieve the GitHub App configuration. Please refresh the
+            page.
+          </PMAlert.Description>
+        </PMAlert.Root>
+      </Shell>
     );
   }
 
@@ -275,7 +326,7 @@ export const GitHubAppTab: React.FC<GitHubAppTabProps> = ({ isAdmin }) => {
   }
 
   const linkedProvider = providersResponse?.providers.find(
-    (p: GitProvider) =>
+    (p: GitProviderWithoutToken) =>
       p.authType === 'github_app' && p.githubAppInstallationId != null,
   );
 
@@ -292,6 +343,7 @@ export const GitHubAppTab: React.FC<GitHubAppTabProps> = ({ isAdmin }) => {
   return (
     <InstallationLinked
       provider={linkedProvider}
+      slug={status.slug}
       htmlUrl={status.htmlUrl}
       isAdmin={isAdmin}
     />

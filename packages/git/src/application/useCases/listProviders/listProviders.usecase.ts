@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  gitProviderHasCredentials,
   IAccountsPort,
   IListProvidersUseCase,
   ListProvidersCommand,
@@ -37,7 +38,11 @@ export class ListProvidersUseCase
 
     const providersWithoutToken = providers.map(({ token, ...provider }) => ({
       ...provider,
-      hasToken: token !== null && token !== undefined && token.length > 0,
+      hasToken: gitProviderHasCredentials({
+        token,
+        authType: provider.authType,
+        githubAppInstallationId: provider.githubAppInstallationId,
+      }),
     }));
 
     this.logger.info('Git providers fetched successfully', {

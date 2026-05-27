@@ -12,6 +12,7 @@ import {
 import { stubLogger } from '@packmind/test-utils';
 import { IGitHubAppConfigRepository } from '../../../../domain/repositories/IGitHubAppConfigRepository';
 import { GitProviderService } from '../../../GitProviderService';
+import { GithubAppInstallationRepositoriesFetcher } from '../../../services/GithubAppInstallationRepositoriesFetcher';
 import { GithubAppTokenService } from '../../../services/GithubAppTokenService';
 import { ListInstallationRepositoriesUseCase } from './listInstallationRepositories.usecase';
 import { gitProviderFactory } from '../../../../../test';
@@ -101,6 +102,7 @@ describe('ListInstallationRepositoriesUseCase', () => {
       gitHubAppConfigRepository,
       githubAppTokenService,
       gitProviderService,
+      new GithubAppInstallationRepositoriesFetcher(),
       stubLogger(),
     );
   });
