@@ -1,4 +1,4 @@
-import type { Marketplace } from './types';
+import type { ConnectedRepo, GitProvider, Marketplace } from './types';
 
 export const STUB_MARKETPLACES: Marketplace[] = [
   {
@@ -112,5 +112,62 @@ export const STUB_MARKETPLACES: Marketplace[] = [
       outdatedRepos: 12,
       outdatedDevs: 10,
     },
+  },
+];
+
+// ── Link-flow stubs ──────────────────────────────────────────────────────────
+
+export const STUB_CONNECTED_PROVIDER: GitProvider = 'github';
+
+export const STUB_CONNECTED_REPOS: ConnectedRepo[] = [
+  {
+    id: 'r1',
+    path: 'acme/billing-marketplace',
+    defaultBranch: 'main',
+    visibility: 'private',
+    pushedRelative: '3h ago',
+  },
+  {
+    id: 'r2',
+    path: 'acme/growth-marketplace',
+    defaultBranch: 'main',
+    visibility: 'private',
+    pushedRelative: '1d ago',
+  },
+  {
+    id: 'r3',
+    path: 'acme/infra-marketplace',
+    defaultBranch: 'main',
+    visibility: 'internal',
+    pushedRelative: '4d ago',
+  },
+  {
+    id: 'r4',
+    path: 'acme/frontend-marketplace',
+    defaultBranch: 'main',
+    visibility: 'private',
+    pushedRelative: '2d ago',
+    alreadyLinked: true,
+  },
+  {
+    id: 'r5',
+    path: 'acme/onboarding-marketplace',
+    defaultBranch: 'main',
+    visibility: 'private',
+    pushedRelative: '12h ago',
+  },
+  {
+    id: 'r6',
+    path: 'acme/qa-marketplace',
+    defaultBranch: 'main',
+    visibility: 'private',
+    pushedRelative: '8d ago',
+  },
+  {
+    id: 'r7',
+    path: 'acme/incident-marketplace',
+    defaultBranch: 'main',
+    visibility: 'internal',
+    pushedRelative: '32d ago',
   },
 ];

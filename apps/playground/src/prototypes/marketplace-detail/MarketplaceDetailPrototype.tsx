@@ -19,6 +19,7 @@ import {
   LuTrash2,
 } from 'react-icons/lu';
 import { MarketplaceDetailView } from './components/MarketplaceDetailView';
+import { MarketplaceSyncSurface } from './components/MarketplaceSyncSurface';
 import {
   EMPTY_MARKETPLACE,
   STUB_MARKETPLACE,
@@ -50,6 +51,7 @@ const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
   { label: 'Loading', value: 'loading' },
   { label: 'Repo unreachable', value: 'unreachable' },
   { label: 'No open suggestions', value: 'suggestions-cleared' },
+  { label: 'Sync push rejected', value: 'sync-fails' },
 ];
 
 const MARKETPLACE_SUBTITLE: Record<string, string> = {
@@ -66,6 +68,7 @@ export default function MarketplaceDetailPrototype() {
   const [suggestionsByScenario, setSuggestionsByScenario] = useState<
     Partial<Record<Scenario, Suggestion[]>>
   >({});
+  const [isSyncOpen, setIsSyncOpen] = useState(false);
 
   const baseMarketplace = useMemo<MarketplaceDetail>(() => {
     if (scenario === 'empty') return EMPTY_MARKETPLACE;
@@ -101,6 +104,22 @@ export default function MarketplaceDetailPrototype() {
       pickInitialSuggestionId(baseMarketplace.suggestions),
     );
   }, [baseMarketplace.suggestions, scenario]);
+
+  useEffect(() => {
+    if (
+      marketplace.state === 'unreachable' ||
+      marketplace.plugins.length === 0
+    ) {
+      setIsSyncOpen(false);
+    }
+  }, [marketplace.state, marketplace.plugins.length]);
+
+  const driftedPluginCount = useMemo(
+    () =>
+      marketplace.plugins.filter((p) => p.sourceSync.state === 'behind').length,
+    [marketplace.plugins],
+  );
+  const canSync = marketplace.state !== 'unreachable' && driftedPluginCount > 0;
 
   const handlePolicyChange = useCallback(
     (pluginId: string, key: PolicyKey, value: boolean) => {
@@ -212,12 +231,29 @@ export default function MarketplaceDetailPrototype() {
               </PMIcon>
               Reconnect
             </PMButton>
-          ) : (
-            <PMButton variant="outline" size="sm">
+          ) : isSyncOpen ? null : (
+            <PMButton
+              variant="primary"
+              size="sm"
+              disabled={!canSync}
+              onClick={() => setIsSyncOpen(true)}
+              title={
+                canSync
+                  ? undefined
+                  : marketplace.plugins.length === 0
+                    ? 'No plugins to sync yet.'
+                    : 'Nothing to sync — every plugin matches its curated state.'
+              }
+            >
               <PMIcon fontSize="sm">
                 <LuRotateCw />
               </PMIcon>
               Sync
+              {canSync && driftedPluginCount > 0 ? (
+                <PMText as="span" fontSize="xs" color="faded" marginLeft={1}>
+                  {driftedPluginCount}
+                </PMText>
+              ) : null}
             </PMButton>
           )}
           <PMButton variant="secondary" size="sm">
@@ -230,20 +266,31 @@ export default function MarketplaceDetailPrototype() {
         </PMHStack>
       }
     >
-      <MarketplaceDetailView
-        scenario={scenario}
-        marketplace={marketplace}
-        activeTab={activeTab}
-        onChangeTab={setActiveTab}
-        selectedPluginId={selectedPluginId}
-        onSelectPlugin={setSelectedPluginId}
-        onChangePolicy={handlePolicyChange}
-        selectedSuggestionId={selectedSuggestionId}
-        onSelectSuggestion={setSelectedSuggestionId}
-        onApproveSuggestion={handleApprove}
-        onRejectSuggestion={handleReject}
-        onRequestChangesOnSuggestion={handleRequestChanges}
-      />
+      {isSyncOpen ? (
+        <MarketplaceSyncSurface
+          marketplace={marketplace}
+          onCancel={() => setIsSyncOpen(false)}
+          onConfirm={() => {
+            /* surface handles its own success step; close happens via onCancel */
+          }}
+          simulateFailure={scenario === 'sync-fails'}
+        />
+      ) : (
+        <MarketplaceDetailView
+          scenario={scenario}
+          marketplace={marketplace}
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+          selectedPluginId={selectedPluginId}
+          onSelectPlugin={setSelectedPluginId}
+          onChangePolicy={handlePolicyChange}
+          selectedSuggestionId={selectedSuggestionId}
+          onSelectSuggestion={setSelectedSuggestionId}
+          onApproveSuggestion={handleApprove}
+          onRejectSuggestion={handleReject}
+          onRequestChangesOnSuggestion={handleRequestChanges}
+        />
+      )}
     </PMPage>
   );
 }

@@ -10,16 +10,21 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuPlug, LuSearch } from 'react-icons/lu';
-import { STUB_MARKETPLACES } from '../data';
-import type { CoverageView, Scenario } from '../types';
+import type { CoverageView, Marketplace, Scenario } from '../types';
 import { MarketplaceRow } from './MarketplaceRow';
 
 type MarketplacesIndexProps = {
   scenario: Scenario;
+  marketplaces: Marketplace[];
+  newlyLinkedId: string | null;
+  onOpenLinkPanel: () => void;
 };
 
 export function MarketplacesIndex({
   scenario,
+  marketplaces,
+  newlyLinkedId,
+  onOpenLinkPanel,
 }: Readonly<MarketplacesIndexProps>) {
   const [query, setQuery] = useState('');
   const [coverageView, setCoverageView] = useState<CoverageView>('repos');
@@ -27,15 +32,15 @@ export function MarketplacesIndex({
   const filtered = useMemo(() => {
     if (scenario !== 'default') return [];
     const q = query.trim().toLowerCase();
-    if (!q) return STUB_MARKETPLACES;
-    return STUB_MARKETPLACES.filter(
+    if (!q) return marketplaces;
+    return marketplaces.filter(
       (m) =>
         m.name.toLowerCase().includes(q) ||
         m.repoPath.toLowerCase().includes(q),
     );
-  }, [query, scenario]);
+  }, [query, scenario, marketplaces]);
 
-  const total = scenario === 'default' ? STUB_MARKETPLACES.length : 0;
+  const total = scenario === 'default' ? marketplaces.length : 0;
 
   return (
     <PMVStack gap={4} align="stretch">
@@ -50,11 +55,19 @@ export function MarketplacesIndex({
 
       {scenario === 'loading' && <LoadingState />}
 
-      {scenario === 'empty' && <EmptyState />}
+      {scenario === 'empty' && <EmptyState onOpenLinkPanel={onOpenLinkPanel} />}
 
-      {scenario === 'default' && filtered.length === 0 && (
-        <FilteredZeroState query={query} onClear={() => setQuery('')} />
-      )}
+      {scenario === 'default' &&
+        filtered.length === 0 &&
+        marketplaces.length > 0 && (
+          <FilteredZeroState query={query} onClear={() => setQuery('')} />
+        )}
+
+      {scenario === 'default' &&
+        filtered.length === 0 &&
+        marketplaces.length === 0 && (
+          <EmptyState onOpenLinkPanel={onOpenLinkPanel} />
+        )}
 
       {scenario === 'default' && filtered.length > 0 && (
         <PMBox
@@ -65,16 +78,21 @@ export function MarketplacesIndex({
           overflow="hidden"
         >
           <ListHeader />
-          {filtered.map((m, i) => (
-            <PMBox
-              key={m.id}
-              {...(i === filtered.length - 1
-                ? { '& > *': { borderBottom: 'none' } }
-                : {})}
-            >
-              <MarketplaceRow marketplace={m} coverageView={coverageView} />
-            </PMBox>
-          ))}
+          {filtered.map((m, i) => {
+            const isNewlyLinked = m.id === newlyLinkedId;
+            return (
+              <PMBox
+                key={m.id}
+                bg={isNewlyLinked ? 'background.tertiary' : undefined}
+                transition="background-color 900ms ease-out"
+                {...(i === filtered.length - 1
+                  ? { '& > *': { borderBottom: 'none' } }
+                  : {})}
+              >
+                <MarketplaceRow marketplace={m} coverageView={coverageView} />
+              </PMBox>
+            );
+          })}
         </PMBox>
       )}
     </PMVStack>
@@ -267,7 +285,9 @@ function LoadingState() {
   );
 }
 
-function EmptyState() {
+function EmptyState({
+  onOpenLinkPanel,
+}: Readonly<{ onOpenLinkPanel: () => void }>) {
   return (
     <PMBox
       bg="background.primary"
@@ -298,12 +318,12 @@ function EmptyState() {
           </PMText>
           <PMText fontSize="sm" color="secondary" lineHeight={1.5}>
             A marketplace is a Git repo where Packmind publishes packages so
-            Claude Code or Copilot can pull them. Connect a repo to get started.
+            Claude Code or Copilot can pull them. Link a repo to get started.
           </PMText>
         </PMVStack>
         <PMHStack gap={3}>
-          <PMButton variant="primary" size="sm">
-            Connect a repo
+          <PMButton variant="primary" size="sm" onClick={onOpenLinkPanel}>
+            Link a repo
           </PMButton>
           <PMButton variant="secondary" size="sm">
             Read the docs
