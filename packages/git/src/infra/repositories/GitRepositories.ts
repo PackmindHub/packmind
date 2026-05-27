@@ -30,6 +30,7 @@ export class GitRepositories implements IGitRepositories {
   private readonly gitCommitRepository: IGitCommitRepository;
   private readonly gitRepoFactory: IGitRepoFactory;
   private readonly gitProviderFactory: IGitProviderFactory;
+  private readonly _gitHubAppConfigRepository: GitHubAppConfigRepository;
 
   constructor(
     private readonly dataSource: DataSource,
@@ -48,10 +49,12 @@ export class GitRepositories implements IGitRepositories {
 
     // Initialize the factories
     this.gitRepoFactory = opts?.gitRepoFactory ?? new GitRepoFactory();
-    const gitHubAppConfigRepository = new GitHubAppConfigRepository(
+    this._gitHubAppConfigRepository = new GitHubAppConfigRepository(
       this.dataSource.getRepository(GitHubAppConfigSchema),
     );
-    this.gitProviderFactory = new GitProviderFactory(gitHubAppConfigRepository);
+    this.gitProviderFactory = new GitProviderFactory(
+      this._gitHubAppConfigRepository,
+    );
   }
 
   getGitProviderRepository(): IGitProviderRepository {
@@ -72,5 +75,9 @@ export class GitRepositories implements IGitRepositories {
 
   getGitProviderFactory(): IGitProviderFactory {
     return this.gitProviderFactory;
+  }
+
+  getGitHubAppConfigRepository(): GitHubAppConfigRepository {
+    return this._gitHubAppConfigRepository;
   }
 }

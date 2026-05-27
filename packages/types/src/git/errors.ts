@@ -140,3 +140,27 @@ export class UnsupportedGitProviderError extends Error {
     }
   }
 }
+
+export class InvalidManifestStateError extends Error {
+  constructor() {
+    super('The manifest state token is invalid or has expired');
+    this.name = 'InvalidManifestStateError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, InvalidManifestStateError);
+    }
+  }
+}
+
+export class AppAlreadyRegisteredError extends Error {
+  constructor() {
+    super(
+      'A GitHub App is already registered for this Packmind instance. Only one App per instance is supported.',
+    );
+    this.name = 'AppAlreadyRegisteredError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, AppAlreadyRegisteredError);
+    }
+  }
+}

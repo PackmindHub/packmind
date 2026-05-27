@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  BuildGitHubAppManifestCommand,
+  BuildGitHubAppManifestResponse,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   GetAvailableRemoteDirectoriesCommand,
+  GetGitHubAppStatusCommand,
+  GetGitHubAppStatusResponse,
   GitCommit,
   GitProvider,
   GitProviderId,
@@ -18,6 +22,8 @@ import {
   ListProvidersResponse,
   OrganizationId,
   QueryOption,
+  RegisterGitHubAppFromManifestCommand,
+  RegisterGitHubAppFromManifestResponse,
   UserId,
 } from '@packmind/types';
 import { AddGitRepoCommand } from '../../domain/useCases/IAddGitRepo';
@@ -26,7 +32,9 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
+import { IGitHubAppConfigRepository } from '../../domain/repositories/IGitHubAppConfigRepository';
 import { GitServices } from '../GitServices';
+import { GitHubAppManifestStateService } from '../services/GitHubAppManifestStateService';
 import {
   AddGitProviderCommand,
   AddGitProviderUseCase,
@@ -45,10 +53,14 @@ import { GetOrganizationRepositoriesUseCase } from './getOrganizationRepositorie
 import { GetRepositoryByIdUseCase } from './getRepositoryById/getRepositoryById.usecase';
 import { HandleWebHook } from './handleWebHook/handleWebHook.usecase';
 import { HandleWebHookWithoutContent } from './handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
+import { BuildGitHubAppManifestUseCase } from './githubApp/buildGitHubAppManifest/buildGitHubAppManifest.usecase';
+import { GetGitHubAppStatusUseCase } from './githubApp/getGitHubAppStatus/getGitHubAppStatus.usecase';
+import { RegisterGitHubAppFromManifestUseCase } from './githubApp/registerGitHubAppFromManifest/registerGitHubAppFromManifest.usecase';
 import { ListAvailableReposUseCase } from './listAvailableRepos/listAvailableRepos.usecase';
 import { ListProvidersUseCase } from './listProviders/listProviders.usecase';
 import { ListReposUseCase } from './listRepos/listRepos.usecase';
 import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.usecase';
+
 const origin = 'GitUseCases';
 
 export class GitUseCases {
@@ -79,6 +91,10 @@ export class GitUseCases {
   private readonly _findGitRepoByOwnerRepoAndBranchInOrganization: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
   private readonly _getAvailableRemoteDirectories: GetAvailableRemoteDirectoriesUseCase;
   private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
+  private readonly _manifestStateService: GitHubAppManifestStateService;
+  private _buildGitHubAppManifest: BuildGitHubAppManifestUseCase;
+  private _registerGitHubAppFromManifest: RegisterGitHubAppFromManifestUseCase;
+  private readonly _getGitHubAppStatus: GetGitHubAppStatusUseCase;
 
   private deploymentsAdapter: IDeploymentPort = {
     async addTarget() {
@@ -88,8 +104,10 @@ export class GitUseCases {
 
   constructor(
     private readonly gitServices: GitServices,
+    private readonly gitHubAppConfigRepository: IGitHubAppConfigRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    this._manifestStateService = new GitHubAppManifestStateService();
     this._addGitProvider = this.createAddGitProviderUseCase();
     this._addGitRepo = this.createAddGitRepoUseCase();
     this._deleteGitProvider = this.createDeleteGitProviderUseCase();
@@ -151,6 +169,13 @@ export class GitUseCases {
       gitServices.getGitProviderService(),
       gitServices.getGitRepoFactory(),
     );
+    this._buildGitHubAppManifest = this.createBuildGitHubAppManifestUseCase();
+    this._registerGitHubAppFromManifest =
+      this.createRegisterGitHubAppFromManifestUseCase();
+    this._getGitHubAppStatus = new GetGitHubAppStatusUseCase(
+      this.accountsAdapter,
+      this.gitHubAppConfigRepository,
+    );
 
     this.logger.info('GitUseCases initialized successfully');
   }
@@ -203,6 +228,21 @@ export class GitUseCases {
     );
   }
 
+  private createBuildGitHubAppManifestUseCase(): BuildGitHubAppManifestUseCase {
+    return new BuildGitHubAppManifestUseCase(
+      this.accountsAdapter,
+      this._manifestStateService,
+    );
+  }
+
+  private createRegisterGitHubAppFromManifestUseCase(): RegisterGitHubAppFromManifestUseCase {
+    return new RegisterGitHubAppFromManifestUseCase(
+      this.accountsAdapter,
+      this.gitHubAppConfigRepository,
+      this._manifestStateService,
+    );
+  }
+
   public setAccountsAdapter(adapter: IAccountsPort): void {
     this.accountsAdapter = adapter;
     this._addGitProvider = this.createAddGitProviderUseCase();
@@ -210,6 +250,9 @@ export class GitUseCases {
     this._deleteGitProvider = this.createDeleteGitProviderUseCase();
     this._deleteGitRepo = this.createDeleteGitRepoUseCase();
     this._updateGitProvider = this.createUpdateGitProviderUseCase();
+    this._buildGitHubAppManifest = this.createBuildGitHubAppManifestUseCase();
+    this._registerGitHubAppFromManifest =
+      this.createRegisterGitHubAppFromManifestUseCase();
   }
 
   public addGitProvider(command: AddGitProviderCommand): Promise<GitProvider> {
@@ -378,5 +421,23 @@ export class GitUseCases {
     command: CheckDirectoryExistenceCommand,
   ): Promise<CheckDirectoryExistenceResult> {
     return this._checkDirectoryExistence.execute(command);
+  }
+
+  public async buildGitHubAppManifest(
+    command: BuildGitHubAppManifestCommand,
+  ): Promise<BuildGitHubAppManifestResponse> {
+    return this._buildGitHubAppManifest.execute(command);
+  }
+
+  public async registerGitHubAppFromManifest(
+    command: RegisterGitHubAppFromManifestCommand,
+  ): Promise<RegisterGitHubAppFromManifestResponse> {
+    return this._registerGitHubAppFromManifest.execute(command);
+  }
+
+  public async getGitHubAppStatus(
+    command: GetGitHubAppStatusCommand,
+  ): Promise<GetGitHubAppStatusResponse> {
+    return this._getGitHubAppStatus.execute(command);
   }
 }

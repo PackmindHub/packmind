@@ -3,6 +3,8 @@ import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,
+  BuildGitHubAppManifestCommand,
+  BuildGitHubAppManifestResponse,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   DeleteItem,
@@ -12,6 +14,8 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
+  GetGitHubAppStatusCommand,
+  GetGitHubAppStatusResponse,
   GitCommit,
   GitProvider,
   GitProviderId,
@@ -31,11 +35,14 @@ import {
   ListProvidersResponse,
   OrganizationId,
   QueryOption,
+  RegisterGitHubAppFromManifestCommand,
+  RegisterGitHubAppFromManifestResponse,
   UserId,
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
 import { GitServices } from '../GitServices';
+import { GitHubAppManifestStateService } from '../services/GitHubAppManifestStateService';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
 import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/checkBranchExists.usecase';
@@ -51,6 +58,9 @@ import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationR
 import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/getRepositoryById.usecase';
 import { HandleWebHook } from '../useCases/handleWebHook/handleWebHook.usecase';
 import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
+import { BuildGitHubAppManifestUseCase } from '../useCases/githubApp/buildGitHubAppManifest/buildGitHubAppManifest.usecase';
+import { GetGitHubAppStatusUseCase } from '../useCases/githubApp/getGitHubAppStatus/getGitHubAppStatus.usecase';
+import { RegisterGitHubAppFromManifestUseCase } from '../useCases/githubApp/registerGitHubAppFromManifest/registerGitHubAppFromManifest.usecase';
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAvailableRepos.usecase';
 import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
 import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
@@ -83,11 +93,16 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _findGitRepoByOwnerRepoAndBranchInOrganization!: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
   private _getAvailableRemoteDirectories!: GetAvailableRemoteDirectoriesUseCase;
   private _checkDirectoryExistence!: CheckDirectoryExistenceUseCase;
+  private _buildGitHubAppManifest!: BuildGitHubAppManifestUseCase;
+  private _registerGitHubAppFromManifest!: RegisterGitHubAppFromManifestUseCase;
+  private _getGitHubAppStatus!: GetGitHubAppStatusUseCase;
+  private readonly _manifestStateService: GitHubAppManifestStateService;
 
   constructor(
     private readonly gitServices: GitServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    this._manifestStateService = new GitHubAppManifestStateService();
     this.logger.info('GitAdapter constructed - awaiting initialization');
   }
 
@@ -216,6 +231,26 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
+    );
+
+    const gitHubAppConfigRepository =
+      this.gitServices.getGitHubAppConfigRepository();
+
+    this._buildGitHubAppManifest = new BuildGitHubAppManifestUseCase(
+      this.accountsPort,
+      this._manifestStateService,
+    );
+
+    this._registerGitHubAppFromManifest =
+      new RegisterGitHubAppFromManifestUseCase(
+        this.accountsPort,
+        gitHubAppConfigRepository,
+        this._manifestStateService,
+      );
+
+    this._getGitHubAppStatus = new GetGitHubAppStatusUseCase(
+      this.accountsPort,
+      gitHubAppConfigRepository,
     );
 
     this.logger.info('GitAdapter initialized successfully with all use cases');
@@ -457,5 +492,27 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       input,
       onComplete,
     );
+  }
+
+  // ===========================
+  // GitHub App Admin Use Cases
+  // ===========================
+
+  public async buildGitHubAppManifest(
+    command: BuildGitHubAppManifestCommand,
+  ): Promise<BuildGitHubAppManifestResponse> {
+    return this._buildGitHubAppManifest.execute(command);
+  }
+
+  public async registerGitHubAppFromManifest(
+    command: RegisterGitHubAppFromManifestCommand,
+  ): Promise<RegisterGitHubAppFromManifestResponse> {
+    return this._registerGitHubAppFromManifest.execute(command);
+  }
+
+  public async getGitHubAppStatus(
+    command: GetGitHubAppStatusCommand,
+  ): Promise<GetGitHubAppStatusResponse> {
+    return this._getGitHubAppStatus.execute(command);
   }
 }

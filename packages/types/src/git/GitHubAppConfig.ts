@@ -13,3 +13,8 @@ export type GitHubAppConfig = {
   privateKey: string;
   webhookSecret: string;
 };
+
+export type GitHubAppConfigSummary = Omit<
+  GitHubAppConfig,
+  'clientSecret' | 'privateKey' | 'webhookSecret'
+>;
