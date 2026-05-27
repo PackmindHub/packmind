@@ -1,5 +1,6 @@
 import {
   GitProviderId,
+  GitProviderAuthType,
   GitProviderVendor,
   GitRepoId,
   OrganizationId,
@@ -18,6 +19,8 @@ export interface GitProviderUI {
   organizationId: OrganizationId;
   hasToken: boolean;
   url: string | null;
+  authType?: GitProviderAuthType;
+  githubAppInstallationId?: number | null;
   repos?: GitRepoUI[];
 }
 

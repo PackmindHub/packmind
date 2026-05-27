@@ -16,6 +16,7 @@ import {
 } from '@packmind/ui';
 import {
   useGetAvailableRepositoriesQuery,
+  useGetGitHubAppInstallationRepositoriesQuery,
   useAddRepositoryMutation,
 } from '../../api/queries';
 import {
@@ -23,11 +24,25 @@ import {
   AvailableRepository,
   AddRepositoryForm,
 } from '../../types/GitProviderTypes';
+import { InstallationRepository } from '@packmind/types';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { GIT_MESSAGES } from '../../constants/messages';
 
 interface RepositorySelectorProps {
   provider: GitProviderUI;
+}
+
+function adaptInstallationRepository(
+  repo: InstallationRepository,
+): AvailableRepository {
+  return {
+    owner: repo.owner,
+    name: repo.name,
+    fullName: repo.fullName,
+    description: repo.description ?? undefined,
+    private: repo.private,
+    defaultBranch: repo.defaultBranch,
+  };
 }
 
 export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
@@ -42,11 +57,19 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   );
   const [customBranch, setCustomBranch] = useState('');
 
-  const {
-    data: availableRepos,
-    isLoading: reposLoading,
-    isError: reposError,
-  } = useGetAvailableRepositoriesQuery(provider.id);
+  const isGitHubApp = provider.authType === 'github_app';
+
+  const patQuery = useGetAvailableRepositoriesQuery(provider.id);
+  const appQuery = useGetGitHubAppInstallationRepositoriesQuery(
+    isGitHubApp ? provider.id : undefined,
+  );
+
+  const reposLoading = isGitHubApp ? appQuery.isLoading : patQuery.isLoading;
+  const reposError = isGitHubApp ? appQuery.isError : patQuery.isError;
+
+  const availableRepos: AvailableRepository[] = isGitHubApp
+    ? (appQuery.data?.repositories.map(adaptInstallationRepository) ?? [])
+    : (patQuery.data ?? []);
 
   const addRepositoryMutation = useAddRepositoryMutation();
 
