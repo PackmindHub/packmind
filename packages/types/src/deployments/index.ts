@@ -24,6 +24,9 @@ export * from './DistributedPackage';
 // Contracts
 export * from './contracts';
 
+// Errors
+export * from './errors';
+
 // Events
 export * from './events';
 

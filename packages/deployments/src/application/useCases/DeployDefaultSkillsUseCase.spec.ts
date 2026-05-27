@@ -17,6 +17,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { getDefaultSkillId } from '../utils/defaultSkillIdUtils';
 import { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 
 const createMockDeployer = (
@@ -170,11 +171,11 @@ describe('DeployDefaultSkillsUseCase', () => {
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
           {
-            path: '.claude/skills/skill-creator/SKILL.md',
+            path: '.claude/skills/packmind-create-skill/SKILL.md',
             content: 'skill content',
           },
           {
-            path: '.claude/skills/skill-creator/README.md',
+            path: '.claude/skills/packmind-create-skill/README.md',
             content: 'readme content',
           },
         ],
@@ -192,7 +193,7 @@ describe('DeployDefaultSkillsUseCase', () => {
             skippedSkillsCount: 0,
             deployedSkills: [
               {
-                slug: 'skill-creator',
+                slug: 'packmind-create-skill',
                 name: 'Skill Creator',
                 version: 1,
               },
@@ -208,10 +209,10 @@ describe('DeployDefaultSkillsUseCase', () => {
       it('returns enriched file updates from deployer', () => {
         expect(result.fileUpdates.createOrUpdate).toHaveLength(2);
         expect(result.fileUpdates.createOrUpdate[0]).toMatchObject({
-          path: '.claude/skills/skill-creator/SKILL.md',
+          path: '.claude/skills/packmind-create-skill/SKILL.md',
           artifactType: 'skill',
-          artifactId: 'skill-creator',
-          artifactSlug: 'skill-creator',
+          artifactId: getDefaultSkillId('packmind-create-skill'),
+          artifactSlug: 'packmind-create-skill',
           artifactName: 'Skill Creator',
           artifactVersion: 1,
           source: 'default',
@@ -224,17 +225,24 @@ describe('DeployDefaultSkillsUseCase', () => {
 
       it('populates lockFileSlice with default-skill keyed entries', () => {
         expect(Object.keys(result.lockFileSlice)).toEqual([
-          'default:skill:skill-creator',
+          'default:skill:packmind-create-skill',
         ]);
         expect(
-          result.lockFileSlice['default:skill:skill-creator'],
+          result.lockFileSlice['default:skill:packmind-create-skill'],
         ).toMatchObject({
           name: 'Skill Creator',
           type: 'skill',
-          id: 'skill-creator',
+          id: getDefaultSkillId('packmind-create-skill'),
           version: 1,
           source: 'default',
         });
+      });
+
+      it('reuses the same id for the same slug across runs in-process', async () => {
+        const secondResult = await useCase.execute(command);
+        expect(
+          secondResult.lockFileSlice['default:skill:packmind-create-skill'].id,
+        ).toBe(result.lockFileSlice['default:skill:packmind-create-skill'].id);
       });
 
       it('does not emit warn logs from the PackmindLockFileService gate', () => {
@@ -296,7 +304,7 @@ describe('DeployDefaultSkillsUseCase', () => {
           fileUpdates: {
             createOrUpdate: [
               {
-                path: '.claude/skills/packmind/skill-creator/SKILL.md',
+                path: '.claude/skills/packmind/packmind-create-skill/SKILL.md',
                 content: 'claude skill',
               },
             ],
@@ -325,7 +333,7 @@ describe('DeployDefaultSkillsUseCase', () => {
 
     it('returns file updates with correct path', () => {
       expect(result.fileUpdates.createOrUpdate[0].path).toBe(
-        '.claude/skills/packmind/skill-creator/SKILL.md',
+        '.claude/skills/packmind/packmind-create-skill/SKILL.md',
       );
     });
 
@@ -356,7 +364,7 @@ describe('DeployDefaultSkillsUseCase', () => {
           fileUpdates: {
             createOrUpdate: [
               {
-                path: '.claude/skills/packmind/skill-creator/SKILL.md',
+                path: '.claude/skills/packmind/packmind-create-skill/SKILL.md',
                 content: 'claude skill',
               },
             ],

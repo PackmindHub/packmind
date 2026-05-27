@@ -15,6 +15,7 @@ import {
   OrganizationOnboardingStatus,
   IPullContentResponse,
   InstallPackagesResponse,
+  InvalidArtifactIdError,
   ListPackagesResponse,
   GetPackageSummaryResponse,
   IAccountsPort,
@@ -383,6 +384,11 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
+
+      if (error instanceof InvalidArtifactIdError) {
+        throw new BadRequestException(error.message);
+      }
+
       throw error;
     }
   }
