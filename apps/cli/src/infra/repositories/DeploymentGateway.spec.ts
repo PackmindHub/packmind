@@ -264,6 +264,64 @@ describe('DeploymentGateway', () => {
     });
   });
 
+  describe('renderPlugin', () => {
+    const command = {
+      packageSlug: 'security',
+      mode: 'marketplace' as const,
+      pluginRoot: 'plugins/security/',
+      pluginName: 'security',
+    };
+
+    beforeEach(() => {
+      mockHttpClient.request.mockResolvedValue({
+        files: [],
+        skippedStandardsCount: 0,
+        pluginName: 'security',
+        pluginVersion: '1.0.0',
+      });
+    });
+
+    it('POSTs to the plugins render endpoint with the command body', async () => {
+      await gateway.renderPlugin(command);
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/plugins/render`,
+        {
+          method: 'POST',
+          body: {
+            packageSlug: 'security',
+            mode: 'marketplace',
+            pluginRoot: 'plugins/security/',
+            pluginName: 'security',
+          },
+        },
+      );
+    });
+
+    it('returns the render response', async () => {
+      const result = await gateway.renderPlugin(command);
+
+      expect(result).toEqual({
+        files: [],
+        skippedStandardsCount: 0,
+        pluginName: 'security',
+        pluginVersion: '1.0.0',
+      });
+    });
+
+    describe('when API request fails', () => {
+      it('propagates the error from httpClient', async () => {
+        mockHttpClient.request.mockRejectedValue(
+          new Error('Package not found'),
+        );
+
+        await expect(gateway.renderPlugin(command)).rejects.toThrow(
+          'Package not found',
+        );
+      });
+    });
+  });
+
   describe('getLatestVersion', () => {
     const spaceId = 'space-42';
 

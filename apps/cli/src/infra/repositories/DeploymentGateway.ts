@@ -9,6 +9,7 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
+  IRenderPackageAsPluginUseCase,
   RenderMode,
 } from '@packmind/types';
 import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway';
@@ -144,6 +145,24 @@ export class DeploymentGateway implements IDeploymentGateway {
         },
       );
     };
+
+  public renderPlugin: Gateway<IRenderPackageAsPluginUseCase> = async (
+    command,
+  ) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/plugins/render`,
+      {
+        method: 'POST',
+        body: {
+          packageSlug: command.packageSlug,
+          mode: command.mode,
+          pluginRoot: command.pluginRoot,
+          pluginName: command.pluginName,
+        },
+      },
+    );
+  };
 
   public getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
     async () => {

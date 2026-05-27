@@ -75,6 +75,7 @@ import {
   HierarchicalConfigResult,
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
+  IRenderPackageAsPluginUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
@@ -378,6 +379,14 @@ export class PackmindCliHexa {
         command,
       );
     };
+
+  public renderPlugin: Gateway<IRenderPackageAsPluginUseCase> = async (
+    command,
+  ) => {
+    return this.hexa.repositories.packmindGateway.deployment.renderPlugin(
+      command,
+    );
+  };
 
   public async uploadSkill(
     command: UploadSkillCommand,

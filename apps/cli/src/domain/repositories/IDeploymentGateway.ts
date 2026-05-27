@@ -8,6 +8,7 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
+  IRenderPackageAsPluginUseCase,
   RenderMode,
 } from '@packmind/types';
 
@@ -18,6 +19,7 @@ export interface IDeploymentGateway {
   getContentByVersions: Gateway<IGetContentByVersionsUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
   notifyArtefactsDistribution: Gateway<INotifyArtefactsDistribution>;
+  renderPlugin: Gateway<IRenderPackageAsPluginUseCase>;
   getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
   updateRenderModeConfiguration(command: {
     activeRenderModes: RenderMode[];
