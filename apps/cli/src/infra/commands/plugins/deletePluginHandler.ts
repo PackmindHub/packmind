@@ -1,5 +1,6 @@
 import { rmSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
   detectPluginMode,
   readMarketplace,
@@ -8,12 +9,15 @@ import {
   removePluginEntry,
   isRemoteSource,
 } from './pluginsContext';
+import { resolveGitContext } from './resolveGitContext';
+import { logWarningConsole } from '../../utils/consoleLogger';
 
 export type DeletePluginArgs = {
   packageSlug: string;
 };
 
 export type DeletePluginHandlerDependencies = {
+  packmindCliHexa: PackmindCliHexa;
   exit: (code: number) => void;
   getCwd: () => string;
   log: (message: string) => void;
@@ -37,6 +41,7 @@ export async function deletePluginHandler(
   }
 
   const pluginName = args.packageSlug.split('/').pop() as string;
+  const { gitRemoteUrl } = await resolveGitContext(deps.packmindCliHexa, cwd);
 
   if (ctx.mode === 'marketplace') {
     const manifestPath = ctx.manifestPath as string;
@@ -62,6 +67,7 @@ export async function deletePluginHandler(
     rmSync(join(cwd, entry.source), { recursive: true, force: true });
     writeMarketplace(manifestPath, removePluginEntry(marketplace, pluginName));
     deps.log(`Removed ${entry.source} and updated marketplace.json`);
+    await trackDeletion(deps, args.packageSlug, gitRemoteUrl);
     deps.exit(0);
     return;
   }
@@ -90,7 +96,23 @@ export async function deletePluginHandler(
     rmSync(join(cwd, 'commands'), { recursive: true, force: true });
     rmSync(join(cwd, 'skills'), { recursive: true, force: true });
     deps.log(`Removed rendered files for "${pluginName}"`);
+    await trackDeletion(deps, args.packageSlug, gitRemoteUrl);
     deps.exit(0);
     return;
+  }
+}
+
+async function trackDeletion(
+  deps: DeletePluginHandlerDependencies,
+  packageSlug: string,
+  gitRemoteUrl: string,
+): Promise<void> {
+  try {
+    await deps.packmindCliHexa.trackPluginDeleted({
+      packageSlug,
+      gitRemoteUrl,
+    });
+  } catch {
+    logWarningConsole('Failed to notify Packmind of plugin deletion');
   }
 }

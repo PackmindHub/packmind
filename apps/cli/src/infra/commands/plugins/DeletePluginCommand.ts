@@ -1,4 +1,6 @@
 import { command, positional, string } from 'cmd-ts';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { deletePluginHandler } from './deletePluginHandler';
 import { confirmOverwrite } from './confirmOverwrite';
 
@@ -13,9 +15,13 @@ export const deletePluginCommand = command({
     }),
   },
   handler: async ({ packageSlug }) => {
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
     await deletePluginHandler(
       { packageSlug },
       {
+        packmindCliHexa,
         exit: process.exit,
         getCwd: () => process.cwd(),
         log: console.log,

@@ -10,6 +10,7 @@ import {
   upsertPluginEntry,
   isRemoteSource,
 } from './pluginsContext';
+import { resolveGitContext } from './resolveGitContext';
 
 export type RenderPluginArgs = {
   packageSlug: string;
@@ -40,6 +41,10 @@ export async function renderPluginHandler(
   }
 
   const pluginName = pluginNameFromSlug(args.packageSlug);
+  const { gitRemoteUrl, gitBranch } = await resolveGitContext(
+    deps.packmindCliHexa,
+    cwd,
+  );
 
   if (ctx.mode === 'marketplace') {
     const manifestPath = ctx.manifestPath as string;
@@ -72,6 +77,8 @@ export async function renderPluginHandler(
         mode: 'marketplace',
         pluginRoot: existingPluginRoot,
         pluginName,
+        gitRemoteUrl,
+        gitBranch,
       });
 
       writeFiles(cwd, response.files);
@@ -103,6 +110,8 @@ export async function renderPluginHandler(
       mode: 'marketplace',
       pluginRoot,
       pluginName,
+      gitRemoteUrl,
+      gitBranch,
     });
 
     writeFiles(cwd, response.files);
@@ -147,6 +156,8 @@ export async function renderPluginHandler(
       mode: 'standalone',
       pluginRoot: '/',
       pluginName,
+      gitRemoteUrl,
+      gitBranch,
     });
 
     writeFiles(cwd, response.files);

@@ -17,6 +17,9 @@ type Deps = Parameters<typeof renderPluginHandler>[1];
 describe('renderPluginHandler', () => {
   let tmp: string;
   let renderPlugin: jest.Mock;
+  let tryGetGitRepositoryRoot: jest.Mock;
+  let getGitRemoteUrlFromPath: jest.Mock;
+  let getCurrentBranch: jest.Mock;
   let exit: jest.Mock;
   let log: jest.Mock;
   let error: jest.Mock;
@@ -34,7 +37,12 @@ describe('renderPluginHandler', () => {
   });
 
   const buildDeps = (): Deps => ({
-    packmindCliHexa: { renderPlugin } as never,
+    packmindCliHexa: {
+      renderPlugin,
+      tryGetGitRepositoryRoot,
+      getGitRemoteUrlFromPath,
+      getCurrentBranch,
+    } as never,
     exit: exit as never,
     getCwd: () => tmp,
     log: log as never,
@@ -53,6 +61,11 @@ describe('renderPluginHandler', () => {
   beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'pm-render-'));
     renderPlugin = jest.fn().mockResolvedValue(buildResponse());
+    tryGetGitRepositoryRoot = jest.fn().mockResolvedValue(tmp);
+    getGitRemoteUrlFromPath = jest
+      .fn()
+      .mockReturnValue('git@github.com:org/repo.git');
+    getCurrentBranch = jest.fn().mockReturnValue('main');
     exit = jest.fn();
     log = jest.fn();
     error = jest.fn();
@@ -88,6 +101,8 @@ describe('renderPluginHandler', () => {
         mode: 'marketplace',
         pluginRoot: 'plugins/security/',
         pluginName: 'security',
+        gitRemoteUrl: 'git@github.com:org/repo.git',
+        gitBranch: 'main',
       });
     });
 
@@ -159,6 +174,16 @@ describe('renderPluginHandler', () => {
 
       expect(exit).toHaveBeenCalledWith(0);
     });
+
+    it('passes empty git context when not in a git repository', async () => {
+      tryGetGitRepositoryRoot.mockResolvedValue(null);
+
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(renderPlugin).toHaveBeenCalledWith(
+        expect.objectContaining({ gitRemoteUrl: '', gitBranch: '' }),
+      );
+    });
   });
 
   describe('marketplace mode with an existing local entry', () => {
@@ -198,6 +223,8 @@ describe('renderPluginHandler', () => {
           mode: 'marketplace',
           pluginRoot: 'backend/plugins/security/',
           pluginName: 'security',
+          gitRemoteUrl: 'git@github.com:org/repo.git',
+          gitBranch: 'main',
         });
       });
 
@@ -354,6 +381,8 @@ describe('renderPluginHandler', () => {
             mode: 'standalone',
             pluginRoot: '/',
             pluginName: 'security',
+            gitRemoteUrl: 'git@github.com:org/repo.git',
+            gitBranch: 'main',
           });
         });
 

@@ -12,8 +12,18 @@ describe('deletePluginHandler', () => {
   let log: jest.Mock;
   let error: jest.Mock;
   let confirmOverwrite: jest.Mock;
+  let trackPluginDeleted: jest.Mock;
+  let tryGetGitRepositoryRoot: jest.Mock;
+  let getGitRemoteUrlFromPath: jest.Mock;
+  let getCurrentBranch: jest.Mock;
 
   const buildDeps = (): Deps => ({
+    packmindCliHexa: {
+      trackPluginDeleted,
+      tryGetGitRepositoryRoot,
+      getGitRemoteUrlFromPath,
+      getCurrentBranch,
+    } as never,
     exit: exit as never,
     getCwd: () => tmp,
     log: log as never,
@@ -35,6 +45,12 @@ describe('deletePluginHandler', () => {
     log = jest.fn();
     error = jest.fn();
     confirmOverwrite = jest.fn();
+    trackPluginDeleted = jest.fn().mockResolvedValue(undefined);
+    tryGetGitRepositoryRoot = jest.fn().mockResolvedValue(tmp);
+    getGitRemoteUrlFromPath = jest
+      .fn()
+      .mockReturnValue('git@github.com:org/repo.git');
+    getCurrentBranch = jest.fn().mockReturnValue('main');
   });
 
   afterEach(() => {
@@ -84,6 +100,35 @@ describe('deletePluginHandler', () => {
 
       expect(exit).toHaveBeenCalledWith(0);
     });
+
+    it('tracks the deletion with the resolved git remote url', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).toHaveBeenCalledTimes(1);
+      expect(trackPluginDeleted).toHaveBeenCalledWith({
+        packageSlug: 'security',
+        gitRemoteUrl: 'git@github.com:org/repo.git',
+      });
+    });
+
+    it('tracks with an empty git remote url when not in a git repository', async () => {
+      tryGetGitRepositoryRoot.mockResolvedValue(null);
+
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).toHaveBeenCalledWith({
+        packageSlug: 'security',
+        gitRemoteUrl: '',
+      });
+    });
+
+    it('still exits zero when tracking fails', async () => {
+      trackPluginDeleted.mockRejectedValue(new Error('network'));
+
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(exit).toHaveBeenCalledWith(0);
+    });
   });
 
   describe('marketplace mode with a remote entry', () => {
@@ -114,6 +159,12 @@ describe('deletePluginHandler', () => {
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(findPluginEntry(mp, 'security')).toBeDefined();
     });
+
+    it('does not track the deletion', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).not.toHaveBeenCalled();
+    });
   });
 
   describe('marketplace mode with no matching entry', () => {
@@ -138,6 +189,12 @@ describe('deletePluginHandler', () => {
 
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(mp.plugins).toHaveLength(1);
+    });
+
+    it('does not track the deletion', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).not.toHaveBeenCalled();
     });
   });
 
@@ -178,6 +235,15 @@ describe('deletePluginHandler', () => {
 
         expect(exit).toHaveBeenCalledWith(0);
       });
+
+      it('tracks the deletion', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(trackPluginDeleted).toHaveBeenCalledWith({
+          packageSlug: 'security',
+          gitRemoteUrl: 'git@github.com:org/repo.git',
+        });
+      });
     });
 
     describe('when the name matches and the user declines', () => {
@@ -199,6 +265,12 @@ describe('deletePluginHandler', () => {
 
         expect(exit).toHaveBeenCalledWith(0);
       });
+
+      it('does not track the deletion', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(trackPluginDeleted).not.toHaveBeenCalled();
+      });
     });
 
     describe('when the name does not match', () => {
@@ -219,6 +291,12 @@ describe('deletePluginHandler', () => {
         await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
 
         expect(confirmOverwrite).not.toHaveBeenCalled();
+      });
+
+      it('does not track the deletion', async () => {
+        await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        expect(trackPluginDeleted).not.toHaveBeenCalled();
       });
     });
   });
