@@ -45,7 +45,7 @@
           "outExtension": {
             ".js": ".js"
           },
-          "external": ["class-validator", "class-transformer"]
+          "external": ["class-validator", "class-transformer", "pg", "ioredis"]
         }
       },
       "configurations": {
@@ -56,7 +56,12 @@
             "outExtension": {
               ".js": ".js"
             },
-            "external": ["class-validator", "class-transformer"]
+            "external": [
+              "class-validator",
+              "class-transformer",
+              "pg",
+              "ioredis"
+            ]
           }
         }
       }

@@ -35,6 +35,11 @@ module.exports = {
 
   optimization: {
     minimize: process.env['NODE_ENV'] === 'production',
+    // SWC's CJS output uses getter-based re-exports that webpack can mark
+    // as unused even when consumers access them dynamically (e.g.
+    // `_nodeutils.AbstractAIDelayedJob`). Disable usedExports so live
+    // re-exports survive production tree-shaking.
+    usedExports: false,
     minimizer: [
       new (require('terser-webpack-plugin'))({
         terserOptions: {

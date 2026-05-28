@@ -1,6 +1,11 @@
 // This import MUST be first - before any other imports
 import './instrument';
 
+// Ensure pg and ioredis drivers are declared as runtime dependencies for
+// Nx generatePackageJson. typeorm and bullmq load them dynamically, so esbuild
+// cannot statically detect them; npm --omit=dev then skips them as devOptional.
+import 'pg';
+import 'ioredis';
 import * as Sentry from '@sentry/node';
 import Fastify from 'fastify';
 import { app } from './app/app';
