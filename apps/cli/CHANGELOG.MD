@@ -1,17 +1,13 @@
-# [Unreleased]
+# [0.29.1] - 2026-05-28
 
 ## Added
 
 - Parse and preserve new skill frontmatter fields when syncing SKILL.md files: `arguments` (Claude Code), `paths` (Cursor), and `context` (GitHub Copilot, experimental)
 - `install` now supports running inside your `~/.claude` home directory: single-agent home-install mode renders for Claude only, auto-creates `packmind.json` with `agents: ['claude']`, strips the redundant `.claude/` path prefix, and skips distribution notifications.
 
-## Changed
-
 ## Fixed
 
 - `install` summary now reports exactly which artifacts changed on disk. Previously, re-running `install` after deleting an agent-rendered file (e.g. `rm -rf .claude/skills/*`) printed `Already up to date`, and a fully idempotent second `install` could print `Synced N standard, M command, K skill` even though nothing on disk had changed. The summary is now driven by per-artifact change tracking (skill / standard / command), so the output reflects what actually moved.
-
-## Removed
 
 # [0.29.0] - 2026-05-22
 
@@ -373,7 +369,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.0...HEAD
+[0.29.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.0...release-cli/0.29.1
 [0.29.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...release-cli/0.29.0
 [0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1
 [0.28.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.27.0...release-cli/0.28.0
