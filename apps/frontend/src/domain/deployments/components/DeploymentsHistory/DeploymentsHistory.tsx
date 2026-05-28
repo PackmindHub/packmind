@@ -140,6 +140,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   const getCommitLinks = (deployment: Distribution) => {
     const commit = deployment.gitCommit;
+    const pullRequestUrl = deployment.metadata?.pullRequestUrl;
+
     if (!commit) {
       if (deployment.status === 'in_progress') {
         return (
@@ -163,21 +165,33 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       return null;
     }
     return (
-      <PMBox>
-        <PMLink
-          variant="active"
-          href={commit.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {commit.sha.substring(0, 7)}
-        </PMLink>
-        {commit.message && (
-          <PMText as="span" variant="small" ml={2}>
-            {commit.message.length > 50
-              ? `${commit.message.substring(0, 50)}...`
-              : commit.message}
-          </PMText>
+      <PMBox display="flex" flexDirection="column" gap={1}>
+        <PMBox>
+          <PMLink
+            variant="active"
+            href={commit.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {commit.sha.substring(0, 7)}
+          </PMLink>
+          {commit.message && (
+            <PMText as="span" variant="small" ml={2}>
+              {commit.message.length > 50
+                ? `${commit.message.substring(0, 50)}...`
+                : commit.message}
+            </PMText>
+          )}
+        </PMBox>
+        {pullRequestUrl && (
+          <PMLink
+            variant="active"
+            href={pullRequestUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View pull request
+          </PMLink>
         )}
       </PMBox>
     );
