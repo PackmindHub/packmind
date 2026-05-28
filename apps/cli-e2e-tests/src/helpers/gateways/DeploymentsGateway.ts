@@ -3,7 +3,7 @@ import {
   Gateway,
   IGetTargetsByOrganizationUseCase,
   IUpdateRenderModeConfigurationUseCase,
-  Distribution
+  Distribution,
 } from '@packmind/types';
 import { IDeploymentsGateway } from '../IPackmindGateway';
 
