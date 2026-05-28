@@ -56,6 +56,7 @@ import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
 import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/checkBranchExists.usecase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
+import { CommitAndOpenPullRequest } from '../useCases/commitAndOpenPullRequest/commitAndOpenPullRequest.usecase';
 import { CommitToGit } from '../useCases/commitToGit/commitToGit.usecase';
 import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/deleteGitProvider.usecase';
 import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/deleteGitRepo.usecase';
@@ -97,6 +98,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
   private _commitToGit!: CommitToGit;
+  private _commitAndOpenPullRequest!: CommitAndOpenPullRequest;
   private _handleWebHook!: HandleWebHook;
   private _handleWebHookWithoutContent!: HandleWebHookWithoutContent;
   private _getFileFromRepo!: GetFileFromRepo;
@@ -194,6 +196,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
+    );
+
+    this._commitAndOpenPullRequest = new CommitAndOpenPullRequest(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoFactory(),
+      this._commitToGit,
     );
 
     this._handleWebHook = new HandleWebHook(
@@ -442,6 +450,16 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       commitMessage,
       deleteFiles,
     );
+  }
+
+  public commitAndOpenPullRequest(input: {
+    repo: GitRepo;
+    files: FileModification[];
+    commitMessage: string;
+    pullRequest: { title: string; body: string };
+    deleteFiles?: DeleteItem[];
+  }): Promise<{ commit: GitCommit; pullRequestUrl: string }> {
+    return this._commitAndOpenPullRequest.execute(input);
   }
 
   public async handleWebHook(

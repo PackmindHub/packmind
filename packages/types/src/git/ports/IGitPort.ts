@@ -85,6 +85,25 @@ export interface IGitPort {
   ): Promise<GitCommit>;
 
   /**
+   * Commit files via a pull request workflow.
+   *
+   * Only supported for GitHub App-authenticated providers. The use case
+   * ensures the Packmind PR branch exists, pushes the commit onto it, and
+   * either reuses the existing open PR or opens a new one targeting
+   * `repo.branch`.
+   *
+   * @param input - The commit + PR request shape
+   * @returns Promise resolving to the commit and the resulting PR URL
+   */
+  commitAndOpenPullRequest(input: {
+    repo: GitRepo;
+    files: FileModification[];
+    commitMessage: string;
+    pullRequest: { title: string; body: string };
+    deleteFiles?: DeleteItem[];
+  }): Promise<{ commit: GitCommit; pullRequestUrl: string }>;
+
+  /**
    * Get file content from a git repository
    *
    * @param gitRepo - The git repository
