@@ -2,6 +2,13 @@
 node_modules/
 .vscode/
 .idea/
+.agents/
+.codex/
+.claude/plans/
+.claude/specs/
+qa-test/
+qa-tmp/
+specs/
 dist/
 docs/
 tmp/

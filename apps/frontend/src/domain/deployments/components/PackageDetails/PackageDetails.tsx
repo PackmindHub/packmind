@@ -18,7 +18,9 @@ import {
   PMDataList,
   PMTabs,
   PMEmptyState,
+  PMAccordion,
 } from '@packmind/ui';
+import { LuTerminal } from 'react-icons/lu';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   useGetPackageByIdQuery,
@@ -260,6 +262,7 @@ export const PackageDetails = ({
     recipeCount === 0 && standardCount === 0 && skillCount === 0;
 
   const installCommand = `packmind-cli install @${spaceSlug}/${pkg.slug}`;
+  const installAsClaudePluginCommand = `packmind-cli plugins render @${spaceSlug}/${pkg.slug}`;
 
   return (
     <PMPage
@@ -310,7 +313,11 @@ export const PackageDetails = ({
             triggerLabel: 'Content',
             content: (
               <PMVStack align="stretch" gap="6" pt={4}>
-                <PMHStack gap={8} align="center" justifyContent="space-between">
+                <PMHStack
+                  gap={8}
+                  align="flex-start"
+                  justifyContent="space-between"
+                >
                   <PMDataList
                     size="md"
                     orientation="horizontal"
@@ -321,21 +328,57 @@ export const PackageDetails = ({
                       },
                     ]}
                   />
-                  <PMHStack
-                    gap={2}
-                    align="center"
-                    flexGrow={1}
-                    justifyContent="flex-end"
-                  >
-                    <PMText variant="small" color="primary" fontWeight="medium">
-                      Install package
-                    </PMText>
-                    <CopiableTextField
-                      value={installCommand}
-                      readOnly
-                      width="auto"
-                    />
-                  </PMHStack>
+                  {!isPackageEmpty && (
+                    <PMVStack
+                      align="stretch"
+                      gap={2}
+                      width="full"
+                      maxWidth="md"
+                    >
+                      <PMHStack gap={2} align="center">
+                        <LuTerminal />
+                        <PMText variant="body" fontWeight="medium">
+                          Install this package
+                        </PMText>
+                      </PMHStack>
+                      <CopiableTextField value={installCommand} readOnly />
+                      <PMAccordion.Root collapsible>
+                        <PMAccordion.Item
+                          value="more-install-options"
+                          border="none"
+                        >
+                          <PMAccordion.ItemTrigger
+                            cursor="pointer"
+                            py={1}
+                            width="fit-content"
+                          >
+                            <PMAccordion.ItemIndicator />
+                            <PMText
+                              variant="small"
+                              fontWeight="medium"
+                              color="secondary"
+                            >
+                              More install options
+                            </PMText>
+                          </PMAccordion.ItemTrigger>
+                          <PMAccordion.ItemContent pt={3} pb={1}>
+                            <PMVStack align="stretch" gap={2}>
+                              <PMText variant="body" fontWeight="medium">
+                                Install as Claude plugin
+                              </PMText>
+                              <PMText variant="small" color="secondary">
+                                Use this package as a Claude Code plugin.
+                              </PMText>
+                              <CopiableTextField
+                                value={installAsClaudePluginCommand}
+                                readOnly
+                              />
+                            </PMVStack>
+                          </PMAccordion.ItemContent>
+                        </PMAccordion.Item>
+                      </PMAccordion.Root>
+                    </PMVStack>
+                  )}
                 </PMHStack>
                 {pkg.description && (
                   <PMBox>
