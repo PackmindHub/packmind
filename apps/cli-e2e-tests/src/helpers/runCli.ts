@@ -7,6 +7,12 @@ export interface RunCliOptions {
   apiKey?: string;
   cwd?: string;
   home?: string;
+  /**
+   * Optional data to pipe to the CLI process's stdin. When provided, stdin is
+   * set to 'pipe' (instead of the default 'ignore') and this string is written
+   * then the stream is closed. Used to answer interactive confirmation prompts.
+   */
+  stdin?: string;
 }
 
 export interface RunCliResult {
@@ -86,19 +92,26 @@ export async function runCli(
     }),
   };
 
+  const stdinMode = opts?.stdin !== undefined ? 'pipe' : 'ignore';
+
   return new Promise((resolve, reject) => {
     const isJsFile = cliPath.endsWith('.cjs') || cliPath.endsWith('.js');
     const child = isJsFile
       ? spawn('node', [cliPath, ...args], {
           env,
           cwd: opts?.cwd || process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio: [stdinMode, 'pipe', 'pipe'],
         })
       : spawn(cliPath, args, {
           env,
           cwd: opts?.cwd || process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio: [stdinMode, 'pipe', 'pipe'],
         });
+
+    if (opts?.stdin !== undefined) {
+      child.stdin?.write(opts.stdin);
+      child.stdin?.end();
+    }
 
     let stdout = '';
     let stderr = '';

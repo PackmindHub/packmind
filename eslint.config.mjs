@@ -24,6 +24,7 @@ export default [
       '**/.docusaurus',
       '**/js-playground',
       '**/js-playground-local',
+      '**/.agents/**',
     ],
   },
   {

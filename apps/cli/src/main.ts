@@ -15,6 +15,7 @@ import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
 import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
+import { pluginsCommand } from './infra/commands/PluginsCommand';
 import { playbookCommand } from './infra/commands/PlaybookCommand';
 import { spacesCommand } from './infra/commands/SpacesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
@@ -103,6 +104,7 @@ const app = subcommands({
     login: loginCommand,
     logout: logoutCommand,
     packages: packagesCommand,
+    plugins: pluginsCommand,
     playbook: playbookCommand,
     skills: skillsCommand,
     spaces: spacesCommand,

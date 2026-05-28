@@ -40,10 +40,16 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       incompatibleInstalledSkills: [],
     };
 
-    // Read agents configuration from packmind.json
-    const config =
-      await this.repositories.configFileRepository.readConfig(baseDirectory);
-    const agents = config?.agents;
+    // Prefer the agents explicitly passed by the caller (the install flow
+    // hands us the server-resolved list, which already includes the
+    // organisation-level fallback). Fall back to packmind.json for callers
+    // that don't yet supply one (skills init, init, bootstrap).
+    let agents = command.agents;
+    if (!agents || agents.length === 0) {
+      const config =
+        await this.repositories.configFileRepository.readConfig(baseDirectory);
+      agents = config?.agents;
+    }
 
     // Fetch default skills from the gateway
     // Note: userId and organizationId are extracted from the API key by the gateway

@@ -13,6 +13,7 @@ describe('VALID_CODING_AGENTS', () => {
       'packmind',
       'junie',
       'claude',
+      'claude_plugin',
       'cursor',
       'copilot',
       'agents_md',
@@ -21,6 +22,16 @@ describe('VALID_CODING_AGENTS', () => {
       'opencode',
       'codex',
     ]);
+  });
+});
+
+describe('claude_plugin coding agent', () => {
+  it('is included in VALID_CODING_AGENTS', () => {
+    expect(VALID_CODING_AGENTS).toContain('claude_plugin');
+  });
+
+  it('passes isValidCodingAgent', () => {
+    expect(isValidCodingAgent('claude_plugin')).toBe(true);
   });
 });
 

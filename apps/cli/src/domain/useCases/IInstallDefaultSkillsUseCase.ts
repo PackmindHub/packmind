@@ -1,9 +1,14 @@
-import { IPublicUseCase } from '@packmind/types';
+import { CodingAgent, IPublicUseCase } from '@packmind/types';
 
 export type IInstallDefaultSkillsCommand = {
   baseDirectory?: string; // Directory where files should be created (defaults to current working directory)
   cliVersion?: string; // CLI version for filtering skills by minimumVersion
   includeBeta?: boolean; // If true, include unreleased/beta skills
+  // When provided, overrides the agents read from packmind.json. Used by the
+  // `install` flow to re-use the server-resolved agents (which already include
+  // the organisation-level fallback) so both packages and default skills
+  // render against the same list.
+  agents?: CodingAgent[];
 };
 
 export type IncompatibleInstalledSkill = {

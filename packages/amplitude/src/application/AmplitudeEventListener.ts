@@ -38,6 +38,8 @@ import {
   SpaceUnpinnedEvent,
   SpaceVisibilityUpdatedEvent,
   PlaybookArtefactMovedEvent,
+  PluginRenderedEvent,
+  PluginDeletedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -131,6 +133,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(SpacePinnedEvent, this.onSpacePinned);
     this.subscribe(SpaceUnpinnedEvent, this.onSpaceUnpinned);
     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
+    this.subscribe(PluginRenderedEvent, this.onPluginRendered);
+    this.subscribe(PluginDeletedEvent, this.onPluginDeleted);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -525,5 +529,31 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         destinationSpaceId: payload.destinationSpaceId,
       }),
     );
+  };
+
+  private onPluginRendered = async (
+    event: PluginRenderedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'plugin_rendered', (payload) => ({
+      packageId: payload.packageId,
+      packageSlug: payload.packageSlug,
+      mode: payload.mode,
+      pluginRoot: payload.pluginRoot,
+      ...(payload.marketplaceRepo && {
+        marketplaceRepo: payload.marketplaceRepo,
+      }),
+    }));
+  };
+
+  private onPluginDeleted = async (
+    event: PluginDeletedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'plugin_deleted', (payload) => ({
+      packageId: payload.packageId,
+      packageSlug: payload.packageSlug,
+      ...(payload.marketplaceRepo && {
+        marketplaceRepo: payload.marketplaceRepo,
+      }),
+    }));
   };
 }

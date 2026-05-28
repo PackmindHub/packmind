@@ -31,6 +31,9 @@ import {
   SpaceType,
   UserSpaceRole,
   PlaybookArtefactMovedEvent,
+  PluginRenderedEvent,
+  PluginDeletedEvent,
+  createPackageId,
   createUserId,
   createOrganizationId,
   createRecipeId,
@@ -983,6 +986,118 @@ describe('AmplitudeEventListener', () => {
 
       expect(mockAdapter.identifyOrganizationGroup).not.toHaveBeenCalled();
       expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PluginRenderedEvent', () => {
+    it('tracks plugin_rendered event with marketplace metadata', async () => {
+      const event = new PluginRenderedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        packageId: createPackageId('pkg-789'),
+        packageSlug: 'default/my-package',
+        mode: 'marketplace',
+        pluginRoot: '/tmp/plugins/my-package',
+        marketplaceRepo: 'git@github.com:org/marketplace.git',
+        source: 'cli',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'plugin_rendered',
+        {
+          packageId: 'pkg-789',
+          packageSlug: 'default/my-package',
+          mode: 'marketplace',
+          pluginRoot: '/tmp/plugins/my-package',
+          marketplaceRepo: 'git@github.com:org/marketplace.git',
+          source: 'cli',
+        },
+      );
+    });
+
+    it('omits marketplaceRepo when absent (standalone mode)', async () => {
+      const event = new PluginRenderedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        packageId: createPackageId('pkg-789'),
+        packageSlug: 'default/my-package',
+        mode: 'standalone',
+        pluginRoot: '/tmp/plugins/my-package',
+        source: 'cli',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'plugin_rendered',
+        {
+          packageId: 'pkg-789',
+          packageSlug: 'default/my-package',
+          mode: 'standalone',
+          pluginRoot: '/tmp/plugins/my-package',
+          source: 'cli',
+        },
+      );
+    });
+  });
+
+  describe('PluginDeletedEvent', () => {
+    it('tracks plugin_deleted event with marketplace metadata', async () => {
+      const event = new PluginDeletedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        packageId: createPackageId('pkg-789'),
+        packageSlug: 'default/my-package',
+        marketplaceRepo: 'git@github.com:org/marketplace.git',
+        source: 'cli',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'plugin_deleted',
+        {
+          packageId: 'pkg-789',
+          packageSlug: 'default/my-package',
+          marketplaceRepo: 'git@github.com:org/marketplace.git',
+          source: 'cli',
+        },
+      );
+    });
+
+    it('omits marketplaceRepo when absent', async () => {
+      const event = new PluginDeletedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        packageId: createPackageId('pkg-789'),
+        packageSlug: 'default/my-package',
+        source: 'cli',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'plugin_deleted',
+        {
+          packageId: 'pkg-789',
+          packageSlug: 'default/my-package',
+          source: 'cli',
+        },
+      );
     });
   });
 });

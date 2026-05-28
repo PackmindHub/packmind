@@ -1,6 +1,7 @@
 import { CodingAgentDeployerRegistry } from './CodingAgentDeployerRegistry';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { CodingAgent, FileUpdates } from '@packmind/types';
+import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
 
 // Mock deployer for testing
 class MockDeployer implements ICodingAgentDeployer {
@@ -83,6 +84,21 @@ describe('CodingAgentDeployerRegistry', () => {
       });
     });
 
+    describe('when getting claude_plugin deployer', () => {
+      it('returns a ClaudePluginDeployer instance', () => {
+        const deployer = registry.getDeployer('claude_plugin');
+
+        expect(deployer).toBeInstanceOf(ClaudePluginDeployer);
+      });
+
+      it('returns the same instance on subsequent calls', () => {
+        const deployer = registry.getDeployer('claude_plugin');
+        const deployer2 = registry.getDeployer('claude_plugin');
+
+        expect(deployer2).toBe(deployer);
+      });
+    });
+
     describe('when getting unknown agent', () => {
       it('throws an error', () => {
         expect(() => {
@@ -133,6 +149,10 @@ describe('CodingAgentDeployerRegistry', () => {
 
       it('returns true for junie agent', () => {
         expect(registry.hasDeployer('junie')).toBe(true);
+      });
+
+      it('returns true for claude_plugin agent', () => {
+        expect(registry.hasDeployer('claude_plugin')).toBe(true);
       });
     });
 

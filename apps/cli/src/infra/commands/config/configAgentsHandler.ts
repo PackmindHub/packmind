@@ -25,6 +25,7 @@ export const SELECTABLE_AGENTS: CodingAgent[] = [
 export const AGENT_DISPLAY_NAMES: Record<CodingAgent, string> = {
   packmind: 'Packmind',
   claude: 'Claude Code',
+  claude_plugin: 'Claude Plugin',
   cursor: 'Cursor',
   copilot: 'GitHub Copilot',
   continue: 'Continue.dev',

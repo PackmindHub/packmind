@@ -1916,6 +1916,104 @@
           "agent": "packmind"
         }
       ]
+    },
+    "user:skill:upgrade-runtime-stack": {
+      "name": "upgrade-runtime-stack",
+      "type": "skill",
+      "id": "40906344-f023-4b3c-b120-4b3d2218deec",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/upgrade-runtime-stack/references/fetch-versions.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/upgrade-runtime-stack/references/file-map.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/upgrade-runtime-stack/references/plan-template.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/upgrade-runtime-stack/references/validation.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/upgrade-runtime-stack/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/upgrade-runtime-stack/references/fetch-versions.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/upgrade-runtime-stack/references/file-map.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/upgrade-runtime-stack/references/plan-template.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/upgrade-runtime-stack/references/validation.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/upgrade-runtime-stack/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/upgrade-runtime-stack/references/fetch-versions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/upgrade-runtime-stack/references/file-map.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/upgrade-runtime-stack/references/plan-template.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/upgrade-runtime-stack/references/validation.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/upgrade-runtime-stack/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/upgrade-runtime-stack/references/fetch-versions.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/upgrade-runtime-stack/references/file-map.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/upgrade-runtime-stack/references/plan-template.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/upgrade-runtime-stack/references/validation.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/upgrade-runtime-stack/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
     }
-  }
+  },
+  "cliVersion": "0.29.1"
 }

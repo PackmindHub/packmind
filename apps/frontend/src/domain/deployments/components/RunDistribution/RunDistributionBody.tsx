@@ -46,6 +46,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
       [RenderMode.GH_COPILOT]: 'Github Copilot',
       [RenderMode.CURSOR]: 'Cursor',
       [RenderMode.CLAUDE]: 'Claude',
+      [RenderMode.CLAUDE_PLUGIN]: 'Claude Plugin',
       [RenderMode.JUNIE]: 'Junie',
       [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
       [RenderMode.CONTINUE]: 'Continue',
