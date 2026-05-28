@@ -3,6 +3,7 @@
 ## Added
 
 - Parse and preserve new skill frontmatter fields when syncing SKILL.md files: `arguments` (Claude Code), `paths` (Cursor), and `context` (GitHub Copilot, experimental)
+- `install` now supports running inside your `~/.claude` home directory: single-agent home-install mode renders for Claude only, auto-creates `packmind.json` with `agents: ['claude']`, strips the redundant `.claude/` path prefix, and skips distribution notifications.
 
 ## Changed
 
