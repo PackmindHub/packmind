@@ -102,13 +102,15 @@ services:
       - sh
       - -c
       - |
-        if [ -f node_modules/.package-lock.json ] && diff -q package-lock.json node_modules/.package-lock.json >/dev/null 2>&1; then
-          echo "[deps] node_modules up to date, skipping install"
+        apk add --no-cache git
+        corepack enable
+        corepack prepare pnpm@9.15.0 --activate
+        if [ -f node_modules/.modules.yaml ] && pnpm install --frozen-lockfile --prefer-offline; then
+          echo "[deps] pnpm install completed (cache hit if possible)"
         else
-          apk add --no-cache git && \
-          npm install --unsafe-perm --audit=false --fund=false && \
-          chmod -R +x node_modules/.bin 2>/dev/null || true
+          pnpm install
         fi
+        chmod -R +x node_modules/.bin 2>/dev/null || true
         node scripts/select-tsconfig.mjs
     volumes:
       - .:/packmind
@@ -122,8 +124,10 @@ services:
       sh -lc '
         set -euo pipefail
         echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
+        corepack enable
+        corepack prepare pnpm@9.15.0 --activate
         cd packages/migrations
-        npm run --no-update-notifier typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
+        pnpm typeorm migration:run --dataSource=datasourceDocker.ts --transaction each
       '
     environment:
       CI: ${CI:-}
@@ -320,7 +324,7 @@ services:
     ports:
       - '9323:9323'
     working_dir: /packmind/apps/e2e-tests
-    entrypoint: npm run e2e
+    entrypoint: sh -c "corepack enable && corepack prepare pnpm@9.15.0 --activate && cd /packmind && pnpm e2e"
     environment:
       BASE_URL: http://frontend:4200
       CI: 'true'

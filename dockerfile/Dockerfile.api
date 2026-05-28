@@ -18,9 +18,14 @@ USER node
 
 WORKDIR /app
 
+# Activate pnpm via corepack (bundled with the node base image)
+USER root
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+USER node
+
 # Copy optimized API package.json and install only required dependencies
 COPY --chown=node:node apps/api/*package*.json package.json
-RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Copy the built application and migrations bundle with correct ownership
 COPY --chown=node:node dist/apps/api/main.js ./
@@ -58,15 +63,15 @@ ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 
 # Install migration dependencies
 WORKDIR /app/migrations
-RUN npm install && npm cache clean --force
+RUN pnpm install --prod && pnpm store prune
 
 # Return to app directory
 WORKDIR /app
 
-# Remove npm and its global node_modules to eliminate vulnerabilities
+# Remove npm/pnpm and their global node_modules to eliminate vulnerabilities
 USER root
-RUN rm -rf /usr/local/lib/node_modules/npm && \
-    rm -f /usr/local/bin/npm /usr/local/bin/npx
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/corepack
 USER node
 
 # Expose port

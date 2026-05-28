@@ -16,11 +16,16 @@ USER node
 # Set working directory
 WORKDIR /app
 
-# Copy package files with proper ownership
-COPY --chown=node:node dist/apps/mcp-server/package.json dist/apps/mcp-server/package-lock.json ./
+# Activate pnpm via corepack (bundled with the node base image)
+USER root
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+USER node
 
-# Install production dependencies
-RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+# Copy package files with proper ownership
+COPY --chown=node:node dist/apps/mcp-server/package.json ./
+
+# Install production dependencies (lockfile may not be present in the dist artifact)
+RUN pnpm install --prod --no-lockfile --ignore-scripts && pnpm store prune
 
 # Copy the built application with proper ownership
 COPY --chown=node:node dist/apps/mcp-server/ ./
@@ -28,10 +33,10 @@ COPY --chown=node:node dist/apps/mcp-server/ ./
 # Copy base tree-sitter WASM files to /app/ directory for runtime initialization
 COPY --chown=node:node dist/apps/mcp-server/tree-sitter*.wasm ./
 
-# Remove npm and its global node_modules to eliminate vulnerabilities
+# Remove npm/pnpm and their global node_modules to eliminate vulnerabilities
 USER root
-RUN rm -rf /usr/local/lib/node_modules/npm && \
-    rm -f /usr/local/bin/npm /usr/local/bin/npx
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/corepack
 USER node
 
 # Expose port
