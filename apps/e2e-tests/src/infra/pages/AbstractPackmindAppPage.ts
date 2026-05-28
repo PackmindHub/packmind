@@ -87,10 +87,19 @@ export abstract class AbstractPackmindAppPage
 
     await this.page.getByTestId('create-space-submit').click();
 
-    // Wait for dialog to close and navigation to the new space dashboard
-    await this.page
-      .getByTestId('create-space-name-input')
-      .waitFor({ state: 'hidden' });
+    // CreateSpaceDialog runs `setOpen(false)` BEFORE `navigate(/space/<slug>)`,
+    // so waiting on the dialog input to be hidden returns while the URL is
+    // still on the previous space. The next call (e.g. openSpaceSettings)
+    // would then act on the old sidebar block — for instance clicking the
+    // default Global space's settings link, loading Global's members into
+    // the AddMembers dialog, and breaking the test. Wait for the URL to
+    // land on the new space's dashboard before returning.
+    const expectedSlug = name.trim().toLowerCase().replace(/\s+/g, '-');
+    await this.page.waitForURL(
+      (url) =>
+        url.pathname.endsWith(`/space/${expectedSlug}`) ||
+        url.pathname.includes(`/space/${expectedSlug}/`),
+    );
 
     return this.pageFactory.getDashboardPage();
   }
@@ -111,17 +120,31 @@ export abstract class AbstractPackmindAppPage
       .first()
       .click();
 
-    // Click "Dashboard" link inside the drawer to navigate to that space
-    const drawer = this.page.locator('[role="dialog"]').filter({
-      hasText: spaceName,
-    });
-    await drawer.getByRole('link', { name: 'Dashboard' }).click();
+    // Wait for the drawer Content to be in `data-state="open"`. zag-js puts
+    // `data-state` on the same node as `role="dialog"`, so the attribute must
+    // be combined into one selector — a descendant search finds nothing.
+    const openDrawer = this.page
+      .locator('[role="dialog"][data-state="open"]')
+      .filter({ hasText: spaceName });
+    await openDrawer.waitFor({ state: 'visible' });
+
+    // Playwright's auto-wait on click handles stability through the open
+    // animation — no extra animation barrier needed (and `getAnimations()`
+    // evaluates against an element that React can unmount mid-call).
+    await openDrawer.getByRole('link', { name: 'Dashboard' }).click();
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
     await this.page.waitForURL((url) => url.toString() !== currentUrl);
 
-    // Wait for the space drawer to close (it closes via useEffect on pathname change)
-    await drawer.waitFor({ state: 'hidden' });
+    // The closing drawer keeps its Content (and its in-drawer Standards /
+    // Skills / Commands links) mounted during the exit animation. If we
+    // return before it detaches, the next `getByRole('link', { name: ... })`
+    // call collides with the sidebar's own copies of those links and fails
+    // with a strict-mode violation. Wait for the dialog itself to detach.
+    await this.page
+      .locator('[role="dialog"]')
+      .filter({ hasText: spaceName })
+      .waitFor({ state: 'detached' });
 
     return this.pageFactory.getDashboardPage();
   }

@@ -7,11 +7,6 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "adm-zip": "^0.5.16",
-    "archiver": "^7.0.1",
-    "bullmq": "^5.58.2",
-    "typeorm": "0.3.28",
-    "uuid": "^11.1.0",
-    "slug": "^11.0.1",
     "@packmind/accounts": "*",
     "@packmind/coding-agent": "*",
     "@packmind/git": "*",
@@ -22,7 +17,12 @@
     "@packmind/spaces": "*",
     "@packmind/standards": "*",
     "@packmind/types": "*",
-    "@packmind/test-utils": "0.0.1"
+    "@packmind/test-utils": "*",
+    "typeorm": "0.3.28",
+    "bullmq": "^5.58.2",
+    "uuid": "^11.1.0",
+    "slug": "^11.0.0",
+    "archiver": "^7.0.1"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",

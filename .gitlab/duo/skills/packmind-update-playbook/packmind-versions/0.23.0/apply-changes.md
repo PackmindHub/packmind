@@ -92,8 +92,6 @@ Ask the user: **"These changes will be submitted as: '<intent description>'. Con
 
 Run `packmind-cli playbook submit -m "<intent description>"` to submit all staged changes as proposals for human review.
 
-> **The `-m` flag is mandatory.** Without it, the CLI opens an interactive text editor (vim/nano) waiting for the message — this blocks an AI agent indefinitely. Always pass the message inline with `-m`.
-
 The message should be a concise summary of the intent (max 1024 characters). If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
 ##### Step 5: Report and continue

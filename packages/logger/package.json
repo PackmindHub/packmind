@@ -6,9 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "winston": "^3.8.2"
-  },
-  "devDependencies": {
-    "@types/winston": "^2.4.4"
+    "winston": "^3.17.0"
   }
 }

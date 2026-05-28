@@ -52,6 +52,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: resolveAliases,
+      dedupe: ['react', 'react-dom', 'react-router'],
     },
     server: {
       port: 4200,
@@ -98,9 +99,6 @@ export default defineConfig(() => {
       outDir: '../../dist/apps/frontend',
       emptyOutDir: true,
       reportCompressedSize: true,
-      commonjsOptions: {
-        transformMixedEsModules: true,
-      },
     },
     test: {
       watch: false,

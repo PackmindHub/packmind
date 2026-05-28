@@ -6,9 +6,9 @@ import { RecipeCentricView } from './RecipeCentricView';
 import {
   createRecipeDeploymentStatus,
   createRepositoryDeploymentInfo,
-} from '@packmind/deployments/test/deploymentOverviewFactory';
-import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
+  gitRepoFactory,
+  recipeFactory,
+} from '@packmind/test-utils';
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<UIProvider>{ui}</UIProvider>);

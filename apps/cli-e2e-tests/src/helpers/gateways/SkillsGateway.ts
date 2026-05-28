@@ -12,7 +12,7 @@ export class SkillsGateway implements ISkillsGateway {
   upload: Gateway<IUploadSkillUseCase> = async (params) => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request<UploadSkillResponse>(
-      `/api/v0//organizations/${organizationId}/spaces/${params.spaceId}/skills/upload`,
+      `/api/v0/organizations/${organizationId}/spaces/${params.spaceId}/skills/upload`,
       { method: 'POST', body: params },
     );
   };
