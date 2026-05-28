@@ -25,6 +25,8 @@ export interface PublishArtifactsJobInput {
   activeRenderModes: RenderMode[];
   packagesSlugs: string[];
   source: PackmindEventSource;
+  pullRequestTitle: string;
+  pullRequestBody: string;
 }
 
 export interface PublishArtifactsJobOutput {
@@ -34,4 +36,5 @@ export interface PublishArtifactsJobOutput {
   status: DistributionStatus;
   gitCommit?: GitCommit;
   error?: string;
+  pullRequestUrl?: string;
 }

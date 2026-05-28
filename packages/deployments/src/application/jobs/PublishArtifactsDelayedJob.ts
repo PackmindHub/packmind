@@ -7,7 +7,12 @@ import {
   SSEEventPublisher,
   WorkerListeners,
 } from '@packmind/node-utils';
-import { DistributionStatus, GitCommit, IGitPort } from '@packmind/types';
+import {
+  DistributionStatus,
+  GitCommit,
+  GitProviderAuthTypes,
+  IGitPort,
+} from '@packmind/types';
 import { Job } from 'bullmq';
 import {
   PublishArtifactsJobInput,
@@ -68,23 +73,60 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
       throw new Error(`Git repository not found with id: ${input.gitRepoId}`);
     }
 
+    const provider = await this.gitPort.getProviderById(gitRepo.providerId);
+    if (!provider) {
+      throw new Error(
+        `Git provider not found for repository: ${input.gitRepoId}`,
+      );
+    }
+
+    const usePullRequestFlow =
+      provider.authType === GitProviderAuthTypes.github_app;
+
     let gitCommit: GitCommit | undefined;
+    let pullRequestUrl: string | undefined;
     let status: DistributionStatus = DistributionStatus.success;
 
     try {
-      gitCommit = await this.gitPort.commitToGit(
-        gitRepo,
-        input.fileUpdates.createOrUpdate,
-        input.commitMessage,
-        input.fileUpdates.delete,
-      );
+      if (usePullRequestFlow) {
+        const result = await this.gitPort.commitAndOpenPullRequest({
+          repo: gitRepo,
+          files: input.fileUpdates.createOrUpdate,
+          commitMessage: input.commitMessage,
+          pullRequest: {
+            title: input.pullRequestTitle,
+            body: input.pullRequestBody,
+          },
+          deleteFiles: input.fileUpdates.delete,
+        });
+        gitCommit = result.commit;
+        pullRequestUrl = result.pullRequestUrl;
 
-      this.logger.info(`[${this.origin}] Successfully committed artifacts`, {
-        jobId,
-        commitSha: gitCommit.sha,
-        filesCreatedOrUpdated: input.fileUpdates.createOrUpdate.length,
-        filesDeleted: input.fileUpdates.delete.length,
-      });
+        this.logger.info(
+          `[${this.origin}] Successfully opened/updated pull request`,
+          {
+            jobId,
+            commitSha: gitCommit.sha,
+            pullRequestUrl,
+            filesCreatedOrUpdated: input.fileUpdates.createOrUpdate.length,
+            filesDeleted: input.fileUpdates.delete.length,
+          },
+        );
+      } else {
+        gitCommit = await this.gitPort.commitToGit(
+          gitRepo,
+          input.fileUpdates.createOrUpdate,
+          input.commitMessage,
+          input.fileUpdates.delete,
+        );
+
+        this.logger.info(`[${this.origin}] Successfully committed artifacts`, {
+          jobId,
+          commitSha: gitCommit.sha,
+          filesCreatedOrUpdated: input.fileUpdates.createOrUpdate.length,
+          filesDeleted: input.fileUpdates.delete.length,
+        });
+      }
     } catch (error) {
       if (error instanceof Error && error.message === 'NO_CHANGES_DETECTED') {
         this.logger.info(
@@ -103,6 +145,7 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
       success: true,
       status,
       gitCommit,
+      pullRequestUrl,
     };
   }
 
@@ -136,6 +179,10 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
             result.distributionId,
             result.status,
             result.gitCommit,
+            undefined,
+            result.pullRequestUrl
+              ? { pullRequestUrl: result.pullRequestUrl }
+              : undefined,
           );
 
           this.logger.info(

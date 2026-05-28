@@ -46,6 +46,8 @@ import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
 const origin = 'PublishArtifactsUseCase';
 
+export const PACKMIND_PULL_REQUEST_TITLE = 'Packmind: update playbook';
+
 /**
  * Unified usecase for publishing recipes, standards, and skills together
  * Uses the unified renderArtifacts method for atomic updates
@@ -330,6 +332,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           addedPackmindSkills,
         );
 
+        const pullRequestBody = this.buildPullRequestBody(
+          command.packagesSlugs,
+          recipeVersions,
+          standardVersions,
+          skillVersions,
+          targets,
+        );
+
         // Get file updates from first target (they're all the same for multi-target repos)
         const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
         if (!firstTargetUpdates) {
@@ -376,6 +386,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           activeRenderModes,
           packagesSlugs: command.packagesSlugs,
           source,
+          pullRequestTitle: PACKMIND_PULL_REQUEST_TITLE,
+          pullRequestBody,
         });
 
         this.logger.info('Enqueued publish artifacts job for repository', {
@@ -1040,6 +1052,55 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       // Renamed: same skillId exists in current but slug has changed
       return currentSv && currentSv.slug !== prevSv.slug;
     });
+  }
+
+  private buildPullRequestBody(
+    packagesSlugs: string[],
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    skillVersions: SkillVersion[],
+    targets: Target[],
+  ): string {
+    const lines: string[] = [
+      'Packmind is updating the following playbook artifacts:',
+      '',
+    ];
+
+    if (packagesSlugs.length > 0) {
+      lines.push('### Packages');
+      packagesSlugs.forEach((slug) => lines.push(`- ${slug}`));
+      lines.push('');
+    }
+
+    if (standardVersions.length > 0) {
+      lines.push('### Standards');
+      standardVersions.forEach((sv) =>
+        lines.push(`- ${sv.name} (v${sv.version})`),
+      );
+      lines.push('');
+    }
+
+    if (recipeVersions.length > 0) {
+      lines.push('### Commands');
+      recipeVersions.forEach((rv) =>
+        lines.push(`- ${rv.name} (v${rv.version})`),
+      );
+      lines.push('');
+    }
+
+    if (skillVersions.length > 0) {
+      lines.push('### Skills');
+      skillVersions.forEach((sv) =>
+        lines.push(`- ${sv.name} (v${sv.version})`),
+      );
+      lines.push('');
+    }
+
+    if (targets.length > 0) {
+      lines.push(`Targets: ${targets.map((t) => t.name).join(', ')}`);
+    }
+
+    return lines.join('\n').trimEnd();
   }
 
   private buildCommitMessage(

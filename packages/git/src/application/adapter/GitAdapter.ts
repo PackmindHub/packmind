@@ -526,6 +526,14 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._getRepositoryById.execute({ repositoryId });
   }
 
+  public async getProviderById(
+    providerId: GitProviderId,
+  ): Promise<GitProvider | null> {
+    return this.gitServices
+      .getGitProviderService()
+      .findGitProviderById(providerId);
+  }
+
   public async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,

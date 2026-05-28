@@ -69,6 +69,14 @@ export interface IGitPort {
   getRepositoryById(repositoryId: GitRepoId): Promise<GitRepo | null>;
 
   /**
+   * Get a git provider by its ID
+   *
+   * @param providerId - The git provider ID
+   * @returns Promise of git provider or null if not found
+   */
+  getProviderById(providerId: GitProviderId): Promise<GitProvider | null>;
+
+  /**
    * Commit files to a git repository
    *
    * @param repo - The git repository
