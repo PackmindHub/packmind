@@ -19,7 +19,7 @@
     "@packmind/deployments": "*",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "typeorm": "0.3.28",
     "jsonwebtoken": "^9.0.3",
     "jest-stage": "^1.0.0",
