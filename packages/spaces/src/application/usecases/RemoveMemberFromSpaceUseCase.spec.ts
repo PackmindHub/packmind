@@ -30,7 +30,7 @@ describe('RemoveMemberFromSpaceUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
   const user = userFactory({
     id: userId,
-    memberships: [{ userId, organizationId, role: 'admin' }],
+    memberships: [{ userId, organizationId, role: 'member' }],
   });
 
   let useCase: RemoveMemberFromSpaceUseCase;
@@ -239,6 +239,51 @@ describe('RemoveMemberFromSpaceUseCase', () => {
 
       it('throws an access error', async () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow();
+      });
+    });
+
+    describe('when caller is an org admin without space admin role', () => {
+      beforeEach(() => {
+        const orgAdmin = userFactory({
+          id: userId,
+          memberships: [{ userId, organizationId, role: 'admin' }],
+        });
+        accountsPort.getUserById.mockResolvedValue(orgAdmin);
+        membershipService.getSpaceById.mockResolvedValue(
+          spaceFactory({ id: spaceId, isDefaultSpace: false }),
+        );
+        membershipService.removeSpaceMembership.mockResolvedValue(true);
+      });
+
+      it('removes a member without checking space-admin membership', async () => {
+        const result = await useCase.execute(buildCommand());
+
+        expect(result).toEqual({ removed: true });
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+            }),
+          }),
+        );
+        expect(membershipService.findMembership).not.toHaveBeenCalled();
+      });
+
+      it('still rejects removal from the default space', async () => {
+        membershipService.getSpaceById.mockResolvedValue(
+          spaceFactory({ id: spaceId, isDefaultSpace: true }),
+        );
+
+        await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+          CannotRemoveFromDefaultSpaceError,
+        );
+      });
+
+      it('still rejects self-removal', async () => {
+        await expect(
+          useCase.execute(buildCommand({ targetUserId: userId })),
+        ).rejects.toBeInstanceOf(CannotRemoveSelfError);
       });
     });
   });

@@ -20,7 +20,6 @@
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
       "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
-      "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],
       "@packmind/assets/*": ["packages/assets/src/*"],
       "@packmind/coding-agent": ["packages/coding-agent/src/index.ts"],
@@ -42,6 +41,7 @@
       "@packmind/logger": ["packages/logger/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
+      "@packmind/plugins": ["packages/plugins/src/index.ts"],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
       "@packmind/skills": ["packages/skills/src/index.ts"],

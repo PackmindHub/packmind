@@ -32,12 +32,12 @@ describe('formatCreatedAt', () => {
     expect(formatCreatedAt(null)).toBe(EMPTY_PLACEHOLDER);
   });
 
-  it('formats a valid ISO date in en-GB short form', () => {
-    expect(formatCreatedAt('2025-02-03')).toBe('03 Feb 2025');
+  it('formats a valid ISO date in en-US short form', () => {
+    expect(formatCreatedAt('2025-02-03')).toBe('Feb 3, 2025');
   });
 
   it('formats a full ISO datetime down to the day', () => {
-    expect(formatCreatedAt('2025-02-03T23:59:59.000Z')).toBe('03 Feb 2025');
+    expect(formatCreatedAt('2025-02-03T23:59:59.000Z')).toBe('Feb 3, 2025');
   });
 
   it('returns the placeholder for an unparseable string', () => {

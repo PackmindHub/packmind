@@ -1,6 +1,6 @@
 ---
-name: 'upgrade-runtime-stack'
-description: 'Check whether newer stable versions of Node.js (24.x line), Nx, or Vite are available and, if so, generate a detailed upgrade plan markdown file at the repo root. Use this skill whenever the user asks to "check for runtime upgrades", "upgrade Node/NX/Vite", "is our Node version current", "plan a Node 24 upgrade", "refresh our runtime stack", "monthly stack check", or anything along those lines — even if they don''t name a specific tool. Also use it when the user wants a recurring/cadence check of build-toolchain currency. Output is a plan only — does NOT mutate package.json, Dockerfiles, lockfiles, or any other repo file. CI/CD wrappers can invoke this skill to keep the runtime stack fresh.'
+name: upgrade-runtime-stack
+description: Check whether newer stable versions of Node.js (24.x line), Nx, or Vite are available and, if so, generate a detailed upgrade plan markdown file at the repo root. Use this skill whenever the user asks to "check for runtime upgrades", "upgrade Node/NX/Vite", "is our Node version current", "plan a Node 24 upgrade", "refresh our runtime stack", "monthly stack check", or anything along those lines — even if they don't name a specific tool. Also use it when the user wants a recurring/cadence check of build-toolchain currency. Output is a plan only — does NOT mutate package.json, Dockerfiles, lockfiles, or any other repo file. CI/CD wrappers can invoke this skill to keep the runtime stack fresh.
 ---
 
 # Upgrade Runtime Stack

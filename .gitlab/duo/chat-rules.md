@@ -26,6 +26,13 @@ Enforce masking of personal information in TypeScript logs, using a standard fir
 
 Full standard is available here for further request: [Compliance - Logging Personal Information](../../.packmind/standards/compliance-logging-personal-information.md)
 
+# Standard: Packmind Proprietary
+
+Prohibit imports from '@packmind/editions' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](../../.packmind/standards/packmind-proprietary.md)
+
 # Standard: Typescript good practices
 
 Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time. :
