@@ -48,6 +48,7 @@
     "@nx/webpack": "22.7.2",
     "@playwright/test": "1.58.2",
     "@react-router/dev": "7.15.1",
+    "@storybook/react": "10.4.0",
     "@storybook/react-vite": "10.4.0",
     "@swc-node/register": "1.11.1",
     "@swc/cli": "0.7.10",
