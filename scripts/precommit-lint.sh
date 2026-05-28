@@ -14,6 +14,12 @@ if [[ ! -f "$CLI_BINARY" ]]; then
   nx run packmind-cli:build
 fi
 
+# pnpm's strict layout doesn't hoist the CLI's runtime deps to the workspace
+# root, so the dist binary needs its own node_modules to resolve them.
+if [[ ! -d "dist/apps/cli/node_modules" ]]; then
+  (cd dist/apps/cli && pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace) >/dev/null
+fi
+
 OUTPUT=$(node "$CLI_BINARY" whoami 2>&1) || exit 0
 
 HOST=$(echo "$OUTPUT" | grep "^Host:" | awk '{print $2}')

@@ -287,6 +287,14 @@ jobs:
           echo "Built executables (with embedded WASM files):"
           ls -lh dist/apps/cli-executables/
 
+      - name: Install dist CLI runtime dependencies
+        # pnpm's strict node_modules layout no longer hoists the CLI's runtime deps
+        # to the workspace root, so we install them inside the dist before invoking
+        # the bundled binary. --ignore-workspace is required so pnpm treats the dist
+        # as a standalone package instead of part of the parent workspace.
+        working-directory: dist/apps/cli
+        run: pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace
+
       - name: Test executables
         run: |
           node dist/apps/cli/main.cjs --version
@@ -333,6 +341,13 @@ jobs:
         run: node scripts/select-tsconfig.mjs
 
       - run: ./node_modules/.bin/nx run packmind-cli:build
+
+      - name: Install dist CLI runtime dependencies
+        # pnpm's strict node_modules layout no longer hoists the CLI's runtime deps
+        # to the workspace root, so install them inside the dist before the e2e tests
+        # exec `node dist/apps/cli/main.cjs` directly.
+        working-directory: dist/apps/cli
+        run: pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace
 
       - name: Fix CLI artifacts permissions
         run: |
