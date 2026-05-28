@@ -1,6 +1,7 @@
 import {
   Distribution,
   DistributionId,
+  DistributionMetadata,
   DistributionStatus,
   GitCommit,
   OrganizationId,
@@ -153,6 +154,7 @@ export interface IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
+    metadata?: DistributionMetadata,
   ): Promise<Distribution>;
 
   /**

@@ -39,6 +39,10 @@ export const DistributionSchema = new EntitySchema<
       nullable: false,
       default: 'app',
     },
+    metadata: {
+      type: 'jsonb',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
   },

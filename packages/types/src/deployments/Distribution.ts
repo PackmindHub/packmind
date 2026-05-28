@@ -9,6 +9,10 @@ import { RenderMode } from './RenderMode';
 
 export type DistributionSource = 'app' | 'cli';
 
+export type DistributionMetadata = {
+  pullRequestUrl?: string;
+};
+
 export type Distribution = {
   id: DistributionId;
   distributedPackages: DistributedPackage[];
@@ -21,4 +25,5 @@ export type Distribution = {
   error?: string; // Optional - only present for failed distributions
   renderModes: RenderMode[]; // Defaults to empty array
   source: DistributionSource;
+  metadata?: DistributionMetadata | null;
 };

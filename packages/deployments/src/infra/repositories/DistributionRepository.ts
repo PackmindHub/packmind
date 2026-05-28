@@ -3,6 +3,7 @@ import { localDataSource } from '@packmind/node-utils';
 import {
   Distribution,
   DistributionId,
+  DistributionMetadata,
   DistributionStatus,
   GitCommit,
   OrganizationId,
@@ -1410,12 +1411,14 @@ export class DistributionRepository implements IDistributionRepository {
     status: DistributionStatus,
     gitCommit?: GitCommit,
     error?: string,
+    metadata?: DistributionMetadata,
   ): Promise<Distribution> {
     this.logger.info('Updating distribution status', {
       distributionId: id,
       status,
       hasGitCommit: !!gitCommit,
       hasError: !!error,
+      hasMetadata: !!metadata,
     });
 
     try {
@@ -1436,6 +1439,13 @@ export class DistributionRepository implements IDistributionRepository {
 
       if (error) {
         distribution.error = error;
+      }
+
+      if (metadata) {
+        distribution.metadata = {
+          ...(distribution.metadata ?? {}),
+          ...metadata,
+        };
       }
 
       const updatedDistribution = await this.repository.save(distribution);
