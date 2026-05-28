@@ -67,7 +67,7 @@ ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 # Install migration dependencies, then prune the shared pnpm store once at the end
 # (pruning between installs may force re-downloads of packages shared by both projects)
 WORKDIR /app/migrations
-RUN pnpm install --prod && pnpm store prune
+RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Return to app directory
 WORKDIR /app
