@@ -186,8 +186,9 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   packmindCliHexa: PackmindCliHexa;
   cwd: string;
   configRepository: IConfigFileRepository;
+  resolvedAgents: CodingAgent[];
 }): Promise<void> {
-  const { packmindCliHexa, cwd, configRepository } = params;
+  const { packmindCliHexa, cwd, configRepository, resolvedAgents } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
 
@@ -195,11 +196,19 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     return;
   }
 
-  const config = await configRepository.readConfig(cwd);
-  const configuredAgents = config?.agents ?? [];
+  // Prefer the server-resolved agents from the package install (they already
+  // include the organisation-level fallback). Only fall back to reading
+  // config.agents on the edge case where no install actually ran — e.g. a
+  // cleanup with packagesSlugs.length === 0 — so the prior local behaviour
+  // is preserved.
+  let agents: CodingAgent[] = resolvedAgents;
+  if (agents.length === 0) {
+    const config = await configRepository.readConfig(cwd);
+    agents = config?.agents ?? [];
+  }
 
-  if (!configuredAgentsSupportSkills(configuredAgents)) {
-    logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+  if (!configuredAgentsSupportSkills(agents)) {
+    logWarningConsole(buildSkillsSkippedWarning(agents));
     return;
   }
 
@@ -207,6 +216,7 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
       baseDirectory: cwd,
+      agents,
     });
 
     if (skillsResult.incompatibleInstalledSkills.length > 0) {
@@ -427,6 +437,7 @@ export async function installHandler({
         packmindCliHexa,
         cwd,
         configRepository,
+        resolvedAgents: combined.resolvedAgents,
       });
     }
   }

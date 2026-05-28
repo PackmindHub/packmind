@@ -1152,6 +1152,88 @@ describe('installCommand', () => {
         );
       });
     });
+
+    // The install use case returns `resolvedAgents` — the list the server
+    // actually used to render packages (after merging packmind.json's
+    // `agents` with the organisation-level fallback). The default-skills
+    // step must drive its capability check from THAT list, not from a
+    // second read of `config.agents`, otherwise we get the contradictory
+    // "Synced N artifact" + "no coding agents are configured" output.
+    describe('when the install returns server-resolved agents', () => {
+      describe('and those agents do not support skills', () => {
+        beforeEach(async () => {
+          // packmind.json has `agents: []` — the local config carries no
+          // agent. The server resolved to the org default ['agents_md']
+          // and rendered packages for it. The capability check must use
+          // the server's list, not the empty config list.
+          MockedConfigFileRepository.mockImplementationOnce(() => ({
+            readConfig: jest.fn().mockResolvedValue({
+              packages: { 'space/pkg': '*' },
+              agents: [],
+            }),
+          }));
+          mockInstall.mockResolvedValue(
+            makeResult({
+              resolvedAgents: ['agents_md'],
+              sourceArtifacts: {
+                skillsCount: 0,
+                standardsCount: 1,
+                commandsCount: 0,
+                recipesCount: 0,
+              },
+            }),
+          );
+          mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+          await handler({
+            installPath: '',
+            packages: [],
+            list: false,
+            show: '',
+            status: false,
+          });
+        });
+
+        it('does not log the "no coding agents are configured" warning', () => {
+          expect(mockConsoleLogger.logWarningConsole).not.toHaveBeenCalledWith(
+            expect.stringContaining('no coding agents are configured'),
+          );
+        });
+
+        it('logs the specific "do not support skills" warning naming the resolved agent', () => {
+          expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+            expect.stringContaining('agents_md'),
+          );
+        });
+      });
+
+      describe('and those agents support skills', () => {
+        beforeEach(async () => {
+          MockedConfigFileRepository.mockImplementationOnce(() => ({
+            readConfig: jest.fn().mockResolvedValue({
+              packages: { 'space/pkg': '*' },
+              agents: [],
+            }),
+          }));
+          mockInstall.mockResolvedValue(
+            makeResult({ resolvedAgents: ['claude'] }),
+          );
+          mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+          await handler({
+            installPath: '',
+            packages: [],
+            list: false,
+            show: '',
+            status: false,
+          });
+        });
+
+        it('forwards the resolved agents to installDefaultSkills', () => {
+          expect(mockInstallDefaultSkills).toHaveBeenCalledWith(
+            expect.objectContaining({ agents: ['claude'] }),
+          );
+        });
+      });
+    });
   });
 
   describe('CLI version drift detection (ensureCliVersion)', () => {
