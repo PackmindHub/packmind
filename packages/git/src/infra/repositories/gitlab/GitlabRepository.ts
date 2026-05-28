@@ -1,4 +1,8 @@
-import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
+import {
+  IGitRepo,
+  CommitFile,
+  PullRequestRef,
+} from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -1029,6 +1033,46 @@ export class GitlabRepository implements IGitRepo {
       return [];
     }
   }
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  async branchExists(_branch: string): Promise<boolean> {
+    throw new Error(
+      'branchExists is not supported for GitLab repositories yet',
+    );
+  }
+
+  async createBranch(_branch: string, _fromBranch: string): Promise<void> {
+    throw new Error(
+      'createBranch is not supported for GitLab repositories yet',
+    );
+  }
+
+  async resetBranchToBase(_branch: string, _baseBranch: string): Promise<void> {
+    throw new Error(
+      'resetBranchToBase is not supported for GitLab repositories yet',
+    );
+  }
+
+  async findOpenPullRequest(
+    _fromBranch: string,
+    _toBranch: string,
+  ): Promise<PullRequestRef | null> {
+    throw new Error(
+      'findOpenPullRequest is not supported for GitLab repositories yet',
+    );
+  }
+
+  async createPullRequest(_input: {
+    fromBranch: string;
+    toBranch: string;
+    title: string;
+    body: string;
+  }): Promise<PullRequestRef> {
+    throw new Error(
+      'createPullRequest is not supported for GitLab repositories yet',
+    );
+  }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   async handlePushHook(
     payload: unknown,

@@ -1,4 +1,8 @@
-import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
+import {
+  IGitRepo,
+  CommitFile,
+  PullRequestRef,
+} from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -691,6 +695,192 @@ export class GithubRepository implements IGitRepo {
       });
       // Return empty array if directory doesn't exist
       return [];
+    }
+  }
+
+  async branchExists(branch: string): Promise<boolean> {
+    const { owner, repo } = this.options;
+
+    try {
+      await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${branch}`,
+      );
+      return true;
+    } catch (error) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'status' in error.response &&
+        error.response.status === 404
+      ) {
+        return false;
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to check branch existence', {
+        owner,
+        repo,
+        branch,
+        error: errorMessage,
+      });
+      throw error;
+    }
+  }
+
+  private async getBranchHeadSha(branch: string): Promise<string> {
+    const { owner, repo } = this.options;
+    const refResponse = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/git/refs/heads/${branch}`,
+    );
+    return refResponse.data.object.sha;
+  }
+
+  async createBranch(branch: string, fromBranch: string): Promise<void> {
+    const { owner, repo } = this.options;
+
+    this.logger.info('Creating branch on GitHub', {
+      owner,
+      repo,
+      branch,
+      fromBranch,
+    });
+
+    try {
+      const baseSha = await this.getBranchHeadSha(fromBranch);
+      await this.axiosInstance.post(`/repos/${owner}/${repo}/git/refs`, {
+        ref: `refs/heads/${branch}`,
+        sha: baseSha,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create branch on GitHub', {
+        owner,
+        repo,
+        branch,
+        fromBranch,
+        error: errorMessage,
+      });
+      throw new Error(`Failed to create branch ${branch}: ${errorMessage}`);
+    }
+  }
+
+  async resetBranchToBase(branch: string, baseBranch: string): Promise<void> {
+    const { owner, repo } = this.options;
+
+    this.logger.info('Resetting branch to base on GitHub', {
+      owner,
+      repo,
+      branch,
+      baseBranch,
+    });
+
+    try {
+      const baseSha = await this.getBranchHeadSha(baseBranch);
+      await this.axiosInstance.patch(
+        `/repos/${owner}/${repo}/git/refs/heads/${branch}`,
+        {
+          sha: baseSha,
+          force: true,
+        },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to reset branch to base on GitHub', {
+        owner,
+        repo,
+        branch,
+        baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to reset branch ${branch} to ${baseBranch}: ${errorMessage}`,
+      );
+    }
+  }
+
+  async findOpenPullRequest(
+    fromBranch: string,
+    toBranch: string,
+  ): Promise<PullRequestRef | null> {
+    const { owner, repo } = this.options;
+
+    try {
+      const response = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/pulls`,
+        {
+          params: {
+            state: 'open',
+            head: `${owner}:${fromBranch}`,
+            base: toBranch,
+            per_page: 1,
+          },
+        },
+      );
+
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        const pr = response.data[0];
+        return { url: pr.html_url, number: pr.number };
+      }
+
+      return null;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to find open pull request on GitHub', {
+        owner,
+        repo,
+        fromBranch,
+        toBranch,
+        error: errorMessage,
+      });
+      throw new Error(`Failed to find open pull request: ${errorMessage}`);
+    }
+  }
+
+  async createPullRequest(input: {
+    fromBranch: string;
+    toBranch: string;
+    title: string;
+    body: string;
+  }): Promise<PullRequestRef> {
+    const { owner, repo } = this.options;
+    const { fromBranch, toBranch, title, body } = input;
+
+    this.logger.info('Creating pull request on GitHub', {
+      owner,
+      repo,
+      fromBranch,
+      toBranch,
+    });
+
+    try {
+      const response = await this.axiosInstance.post(
+        `/repos/${owner}/${repo}/pulls`,
+        {
+          title,
+          body,
+          head: fromBranch,
+          base: toBranch,
+        },
+      );
+
+      return { url: response.data.html_url, number: response.data.number };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create pull request on GitHub', {
+        owner,
+        repo,
+        fromBranch,
+        toBranch,
+        error: errorMessage,
+      });
+      throw new Error(`Failed to create pull request: ${errorMessage}`);
     }
   }
 

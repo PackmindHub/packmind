@@ -6,6 +6,11 @@ export type CommitFile = {
   permissions?: string;
 };
 
+export type PullRequestRef = {
+  url: string;
+  number: number;
+};
+
 export interface IGitRepo {
   commitFiles(
     files: CommitFile[],
@@ -49,4 +54,22 @@ export interface IGitRepo {
     path: string,
     branch: string,
   ): Promise<{ path: string }[]>;
+
+  branchExists(branch: string): Promise<boolean>;
+
+  createBranch(branch: string, fromBranch: string): Promise<void>;
+
+  resetBranchToBase(branch: string, baseBranch: string): Promise<void>;
+
+  findOpenPullRequest(
+    fromBranch: string,
+    toBranch: string,
+  ): Promise<PullRequestRef | null>;
+
+  createPullRequest(input: {
+    fromBranch: string;
+    toBranch: string;
+    title: string;
+    body: string;
+  }): Promise<PullRequestRef>;
 }
