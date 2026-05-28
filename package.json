@@ -9,7 +9,7 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t build",
-    "chakra:typegen": "cd packages/ui && pnpm dlx @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
+    "chakra:typegen": "pnpm --filter ./packages/ui exec chakra typegen ./src/lib/theme/theme.ts",
     "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false pnpm exec playwright test --config apps/e2e-tests/playwright.config.ts",
     "husky": "husky",
     "lint": "nx run-many -t lint",

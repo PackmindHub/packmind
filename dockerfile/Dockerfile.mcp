@@ -22,10 +22,10 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 USER node
 
 # Copy package files with proper ownership
-COPY --chown=node:node dist/apps/mcp-server/package.json ./
+COPY --chown=node:node dist/apps/mcp-server/package.json dist/apps/mcp-server/pnpm-lock.yaml ./
 
-# Install production dependencies (lockfile may not be present in the dist artifact)
-RUN pnpm install --prod --no-lockfile --ignore-scripts && pnpm store prune
+# Install production dependencies (the lockfile pins transitive versions for reproducible builds)
+RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Copy the built application with proper ownership
 COPY --chown=node:node dist/apps/mcp-server/ ./

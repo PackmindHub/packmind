@@ -22,6 +22,9 @@
     "@packmind/assets": "workspace:*",
     "@zag-js/checkbox": "^1.41.1"
   },
+  "devDependencies": {
+    "@chakra-ui/cli": "^3.31.0"
+  },
   "peerDependencies": {
     "@chakra-ui/react": "^3.0.0",
     "react": ">=18.0.0",
