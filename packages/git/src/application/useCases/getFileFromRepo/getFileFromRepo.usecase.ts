@@ -1,5 +1,5 @@
 import { GitRepo } from '@packmind/types';
-import { GitProvider } from '@packmind/types';
+import { GitProvider, gitProviderHasCredentials } from '@packmind/types';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
@@ -43,9 +43,8 @@ export class GetFileFromRepo {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(provider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create IGitRepo instance based on provider

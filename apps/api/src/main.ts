@@ -8,7 +8,7 @@ import './instrument';
 
 import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import bodyParser from 'body-parser';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -84,7 +84,7 @@ async function bootstrap() {
       timestamp: new Date().toISOString(),
     });
 
-    const app = await NestFactory.create(AppModule, {
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       logger: ['error', 'warn'],
       rawBody: true,
     });
@@ -96,10 +96,11 @@ async function bootstrap() {
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
 
-    // Configure body-parser with increased limit for bulk imports and skill uploads
-    // Limit set to 15MB to accommodate 10MB skills with base64 encoding overhead (~33% increase)
-    app.use(bodyParser.json({ limit: '15mb' }));
-    app.use(bodyParser.urlencoded({ limit: '15mb', extended: true }));
+    // Configure body-parser with increased limit for bulk imports and skill uploads.
+    // Use NestJS's built-in body parser so `rawBody: true` populates req.rawBody
+    // for webhook signature verification (e.g. GitHub App at /hooks/github-app).
+    app.useBodyParser('json', { limit: '15mb' });
+    app.useBodyParser('urlencoded', { limit: '15mb', extended: true });
     logger.debug('Body parser configured with 15MB limit');
 
     // Enable CORS with dynamic origins

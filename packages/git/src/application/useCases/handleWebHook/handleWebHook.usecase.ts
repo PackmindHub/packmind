@@ -1,5 +1,9 @@
 import { GitRepo } from '@packmind/types';
-import { GitProviderVendors, GitProvider } from '@packmind/types';
+import {
+  GitProviderVendors,
+  GitProvider,
+  gitProviderHasCredentials,
+} from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
@@ -49,9 +53,8 @@ export class HandleWebHook implements IHandleWebHookUseCase {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(provider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create IGitRepo instance based on provider

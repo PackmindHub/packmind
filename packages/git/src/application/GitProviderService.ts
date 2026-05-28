@@ -5,6 +5,7 @@ import {
   GitProvider,
   GitProviderId,
   createGitProviderId,
+  gitProviderHasCredentials,
 } from '@packmind/types';
 import { GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
@@ -69,11 +70,8 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    // Get the token from the provider
-    const token = gitProvider.token;
-
-    if (!token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(gitProvider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create an instance of IGitProvider using the factory
@@ -98,11 +96,8 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    // Get the token from the provider
-    const token = gitProvider.token;
-
-    if (!token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(gitProvider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create an instance of IGitProvider using the factory
@@ -124,8 +119,8 @@ export class GitProviderService {
       throw new Error('Git provider not found for this repository');
     }
 
-    if (!gitProvider.token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(gitProvider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create an instance of IGitRepo using the factory

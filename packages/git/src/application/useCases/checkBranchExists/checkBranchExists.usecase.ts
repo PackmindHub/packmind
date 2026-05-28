@@ -1,5 +1,5 @@
 import { GitProviderService } from '../../GitProviderService';
-import { GitProviderId } from '@packmind/types';
+import { GitProviderId, gitProviderHasCredentials } from '@packmind/types';
 
 export interface CheckBranchExistsUseCaseInput {
   gitProviderId: GitProviderId;
@@ -35,9 +35,8 @@ export class CheckBranchExistsUseCase {
       throw new Error('Git provider not found');
     }
 
-    // Business rule: git provider must have a token configured
-    if (!gitProvider.token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(gitProvider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Business rule: git provider must have a valid source

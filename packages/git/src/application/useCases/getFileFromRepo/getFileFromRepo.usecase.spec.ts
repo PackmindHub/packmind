@@ -135,16 +135,20 @@ describe('GetFileFromRepo', () => {
     });
   });
 
-  describe('when git provider token is not configured', () => {
+  describe('when git provider has no credentials', () => {
     it('throws error', async () => {
-      const providerWithoutToken = { ...mockProvider, token: undefined };
+      const providerWithoutToken = {
+        ...mockProvider,
+        token: undefined,
+        authType: 'pat' as const,
+      };
       gitProviderService.findGitProviderById.mockResolvedValue(
         providerWithoutToken as unknown as GitProvider,
       );
 
       await expect(
         useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),
-      ).rejects.toThrow('Git provider token not configured');
+      ).rejects.toThrow('Git provider credentials not configured');
     });
   });
 

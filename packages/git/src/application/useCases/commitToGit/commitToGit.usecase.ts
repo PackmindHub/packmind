@@ -5,6 +5,7 @@ import {
   GitProvider,
   DeleteItem,
   DeleteItemType,
+  gitProviderHasCredentials,
 } from '@packmind/types';
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
@@ -50,9 +51,8 @@ export class CommitToGit {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
+    if (!gitProviderHasCredentials(provider)) {
+      throw new Error('Git provider credentials not configured');
     }
 
     // Create IGitRepo instance based on provider

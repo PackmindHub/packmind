@@ -56,7 +56,7 @@ export default defineConfig(() => {
     server: {
       port: 4200,
       host: process.env.NX_WATCHER ? '0.0.0.0' : 'localhost',
-      allowedHosts: ['frontend', '.ngrok-free.app'],
+      allowedHosts: ['frontend', '.ngrok-free.app', '.ts.net'],
       proxy,
       hmr: process.env.NX_WATCHER
         ? {

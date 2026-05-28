@@ -282,11 +282,12 @@ describe('GitProviderService', () => {
       });
     });
 
-    describe('when git provider has no token', () => {
+    describe('when git provider has no credentials', () => {
       it('throws error', async () => {
         const providerWithoutToken = {
           ...mockGitProvider,
           token: null,
+          authType: 'pat' as const,
         };
         mockGitProviderRepository.findById.mockResolvedValue(
           providerWithoutToken,
@@ -296,7 +297,32 @@ describe('GitProviderService', () => {
           gitProviderService.getAvailableRepos(
             createGitProviderId('provider-1'),
           ),
-        ).rejects.toThrow('Git provider token not configured');
+        ).rejects.toThrow('Git provider credentials not configured');
+      });
+    });
+
+    describe('when git provider is a GitHub App installation', () => {
+      it('accepts the provider even when PAT token is null', async () => {
+        const appProvider = {
+          ...mockGitProvider,
+          token: null,
+          authType: 'github_app' as const,
+          githubAppInstallationId: 42,
+        };
+        mockGitProviderRepository.findById.mockResolvedValue(appProvider);
+        mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue(
+          [],
+        );
+
+        await expect(
+          gitProviderService.getAvailableRepos(
+            createGitProviderId('provider-1'),
+          ),
+        ).resolves.toEqual([]);
+
+        expect(
+          mockGithubProviderInstance.listAvailableRepositories,
+        ).toHaveBeenCalled();
       });
     });
 
@@ -537,11 +563,12 @@ describe('GitProviderService', () => {
       });
     });
 
-    describe('when git provider has no token', () => {
+    describe('when git provider has no credentials', () => {
       it('throws error', async () => {
         const providerWithoutToken = {
           ...mockGitProvider,
           token: null,
+          authType: 'pat' as const,
         };
         mockGitProviderRepository.findById.mockResolvedValue(
           providerWithoutToken,
@@ -554,7 +581,33 @@ describe('GitProviderService', () => {
             repo,
             branch,
           ),
-        ).rejects.toThrow('Git provider token not configured');
+        ).rejects.toThrow('Git provider credentials not configured');
+      });
+    });
+
+    describe('when git provider is a GitHub App installation', () => {
+      it('accepts the provider even when PAT token is null', async () => {
+        const appProvider = {
+          ...mockGitProvider,
+          token: null,
+          authType: 'github_app' as const,
+          githubAppInstallationId: 42,
+        };
+        mockGitProviderRepository.findById.mockResolvedValue(appProvider);
+        mockGithubProviderInstance.checkBranchExists.mockResolvedValue(true);
+
+        await expect(
+          gitProviderService.checkBranchExists(
+            createGitProviderId('provider-1'),
+            owner,
+            repo,
+            branch,
+          ),
+        ).resolves.toBe(true);
+
+        expect(
+          mockGithubProviderInstance.checkBranchExists,
+        ).toHaveBeenCalledWith(owner, repo, branch);
       });
     });
 

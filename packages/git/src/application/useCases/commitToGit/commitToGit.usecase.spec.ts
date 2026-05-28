@@ -168,13 +168,13 @@ describe('CommitToGit', () => {
       ).rejects.toThrow('Unsupported git provider source: UNSUPPORTED');
     });
 
-    it('throws error if provider token is missing', async () => {
+    it('throws error if PAT provider has no token', async () => {
       const providerWithoutToken: GitProvider = {
         ...mockGitProvider,
         token: null,
+        authType: 'pat',
       };
 
-      // Mock provider service to return the provider without token
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         providerWithoutToken,
       );
@@ -185,7 +185,41 @@ describe('CommitToGit', () => {
           [{ path: 'test.txt', content: 'content' }],
           'Commit message',
         ),
-      ).rejects.toThrow('Git provider token not configured');
+      ).rejects.toThrow('Git provider credentials not configured');
+    });
+
+    it('accepts a GitHub App provider with installationId and no PAT token', async () => {
+      const appProvider: GitProvider = {
+        ...mockGitProvider,
+        token: null,
+        authType: 'github_app',
+        githubAppInstallationId: 42,
+      };
+
+      const commitDataFromGit = {
+        sha: 'abc123',
+        message: 'Commit message',
+        author: 'test@example.com',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123',
+      };
+      const expectedCommit = gitCommitFactory(commitDataFromGit);
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(appProvider);
+      mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
+      mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
+
+      await expect(
+        commitToGit.commitToGit(
+          mockGitRepo,
+          [{ path: 'test.txt', content: 'content' }],
+          'Commit message',
+        ),
+      ).resolves.toEqual(expectedCommit);
+
+      expect(mockGitRepoFactory.createGitRepo).toHaveBeenCalledWith(
+        mockGitRepo,
+        appProvider,
+      );
     });
 
     it('throws error if provider is not found', async () => {

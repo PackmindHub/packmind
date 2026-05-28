@@ -233,11 +233,12 @@ describe('CheckDirectoryExistenceUseCase', () => {
       });
     });
 
-    describe('when git provider token not configured', () => {
-      it('throws error for provider without token', async () => {
+    describe('when git provider has no credentials', () => {
+      it('throws error for PAT provider without token', async () => {
         const providerWithoutToken = gitProviderFactory({
           id: gitProviderId,
           token: undefined,
+          authType: 'pat',
           organizationId,
         });
 
@@ -247,7 +248,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
         );
 
         await expect(useCase.execute(validCommand)).rejects.toThrow(
-          'Git provider token not configured',
+          'Git provider credentials not configured',
         );
       });
     });
