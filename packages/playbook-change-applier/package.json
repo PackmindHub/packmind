@@ -6,11 +6,11 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/types": "*",
-    "@packmind/logger": "*",
-    "@packmind/node-utils": "*",
-    "@packmind/skills": "*",
-    "@packmind/test-utils": "*",
+    "@packmind/types": "workspace:*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/skills": "workspace:*",
+    "@packmind/test-utils": "workspace:*",
     "uuid": "^11.1.0",
     "yaml": "^2.8.3",
     "typeorm": "0.3.28"

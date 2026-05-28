@@ -4,31 +4,28 @@
   "private": true,
   "engines": {
     "node": "24.15.0",
-    "npm": "11.12.1"
+    "pnpm": ">=9.0.0 <10.0.0"
   },
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t build",
-    "chakra:typegen": "npx --workspace=packages/ui @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
-    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test --config apps/e2e-tests/playwright.config.ts",
+    "chakra:typegen": "cd packages/ui && pnpm dlx @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
+    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false pnpm exec playwright test --config apps/e2e-tests/playwright.config.ts",
     "husky": "husky",
     "lint": "nx run-many -t lint",
     "lint:staged": "nx affected:lint --parallel --uncommitted",
     "packmind-cli:build": "nx run packmind-cli:build --skip-nx-cache",
-    "packmind-cli:lint": "npm run packmind-cli:build && node dist/apps/cli/main.cjs lint .",
-    "prepare": "npm run husky && npm run chakra:typegen",
+    "packmind-cli:lint": "pnpm packmind-cli:build && node dist/apps/cli/main.cjs lint .",
+    "prepare": "pnpm husky && pnpm chakra:typegen",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
-    "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build",
+    "quality-gate": "pnpm typecheck:frontend && pnpm test:staged && pnpm lint:staged && pnpm build",
     "withEnv": "bash -c 'set -a; [ -f .env ] && source .env; set +a; eval \"$@\"' --",
-    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
-    "test:staged": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test": "PACKMIND_LOG_LEVEL=silent pnpm withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx run-many -t test --exclude=cli-e2e-tests --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test:staged": "PACKMIND_LOG_LEVEL=silent pnpm withEnv \"NODE_OPTIONS='--max-old-space-size=16384 --no-experimental-strip-types' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:memory-profile": "./scripts/test-memory-profile.sh",
     "typecheck:frontend": "nx run frontend:typecheck"
   },
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@nestjs/schematics": "^11.0.0",
@@ -204,7 +201,16 @@
     "winston": "^3.17.0",
     "yaml": "^2.8.3"
   },
-  "overrides": {
-    "fast-xml-parser": "5.5.6"
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": "5.5.6"
+    },
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "@swc/core",
+      "esbuild",
+      "@nestjs/core",
+      "@swc/cli"
+    ]
   }
 }
