@@ -58,7 +58,9 @@
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.1",
     "@testing-library/user-event": "^14.5.2",
+    "@types/body-parser": "^1.19.6",
     "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.19.9",
@@ -164,6 +166,7 @@
     "archiver": "^7.0.1",
     "axios": "^1.15.0",
     "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.2",
     "bullmq": "^5.58.2",
     "chalk": "^5.6.0",
     "clsx": "^2.0.0",
@@ -173,6 +176,7 @@
     "date-fns": "^4.1.0",
     "diff": "^8.0.3",
     "dompurify": "^3.3.3",
+    "express": "^5.1.0",
     "fastify": "^5.8.3",
     "fastify-plugin": "~5.1.0",
     "http-proxy-middleware": "^3.0.5",
@@ -199,7 +203,8 @@
     "validator": "^13.15.15",
     "web-tree-sitter": "^0.25.0",
     "winston": "^3.17.0",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "zod": "^3.25.76"
   },
   "pnpm": {
     "overrides": {

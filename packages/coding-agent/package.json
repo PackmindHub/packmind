@@ -7,16 +7,19 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@packmind/logger": "workspace:*",
-    "@packmind/recipes": "workspace:*",
     "@packmind/node-utils": "workspace:*",
-    "@packmind/types": "workspace:*",
-    "@packmind/standards": "workspace:*",
+    "@packmind/recipes": "workspace:*",
     "@packmind/skills": "workspace:*",
+    "@packmind/standards": "workspace:*",
     "@packmind/test-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
     "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "semver": "^7.7.4",
     "typeorm": "0.3.28",
-    "archiver": "^7.0.1",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3"
   }
 }
