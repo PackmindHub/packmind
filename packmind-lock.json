@@ -17,6 +17,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "targetId": "348b77b3-625b-478a-accd-5088a72f6d87",
   "artifacts": {
     "user:command:create-handoff": {
       "name": "Create handoff",
@@ -630,6 +631,296 @@
         },
         {
           "path": ".gitlab/duo/skills/feature-flags-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:feature-spec": {
+      "name": "feature-spec",
+      "type": "skill",
+      "id": "856e81e9-f291-45c2-8108-30be503122d0",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "72851a01-4230-4838-ba7a-fb26f3e95ff3"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-3-implementation.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-4-finalize.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/context-schema.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/spec-templates.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-3-implementation.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-4-finalize.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/context-schema.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/spec-templates.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-3-implementation.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-4-finalize.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/context-schema.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/spec-templates.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-3-implementation.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-4-finalize.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/context-schema.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/spec-templates.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:feature-sprint": {
+      "name": "feature-sprint",
+      "type": "skill",
+      "id": "01ebc12a-443d-4719-a045-e66f4c3ca457",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "72851a01-4230-4838-ba7a-fb26f3e95ff3"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/feature-sprint/phase-1-init.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/phase-2-execute.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-1-init.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-2-execute.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-1-init.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-2-execute.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-1-init.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-2-execute.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
@@ -1626,6 +1917,5 @@
         }
       ]
     }
-  },
-  "cliVersion": "0.29.0"
+  }
 }

@@ -29,7 +29,8 @@ Before reaching for a raw `<div>` or Chakra primitive, check if a PM component e
 6. **Need an overlay?** Use `PMDialog` for modals, `PMPopover` for contextual info, `PMDrawer` for side panels.
 7. **Need to show nothing?** Use `PMEmptyState` with title, description, icon, and an action button.
 8. **Need loading placeholders?** Use `PMSkeleton` for content areas, `PMSpinner` for inline indicators.
-9. **No PM wrapper exists?** Check Chakra UI v3 docs, then ask the user before using a raw Chakra component.
+9. **Need a color indicator?** Use `PMColorSwatch` to display a color sample.
+10. **No PM wrapper exists?** Check Chakra UI v3 docs, then ask the user before using a raw Chakra component.
 
 ## Compound Component Patterns
 
@@ -71,9 +72,19 @@ Several PM components use Chakra's compound pattern with dot notation. Always us
     </PMTimeline.Content>
   </PMTimeline.Item>
 </PMTimeline.Root>
+
+// Tabs (compound pattern — preferred for flexible tab layouts)
+<PMTabsCompound.Root defaultValue="tab1">
+  <PMTabsCompound.List>
+    <PMTabsCompound.Trigger value="tab1">First Tab</PMTabsCompound.Trigger>
+    <PMTabsCompound.Trigger value="tab2">Second Tab</PMTabsCompound.Trigger>
+  </PMTabsCompound.List>
+  <PMTabsCompound.Content value="tab1">First content</PMTabsCompound.Content>
+  <PMTabsCompound.Content value="tab2">Second content</PMTabsCompound.Content>
+</PMTabsCompound.Root>
 ```
 
-**Key compound components**: `PMDialog`, `PMAccordion`, `PMTimeline`, `PMCarousel`, `PMCopiable`, `PMSelect`, `PMMenu`, `PMTreeView`, `PMTabs`.
+**Key compound components**: `PMDialog`, `PMAccordion`, `PMTimeline`, `PMCarousel`, `PMCopiable`, `PMSelect`, `PMMenu`, `PMTreeView`, `PMTabs`, `PMTabsCompound`.
 
 Always wrap overlays (dialogs, popovers, drawers) inside `PMPortal` to escape stacking context issues.
 
@@ -286,6 +297,35 @@ Mobile-first approach: `base` styles apply to all sizes, then override at larger
 | `warning` | Caution-required actions |
 | `danger` | Destructive actions (delete, remove) |
 
+## Hooks
+
+`@packmind/ui` exports several hooks for common UI patterns:
+
+### useTableSort
+
+Manages sorting state for `PMTable`. Returns `sortKey`, `sortDirection`, `handleSort`, and `getSortDirection`:
+
+```tsx
+import { useTableSort } from '@packmind/ui';
+
+const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort({
+  defaultSortKey: 'name',
+  defaultSortDirection: 'asc',
+});
+
+<PMTable columns={columns} data={data} onSort={handleSort} />
+```
+
+### Chakra Re-exports
+
+- **pmUseFilter** — Chakra's `useFilter` for filtering collections
+- **pmUseListCollection** — Chakra's `useListCollection` for managing list data (useful with `PMSelect`, `PMCombobox`)
+- **pmUseToken** — Chakra's `useToken` for accessing design tokens programmatically
+
+```tsx
+import { pmUseToken, pmUseListCollection } from '@packmind/ui';
+```
+
 ## Anti-Patterns
 
 - **Do not** import from `@chakra-ui/react` directly — always use `@packmind/ui` wrappers.
@@ -298,4 +338,4 @@ Mobile-first approach: `base` styles apply to all sizes, then override at larger
 
 ### references/
 
-- `component-catalog.md` — Full inventory of all PM components with props, organized by category.
+- `component-catalog.md` — Full inventory of all PM components and hooks with props, organized by category.
