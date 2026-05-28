@@ -2,6 +2,14 @@
 export * from './TargetId';
 export * from './Target';
 export * from './TargetWithRepository';
+export * from './MarketplaceId';
+export * from './MarketplaceVendor';
+export * from './MarketplaceState';
+export * from './PluginRef';
+export * from './MarketplaceDescriptor';
+export * from './MarketplaceDescriptorFilename';
+export * from './Marketplace';
+export * from './MarketplaceListItem';
 export * from './DistributionStatus';
 export * from './RenderMode';
 export * from './RenderModeConfigurationId';
@@ -32,3 +40,6 @@ export * from './events';
 
 // Ports
 export * from './ports';
+
+// Parsers
+export * from './parsers';
