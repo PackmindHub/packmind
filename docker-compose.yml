@@ -105,10 +105,9 @@ services:
         apk add --no-cache git
         corepack enable
         corepack prepare pnpm@9.15.0 --activate
-        if [ -f node_modules/.modules.yaml ] && pnpm install --frozen-lockfile --prefer-offline; then
-          echo "[deps] pnpm install completed (cache hit if possible)"
-        else
-          pnpm install
+        if ! pnpm install --frozen-lockfile --prefer-offline; then
+          echo "[deps] lockfile drift detected — run 'pnpm install' locally and commit pnpm-lock.yaml" >&2
+          exit 1
         fi
         chmod -R +x node_modules/.bin 2>/dev/null || true
         node scripts/select-tsconfig.mjs
