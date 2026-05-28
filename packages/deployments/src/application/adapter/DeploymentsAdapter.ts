@@ -50,8 +50,6 @@ import {
   ICodingAgentPort,
   ICodingAgentPortName,
   IDeploymentPort,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   InstallPackagesCommand,
@@ -157,7 +155,6 @@ export class DeploymentsAdapter
   private skillsPort: ISkillsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private accountsPort: IAccountsPort | null = null;
-  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Use cases - initialized in initialize()
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
@@ -220,7 +217,6 @@ export class DeploymentsAdapter
     [ISkillsPortName]: ISkillsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
-    [IEventTrackingPortName]: IEventTrackingPort;
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
@@ -232,7 +228,6 @@ export class DeploymentsAdapter
     this.skillsPort = ports[ISkillsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
-    this.eventTrackingPort = ports[IEventTrackingPortName];
 
     // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
@@ -248,7 +243,6 @@ export class DeploymentsAdapter
       !this.skillsPort &&
       !this.spacesPort &&
       !this.accountsPort &&
-      !this.eventTrackingPort &&
       !this.deploymentsServices
     ) {
       throw new Error('DeploymentsAdapter: Required ports not provided');
@@ -406,14 +400,14 @@ export class DeploymentsAdapter
       targetResolutionService,
       this.distributionRepository,
       this.distributedPackageRepository,
-      this.eventTrackingPort,
+      ports.eventEmitterService,
     );
 
     this._trackPluginDeletedUseCase = new TrackPluginDeletedUseCase(
       this.deploymentsServices.getPackageService(),
       this.spacesPort,
       this.accountsPort,
-      this.eventTrackingPort,
+      ports.eventEmitterService,
     );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(

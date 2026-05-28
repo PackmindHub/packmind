@@ -1,5 +1,9 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { ClaudePluginDeployer } from '@packmind/coding-agent';
 import {
   Distribution,
@@ -8,13 +12,13 @@ import {
   FileUpdates,
   GitRepo,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   OrganizationId,
   PackageWithArtefacts,
+  PluginRenderedEvent,
   RecipeVersion,
   RenderMode,
   RenderPackageAsPluginCommand,
@@ -41,7 +45,6 @@ const origin = 'RenderPackageAsPluginUseCase';
 
 const PLUGIN_VERSION = '0.1.0';
 
-const RENDER_PLUGIN_EVENT = 'package_rendered_as_plugin';
 const DEFAULT_GIT_BRANCH = 'main';
 
 /**
@@ -65,7 +68,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     private readonly targetResolutionService: TargetResolutionService,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
-    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -182,21 +185,17 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
         });
       }
 
-      const metadata: Record<string, string | number> = {
-        package_id: pkg.id,
-        package_slug: pkg.slug,
-        target_mode: command.mode,
-        target_path: command.pluginRoot,
-      };
-      if (gitRemoteUrl) {
-        metadata['marketplace_repo'] = gitRemoteUrl;
-      }
-
-      await this.eventTrackingPort.trackEvent(
-        userId,
-        organizationId,
-        RENDER_PLUGIN_EVENT,
-        metadata,
+      this.eventEmitterService.emit(
+        new PluginRenderedEvent({
+          userId,
+          organizationId,
+          source: command.source ?? 'cli',
+          packageId: pkg.id,
+          packageSlug: pkg.slug,
+          mode: command.mode,
+          pluginRoot: command.pluginRoot,
+          ...(gitRemoteUrl ? { marketplaceRepo: gitRemoteUrl } : {}),
+        }),
       );
 
       return distributionId;

@@ -60,6 +60,7 @@ export class PluginsController {
       const command: RenderPackageAsPluginCommand = {
         userId: request.user.userId,
         organizationId,
+        source: request.clientSource,
         packageSlug: body.packageSlug,
         mode: body.mode,
         pluginRoot: body.pluginRoot,
@@ -117,6 +118,7 @@ export class PluginsController {
       const command: TrackPluginDeletedCommand = {
         userId: request.user.userId,
         organizationId,
+        source: request.clientSource,
         packageSlug: body.packageSlug,
         gitRemoteUrl: body.gitRemoteUrl,
       };

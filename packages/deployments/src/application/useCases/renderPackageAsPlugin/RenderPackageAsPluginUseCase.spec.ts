@@ -1,9 +1,9 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   Distribution,
   DistributionStatus,
   IAccountsPort,
-  IEventTrackingPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -11,6 +11,7 @@ import {
   Organization,
   OrganizationId,
   PackageWithArtefacts,
+  PluginRenderedEvent,
   Recipe,
   RecipeVersion,
   RenderMode,
@@ -74,7 +75,7 @@ describe('RenderPackageAsPluginUseCase', () => {
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let distributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let useCase: RenderPackageAsPluginUseCase;
   let organizationId: OrganizationId;
   let organization: Organization;
@@ -245,10 +246,9 @@ describe('RenderPackageAsPluginUseCase', () => {
       addSkillVersions: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-      identifyOrganizationGroup: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new RenderPackageAsPluginUseCase(
       packageService,
@@ -260,7 +260,7 @@ describe('RenderPackageAsPluginUseCase', () => {
       targetResolutionService,
       distributionRepository,
       distributedPackageRepository,
-      eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
   });
@@ -475,25 +475,27 @@ describe('RenderPackageAsPluginUseCase', () => {
         ).toHaveBeenCalledWith(distributedPackageId, [standardVersionId]);
       });
 
-      it('emits package_rendered_as_plugin with the marketplace metadata', async () => {
+      it('emits PluginRenderedEvent with the marketplace metadata', async () => {
         await useCase.execute(
           buildCommand({
             gitRemoteUrl: 'https://github.com/acme/marketplace.git',
           }),
         );
 
-        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-          userId,
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        const emitted = eventEmitterService.emit.mock
+          .calls[0][0] as PluginRenderedEvent;
+        expect(emitted).toBeInstanceOf(PluginRenderedEvent);
+        expect(emitted.payload).toEqual({
+          userId: createUserId(userId),
           organizationId,
-          'package_rendered_as_plugin',
-          {
-            package_id: pkg.id,
-            package_slug: pkg.slug,
-            target_mode: 'marketplace',
-            target_path: 'plugins/security/',
-            marketplace_repo: 'https://github.com/acme/marketplace.git',
-          },
-        );
+          source: 'cli',
+          packageId: pkg.id,
+          packageSlug: pkg.slug,
+          mode: 'marketplace',
+          pluginRoot: 'plugins/security/',
+          marketplaceRepo: 'https://github.com/acme/marketplace.git',
+        });
       });
 
       it('returns the rendered files and the distribution id', async () => {
@@ -523,17 +525,19 @@ describe('RenderPackageAsPluginUseCase', () => {
       it('still emits the event without the marketplace repo', async () => {
         await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
 
-        expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-          userId,
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        const emitted = eventEmitterService.emit.mock
+          .calls[0][0] as PluginRenderedEvent;
+        expect(emitted.payload).toEqual({
+          userId: createUserId(userId),
           organizationId,
-          'package_rendered_as_plugin',
-          {
-            package_id: pkg.id,
-            package_slug: pkg.slug,
-            target_mode: 'marketplace',
-            target_path: 'plugins/security/',
-          },
-        );
+          source: 'cli',
+          packageId: pkg.id,
+          packageSlug: pkg.slug,
+          mode: 'marketplace',
+          pluginRoot: 'plugins/security/',
+        });
+        expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
       });
 
       it('returns the files with no distribution id', async () => {

@@ -1,11 +1,12 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   IAccountsPort,
-  IEventTrackingPort,
   ISpacesPort,
   Organization,
   OrganizationId,
   PackageWithArtefacts,
+  PluginDeletedEvent,
   Space,
   SpaceType,
   TrackPluginDeletedCommand,
@@ -44,7 +45,7 @@ describe('TrackPluginDeletedUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let useCase: TrackPluginDeletedUseCase;
   let organizationId: OrganizationId;
   let organization: Organization;
@@ -115,22 +116,21 @@ describe('TrackPluginDeletedUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-      identifyOrganizationGroup: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new TrackPluginDeletedUseCase(
       packageService,
       spacesPort,
       accountsPort,
-      eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
   });
 
   describe('when a git remote url is provided', () => {
-    it('resolves the package and emits plugin_deleted with the marketplace repo', async () => {
+    it('resolves the package and emits PluginDeletedEvent with the marketplace repo', async () => {
       const result = await useCase.execute(
         buildCommand({
           gitRemoteUrl: 'https://github.com/acme/marketplace.git',
@@ -140,50 +140,49 @@ describe('TrackPluginDeletedUseCase', () => {
       expect(
         packageService.getPackagesBySlugsAndSpaceWithArtefacts,
       ).toHaveBeenCalledWith(['security'], defaultSpace.id);
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
+      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+      const emitted = eventEmitterService.emit.mock
+        .calls[0][0] as PluginDeletedEvent;
+      expect(emitted).toBeInstanceOf(PluginDeletedEvent);
+      expect(emitted.payload).toEqual({
+        userId: createUserId(userId),
         organizationId,
-        'plugin_deleted',
-        {
-          package_id: pkg.id,
-          package_slug: pkg.slug,
-          marketplace_repo: 'https://github.com/acme/marketplace.git',
-        },
-      );
+        source: 'cli',
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+        marketplaceRepo: 'https://github.com/acme/marketplace.git',
+      });
       expect(result).toEqual({ tracked: true });
     });
   });
 
   describe('when no git remote url is provided', () => {
-    it('emits plugin_deleted without the marketplace repo', async () => {
+    it('emits PluginDeletedEvent without the marketplace repo', async () => {
       const result = await useCase.execute(
         buildCommand({ gitRemoteUrl: '   ' }),
       );
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
+      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+      const emitted = eventEmitterService.emit.mock
+        .calls[0][0] as PluginDeletedEvent;
+      expect(emitted.payload).toEqual({
+        userId: createUserId(userId),
         organizationId,
-        'plugin_deleted',
-        {
-          package_id: pkg.id,
-          package_slug: pkg.slug,
-        },
-      );
+        source: 'cli',
+        packageId: pkg.id,
+        packageSlug: pkg.slug,
+      });
+      expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
       expect(result).toEqual({ tracked: true });
     });
 
-    it('emits plugin_deleted without the marketplace repo when undefined', async () => {
+    it('emits PluginDeletedEvent without the marketplace repo when undefined', async () => {
       await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'plugin_deleted',
-        {
-          package_id: pkg.id,
-          package_slug: pkg.slug,
-        },
-      );
+      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+      const emitted = eventEmitterService.emit.mock
+        .calls[0][0] as PluginDeletedEvent;
+      expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
     });
   });
 
@@ -196,7 +195,7 @@ describe('TrackPluginDeletedUseCase', () => {
       await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
         PackagesNotFoundError,
       );
-      expect(eventTrackingPort.trackEvent).not.toHaveBeenCalled();
+      expect(eventEmitterService.emit).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,11 +1,15 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
-  IEventTrackingPort,
   ISpacesPort,
   OrganizationId,
   PackageWithArtefacts,
+  PluginDeletedEvent,
   SpaceId,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
@@ -16,10 +20,8 @@ import { PackagesNotFoundError } from '../../../domain/errors/PackagesNotFoundEr
 
 const origin = 'TrackPluginDeletedUseCase';
 
-const PLUGIN_DELETED_EVENT = 'plugin_deleted';
-
 /**
- * Emits a `plugin_deleted` analytics event when a rendered plugin is removed.
+ * Emits a `PluginDeletedEvent` when a rendered plugin is removed.
  *
  * Plugin delete is a local-only operation; this use case resolves the package
  * to enrich the event and writes no distribution row.
@@ -32,7 +34,7 @@ export class TrackPluginDeletedUseCase extends AbstractMemberUseCase<
     private readonly packageService: PackageService,
     private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -52,24 +54,26 @@ export class TrackPluginDeletedUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
-    const gitRemoteUrl = command.gitRemoteUrl?.trim()
+    const marketplaceRepo = command.gitRemoteUrl?.trim()
       ? command.gitRemoteUrl
       : undefined;
 
-    const metadata: Record<string, string | number> = {
-      package_id: pkg.id,
-      package_slug: pkg.slug,
-    };
-    if (gitRemoteUrl) {
-      metadata['marketplace_repo'] = gitRemoteUrl;
+    try {
+      this.eventEmitterService.emit(
+        new PluginDeletedEvent({
+          userId: command.user.id,
+          organizationId: command.organization.id,
+          source: command.source ?? 'cli',
+          packageId: pkg.id,
+          packageSlug: pkg.slug,
+          ...(marketplaceRepo ? { marketplaceRepo } : {}),
+        }),
+      );
+    } catch (error) {
+      this.logger.warn('Failed to track plugin deletion; continuing', {
+        error,
+      });
     }
-
-    await this.eventTrackingPort.trackEvent(
-      command.user.id,
-      command.organization.id,
-      PLUGIN_DELETED_EVENT,
-      metadata,
-    );
 
     return { tracked: true };
   }
