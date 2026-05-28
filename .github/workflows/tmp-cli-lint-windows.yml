@@ -35,8 +35,8 @@ jobs:
         run: pnpm packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
-        working-directory: dist/apps/cli
-        run: pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace
+        shell: bash
+        run: sh scripts/install-dist-cli-deps.sh
 
       - name: Run CLI lint
         run: node dist/apps/cli/main.cjs lint .

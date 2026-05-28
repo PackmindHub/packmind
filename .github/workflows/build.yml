@@ -289,12 +289,7 @@ jobs:
           ls -lh dist/apps/cli-executables/
 
       - name: Install dist CLI runtime dependencies
-        # pnpm's strict node_modules layout no longer hoists the CLI's runtime deps
-        # to the workspace root, so we install them inside the dist before invoking
-        # the bundled binary. --ignore-workspace is required so pnpm treats the dist
-        # as a standalone package instead of part of the parent workspace.
-        working-directory: dist/apps/cli
-        run: pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace
+        run: sh scripts/install-dist-cli-deps.sh
 
       - name: Test executables
         run: |
@@ -344,11 +339,7 @@ jobs:
       - run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
-        # pnpm's strict node_modules layout no longer hoists the CLI's runtime deps
-        # to the workspace root, so install them inside the dist before the e2e tests
-        # exec `node dist/apps/cli/main.cjs` directly.
-        working-directory: dist/apps/cli
-        run: pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace
+        run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
         run: |
