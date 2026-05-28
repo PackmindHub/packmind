@@ -10,7 +10,7 @@ import {
   PMAlert,
   PMHStack,
 } from '@packmind/ui';
-import { ErrorBoundary } from '../../src/providers/ErrorBoundary/ErrorBoundary';
+import { ErrorBoundary } from '../../src/providers/ErrorBoundary';
 
 export const handle = {
   crumb: () => ({ label: 'Error Demo', to: '/error-demo' }),

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PMEllipsisMenu } from './PMEllipsisMenu';
 import { PMIcon } from '../../content/PMIcon/PMIcon';
 import { PMHStack } from '../../layout/PMHStack/PMHStack';

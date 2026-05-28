@@ -6,8 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "bullmq": "^5.58.2",
-    "jsonwebtoken": "^9.0.2",
     "@packmind/accounts": "*",
     "@packmind/editions": "*",
     "@packmind/recipes": "*",
@@ -16,13 +14,15 @@
     "@packmind/types": "*",
     "@packmind/skills": "*",
     "@packmind/spaces": "*",
-    "typeorm": "0.3.28",
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
-    "uuid": "11.1.0",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*",
-    "jest-stage": "^1.0.0"
+    "uuid": "^11.1.0",
+    "typeorm": "0.3.28",
+    "jsonwebtoken": "^9.0.3",
+    "jest-stage": "^1.0.0",
+    "bullmq": "^5.58.2"
   }
 }

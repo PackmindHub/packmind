@@ -6,14 +6,14 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "axios": "^1.12.0",
     "@packmind/accounts": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
+    "@packmind/test-utils": "*",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "bullmq": "^5.58.2",
-    "@packmind/test-utils": "0.0.1"
+    "axios": "^1.12.0"
   }
 }

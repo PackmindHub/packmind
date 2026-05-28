@@ -43,6 +43,10 @@ apps/mcp-server/key.pem
 # Git worktrees
 .worktrees/
 
-# GitLab Duo skills (managed locally)
-.gitlab/
+.claude/worktrees
+.claude/settings.local.json
+
 docker/nginx/ssl
+
+.nx/polygraph
+.nx/self-healing

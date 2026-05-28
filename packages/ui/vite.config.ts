@@ -18,7 +18,7 @@ export default defineConfig(() => ({
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
       pathsToAliases: false,
     }),
-    tsconfigPaths,
+    tsconfigPaths(),
   ],
   // Uncomment this if you are using workers.
   // worker: {
@@ -30,9 +30,6 @@ export default defineConfig(() => ({
     outDir: '../../dist/packages/packmind-ui',
     emptyOutDir: true,
     reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
@@ -42,9 +39,10 @@ export default defineConfig(() => ({
       // Don't forget to update your package.json as well.
       formats: ['es' as const],
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: (id: string) =>
+        !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0'),
     },
   },
 }));

@@ -39,6 +39,7 @@ import {
   SidebarAccountsMenuDataTestIds,
   SidebarNavigationDataTestId,
 } from '@packmind/frontend';
+import type { Space } from '@packmind/types';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 
@@ -162,6 +163,7 @@ export const SidebarNavigation: React.FunctionComponent<
   const { isCollapsed } = useSidebarCollapse();
   const { user } = useAuthContext();
   const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
+  const [lastPanelSpace, setLastPanelSpace] = useState<Space | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const signOutMutation = useSignOutMutation();
@@ -179,6 +181,16 @@ export const SidebarNavigation: React.FunctionComponent<
     : SIDEBAR_WIDTH_EXPANDED;
 
   const panelSpace = spaces?.find((s) => s.id === activeSpacePanel);
+
+  // Keep last opened space mounted so Chakra Drawer can run its close
+  // animation and clean up portal/pointer-events before unmounting.
+  useEffect(() => {
+    if (panelSpace) {
+      setLastPanelSpace(panelSpace);
+    }
+    // panelSpace identity changes every render via .find() — gate on the id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpacePanel, spaces]);
 
   const handleSignOut = () => {
     const redirectPath = '/sign-in';
@@ -461,11 +473,11 @@ export const SidebarNavigation: React.FunctionComponent<
       </PMVerticalNav>
 
       {/* SpaceNavPanel drawer */}
-      {panelSpace && (
+      {lastPanelSpace && (
         <SpaceNavPanel
-          space={panelSpace}
+          space={lastPanelSpace}
           orgSlug={orgSlug}
-          open={true}
+          open={!!panelSpace}
           onClose={() => setActiveSpacePanel(null)}
           containerRef={contentAreaRef}
         />

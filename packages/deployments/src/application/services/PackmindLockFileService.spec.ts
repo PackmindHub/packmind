@@ -17,11 +17,12 @@ import { PackmindLockFileService } from './PackmindLockFileService';
 describe('PackmindLockFileService', () => {
   let service: PackmindLockFileService;
   const FIXED_DATE = '2024-06-15T10:30:00.000Z';
+  const FIXED_DATE_MS = new Date(FIXED_DATE).getTime();
 
   beforeEach(() => {
     service = new PackmindLockFileService();
     jest.useFakeTimers();
-    jest.setSystemTime(new Date(FIXED_DATE));
+    jest.setSystemTime(FIXED_DATE_MS);
   });
 
   afterEach(() => {
