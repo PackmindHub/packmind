@@ -149,7 +149,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       # Download all build artifacts
       - name: Download API build artifacts

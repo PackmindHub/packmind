@@ -16,7 +16,7 @@
     "lint:staged": "nx affected:lint --parallel --uncommitted",
     "packmind-cli:build": "nx run packmind-cli:build --skip-nx-cache",
     "packmind-cli:lint": "pnpm packmind-cli:build && (cd dist/apps/cli && pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace) && node dist/apps/cli/main.cjs lint .",
-    "prepare": "pnpm husky && pnpm chakra:typegen",
+    "prepare": "node scripts/prepare.mjs",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
     "quality-gate": "pnpm typecheck:frontend && pnpm test:staged && pnpm lint:staged && pnpm build",
