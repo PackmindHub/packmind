@@ -16,9 +16,12 @@ USER node
 # Set working directory
 WORKDIR /app
 
-# Activate pnpm via corepack (bundled with the node base image)
+# Activate pnpm via corepack in a shared cache so both root and node see the same binary
+# (otherwise corepack prepare runs as root and pnpm install re-downloads under node's home)
 USER root
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+ENV COREPACK_HOME=/usr/local/share/node/corepack
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate && \
+    chmod -R a+rX "$COREPACK_HOME"
 USER node
 
 # Copy package files with proper ownership

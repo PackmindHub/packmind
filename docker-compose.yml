@@ -115,6 +115,8 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
 
   run-migrations:
     image: node:24.15.0-alpine3.23
@@ -136,6 +138,8 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
     depends_on:
       install-dependencies:
         condition: service_completed_successfully
@@ -321,6 +325,8 @@ services:
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
     ports:
       - '9323:9323'
     working_dir: /packmind/apps/e2e-tests
@@ -342,3 +348,5 @@ volumes:
   dev-dist:
   dev-tmp:
   dev-node_modules:
+  dev-corepack-cache:
+  dev-pnpm-store:

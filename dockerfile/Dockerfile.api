@@ -18,14 +18,17 @@ USER node
 
 WORKDIR /app
 
-# Activate pnpm via corepack (bundled with the node base image)
+# Activate pnpm via corepack in a shared cache so both root and node see the same binary
+# (otherwise corepack prepare runs as root and pnpm install re-downloads under node's home)
 USER root
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+ENV COREPACK_HOME=/usr/local/share/node/corepack
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate && \
+    chmod -R a+rX "$COREPACK_HOME"
 USER node
 
 # Copy optimized API package.json and install only required dependencies
 COPY --chown=node:node apps/api/*package*.json package.json
-RUN pnpm install --prod --ignore-scripts && pnpm store prune
+RUN pnpm install --prod --ignore-scripts
 
 # Copy the built application and migrations bundle with correct ownership
 COPY --chown=node:node dist/apps/api/main.js ./
@@ -61,12 +64,14 @@ RUN --mount=type=bind,source=.,target=/build-context \
 USER node
 ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 
-# Install migration dependencies
+# Install migration dependencies, then prune the shared pnpm store once at the end
+# (pruning between installs may force re-downloads of packages shared by both projects)
 WORKDIR /app/migrations
 RUN pnpm install --prod && pnpm store prune
 
 # Return to app directory
 WORKDIR /app
+
 
 # Remove npm/pnpm and their global node_modules to eliminate vulnerabilities
 USER root
