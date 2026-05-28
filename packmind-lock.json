@@ -1202,6 +1202,183 @@
         }
       ]
     },
+    "user:skill:release-proprietary": {
+      "name": "release-proprietary",
+      "type": "skill",
+      "id": "43db67da-b17c-475e-9289-927ce8518a3b",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "72851a01-4230-4838-ba7a-fb26f3e95ff3"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "user:skill:ux-microcopy": {
       "name": "ux-microcopy",
       "type": "skill",
