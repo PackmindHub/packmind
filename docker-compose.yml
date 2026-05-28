@@ -324,6 +324,7 @@ services:
     environment:
       BASE_URL: http://frontend:4200
       CI: 'true'
+      NODE_OPTIONS: '--max-old-space-size=16384'
     depends_on:
       frontend:
         condition: service_healthy

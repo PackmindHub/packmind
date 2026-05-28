@@ -6,6 +6,8 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "bullmq": "^5.58.2",
+    "jsonwebtoken": "^9.0.2",
     "@packmind/accounts": "*",
     "@packmind/amplitude": "*",
     "@packmind/recipes": "*",
@@ -23,8 +25,6 @@
     "@packmind/llm": "*",
     "@packmind/linter": "*",
     "typeorm": "0.3.28",
-    "jsonwebtoken": "^9.0.3",
-    "jest-stage": "^1.0.0",
-    "bullmq": "^5.58.2"
+    "jest-stage": "^1.0.0"
   }
 }

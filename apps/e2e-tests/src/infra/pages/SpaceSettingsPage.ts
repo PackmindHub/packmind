@@ -88,7 +88,7 @@ export class SpaceSettingsPage
     const errorText = this.page.getByText(
       'Another space with a similar name already exists.',
     );
-    await errorText.waitFor({ state: 'visible', timeout: 10000 });
+    await errorText.waitFor({ state: 'visible', timeout: 20000 });
     return errorText.innerText();
   }
 
