@@ -50,37 +50,62 @@ export class GitProviderRepository
   }
 
   /**
-   * Encrypt the token field in a GitProvider before saving to database
+   * Encrypt sensitive fields (token and appPrivateKey) in a GitProvider
+   * before saving to the database. Both fields are guarded: empty/null values
+   * pass through unchanged, and already-encrypted values (3-part iv:enc:tag
+   * envelope) are not re-encrypted.
    */
   private async encryptGitProvider(
     gitProvider: GitProvider,
   ): Promise<GitProvider> {
-    if (!gitProvider.token) {
+    if (!gitProvider.token && !gitProvider.appPrivateKey) {
       return gitProvider;
     }
 
     const encryptionService = await this.getEncryptionService();
-    return {
-      ...gitProvider,
-      token: encryptionService.encrypt(gitProvider.token),
-    };
+
+    const next: GitProvider = { ...gitProvider };
+
+    if (next.token && !encryptionService.isEncrypted(next.token)) {
+      next.token = encryptionService.encrypt(next.token);
+    }
+
+    if (
+      next.appPrivateKey &&
+      !encryptionService.isEncrypted(next.appPrivateKey)
+    ) {
+      next.appPrivateKey = encryptionService.encrypt(next.appPrivateKey);
+    }
+
+    return next;
   }
 
   /**
-   * Decrypt the token field in a GitProvider after reading from database
+   * Decrypt sensitive fields (token and appPrivateKey) in a GitProvider
+   * after reading from the database. Plaintext / empty values pass through
+   * unchanged, matching the existing backward-compatibility behavior of
+   * EncryptionService.decrypt.
    */
   private async decryptGitProvider(
     gitProvider: GitProvider,
   ): Promise<GitProvider> {
-    if (!gitProvider.token) {
+    if (!gitProvider.token && !gitProvider.appPrivateKey) {
       return gitProvider;
     }
 
     const encryptionService = await this.getEncryptionService();
-    return {
-      ...gitProvider,
-      token: encryptionService.decrypt(gitProvider.token),
-    };
+
+    const next: GitProvider = { ...gitProvider };
+
+    if (next.token) {
+      next.token = encryptionService.decrypt(next.token);
+    }
+
+    if (next.appPrivateKey) {
+      next.appPrivateKey = encryptionService.decrypt(next.appPrivateKey);
+    }
+
+    return next;
   }
 
   override async add(gitProvider: GitProvider): Promise<GitProvider> {

@@ -1,10 +1,16 @@
 import axios from 'axios';
 import { GithubProvider } from './GithubProvider';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+const stubResolver = (): IGithubTokenResolver => ({
+  getToken: jest.fn().mockResolvedValue('fake-token'),
+  onUnauthorized: jest.fn().mockResolvedValue(undefined),
+});
 
 describe('GithubProvider', () => {
   let githubProvider: GithubProvider;
@@ -17,11 +23,15 @@ describe('GithubProvider', () => {
 
     mockAxiosInstance = {
       get: jest.fn(),
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
+      },
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
-    githubProvider = new GithubProvider('fake-token', mockLogger);
+    githubProvider = new GithubProvider(stubResolver(), mockLogger);
   });
 
   afterEach(() => {

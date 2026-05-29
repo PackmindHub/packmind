@@ -20,6 +20,7 @@ import { FetchFileContentCallback } from './application/jobs/FetchFileContentDel
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
+import { GithubTokenResolverFactory } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 
 const origin = 'GitHexa';
 
@@ -35,6 +36,7 @@ const origin = 'GitHexa';
 
 export type GitHexaOpts = BaseHexaOpts & {
   gitRepoFactory?: IGitRepoFactory;
+  githubTokenResolverFactory?: GithubTokenResolverFactory;
 };
 
 const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };

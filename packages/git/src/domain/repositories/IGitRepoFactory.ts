@@ -18,5 +18,5 @@ export interface IGitRepoFactory {
    * @returns IGitRepo instance configured for the specific provider
    * @throws Error if the provider source is unsupported or configuration is invalid
    */
-  createGitRepo(gitRepo: GitRepo, provider: GitProvider): IGitRepo;
+  createGitRepo(gitRepo: GitRepo, provider: GitProvider): Promise<IGitRepo>;
 }

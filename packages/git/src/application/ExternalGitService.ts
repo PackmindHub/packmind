@@ -1,4 +1,5 @@
 import { GitProvider } from '@packmind/types';
+import { IGitProvider } from '../domain/repositories/IGitProvider';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { PackmindLogger } from '@packmind/logger';
 
@@ -23,7 +24,7 @@ export class ExternalGitService {
   async listAvailableRepositories(
     gitProvider: GitProvider,
   ): Promise<ExternalRepository[]> {
-    const provider = this.createGitProviderInstance(gitProvider);
+    const provider = await this.createGitProviderInstance(gitProvider);
     return provider.listAvailableRepositories();
   }
 
@@ -33,11 +34,13 @@ export class ExternalGitService {
     repo: string,
     branch: string,
   ): Promise<boolean> {
-    const provider = this.createGitProviderInstance(gitProvider);
+    const provider = await this.createGitProviderInstance(gitProvider);
     return provider.checkBranchExists(owner, repo, branch);
   }
 
-  private createGitProviderInstance(gitProvider: GitProvider) {
+  private createGitProviderInstance(
+    gitProvider: GitProvider,
+  ): Promise<IGitProvider> {
     return this.gitProviderFactory.createGitProvider(gitProvider);
   }
 }

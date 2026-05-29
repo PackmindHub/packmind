@@ -35,6 +35,37 @@ export const GitProviderSchema = new EntitySchema<
       type: 'varchar',
       nullable: true,
     },
+    authMethod: {
+      name: 'auth_method',
+      type: 'varchar',
+      length: 16,
+      default: 'token',
+    },
+    appInstallationId: {
+      name: 'app_installation_id',
+      type: 'bigint',
+      nullable: true,
+    },
+    appId: {
+      name: 'app_id',
+      type: 'bigint',
+      nullable: true,
+    },
+    appClientId: {
+      name: 'app_client_id',
+      type: 'varchar',
+      nullable: true,
+    },
+    appPrivateKey: {
+      name: 'app_private_key',
+      type: 'text',
+      nullable: true,
+    },
+    revokedAt: {
+      name: 'revoked_at',
+      type: 'timestamptz',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

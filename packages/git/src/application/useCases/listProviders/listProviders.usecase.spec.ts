@@ -75,13 +75,13 @@ describe('ListProvidersUseCase', () => {
         const result = await useCase.execute({ organizationId, userId });
 
         expect(result.providers).toEqual([
-          {
+          expect.objectContaining({
             id: provider.id,
             source: provider.source,
             organizationId: provider.organizationId,
             url: provider.url,
             hasToken: true,
-          },
+          }),
         ]);
       });
 

@@ -14,12 +14,28 @@ export const GitProviderVendors: Record<GitProviderVendor, GitProviderVendor> =
 export type GitProviderId = Branded<'GitProviderId'>;
 export const createGitProviderId = brandedIdFactory<GitProviderId>();
 
+export type GitProviderAuthMethod = 'token' | 'app';
+
+export const GitProviderAuthMethods: Record<
+  GitProviderAuthMethod,
+  GitProviderAuthMethod
+> = {
+  token: 'token',
+  app: 'app',
+};
+
 export type GitProvider = {
   id: GitProviderId;
   source: GitProviderVendor;
   organizationId: OrganizationId;
   url: string | null;
   token: string | null;
+  authMethod: GitProviderAuthMethod;
+  appInstallationId?: number;
+  appId?: number;
+  appClientId?: string;
+  appPrivateKey?: string;
+  revokedAt?: Date | null;
   organization?: Organization;
   repos?: GitRepo[];
 };

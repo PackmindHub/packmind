@@ -3,3 +3,12 @@ export * from './domain/jobs';
 export * from './infra/schemas';
 export * from './application/useCases';
 export { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
+export {
+  GithubTokenResolverFactory,
+  resolveEdition,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';
+export type {
+  PackmindEdition,
+  GithubTokenResolverFactoryBuildOpts,
+  IConfigProvider,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';

@@ -350,6 +350,7 @@ export class TargetResolutionService {
           source: GitProviderVendors[providerVendor],
           url: expectedProviderUrl,
           token: null,
+          authMethod: 'token' as const,
         },
         allowTokenlessProvider: true,
       });

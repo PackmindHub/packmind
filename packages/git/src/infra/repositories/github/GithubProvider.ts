@@ -1,4 +1,5 @@
 import { IGitProvider } from '../../../domain/repositories/IGitProvider';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
@@ -9,17 +10,34 @@ export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
 
   constructor(
-    private readonly token: string,
+    private readonly resolver: IGithubTokenResolver,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.client = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    // Inject token from resolver on every request
+    this.client.interceptors.request.use(async (config) => {
+      const token = await resolver.getToken();
+      config.headers['Authorization'] = `token ${token}`;
+      return config;
+    });
+
+    // Fire onUnauthorized hook on 401 responses
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error?.response?.status === 401) {
+          await resolver.onUnauthorized();
+        }
+        return Promise.reject(error);
+      },
+    );
   }
 
   async listAvailableRepositories(): Promise<

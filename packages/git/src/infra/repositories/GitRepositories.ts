@@ -10,6 +10,7 @@ import { GitRepoRepository } from './GitRepoRepository';
 import { GitCommitRepository } from './GitCommitRepository';
 import { GitRepoFactory } from './GitRepoFactory';
 import { GitProviderFactory } from './GitProviderFactory';
+import { GithubTokenResolverFactory } from './github/auth/GithubTokenResolverFactory';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
@@ -44,9 +45,16 @@ export class GitRepositories implements IGitRepositories {
       this.dataSource.getRepository(GitCommitSchema),
     );
 
-    // Initialize the factories
-    this.gitRepoFactory = opts?.gitRepoFactory ?? new GitRepoFactory();
-    this.gitProviderFactory = new GitProviderFactory();
+    // Initialize the factories — the token resolver factory is the single
+    // chokepoint for "given a GitProvider, give me an IGithubTokenResolver".
+    const tokenResolverFactory =
+      (opts as GitHexaOpts)?.githubTokenResolverFactory ??
+      new GithubTokenResolverFactory();
+
+    this.gitRepoFactory =
+      (opts as GitHexaOpts)?.gitRepoFactory ??
+      new GitRepoFactory(tokenResolverFactory);
+    this.gitProviderFactory = new GitProviderFactory(tokenResolverFactory);
   }
 
   getGitProviderRepository(): IGitProviderRepository {

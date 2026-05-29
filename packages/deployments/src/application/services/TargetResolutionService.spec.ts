@@ -372,6 +372,7 @@ describe('TargetResolutionService', () => {
               source: 'github',
               url: 'https://github.com',
               token: null,
+              authMethod: 'token',
             },
             allowTokenlessProvider: true,
           }),

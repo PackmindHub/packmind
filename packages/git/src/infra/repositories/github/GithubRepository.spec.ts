@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
@@ -7,10 +8,14 @@ import { stubLogger } from '@packmind/test-utils';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+const stubResolver = (): IGithubTokenResolver => ({
+  getToken: jest.fn().mockResolvedValue('test-github-token'),
+  onUnauthorized: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('GithubRepository', () => {
   let githubRepository: GithubRepository;
   let mockAxiosInstance: jest.Mocked<typeof axios>;
-  const githubToken = 'test-github-token';
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const options: GithubRepositoryOptions = {
@@ -52,12 +57,17 @@ describe('GithubRepository', () => {
   };
 
   beforeEach(() => {
-    mockAxiosInstance = {} as jest.Mocked<typeof axios>;
+    mockAxiosInstance = {
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
+      },
+    } as unknown as jest.Mocked<typeof axios>;
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
     stubbedLogger = stubLogger();
     githubRepository = new GithubRepository(
-      githubToken,
+      stubResolver(),
       options,
       stubbedLogger,
     );
@@ -68,15 +78,19 @@ describe('GithubRepository', () => {
   });
 
   describe('constructor', () => {
-    it('creates an axios instance with the correct configuration', () => {
+    it('creates an axios instance with the correct base configuration', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://api.github.com',
         headers: {
-          Authorization: `token ${githubToken}`,
           'Content-Type': 'application/json',
           Accept: 'application/vnd.github.v3+json',
         },
       });
+    });
+
+    it('registers request and response interceptors for token injection', () => {
+      expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalled();
+      expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalled();
     });
   });
 
@@ -301,7 +315,7 @@ describe('GithubRepository', () => {
       beforeEach(async () => {
         stubbedLogger = stubLogger();
         githubRepository = new GithubRepository(
-          githubToken,
+          stubResolver(),
           {
             ...options,
             branch: customBranch,

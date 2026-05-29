@@ -301,6 +301,50 @@ describe('GitProviderRepository', () => {
     });
   });
 
+  describe('when storing and retrieving git provider with appPrivateKey encryption', () => {
+    const testPem =
+      '-----BEGIN PRIVATE KEY-----\nabc==\n-----END PRIVATE KEY-----';
+
+    let gitProvider: ReturnType<typeof gitProviderFactory>;
+    let foundGitProvider: Awaited<
+      ReturnType<typeof gitProviderRepository.findById>
+    >;
+    let rawProvider: Awaited<
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
+    >;
+
+    beforeEach(async () => {
+      gitProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+        token: null,
+        authMethod: 'app',
+        appPrivateKey: testPem,
+      });
+      await gitProviderRepository.add(gitProvider);
+
+      foundGitProvider = await gitProviderRepository.findById(gitProvider.id);
+
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: gitProvider.id },
+        });
+    });
+
+    it('retrieves decrypted appPrivateKey matching original PEM', async () => {
+      expect(foundGitProvider?.appPrivateKey).toBe(testPem);
+    });
+
+    it('stores encrypted appPrivateKey in database', async () => {
+      expect(rawProvider?.appPrivateKey).not.toBe(testPem);
+    });
+
+    it('stores appPrivateKey in encrypted envelope format', async () => {
+      const parts = rawProvider?.appPrivateKey?.split(':');
+      expect(parts?.length).toBe(3);
+    });
+  });
+
   describe('when configuration is missing', () => {
     it('uses default encryption key', async () => {
       mockConfiguration.getConfig.mockResolvedValueOnce(null);
