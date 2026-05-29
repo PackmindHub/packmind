@@ -1,3 +1,9 @@
 export { PackageNotFoundError } from './PackageNotFoundError';
 export { PackagesNotFoundError } from './PackagesNotFoundError';
 export { TargetNotFoundError } from './TargetNotFoundError';
+export { MarketplaceAlreadyLinkedError } from './MarketplaceAlreadyLinkedError';
+export { MarketplaceDescriptorNotFoundError } from './MarketplaceDescriptorNotFoundError';
+export { UnknownMarketplaceDescriptorError } from './UnknownMarketplaceDescriptorError';
+export { MarketplaceDescriptorParseError } from './MarketplaceDescriptorParseError';
+export { MarketplaceNotFoundError } from './MarketplaceNotFoundError';
+export { MarketplaceUrlNotReachableError } from './MarketplaceUrlNotReachableError';
