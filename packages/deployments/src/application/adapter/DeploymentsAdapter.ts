@@ -63,6 +63,8 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  LinkMarketplaceCommand,
+  LinkMarketplaceResponse,
   ListDeploymentsByPackageCommand,
   IListActiveDistributedPackagesBySpaceUseCase,
   ListActiveDistributedPackagesBySpaceCommand,
@@ -70,6 +72,8 @@ import {
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
+  ListMarketplacesCommand,
+  ListMarketplacesResponse,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -92,14 +96,21 @@ import {
   TargetWithRepository,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  UnlinkMarketplaceCommand,
+  UnlinkMarketplaceResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
+  ValidateMarketplaceUrlCommand,
+  ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
+import { GitRepoService } from '@packmind/git';
 import { IDeploymentsDelayedJobs } from '../../domain/jobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
+import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -113,6 +124,10 @@ import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDef
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
+import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
+import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
+import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
+import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetTargetByIdUseCase } from '../useCases/GetTargetByIdUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
@@ -197,11 +212,18 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
+  private _linkMarketplaceUseCase!: LinkMarketplaceUseCase;
+  private _unlinkMarketplaceUseCase!: UnlinkMarketplaceUseCase;
+  private _listMarketplacesUseCase!: ListMarketplacesUseCase;
+  private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly marketplaceRepository: IMarketplaceRepository,
+    private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry,
+    private readonly gitRepoService: GitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -549,6 +571,36 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
+
+    // Marketplace use cases. The reconciliation job wire-up (group K, task
+    // 11.3) is intentionally deferred — LinkMarketplaceUseCase carries a
+    // TODO in step 8 of its flow that K will fill in.
+    this._linkMarketplaceUseCase = new LinkMarketplaceUseCase(
+      this.marketplaceRepository,
+      this.gitRepoService,
+      this.gitPort,
+      this.marketplaceDescriptorParserRegistry,
+      ports.eventEmitterService,
+      this.accountsPort,
+    );
+
+    this._unlinkMarketplaceUseCase = new UnlinkMarketplaceUseCase(
+      this.marketplaceRepository,
+      this.gitPort,
+      ports.eventEmitterService,
+      this.accountsPort,
+    );
+
+    this._listMarketplacesUseCase = new ListMarketplacesUseCase(
+      this.marketplaceRepository,
+      this.accountsPort,
+    );
+
+    this._validateMarketplaceUrlUseCase = new ValidateMarketplaceUrlUseCase(
+      this.gitPort,
+      this.marketplaceDescriptorParserRegistry,
+      this.accountsPort,
+    );
   }
 
   /**
@@ -835,5 +887,29 @@ export class DeploymentsAdapter
 
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
     return this._listActiveDistributedPackagesBySpaceUseCase;
+  }
+
+  async linkMarketplace(
+    command: LinkMarketplaceCommand,
+  ): Promise<LinkMarketplaceResponse> {
+    return this._linkMarketplaceUseCase.execute(command);
+  }
+
+  async unlinkMarketplace(
+    command: UnlinkMarketplaceCommand,
+  ): Promise<UnlinkMarketplaceResponse> {
+    return this._unlinkMarketplaceUseCase.execute(command);
+  }
+
+  async listMarketplaces(
+    command: ListMarketplacesCommand,
+  ): Promise<ListMarketplacesResponse> {
+    return this._listMarketplacesUseCase.execute(command);
+  }
+
+  async validateMarketplaceUrl(
+    command: ValidateMarketplaceUrlCommand,
+  ): Promise<ValidateMarketplaceUrlResponse> {
+    return this._validateMarketplaceUrlUseCase.execute(command);
   }
 }

@@ -40,12 +40,16 @@ import {
   InstallPackagesResponse,
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
+  LinkMarketplaceCommand,
+  LinkMarketplaceResponse,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
+  ListMarketplacesCommand,
+  ListMarketplacesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -64,10 +68,14 @@ import {
   RenderPackageAsPluginResponse,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  UnlinkMarketplaceCommand,
+  UnlinkMarketplaceResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
+  ValidateMarketplaceUrlCommand,
+  ValidateMarketplaceUrlResponse,
 } from '../contracts';
 import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
@@ -574,4 +582,57 @@ export interface IDeploymentPort {
    * Exposes the typed use case instance for consumers that need the port-typed reference.
    */
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
+
+  /**
+   * Links a Git repository as an organization-level marketplace.
+   *
+   * Admin-only at the use-case boundary. Validates the target git provider,
+   * fetches and parses `marketplace.json`, persists a marketplace-typed
+   * `GitRepo` together with a `Marketplace` row, emits
+   * `MarketplaceLinkedEvent`, and seeds the reconciliation job.
+   *
+   * @param command - Command containing git provider, owner/repo/branch, and display name
+   * @returns Promise of the created marketplace enriched with `addedByUserName`
+   */
+  linkMarketplace(
+    command: LinkMarketplaceCommand,
+  ): Promise<LinkMarketplaceResponse>;
+
+  /**
+   * Unlinks a marketplace from the caller's organization.
+   *
+   * Admin-only. Soft-deletes the `Marketplace` row and the underlying
+   * marketplace-typed `GitRepo`, removes the reconciliation job, and emits
+   * `MarketplaceUnlinkedEvent`. The underlying Git repository is never
+   * touched.
+   *
+   * @param command - Command containing the marketplace id
+   * @returns Promise resolving to the unlinked marketplace id
+   */
+  unlinkMarketplace(
+    command: UnlinkMarketplaceCommand,
+  ): Promise<UnlinkMarketplaceResponse>;
+
+  /**
+   * Lists all marketplaces linked to the caller's organization. Open to any
+   * organization member.
+   *
+   * @param command - Command carrying the organization/user context
+   * @returns Promise of presentation DTOs enriched with `addedByUserName` and `pluginCount`
+   */
+  listMarketplaces(
+    command: ListMarketplacesCommand,
+  ): Promise<ListMarketplacesResponse>;
+
+  /**
+   * Pre-flight validation of a public marketplace URL. Resolves a tokenless
+   * git provider for the URL host, fetches `marketplace.json` and validates
+   * the descriptor through the parser registry.
+   *
+   * @param command - Command containing the marketplace URL
+   * @returns Promise of `{ kind: 'verified', repoPath, defaultBranch, pluginCount }`
+   */
+  validateMarketplaceUrl(
+    command: ValidateMarketplaceUrlCommand,
+  ): Promise<ValidateMarketplaceUrlResponse>;
 }
