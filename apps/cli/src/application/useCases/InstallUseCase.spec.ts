@@ -15,6 +15,7 @@ import {
   PackmindLockFile,
   SpaceType,
 } from '@packmind/types';
+import { parsePackageSlug } from '../../domain/entities/PackageSlug';
 
 jest.mock('fs/promises');
 
@@ -151,7 +152,7 @@ describe('InstallUseCase', () => {
     it('proceeds without throwing', async () => {
       await expect(
         useCase.execute({
-          packages: ['@my-space/my-package'],
+          packages: ['@my-space/my-package'].map(parsePackageSlug),
           baseDirectory: '/test',
           cliVersion: '0.0.0-test',
         }),
@@ -160,7 +161,7 @@ describe('InstallUseCase', () => {
 
     it('calls install with the provided package slug', async () => {
       await useCase.execute({
-        packages: ['@my-space/my-package'],
+        packages: ['@my-space/my-package'].map(parsePackageSlug),
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
@@ -174,7 +175,7 @@ describe('InstallUseCase', () => {
 
     it('updates packmind.json with the installed package slug', async () => {
       await useCase.execute({
-        packages: ['@my-space/my-package'],
+        packages: ['@my-space/my-package'].map(parsePackageSlug),
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
@@ -207,7 +208,7 @@ describe('InstallUseCase', () => {
 
     it('normalizes and saves unnormalized config slugs before installing', async () => {
       await useCase.execute({
-        packages: ['@my-space/new-package'],
+        packages: ['@my-space/new-package'].map(parsePackageSlug),
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
@@ -221,7 +222,7 @@ describe('InstallUseCase', () => {
 
     it('installs using normalized slugs for both config and explicit packages', async () => {
       await useCase.execute({
-        packages: ['@my-space/new-package'],
+        packages: ['@my-space/new-package'].map(parsePackageSlug),
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
@@ -467,7 +468,7 @@ describe('InstallUseCase', () => {
 
       it('normalizes the slug by prepending @space/', async () => {
         await useCase.execute({
-          packages: ['my-package'],
+          packages: ['my-package'].map(parsePackageSlug),
           baseDirectory: '/test',
           cliVersion: '0.0.0-test',
         });
@@ -490,7 +491,10 @@ describe('InstallUseCase', () => {
 
       it('throws an error asking to specify the space', async () => {
         await expect(
-          useCase.execute({ packages: ['my-package'], baseDirectory: '/test' }),
+          useCase.execute({
+            packages: ['my-package'].map(parsePackageSlug),
+            baseDirectory: '/test',
+          }),
         ).rejects.toThrow(
           'Your organization has multiple spaces. Please specify the space for each package using the @space/package format',
         );
@@ -517,7 +521,7 @@ describe('InstallUseCase', () => {
       it('throws an error saying the package does not exist', async () => {
         await expect(
           useCase.execute({
-            packages: ['@other-space/secret-package'],
+            packages: ['@other-space/secret-package'].map(parsePackageSlug),
             baseDirectory: '/test',
             cliVersion: '0.0.0-test',
           }),
@@ -550,7 +554,7 @@ describe('InstallUseCase', () => {
       it('throws an error with a join URL', async () => {
         await expect(
           useCase.execute({
-            packages: ['@public-space/some-package'],
+            packages: ['@public-space/some-package'].map(parsePackageSlug),
             baseDirectory: '/test',
             cliVersion: '0.0.0-test',
           }),
@@ -1299,7 +1303,7 @@ Old packmind content
 
     it('merges config packages with explicit packages (deduplicating)', async () => {
       await useCase.execute({
-        packages: ['@my-space/new-package'],
+        packages: ['@my-space/new-package'].map(parsePackageSlug),
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
@@ -1337,7 +1341,7 @@ Old packmind content
       const result = await useCase.execute({
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
-        packages: ['@space/pkg'],
+        packages: ['@space/pkg'].map(parsePackageSlug),
       });
 
       expect(result.configCreated).toBe(true);
@@ -1352,7 +1356,7 @@ Old packmind content
       const result = await useCase.execute({
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
-        packages: ['@space/new-pkg'],
+        packages: ['@space/new-pkg'].map(parsePackageSlug),
       });
 
       expect(result.configCreated).toBe(false);
@@ -1383,7 +1387,7 @@ Old packmind content
       const result = await useCase.execute({
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
-        packages: ['@space/existing', '@space/new-one'],
+        packages: ['@space/existing', '@space/new-one'].map(parsePackageSlug),
       });
 
       expect(result.packagesAdded).toEqual(['@space/new-one']);

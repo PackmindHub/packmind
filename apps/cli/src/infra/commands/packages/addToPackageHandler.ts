@@ -17,7 +17,7 @@ import {
   FullParsedPackageSlug,
   isFullParsedPackageSlug,
   ParsedPackageSlug,
-} from '../customParameters/PackageSlugArgType';
+} from '../../../domain/entities/PackageSlug';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

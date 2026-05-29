@@ -6,6 +6,7 @@ jest.mock('cmd-ts', () => ({
   restPositionals: jest.fn(),
   flag: jest.fn(),
   string: 'string',
+  optional: jest.fn((t) => t),
 }));
 
 jest.mock('fs', () => ({
@@ -72,6 +73,7 @@ import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
+import { parsePackageSlug } from '../../domain/entities/PackageSlug';
 
 const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
   typeof bootstrapInstallContext
@@ -172,7 +174,7 @@ describe('installCommand', () => {
           installPath: 'non/existing',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -202,7 +204,7 @@ describe('installCommand', () => {
           installPath: '.claude/commands/my-command.md',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -241,7 +243,7 @@ describe('installCommand', () => {
           installPath: 'apps/frontend',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -274,7 +276,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -316,7 +318,7 @@ describe('installCommand', () => {
           installPath: 'apps/frontend',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -335,7 +337,7 @@ describe('installCommand', () => {
           installPath: 'apps/frontend',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -388,7 +390,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -447,9 +449,11 @@ describe('installCommand', () => {
         });
         await handler({
           installPath: '',
-          packages: ['@public-space/public', '@global/global'],
+          packages: ['@public-space/public', '@global/global'].map(
+            parsePackageSlug,
+          ),
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -479,7 +483,9 @@ describe('installCommand', () => {
       it('passes the packages to install', () => {
         expect(mockInstall).toHaveBeenCalledWith(
           expect.objectContaining({
-            packages: ['@public-space/public', '@global/global'],
+            packages: ['@public-space/public', '@global/global'].map(
+              parsePackageSlug,
+            ),
           }),
         );
       });
@@ -513,7 +519,7 @@ describe('installCommand', () => {
           installPath: 'apps',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -576,7 +582,7 @@ describe('installCommand', () => {
           installPath: 'apps',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -628,9 +634,9 @@ describe('installCommand', () => {
 
       await handler({
         installPath: '',
-        packages: ['@testing/cli-e2e'],
+        packages: ['@testing/cli-e2e'].map(parsePackageSlug),
         list: false,
-        show: '',
+        show: undefined,
         status: false,
         skipInstalledAt: false,
       });
@@ -664,9 +670,9 @@ describe('installCommand', () => {
 
       await handler({
         installPath: '',
-        packages: ['@testing/cli-e2e'],
+        packages: ['@testing/cli-e2e'].map(parsePackageSlug),
         list: false,
-        show: '',
+        show: undefined,
         status: false,
         skipInstalledAt: false,
       });
@@ -699,9 +705,9 @@ describe('installCommand', () => {
 
         await handler({
           installPath: '',
-          packages: ['@testing/cli-e2e'],
+          packages: ['@testing/cli-e2e'].map(parsePackageSlug),
           list: false,
-          show: '',
+          show: undefined,
           status: false,
           skipInstalledAt: false,
         });
@@ -748,9 +754,9 @@ describe('installCommand', () => {
 
         await handler({
           installPath: '',
-          packages: ['@a/x', '@b/y'],
+          packages: ['@a/x', '@b/y'].map(parsePackageSlug),
           list: false,
-          show: '',
+          show: undefined,
           status: false,
           skipInstalledAt: false,
         });
@@ -788,9 +794,9 @@ describe('installCommand', () => {
 
         await handler({
           installPath: '',
-          packages: ['@a/x'],
+          packages: ['@a/x'].map(parsePackageSlug),
           list: false,
-          show: '',
+          show: undefined,
           status: false,
           skipInstalledAt: false,
         });
@@ -824,7 +830,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -843,7 +849,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -860,7 +866,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -885,7 +891,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -912,7 +918,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -942,7 +948,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -975,7 +981,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         }).then(() => {
           handlerReturned = true;
@@ -1039,7 +1045,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
 
@@ -1047,7 +1053,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -1070,7 +1076,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -1108,7 +1114,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -1137,7 +1143,7 @@ describe('installCommand', () => {
           installPath: '',
           packages: [],
           list: false,
-          show: '',
+          show: undefined,
           status: false,
         });
       });
@@ -1188,7 +1194,7 @@ describe('installCommand', () => {
             installPath: '',
             packages: [],
             list: false,
-            show: '',
+            show: undefined,
             status: false,
           });
         });
@@ -1222,7 +1228,7 @@ describe('installCommand', () => {
             installPath: '',
             packages: [],
             list: false,
-            show: '',
+            show: undefined,
             status: false,
           });
         });
@@ -1250,7 +1256,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1274,7 +1280,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1299,7 +1305,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1315,7 +1321,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1336,7 +1342,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1359,7 +1365,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1380,7 +1386,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1421,7 +1427,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1444,7 +1450,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1466,7 +1472,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1498,7 +1504,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1512,7 +1518,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1543,7 +1549,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 
@@ -1555,7 +1561,7 @@ describe('installCommand', () => {
         installPath: '',
         packages: [],
         list: false,
-        show: '',
+        show: undefined,
         status: false,
       });
 

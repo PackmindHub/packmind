@@ -9,7 +9,7 @@ import {
   displayableParsedPackageSlug,
   isFullParsedPackageSlug,
   ParsedPackageSlug,
-} from '../customParameters/PackageSlugArgType';
+} from '../../../domain/entities/PackageSlug';
 
 export type ShowPackageArgs = {
   slug: ParsedPackageSlug;

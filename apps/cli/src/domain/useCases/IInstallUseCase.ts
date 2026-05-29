@@ -3,10 +3,11 @@ import {
   InstallPackagesResponse,
   IPublicUseCase,
 } from '@packmind/types';
+import { ParsedPackageSlug } from '../entities/PackageSlug';
 
 export type IInstallCommand = {
   baseDirectory?: string;
-  packages?: string[];
+  packages?: ParsedPackageSlug[];
   skipInstalledAt?: boolean;
   /**
    * The running CLI version, stored verbatim (including any `-next`

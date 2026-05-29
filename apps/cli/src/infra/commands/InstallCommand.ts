@@ -1,4 +1,11 @@
-import { command, restPositionals, string, option, flag } from 'cmd-ts';
+import {
+  command,
+  restPositionals,
+  string,
+  option,
+  flag,
+  optional,
+} from 'cmd-ts';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -30,6 +37,11 @@ import {
   configuredAgentsSupportSkills,
 } from './skillsCapabilityWarning';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
+import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
+import {
+  displayableParsedPackageSlug,
+  ParsedPackageSlug,
+} from '../../domain/entities/PackageSlug';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -256,9 +268,9 @@ export async function installHandler({
   skipInstalledAt,
 }: {
   installPath: string;
-  packages: string[];
+  packages: ParsedPackageSlug[];
   list: boolean;
-  show: string;
+  show: ParsedPackageSlug | undefined;
   status: boolean;
   skipInstalledAt: boolean;
 }): Promise<void> {
@@ -284,7 +296,7 @@ export async function installHandler({
   }
 
   if (show) {
-    const showCommand = `packmind-cli packages show ${show}`;
+    const showCommand = `packmind-cli packages show ${displayableParsedPackageSlug(show)}`;
     logErrorConsole('Command "packmind-cli install --show" has been removed.');
     logConsole(`Use ${formatCommand(showCommand)} instead.`);
     process.exit(1);
@@ -326,7 +338,7 @@ export async function installHandler({
     agentDetectionService: new AgentArtifactDetectionService(),
     packmindGateway: packmindCliHexa.getPackmindGateway(),
     baseDirectory: cwd,
-    packages,
+    packages: packages.map(displayableParsedPackageSlug),
     isTTY: process.stdin.isTTY ?? false,
     installDefaultSkills:
       packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
@@ -468,7 +480,7 @@ export const installCommand = command({
         'Run install in the specified directory instead of the current directory',
     }),
     packages: restPositionals({
-      type: string,
+      type: PackageSlugArgType,
       displayName: 'packages',
       description: 'Package slugs to install (e.g. @my-space/my-package)',
     }),
@@ -482,10 +494,9 @@ export const installCommand = command({
       description: '[Deprecated] List available packages',
     }),
     show: option({
-      type: string,
+      type: optional(PackageSlugArgType),
       long: 'show',
       description: '[Deprecated] Show details of a specific package',
-      defaultValue: () => '',
     }),
     skipInstalledAt: flag({
       long: 'skip-installed-at',
