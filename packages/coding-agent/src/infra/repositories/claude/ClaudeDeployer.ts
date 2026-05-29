@@ -1,6 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  CAMEL_TO_YAML_KEY,
   CODING_AGENT_ARTEFACT_PATHS,
   DeleteItem,
   DeleteItemType,
@@ -13,7 +12,6 @@ import {
   SkillVersion,
   StandardVersion,
   Target,
-  camelToKebab,
 } from '@packmind/types';
 import {
   DeployDefaultSkillsOptions,
@@ -21,9 +19,8 @@ import {
 } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
-import { formatAdditionalPropertyYaml } from '../utils/YamlFrontmatterUtils';
+import { generateSkillMdContent } from '../utils/SkillMdContentBuilder';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
-import { sortAdditionalPropertiesKeys } from '@packmind/node-utils';
 
 const origin = 'ClaudeDeployer';
 
@@ -635,17 +632,13 @@ ${instructionContent}`;
   ): SkillFileOutput[] {
     const files: SkillFileOutput[] = [];
 
-    // Generate SKILL.md (main skill file)
-    const skillMdContent = this.generateSkillMdContent(skillVersion);
     files.push({
       path: `${ClaudeDeployer.ARTEFACT_PATHS.skill}${skillVersion.slug}/SKILL.md`,
-      content: skillMdContent,
+      content: generateSkillMdContent(skillVersion),
     });
 
-    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
     if (skillVersion.files && skillVersion.files.length > 0) {
       for (const file of skillVersion.files) {
-        // Skip SKILL.md as it's already generated from the prompt
         if (file.path.toUpperCase() === 'SKILL.MD') {
           continue;
         }
@@ -660,79 +653,6 @@ ${instructionContent}`;
     }
 
     return files;
-  }
-
-  /**
-   * Generate the SKILL.md content with frontmatter for a specific skill version
-   */
-  private generateSkillMdContent(skillVersion: SkillVersion): string {
-    // Build frontmatter according to Agent Skills specification
-    const frontmatterFields: string[] = [];
-
-    if (skillVersion.name) {
-      frontmatterFields.push(
-        `name: '${escapeSingleQuotes(skillVersion.name)}'`,
-      );
-    }
-
-    if (skillVersion.description) {
-      frontmatterFields.push(
-        `description: '${escapeSingleQuotes(skillVersion.description)}'`,
-      );
-    }
-
-    if (skillVersion.license) {
-      frontmatterFields.push(
-        `license: '${escapeSingleQuotes(skillVersion.license)}'`,
-      );
-    }
-
-    if (skillVersion.compatibility) {
-      frontmatterFields.push(
-        `compatibility: '${escapeSingleQuotes(skillVersion.compatibility)}'`,
-      );
-    }
-
-    if (skillVersion.allowedTools) {
-      frontmatterFields.push(
-        `allowed-tools: '${escapeSingleQuotes(skillVersion.allowedTools)}'`,
-      );
-    }
-
-    if (
-      skillVersion.metadata &&
-      Object.keys(skillVersion.metadata).length > 0
-    ) {
-      // Metadata is stored as JSONB, convert to YAML format
-      const metadataYaml = Object.entries(skillVersion.metadata)
-        .map(
-          ([key, value]) => `  ${key}: '${escapeSingleQuotes(String(value))}'`,
-        )
-        .join('\n');
-      frontmatterFields.push(`metadata:\n${metadataYaml}`);
-    }
-
-    // Emit Claude Code-specific additional properties
-    if (
-      skillVersion.additionalProperties &&
-      Object.keys(skillVersion.additionalProperties).length > 0
-    ) {
-      for (const [camelKey, value] of sortAdditionalPropertiesKeys(
-        skillVersion.additionalProperties,
-      )) {
-        const yamlKey = CAMEL_TO_YAML_KEY[camelKey] ?? camelToKebab(camelKey);
-        frontmatterFields.push(formatAdditionalPropertyYaml(yamlKey, value));
-      }
-    }
-
-    const frontmatter = `---
-${frontmatterFields.join('\n')}
----`;
-
-    // Content is the skill prompt (body)
-    return `${frontmatter}
-
-${skillVersion.prompt}`;
   }
 
   getSkillsFolderPath(): string {

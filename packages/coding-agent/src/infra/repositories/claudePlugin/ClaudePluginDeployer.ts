@@ -10,6 +10,7 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
+import { generateSkillMdContent } from '../utils/SkillMdContentBuilder';
 import {
   buildPluginManifest,
   PluginManifestInput,
@@ -88,24 +89,37 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     const root = pluginRoot(target);
     const createOrUpdate: FileUpdates['createOrUpdate'] = [];
     for (const skillVersion of skillVersions) {
-      const files =
-        skillVersion.files && skillVersion.files.length > 0
-          ? skillVersion.files.map((file) => ({
-              path: file.path,
-              content: file.content,
-              isBase64: file.isBase64,
-              skillFileId: file.id as string,
-              skillFilePermissions: file.permissions,
-            }))
-          : [
-              {
-                path: 'SKILL.md',
-                content: skillVersion.prompt,
-                isBase64: undefined as boolean | undefined,
-                skillFileId: undefined as string | undefined,
-                skillFilePermissions: undefined as string | undefined,
-              },
-            ];
+      const files: Array<{
+        path: string;
+        content: string;
+        isBase64: boolean | undefined;
+        skillFileId: string | undefined;
+        skillFilePermissions: string | undefined;
+      }> = [
+        {
+          path: 'SKILL.md',
+          content: generateSkillMdContent(skillVersion),
+          isBase64: undefined,
+          skillFileId: undefined,
+          skillFilePermissions: undefined,
+        },
+      ];
+
+      if (skillVersion.files && skillVersion.files.length > 0) {
+        for (const file of skillVersion.files) {
+          if (file.path.toUpperCase() === 'SKILL.MD') {
+            continue;
+          }
+          files.push({
+            path: file.path,
+            content: file.content,
+            isBase64: file.isBase64,
+            skillFileId: file.id as string,
+            skillFilePermissions: file.permissions,
+          });
+        }
+      }
+
       for (const file of files) {
         createOrUpdate.push({
           path: `${root}${ClaudePluginDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}/${file.path}`,
