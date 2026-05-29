@@ -3,6 +3,7 @@
 ## Added
 
 - Enable rendering packmind artifacts in `~/.claude` #332
+- Org-level marketplace governance — admins can link/unlink Git repositories as Packmind-governed marketplaces and members can browse enrolled marketplaces. Includes periodic health reconciliation (`healthy | drift | unreachable`).
 
 ## Changed
 
