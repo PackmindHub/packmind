@@ -130,3 +130,45 @@ export const useDeleteGitProviderMutation = () => {
     },
   });
 };
+
+export const useGithubAppInstallUrlMutation = () => {
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch GitHub App install URL',
+        );
+      }
+      return gitProviderGateway.getGithubAppInstallUrl(organization.id);
+    },
+    onError: (error) => {
+      console.error('Error fetching GitHub App install URL:', error);
+    },
+  });
+};
+
+export const useSubmitGithubAppCallbackMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationFn: async (body: { installationId: number; state: string }) => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to complete GitHub App install',
+        );
+      }
+      return gitProviderGateway.submitGithubAppCallback(organization.id, body);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_GIT_PROVIDERS_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error submitting GitHub App callback:', error);
+    },
+  });
+};

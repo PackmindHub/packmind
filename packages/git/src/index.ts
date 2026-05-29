@@ -12,3 +12,8 @@ export type {
   GithubTokenResolverFactoryBuildOpts,
   IConfigProvider,
 } from './infra/repositories/github/auth/GithubTokenResolverFactory';
+export {
+  InstallStateSigner,
+  InvalidInstallStateError,
+} from './infra/repositories/github/auth/InstallStateSigner';
+export type { InstallStatePayload } from './infra/repositories/github/auth/InstallStateSigner';

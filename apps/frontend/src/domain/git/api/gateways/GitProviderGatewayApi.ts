@@ -2,8 +2,8 @@ import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
 import {
   CheckDirectoryExistenceResult,
-  GitProvider,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepoId,
   IListProvidersUseCase,
   ListProvidersResponse,
@@ -48,20 +48,44 @@ export class GitProviderGatewayApi
     return provider as GitProviderUI;
   }
 
+  async getGithubAppInstallUrl(
+    organizationId: OrganizationId,
+  ): Promise<{ installUrl: string; state: string }> {
+    return await this._api.get<{ installUrl: string; state: string }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/install-url`,
+    );
+  }
+
+  async submitGithubAppCallback(
+    organizationId: OrganizationId,
+    body: { installationId: number; state: string },
+  ): Promise<GitProviderWithoutToken> {
+    return await this._api.post<GitProviderWithoutToken>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/callback`,
+      body,
+    );
+  }
+
   async createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
   ): Promise<GitProviderUI> {
-    const gitProvider: Omit<GitProvider, 'id'> = {
+    const body = {
       source: data.source,
       organizationId,
       url: data.url,
-      token: data.token,
-      authMethod: 'token',
+      authMethod: data.authMethod ?? 'token',
+      ...(data.authMethod === 'app'
+        ? {
+            appId: data.appId,
+            appInstallationId: data.appInstallationId,
+            appPrivateKey: data.appPrivateKey,
+          }
+        : { token: data.token }),
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers`,
-      gitProvider,
+      body,
     );
   }
 
@@ -70,14 +94,21 @@ export class GitProviderGatewayApi
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI> {
-    const gitProvider: Partial<Omit<GitProvider, 'id'>> = {
+    const body = {
       source: data.source,
       url: data.url,
-      token: data.token,
+      authMethod: data.authMethod ?? 'token',
+      ...(data.authMethod === 'app'
+        ? {
+            appId: data.appId,
+            appInstallationId: data.appInstallationId,
+            appPrivateKey: data.appPrivateKey,
+          }
+        : { token: data.token }),
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers/${id}`,
-      gitProvider,
+      body,
     );
   }
 

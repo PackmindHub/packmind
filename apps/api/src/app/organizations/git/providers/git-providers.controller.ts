@@ -9,6 +9,7 @@ import {
   Request,
   ConflictException,
   BadRequestException,
+  NotImplementedException,
   UseGuards,
 } from '@nestjs/common';
 import { GitProvidersService } from './git-providers.service';
@@ -27,6 +28,7 @@ import {
 import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
+import { resolvePackmindEdition } from '../../../shared/utils/edition';
 
 interface AddRepositoryDto {
   owner: string;
@@ -85,6 +87,93 @@ export class GitProvidersController {
           organizationId,
           error: errorMessage,
         },
+      );
+      throw error;
+    }
+  }
+
+  @Get('github/app/install-url')
+  async getGithubAppInstallUrl(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ installUrl: string; state: string }> {
+    // Edition guard — Cloud only. OSS users see the OSS form (step 9).
+    // Use the `resolvePackmindEdition()` helper introduced in step 7
+    // (exported from the same module that exposes `edition` via `/me`).
+    // It maps the raw env value `'proprietary'` → `'cloud'` so we compare
+    // against the canonical public name here. Do NOT re-implement that
+    // mapping locally — keep a single source of truth.
+    const edition = await resolvePackmindEdition();
+    if (edition === 'oss') {
+      throw new NotImplementedException(
+        'GitHub App installation is only available on Packmind Cloud',
+      );
+    }
+
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/github/app/install-url',
+      { organizationId },
+    );
+
+    try {
+      return await this.gitProvidersService.buildGithubAppInstallUrl({
+        organizationId,
+        userId: req.user.userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/github/app/install-url - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Post('github/app/callback')
+  async completeGithubAppInstall(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { installationId: number; state: string },
+  ): Promise<GitProvider> {
+    this.logger.info(
+      'POST /organizations/:orgId/git/providers/github/app/callback',
+      {
+        organizationId,
+        // Do NOT log the full state or installationId at info — installation
+        // IDs aren't strictly PII but they correlate to org/user pairs.
+        // Log only structural facts.
+        hasState: Boolean(body?.state),
+        hasInstallationId: Boolean(body?.installationId),
+      },
+    );
+
+    if (
+      !body ||
+      typeof body.state !== 'string' ||
+      body.state.length === 0 ||
+      typeof body.installationId !== 'number'
+    ) {
+      throw new BadRequestException(
+        'Request body must include state (string) and installationId (number)',
+      );
+    }
+
+    try {
+      return await this.gitProvidersService.completeGithubAppInstall({
+        organizationId,
+        userId: req.user.userId,
+        installationId: body.installationId,
+        state: body.state,
+        source: req.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/git/providers/github/app/callback - failed',
+        { organizationId, error: errorMessage },
       );
       throw error;
     }

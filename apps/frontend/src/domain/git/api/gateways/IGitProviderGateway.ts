@@ -1,6 +1,7 @@
 import {
   CheckDirectoryExistenceResult,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepoId,
   IListProvidersUseCase,
   NewGateway,
@@ -21,6 +22,13 @@ export interface IGitProviderGateway {
     organizationId: OrganizationId,
     id: GitProviderId,
   ): Promise<GitProviderUI>;
+  getGithubAppInstallUrl(
+    organizationId: OrganizationId,
+  ): Promise<{ installUrl: string; state: string }>;
+  submitGithubAppCallback(
+    organizationId: OrganizationId,
+    body: { installationId: number; state: string },
+  ): Promise<GitProviderWithoutToken>;
   createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
