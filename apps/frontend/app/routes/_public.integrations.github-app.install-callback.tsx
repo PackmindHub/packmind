@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
   PMBox,
@@ -17,6 +17,7 @@ export default function GitHubAppInstallCallbackRoute() {
   const [searchParams] = useSearchParams();
   const { organization } = useAuthContext();
   const [error, setError] = useState<string | null>(null);
+  const hasRunRef = useRef(false);
 
   const installationIdRaw = searchParams.get('installation_id');
   const setupAction = searchParams.get('setup_action');
@@ -25,6 +26,11 @@ export default function GitHubAppInstallCallbackRoute() {
   const resolvedOrgSlug = stateOrgSlug ?? organization?.slug;
 
   useEffect(() => {
+    if (hasRunRef.current) {
+      return;
+    }
+    hasRunRef.current = true;
+
     if (setupAction && setupAction !== 'install') {
       const target = resolvedOrgSlug
         ? `/org/${resolvedOrgSlug}/settings/git?tab=github-app`

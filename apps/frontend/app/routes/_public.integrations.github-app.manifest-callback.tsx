@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
   PMBox,
@@ -17,11 +17,17 @@ export default function GitHubAppManifestCallbackRoute() {
   const [searchParams] = useSearchParams();
   const { organization } = useAuthContext();
   const [error, setError] = useState<string | null>(null);
+  const hasRunRef = useRef(false);
 
   const code = searchParams.get('code');
   const state = searchParams.get('state');
 
   useEffect(() => {
+    if (hasRunRef.current) {
+      return;
+    }
+    hasRunRef.current = true;
+
     if (!code || !state) {
       setError('Missing manifest exchange parameters — please retry.');
       return;
