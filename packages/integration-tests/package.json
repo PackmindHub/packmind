@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@nestjs/common": "^11.1.17",
     "bullmq": "^5.58.2",
     "jsonwebtoken": "^9.0.2",
     "@packmind/accounts": "*",

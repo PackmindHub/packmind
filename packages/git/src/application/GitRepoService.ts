@@ -116,6 +116,17 @@ export class GitRepoService {
   }
 
   /**
+   * Find a GitRepo by id without any type filter.
+   *
+   * Used by `DeleteGitRepoUseCase`, which serves both standard and
+   * marketplace deletion paths. The use case looks up the repo by id and
+   * then enforces type-appropriate authorization downstream.
+   */
+  async findGitRepoByIdIgnoringType(id: GitRepoId): Promise<GitRepo | null> {
+    return this.gitRepoRepository.findById(id);
+  }
+
+  /**
    * Find a marketplace-typed GitRepo by owner/repo within an organization.
    *
    * Excludes standard-typed repos.
