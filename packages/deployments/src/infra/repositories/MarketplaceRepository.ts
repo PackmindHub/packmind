@@ -199,7 +199,11 @@ export class MarketplaceRepository
       const result = await this.repository
         .createQueryBuilder()
         .update()
-        .set(updates)
+        // The TypeORM QueryDeepPartialEntity narrowing rejects the `raw:
+        // unknown` field on `MarketplaceDescriptor`; the unknown cast keeps
+        // the upsert payload type-safe at the boundary while preserving the
+        // domain shape passed in.
+        .set(updates as unknown as Parameters<typeof this.repository.update>[1])
         .where('id = :id', { id })
         .execute();
 
