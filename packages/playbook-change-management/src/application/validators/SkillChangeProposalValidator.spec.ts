@@ -15,6 +15,7 @@ import {
   SkillVersion,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import { SkillChangeProposalValidator } from './SkillChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../errors/SkillFileNotFoundError';
@@ -154,6 +155,88 @@ describe('SkillChangeProposalValidator', () => {
       await validator.validate(command);
 
       expect(skillsPort.getSkill).not.toHaveBeenCalled();
+    });
+
+    it('accepts a description exactly at the maximum length', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createSkill,
+        artefactId: null,
+        payload: {
+          name: 'New Skill',
+          description: 'a'.repeat(DESCRIPTION_MAX_LENGTH),
+          prompt: 'Do something useful',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 0 });
+    });
+
+    it('throws SkillValidationError when the description exceeds the maximum length', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.createSkill,
+        artefactId: null,
+        payload: {
+          name: 'New Skill',
+          description: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
+          prompt: 'Do something useful',
+        },
+      });
+
+      await expect(validator.validate(command)).rejects.toBeInstanceOf(
+        SkillValidationError,
+      );
+    });
+  });
+
+  describe('when type is updateSkillDescription', () => {
+    it('accepts a new value exactly at the maximum length', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillDescription,
+        payload: {
+          oldValue: 'desc',
+          newValue: 'a'.repeat(DESCRIPTION_MAX_LENGTH),
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
+    });
+
+    it('throws SkillValidationError when the new value exceeds the maximum length', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillDescription,
+        payload: {
+          oldValue: 'desc',
+          newValue: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
+        },
+      });
+
+      await expect(validator.validate(command)).rejects.toBeInstanceOf(
+        SkillValidationError,
+      );
+    });
+
+    it('allows shrinking a legacy oversized description back under the cap', async () => {
+      const legacyDescription = 'a'.repeat(DESCRIPTION_MAX_LENGTH + 50);
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        description: legacyDescription,
+      } as Skill);
+
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillDescription,
+        payload: {
+          oldValue: legacyDescription,
+          newValue: 'a much shorter, valid description',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
     });
   });
 

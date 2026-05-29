@@ -4,6 +4,7 @@ import {
   CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
   ISkillsPort,
+  NewSkillPayload,
   Skill,
   SkillFile,
   SkillFileId,
@@ -11,6 +12,7 @@ import {
   SkillVersionId,
   ScalarUpdatePayload,
 } from '@packmind/types';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import {
   MemberContext,
   canonicalJsonStringify,
@@ -80,6 +82,15 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<{ artefactVersion: number }> {
     if (command.type === ChangeProposalType.createSkill) {
+      const { description } = command.payload as NewSkillPayload;
+      if ((description ?? '').length > DESCRIPTION_MAX_LENGTH) {
+        throw new SkillValidationError([
+          {
+            field: 'description',
+            message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+          },
+        ]);
+      }
       return { artefactVersion: 0 };
     }
 
@@ -100,6 +111,21 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
           payload.oldValue,
           currentValue,
         );
+      }
+
+      // Reject only on the submitted new value — never on the existing
+      // description — so already-valid skills and legacy fix-up edits
+      // (shrinking an oversized description back under the cap) stay allowed.
+      if (
+        command.type === ChangeProposalType.updateSkillDescription &&
+        (payload.newValue ?? '').length > DESCRIPTION_MAX_LENGTH
+      ) {
+        throw new SkillValidationError([
+          {
+            field: 'description',
+            message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+          },
+        ]);
       }
     }
 
