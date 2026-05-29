@@ -28,6 +28,7 @@ import {
 } from '@packmind/types';
 import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
+import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 
 const origin = 'LinkMarketplaceUseCase';
@@ -63,6 +64,7 @@ export class LinkMarketplaceUseCase
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly reconciliationJob: MarketplaceReconciliationDelayedJob,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -234,8 +236,25 @@ export class LinkMarketplaceUseCase
       }),
     );
 
-    // 8. TODO(group K, task 11.3): enqueue MarketplaceReconciliationDelayedJob
-    // jobId = `marketplace-reconciliation:${marketplace.id}` (repeatable + immediate fire)
+    // 8. Schedule the BullMQ reconciliation cron + seed an immediate
+    //    health-check so the marketplace's state column reflects the world as
+    //    early as possible. Schedule failures are swallowed and logged — they
+    //    must not break the link transaction.
+    try {
+      await this.reconciliationJob.scheduleRecurring(insertedMarketplace.id);
+      await this.reconciliationJob.addJob({
+        marketplaceId: insertedMarketplace.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        'Failed to enqueue marketplace reconciliation job — marketplace state will not auto-refresh until the next manual trigger',
+        {
+          marketplaceId: insertedMarketplace.id,
+          organizationId: organization.id,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
 
     // 9. Hydrate addedByUserName for the presentation DTO.
     const addedByUserName = await this.resolveAddedByUserName(addedBy);

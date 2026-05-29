@@ -15,6 +15,7 @@ import {
   UnlinkMarketplaceResponse,
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
+import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 
 const origin = 'UnlinkMarketplaceUseCase';
 
@@ -45,6 +46,7 @@ export class UnlinkMarketplaceUseCase
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly gitPort: IGitPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly reconciliationJob: MarketplaceReconciliationDelayedJob,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -87,9 +89,22 @@ export class UnlinkMarketplaceUseCase
       organization.id,
     );
 
-    // 4. TODO(group K, task 11.3): removeRepeatable for
-    // jobId = `marketplace-reconciliation:${marketplaceId}` to stop the
-    // BullMQ reconciliation cron for this marketplace.
+    // 4. Cancel the BullMQ repeatable reconciliation cron for this
+    //    marketplace so the worker stops polling once the row is gone. The
+    //    underlying removeRepeatable is a no-op if no schedule exists, and
+    //    we swallow errors so a scheduler hiccup never blocks the unlink.
+    try {
+      await this.reconciliationJob.cancelRecurring(marketplace.id);
+    } catch (error) {
+      this.logger.error(
+        'Failed to cancel marketplace reconciliation cron — the schedule may continue running until the row is hard-deleted',
+        {
+          marketplaceId: marketplace.id,
+          organizationId: organization.id,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
 
     // 5. Emit MarketplaceUnlinkedEvent.
     this.eventEmitterService.emit(

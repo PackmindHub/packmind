@@ -30,6 +30,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
+import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 import { LinkMarketplaceUseCase } from './linkMarketplace.usecase';
 
@@ -94,6 +95,7 @@ describe('LinkMarketplaceUseCase', () => {
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let mockReconciliationJob: jest.Mocked<MarketplaceReconciliationDelayedJob>;
   let useCase: LinkMarketplaceUseCase;
 
   const createdGitRepo: GitRepo = {
@@ -148,6 +150,12 @@ describe('LinkMarketplaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    mockReconciliationJob = {
+      scheduleRecurring: jest.fn().mockResolvedValue(undefined),
+      cancelRecurring: jest.fn().mockResolvedValue(undefined),
+      addJob: jest.fn().mockResolvedValue('job-id'),
+    } as unknown as jest.Mocked<MarketplaceReconciliationDelayedJob>;
+
     mockMarketplaceRepository.add.mockImplementation(
       async (m) => m as Marketplace,
     );
@@ -158,6 +166,7 @@ describe('LinkMarketplaceUseCase', () => {
       mockGitPort,
       mockParserRegistry,
       mockEventEmitterService,
+      mockReconciliationJob,
       mockAccountsPort,
       stubLogger(),
     );
@@ -218,6 +227,18 @@ describe('LinkMarketplaceUseCase', () => {
       expect(emitted.payload.organizationId).toBe(organizationId);
       expect(emitted.payload.gitRepoId).toBe(createdGitRepo.id);
       expect(emitted.payload.addedBy).toBe(userId);
+    });
+
+    it('schedules the repeatable reconciliation cron and seeds an immediate run', async () => {
+      await useCase.execute(baseCommand);
+
+      const insertedId = mockMarketplaceRepository.add.mock.calls[0][0].id;
+      expect(mockReconciliationJob.scheduleRecurring).toHaveBeenCalledWith(
+        insertedId,
+      );
+      expect(mockReconciliationJob.addJob).toHaveBeenCalledWith({
+        marketplaceId: insertedId,
+      });
     });
   });
 

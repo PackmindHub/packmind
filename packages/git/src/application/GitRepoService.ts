@@ -98,6 +98,24 @@ export class GitRepoService {
   // ---------------------------------------------------------------------------
 
   /**
+   * Find a marketplace-typed GitRepo by id.
+   *
+   * Returns null when no row is found or when the row's type is not
+   * `'marketplace'`. Used by the reconciliation job to load the underlying
+   * `GitRepo` for a `Marketplace` without leaking standard-typed rows.
+   */
+  async findMarketplaceGitRepoById(id: GitRepoId): Promise<GitRepo | null> {
+    const gitRepo = await this.gitRepoRepository.findById(id);
+    if (!gitRepo) {
+      return null;
+    }
+    if (gitRepo.type !== 'marketplace') {
+      return null;
+    }
+    return gitRepo;
+  }
+
+  /**
    * Find a marketplace-typed GitRepo by owner/repo within an organization.
    *
    * Excludes standard-typed repos.

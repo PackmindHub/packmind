@@ -19,6 +19,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
+import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 import { UnlinkMarketplaceUseCase } from './unlinkMarketplace.usecase';
 
 describe('UnlinkMarketplaceUseCase', () => {
@@ -72,6 +73,7 @@ describe('UnlinkMarketplaceUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let mockReconciliationJob: jest.Mocked<MarketplaceReconciliationDelayedJob>;
   let useCase: UnlinkMarketplaceUseCase;
 
   beforeEach(() => {
@@ -102,10 +104,17 @@ describe('UnlinkMarketplaceUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    mockReconciliationJob = {
+      scheduleRecurring: jest.fn().mockResolvedValue(undefined),
+      cancelRecurring: jest.fn().mockResolvedValue(undefined),
+      addJob: jest.fn().mockResolvedValue('job-id'),
+    } as unknown as jest.Mocked<MarketplaceReconciliationDelayedJob>;
+
     useCase = new UnlinkMarketplaceUseCase(
       mockMarketplaceRepository,
       mockGitPort,
       mockEventEmitterService,
+      mockReconciliationJob,
       mockAccountsPort,
       stubLogger(),
     );
@@ -140,6 +149,14 @@ describe('UnlinkMarketplaceUseCase', () => {
       expect(emitted.payload.marketplaceId).toBe(marketplaceId);
       expect(emitted.payload.gitRepoId).toBe(gitRepoId);
       expect(emitted.payload.organizationId).toBe(organizationId);
+    });
+
+    it('cancels the repeatable reconciliation cron via the job manager', async () => {
+      await useCase.execute(command);
+
+      expect(mockReconciliationJob.cancelRecurring).toHaveBeenCalledWith(
+        marketplaceId,
+      );
     });
   });
 

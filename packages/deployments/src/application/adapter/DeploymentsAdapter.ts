@@ -108,6 +108,7 @@ import { IDeploymentsDelayedJobs } from '../../domain/jobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
@@ -572,15 +573,15 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
 
-    // Marketplace use cases. The reconciliation job wire-up (group K, task
-    // 11.3) is intentionally deferred — LinkMarketplaceUseCase carries a
-    // TODO in step 8 of its flow that K will fill in.
+    // Marketplace use cases. The reconciliation job is wired through here so
+    // both Link/Unlink can drive the BullMQ repeatable schedule.
     this._linkMarketplaceUseCase = new LinkMarketplaceUseCase(
       this.marketplaceRepository,
       this.gitRepoService,
       this.gitPort,
       this.marketplaceDescriptorParserRegistry,
       ports.eventEmitterService,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
       this.accountsPort,
     );
 
@@ -588,6 +589,7 @@ export class DeploymentsAdapter
       this.marketplaceRepository,
       this.gitPort,
       ports.eventEmitterService,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
       this.accountsPort,
     );
 
@@ -626,9 +628,31 @@ export class DeploymentsAdapter
       );
     }
 
+    // Marketplace reconciliation queue — per-marketplace BullMQ repeatable
+    // jobs (default `*/30 * * * *`). Registered through the same JobsService
+    // so the queue is initialized alongside the rest of the worker pool.
+    const reconciliationFactory = new MarketplaceReconciliationJobFactory(
+      this.marketplaceRepository,
+      this.gitRepoService,
+      this.gitPort!,
+      this.marketplaceDescriptorParserRegistry,
+    );
+    jobsService.registerJobQueue(
+      reconciliationFactory.getQueueName(),
+      reconciliationFactory,
+    );
+    await reconciliationFactory.createQueue();
+
+    if (!reconciliationFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for marketplace reconciliation',
+      );
+    }
+
     this.logger.debug('Deployments delayed jobs built successfully');
     return {
       publishArtifactsDelayedJob: jobFactory.delayedJob,
+      marketplaceReconciliationDelayedJob: reconciliationFactory.delayedJob,
     };
   }
 
