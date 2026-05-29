@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useSearchParams } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import GithubAppCallbackRouteModule from './_public.github-app-callback';
+import GithubAppCallbackRouteModule from './_public.integrations.github-app.install-callback';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { useSubmitGithubAppCallbackMutation } from '../../src/domain/git/api/queries/GitProviderQueries';
 
@@ -52,12 +52,6 @@ const authenticatedMe = {
     slug: 'acme',
     role: 'ADMIN' as const,
   },
-};
-
-const mockLocalStorage = {
-  setItem: jest.fn(),
-  getItem: jest.fn().mockReturnValue('stored-state-token'),
-  removeItem: jest.fn(),
 };
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -114,14 +108,10 @@ describe('GithubAppCallbackRouteModule', () => {
       new URLSearchParams({
         installation_id: '12345',
         setup_action: 'install',
+        state: 'stored-state-token',
       }),
       jest.fn(),
     ]);
-
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    });
 
     Object.defineProperty(window, 'opener', {
       value: { postMessage: jest.fn() },
@@ -142,7 +132,7 @@ describe('GithubAppCallbackRouteModule', () => {
     });
   });
 
-  describe('when authenticated user has valid installation_id and state in localStorage', () => {
+  describe('when authenticated user has valid installation_id and state in URL params', () => {
     it('calls the callback mutation with installationId and state', async () => {
       const mockMutate = jest.fn();
 
@@ -151,8 +141,6 @@ describe('GithubAppCallbackRouteModule', () => {
           typeof useSubmitGithubAppCallbackMutation
         >,
       );
-
-      mockLocalStorage.getItem.mockReturnValue('stored-state-token');
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
 
@@ -213,26 +201,6 @@ describe('GithubAppCallbackRouteModule', () => {
       });
 
       expect(window.close).toHaveBeenCalled();
-    });
-
-    it('removes the localStorage state key on success', async () => {
-      const mockMutate = jest.fn().mockImplementation((_, options) => {
-        options?.onSuccess?.({ id: 'prov-new' });
-      });
-
-      mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
-          typeof useSubmitGithubAppCallbackMutation
-        >,
-      );
-
-      renderWithProviders(<GithubAppCallbackRouteModule />);
-
-      await waitFor(() => {
-        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith(
-          'pm.gh-app.state.org-1',
-        );
-      });
     });
   });
 
@@ -300,7 +268,7 @@ describe('GithubAppCallbackRouteModule', () => {
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
 
-      expect(screen.getByText(/missing install context/i)).toBeInTheDocument();
+      expect(screen.getByText('Missing install context')).toBeInTheDocument();
     });
 
     it('does not call the mutation', () => {

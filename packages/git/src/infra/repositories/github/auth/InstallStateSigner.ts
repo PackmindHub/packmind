@@ -1,10 +1,13 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
+export type InstallStateKind = 'install' | 'manifest';
+
 export interface InstallStatePayload {
   orgId: string;
   userId: string;
   nonce: string;
   exp: number; // unix seconds
+  kind: InstallStateKind;
 }
 
 export class InvalidInstallStateError extends Error {
@@ -37,17 +40,20 @@ export class InstallStateSigner {
     payload: Omit<InstallStatePayload, 'exp' | 'nonce'> & {
       nonce?: string;
       exp?: number;
+      kind?: InstallStateKind;
     },
   ): string {
     const nonce = payload.nonce ?? randomBytes(16).toString('hex');
     const exp = payload.exp ?? this.now() + this.ttlSeconds;
+    const kind: InstallStateKind = payload.kind ?? 'install';
 
-    // Stable key order: orgId, userId, nonce, exp
+    // Stable key order: orgId, userId, nonce, exp, kind
     const fullPayload = {
       orgId: payload.orgId,
       userId: payload.userId,
       nonce,
       exp,
+      kind,
     };
 
     const json = JSON.stringify(fullPayload);
@@ -102,22 +108,34 @@ export class InstallStateSigner {
       throw new InvalidInstallStateError();
     }
 
+    const record = parsed as Record<string, unknown>;
+
     if (
       typeof parsed !== 'object' ||
       parsed === null ||
-      typeof (parsed as Record<string, unknown>).orgId !== 'string' ||
-      !(parsed as Record<string, unknown>).orgId ||
-      typeof (parsed as Record<string, unknown>).userId !== 'string' ||
-      !(parsed as Record<string, unknown>).userId ||
-      typeof (parsed as Record<string, unknown>).nonce !== 'string' ||
-      !(parsed as Record<string, unknown>).nonce ||
-      typeof (parsed as Record<string, unknown>).exp !== 'number' ||
-      !isFinite((parsed as Record<string, unknown>).exp as number)
+      typeof record.orgId !== 'string' ||
+      !record.orgId ||
+      typeof record.userId !== 'string' ||
+      !record.userId ||
+      typeof record.nonce !== 'string' ||
+      !record.nonce ||
+      typeof record.exp !== 'number' ||
+      !isFinite(record.exp as number)
     ) {
       throw new InvalidInstallStateError();
     }
 
-    const payload = parsed as InstallStatePayload;
+    // kind defaults to 'install' for tokens signed before the discriminator was introduced
+    const kind: InstallStateKind =
+      record.kind === 'manifest' ? 'manifest' : 'install';
+
+    const payload: InstallStatePayload = {
+      orgId: record.orgId as string,
+      userId: record.userId as string,
+      nonce: record.nonce as string,
+      exp: record.exp as number,
+      kind,
+    };
 
     if (payload.exp <= this.now()) {
       throw new InvalidInstallStateError();

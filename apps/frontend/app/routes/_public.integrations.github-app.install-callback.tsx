@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import {
   PMAlert,
@@ -20,6 +20,7 @@ export default function GithubAppCallbackRouteModule() {
 
   const rawInstallationId = searchParams.get('installation_id');
   const setupAction = searchParams.get('setup_action');
+  const state = searchParams.get('state');
 
   const installationId = rawInstallationId ? Number(rawInstallationId) : null;
   const isValidInstallationId =
@@ -43,18 +44,6 @@ export default function GithubAppCallbackRouteModule() {
     }
   }, [me, authLoading, navigate]);
 
-  // Read state from localStorage once we know the org id
-  const state = useMemo(() => {
-    if (!me?.authenticated || !me.organization?.id) return null;
-    try {
-      return window.localStorage.getItem(
-        `pm.gh-app.state.${me.organization.id}`,
-      );
-    } catch {
-      return null;
-    }
-  }, [me?.authenticated, me?.organization?.id]);
-
   // Fire the callback POST exactly once
   useEffect(() => {
     if (submittedRef.current) return;
@@ -73,14 +62,6 @@ export default function GithubAppCallbackRouteModule() {
       { installationId: installationId!, state },
       {
         onSuccess: (provider) => {
-          try {
-            window.localStorage.removeItem(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              `pm.gh-app.state.${me.organization!.id}`,
-            );
-          } catch {
-            // ignore
-          }
           window.opener?.postMessage(
             {
               type: 'packmind:github-app-installed',

@@ -74,10 +74,22 @@ describe('InstallStateSigner', () => {
   describe('tampered payload', () => {
     it('throws InvalidInstallStateError when the payload part is tampered', () => {
       const signer = signerWithFixedNow();
-      const state = signer.sign({ orgId: 'org-1', userId: 'user-1' });
+      // Use a fixed nonce so the base64url output is deterministic and we can
+      // pick a safe character position to tamper (not a trailing padding slot).
+      const state = signer.sign({
+        orgId: 'org-1',
+        userId: 'user-1',
+        nonce: 'aabbccddeeff00112233445566778899',
+      });
       const [payload, sig] = state.split('.');
+      // Tamper a character in the middle of the payload (position 10) so the
+      // change always alters the decoded JSON bytes regardless of base64
+      // trailing-character padding equivalence.
+      const mid = 10;
       const tampered =
-        payload.slice(0, -1) + (payload.at(-1) === 'a' ? 'b' : 'a');
+        payload.slice(0, mid) +
+        (payload[mid] === 'a' ? 'b' : 'a') +
+        payload.slice(mid + 1);
 
       expect(() => signer.verify(`${tampered}.${sig}`)).toThrow(
         InvalidInstallStateError,

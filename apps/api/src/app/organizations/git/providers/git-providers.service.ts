@@ -3,8 +3,10 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AccountsHexa } from '@packmind/accounts';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AddGitProviderCommand,
   ClientSource,
@@ -15,13 +17,20 @@ import {
   IGitPort,
   ListProvidersCommand,
   ListProvidersResponse,
+  OrganizationGitHubApp,
   OrganizationId,
   UserId,
+  createOrganizationGitHubAppId,
 } from '@packmind/types';
 import { InjectGitAdapter } from '../../../shared/HexaInjection';
 import { Configuration } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
+import { resolvePackmindEdition } from '../../../shared/utils/edition';
+import { GitHubAppManifest } from './types/GitHubAppManifest';
+import axios from 'axios';
+
+const origin = 'GitProvidersService';
 
 type BuildGithubAppInstallUrlCommand = {
   organizationId: OrganizationId;
@@ -41,6 +50,43 @@ type CompleteGithubAppInstallCommand = {
   source: ClientSource;
 };
 
+type BuildGithubAppManifestCommand = {
+  orgId: OrganizationId;
+  userId: UserId;
+};
+
+type BuildGithubAppManifestResponse = {
+  manifest: GitHubAppManifest;
+  state: string;
+  manifestPostUrl: string;
+};
+
+type CompleteGithubAppManifestCommand = {
+  orgId: OrganizationId;
+  userId: UserId;
+  code: string;
+  state: string;
+};
+
+type CompleteGithubAppManifestResponse = {
+  installUrl: string;
+};
+
+type GetGithubAppStatusCommand = {
+  orgId: OrganizationId;
+};
+
+type GetGithubAppStatusResponse = {
+  hasApp: boolean;
+  appSlug?: string;
+  revokedAt?: Date | null;
+};
+
+type RevokeGithubAppCommand = {
+  orgId: OrganizationId;
+  userId: UserId;
+};
+
 @Injectable()
 export class GitProvidersService {
   constructor(
@@ -48,6 +94,10 @@ export class GitProvidersService {
     private readonly accountsHexa: AccountsHexa,
     @Inject(INSTALL_STATE_SIGNER)
     private readonly signer: InstallStateSigner,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.INFO,
+    ),
   ) {}
 
   async addGitProvider(
@@ -73,11 +123,28 @@ export class GitProvidersService {
   async buildGithubAppInstallUrl(
     command: BuildGithubAppInstallUrlCommand,
   ): Promise<BuildGithubAppInstallUrlResponse> {
-    const slug = await Configuration.getConfig('GITHUB_APP_SLUG');
-    if (!slug) {
-      throw new InternalServerErrorException(
-        'GITHUB_APP_SLUG is not configured',
+    const edition = await resolvePackmindEdition();
+
+    let slug: string;
+
+    if (edition === 'oss') {
+      const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
+        command.organizationId,
       );
+      if (!record) {
+        throw new BadRequestException(
+          'No GitHub App registered for this organization',
+        );
+      }
+      slug = record.appSlug;
+    } else {
+      const configuredSlug = await Configuration.getConfig('GITHUB_APP_SLUG');
+      if (!configuredSlug) {
+        throw new InternalServerErrorException(
+          'GITHUB_APP_SLUG is not configured',
+        );
+      }
+      slug = configuredSlug;
     }
 
     const state = this.signer.sign({
@@ -92,6 +159,148 @@ export class GitProvidersService {
       encodeURIComponent(state);
 
     return { installUrl, state };
+  }
+
+  async buildGithubAppManifest(
+    command: BuildGithubAppManifestCommand,
+  ): Promise<BuildGithubAppManifestResponse> {
+    const edition = await resolvePackmindEdition();
+    if (edition !== 'oss') {
+      throw new BadRequestException(
+        'Manifest flow is only available on OSS edition',
+      );
+    }
+
+    const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
+    if (!appWebUrl) {
+      throw new BadRequestException('APP_WEB_URL is not configured');
+    }
+
+    const organization = await this.accountsHexa
+      .getAdapter()
+      .getOrganizationById({ organizationId: command.orgId });
+
+    if (!organization) {
+      throw new BadRequestException('Organization not found');
+    }
+
+    const state = this.signer.sign({
+      orgId: String(command.orgId),
+      userId: String(command.userId),
+      kind: 'manifest',
+    });
+
+    const manifest: GitHubAppManifest = {
+      name: `Packmind on ${organization.name}`,
+      url: appWebUrl,
+      redirect_url: `${appWebUrl}/integrations/github-app/manifest-callback`,
+      setup_url: `${appWebUrl}/integrations/github-app/install-callback`,
+      setup_on_update: true,
+      hook_attributes: { url: `${appWebUrl}/api/v0/hooks/github-app` },
+      public: false,
+      default_permissions: {
+        contents: 'write',
+        metadata: 'read',
+        pull_requests: 'write',
+      },
+      default_events: [],
+    };
+
+    return {
+      manifest,
+      state,
+      manifestPostUrl: 'https://github.com/settings/apps/new',
+    };
+  }
+
+  async completeGithubAppManifest(
+    command: CompleteGithubAppManifestCommand,
+  ): Promise<CompleteGithubAppManifestResponse> {
+    const edition = await resolvePackmindEdition();
+    if (edition !== 'oss') {
+      throw new BadRequestException(
+        'Manifest flow is only available on OSS edition',
+      );
+    }
+
+    let payload;
+    try {
+      payload = this.signer.verify(command.state);
+    } catch (error) {
+      if (error instanceof InvalidInstallStateError) {
+        throw new BadRequestException('Invalid manifest state');
+      }
+      throw error;
+    }
+
+    if (payload.kind !== 'manifest') {
+      throw new BadRequestException('Invalid manifest state');
+    }
+
+    if (payload.orgId !== String(command.orgId)) {
+      throw new BadRequestException('Invalid manifest state');
+    }
+
+    if (payload.userId !== String(command.userId)) {
+      throw new BadRequestException('Invalid manifest state');
+    }
+
+    // Exchange the code with GitHub (unauthenticated — the code IS the auth)
+    let conversionData: {
+      id: number;
+      slug: string;
+      client_id: string;
+      client_secret: string;
+      webhook_secret: string;
+      pem: string;
+    };
+    try {
+      const response = await axios.post<typeof conversionData>(
+        `https://api.github.com/app-manifests/${encodeURIComponent(command.code)}/conversions`,
+        undefined,
+        {
+          headers: {
+            Accept: 'application/vnd.github+json',
+          },
+        },
+      );
+      conversionData = response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message =
+          (error.response.data as { message?: string })?.message ??
+          'GitHub code conversion failed';
+        throw new BadRequestException(message);
+      }
+      throw error;
+    }
+
+    const app: OrganizationGitHubApp = {
+      id: createOrganizationGitHubAppId(),
+      organizationId: command.orgId,
+      appId: conversionData.id,
+      appSlug: conversionData.slug,
+      appClientId: conversionData.client_id,
+      appClientSecret: conversionData.client_secret,
+      appPrivateKey: conversionData.pem,
+      appWebhookSecret: conversionData.webhook_secret,
+    };
+
+    await this.gitAdapter.upsertOrganizationGitHubApp(app);
+
+    const installState = this.signer.sign({
+      orgId: String(command.orgId),
+      userId: String(command.userId),
+      kind: 'install',
+    });
+
+    const installUrl =
+      'https://github.com/apps/' +
+      encodeURIComponent(conversionData.slug) +
+      '/installations/new?state=' +
+      encodeURIComponent(installState);
+
+    return { installUrl };
   }
 
   async completeGithubAppInstall(
@@ -237,5 +446,57 @@ export class GitProvidersService {
       organizationId,
       providerId,
     );
+  }
+
+  async getGithubAppStatus(
+    command: GetGithubAppStatusCommand,
+  ): Promise<GetGithubAppStatusResponse> {
+    const edition = await resolvePackmindEdition();
+
+    // Cloud uses an env-configured shared GitHub App — no per-org record exists.
+    if (edition !== 'oss') {
+      return { hasApp: true };
+    }
+
+    const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
+      command.orgId,
+    );
+
+    return {
+      hasApp: !!record,
+      appSlug: record?.appSlug,
+      revokedAt: record?.revokedAt ?? null,
+    };
+  }
+
+  async revokeGithubApp(command: RevokeGithubAppCommand): Promise<void> {
+    const edition = await resolvePackmindEdition();
+
+    if (edition !== 'oss') {
+      throw new BadRequestException(
+        'GitHub App revocation is only available on OSS edition',
+      );
+    }
+
+    const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
+      command.orgId,
+    );
+
+    if (!record) {
+      throw new NotFoundException(
+        'No active GitHub App found for this organization',
+      );
+    }
+
+    // Mark the record revoked. This does NOT cascade-delete existing GitProvider
+    // rows that point at this org — those will start failing at next token mint
+    // when the resolver throws on a missing active app. The admin must re-register
+    // and users will need to re-install the new app.
+    await this.gitAdapter.revokeOrganizationGitHubApp(command.orgId);
+
+    this.logger.warn('GitHub App revoked', {
+      orgId: command.orgId,
+      userId: command.userId,
+    });
   }
 }

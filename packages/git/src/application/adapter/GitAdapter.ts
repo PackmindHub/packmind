@@ -29,6 +29,7 @@ import {
   IGitPort,
   ListProvidersCommand,
   ListProvidersResponse,
+  OrganizationGitHubApp,
   OrganizationId,
   QueryOption,
   UserId,
@@ -481,5 +482,29 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       input,
       onComplete,
     );
+  }
+
+  public async upsertOrganizationGitHubApp(
+    app: OrganizationGitHubApp,
+  ): Promise<OrganizationGitHubApp> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .upsertForOrganization(app);
+  }
+
+  public async getActiveOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<OrganizationGitHubApp | null> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .findActiveByOrganizationId(orgId);
+  }
+
+  public async revokeOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<void> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .markRevoked(orgId);
   }
 }

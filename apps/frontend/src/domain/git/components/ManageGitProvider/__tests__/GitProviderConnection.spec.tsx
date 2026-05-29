@@ -40,6 +40,30 @@ jest.mock('../../../api/queries/GitProviderQueries', () => ({
     error: null,
     reset: jest.fn(),
   })),
+  useGetGithubAppStatusQuery: jest.fn(() => ({
+    data: { hasApp: false },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  })),
+  useGetGithubAppManifestMutation: jest.fn(() => ({
+    mutate: jest.fn(),
+    mutateAsync: jest.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: jest.fn(),
+  })),
+  useRevokeGithubAppMutation: jest.fn(() => ({
+    mutate: jest.fn(),
+    mutateAsync: jest.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: jest.fn(),
+  })),
 }));
 
 jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
@@ -117,7 +141,7 @@ describe('GitProviderConnection', () => {
       createMockMutation<ReturnType<typeof useUpdateGitProviderMutation>>(),
     );
 
-    // Default: allowlisted OSS user — feature flag ON
+    // Default: OSS user with feature flag ON
     mockUseGetMeQuery.mockReturnValue({
       data: {
         authenticated: true,
@@ -182,7 +206,6 @@ describe('GitProviderConnection', () => {
       });
       await user.click(tokenTab);
 
-      // After clicking the PAT tab, it becomes the active tab
       expect(tokenTab).toHaveAttribute('aria-selected', 'true');
     });
   });
@@ -210,56 +233,6 @@ describe('GitProviderConnection', () => {
       await user.selectOptions(vendorSelect, 'gitlab');
 
       expect(screen.getByPlaceholderText(/glpat-/i)).toBeInTheDocument();
-    });
-  });
-
-  describe('when OSS App form installation ID is empty', () => {
-    it('disables the save button and does not call create mutation', async () => {
-      const mockCreate =
-        createMockMutation<ReturnType<typeof useCreateGitProviderMutation>>();
-      mockUseCreateGitProviderMutation.mockReturnValue(mockCreate);
-
-      renderWithProviders(
-        <GitProviderConnection organizationId={mockOrganizationId} />,
-      );
-
-      // Save button should be disabled when installation ID is empty
-      expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
-      expect(mockCreate.mutateAsync).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when OSS App form is filled correctly', () => {
-    it('calls create mutation with the correct app payload', async () => {
-      const user = userEvent.setup();
-      const capturedPayloads: unknown[] = [];
-      const mockCreate = createMockMutation<
-        ReturnType<typeof useCreateGitProviderMutation>
-      >({
-        mutateAsync: jest.fn().mockImplementation(({ data }) => {
-          capturedPayloads.push(data);
-          return Promise.resolve({ id: 'prov-new' });
-        }),
-      });
-      mockUseCreateGitProviderMutation.mockReturnValue(mockCreate);
-
-      renderWithProviders(
-        <GitProviderConnection organizationId={mockOrganizationId} />,
-      );
-
-      await user.type(screen.getByLabelText(/installation id/i), '67890');
-
-      await user.click(screen.getByRole('button', { name: /^save$/i }));
-
-      await waitFor(() => {
-        expect(capturedPayloads[0]).toEqual({
-          source: 'github',
-          url: 'https://github.com',
-          token: '',
-          authMethod: 'app',
-          appInstallationId: 67890,
-        });
-      });
     });
   });
 
@@ -399,6 +372,28 @@ describe('GitProviderConnection', () => {
       expect(
         screen.getByRole('tab', { name: /personal access token/i }),
       ).toHaveAttribute('aria-selected', 'true');
+    });
+  });
+
+  describe('when OSS edition and GitHub App tab is active', () => {
+    it('does not render installation ID input (manual form is gone)', () => {
+      renderWithProviders(
+        <GitProviderConnection organizationId={mockOrganizationId} />,
+      );
+
+      expect(
+        screen.queryByLabelText(/installation id/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders the connect to github button when app is not registered', () => {
+      renderWithProviders(
+        <GitProviderConnection organizationId={mockOrganizationId} />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /connect to github/i }),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -132,29 +132,6 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
     }
   };
 
-  const handleAppSubmit = async (payload: FormData) => {
-    setErrors({});
-    setSuccess(false);
-    try {
-      const mutationResult =
-        isEditing && editingProvider
-          ? await updateMutation.mutateAsync({
-              id: editingProvider.id,
-              data: payload,
-            })
-          : await createMutation.mutateAsync({ data: payload });
-      setSuccess(true);
-      if (onSuccess) onSuccess(mutationResult);
-    } catch (error) {
-      setErrors({
-        form: extractErrorMessage(
-          error,
-          'Failed to save git provider. Please try again.',
-        ),
-      });
-    }
-  };
-
   const providerSelectId = 'provider-source';
   const tokenInputId = 'provider-token';
   const urlInputId = 'provider-url';
@@ -334,13 +311,6 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
                       <GitHubAppConnection
                         organizationId={organizationId}
                         url={formData.url}
-                        editingProvider={editingProvider}
-                        isSubmitting={
-                          isEditing
-                            ? updateMutation.isPending
-                            : createMutation.isPending
-                        }
-                        onSubmit={handleAppSubmit}
                       />
                     </PMBox>
                   ),

@@ -16,4 +16,7 @@ export {
   InstallStateSigner,
   InvalidInstallStateError,
 } from './infra/repositories/github/auth/InstallStateSigner';
-export type { InstallStatePayload } from './infra/repositories/github/auth/InstallStateSigner';
+export type {
+  InstallStatePayload,
+  InstallStateKind,
+} from './infra/repositories/github/auth/InstallStateSigner';
