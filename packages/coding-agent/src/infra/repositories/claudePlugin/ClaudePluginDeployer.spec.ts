@@ -162,9 +162,11 @@ describe('ClaudePluginDeployer', () => {
       ]);
     });
 
-    it('falls back to the skill prompt when no files are provided', async () => {
+    it('generates SKILL.md with frontmatter from the skill version when no files are provided', async () => {
       const skill = makeSkill({
         slug: 'threat-model',
+        name: 'Threat Model',
+        description: 'Threat modeling skill',
         prompt: '# prompt body',
         files: undefined,
       });
@@ -181,7 +183,48 @@ describe('ClaudePluginDeployer', () => {
       );
       const file = result.createOrUpdate[0];
       if (file.content === undefined) throw new Error('expected content');
-      expect(file.content).toBe('# prompt body');
+      expect(file.content).toContain("name: 'Threat Model'");
+      expect(file.content).toContain("description: 'Threat modeling skill'");
+      expect(file.content).toContain('# prompt body');
+    });
+
+    it('always generates SKILL.md with frontmatter, ignoring any SKILL.md in files', async () => {
+      const skill = makeSkill({
+        slug: 'threat-model',
+        name: 'Threat Model',
+        description: 'Threat modeling skill',
+        prompt: '# generated body',
+        files: [
+          makeSkillFile({
+            path: 'SKILL.md',
+            content: '# raw without frontmatter',
+          }),
+          makeSkillFile({
+            id: createSkillFileId('sf2'),
+            path: 'references/example.md',
+            content: 'ex',
+          }),
+        ],
+      });
+
+      const result = await new ClaudePluginDeployer().deploySkills(
+        [skill],
+        {} as GitRepo,
+        makeTarget('/'),
+      );
+
+      const skillMd = result.createOrUpdate.find(
+        (f) => f.path === 'skills/threat-model/SKILL.md',
+      );
+      if (!skillMd?.content) throw new Error('expected SKILL.md');
+      expect(skillMd.content).toContain("name: 'Threat Model'");
+      expect(skillMd.content).toContain('# generated body');
+      expect(skillMd.content).not.toContain('# raw without frontmatter');
+
+      expect(result.createOrUpdate.map((f) => f.path).sort()).toEqual([
+        'skills/threat-model/SKILL.md',
+        'skills/threat-model/references/example.md',
+      ]);
     });
 
     it('returns empty when no skills', async () => {
