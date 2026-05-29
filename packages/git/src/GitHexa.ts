@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   BaseHexaOpts,
+  Configuration,
   HexaRegistry,
   JobsService,
 } from '@packmind/node-utils';
@@ -81,6 +82,15 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('Initializing GitHexa (adapter retrieval phase)');
 
     try {
+      // Resolve edition once at bootstrap so use cases get the correct value
+      const rawEdition = await Configuration.getConfig('PACKMIND_EDITION');
+      const edition: 'cloud' | 'oss' =
+        rawEdition === 'proprietary' || rawEdition === 'cloud'
+          ? 'cloud'
+          : 'oss';
+
+      this.adapter.setEdition(edition);
+
       // Get all required ports and services
       const ports = {
         [IAccountsPortName]:

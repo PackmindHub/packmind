@@ -165,6 +165,231 @@ describe('AddGitProviderUseCase', () => {
     });
   });
 
+  describe('authMethod validation', () => {
+    const makeUseCase = (edition: 'cloud' | 'oss') =>
+      new AddGitProviderUseCase(
+        mockGitProviderService,
+        accountsAdapter,
+        edition,
+        stubLogger(),
+      );
+
+    describe('token auth method', () => {
+      it('succeeds when token is present', async () => {
+        const uc = makeUseCase('oss');
+        const expectedResult = gitProviderFactory({
+          organizationId,
+          token: 'my-token',
+          authMethod: 'token',
+        });
+        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+        const result = await uc.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: 'my-token',
+            authMethod: 'token',
+          },
+          organizationId,
+          userId: memberUser.id,
+        });
+
+        expect(result).toEqual(expectedResult);
+      });
+
+      it('throws BadRequestException when token is missing and allowTokenlessProvider is false', async () => {
+        const uc = makeUseCase('oss');
+
+        await expect(
+          uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: '',
+              authMethod: 'token',
+            },
+            organizationId,
+            userId: memberUser.id,
+            allowTokenlessProvider: false,
+          }),
+        ).rejects.toThrow('Git provider token is required');
+      });
+    });
+
+    describe('app auth method on Cloud edition', () => {
+      it('succeeds when only appInstallationId is provided', async () => {
+        const uc = makeUseCase('cloud');
+        const expectedResult = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+        });
+        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+        const result = await uc.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: null,
+            authMethod: 'app',
+            appInstallationId: 42,
+          },
+          organizationId,
+          userId: memberUser.id,
+        });
+
+        expect(result).toEqual(expectedResult);
+      });
+
+      it('throws BadRequestException when appId is provided on Cloud', async () => {
+        const uc = makeUseCase('cloud');
+
+        await expect(
+          uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: null,
+              authMethod: 'app',
+              appId: 99,
+              appInstallationId: 42,
+            },
+            organizationId,
+            userId: memberUser.id,
+          }),
+        ).rejects.toThrow(
+          'App ID is managed by the Packmind Cloud instance and must not be provided by the client',
+        );
+      });
+
+      it('throws BadRequestException when appPrivateKey is provided on Cloud', async () => {
+        const uc = makeUseCase('cloud');
+
+        await expect(
+          uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: null,
+              authMethod: 'app',
+              appInstallationId: 42,
+              appPrivateKey: 'private-key',
+            },
+            organizationId,
+            userId: memberUser.id,
+          }),
+        ).rejects.toThrow(
+          'App private key is managed by the Packmind Cloud instance and must not be provided by the client',
+        );
+      });
+    });
+
+    describe('app auth method on OSS edition', () => {
+      it('succeeds when appId, appInstallationId and appPrivateKey are all provided', async () => {
+        const uc = makeUseCase('oss');
+        const expectedResult = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appId: 10,
+          appInstallationId: 42,
+          appPrivateKey: 'private-key',
+        });
+        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+        const result = await uc.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: null,
+            authMethod: 'app',
+            appId: 10,
+            appInstallationId: 42,
+            appPrivateKey: 'private-key',
+          },
+          organizationId,
+          userId: memberUser.id,
+        });
+
+        expect(result).toEqual(expectedResult);
+      });
+
+      it.each([
+        {
+          label: 'appId is missing',
+          gitProvider: {
+            source: GitProviderVendors.github as GitProviderVendor,
+            url: 'https://github.com',
+            token: null,
+            authMethod: 'app' as const,
+            appInstallationId: 42,
+            appPrivateKey: 'private-key',
+          },
+          expectedMessage: 'GitHub App ID is required',
+        },
+        {
+          label: 'appInstallationId is missing',
+          gitProvider: {
+            source: GitProviderVendors.github as GitProviderVendor,
+            url: 'https://github.com',
+            token: null,
+            authMethod: 'app' as const,
+            appId: 10,
+            appPrivateKey: 'private-key',
+          },
+          expectedMessage: 'GitHub App installation ID is required',
+        },
+        {
+          label: 'appPrivateKey is missing',
+          gitProvider: {
+            source: GitProviderVendors.github as GitProviderVendor,
+            url: 'https://github.com',
+            token: null,
+            authMethod: 'app' as const,
+            appId: 10,
+            appInstallationId: 42,
+          },
+          expectedMessage: 'GitHub App private key is required',
+        },
+      ])(
+        'throws BadRequestException when $label',
+        async ({ gitProvider, expectedMessage }) => {
+          const uc = makeUseCase('oss');
+
+          await expect(
+            uc.execute({
+              gitProvider,
+              organizationId,
+              userId: memberUser.id,
+            }),
+          ).rejects.toThrow(expectedMessage);
+        },
+      );
+
+      it('throws BadRequestException when token is set with app authMethod', async () => {
+        const uc = makeUseCase('oss');
+
+        await expect(
+          uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: 'some-token',
+              authMethod: 'app',
+              appId: 10,
+              appInstallationId: 42,
+              appPrivateKey: 'private-key',
+            },
+            organizationId,
+            userId: memberUser.id,
+          }),
+        ).rejects.toThrow('Token must not be set when authMethod is "app"');
+      });
+    });
+  });
+
   describe('allowTokenlessProvider flag', () => {
     describe('when allowTokenlessProvider is true', () => {
       const input = {

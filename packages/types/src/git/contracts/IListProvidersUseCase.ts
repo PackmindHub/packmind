@@ -4,7 +4,8 @@ import { OrganizationId } from '../../accounts/Organization';
 
 export type GitProviderWithoutToken = {
   hasToken: boolean;
-} & Omit<GitProvider, 'token'>;
+  authMethod: 'token' | 'app';
+} & Omit<GitProvider, 'token' | 'appPrivateKey'>;
 
 export type ListProvidersCommand = PackmindCommand & {
   organizationId: OrganizationId;

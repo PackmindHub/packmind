@@ -30,15 +30,17 @@ export interface SignOutResponse {
   message: string;
 }
 
+type EditionFlag = { edition: 'cloud' | 'oss' };
+
 export type MeResponse =
-  | {
+  | (EditionFlag & {
       message: string;
       authenticated: false;
       user?: never;
       organization?: never;
       organizations?: never;
-    }
-  | {
+    })
+  | (EditionFlag & {
       message: string;
       authenticated: true;
       user: {
@@ -61,7 +63,7 @@ export type MeResponse =
         };
         role: UserOrganizationRole;
       }>;
-    };
+    });
 
 export interface TokenResponse {
   access_token: string;

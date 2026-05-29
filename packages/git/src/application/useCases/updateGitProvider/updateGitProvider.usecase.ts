@@ -9,6 +9,7 @@ import {
   PackmindCommand,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
+import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 
 const origin = 'UpdateGitProviderUseCase';
 
@@ -24,6 +25,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
+    private readonly edition: 'cloud' | 'oss' = 'oss',
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -61,6 +63,34 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
     ) {
       throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
+
+    const nextAuthMethod =
+      gitProvider.authMethod ?? existingProvider.authMethod;
+    const isSwitchingMethod =
+      gitProvider.authMethod !== undefined &&
+      gitProvider.authMethod !== existingProvider.authMethod;
+
+    const credentialView = isSwitchingMethod
+      ? {
+          authMethod: nextAuthMethod,
+          token: gitProvider.token ?? null,
+          appId: gitProvider.appId ?? null,
+          appInstallationId: gitProvider.appInstallationId ?? null,
+          appPrivateKey: gitProvider.appPrivateKey ?? null,
+        }
+      : {
+          authMethod: nextAuthMethod,
+          token: gitProvider.token ?? existingProvider.token ?? null,
+          appId: gitProvider.appId ?? existingProvider.appId ?? null,
+          appInstallationId:
+            gitProvider.appInstallationId ??
+            existingProvider.appInstallationId ??
+            null,
+          appPrivateKey:
+            gitProvider.appPrivateKey ?? existingProvider.appPrivateKey ?? null,
+        };
+
+    validateProviderCredentials(credentialView, this.edition);
 
     return this.gitProviderService.updateGitProvider(id, gitProvider);
   }

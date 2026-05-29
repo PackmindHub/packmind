@@ -62,6 +62,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private accountsPort: IAccountsPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
   private gitDelayedJobs: IGitDelayedJobs | null = null;
+  private edition: 'cloud' | 'oss' = 'oss';
 
   // Use cases - all initialized in initialize()
   private _addGitProvider!: AddGitProviderUseCase;
@@ -89,6 +90,27 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('GitAdapter constructed - awaiting initialization');
+  }
+
+  /**
+   * Set the edition for use in credential validation.
+   * Must be called before use cases that validate credentials are invoked.
+   */
+  public setEdition(edition: 'cloud' | 'oss'): void {
+    this.edition = edition;
+    // Recreate affected use cases with the new edition
+    if (this.accountsPort) {
+      this._addGitProvider = new AddGitProviderUseCase(
+        this.gitServices.getGitProviderService(),
+        this.accountsPort,
+        this.edition,
+      );
+      this._updateGitProvider = new UpdateGitProviderUseCase(
+        this.gitServices.getGitProviderService(),
+        this.accountsPort,
+        this.edition,
+      );
+    }
   }
 
   /**
@@ -121,6 +143,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._addGitProvider = new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
+      this.edition,
     );
 
     this._addGitRepo = new AddGitRepoUseCase(
@@ -145,6 +168,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._updateGitProvider = new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
+      this.edition,
     );
 
     // Use cases that don't depend on external ports

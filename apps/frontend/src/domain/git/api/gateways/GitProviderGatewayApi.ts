@@ -57,6 +57,7 @@ export class GitProviderGatewayApi
       organizationId,
       url: data.url,
       token: data.token,
+      authMethod: 'token',
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers`,

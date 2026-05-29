@@ -20,6 +20,7 @@ import {
   GitRepoAlreadyExistsError,
   GitRepoId,
   GitProviderHasRepositoriesError,
+  InvalidGitProviderCredentialsError,
   ListProvidersResponse,
   OrganizationId,
 } from '@packmind/types';
@@ -73,6 +74,9 @@ export class GitProvidersController {
         req.clientSource,
       );
     } catch (error) {
+      if (error instanceof InvalidGitProviderCredentialsError) {
+        throw new BadRequestException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -248,6 +252,9 @@ export class GitProvidersController {
       );
       return updatedProvider;
     } catch (error) {
+      if (error instanceof InvalidGitProviderCredentialsError) {
+        throw new BadRequestException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(

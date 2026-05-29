@@ -7,6 +7,7 @@ import {
   IAddGitProviderUseCase,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
+import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 
 // Re-export for backward compatibility
 export { AddGitProviderCommand };
@@ -20,6 +21,7 @@ export class AddGitProviderUseCase
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
+    private readonly edition: 'cloud' | 'oss' = 'oss',
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -34,10 +36,17 @@ export class AddGitProviderUseCase
       allowTokenlessProvider = false,
     } = command;
 
-    // Business rule: git provider must have a token configured (unless explicitly allowed)
-    if (!gitProvider.token && !allowTokenlessProvider) {
-      throw new Error('Git provider token is required');
-    }
+    validateProviderCredentials(
+      {
+        authMethod: gitProvider.authMethod ?? 'token',
+        token: gitProvider.token ?? null,
+        appId: gitProvider.appId ?? null,
+        appInstallationId: gitProvider.appInstallationId ?? null,
+        appPrivateKey: gitProvider.appPrivateKey ?? null,
+      },
+      this.edition,
+      { allowTokenless: allowTokenlessProvider },
+    );
 
     if (!gitProvider.source) {
       throw new Error('Git provider source is required');

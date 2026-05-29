@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  GitProviderWithoutToken,
   IAccountsPort,
   IListProvidersUseCase,
   ListProvidersCommand,
@@ -35,10 +36,17 @@ export class ListProvidersUseCase
         command.organization.id,
       );
 
-    const providersWithoutToken = providers.map(({ token, ...provider }) => ({
-      ...provider,
-      hasToken: token !== null && token !== undefined && token.length > 0,
-    }));
+    const providersWithoutToken: GitProviderWithoutToken[] = providers.map(
+      (provider) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { token, appPrivateKey, ...rest } = provider;
+        return {
+          ...rest,
+          hasToken: token !== null && token !== undefined && token.length > 0,
+          authMethod: rest.authMethod,
+        };
+      },
+    );
 
     this.logger.info('Git providers fetched successfully', {
       organizationId: command.organizationId,
