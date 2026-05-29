@@ -172,9 +172,7 @@ describe('ListProvidersUseCase', () => {
         organizationId,
         token: null,
         authMethod: 'app',
-        appId: 10,
         appInstallationId: 42,
-        appPrivateKey: 'key',
       });
       mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
         [tokenProvider, appProvider],
@@ -184,24 +182,6 @@ describe('ListProvidersUseCase', () => {
 
       expect(result.providers[0].authMethod).toBe('token');
       expect(result.providers[1].authMethod).toBe('app');
-    });
-
-    it('does not include appPrivateKey in the projected result', async () => {
-      const appProvider = gitProviderFactory({
-        organizationId,
-        token: null,
-        authMethod: 'app',
-        appId: 10,
-        appInstallationId: 42,
-        appPrivateKey: 'secret-key',
-      });
-      mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
-        [appProvider],
-      );
-
-      const result = await useCase.execute({ organizationId, userId });
-
-      expect(result.providers[0]).not.toHaveProperty('appPrivateKey');
     });
   });
 

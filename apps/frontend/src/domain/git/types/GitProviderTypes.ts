@@ -45,9 +45,7 @@ export interface CreateGitProviderForm {
   // GitHub-only. Defaults to 'token' to preserve existing behaviour for GitLab.
   authMethod?: GitProviderAuthMethod;
   // Only meaningful when source === 'github' && authMethod === 'app'.
-  appId?: number;
   appInstallationId?: number;
-  appPrivateKey?: string;
 }
 
 // Form data types for adding repositories

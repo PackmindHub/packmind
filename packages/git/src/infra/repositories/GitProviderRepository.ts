@@ -50,15 +50,15 @@ export class GitProviderRepository
   }
 
   /**
-   * Encrypt sensitive fields (token and appPrivateKey) in a GitProvider
-   * before saving to the database. Both fields are guarded: empty/null values
-   * pass through unchanged, and already-encrypted values (3-part iv:enc:tag
-   * envelope) are not re-encrypted.
+   * Encrypt sensitive fields (token) in a GitProvider before saving to the
+   * database. Empty/null token values pass through unchanged, and
+   * already-encrypted values (3-part iv:enc:tag envelope) are not
+   * re-encrypted.
    */
   private async encryptGitProvider(
     gitProvider: GitProvider,
   ): Promise<GitProvider> {
-    if (!gitProvider.token && !gitProvider.appPrivateKey) {
+    if (!gitProvider.token) {
       return gitProvider;
     }
 
@@ -70,26 +70,18 @@ export class GitProviderRepository
       next.token = encryptionService.encrypt(next.token);
     }
 
-    if (
-      next.appPrivateKey &&
-      !encryptionService.isEncrypted(next.appPrivateKey)
-    ) {
-      next.appPrivateKey = encryptionService.encrypt(next.appPrivateKey);
-    }
-
     return next;
   }
 
   /**
-   * Decrypt sensitive fields (token and appPrivateKey) in a GitProvider
-   * after reading from the database. Plaintext / empty values pass through
-   * unchanged, matching the existing backward-compatibility behavior of
-   * EncryptionService.decrypt.
+   * Decrypt sensitive fields (token) in a GitProvider after reading from the
+   * database. Plaintext / empty values pass through unchanged, matching the
+   * existing backward-compatibility behavior of EncryptionService.decrypt.
    */
   private async decryptGitProvider(
     gitProvider: GitProvider,
   ): Promise<GitProvider> {
-    if (!gitProvider.token && !gitProvider.appPrivateKey) {
+    if (!gitProvider.token) {
       return gitProvider;
     }
 
@@ -99,10 +91,6 @@ export class GitProviderRepository
 
     if (next.token) {
       next.token = encryptionService.decrypt(next.token);
-    }
-
-    if (next.appPrivateKey) {
-      next.appPrivateKey = encryptionService.decrypt(next.appPrivateKey);
     }
 
     return next;

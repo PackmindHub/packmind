@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { GitProvider } from '@packmind/types';
+import { OrganizationGitHubApp } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,
@@ -7,44 +7,43 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { GitRepo } from '@packmind/types';
 import { Organization } from '@packmind/types';
 
-export const GitProviderSchema = new EntitySchema<
+export const OrganizationGitHubAppSchema = new EntitySchema<
   WithSoftDelete<
-    WithTimestamps<
-      GitProvider & { repos?: GitRepo[]; organization?: Organization }
-    >
+    WithTimestamps<OrganizationGitHubApp & { organization?: Organization }>
   >
 >({
-  name: 'GitProvider',
-  tableName: 'git_providers',
+  name: 'OrganizationGitHubApp',
+  tableName: 'organization_github_apps',
   columns: {
-    source: {
-      type: 'varchar',
-    },
     organizationId: {
       name: 'organization_id',
       type: 'uuid',
     },
-    url: {
-      type: 'varchar',
-      nullable: true,
-    },
-    token: {
-      type: 'varchar',
-      nullable: true,
-    },
-    authMethod: {
-      name: 'auth_method',
-      type: 'varchar',
-      length: 16,
-      default: 'token',
-    },
-    appInstallationId: {
-      name: 'app_installation_id',
+    appId: {
+      name: 'app_id',
       type: 'bigint',
-      nullable: true,
+    },
+    appSlug: {
+      name: 'app_slug',
+      type: 'varchar',
+    },
+    appClientId: {
+      name: 'app_client_id',
+      type: 'varchar',
+    },
+    appClientSecret: {
+      name: 'app_client_secret',
+      type: 'text',
+    },
+    appPrivateKey: {
+      name: 'app_private_key',
+      type: 'text',
+    },
+    appWebhookSecret: {
+      name: 'app_webhook_secret',
+      type: 'text',
     },
     revokedAt: {
       name: 'revoked_at',
@@ -56,11 +55,6 @@ export const GitProviderSchema = new EntitySchema<
     ...softDeleteSchemas,
   },
   relations: {
-    repos: {
-      type: 'one-to-many',
-      target: 'GitRepo',
-      inverseSide: 'provider',
-    },
     organization: {
       type: 'many-to-one',
       target: 'Organization',
@@ -70,4 +64,10 @@ export const GitProviderSchema = new EntitySchema<
       onDelete: 'CASCADE',
     },
   },
+  indices: [
+    {
+      name: 'IDX_org_github_app_organization_id',
+      columns: ['organizationId'],
+    },
+  ],
 });

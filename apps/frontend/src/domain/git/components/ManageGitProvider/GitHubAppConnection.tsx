@@ -3,7 +3,6 @@ import {
   PMAlert,
   PMButton,
   PMField,
-  PMTextArea,
   PMVStack,
   PMText,
   PMInput,
@@ -128,15 +127,11 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
   const edition: 'cloud' | 'oss' = me?.edition ?? 'oss';
 
   const [appForm, setAppForm] = useState({
-    appId: '',
     appInstallationId: '',
-    appPrivateKey: '',
   });
 
   const [appErrors, setAppErrors] = useState<{
-    appId?: string;
     appInstallationId?: string;
-    appPrivateKey?: string;
   }>({});
 
   const handleFieldChange = (field: keyof typeof appForm, value: string) => {
@@ -149,24 +144,13 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
   const handleAppSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: typeof appErrors = {};
-    const appIdNum = Number(appForm.appId);
     const instIdNum = Number(appForm.appInstallationId);
-    if (!appForm.appId.trim() || !Number.isInteger(appIdNum) || appIdNum <= 0) {
-      errs.appId = 'App ID must be a positive integer';
-    }
     if (
       !appForm.appInstallationId.trim() ||
       !Number.isInteger(instIdNum) ||
       instIdNum <= 0
     ) {
       errs.appInstallationId = 'Installation ID must be a positive integer';
-    }
-    const pem = appForm.appPrivateKey.trim();
-    if (!pem) {
-      errs.appPrivateKey = 'Private key is required';
-    } else if (!pem.includes('-----BEGIN') || !pem.includes('-----END')) {
-      errs.appPrivateKey =
-        'Private key must be a PEM block including BEGIN/END lines';
     }
     setAppErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -176,9 +160,7 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
       url,
       token: '', // not used for app method; backend ignores it
       authMethod: 'app',
-      appId: appIdNum,
       appInstallationId: instIdNum,
-      appPrivateKey: pem,
     });
   };
 
@@ -188,39 +170,13 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
     );
   }
 
-  const appIdInputId = 'github-app-id';
   const installationIdInputId = 'github-app-installation-id';
-  const privateKeyInputId = 'github-app-private-key';
 
-  const isSubmitDisabled =
-    !appForm.appId.trim() ||
-    !appForm.appInstallationId.trim() ||
-    !appForm.appPrivateKey.trim();
+  const isSubmitDisabled = !appForm.appInstallationId.trim();
 
   return (
     <form onSubmit={handleAppSubmit}>
       <PMVStack alignItems="stretch" gap={4}>
-        <PMField.Root required invalid={!!appErrors.appId}>
-          <PMField.Label htmlFor={appIdInputId}>
-            App ID
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-          <PMInput
-            id={appIdInputId}
-            size="sm"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={appForm.appId}
-            onChange={(e) => handleFieldChange('appId', e.target.value)}
-            disabled={isSubmitting}
-          />
-          <PMField.HelperText>
-            The numeric ID shown on your GitHub App's settings page.
-          </PMField.HelperText>
-          <PMField.ErrorText>{appErrors.appId}</PMField.ErrorText>
-        </PMField.Root>
-
         <PMField.Root required invalid={!!appErrors.appInstallationId}>
           <PMField.Label htmlFor={installationIdInputId}>
             Installation ID
@@ -243,23 +199,6 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
             repo. Visible in the GitHub App's "Install" page URL.
           </PMField.HelperText>
           <PMField.ErrorText>{appErrors.appInstallationId}</PMField.ErrorText>
-        </PMField.Root>
-
-        <PMField.Root required invalid={!!appErrors.appPrivateKey}>
-          <PMField.Label htmlFor={privateKeyInputId}>
-            Private Key
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-          <PMTextArea
-            id={privateKeyInputId}
-            fontFamily="mono"
-            rows={10}
-            placeholder="Paste the full PEM, including the BEGIN/END lines."
-            value={appForm.appPrivateKey}
-            onChange={(e) => handleFieldChange('appPrivateKey', e.target.value)}
-            disabled={isSubmitting}
-          />
-          <PMField.ErrorText>{appErrors.appPrivateKey}</PMField.ErrorText>
         </PMField.Root>
 
         <PMButton

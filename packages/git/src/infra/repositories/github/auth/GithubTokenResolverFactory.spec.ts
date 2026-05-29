@@ -7,9 +7,12 @@ import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
 import {
   GitProvider,
+  OrganizationGitHubApp,
   createGitProviderId,
   createOrganizationId,
+  createOrganizationGitHubAppId,
 } from '@packmind/types';
+import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 
 const makeProvider = (overrides: Partial<GitProvider> = {}): GitProvider =>
   ({
@@ -23,10 +26,37 @@ const makeProvider = (overrides: Partial<GitProvider> = {}): GitProvider =>
     ...overrides,
   }) as GitProvider;
 
+const makeOrgApp = (
+  overrides: Partial<OrganizationGitHubApp> = {},
+): OrganizationGitHubApp => ({
+  id: createOrganizationGitHubAppId('fixture-app-id'),
+  organizationId: createOrganizationId('fixture-org-id'),
+  appId: 777777,
+  appSlug: 'my-oss-app',
+  appClientId: 'Iv1.fixture',
+  appClientSecret: 'fixture-client-secret',
+  appPrivateKey:
+    '-----BEGIN RSA PRIVATE KEY-----\nOSS-PEM\n-----END RSA PRIVATE KEY-----',
+  appWebhookSecret: 'fixture-webhook-secret',
+  revokedAt: null,
+  ...overrides,
+});
+
 class StubConfig implements IConfigProvider {
   constructor(private readonly values: Record<string, string | null>) {}
   async getConfig(key: string): Promise<string | null> {
     return this.values[key] ?? null;
+  }
+}
+
+class StubOrgGitHubAppRepository implements Pick<
+  IOrganizationGitHubAppRepository,
+  'findActiveByOrganizationId'
+> {
+  constructor(private readonly result: OrganizationGitHubApp | null) {}
+
+  async findActiveByOrganizationId(): Promise<OrganizationGitHubApp | null> {
+    return this.result;
   }
 }
 
@@ -131,18 +161,17 @@ describe('GithubTokenResolverFactory', () => {
   });
 
   describe('authMethod = "app", edition = "oss"', () => {
-    it('reads appId, appPrivateKey, appInstallationId from the provider row and returns AppInstallationTokenResolver', async () => {
-      // These cloud config values should be ignored on OSS
-      const config = new StubConfig({
-        GITHUB_APP_ID: 'wrong-cloud-id',
-        GITHUB_APP_PRIVATE_KEY: 'wrong-cloud-key',
-      });
-      const factory = new GithubTokenResolverFactory(config, 'oss');
+    it('reads appId and appPrivateKey from active OrganizationGitHubApp and returns AppInstallationTokenResolver', async () => {
+      const orgApp = makeOrgApp();
+      const repo = new StubOrgGitHubAppRepository(orgApp);
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        repo as unknown as IOrganizationGitHubAppRepository,
+      );
       const provider = makeProvider({
         authMethod: 'app',
-        appId: 777777,
-        appPrivateKey:
-          '-----BEGIN RSA PRIVATE KEY-----\nOSS-PEM\n-----END RSA PRIVATE KEY-----',
         appInstallationId: 111222,
       });
 
@@ -151,32 +180,57 @@ describe('GithubTokenResolverFactory', () => {
       expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
     });
 
-    it('throws when appId is missing on OSS', async () => {
-      const factory = new GithubTokenResolverFactory(new StubConfig({}), 'oss');
+    it('throws when no active OrganizationGitHubApp exists for the organization', async () => {
+      const repo = new StubOrgGitHubAppRepository(null);
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        repo as unknown as IOrganizationGitHubAppRepository,
+      );
       const provider = makeProvider({
         authMethod: 'app',
-        appId: undefined,
-        appPrivateKey: 'pem',
         appInstallationId: 111222,
       });
 
       await expect(factory.build(provider)).rejects.toThrow(
-        /provider\.appId is missing/,
+        /no active OrganizationGitHubApp found for organization/,
       );
     });
 
-    it('throws when appPrivateKey is missing on OSS', async () => {
-      const factory = new GithubTokenResolverFactory(new StubConfig({}), 'oss');
+    it('throws when orgGitHubAppRepository is not provided', async () => {
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        null,
+      );
       const provider = makeProvider({
         authMethod: 'app',
-        appId: 777777,
-        appPrivateKey: undefined,
         appInstallationId: 111222,
       });
 
       await expect(factory.build(provider)).rejects.toThrow(
-        /provider\.appPrivateKey is missing/,
+        /orgGitHubAppRepository is required for oss edition/,
       );
+    });
+
+    it('throws when the error message includes the organization id', async () => {
+      const orgId = createOrganizationId('specific-org-id');
+      const repo = new StubOrgGitHubAppRepository(null);
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        repo as unknown as IOrganizationGitHubAppRepository,
+      );
+      const provider = makeProvider({
+        authMethod: 'app',
+        appInstallationId: 111222,
+        organizationId: orgId,
+      });
+
+      await expect(factory.build(provider)).rejects.toThrow(/specific-org-id/);
     });
   });
 

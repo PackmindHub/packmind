@@ -3,9 +3,7 @@ import { InvalidGitProviderCredentialsError } from '@packmind/types';
 export type CredentialView = {
   authMethod: 'token' | 'app';
   token: string | null;
-  appId: number | null;
   appInstallationId: number | null;
-  appPrivateKey: string | null;
 };
 
 function isMissing(value: string | number | null | undefined): boolean {
@@ -18,7 +16,7 @@ function isPresent(value: string | number | null | undefined): boolean {
 
 export function validateProviderCredentials(
   view: CredentialView,
-  edition: 'cloud' | 'oss',
+  _edition: 'cloud' | 'oss',
   { allowTokenless = false }: { allowTokenless?: boolean } = {},
 ): void {
   if (view.authMethod !== 'token' && view.authMethod !== 'app') {
@@ -32,12 +30,7 @@ export function validateProviderCredentials(
       );
     }
 
-    const hasAppFields =
-      isPresent(view.appId) &&
-      isPresent(view.appInstallationId) &&
-      isPresent(view.appPrivateKey);
-
-    if (hasAppFields) {
+    if (isPresent(view.appInstallationId)) {
       throw new InvalidGitProviderCredentialsError(
         'App credentials must not be set when authMethod is "token"',
       );
@@ -53,42 +46,9 @@ export function validateProviderCredentials(
     );
   }
 
-  if (edition === 'cloud') {
-    if (isPresent(view.appId)) {
-      throw new InvalidGitProviderCredentialsError(
-        'App ID is managed by the Packmind Cloud instance and must not be provided by the client',
-      );
-    }
-
-    if (isPresent(view.appPrivateKey)) {
-      throw new InvalidGitProviderCredentialsError(
-        'App private key is managed by the Packmind Cloud instance and must not be provided by the client',
-      );
-    }
-
-    if (isMissing(view.appInstallationId)) {
-      throw new InvalidGitProviderCredentialsError(
-        'GitHub App installation ID is required',
-      );
-    }
-
-    return;
-  }
-
-  // edition === 'oss'
-  if (isMissing(view.appId)) {
-    throw new InvalidGitProviderCredentialsError('GitHub App ID is required');
-  }
-
   if (isMissing(view.appInstallationId)) {
     throw new InvalidGitProviderCredentialsError(
       'GitHub App installation ID is required',
-    );
-  }
-
-  if (isMissing(view.appPrivateKey)) {
-    throw new InvalidGitProviderCredentialsError(
-      'GitHub App private key is required',
     );
   }
 }

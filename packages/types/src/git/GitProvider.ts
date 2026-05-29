@@ -32,9 +32,6 @@ export type GitProvider = {
   token: string | null;
   authMethod: GitProviderAuthMethod;
   appInstallationId?: number;
-  appId?: number;
-  appClientId?: string;
-  appPrivateKey?: string;
   revokedAt?: Date | null;
   organization?: Organization;
   repos?: GitRepo[];

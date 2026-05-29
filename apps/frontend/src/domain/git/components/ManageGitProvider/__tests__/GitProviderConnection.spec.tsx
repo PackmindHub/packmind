@@ -213,9 +213,8 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when OSS App form has an invalid private key', () => {
-    it('displays a private key PEM error and does not call create mutation', async () => {
-      const user = userEvent.setup();
+  describe('when OSS App form installation ID is empty', () => {
+    it('disables the save button and does not call create mutation', async () => {
       const mockCreate =
         createMockMutation<ReturnType<typeof useCreateGitProviderMutation>>();
       mockUseCreateGitProviderMutation.mockReturnValue(mockCreate);
@@ -224,19 +223,8 @@ describe('GitProviderConnection', () => {
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
 
-      await user.type(screen.getByLabelText(/^app id/i), '12345');
-      await user.type(screen.getByLabelText(/installation id/i), '67890');
-      // Provide a non-empty private key that fails PEM shape validation
-      await user.type(screen.getByLabelText(/private key/i), 'not-a-valid-pem');
-
-      await user.click(screen.getByRole('button', { name: /^save$/i }));
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/pem block including begin\/end lines/i),
-        ).toBeInTheDocument();
-      });
-
+      // Save button should be disabled when installation ID is empty
+      expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
       expect(mockCreate.mutateAsync).not.toHaveBeenCalled();
     });
   });
@@ -259,11 +247,7 @@ describe('GitProviderConnection', () => {
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
 
-      await user.type(screen.getByLabelText(/^app id/i), '12345');
       await user.type(screen.getByLabelText(/installation id/i), '67890');
-      const pem =
-        '-----BEGIN RSA PRIVATE KEY-----\nabc\n-----END RSA PRIVATE KEY-----';
-      await user.type(screen.getByLabelText(/private key/i), pem);
 
       await user.click(screen.getByRole('button', { name: /^save$/i }));
 
@@ -273,9 +257,7 @@ describe('GitProviderConnection', () => {
           url: 'https://github.com',
           token: '',
           authMethod: 'app',
-          appId: 12345,
           appInstallationId: 67890,
-          appPrivateKey: pem,
         });
       });
     });
@@ -308,12 +290,14 @@ describe('GitProviderConnection', () => {
       ).toBeInTheDocument();
     });
 
-    it('does not render the OSS App ID input', () => {
+    it('does not render the OSS manual form inputs', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
 
-      expect(screen.queryByLabelText(/^app id/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/installation id/i),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -350,16 +334,14 @@ describe('GitProviderConnection', () => {
       expect(screen.getByPlaceholderText(/ghp_/i)).toBeInTheDocument();
     });
 
-    it('does not render App ID, Installation ID or Private Key inputs', () => {
+    it('does not render Installation ID input', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
       );
 
-      expect(screen.queryByLabelText(/^app id/i)).not.toBeInTheDocument();
       expect(
         screen.queryByLabelText(/installation id/i),
       ).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/private key/i)).not.toBeInTheDocument();
     });
   });
 

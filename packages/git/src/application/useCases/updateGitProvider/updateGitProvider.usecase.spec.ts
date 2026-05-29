@@ -97,7 +97,7 @@ describe('UpdateGitProviderUseCase', () => {
   });
 
   describe('switching authMethod from token to app', () => {
-    it('throws BadRequestException when switching without providing all App fields', async () => {
+    it('throws BadRequestException when switching without providing appInstallationId', async () => {
       const existingProvider = gitProviderFactory({
         organizationId,
         token: 'old-token',
@@ -112,7 +112,7 @@ describe('UpdateGitProviderUseCase', () => {
           id: existingProvider.id,
           gitProvider: {
             authMethod: 'app',
-            // missing appId, appInstallationId, appPrivateKey
+            // missing appInstallationId
           },
           userId: String(adminUser.id),
           organizationId: String(organizationId),
@@ -120,46 +120,8 @@ describe('UpdateGitProviderUseCase', () => {
       ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
     });
 
-    it('succeeds on OSS when all required App fields are provided', async () => {
+    it('succeeds when appInstallationId is provided when switching', async () => {
       const uc = makeUseCase('oss');
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: 'old-token',
-        authMethod: 'token',
-      });
-      const updatedProvider = gitProviderFactory({
-        ...existingProvider,
-        token: null,
-        authMethod: 'app',
-        appId: 10,
-        appInstallationId: 42,
-        appPrivateKey: 'private-key',
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-      mockGitProviderService.updateGitProvider.mockResolvedValue(
-        updatedProvider,
-      );
-
-      const result = await uc.execute({
-        id: existingProvider.id,
-        gitProvider: {
-          authMethod: 'app',
-          token: null,
-          appId: 10,
-          appInstallationId: 42,
-          appPrivateKey: 'private-key',
-        },
-        userId: String(adminUser.id),
-        organizationId: String(organizationId),
-      });
-
-      expect(result).toEqual(updatedProvider);
-    });
-
-    it('succeeds on Cloud when only appInstallationId is provided when switching', async () => {
-      const uc = makeUseCase('cloud');
       const existingProvider = gitProviderFactory({
         organizationId,
         token: 'old-token',
@@ -193,40 +155,14 @@ describe('UpdateGitProviderUseCase', () => {
     });
   });
 
-  describe('updating an app-method provider on Cloud edition', () => {
-    it('throws BadRequestException when appPrivateKey is sent', async () => {
-      const uc = makeUseCase('cloud');
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: null,
-        authMethod: 'app',
-        appInstallationId: 42,
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-
-      await expect(
-        uc.execute({
-          id: existingProvider.id,
-          gitProvider: { appPrivateKey: 'client-supplied-key' },
-          userId: String(adminUser.id),
-          organizationId: String(organizationId),
-        }),
-      ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
-    });
-  });
-
-  describe('updating an app-method provider on OSS edition', () => {
-    it('succeeds when replacing appInstallationId while leaving other App fields in existing provider', async () => {
+  describe('updating an app-method provider', () => {
+    it('succeeds when replacing appInstallationId', async () => {
       const uc = makeUseCase('oss');
       const existingProvider = gitProviderFactory({
         organizationId,
         token: null,
         authMethod: 'app',
-        appId: 10,
         appInstallationId: 42,
-        appPrivateKey: 'existing-key',
       });
       const updatedProvider = gitProviderFactory({
         ...existingProvider,

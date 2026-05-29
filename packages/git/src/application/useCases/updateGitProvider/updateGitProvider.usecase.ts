@@ -74,20 +74,15 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
       ? {
           authMethod: nextAuthMethod,
           token: gitProvider.token ?? null,
-          appId: gitProvider.appId ?? null,
           appInstallationId: gitProvider.appInstallationId ?? null,
-          appPrivateKey: gitProvider.appPrivateKey ?? null,
         }
       : {
           authMethod: nextAuthMethod,
           token: gitProvider.token ?? existingProvider.token ?? null,
-          appId: gitProvider.appId ?? existingProvider.appId ?? null,
           appInstallationId:
             gitProvider.appInstallationId ??
             existingProvider.appInstallationId ??
             null,
-          appPrivateKey:
-            gitProvider.appPrivateKey ?? existingProvider.appPrivateKey ?? null,
         };
 
     validateProviderCredentials(credentialView, this.edition);

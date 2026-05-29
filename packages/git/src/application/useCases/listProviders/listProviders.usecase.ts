@@ -38,8 +38,7 @@ export class ListProvidersUseCase
 
     const providersWithoutToken: GitProviderWithoutToken[] = providers.map(
       (provider) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { token, appPrivateKey, ...rest } = provider;
+        const { token, ...rest } = provider;
         return {
           ...rest,
           hasToken: token !== null && token !== undefined && token.length > 0,

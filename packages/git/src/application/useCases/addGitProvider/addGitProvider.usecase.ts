@@ -40,9 +40,7 @@ export class AddGitProviderUseCase
       {
         authMethod: gitProvider.authMethod ?? 'token',
         token: gitProvider.token ?? null,
-        appId: gitProvider.appId ?? null,
         appInstallationId: gitProvider.appInstallationId ?? null,
-        appPrivateKey: gitProvider.appPrivateKey ?? null,
       },
       this.edition,
       { allowTokenless: allowTokenlessProvider },

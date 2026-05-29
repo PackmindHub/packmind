@@ -2,6 +2,7 @@ import { GitProvider } from '@packmind/types';
 import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IGithubTokenResolver } from '../../../../domain/repositories/IGithubTokenResolver';
+import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
 
@@ -49,8 +50,9 @@ export interface IConfigProvider {
  *   - on `'cloud'`, reads `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`
  *     from the config port (env + Infisical), and uses
  *     `provider.appInstallationId` from the row.
- *   - on `'oss'`, reads `provider.appId`, `provider.appPrivateKey`,
- *     and `provider.appInstallationId` directly from the row.
+ *   - on `'oss'`, reads `appId` and `appPrivateKey` from the active
+ *     `OrganizationGitHubApp` record for the provider's organization, and uses
+ *     `provider.appInstallationId` from the row.
  */
 export class GithubTokenResolverFactory {
   constructor(
@@ -59,6 +61,7 @@ export class GithubTokenResolverFactory {
     },
     private readonly edition: PackmindEdition = resolveEdition(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly orgGitHubAppRepository: IOrganizationGitHubAppRepository | null = null,
   ) {
     this.logger.info('GithubTokenResolverFactory initialized', {
       edition: this.edition,
@@ -110,20 +113,26 @@ export class GithubTokenResolverFactory {
           );
         }
       } else {
-        // oss: read app credentials directly from the provider row
-        appIdRaw = provider.appId ?? null;
-        privateKeyPem = provider.appPrivateKey ?? null;
+        // oss: read app credentials from the OrganizationGitHubApp record
+        if (!this.orgGitHubAppRepository) {
+          throw new Error(
+            'GithubTokenResolverFactory: orgGitHubAppRepository is required for oss edition with app auth',
+          );
+        }
 
-        if (appIdRaw === undefined || appIdRaw === null) {
+        const app =
+          await this.orgGitHubAppRepository.findActiveByOrganizationId(
+            provider.organizationId,
+          );
+
+        if (!app) {
           throw new Error(
-            'GithubTokenResolverFactory: provider.appId is missing (oss edition)',
+            `GithubTokenResolverFactory: no active OrganizationGitHubApp found for organization ${provider.organizationId} (oss edition)`,
           );
         }
-        if (!privateKeyPem) {
-          throw new Error(
-            'GithubTokenResolverFactory: provider.appPrivateKey is missing (oss edition)',
-          );
-        }
+
+        appIdRaw = app.appId;
+        privateKeyPem = app.appPrivateKey;
       }
 
       const appId = Number(appIdRaw);
@@ -131,6 +140,10 @@ export class GithubTokenResolverFactory {
         throw new Error(
           'GithubTokenResolverFactory: appId must be a positive integer',
         );
+      }
+
+      if (!privateKeyPem) {
+        throw new Error('GithubTokenResolverFactory: appPrivateKey is missing');
       }
 
       this.logger.info('Building AppInstallationTokenResolver', {

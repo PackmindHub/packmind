@@ -77,9 +77,7 @@ export class GitProviderGatewayApi
       authMethod: data.authMethod ?? 'token',
       ...(data.authMethod === 'app'
         ? {
-            appId: data.appId,
             appInstallationId: data.appInstallationId,
-            appPrivateKey: data.appPrivateKey,
           }
         : { token: data.token }),
     };
@@ -100,9 +98,7 @@ export class GitProviderGatewayApi
       authMethod: data.authMethod ?? 'token',
       ...(data.authMethod === 'app'
         ? {
-            appId: data.appId,
             appInstallationId: data.appInstallationId,
-            appPrivateKey: data.appPrivateKey,
           }
         : { token: data.token }),
     };
