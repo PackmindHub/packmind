@@ -1,4 +1,6 @@
 export * from './DeploymentsServices';
+export * from './MarketplaceDescriptorParserRegistry';
+export * from './parsers';
 export * from './PackageService';
 export * from './packageSlugHelpers';
 export * from './PackmindConfigService';
