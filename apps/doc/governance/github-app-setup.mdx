@@ -1,0 +1,161 @@
+---
+title: 'GitHub App Setup (Self-Hosted)'
+description: 'Register a GitHub App for your self-hosted Packmind instance with a one-click manifest flow and connect it to a GitHub organization.'
+---
+
+This guide is for **self-hosted (OSS / on-prem) administrators** who want to connect Packmind to a GitHub organization using a **GitHub App** instead of a Personal Access Token (PAT). For the PAT path, see [Git Repository Connection](/governance/git-repository-connection).
+
+<Info>
+  This guide applies to **self-hosted Packmind** only. If you use Packmind
+  Cloud, install the Packmind App with one click from **Settings → Git providers
+  → Add provider → GitHub → Install on GitHub**. No registration is required.
+</Info>
+
+<Note>
+  **Operators upgrading from a prior Packmind version (Cloud only):** the Cloud
+  GitHub App's `setup_url` on github.com must be updated to `${APP_WEB_URL}
+  /integrations/github-app/install-callback`. Without this change, users
+  completing the install on GitHub will not be redirected back into Packmind.
+  Self-hosters do not need to do anything — the manifest flow generates the
+  right URLs automatically.
+</Note>
+
+## Why use a GitHub App over a PAT
+
+- **Decoupled from a single user account** — survives staff turnover and team changes.
+- **Org-level consent** — repository access is granted at install time, not via personal permissions.
+- **Higher rate limits** than a user PAT.
+- **Fine-grained per-repo install scope** — pick exactly which repositories the App can access.
+
+PATs are still fully supported and remain the simplest option for a single-user evaluation.
+
+## Prerequisites
+
+- You are a **Packmind Admin** — only admins can configure Git providers.
+- You can create a GitHub App in the target account (your personal account or an organization you own).
+- Your self-hosted Packmind instance has `ENCRYPTION_KEY` set in its environment. Without it, the API will refuse to store the App private key. See [Install Packmind on your server](/getting-started/gs-install-self-hosted) for how to set environment variables.
+- Your self-hosted Packmind instance has `APP_WEB_URL` set to a **publicly reachable URL** — see below.
+
+### Make `APP_WEB_URL` reachable from GitHub
+
+The new manifest flow is a round-trip: Packmind submits a manifest to GitHub, and GitHub posts callbacks **back to your Packmind instance**. Two endpoints must be reachable from the public internet:
+
+- `${APP_WEB_URL}/integrations/github-app/manifest-callback` — receives the temporary code GitHub returns after the App is created.
+- `${APP_WEB_URL}/integrations/github-app/install-callback` — receives the installation ID after the user picks repositories.
+
+Set `APP_WEB_URL` in your Packmind API container's environment to the externally visible base URL of your instance (e.g. `https://packmind.acme.example.com`).
+
+<Tip>
+  **For local development**, expose your Packmind instance with a tunnel such as
+  [ngrok](https://ngrok.com/) or
+  [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/),
+  then set `APP_WEB_URL` to the tunnel URL before starting the API. Restart the
+  API after changing `APP_WEB_URL` so the new value is picked up.
+</Tip>
+
+## Connect Packmind to GitHub
+
+The flow is fully automated: Packmind generates a GitHub App Manifest, GitHub creates the App, and Packmind stores the resulting credentials and bounces you into the install flow. There is **no copy/paste** of App ID, Installation ID, or private key.
+
+1. Sign in to your Packmind instance as an Admin.
+2. Go to **Settings → Git providers → Add provider** and choose **GitHub App**.
+3. Click **Connect to GitHub**. Packmind generates the manifest and submits it to GitHub.
+4. On GitHub, **choose where the App should be created** (your personal account or an organization you own) and **confirm the requested permissions**, then click **Create GitHub App**.
+5. GitHub redirects you back to Packmind, which stores the App credentials and **immediately opens the install flow**.
+6. Choose which repositories the App can access (**Only select repositories** is recommended), then click **Install**.
+7. GitHub redirects you back to Packmind. The provider is now wired up and the selected repositories appear in the Repositories section.
+
+<Note>
+  Each Packmind organization owns one App registration. Reconnecting will not
+  create duplicates — if you need to refresh the App's credentials or
+  permissions, use the **Re-register** action described below.
+</Note>
+
+## Permissions requested
+
+Packmind requests the **least-privilege** set of permissions needed to read repository contents and open pull requests:
+
+- **Repository contents** — read & write
+- **Repository metadata** — read
+- **Pull requests** — read & write
+
+No webhook events are subscribed in v1 — the App receives no events from GitHub.
+
+## Re-registering the App
+
+The provider settings panel exposes an **Advanced → Re-register** action. Use it when you need to:
+
+- **Rotate the App's private key.** Re-registering generates a fresh App on GitHub with a new key, replacing the credentials Packmind has stored.
+- **Expand permissions** after a Packmind upgrade introduces new capabilities.
+- **Recover from a deleted App** — if someone removed the App from GitHub, Packmind's stored credentials are dead. Re-register to mint a new one.
+
+To re-register:
+
+1. Open **Settings → Git providers**, select the GitHub App provider, and expand **Advanced**.
+2. Click **Re-register** and confirm in the dialog.
+3. Run through the **Connect to GitHub** flow again (steps 3–7 above).
+
+<Warning>
+  Re-registering does **not** delete the old App from GitHub. The old App
+  remains under the GitHub account it was created in, with no credentials known
+  to Packmind. If you no longer want it, remove it manually: **GitHub → account
+  or org Settings → Developer settings → GitHub Apps → \<old App\> → Delete
+  GitHub App**.
+</Warning>
+
+## Verifying the install
+
+1. In Packmind, open the package you want to distribute to one of the App's repositories.
+2. Configure a distribution target whose repository is one of the repos the App was installed on.
+3. Publish a standard or command. Packmind should commit (or open a PR, depending on your distribution settings) within seconds.
+4. Confirm the commit lands on the target branch in GitHub.
+
+If the commit fails, jump to [Troubleshooting](#troubleshooting).
+
+## Revoking access
+
+To revoke Packmind's access, uninstall the App in GitHub:
+
+1. **GitHub → account or org Settings → Integrations → GitHub Apps → \<your App\> → Configure → Uninstall**.
+
+On Packmind's next API call for that provider, the resolver receives a `401`, marks the provider as **Revoked**, and shows a red badge in the providers list. Distributions targeting repos under that provider stop attempting commits until the provider is reconnected.
+
+To re-enable later, run the **Connect to GitHub** flow on the same provider, or **Re-register** if you also want a fresh App registration.
+
+## Troubleshooting
+
+- **GitHub never redirects back to Packmind after "Create GitHub App".** Your `APP_WEB_URL` is not reachable from GitHub. Confirm it resolves publicly and that `${APP_WEB_URL}/integrations/github-app/manifest-callback` returns a Packmind response when opened in a browser.
+- **GitHub redirects back but the install step never starts.** The manifest callback failed to store credentials. Check the API logs for errors mentioning `manifest-callback` — the most common cause is a missing `ENCRYPTION_KEY`.
+- **"401 Unauthorized" on the first call after install.** The App was uninstalled on GitHub side, or the install does not include the target repository. Re-open the install on GitHub and confirm the target repo is in the selected list.
+- **"Resource not accessible by integration" when committing.** The install does not include the target repository. Open the install on GitHub and add the missing repository, or **Re-register** if you also need to refresh the requested permissions.
+- **The Repositories list is empty after install.** The credentials are valid but the install covers no repositories. On GitHub, open the install settings and choose at least one repo (or **All repositories**).
+- **"ENCRYPTION_KEY is not configured" error.** Your API container has not been given the `ENCRYPTION_KEY` env var. See [Install Packmind on your server](/getting-started/gs-install-self-hosted) for how to set it.
+
+## Security notes
+
+- The App private key is encrypted at rest with `ENCRYPTION_KEY` (AES-256-GCM, the same scheme as PATs).
+- The private key is never logged. The `GET /git/providers` response masks it.
+- Installation tokens are short-lived (one hour) and minted just-in-time by the API — Packmind never stores them.
+- The App requests **least privilege**: `contents: write`, `metadata: read`, `pull_requests: write`. No webhooks, no organization permissions, no account permissions.
+
+### Rotating `ENCRYPTION_KEY`
+
+Packmind encrypts the App private key at rest with the API's `ENCRYPTION_KEY` environment variable — the **same** key that protects PATs and password-reset tokens.
+
+If you rotate `ENCRYPTION_KEY` on the server, existing stored App private keys (and PATs) become **unreadable**. For App-backed providers, run **Re-register** on each provider to mint a fresh App and store its key under the new `ENCRYPTION_KEY`. PAT-backed providers must be re-saved with the token re-pasted.
+
+<Warning>
+  There is no automated re-keying tool. Plan `ENCRYPTION_KEY` rotation as a
+  maintenance window.
+</Warning>
+
+<Note>
+  GitHub Enterprise Server (GHES) is **not yet supported** for App
+  authentication. Use a PAT against your GHES instance for now.
+</Note>
+
+## Next steps
+
+- [Connect repositories and configure targets](/governance/git-repository-connection)
+- [Distribute standards and commands](/governance/distribution)
+- [Security & Privacy (Self-Hosted)](/security/security-privacy-self-hosted)
