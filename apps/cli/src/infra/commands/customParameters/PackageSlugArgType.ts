@@ -37,6 +37,15 @@ export function parsePackageSlug(slug: string): ParsedPackageSlug {
   throw new Error(`Invalid package syntax: ${slugs}`);
 }
 
+export function displayableParsedPackageSlug(
+  parsedPackageSlug: ParsedPackageSlug,
+) {
+  if (isFullParsedPackageSlug(parsedPackageSlug)) {
+    return `@${parsedPackageSlug.spaceSlug}/${parsedPackageSlug.packageSlug}`;
+  }
+  return parsedPackageSlug.packageSlug;
+}
+
 export const PackageSlugArgType: Type<string, ParsedPackageSlug> = {
   from: async (input) => parsePackageSlug(input),
 };
