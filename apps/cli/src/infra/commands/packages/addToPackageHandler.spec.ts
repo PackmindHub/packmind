@@ -9,6 +9,7 @@ import {
   logInfoConsole,
   logSuccessConsole,
 } from '../../utils/consoleLogger';
+import { parsePackageSlug } from '../customParameters/PackageSlugArgType';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
@@ -45,7 +46,7 @@ function makeArgs(
   overrides: Partial<AddToPackageHandlerArgs> = {},
 ): AddToPackageHandlerArgs {
   return {
-    to: 'my-pkg',
+    to: parsePackageSlug('my-pkg'),
     itemType: 'standard',
     itemSlugs: ['std-1'],
     ...overrides,
@@ -79,7 +80,10 @@ describe('addToPackageHandler', () => {
     describe('and a single space exists', () => {
       it('does not call exit', async () => {
         const deps = makeDeps();
-        await addToPackageHandler(makeArgs({ to: 'my-pkg' }), deps);
+        await addToPackageHandler(
+          makeArgs({ to: parsePackageSlug('my-pkg') }),
+          deps,
+        );
         expect(deps.mockExit).not.toHaveBeenCalled();
       });
     });
@@ -93,7 +97,10 @@ describe('addToPackageHandler', () => {
           SPACE_GLOBAL,
           SPACE_TEAM,
         ]);
-        await addToPackageHandler(makeArgs({ to: 'my-pkg' }), deps);
+        await addToPackageHandler(
+          makeArgs({ to: parsePackageSlug('my-pkg') }),
+          deps,
+        );
       });
 
       it('logs a disambiguation error', () => {
@@ -132,7 +139,10 @@ describe('addToPackageHandler', () => {
     describe('and the space exists', () => {
       it('does not call exit', async () => {
         const deps = makeDeps();
-        await addToPackageHandler(makeArgs({ to: '@global/my-pkg' }), deps);
+        await addToPackageHandler(
+          makeArgs({ to: parsePackageSlug('@global/my-pkg') }),
+          deps,
+        );
         expect(deps.mockExit).not.toHaveBeenCalled();
       });
 
@@ -143,7 +153,10 @@ describe('addToPackageHandler', () => {
             SPACE_GLOBAL,
             SPACE_TEAM,
           ]);
-          await addToPackageHandler(makeArgs({ to: '@team/my-pkg' }), deps);
+          await addToPackageHandler(
+            makeArgs({ to: parsePackageSlug('@team/my-pkg') }),
+            deps,
+          );
           expect(deps.mockExit).not.toHaveBeenCalled();
         });
       });
@@ -154,7 +167,10 @@ describe('addToPackageHandler', () => {
 
       beforeEach(async () => {
         deps = makeDeps();
-        await addToPackageHandler(makeArgs({ to: '@unknown/my-pkg' }), deps);
+        await addToPackageHandler(
+          makeArgs({ to: parsePackageSlug('@unknown/my-pkg') }),
+          deps,
+        );
       });
 
       it('logs a space-not-found error', () => {
@@ -191,7 +207,10 @@ describe('addToPackageHandler', () => {
           .mockResolvedValue({ added: ['std-1', 'std-2'], skipped: [] }),
       }));
       await addToPackageHandler(
-        makeArgs({ to: '@global/my-pkg', itemSlugs: ['std-1', 'std-2'] }),
+        makeArgs({
+          to: parsePackageSlug('@global/my-pkg'),
+          itemSlugs: ['std-1', 'std-2'],
+        }),
         deps,
       );
     });
