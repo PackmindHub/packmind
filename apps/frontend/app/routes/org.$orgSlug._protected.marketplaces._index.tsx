@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import type { LoaderFunctionArgs } from 'react-router';
 import { PMPage } from '@packmind/ui';
+import type { MarketplaceId } from '@packmind/types';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 import {
   marketplaceQueries,
   useMarketplaces,
+  useUnlinkMarketplace,
 } from '../../src/domain/marketplaces/api/queries';
 import {
   LinkMarketplacePanel,
@@ -32,7 +35,17 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function MarketplacesRouteModule() {
   const { organization } = useAuthContext();
   const orgId = organization?.id ?? '';
+  const orgSlug = organization?.slug ?? '';
   const { data: marketplaces, isLoading } = useMarketplaces(orgId);
+  const unlinkMutation = useUnlinkMarketplace(orgId);
+  const [unlinkingId, setUnlinkingId] = useState<MarketplaceId | null>(null);
+
+  const handleUnlink = (marketplaceId: MarketplaceId) => {
+    setUnlinkingId(marketplaceId);
+    unlinkMutation.mutate(marketplaceId, {
+      onSettled: () => setUnlinkingId(null),
+    });
+  };
 
   if (!organization) {
     return null;
@@ -43,12 +56,14 @@ export default function MarketplacesRouteModule() {
       title="Marketplaces"
       subtitle="Curate the Git-backed marketplaces enrolled in your organization"
     >
+      <LinkMarketplacePanel organizationId={orgId} orgSlug={orgSlug} />
       <MarketplacesIndex
         marketplaces={marketplaces ?? []}
         isLoading={isLoading}
+        unlinkingMarketplaceId={unlinkingId}
+        onUnlink={handleUnlink}
         organizationId={orgId}
       />
-      <LinkMarketplacePanel organizationId={orgId} />
     </PMPage>
   );
 }

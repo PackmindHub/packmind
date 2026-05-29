@@ -1,5 +1,13 @@
-// NOTE: Group L (task 12.3) created the route + placeholder components below.
-// Group M (tasks 13.1..13.9) will replace these with the real implementations
-// and add additional components — keep this barrel up to date as they land.
+// Barrel for the marketplaces components. Components ship in dependency
+// order: presentational pieces first, then the form composites, then the
+// drawer + list page that compose them.
+export * from './MarketplaceStateBadge';
+export * from './SubmitErrorBanner';
+export * from './AgentsFieldset';
+export * from './GitNotConnectedNotice';
+export * from './MarketplaceRow';
 export * from './MarketplacesIndex';
+export * from './PrivateLinkForm';
+export * from './PublicLinkForm';
 export * from './LinkMarketplacePanel';
+export * from './errorMapping';

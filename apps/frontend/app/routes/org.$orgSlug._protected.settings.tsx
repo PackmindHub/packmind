@@ -119,6 +119,14 @@ export default function SettingsIndexRouteModule() {
               />,
 
               <SidebarNavigationLink
+                key="marketplaces"
+                url={orgSlug ? routes.org.toMarketplaces(orgSlug) : '#'}
+                label="Marketplaces"
+                exact
+                aria-label="Marketplaces"
+              />,
+
+              <SidebarNavigationLink
                 key="rendering"
                 url={orgSlug ? routes.org.toSettingsDistribution(orgSlug) : '#'}
                 label="Rendering"

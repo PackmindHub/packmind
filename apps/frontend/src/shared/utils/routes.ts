@@ -14,6 +14,7 @@ export const routes = {
   org: {
     toDashboard: (orgSlug: string) => `/org/${orgSlug}`,
     toDeployments: (orgSlug: string) => `/org/${orgSlug}/deployments`,
+    toMarketplaces: (orgSlug: string) => `/org/${orgSlug}/marketplaces`,
     toSettings: (orgSlug: string) => `/org/${orgSlug}/settings`,
     toSettingsUsers: (orgSlug: string) => `/org/${orgSlug}/settings/users`,
     toSettingsSpaces: (orgSlug: string) => `/org/${orgSlug}/settings/spaces`,
