@@ -1,4 +1,4 @@
-import { parsePackageSlug } from './PackageSlugArgType';
+import { parsePackageSlug } from './PackageSlug';
 
 describe('parsePackageSlug', () => {
   describe('when using the simple syntax (eg: "my-package")', () => {

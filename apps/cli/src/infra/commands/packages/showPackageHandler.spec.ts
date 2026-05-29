@@ -8,7 +8,7 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { parsePackageSlug } from '../customParameters/PackageSlugArgType';
+import { parsePackageSlug } from '../../../domain/entities/PackageSlug';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
