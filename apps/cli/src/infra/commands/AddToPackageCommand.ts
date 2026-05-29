@@ -5,6 +5,7 @@ import { logErrorConsole } from '../utils/consoleLogger';
 import { ItemType } from '../../domain/useCases/IAddToPackageUseCase';
 import { originSkillOption } from './sharedOptions';
 import { addToPackageHandler } from './packages/addToPackageHandler';
+import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
 
 export const addToPackageCommand = command({
   name: 'add',
@@ -14,7 +15,7 @@ export const addToPackageCommand = command({
       long: 'to',
       description:
         'Target package slug (use @space/package format when multiple spaces exist)',
-      type: string,
+      type: PackageSlugArgType,
     }),
     standards: multioption({
       long: 'standard',
