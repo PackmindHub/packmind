@@ -13,12 +13,15 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
 
 export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
+export const MARKETPLACES_FEATURE_KEY = 'marketplaces';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]: [
     '@packmind.com',
     '@promyze.com',
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [MARKETPLACES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const isEmailEntry = (entry: string): boolean => {
