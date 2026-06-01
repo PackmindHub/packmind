@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- query rendering settings on Packmind when installing default skills.
+
 ## Removed
 
 # [0.29.1] - 2026-05-28
