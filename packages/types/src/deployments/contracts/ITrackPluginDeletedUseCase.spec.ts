@@ -5,15 +5,25 @@ import {
 } from './ITrackPluginDeletedUseCase';
 
 describe('ITrackPluginDeletedUseCase types', () => {
-  it('Command exposes packageSlug and optional gitRemoteUrl', () => {
-    const cmd: TrackPluginDeletedCommand = {
-      userId: 'u',
-      organizationId: 'o',
-      packageSlug: 'security',
-      gitRemoteUrl: 'https://github.com/acme/plugins.git',
-    };
-    expect(cmd.packageSlug).toBe('security');
-    expect(cmd.gitRemoteUrl).toBeDefined();
+  describe('Command exposes packageSlug and optional gitRemoteUrl', () => {
+    let cmd: TrackPluginDeletedCommand;
+
+    beforeEach(() => {
+      cmd = {
+        userId: 'u',
+        organizationId: 'o',
+        packageSlug: 'security',
+        gitRemoteUrl: 'https://github.com/acme/plugins.git',
+      };
+    });
+
+    it('exposes packageSlug', () => {
+      expect(cmd.packageSlug).toBe('security');
+    });
+
+    it('exposes gitRemoteUrl', () => {
+      expect(cmd.gitRemoteUrl).toBeDefined();
+    });
   });
 
   it('Response exposes tracked flag', () => {

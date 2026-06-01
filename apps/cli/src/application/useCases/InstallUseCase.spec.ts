@@ -1330,36 +1330,40 @@ Old packmind content
       });
     });
 
-    it('sets configCreated=true when no packmind.json existed and explicit packages are added', async () => {
-      mockConfigFileRepository.configExists.mockResolvedValue(false);
-      mockConfigFileRepository.readConfig
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          packages: { '@space/pkg': '*' },
+    describe('when no packmind.json existed and explicit packages are added', () => {
+      it('sets configCreated=true', async () => {
+        mockConfigFileRepository.configExists.mockResolvedValue(false);
+        mockConfigFileRepository.readConfig
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({
+            packages: { '@space/pkg': '*' },
+          });
+
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          packages: ['@space/pkg'].map(parsePackageSlug),
         });
 
-      const result = await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        packages: ['@space/pkg'].map(parsePackageSlug),
+        expect(result.configCreated).toBe(true);
       });
-
-      expect(result.configCreated).toBe(true);
     });
 
-    it('sets configCreated=false when packmind.json already existed', async () => {
-      mockConfigFileRepository.configExists.mockResolvedValue(true);
-      mockConfigFileRepository.readConfig.mockResolvedValue({
-        packages: { '@space/old-pkg': '*' },
-      });
+    describe('when packmind.json already existed', () => {
+      it('sets configCreated=false', async () => {
+        mockConfigFileRepository.configExists.mockResolvedValue(true);
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@space/old-pkg': '*' },
+        });
 
-      const result = await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        packages: ['@space/new-pkg'].map(parsePackageSlug),
-      });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          packages: ['@space/new-pkg'].map(parsePackageSlug),
+        });
 
-      expect(result.configCreated).toBe(false);
+        expect(result.configCreated).toBe(false);
+      });
     });
   });
 
@@ -1393,23 +1397,25 @@ Old packmind content
       expect(result.packagesAdded).toEqual(['@space/new-one']);
     });
 
-    it('returns empty array when running install with no explicit packages', async () => {
-      mockConfigFileRepository.configExists.mockResolvedValue(true);
-      mockConfigFileRepository.readConfig.mockResolvedValue({
-        packages: { '@space/existing': '*' },
-      });
+    describe('when running install with no explicit packages', () => {
+      it('returns empty array', async () => {
+        mockConfigFileRepository.configExists.mockResolvedValue(true);
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@space/existing': '*' },
+        });
 
-      const result = await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-      });
+        const result = await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+        });
 
-      expect(result.packagesAdded).toEqual([]);
+        expect(result.packagesAdded).toEqual([]);
+      });
     });
   });
 
   describe('source artifacts and resolved agents passthrough', () => {
-    it('passes through sourceArtifacts and resolvedAgents from the gateway response', async () => {
+    beforeEach(() => {
       mockGateway.deployment.install.mockResolvedValue({
         fileUpdates: { createOrUpdate: [], delete: [] },
         resolvedAgents: ['agents_md', 'packmind'],
@@ -1426,13 +1432,23 @@ Old packmind content
       mockConfigFileRepository.readConfig.mockResolvedValue({
         packages: { '@space/pkg': '*' },
       });
+    });
 
+    it('passes through resolvedAgents from the gateway response', async () => {
       const result = await useCase.execute({
         baseDirectory: '/test',
         cliVersion: '0.0.0-test',
       });
 
       expect(result.resolvedAgents).toEqual(['agents_md', 'packmind']);
+    });
+
+    it('passes through sourceArtifacts from the gateway response', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/test',
+        cliVersion: '0.0.0-test',
+      });
+
       expect(result.sourceArtifacts).toEqual({
         skillsCount: 3,
         standardsCount: 2,
@@ -1449,7 +1465,6 @@ Old packmind content
         cliVersion: '0.28.1-next',
       });
 
-      expect(mockLockFileRepository.write).toHaveBeenCalledTimes(1);
       expect(mockLockFileRepository.write).toHaveBeenCalledWith(
         '/test',
         expect.objectContaining({ cliVersion: '0.28.1-next' }),
@@ -1479,52 +1494,54 @@ Old packmind content
       expect(writeCalls).not.toContain('/test/packmind-lock.json');
     });
 
-    it('uses the server-returned lockfile content as the base when present', async () => {
-      const serverLockFile = {
-        lockfileVersion: 1,
-        packageSlugs: ['@space/test-package'],
-        agents: ['claude-code'],
-        artifacts: {
-          'artifact-1': {
-            name: 'recipe-from-server',
-            type: 'recipe',
-            id: 'artifact-1',
-            version: 1,
-            spaceId: 'space-1',
-            packageIds: ['pkg-1'],
-            files: [
+    describe('when the server returns lockfile content', () => {
+      it('uses it as the base', async () => {
+        const serverLockFile = {
+          lockfileVersion: 1,
+          packageSlugs: ['@space/test-package'],
+          agents: ['claude-code'],
+          artifacts: {
+            'artifact-1': {
+              name: 'recipe-from-server',
+              type: 'recipe',
+              id: 'artifact-1',
+              version: 1,
+              spaceId: 'space-1',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/recipes/recipe-from-server.md',
+                  agent: 'claude-code',
+                },
+              ],
+            },
+          },
+        };
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            createOrUpdate: [
               {
-                path: '.packmind/recipes/recipe-from-server.md',
-                agent: 'claude-code',
+                path: 'packmind-lock.json',
+                content: JSON.stringify(serverLockFile),
               },
             ],
-          },
-        },
-      };
-      mockGateway.deployment.install.mockResolvedValue(
-        installResponseFactory({
-          createOrUpdate: [
-            {
-              path: 'packmind-lock.json',
-              content: JSON.stringify(serverLockFile),
-            },
-          ],
-        }),
-      );
+          }),
+        );
 
-      await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.28.1-next',
-      });
-
-      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
-        '/test',
-        expect.objectContaining({
-          agents: ['claude-code'],
-          packageSlugs: ['@space/test-package'],
+        await useCase.execute({
+          baseDirectory: '/test',
           cliVersion: '0.28.1-next',
-        }),
-      );
+        });
+
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/test',
+          expect.objectContaining({
+            agents: ['claude-code'],
+            packageSlugs: ['@space/test-package'],
+            cliVersion: '0.28.1-next',
+          }),
+        );
+      });
     });
 
     it('does not write the server-returned lockfile via createOrUpdateFile (filtered out)', async () => {
@@ -1551,22 +1568,33 @@ Old packmind content
       expect(writeCalls).not.toContain('/test/packmind-lock.json');
     });
 
-    it('omits installedAt from the written lockfile when skipInstalledAt is true', async () => {
-      mockLockFileRepository.read.mockResolvedValue(null);
-      mockConfigFileRepository.readConfig.mockResolvedValue({
-        packages: { '@space/pkg': '*' },
+    describe('when skipInstalledAt is true', () => {
+      let lockFileArg: Record<string, unknown>;
+
+      beforeEach(async () => {
+        mockLockFileRepository.read.mockResolvedValue(null);
+        mockConfigFileRepository.readConfig.mockResolvedValue({
+          packages: { '@space/pkg': '*' },
+        });
+
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          skipInstalledAt: true,
+        });
+
+        [, lockFileArg] = (
+          mockLockFileRepository.write as jest.Mock
+        ).mock.calls[0];
       });
 
-      await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        skipInstalledAt: true,
+      it('omits installedAt from the written lockfile', () => {
+        expect(lockFileArg.installedAt).toBeUndefined();
       });
 
-      const [, lockFileArg] = (mockLockFileRepository.write as jest.Mock).mock
-        .calls[0];
-      expect(lockFileArg.installedAt).toBeUndefined();
-      expect(lockFileArg.cliVersion).toBe('0.0.0-test');
+      it('still writes the cliVersion to the lockfile', () => {
+        expect(lockFileArg.cliVersion).toBe('0.0.0-test');
+      });
     });
   });
 
@@ -1592,52 +1620,61 @@ Old packmind content
       );
     });
 
-    it('strips the agent home directory prefix from created files', async () => {
-      mockGateway.deployment.install.mockResolvedValue(
-        installResponseFactory({
-          createOrUpdate: [
-            {
-              path: '.claude/skills/my-skill/SKILL.md',
-              content: 'skill content',
-            },
-            {
-              path: '.claude/rules/packmind/standard-foo.md',
-              content: 'standard content',
-            },
-            {
-              path: '.claude/commands/bar.md',
-              content: 'command content',
-            },
-            { path: 'CLAUDE.md', content: 'claude md' },
-          ],
-        }),
-      );
+    describe('strips the agent home directory prefix from created files', () => {
+      let writePaths: string[];
 
-      await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        homeAgent: 'claude',
+      beforeEach(async () => {
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                content: 'skill content',
+              },
+              {
+                path: '.claude/rules/packmind/standard-foo.md',
+                content: 'standard content',
+              },
+              {
+                path: '.claude/commands/bar.md',
+                content: 'command content',
+              },
+              { path: 'CLAUDE.md', content: 'claude md' },
+            ],
+          }),
+        );
+
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          homeAgent: 'claude',
+        });
+
+        writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
+          ([p]: [string]) => p,
+        );
       });
 
-      const writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
-        ([p]: [string]) => p,
-      );
+      it('writes files with the prefix stripped', () => {
+        expect(writePaths).toEqual(
+          expect.arrayContaining([
+            '/test/skills/my-skill/SKILL.md',
+            '/test/rules/packmind/standard-foo.md',
+            '/test/commands/bar.md',
+            '/test/CLAUDE.md',
+          ]),
+        );
+      });
 
-      expect(writePaths).toEqual(
-        expect.arrayContaining([
-          '/test/skills/my-skill/SKILL.md',
-          '/test/rules/packmind/standard-foo.md',
-          '/test/commands/bar.md',
-          '/test/CLAUDE.md',
-        ]),
-      );
-      expect(writePaths).not.toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('/.claude/skills/'),
-          expect.stringContaining('/.claude/rules/'),
-          expect.stringContaining('/.claude/commands/'),
-        ]),
-      );
+      it('does not write files with the original agent prefix in their paths', () => {
+        expect(writePaths).not.toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('/.claude/skills/'),
+            expect.stringContaining('/.claude/rules/'),
+            expect.stringContaining('/.claude/commands/'),
+          ]),
+        );
+      });
     });
 
     it('strips the agent home directory prefix from deleted files', async () => {
@@ -1687,96 +1724,127 @@ Old packmind content
       expect(writePaths).toContain('/test/CLAUDE.md');
     });
 
-    it('strips the trailing "Full standard is available here" footer from standard content', async () => {
-      const standardBody = [
-        '# Standard: Frontend testing',
-        '',
-        'My summary :',
-        '* Rule one',
-        '* Rule two',
-        '',
-        'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
-      ].join('\n');
+    describe('strips the trailing "Full standard is available here" footer from standard content', () => {
+      let writtenContent: string;
 
-      mockGateway.deployment.install.mockResolvedValue(
-        installResponseFactory({
-          createOrUpdate: [
-            {
-              path: '.claude/rules/packmind/standard-frontend-testing.md',
-              content: standardBody,
-            },
-          ],
-        }),
-      );
+      beforeEach(async () => {
+        const standardBody = [
+          '# Standard: Frontend testing',
+          '',
+          'My summary :',
+          '* Rule one',
+          '* Rule two',
+          '',
+          'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
+        ].join('\n');
 
-      await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        homeAgent: 'claude',
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            createOrUpdate: [
+              {
+                path: '.claude/rules/packmind/standard-frontend-testing.md',
+                content: standardBody,
+              },
+            ],
+          }),
+        );
+
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          homeAgent: 'claude',
+        });
+
+        const writeCall = (fs.writeFile as jest.Mock).mock.calls.find(
+          ([p]: [string]) =>
+            p === '/test/rules/packmind/standard-frontend-testing.md',
+        );
+        writtenContent = writeCall[1] as string;
       });
 
-      const writeCall = (fs.writeFile as jest.Mock).mock.calls.find(
-        ([p]: [string]) =>
-          p === '/test/rules/packmind/standard-frontend-testing.md',
-      );
-      expect(writeCall).toBeDefined();
-      const writtenContent = writeCall[1] as string;
-      expect(writtenContent).not.toContain(
-        'Full standard is available here for further request:',
-      );
-      expect(writtenContent).not.toContain('.packmind/standards/');
-      expect(writtenContent).toContain('* Rule one');
+      it('removes the "Full standard is available here" line', () => {
+        expect(writtenContent).not.toContain(
+          'Full standard is available here for further request:',
+        );
+      });
+
+      it('removes the .packmind/standards/ link', () => {
+        expect(writtenContent).not.toContain('.packmind/standards/');
+      });
+
+      it('preserves the standard body content', () => {
+        expect(writtenContent).toContain('* Rule one');
+      });
     });
 
-    it('drops .packmind/ mirror files emitted by the packmind agent renderer', async () => {
-      mockGateway.deployment.install.mockResolvedValue(
-        installResponseFactory({
-          createOrUpdate: [
-            {
-              path: '.claude/skills/my-skill/SKILL.md',
-              content: 'claude skill',
-            },
-            {
-              path: '.packmind/standards/foo.md',
-              content: 'mirror standard',
-            },
-            {
-              path: '.packmind/commands/bar.md',
-              content: 'mirror command',
-            },
-          ],
-          delete: [
-            { path: '.packmind/standards/old.md', type: DeleteItemType.File },
-          ],
-        }),
-      );
-      (fs.stat as jest.Mock).mockResolvedValue({
-        isDirectory: () => false,
-        isFile: () => true,
+    describe('drops .packmind/ mirror files emitted by the packmind agent renderer', () => {
+      let writePaths: string[];
+      let unlinkPaths: string[];
+
+      beforeEach(async () => {
+        mockGateway.deployment.install.mockResolvedValue(
+          installResponseFactory({
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                content: 'claude skill',
+              },
+              {
+                path: '.packmind/standards/foo.md',
+                content: 'mirror standard',
+              },
+              {
+                path: '.packmind/commands/bar.md',
+                content: 'mirror command',
+              },
+            ],
+            delete: [
+              { path: '.packmind/standards/old.md', type: DeleteItemType.File },
+            ],
+          }),
+        );
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => false,
+          isFile: () => true,
+        });
+
+        await useCase.execute({
+          baseDirectory: '/test',
+          cliVersion: '0.0.0-test',
+          homeAgent: 'claude',
+        });
+
+        writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
+          ([p]: [string]) => p,
+        );
+        unlinkPaths = (fs.unlink as jest.Mock).mock.calls.map(
+          ([p]: [string]) => p,
+        );
       });
 
-      await useCase.execute({
-        baseDirectory: '/test',
-        cliVersion: '0.0.0-test',
-        homeAgent: 'claude',
+      it('writes non-.packmind files', () => {
+        expect(writePaths).toContain('/test/skills/my-skill/SKILL.md');
       });
 
-      const writePaths = (fs.writeFile as jest.Mock).mock.calls.map(
-        ([p]: [string]) => p,
-      );
-      const unlinkPaths = (fs.unlink as jest.Mock).mock.calls.map(
-        ([p]: [string]) => p,
-      );
+      it('does not write any .packmind/ paths', () => {
+        expect(writePaths.some((p: string) => p.includes('.packmind/'))).toBe(
+          false,
+        );
+      });
 
-      expect(writePaths).toContain('/test/skills/my-skill/SKILL.md');
-      expect(writePaths.some((p: string) => p.includes('.packmind/'))).toBe(
-        false,
-      );
-      expect(writePaths).not.toContain('/test/standards/foo.md');
-      expect(writePaths).not.toContain('/test/commands/bar.md');
-      expect(unlinkPaths.some((p: string) => p.includes('.packmind/'))).toBe(
-        false,
-      );
+      it('does not write mirror standard files', () => {
+        expect(writePaths).not.toContain('/test/standards/foo.md');
+      });
+
+      it('does not write mirror command files', () => {
+        expect(writePaths).not.toContain('/test/commands/bar.md');
+      });
+
+      it('does not unlink any .packmind/ paths', () => {
+        expect(unlinkPaths.some((p: string) => p.includes('.packmind/'))).toBe(
+          false,
+        );
+      });
     });
 
     it('strips the agent home directory prefix from lockfile artifact paths', async () => {

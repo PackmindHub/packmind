@@ -106,10 +106,15 @@ describe('marketplace.json helpers', () => {
   });
 
   describe('readMarketplace', () => {
-    it('parses the plugins array', () => {
+    it('parses the plugins array with the correct length', () => {
       const mp = readMarketplace(manifestPath);
 
       expect(mp.plugins).toHaveLength(2);
+    });
+
+    it('parses the plugins array with the correct names', () => {
+      const mp = readMarketplace(manifestPath);
+
       expect(mp.plugins.map((p) => p.name)).toEqual(['backend', 'frontend']);
     });
   });
@@ -117,16 +122,25 @@ describe('marketplace.json helpers', () => {
   describe('classifySource', () => {
     it('returns local for ./-prefixed relative paths', () => {
       expect(classifySource('./plugins/security')).toBe('local');
+    });
+
+    it('returns local for nested ./-prefixed relative paths', () => {
       expect(classifySource('./backend/plugins/security')).toBe('local');
     });
 
-    it('returns remote for object sources (github, url, git-subdir, npm)', () => {
+    it('returns remote for github object sources', () => {
       expect(classifySource({ source: 'github', repo: 'org/repo' })).toBe(
         'remote',
       );
+    });
+
+    it('returns remote for url object sources', () => {
       expect(
         classifySource({ source: 'url', url: 'https://example.com/x.git' }),
       ).toBe('remote');
+    });
+
+    it('returns remote for git-subdir object sources', () => {
       expect(
         classifySource({
           source: 'git-subdir',
@@ -134,6 +148,9 @@ describe('marketplace.json helpers', () => {
           path: 'plugins/a',
         }),
       ).toBe('remote');
+    });
+
+    it('returns remote for npm object sources', () => {
       expect(classifySource({ source: 'npm', package: '@scope/pkg' })).toBe(
         'remote',
       );
@@ -143,9 +160,15 @@ describe('marketplace.json helpers', () => {
       expect(classifySource('/plugins/security')).toBe('local');
     });
 
-    it('returns remote for string shortcut formats (github:, url:, raw URLs)', () => {
+    it('returns remote for github: string shortcut format', () => {
       expect(classifySource('github:owner/repo')).toBe('remote');
+    });
+
+    it('returns remote for https raw URLs', () => {
       expect(classifySource('https://github.com/org/repo.git')).toBe('remote');
+    });
+
+    it('returns remote for git@ raw URLs', () => {
       expect(classifySource('git@my-provider.com/security-repo.git')).toBe(
         'remote',
       );
@@ -167,15 +190,17 @@ describe('marketplace.json helpers', () => {
       });
     });
 
-    it('returns undefined when no entry matches', () => {
-      const mp = readMarketplace(manifestPath);
+    describe('when no entry matches', () => {
+      it('returns undefined', () => {
+        const mp = readMarketplace(manifestPath);
 
-      expect(findPluginEntry(mp, 'security')).toBeUndefined();
+        expect(findPluginEntry(mp, 'security')).toBeUndefined();
+      });
     });
   });
 
   describe('upsertPluginEntry', () => {
-    it('adds a new entry preserving siblings', () => {
+    it('adds a new entry preserving siblings length', () => {
       const mp = readMarketplace(manifestPath);
 
       const updated = upsertPluginEntry(mp, {
@@ -185,11 +210,48 @@ describe('marketplace.json helpers', () => {
       });
 
       expect(updated.plugins).toHaveLength(3);
+    });
+
+    it('adds a new entry preserving siblings names', () => {
+      const mp = readMarketplace(manifestPath);
+
+      const updated = upsertPluginEntry(mp, {
+        name: 'security',
+        source: './plugins/security',
+        description: 'Security',
+      });
+
       expect(updated.plugins.map((p) => p.name)).toEqual([
         'backend',
         'frontend',
         'security',
       ]);
+    });
+
+    it('overwrites an existing entry by name preserving length', () => {
+      const mp = readMarketplace(manifestPath);
+
+      const updated = upsertPluginEntry(mp, {
+        name: 'frontend',
+        source: './plugins/frontend',
+        description: 'Updated frontend',
+      });
+
+      expect(updated.plugins).toHaveLength(2);
+    });
+
+    it('overwrites an existing entry by name updating description', () => {
+      const mp = readMarketplace(manifestPath);
+
+      const updated = upsertPluginEntry(mp, {
+        name: 'frontend',
+        source: './plugins/frontend',
+        description: 'Updated frontend',
+      });
+
+      expect(findPluginEntry(updated, 'frontend')?.description).toBe(
+        'Updated frontend',
+      );
     });
 
     it('overwrites an existing entry by name preserving siblings', () => {
@@ -201,10 +263,6 @@ describe('marketplace.json helpers', () => {
         description: 'Updated frontend',
       });
 
-      expect(updated.plugins).toHaveLength(2);
-      expect(findPluginEntry(updated, 'frontend')?.description).toBe(
-        'Updated frontend',
-      );
       expect(findPluginEntry(updated, 'backend')?.description).toBe('Backend');
     });
 
@@ -239,7 +297,7 @@ describe('marketplace.json helpers', () => {
   });
 
   describe('writeMarketplace', () => {
-    it('serializes JSON with 2-space indent and a trailing newline', () => {
+    it('serializes JSON with a trailing newline', () => {
       const mp = readMarketplace(manifestPath);
       const outPath = join(tmp, 'out.json');
 
@@ -247,6 +305,15 @@ describe('marketplace.json helpers', () => {
 
       const raw = readFileSync(outPath, 'utf8');
       expect(raw.endsWith('\n')).toBe(true);
+    });
+
+    it('serializes JSON with 2-space indent', () => {
+      const mp = readMarketplace(manifestPath);
+      const outPath = join(tmp, 'out.json');
+
+      writeMarketplace(outPath, mp);
+
+      const raw = readFileSync(outPath, 'utf8');
       expect(raw).toBe(`${JSON.stringify(mp, null, 2)}\n`);
     });
   });

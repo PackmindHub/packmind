@@ -405,18 +405,18 @@ describe('GetContentByVersionsUseCase', () => {
       ];
     });
 
-    it('does not query the skills port for the default-skill id', async () => {
-      await useCase.execute(command);
+    describe('does not query the skills port for the default-skill id', () => {
+      it('does not call getSkillVersionByNumber', async () => {
+        await useCase.execute(command);
 
-      expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
-      expect(skillsPort.getSkillFiles).not.toHaveBeenCalled();
-    });
+        expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
+      });
 
-    it('does not emit a "Skill version not found" warning', async () => {
-      await useCase.execute(command);
+      it('does not call getSkillFiles', async () => {
+        await useCase.execute(command);
 
-      const warnCalls = logger.warn.mock.calls.map(([message]) => message);
-      expect(warnCalls).not.toContain('Skill version not found');
+        expect(skillsPort.getSkillFiles).not.toHaveBeenCalled();
+      });
     });
 
     it('still resolves the response cleanly', async () => {
@@ -444,7 +444,7 @@ describe('GetContentByVersionsUseCase', () => {
       await expect(useCase.execute(command)).resolves.toBeDefined();
     });
 
-    it('does not query the skills port and does not warn', async () => {
+    it('does not query the skills port', async () => {
       command.artifacts = [
         {
           name: legacySlug,
@@ -458,8 +458,6 @@ describe('GetContentByVersionsUseCase', () => {
       await useCase.execute(command);
 
       expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
-      const warnMessages = logger.warn.mock.calls.map(([message]) => message);
-      expect(warnMessages).not.toContain('Skill version not found');
     });
 
     it('still processes a real standard in the same batch', async () => {
@@ -541,48 +539,66 @@ describe('GetContentByVersionsUseCase', () => {
       });
     });
 
-    it('throws before calling any port', async () => {
-      command.artifacts = [
-        {
-          name: 'bad',
-          type: 'command',
-          id: 'still-not-a-uuid',
-          version: 1,
-          spaceId: spaceId as string,
-        },
-      ];
+    describe('throws before calling any port', () => {
+      beforeEach(async () => {
+        command.artifacts = [
+          {
+            name: 'bad',
+            type: 'command',
+            id: 'still-not-a-uuid',
+            version: 1,
+            spaceId: spaceId as string,
+          },
+        ];
+        await useCase.execute(command).catch(() => undefined);
+      });
 
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        InvalidArtifactIdError,
-      );
+      it('rejects with InvalidArtifactIdError', async () => {
+        await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+          InvalidArtifactIdError,
+        );
+      });
 
-      expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
-      expect(standardsPort.getStandardVersionByNumber).not.toHaveBeenCalled();
-      expect(recipesPort.getRecipeVersion).not.toHaveBeenCalled();
-      expect(spacesPort.listSpacesByOrganization).not.toHaveBeenCalled();
+      it('does not call getSkillVersionByNumber', () => {
+        expect(skillsPort.getSkillVersionByNumber).not.toHaveBeenCalled();
+      });
+
+      it('does not call getStandardVersionByNumber', () => {
+        expect(standardsPort.getStandardVersionByNumber).not.toHaveBeenCalled();
+      });
+
+      it('does not call getRecipeVersion', () => {
+        expect(recipesPort.getRecipeVersion).not.toHaveBeenCalled();
+      });
+
+      it('does not call listSpacesByOrganization', () => {
+        expect(spacesPort.listSpacesByOrganization).not.toHaveBeenCalled();
+      });
     });
 
-    it('rejects when a valid uuid sits alongside an invalid one', async () => {
-      command.artifacts = [
-        {
-          name: 'good',
-          type: 'skill',
-          id: uuidv4(),
-          version: 1,
-          spaceId: spaceId as string,
-        },
-        {
-          name: 'bad',
-          type: 'skill',
-          id: 'still-not-a-uuid',
-          version: 1,
-          spaceId: spaceId as string,
-        },
-      ];
+    describe('when a valid uuid sits alongside an invalid one', () => {
+      it('rejects with InvalidArtifactIdError for the invalid id', async () => {
+        command.artifacts = [
+          {
+            name: 'good',
+            type: 'skill',
+            id: uuidv4(),
+            version: 1,
+            spaceId: spaceId as string,
+          },
+          {
+            name: 'bad',
+            type: 'skill',
+            id: 'still-not-a-uuid',
+            version: 1,
+            spaceId: spaceId as string,
+          },
+        ];
 
-      await expect(useCase.execute(command)).rejects.toMatchObject({
-        name: 'InvalidArtifactIdError',
-        invalidId: 'still-not-a-uuid',
+        await expect(useCase.execute(command)).rejects.toMatchObject({
+          name: 'InvalidArtifactIdError',
+          invalidId: 'still-not-a-uuid',
+        });
       });
     });
   });

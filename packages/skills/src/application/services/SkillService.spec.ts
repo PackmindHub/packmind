@@ -583,36 +583,50 @@ describe('SkillService', () => {
         skillFileRepository.addMany = jest.fn().mockResolvedValue([]);
       });
 
-      it('copies all versions in a single bulk call', async () => {
-        await skillService.duplicateSkillToSpace(
-          skillId,
-          destinationSpaceId,
-          newUserId,
-        );
+      describe('copies all versions in a single bulk call', () => {
+        beforeEach(async () => {
+          await skillService.duplicateSkillToSpace(
+            skillId,
+            destinationSpaceId,
+            newUserId,
+          );
+        });
 
-        expect(skillVersionRepository.addMany).toHaveBeenCalledTimes(1);
-        expect(skillVersionRepository.addMany).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ name: version1.name }),
-            expect.objectContaining({ name: version2.name }),
-          ]),
-        );
+        it('calls addMany exactly once', () => {
+          expect(skillVersionRepository.addMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('passes all versions to addMany', () => {
+          expect(skillVersionRepository.addMany).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({ name: version1.name }),
+              expect.objectContaining({ name: version2.name }),
+            ]),
+          );
+        });
       });
 
-      it('copies all files in a single bulk call', async () => {
-        await skillService.duplicateSkillToSpace(
-          skillId,
-          destinationSpaceId,
-          newUserId,
-        );
+      describe('copies all files in a single bulk call', () => {
+        beforeEach(async () => {
+          await skillService.duplicateSkillToSpace(
+            skillId,
+            destinationSpaceId,
+            newUserId,
+          );
+        });
 
-        expect(skillFileRepository.addMany).toHaveBeenCalledTimes(1);
-        expect(skillFileRepository.addMany).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ path: file1.path }),
-            expect.objectContaining({ path: file2.path }),
-          ]),
-        );
+        it('calls addMany exactly once', () => {
+          expect(skillFileRepository.addMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('passes all files to addMany', () => {
+          expect(skillFileRepository.addMany).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({ path: file1.path }),
+              expect.objectContaining({ path: file2.path }),
+            ]),
+          );
+        });
       });
     });
 

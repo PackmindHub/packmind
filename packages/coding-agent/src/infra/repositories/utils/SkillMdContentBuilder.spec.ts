@@ -34,18 +34,30 @@ description: 'Threat modeling skill'
     );
   });
 
-  it('emits license, compatibility and allowed-tools when present', () => {
-    const content = generateSkillMdContent(
-      makeSkill({
-        license: 'MIT',
-        compatibility: 'Claude Code',
-        allowedTools: 'Read,Write',
-      }),
-    );
+  describe('when present', () => {
+    let content: string;
 
-    expect(content).toContain("license: 'MIT'");
-    expect(content).toContain("compatibility: 'Claude Code'");
-    expect(content).toContain("allowed-tools: 'Read,Write'");
+    beforeEach(() => {
+      content = generateSkillMdContent(
+        makeSkill({
+          license: 'MIT',
+          compatibility: 'Claude Code',
+          allowedTools: 'Read,Write',
+        }),
+      );
+    });
+
+    it('emits license', () => {
+      expect(content).toContain("license: 'MIT'");
+    });
+
+    it('emits compatibility', () => {
+      expect(content).toContain("compatibility: 'Claude Code'");
+    });
+
+    it('emits allowed-tools', () => {
+      expect(content).toContain("allowed-tools: 'Read,Write'");
+    });
   });
 
   it('renders metadata as nested YAML', () => {
@@ -71,19 +83,28 @@ description: 'Threat modeling skill'
     expect(content).toContain("name: 'Bob''s skill'");
   });
 
-  it('omits empty metadata and additionalProperties keys', () => {
-    const content = generateSkillMdContent(
-      makeSkill({ metadata: {}, additionalProperties: {} }),
-    );
+  describe('omits empty metadata and additionalProperties keys', () => {
+    let content: string;
 
-    expect(content).not.toContain('metadata:');
-    expect(content).toBe(
-      `---
+    beforeEach(() => {
+      content = generateSkillMdContent(
+        makeSkill({ metadata: {}, additionalProperties: {} }),
+      );
+    });
+
+    it('does not contain metadata key', () => {
+      expect(content).not.toContain('metadata:');
+    });
+
+    it('renders only name and description frontmatter', () => {
+      expect(content).toBe(
+        `---
 name: 'Threat Model'
 description: 'Threat modeling skill'
 ---
 
 # body`,
-    );
+      );
+    });
   });
 });

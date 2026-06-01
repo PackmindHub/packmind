@@ -163,7 +163,7 @@ describe('LockFileRepository', () => {
         }
       });
 
-      it('preserves every existing field on each migrated entry', () => {
+      it('preserves every existing field on the migrated standard entry', () => {
         expect(result?.artifacts['user:standard:my-standard']).toEqual({
           name: 'My Standard',
           type: 'standard',
@@ -176,6 +176,9 @@ describe('LockFileRepository', () => {
             { path: '.packmind/standards/my-standard.md', agent: 'packmind' },
           ],
         });
+      });
+
+      it('preserves every existing field on the migrated skill entry', () => {
         expect(result?.artifacts['user:skill:my-skill']).toEqual({
           name: 'My Skill',
           type: 'skill',
@@ -188,10 +191,19 @@ describe('LockFileRepository', () => {
         });
       });
 
-      it('preserves top-level fields (cliVersion, packageSlugs, agents, installedAt)', () => {
+      it('preserves the cliVersion top-level field', () => {
         expect(result?.cliVersion).toBe('0.27.0');
+      });
+
+      it('preserves the packageSlugs top-level field', () => {
         expect(result?.packageSlugs).toEqual(['my-package']);
+      });
+
+      it('preserves the agents top-level field', () => {
         expect(result?.agents).toEqual(['claude', 'packmind']);
+      });
+
+      it('preserves the installedAt top-level field', () => {
         expect(result?.installedAt).toBe('2026-01-01T00:00:00.000Z');
       });
 
@@ -236,15 +248,21 @@ describe('LockFileRepository', () => {
         result = await repository.read('/project');
       });
 
-      it('is accepted and migrated like v1', () => {
+      it('is accepted (returns non-null)', () => {
         expect(result).not.toBeNull();
+      });
+
+      it('bumps lockfileVersion to 2', () => {
         expect(result?.lockfileVersion).toBe(2);
       });
 
-      it('re-keys entries under the user: prefix and tags them source: "user"', () => {
+      it('re-keys entries under the user: prefix', () => {
         expect(Object.keys(result?.artifacts ?? {})).toEqual([
           'user:standard:legacy-standard',
         ]);
+      });
+
+      it('tags migrated entries with source: "user"', () => {
         expect(result?.artifacts['user:standard:legacy-standard'].source).toBe(
           'user',
         );
@@ -471,7 +489,7 @@ describe('LockFileRepository', () => {
     });
 
     describe('when the lock file already exists', () => {
-      it('overwrites the existing file (single fs.writeFile call)', async () => {
+      beforeEach(async () => {
         mockFs.writeFile.mockResolvedValue(undefined);
 
         await repository.write('/project', lockFile);
@@ -479,8 +497,13 @@ describe('LockFileRepository', () => {
           ...lockFile,
           cliVersion: '0.29.0',
         });
+      });
 
+      it('calls fs.writeFile twice (one per write call)', () => {
         expect(mockFs.writeFile).toHaveBeenCalledTimes(2);
+      });
+
+      it('overwrites the file with the new content on the second write', () => {
         expect(mockFs.writeFile).toHaveBeenNthCalledWith(
           2,
           '/project/packmind-lock.json',

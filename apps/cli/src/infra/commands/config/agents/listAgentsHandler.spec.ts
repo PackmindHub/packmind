@@ -31,8 +31,6 @@ describe('listAgentsHandler', () => {
   let deps: ListAgentsHandlerDependencies;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
     mockConfigRepository = {
       readConfig: jest.fn(),
       writeConfig: jest.fn(),
@@ -53,6 +51,7 @@ describe('listAgentsHandler', () => {
       getCwd: () => '/project',
     };
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when no packmind.json files are found', () => {
     beforeEach(() => {

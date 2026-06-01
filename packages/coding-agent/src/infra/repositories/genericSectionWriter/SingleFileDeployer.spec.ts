@@ -464,43 +464,68 @@ describe('SingleFileDeployer', () => {
         return result.createOrUpdate[0].sections![0].content;
       };
 
-      it('produces byte-identical content for any input order via deployStandards', async () => {
-        const orderA = await getStandardsSectionContent([
-          standardA,
-          standardB,
-          standardC,
-        ]);
-        const orderB = await getStandardsSectionContent([
-          standardC,
-          standardA,
-          standardB,
-        ]);
-        const orderC = await getStandardsSectionContent([
-          standardB,
-          standardC,
-          standardA,
-        ]);
+      describe('produces byte-identical content for any input order via deployStandards', () => {
+        let orderA: string;
+        let orderB: string;
+        let orderC: string;
 
-        expect(orderA).toBe(orderB);
-        expect(orderA).toBe(orderC);
+        beforeEach(async () => {
+          orderA = await getStandardsSectionContent([
+            standardA,
+            standardB,
+            standardC,
+          ]);
+          orderB = await getStandardsSectionContent([
+            standardC,
+            standardA,
+            standardB,
+          ]);
+          orderC = await getStandardsSectionContent([
+            standardB,
+            standardC,
+            standardA,
+          ]);
+        });
+
+        it('produces the same content for order A and order B', () => {
+          expect(orderA).toBe(orderB);
+        });
+
+        it('produces the same content for order A and order C', () => {
+          expect(orderA).toBe(orderC);
+        });
       });
 
-      it('renders standards alphabetically by slug (not by name)', async () => {
-        const content = await getStandardsSectionContent([
-          standardC,
-          standardA,
-          standardB,
-        ]);
+      describe('renders standards alphabetically by slug (not by name)', () => {
+        let zetaIndex: number;
+        let yankeeIndex: number;
+        let xrayIndex: number;
 
-        // Slug order: alpha-standard < beta-standard < charlie-standard
-        // → expected display order: Zeta (alpha), Yankee (beta), Xray (charlie)
-        const zetaIndex = content.indexOf('# Standard: Zeta Standard');
-        const yankeeIndex = content.indexOf('# Standard: Yankee Standard');
-        const xrayIndex = content.indexOf('# Standard: Xray Standard');
+        beforeEach(async () => {
+          const content = await getStandardsSectionContent([
+            standardC,
+            standardA,
+            standardB,
+          ]);
 
-        expect(zetaIndex).toBeGreaterThan(-1);
-        expect(zetaIndex).toBeLessThan(yankeeIndex);
-        expect(yankeeIndex).toBeLessThan(xrayIndex);
+          // Slug order: alpha-standard < beta-standard < charlie-standard
+          // → expected display order: Zeta (alpha), Yankee (beta), Xray (charlie)
+          zetaIndex = content.indexOf('# Standard: Zeta Standard');
+          yankeeIndex = content.indexOf('# Standard: Yankee Standard');
+          xrayIndex = content.indexOf('# Standard: Xray Standard');
+        });
+
+        it('includes Zeta Standard in the output', () => {
+          expect(zetaIndex).toBeGreaterThan(-1);
+        });
+
+        it('renders Zeta Standard before Yankee Standard', () => {
+          expect(zetaIndex).toBeLessThan(yankeeIndex);
+        });
+
+        it('renders Yankee Standard before Xray Standard', () => {
+          expect(yankeeIndex).toBeLessThan(xrayIndex);
+        });
       });
 
       it('produces byte-identical content via deployArtifacts regardless of input order', async () => {

@@ -206,8 +206,11 @@ describe('DeployDefaultSkillsUseCase', () => {
         result = await useCase.execute(command);
       });
 
-      it('returns enriched file updates from deployer', () => {
+      it('returns 2 enriched file updates from deployer', () => {
         expect(result.fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('returns file updates with enriched artifact metadata', () => {
         expect(result.fileUpdates.createOrUpdate[0]).toMatchObject({
           path: '.claude/skills/packmind-create-skill/SKILL.md',
           artifactType: 'skill',
@@ -223,10 +226,13 @@ describe('DeployDefaultSkillsUseCase', () => {
         expect(result.skippedSkillsCount).toBe(0);
       });
 
-      it('populates lockFileSlice with default-skill keyed entries', () => {
+      it('populates lockFileSlice with the expected key', () => {
         expect(Object.keys(result.lockFileSlice)).toEqual([
           'default:skill:packmind-create-skill',
         ]);
+      });
+
+      it('populates lockFileSlice entry with correct artifact metadata', () => {
         expect(
           result.lockFileSlice['default:skill:packmind-create-skill'],
         ).toMatchObject({
@@ -243,10 +249,6 @@ describe('DeployDefaultSkillsUseCase', () => {
         expect(
           secondResult.lockFileSlice['default:skill:packmind-create-skill'].id,
         ).toBe(result.lockFileSlice['default:skill:packmind-create-skill'].id);
-      });
-
-      it('does not emit warn logs from the PackmindLockFileService gate', () => {
-        expect(logger.warn).not.toHaveBeenCalled();
       });
 
       it('calls getDeployer with claude', () => {

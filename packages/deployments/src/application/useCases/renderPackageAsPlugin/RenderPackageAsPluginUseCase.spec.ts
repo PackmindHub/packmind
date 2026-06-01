@@ -278,7 +278,9 @@ describe('RenderPackageAsPluginUseCase', () => {
   });
 
   describe('when the package has only standards', () => {
-    it('returns the manifest only and the skipped standards count', async () => {
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
       const standards = [
         buildStandard('s1', 'std-one'),
         buildStandard('s2', 'std-two'),
@@ -291,10 +293,18 @@ describe('RenderPackageAsPluginUseCase', () => {
         Promise.resolve(buildStandardVersion(id as string, 'std')),
       );
 
-      const result = await useCase.execute(buildCommand());
+      result = await useCase.execute(buildCommand());
+    });
 
+    it('returns the skipped standards count', () => {
       expect(result.skippedStandardsCount).toBe(3);
+    });
+
+    it('returns only the manifest file', () => {
       expect(result.files).toHaveLength(1);
+    });
+
+    it('returns the manifest at the expected path', () => {
       expect(result.files[0].path).toBe(
         'plugins/security/.claude-plugin/plugin.json',
       );
@@ -361,11 +371,24 @@ describe('RenderPackageAsPluginUseCase', () => {
       );
     });
 
-    it('returns plugin metadata from the package and the command', async () => {
-      const result = await useCase.execute(buildCommand());
-      expect(result.pluginName).toBe('security');
-      expect(result.pluginDescription).toBe('Security helpers');
-      expect(result.pluginVersion).toBe('0.1.0');
+    describe('returns plugin metadata', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute(buildCommand());
+      });
+
+      it('returns pluginName from the command', () => {
+        expect(result.pluginName).toBe('security');
+      });
+
+      it('returns pluginDescription from the package', () => {
+        expect(result.pluginDescription).toBe('Security helpers');
+      });
+
+      it('returns pluginVersion as the initial version', () => {
+        expect(result.pluginVersion).toBe('0.1.0');
+      });
     });
   });
 
@@ -418,97 +441,159 @@ describe('RenderPackageAsPluginUseCase', () => {
         );
       });
 
-      it('defaults the git branch to main when omitted', async () => {
-        await useCase.execute(
-          buildCommand({
-            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
-          }),
-        );
+      describe('when git branch is omitted', () => {
+        it('defaults the git branch to main', async () => {
+          await useCase.execute(
+            buildCommand({
+              gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            }),
+          );
 
-        expect(
-          targetResolutionService.findOrCreateTargetFromGitInfo,
-        ).toHaveBeenCalledWith(
-          organizationId,
-          userId,
-          'https://github.com/acme/marketplace.git',
-          'main',
-          'plugins/security/',
-        );
-      });
-
-      it('writes a single CLAUDE_PLUGIN add distribution from the cli', async () => {
-        await useCase.execute(
-          buildCommand({
-            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
-          }),
-        );
-
-        expect(distributionRepository.add).toHaveBeenCalledTimes(1);
-        const distribution = distributionRepository.add.mock
-          .calls[0][0] as Distribution;
-        expect(distribution.renderModes).toEqual([RenderMode.CLAUDE_PLUGIN]);
-        expect(distribution.source).toBe('cli');
-        expect(distribution.status).toBe(DistributionStatus.success);
-        expect(distribution.distributedPackages).toHaveLength(1);
-        expect(distribution.distributedPackages[0].operation).toBe('add');
-        expect(distribution.distributedPackages[0].packageId).toBe(pkg.id);
-      });
-
-      it('persists the distributed package with the fetched version ids', async () => {
-        await useCase.execute(
-          buildCommand({
-            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
-          }),
-        );
-
-        expect(distributedPackageRepository.add).toHaveBeenCalledTimes(1);
-        const distributedPackageId =
-          distributedPackageRepository.add.mock.calls[0][0].id;
-        expect(
-          distributedPackageRepository.addRecipeVersions,
-        ).toHaveBeenCalledWith(distributedPackageId, [recipeVersionId]);
-        expect(
-          distributedPackageRepository.addSkillVersions,
-        ).toHaveBeenCalledWith(distributedPackageId, [skillVersionId]);
-        expect(
-          distributedPackageRepository.addStandardVersions,
-        ).toHaveBeenCalledWith(distributedPackageId, [standardVersionId]);
-      });
-
-      it('emits PluginRenderedEvent with the marketplace metadata', async () => {
-        await useCase.execute(
-          buildCommand({
-            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
-          }),
-        );
-
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-        const emitted = eventEmitterService.emit.mock
-          .calls[0][0] as PluginRenderedEvent;
-        expect(emitted).toBeInstanceOf(PluginRenderedEvent);
-        expect(emitted.payload).toEqual({
-          userId: createUserId(userId),
-          organizationId,
-          source: 'cli',
-          packageId: pkg.id,
-          packageSlug: pkg.slug,
-          mode: 'marketplace',
-          pluginRoot: 'plugins/security/',
-          marketplaceRepo: 'https://github.com/acme/marketplace.git',
+          expect(
+            targetResolutionService.findOrCreateTargetFromGitInfo,
+          ).toHaveBeenCalledWith(
+            organizationId,
+            userId,
+            'https://github.com/acme/marketplace.git',
+            'main',
+            'plugins/security/',
+          );
         });
       });
 
-      it('returns the rendered files and the distribution id', async () => {
-        const result = await useCase.execute(
-          buildCommand({
-            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
-          }),
-        );
+      describe('writes a distribution', () => {
+        let distribution: Distribution;
 
-        expect(result.files.length).toBeGreaterThan(0);
-        const distribution = distributionRepository.add.mock
-          .calls[0][0] as Distribution;
-        expect(result.distributionId).toBe(distribution.id);
+        beforeEach(async () => {
+          await useCase.execute(
+            buildCommand({
+              gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            }),
+          );
+          distribution = distributionRepository.add.mock
+            .calls[0][0] as Distribution;
+        });
+
+        it('writes a single distribution', () => {
+          expect(distributionRepository.add).toHaveBeenCalledTimes(1);
+        });
+
+        it('sets renderModes to CLAUDE_PLUGIN', () => {
+          expect(distribution.renderModes).toEqual([RenderMode.CLAUDE_PLUGIN]);
+        });
+
+        it('sets source to cli', () => {
+          expect(distribution.source).toBe('cli');
+        });
+
+        it('sets status to success', () => {
+          expect(distribution.status).toBe(DistributionStatus.success);
+        });
+
+        it('includes one distributed package', () => {
+          expect(distribution.distributedPackages).toHaveLength(1);
+        });
+
+        it('sets the distributed package operation to add', () => {
+          expect(distribution.distributedPackages[0].operation).toBe('add');
+        });
+
+        it('sets the distributed package id to the package id', () => {
+          expect(distribution.distributedPackages[0].packageId).toBe(pkg.id);
+        });
+      });
+
+      describe('persists the distributed package', () => {
+        let distributedPackageId: string;
+
+        beforeEach(async () => {
+          await useCase.execute(
+            buildCommand({
+              gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            }),
+          );
+          distributedPackageId =
+            distributedPackageRepository.add.mock.calls[0][0].id;
+        });
+
+        it('calls add once', () => {
+          expect(distributedPackageRepository.add).toHaveBeenCalledTimes(1);
+        });
+
+        it('persists the recipe version ids', () => {
+          expect(
+            distributedPackageRepository.addRecipeVersions,
+          ).toHaveBeenCalledWith(distributedPackageId, [recipeVersionId]);
+        });
+
+        it('persists the skill version ids', () => {
+          expect(
+            distributedPackageRepository.addSkillVersions,
+          ).toHaveBeenCalledWith(distributedPackageId, [skillVersionId]);
+        });
+
+        it('persists the standard version ids', () => {
+          expect(
+            distributedPackageRepository.addStandardVersions,
+          ).toHaveBeenCalledWith(distributedPackageId, [standardVersionId]);
+        });
+      });
+
+      describe('emits PluginRenderedEvent', () => {
+        let emitted: PluginRenderedEvent;
+
+        beforeEach(async () => {
+          await useCase.execute(
+            buildCommand({
+              gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            }),
+          );
+          emitted = eventEmitterService.emit.mock
+            .calls[0][0] as PluginRenderedEvent;
+        });
+
+        it('emits exactly one event', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits a PluginRenderedEvent instance', () => {
+          expect(emitted).toBeInstanceOf(PluginRenderedEvent);
+        });
+
+        it('emits the correct marketplace metadata payload', () => {
+          expect(emitted.payload).toEqual({
+            userId: createUserId(userId),
+            organizationId,
+            source: 'cli',
+            packageId: pkg.id,
+            packageSlug: pkg.slug,
+            mode: 'marketplace',
+            pluginRoot: 'plugins/security/',
+            marketplaceRepo: 'https://github.com/acme/marketplace.git',
+          });
+        });
+      });
+
+      describe('returns the result', () => {
+        let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+        beforeEach(async () => {
+          result = await useCase.execute(
+            buildCommand({
+              gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+            }),
+          );
+        });
+
+        it('returns rendered files', () => {
+          expect(result.files.length).toBeGreaterThan(0);
+        });
+
+        it('returns the distribution id', () => {
+          const distribution = distributionRepository.add.mock
+            .calls[0][0] as Distribution;
+          expect(result.distributionId).toBe(distribution.id);
+        });
       });
     });
 
@@ -517,52 +602,85 @@ describe('RenderPackageAsPluginUseCase', () => {
         await useCase.execute(buildCommand({ gitRemoteUrl: '   ' }));
 
         expect(distributionRepository.add).not.toHaveBeenCalled();
+      });
+
+      it('does not resolve a target', async () => {
+        await useCase.execute(buildCommand({ gitRemoteUrl: '   ' }));
+
         expect(
           targetResolutionService.findOrCreateTargetFromGitInfo,
         ).not.toHaveBeenCalled();
       });
 
-      it('still emits the event without the marketplace repo', async () => {
-        await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
+      describe('still emits the event without the marketplace repo', () => {
+        let emitted: PluginRenderedEvent;
 
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-        const emitted = eventEmitterService.emit.mock
-          .calls[0][0] as PluginRenderedEvent;
-        expect(emitted.payload).toEqual({
-          userId: createUserId(userId),
-          organizationId,
-          source: 'cli',
-          packageId: pkg.id,
-          packageSlug: pkg.slug,
-          mode: 'marketplace',
-          pluginRoot: 'plugins/security/',
+        beforeEach(async () => {
+          await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
+          emitted = eventEmitterService.emit.mock
+            .calls[0][0] as PluginRenderedEvent;
         });
-        expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
+
+        it('emits exactly one event', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits the correct payload without marketplaceRepo', () => {
+          expect(emitted.payload).toEqual({
+            userId: createUserId(userId),
+            organizationId,
+            source: 'cli',
+            packageId: pkg.id,
+            packageSlug: pkg.slug,
+            mode: 'marketplace',
+            pluginRoot: 'plugins/security/',
+          });
+        });
+
+        it('does not include marketplaceRepo in the payload', () => {
+          expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
+        });
       });
 
-      it('returns the files with no distribution id', async () => {
-        const result = await useCase.execute(
-          buildCommand({ gitRemoteUrl: undefined }),
-        );
+      describe('returns the result', () => {
+        let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-        expect(result.files.length).toBeGreaterThan(0);
-        expect(result.distributionId).toBeUndefined();
+        beforeEach(async () => {
+          result = await useCase.execute(
+            buildCommand({ gitRemoteUrl: undefined }),
+          );
+        });
+
+        it('returns rendered files', () => {
+          expect(result.files.length).toBeGreaterThan(0);
+        });
+
+        it('returns no distribution id', () => {
+          expect(result.distributionId).toBeUndefined();
+        });
       });
     });
 
     describe('when tracking fails', () => {
-      it('does not reject and still returns the rendered files', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         targetResolutionService.findOrCreateTargetFromGitInfo.mockRejectedValue(
           new Error('git resolution failed'),
         );
 
-        const result = await useCase.execute(
+        result = await useCase.execute(
           buildCommand({
             gitRemoteUrl: 'https://github.com/acme/marketplace.git',
           }),
         );
+      });
 
+      it('does not reject', () => {
         expect(result.files.length).toBeGreaterThan(0);
+      });
+
+      it('returns no distribution id', () => {
         expect(result.distributionId).toBeUndefined();
       });
     });

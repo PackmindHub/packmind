@@ -41,8 +41,6 @@ describe('createTargetContextResolver', () => {
   let mockPackmindCliHexa: PackmindCliHexa;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
     mockLockFileRepository = {
       read: jest.fn().mockResolvedValue({
         lockfileVersion: 1,
@@ -61,6 +59,7 @@ describe('createTargetContextResolver', () => {
       getPackmindGateway: jest.fn().mockReturnValue({}),
     } as unknown as PackmindCliHexa;
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when entry has configDir', () => {
     it('loads lock file from gitRoot/configDir', async () => {

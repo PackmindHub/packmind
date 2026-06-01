@@ -5,7 +5,7 @@ import {
 } from './IRenderPackageAsPluginUseCase';
 
 describe('IRenderPackageAsPluginUseCase types', () => {
-  it('Command exposes packageSlug, mode, pluginRoot, and pluginName', () => {
+  describe('Command exposes packageSlug, mode, pluginRoot, and pluginName', () => {
     const cmd: RenderPackageAsPluginCommand = {
       userId: 'u',
       organizationId: 'o',
@@ -14,11 +14,17 @@ describe('IRenderPackageAsPluginUseCase types', () => {
       pluginRoot: 'plugins/security/',
       pluginName: 'security',
     };
-    expect(cmd.packageSlug).toBe('security');
-    expect(cmd.mode).toBe('marketplace');
+
+    it('exposes packageSlug', () => {
+      expect(cmd.packageSlug).toBe('security');
+    });
+
+    it('exposes mode', () => {
+      expect(cmd.mode).toBe('marketplace');
+    });
   });
 
-  it('Response exposes files and skippedStandardsCount', () => {
+  describe('Response exposes files and skippedStandardsCount', () => {
     const res: RenderPackageAsPluginResponse = {
       files: [
         { path: 'plugins/security/commands/audit.md', content: '# audit' },
@@ -28,8 +34,14 @@ describe('IRenderPackageAsPluginUseCase types', () => {
       pluginDescription: 'Security',
       pluginVersion: '0.1.0',
     };
-    expect(res.files).toHaveLength(1);
-    expect(res.skippedStandardsCount).toBe(5);
+
+    it('exposes files', () => {
+      expect(res.files).toHaveLength(1);
+    });
+
+    it('exposes skippedStandardsCount', () => {
+      expect(res.skippedStandardsCount).toBe(5);
+    });
   });
 
   it('UseCase interface combines Command and Response', () => {

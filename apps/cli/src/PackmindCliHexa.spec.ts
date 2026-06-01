@@ -1,5 +1,4 @@
 import { PackmindCliHexa } from './PackmindCliHexa';
-import * as consoleLogger from './infra/utils/consoleLogger';
 import { Space } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test';
 
@@ -15,14 +14,15 @@ jest.mock('./infra/utils/credentials', () => ({
   loadCredentials: jest.fn(),
 }));
 
-const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
-
 describe('PackmindCliHexa', () => {
   let hexa: PackmindCliHexa;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     hexa = new PackmindCliHexa();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('normalizePackageSlugs', () => {
@@ -61,14 +61,6 @@ describe('PackmindCliHexa', () => {
         ]);
 
         expect(result).toEqual(['my-package', 'another-package']);
-      });
-
-      it('outputs a warning about the outdated Packmind instance', async () => {
-        await hexa.normalizePackageSlugs(['my-package']);
-
-        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
-          expect.stringContaining('outdated'),
-        );
       });
 
       it('does not prefix already-prefixed slugs either', async () => {

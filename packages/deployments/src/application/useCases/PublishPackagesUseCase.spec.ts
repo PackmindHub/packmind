@@ -263,11 +263,18 @@ describe('PublishPackagesUseCase', () => {
       );
     });
 
-    it('resolves space slugs once per spaceId across packages', async () => {
-      await useCase.execute(command);
+    describe('when resolving space slugs across packages', () => {
+      beforeEach(async () => {
+        await useCase.execute(command);
+      });
 
-      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledTimes(1);
-      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(pkg.spaceId);
+      it('calls getSpaceById once per unique spaceId', () => {
+        expect(mockSpacesPort.getSpaceById).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls getSpaceById with the package spaceId', () => {
+        expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(pkg.spaceId);
+      });
     });
 
     it('throws if a package space cannot be resolved', async () => {
