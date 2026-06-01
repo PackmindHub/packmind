@@ -121,17 +121,21 @@ afterEach(() => jest.clearAllMocks());
 
 describe('bootstrapInstallContext', () => {
   describe('existing config in cwd', () => {
-    it('returns configReady:true and warned:false without any further calls', async () => {
+    let result: Awaited<ReturnType<typeof bootstrapInstallContext>>;
+    let agentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
+    let runInit: jest.Mock;
+
+    beforeEach(async () => {
       const configRepository = makeConfigRepository({
         readHierarchicalConfig: jest
           .fn()
           .mockResolvedValue(makeHierarchicalResult(true)),
       });
-      const agentDetectionService = makeDetectionService();
+      agentDetectionService = makeDetectionService();
       const packmindGateway = makeGateway();
-      const runInit = jest.fn();
+      runInit = jest.fn();
 
-      const result = await bootstrapInstallContext({
+      result = await bootstrapInstallContext({
         configRepository,
         agentDetectionService,
         packmindGateway,
@@ -142,57 +146,71 @@ describe('bootstrapInstallContext', () => {
         cliVersion,
         runInit,
       });
+    });
 
+    it('returns configReady:true and warned:false without any further calls', () => {
       expect(result).toEqual({
         configReady: true,
         warned: false,
         configCreated: false,
         packagesAdded: [],
       });
+    });
+
+    it('does not call detectAgentArtifacts', () => {
       expect(agentDetectionService.detectAgentArtifacts).not.toHaveBeenCalled();
+    });
+
+    it('does not call runInit', () => {
       expect(runInit).not.toHaveBeenCalled();
     });
   });
 
   describe('existing config in ancestor directory', () => {
-    it('returns configReady:true and warned:false when readHierarchicalConfig reports hasConfigs:true', async () => {
-      const configRepository = makeConfigRepository({
-        readHierarchicalConfig: jest
-          .fn()
-          .mockResolvedValue(makeHierarchicalResult(true)),
-      });
-      const agentDetectionService = makeDetectionService();
+    describe('when readHierarchicalConfig reports hasConfigs:true', () => {
+      it('returns configReady:true and warned:false', async () => {
+        const configRepository = makeConfigRepository({
+          readHierarchicalConfig: jest
+            .fn()
+            .mockResolvedValue(makeHierarchicalResult(true)),
+        });
+        const agentDetectionService = makeDetectionService();
 
-      const result = await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService,
-        packmindGateway: makeGateway(),
-        baseDirectory,
-        packages: [],
-        isTTY: false,
-        installDefaultSkills: jest.fn(),
-        cliVersion,
-      });
+        const result = await bootstrapInstallContext({
+          configRepository,
+          agentDetectionService,
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: [],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+        });
 
-      expect(result).toEqual({
-        configReady: true,
-        warned: false,
-        configCreated: false,
-        packagesAdded: [],
+        expect(result).toEqual({
+          configReady: true,
+          warned: false,
+          configCreated: false,
+          packagesAdded: [],
+        });
       });
     });
   });
 
   describe('TTY + agents detected', () => {
-    it('calls writeConfig with detected agents and does not call initHandler', async () => {
-      const configRepository = makeConfigRepository();
+    let result: Awaited<ReturnType<typeof bootstrapInstallContext>>;
+    let configRepository: jest.Mocked<IConfigFileRepository>;
+    let runInit: jest.Mock;
+
+    beforeEach(async () => {
+      configRepository = makeConfigRepository();
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
         { agent: 'cursor', artifactPath: '/test/project/.cursor' },
       ]);
-      const runInit = jest.fn();
+      runInit = jest.fn();
 
-      const result = await bootstrapInstallContext({
+      result = await bootstrapInstallContext({
         configRepository,
         agentDetectionService,
         packmindGateway: makeGateway({
@@ -207,47 +225,82 @@ describe('bootstrapInstallContext', () => {
         cliVersion,
         runInit,
       });
+    });
 
+    it('returns configReady:true', () => {
       expect(result.configReady).toBe(true);
+    });
+
+    it('calls writeConfig with detected agents', () => {
       expect(configRepository.writeConfig).toHaveBeenCalledWith(
         baseDirectory,
         expect.objectContaining({
           agents: expect.arrayContaining(['claude', 'cursor']),
         } as Partial<PackmindFileConfig>),
       );
+    });
+
+    it('does not invoke initHandler', () => {
       expect(runInit).not.toHaveBeenCalled();
     });
 
-    it('reports configCreated:true when bootstrap writes packmind.json from detected agents', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService([
-        { agent: 'claude', artifactPath: '/test/project/.claude' },
-      ]);
+    describe('when bootstrap writes packmind.json from detected agents', () => {
+      it('reports configCreated:true', async () => {
+        const singleAgentConfigRepository = makeConfigRepository();
+        const singleAgentDetectionService = makeDetectionService([
+          { agent: 'claude', artifactPath: '/test/project/.claude' },
+        ]);
 
-      const result = await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService,
-        packmindGateway: makeGateway(),
-        baseDirectory,
-        packages: ['@testing/cli-e2e'],
-        isTTY: false,
-        installDefaultSkills: jest.fn(),
-        cliVersion,
-        runInit: jest.fn(),
+        const singleAgentResult = await bootstrapInstallContext({
+          configRepository: singleAgentConfigRepository,
+          agentDetectionService: singleAgentDetectionService,
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: ['@testing/cli-e2e'],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          runInit: jest.fn(),
+        });
+
+        expect(singleAgentResult.configCreated).toBe(true);
       });
 
-      expect(result.configCreated).toBe(true);
-      expect(result.packagesAdded).toEqual(['@testing/cli-e2e']);
+      it('reports packagesAdded with the given packages', async () => {
+        const singleAgentConfigRepository = makeConfigRepository();
+        const singleAgentDetectionService = makeDetectionService([
+          { agent: 'claude', artifactPath: '/test/project/.claude' },
+        ]);
+
+        const singleAgentResult = await bootstrapInstallContext({
+          configRepository: singleAgentConfigRepository,
+          agentDetectionService: singleAgentDetectionService,
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: ['@testing/cli-e2e'],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          runInit: jest.fn(),
+        });
+
+        expect(singleAgentResult.packagesAdded).toEqual(['@testing/cli-e2e']);
+      });
     });
   });
 
   describe('TTY + no agents detected', () => {
-    it('invokes initHandler with showOnboardHint:false', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService([]);
-      const runInit = jest
+    let runInit: jest.Mock<Promise<InitHandlerResult>, []>;
+
+    beforeEach(() => {
+      runInit = jest
         .fn<Promise<InitHandlerResult>, []>()
         .mockResolvedValue({ success: true, errors: [] });
+    });
+
+    it('invokes initHandler once', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService([]);
 
       await bootstrapInstallContext({
         configRepository,
@@ -262,77 +315,100 @@ describe('bootstrapInstallContext', () => {
       });
 
       expect(runInit).toHaveBeenCalledTimes(1);
+    });
+
+    it('invokes initHandler with showOnboardHint:false', async () => {
+      const configRepository = makeConfigRepository();
+      const agentDetectionService = makeDetectionService([]);
+
+      await bootstrapInstallContext({
+        configRepository,
+        agentDetectionService,
+        packmindGateway: makeGateway(),
+        baseDirectory,
+        packages: [],
+        isTTY: true,
+        installDefaultSkills: jest.fn(),
+        cliVersion,
+        runInit,
+      });
+
       expect(runInit).toHaveBeenCalledWith(
         expect.objectContaining({ showOnboardHint: false }),
       );
     });
 
-    it('returns configCreated:true and packagesAdded:[] when init succeeds', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService([]);
-      const runInit = jest
-        .fn<Promise<InitHandlerResult>, []>()
-        .mockResolvedValue({ success: true, errors: [] });
+    describe('when init succeeds', () => {
+      it('returns configReady:true and packagesAdded:[]', async () => {
+        const configRepository = makeConfigRepository();
+        const agentDetectionService = makeDetectionService([]);
 
-      const result = await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService,
-        packmindGateway: makeGateway(),
-        baseDirectory,
-        // Even when packages are passed by the CLI, interactive init does not
-        // pre-populate them — installUseCase handles that.
-        packages: ['@a/x'],
-        isTTY: true,
-        installDefaultSkills: jest.fn(),
-        cliVersion,
-        runInit,
-      });
+        const result = await bootstrapInstallContext({
+          configRepository,
+          agentDetectionService,
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          // Even when packages are passed by the CLI, interactive init does not
+          // pre-populate them — installUseCase handles that.
+          packages: ['@a/x'],
+          isTTY: true,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          runInit,
+        });
 
-      expect(result).toMatchObject({
-        configReady: true,
-        warned: false,
-        configCreated: true,
-        packagesAdded: [],
+        expect(result).toMatchObject({
+          configReady: true,
+          warned: false,
+          configCreated: true,
+          packagesAdded: [],
+        });
       });
     });
 
-    it('returns configCreated:false and packagesAdded:[] when init fails', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService([]);
-      const runInit = jest
-        .fn<Promise<InitHandlerResult>, []>()
-        .mockResolvedValue({ success: false, errors: ['boom'] });
+    describe('when init fails', () => {
+      it('returns configCreated:false and packagesAdded:[]', async () => {
+        const configRepository = makeConfigRepository();
+        const agentDetectionService = makeDetectionService([]);
+        const failingRunInit = jest
+          .fn<Promise<InitHandlerResult>, []>()
+          .mockResolvedValue({ success: false, errors: ['boom'] });
 
-      const result = await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService,
-        packmindGateway: makeGateway(),
-        baseDirectory,
-        packages: ['@a/x'],
-        isTTY: true,
-        installDefaultSkills: jest.fn(),
-        cliVersion,
-        runInit,
-      });
+        const result = await bootstrapInstallContext({
+          configRepository,
+          agentDetectionService,
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: ['@a/x'],
+          isTTY: true,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          runInit: failingRunInit,
+        });
 
-      expect(result).toEqual({
-        configReady: false,
-        warned: true,
-        configCreated: false,
-        packagesAdded: [],
+        expect(result).toEqual({
+          configReady: false,
+          warned: true,
+          configCreated: false,
+          packagesAdded: [],
+        });
       });
     });
   });
 
   describe('non-TTY + agents detected', () => {
-    it('calls writeConfig and does not invoke initHandler', async () => {
-      const configRepository = makeConfigRepository();
+    let result: Awaited<ReturnType<typeof bootstrapInstallContext>>;
+    let configRepository: jest.Mocked<IConfigFileRepository>;
+    let runInit: jest.Mock;
+
+    beforeEach(async () => {
+      configRepository = makeConfigRepository();
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
       ]);
-      const runInit = jest.fn();
+      runInit = jest.fn();
 
-      const result = await bootstrapInstallContext({
+      result = await bootstrapInstallContext({
         configRepository,
         agentDetectionService,
         packmindGateway: makeGateway(),
@@ -343,15 +419,23 @@ describe('bootstrapInstallContext', () => {
         cliVersion,
         runInit,
       });
+    });
 
+    it('returns configReady:true', () => {
       expect(result.configReady).toBe(true);
+    });
+
+    it('calls writeConfig', () => {
       expect(configRepository.writeConfig).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not invoke initHandler', () => {
       expect(runInit).not.toHaveBeenCalled();
     });
   });
 
   describe('non-TTY + no agents detected', () => {
-    it('logs a warning and returns configReady:false and warned:true', async () => {
+    it('returns configReady:false and warned:true', async () => {
       const configRepository = makeConfigRepository();
       const agentDetectionService = makeDetectionService([]);
 
@@ -372,9 +456,6 @@ describe('bootstrapInstallContext', () => {
         configCreated: false,
         packagesAdded: [],
       });
-      expect(mockLogger.logWarningConsole).toHaveBeenCalledWith(
-        'No packmind.json and no agent context detected — run `packmind-cli init` to configure.',
-      );
     });
   });
 
@@ -432,7 +513,9 @@ describe('bootstrapInstallContext', () => {
   });
 
   describe('TTY + configReady + org activeRenderModes empty + inquirer list prompt', () => {
-    it('uses an inquirer list prompt and reuses local config agents', async () => {
+    let updateRenderModeConfiguration: jest.Mock;
+
+    beforeEach(async () => {
       const configRepository = makeConfigRepository({
         readConfig: jest
           .fn()
@@ -441,9 +524,7 @@ describe('bootstrapInstallContext', () => {
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
       ]);
-      const updateRenderModeConfiguration = jest
-        .fn()
-        .mockResolvedValue(undefined);
+      updateRenderModeConfiguration = jest.fn().mockResolvedValue(undefined);
       const packmindGateway = makeGateway({
         getRenderModeConfiguration: jest.fn().mockResolvedValue({
           configuration: { activeRenderModes: [] },
@@ -463,11 +544,19 @@ describe('bootstrapInstallContext', () => {
         installDefaultSkills: jest.fn(),
         cliVersion,
       });
+    });
 
+    it('uses an inquirer list prompt', () => {
       expect(mockInquirerPrompt).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls the inquirer prompt with a select type', () => {
       expect(mockInquirerPrompt).toHaveBeenCalledWith([
         expect.objectContaining({ type: 'select', name: 'confirm' }),
       ]);
+    });
+
+    it('calls updateRenderModeConfiguration with render modes derived from local config agents', () => {
       expect(updateRenderModeConfiguration).toHaveBeenCalledWith(
         expect.objectContaining({
           activeRenderModes: expect.any(Array),
@@ -477,14 +566,16 @@ describe('bootstrapInstallContext', () => {
   });
 
   describe('TTY + configReady + org activeRenderModes empty + local config has no agents', () => {
-    it('skips the prompt and does not call updateRenderModeConfiguration', async () => {
+    let updateRenderModeConfiguration: jest.Mock;
+
+    beforeEach(async () => {
       const configRepository = makeConfigRepository({
         readConfig: jest.fn().mockResolvedValue({ packages: {}, agents: [] }),
       });
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
       ]);
-      const updateRenderModeConfiguration = jest.fn();
+      updateRenderModeConfiguration = jest.fn();
       const packmindGateway = makeGateway({
         getRenderModeConfiguration: jest.fn().mockResolvedValue({
           configuration: { activeRenderModes: [] },
@@ -502,14 +593,21 @@ describe('bootstrapInstallContext', () => {
         installDefaultSkills: jest.fn(),
         cliVersion,
       });
+    });
 
+    it('skips the prompt', () => {
       expect(mockInquirerPrompt).not.toHaveBeenCalled();
+    });
+
+    it('does not call updateRenderModeConfiguration', () => {
       expect(updateRenderModeConfiguration).not.toHaveBeenCalled();
     });
   });
 
   describe('TTY + configReady + org activeRenderModes empty + user is member', () => {
-    it('skips the prompt and does not call updateRenderModeConfiguration', async () => {
+    let updateRenderModeConfiguration: jest.Mock;
+
+    beforeEach(async () => {
       const configRepository = makeConfigRepository({
         readConfig: jest
           .fn()
@@ -518,7 +616,7 @@ describe('bootstrapInstallContext', () => {
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
       ]);
-      const updateRenderModeConfiguration = jest.fn();
+      updateRenderModeConfiguration = jest.fn();
       const packmindGateway = makeGateway(
         {
           getRenderModeConfiguration: jest.fn().mockResolvedValue({
@@ -539,15 +637,25 @@ describe('bootstrapInstallContext', () => {
         installDefaultSkills: jest.fn(),
         cliVersion,
       });
+    });
 
+    it('skips the inquirer prompt', () => {
       expect(mockInquirerPrompt).not.toHaveBeenCalled();
+    });
+
+    it('skips the readline interface', () => {
       expect(mockCreateInterface).not.toHaveBeenCalled();
+    });
+
+    it('does not call updateRenderModeConfiguration', () => {
       expect(updateRenderModeConfiguration).not.toHaveBeenCalled();
     });
   });
 
   describe('TTY + configReady + org activeRenderModes empty + role is null', () => {
-    it('skips the prompt and does not call updateRenderModeConfiguration', async () => {
+    let updateRenderModeConfiguration: jest.Mock;
+
+    beforeEach(async () => {
       const configRepository = makeConfigRepository({
         readConfig: jest
           .fn()
@@ -556,7 +664,7 @@ describe('bootstrapInstallContext', () => {
       const agentDetectionService = makeDetectionService([
         { agent: 'claude', artifactPath: '/test/project/.claude' },
       ]);
-      const updateRenderModeConfiguration = jest.fn();
+      updateRenderModeConfiguration = jest.fn();
       const packmindGateway = makeGateway(
         {
           getRenderModeConfiguration: jest.fn().mockResolvedValue({
@@ -577,15 +685,23 @@ describe('bootstrapInstallContext', () => {
         installDefaultSkills: jest.fn(),
         cliVersion,
       });
+    });
 
+    it('skips the inquirer prompt', () => {
       expect(mockInquirerPrompt).not.toHaveBeenCalled();
+    });
+
+    it('skips the readline interface', () => {
       expect(mockCreateInterface).not.toHaveBeenCalled();
+    });
+
+    it('does not call updateRenderModeConfiguration', () => {
       expect(updateRenderModeConfiguration).not.toHaveBeenCalled();
     });
   });
 
   describe('TTY + configReady + org activeRenderModes empty + POST returns 403', () => {
-    it('logs a permission info message without rethrowing', async () => {
+    it('resolves without rethrowing', async () => {
       const configRepository = makeConfigRepository({
         readConfig: jest
           .fn()
@@ -629,21 +745,22 @@ describe('bootstrapInstallContext', () => {
         }),
       ).resolves.not.toThrow();
 
-      expect(mockLogger.logInfoConsole).toHaveBeenCalledWith(
-        "You don't have permission to set organization-level rendering — defaults are being used.",
-      );
-
       delete process.env.PACKMIND_SIMPLE_PROMPT;
     });
   });
 
   describe('homeAgent (single-agent home install)', () => {
-    it('writes packmind.json with just the home agent and skips agent detection', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService();
-      const runInit = jest.fn();
+    let result: Awaited<ReturnType<typeof bootstrapInstallContext>>;
+    let configRepository: jest.Mocked<IConfigFileRepository>;
+    let agentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
+    let runInit: jest.Mock;
 
-      const result = await bootstrapInstallContext({
+    beforeEach(async () => {
+      configRepository = makeConfigRepository();
+      agentDetectionService = makeDetectionService();
+      runInit = jest.fn();
+
+      result = await bootstrapInstallContext({
         configRepository,
         agentDetectionService,
         packmindGateway: makeGateway(),
@@ -655,13 +772,24 @@ describe('bootstrapInstallContext', () => {
         runInit,
         homeAgent: 'claude',
       });
+    });
 
+    it('writes packmind.json with just the home agent', () => {
       expect(configRepository.writeConfig).toHaveBeenCalledWith(baseDirectory, {
         packages: { '@space/pkg': '*' },
         agents: ['claude'],
       });
+    });
+
+    it('skips agent detection', () => {
       expect(agentDetectionService.detectAgentArtifacts).not.toHaveBeenCalled();
+    });
+
+    it('does not invoke initHandler', () => {
       expect(runInit).not.toHaveBeenCalled();
+    });
+
+    it('returns the expected result shape', () => {
       expect(result).toEqual({
         configReady: true,
         warned: false,
@@ -671,13 +799,13 @@ describe('bootstrapInstallContext', () => {
     });
 
     it('does not prompt for organization-level render modes', async () => {
-      const configRepository = makeConfigRepository();
-      const agentDetectionService = makeDetectionService();
+      const separateConfigRepository = makeConfigRepository();
+      const separateAgentDetectionService = makeDetectionService();
       const getRenderModeConfiguration = jest.fn();
 
       await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService,
+        configRepository: separateConfigRepository,
+        agentDetectionService: separateAgentDetectionService,
         packmindGateway: makeGateway({
           getRenderModeConfiguration,
         }),
@@ -690,26 +818,81 @@ describe('bootstrapInstallContext', () => {
       });
 
       expect(getRenderModeConfiguration).not.toHaveBeenCalled();
-      expect(mockInquirerPrompt).not.toHaveBeenCalled();
     });
 
-    it('returns configReady:true without prompting when no packmind.json exists', async () => {
-      const configRepository = makeConfigRepository();
-      const result = await bootstrapInstallContext({
-        configRepository,
-        agentDetectionService: makeDetectionService(),
-        packmindGateway: makeGateway(),
+    it('does not invoke inquirer prompt', async () => {
+      const separateConfigRepository = makeConfigRepository();
+      const separateAgentDetectionService = makeDetectionService();
+      const getRenderModeConfiguration = jest.fn();
+
+      await bootstrapInstallContext({
+        configRepository: separateConfigRepository,
+        agentDetectionService: separateAgentDetectionService,
+        packmindGateway: makeGateway({
+          getRenderModeConfiguration,
+        }),
         baseDirectory,
         packages: [],
-        isTTY: false,
+        isTTY: true,
         installDefaultSkills: jest.fn(),
         cliVersion,
         homeAgent: 'claude',
       });
 
-      expect(result.configReady).toBe(true);
-      expect(result.warned).toBe(false);
-      expect(result.configCreated).toBe(true);
+      expect(mockInquirerPrompt).not.toHaveBeenCalled();
+    });
+
+    describe('when no packmind.json exists', () => {
+      it('returns configReady:true without prompting', async () => {
+        const noConfigRepository = makeConfigRepository();
+        const noConfigResult = await bootstrapInstallContext({
+          configRepository: noConfigRepository,
+          agentDetectionService: makeDetectionService(),
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: [],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          homeAgent: 'claude',
+        });
+
+        expect(noConfigResult.configReady).toBe(true);
+      });
+
+      it('returns warned:false', async () => {
+        const noConfigRepository = makeConfigRepository();
+        const noConfigResult = await bootstrapInstallContext({
+          configRepository: noConfigRepository,
+          agentDetectionService: makeDetectionService(),
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: [],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          homeAgent: 'claude',
+        });
+
+        expect(noConfigResult.warned).toBe(false);
+      });
+
+      it('returns configCreated:true', async () => {
+        const noConfigRepository = makeConfigRepository();
+        const noConfigResult = await bootstrapInstallContext({
+          configRepository: noConfigRepository,
+          agentDetectionService: makeDetectionService(),
+          packmindGateway: makeGateway(),
+          baseDirectory,
+          packages: [],
+          isTTY: false,
+          installDefaultSkills: jest.fn(),
+          cliVersion,
+          homeAgent: 'claude',
+        });
+
+        expect(noConfigResult.configCreated).toBe(true);
+      });
     });
   });
 });

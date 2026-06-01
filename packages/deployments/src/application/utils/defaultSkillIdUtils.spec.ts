@@ -47,9 +47,14 @@ describe('isDefaultSkillId', () => {
     expect(isDefaultSkillId(uuidv4())).toBe(false);
   });
 
-  it('returns false for a non-UUID string', () => {
-    expect(isDefaultSkillId('packmind-create-skill')).toBe(false);
-    expect(isDefaultSkillId('')).toBe(false);
+  describe('when the input is a non-UUID string', () => {
+    it('returns false for a slug string', () => {
+      expect(isDefaultSkillId('packmind-create-skill')).toBe(false);
+    });
+
+    it('returns false for an empty string', () => {
+      expect(isDefaultSkillId('')).toBe(false);
+    });
   });
 });
 
@@ -66,10 +71,18 @@ describe('isDefaultSkillSlug', () => {
     }
   });
 
-  it('returns false for arbitrary strings', () => {
-    expect(isDefaultSkillSlug('not-a-default-skill')).toBe(false);
-    expect(isDefaultSkillSlug(uuidv4())).toBe(false);
-    expect(isDefaultSkillSlug('')).toBe(false);
+  describe('when the input is an arbitrary string', () => {
+    it('returns false for an unknown slug-like string', () => {
+      expect(isDefaultSkillSlug('not-a-default-skill')).toBe(false);
+    });
+
+    it('returns false for a random UUID', () => {
+      expect(isDefaultSkillSlug(uuidv4())).toBe(false);
+    });
+
+    it('returns false for an empty string', () => {
+      expect(isDefaultSkillSlug('')).toBe(false);
+    });
   });
 
   it('is disjoint from isDefaultSkillId across all known slugs and UUIDs', () => {

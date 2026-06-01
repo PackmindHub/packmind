@@ -4379,20 +4379,30 @@ describe('PublishArtifactsUseCase', () => {
         );
       });
 
-      it('refreshes installedAt in the lock file', async () => {
-        await useCase.execute(command);
+      describe('refreshes installedAt in the lock file', () => {
+        let parsed: Record<string, unknown>;
 
-        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-        const lockFile = jobInput.fileUpdates.createOrUpdate.find(
-          (f: { path: string }) => f.path === 'packmind-lock.json',
-        );
+        beforeEach(async () => {
+          await useCase.execute(command);
 
-        assert(lockFile, 'lockFile should be defined');
-        assert(lockFile.content, 'lockFile.content should be defined');
-        const parsed = JSON.parse(lockFile.content);
+          const jobInput =
+            mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+          const lockFile = jobInput.fileUpdates.createOrUpdate.find(
+            (f: { path: string }) => f.path === 'packmind-lock.json',
+          );
 
-        expect(parsed.installedAt).toBeDefined();
-        expect(parsed.installedAt).not.toEqual('2024-01-01T00:00:00.000Z');
+          assert(lockFile, 'lockFile should be defined');
+          assert(lockFile.content, 'lockFile.content should be defined');
+          parsed = JSON.parse(lockFile.content);
+        });
+
+        it('sets installedAt to a defined value', () => {
+          expect(parsed.installedAt).toBeDefined();
+        });
+
+        it('updates installedAt to a new value', () => {
+          expect(parsed.installedAt).not.toEqual('2024-01-01T00:00:00.000Z');
+        });
       });
     });
 

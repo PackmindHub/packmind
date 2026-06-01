@@ -156,7 +156,7 @@ describe('CheckCliVersionUseCase', () => {
       };
     });
 
-    it('returns the cached version without fetching', async () => {
+    it('returns the cached version', async () => {
       const result = await useCase.execute({ currentVersion: '1.0.0' });
 
       expect(result).toEqual({
@@ -164,6 +164,11 @@ describe('CheckCliVersionUseCase', () => {
         latestVersion: '1.5.0',
         updateAvailable: true,
       });
+    });
+
+    it('does not fetch the latest version', async () => {
+      await useCase.execute({ currentVersion: '1.0.0' });
+
       expect(mockFetchLatestVersion).not.toHaveBeenCalled();
     });
 
@@ -191,6 +196,11 @@ describe('CheckCliVersionUseCase', () => {
         latestVersion: '1.6.0',
         updateAvailable: true,
       });
+    });
+
+    it('calls fetchLatestVersion once', async () => {
+      await useCase.execute({ currentVersion: '1.0.0' });
+
       expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
     });
 
@@ -217,6 +227,11 @@ describe('CheckCliVersionUseCase', () => {
       const result = await useCase.execute({ currentVersion: '1.0.0' });
 
       expect(result?.latestVersion).toBe('1.6.0');
+    });
+
+    it('calls fetchLatestVersion once', async () => {
+      await useCase.execute({ currentVersion: '1.0.0' });
+
       expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
     });
   });
@@ -256,6 +271,11 @@ describe('CheckCliVersionUseCase', () => {
       const result = await useCase.execute({ currentVersion: '1.0.0' });
 
       expect(result?.latestVersion).toBe('1.6.0');
+    });
+
+    it('calls fetchLatestVersion once', async () => {
+      await useCase.execute({ currentVersion: '1.0.0' });
+
       expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
     });
   });
@@ -272,6 +292,11 @@ describe('CheckCliVersionUseCase', () => {
       const result = await useCase.execute({ currentVersion: '1.0.0' });
 
       expect(result?.latestVersion).toBe('1.5.0');
+    });
+
+    it('does not fetch the latest version', async () => {
+      await useCase.execute({ currentVersion: '1.0.0' });
+
       expect(mockFetchLatestVersion).not.toHaveBeenCalled();
     });
   });
@@ -285,18 +310,32 @@ describe('CheckCliVersionUseCase', () => {
       mockFetchLatestVersion.mockResolvedValue('1.6.0');
     });
 
-    it('refetches when current equals cached', async () => {
-      const result = await useCase.execute({ currentVersion: '1.5.0' });
+    describe('when current equals cached', () => {
+      it('refetches', async () => {
+        await useCase.execute({ currentVersion: '1.5.0' });
 
-      expect(result?.latestVersion).toBe('1.6.0');
-      expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
+        expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns the newly fetched latest version', async () => {
+        const result = await useCase.execute({ currentVersion: '1.5.0' });
+
+        expect(result?.latestVersion).toBe('1.6.0');
+      });
     });
 
-    it('refetches when current is newer than cached', async () => {
-      const result = await useCase.execute({ currentVersion: '1.6.0' });
+    describe('when current is newer than cached', () => {
+      it('refetches', async () => {
+        await useCase.execute({ currentVersion: '1.6.0' });
 
-      expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
-      expect(result?.updateAvailable).toBe(false);
+        expect(mockFetchLatestVersion).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns updateAvailable as false', async () => {
+        const result = await useCase.execute({ currentVersion: '1.6.0' });
+
+        expect(result?.updateAvailable).toBe(false);
+      });
     });
   });
 });

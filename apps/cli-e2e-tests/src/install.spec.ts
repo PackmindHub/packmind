@@ -265,8 +265,11 @@ describe('...', () => {
               expect(result.returnCode).toBe(0);
             });
 
-            it('creates packmind.json with the package', () => {
+            it('creates packmind.json', () => {
               expect(fileExists('packmind.json', context.testDir)).toBe(true);
+            });
+
+            it('adds the package to packmind.json', () => {
               const content = readFile('packmind.json', context.testDir);
               expect(content).toContain(pkgWithSkills.slug);
             });
@@ -282,10 +285,18 @@ describe('...', () => {
             // TODO: enable once the e2e gateway can publish skills into a test
             // package. With AGENTS.md/packmind as default agents, the CLI should
             // print the capability warning naming "skills".
-            it.skip('warns when configured agents lack skill capability', () => {
-              expect(result.stdout).toContain('could not be rendered');
-              expect(result.stdout).toContain('skills');
-              expect(result.stdout).toContain('packmind-cli config agents');
+            describe.skip('when configured agents lack skill capability', () => {
+              it('warns that content could not be rendered', () => {
+                expect(result.stdout).toContain('could not be rendered');
+              });
+
+              it('mentions skills in the warning', () => {
+                expect(result.stdout).toContain('skills');
+              });
+
+              it('suggests packmind-cli config agents', () => {
+                expect(result.stdout).toContain('packmind-cli config agents');
+              });
             });
           });
         },
@@ -361,11 +372,16 @@ describe('...', () => {
               expect(result.returnCode).toBe(0);
             });
 
-            it('removes the obsolete skill silently', () => {
+            it('removes the obsolete skill', () => {
               expect(fileExists(obsoleteSkillPath, context.testDir)).toBe(
                 false,
               );
-              expect(result.stdout).not.toMatch(/Are you sure/i);
+            });
+
+            describe('when removing the obsolete skill', () => {
+              it('does not prompt for confirmation', () => {
+                expect(result.stdout).not.toMatch(/Are you sure/i);
+              });
             });
           });
 
@@ -433,11 +449,15 @@ describe('...', () => {
               expect(result.returnCode).toBe(0);
             });
 
-            it('does not print drift output', () => {
+            it('does not print the older-version warning', () => {
               const combined = result.stdout + result.stderr;
               expect(combined).not.toContain(
                 'older than the version recorded in packmind-lock.json',
               );
+            });
+
+            it('does not print the CLI upgrade detected message', () => {
+              const combined = result.stdout + result.stderr;
               expect(combined).not.toContain('CLI upgrade detected');
             });
           });
@@ -575,16 +595,18 @@ describe('...', () => {
               const defaultEntries = Object.entries(lockFile.artifacts)
                 .filter(([k]) => k.startsWith('default:skill:'))
                 .map(([, entry]) => entry);
-              expect(defaultEntries.length).toBeGreaterThan(0);
-              for (const entry of defaultEntries) {
-                expect(entry.source).toBe('default');
-              }
+              expect(
+                defaultEntries.every((entry) => entry.source === 'default'),
+              ).toBe(true);
             });
 
             it('records the well-known packmind-create-skill default entry', () => {
               expect(
                 lockFile.artifacts['default:skill:packmind-create-skill'],
               ).toBeDefined();
+            });
+
+            it('tags the packmind-create-skill entry with source: "default"', () => {
               expect(
                 lockFile.artifacts['default:skill:packmind-create-skill']
                   .source,
@@ -686,14 +708,20 @@ describe('...', () => {
               ).toBeUndefined();
             });
 
-            it('adds default-skill entries tagged source: "default"', () => {
+            it('adds default-skill entries', () => {
               const defaultEntries = Object.entries(lockFile.artifacts)
                 .filter(([k]) => k.startsWith('default:skill:'))
                 .map(([, entry]) => entry);
               expect(defaultEntries.length).toBeGreaterThan(0);
-              for (const entry of defaultEntries) {
-                expect(entry.source).toBe('default');
-              }
+            });
+
+            it('tags default-skill entries with source: "default"', () => {
+              const defaultEntries = Object.entries(lockFile.artifacts)
+                .filter(([k]) => k.startsWith('default:skill:'))
+                .map(([, entry]) => entry);
+              expect(
+                defaultEntries.every((entry) => entry.source === 'default'),
+              ).toBe(true);
             });
           });
         },

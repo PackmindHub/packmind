@@ -19,8 +19,8 @@ describe('SkillDiffStrategy', () => {
 
   beforeEach(() => {
     strategy = new SkillDiffStrategy();
-    jest.clearAllMocks();
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when binary file content is updated', () => {
     const serverContent = Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString(

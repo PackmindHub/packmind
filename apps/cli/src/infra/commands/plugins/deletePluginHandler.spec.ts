@@ -11,7 +11,7 @@ describe('deletePluginHandler', () => {
   let tmp: string;
   let exit: jest.Mock;
   let log: jest.Mock;
-  let error: jest.Mock;
+  const printedErrors: string[] = [];
   let confirmOverwrite: jest.Mock;
   let trackPluginDeleted: jest.Mock;
   let tryGetGitRepositoryRoot: jest.Mock;
@@ -28,7 +28,7 @@ describe('deletePluginHandler', () => {
     exit: exit as never,
     getCwd: () => tmp,
     log: log as never,
-    error: error as never,
+    error: (msg: string) => printedErrors.push(msg),
     confirmOverwrite: confirmOverwrite as never,
   });
 
@@ -41,10 +41,10 @@ describe('deletePluginHandler', () => {
   };
 
   beforeEach(() => {
+    printedErrors.length = 0;
     tmp = mkdtempSync(join(tmpdir(), 'pm-delete-'));
     exit = jest.fn();
     log = jest.fn();
-    error = jest.fn();
     confirmOverwrite = jest.fn();
     trackPluginDeleted = jest.fn().mockResolvedValue(undefined);
     tryGetGitRepositoryRoot = jest.fn().mockResolvedValue(tmp);
@@ -59,15 +59,21 @@ describe('deletePluginHandler', () => {
   });
 
   describe('when no plugin manifest exists', () => {
-    it('prints an error and exits non-zero', async () => {
+    it('prints an error', async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
 
-      expect(error).toHaveBeenCalledWith(
-        expect.stringContaining('No .claude-plugin'),
+      expect(printedErrors[0]).toMatch(/No .claude-plugin/);
+    });
+
+    it('exits non-zero', async () => {
+      await deletePluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
       );
+
       expect(exit).toHaveBeenCalledWith(1);
     });
   });
@@ -93,6 +99,14 @@ describe('deletePluginHandler', () => {
       );
 
       expect(confirmOverwrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('prompts with a message containing the plugin path', async () => {
+      await deletePluginHandler(
+        { packageSlug: parsePackageSlug('security') },
+        buildDeps(),
+      );
+
       expect(confirmOverwrite).toHaveBeenCalledWith(
         expect.stringContaining('./plugins/security'),
       );
@@ -107,7 +121,7 @@ describe('deletePluginHandler', () => {
       expect(existsSync(join(tmp, 'plugins/security'))).toBe(false);
     });
 
-    it('removes the entry from marketplace.json preserving siblings', async () => {
+    it('removes the entry from marketplace.json', async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
@@ -115,6 +129,15 @@ describe('deletePluginHandler', () => {
 
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(findPluginEntry(mp, 'security')).toBeUndefined();
+    });
+
+    it('preserves sibling entries in marketplace.json', async () => {
+      await deletePluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
+      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(findPluginEntry(mp, 'backend')).toBeDefined();
     });
 
@@ -127,42 +150,54 @@ describe('deletePluginHandler', () => {
       expect(exit).toHaveBeenCalledWith(0);
     });
 
-    it('tracks the deletion with the resolved git remote url', async () => {
+    it('tracks the deletion once', async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
 
       expect(trackPluginDeleted).toHaveBeenCalledTimes(1);
+    });
+
+    it('tracks the deletion with the resolved git remote url', async () => {
+      await deletePluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
       expect(trackPluginDeleted).toHaveBeenCalledWith({
         packageSlug: 'security',
         gitRemoteUrl: 'git@github.com:org/repo.git',
       });
     });
 
-    it('tracks with an empty git remote url when not in a git repository', async () => {
-      tryGetGitRepositoryRoot.mockResolvedValue(null);
+    describe('when not in a git repository', () => {
+      it('tracks with an empty git remote url', async () => {
+        tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
 
-      expect(trackPluginDeleted).toHaveBeenCalledWith({
-        packageSlug: 'security',
-        gitRemoteUrl: '',
+        expect(trackPluginDeleted).toHaveBeenCalledWith({
+          packageSlug: 'security',
+          gitRemoteUrl: '',
+        });
       });
     });
 
-    it('still exits zero when tracking fails', async () => {
-      trackPluginDeleted.mockRejectedValue(new Error('network'));
+    describe('when tracking fails', () => {
+      it('still exits zero', async () => {
+        trackPluginDeleted.mockRejectedValue(new Error('network'));
 
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
 
-      expect(exit).toHaveBeenCalledWith(0);
+        expect(exit).toHaveBeenCalledWith(0);
+      });
     });
   });
 
@@ -230,15 +265,23 @@ describe('deletePluginHandler', () => {
       });
     });
 
-    it('refuses with a remote-source error and exits non-zero', async () => {
+    it('refuses with a remote-source error', async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
 
-      expect(error).toHaveBeenCalledWith(
+      expect(printedErrors[0]).toBe(
         'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
       );
+    });
+
+    it('exits non-zero', async () => {
+      await deletePluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
       expect(exit).toHaveBeenCalledWith(1);
     });
 
@@ -279,7 +322,7 @@ describe('deletePluginHandler', () => {
       });
     });
 
-    it('prints a nothing-to-delete message and exits zero', async () => {
+    it('prints a nothing-to-delete message', async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
@@ -288,6 +331,14 @@ describe('deletePluginHandler', () => {
       expect(log).toHaveBeenCalledWith(
         'Plugin "security" is not declared in marketplace.json. Nothing to delete.',
       );
+    });
+
+    it('exits zero', async () => {
+      await deletePluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
       expect(exit).toHaveBeenCalledWith(0);
     });
 
@@ -330,13 +381,21 @@ describe('deletePluginHandler', () => {
         confirmOverwrite.mockResolvedValue(true);
       });
 
-      it('removes commands and skills directories', async () => {
+      it('removes the commands directory', async () => {
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
 
         expect(existsSync(join(tmp, 'commands'))).toBe(false);
+      });
+
+      it('removes the skills directory', async () => {
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
         expect(existsSync(join(tmp, 'skills'))).toBe(false);
       });
 
@@ -412,15 +471,23 @@ describe('deletePluginHandler', () => {
         writeStandaloneManifest({ name: 'frontend' });
       });
 
-      it('exits non-zero with the documented message', async () => {
+      it('prints the documented error message', async () => {
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
 
-        expect(error).toHaveBeenCalledWith(
+        expect(printedErrors[0]).toBe(
           "The plugin 'security' is not handled in this repo.",
         );
+      });
+
+      it('exits non-zero', async () => {
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
         expect(exit).toHaveBeenCalledWith(1);
       });
 

@@ -35,7 +35,6 @@ describe('updateHandler', () => {
     .mockImplementation(() => undefined as never);
 
   beforeEach(() => {
-    jest.clearAllMocks();
     (fs.realpathSync as jest.Mock).mockImplementation((p: string) => p);
 
     mockFetch = jest.fn();
@@ -48,6 +47,7 @@ describe('updateHandler', () => {
       fetchFn: mockFetch,
     };
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('getPlatformAssetSuffix', () => {
     it('returns macos-arm64 for darwin arm64', () => {

@@ -565,68 +565,100 @@ describe('PackmindLockFileService', () => {
           ...overrides,
         }) as FileModification;
 
-      it('emits entries with source: "default" under the default: key prefix when FileModification.source is "default"', () => {
-        const result = service.buildLockFile({
-          fileModifications: [skillFileMod({ source: 'default' })],
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions,
-          codingAgents: ['claude'],
-          packageSlugs: [],
-          artifactSpaceIds: {},
-          artifactPackageIds: {},
+      describe('when FileModification.source is "default"', () => {
+        let result: ReturnType<typeof service.buildLockFile>;
+
+        beforeEach(() => {
+          result = service.buildLockFile({
+            fileModifications: [skillFileMod({ source: 'default' })],
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions,
+            codingAgents: ['claude'],
+            packageSlugs: [],
+            artifactSpaceIds: {},
+            artifactPackageIds: {},
+          });
         });
 
-        expect(Object.keys(result.artifacts)).toEqual([
-          'default:skill:my-skill',
-        ]);
-        expect(result.artifacts['default:skill:my-skill'].source).toBe(
-          'default',
-        );
+        it('emits entries under the default: key prefix', () => {
+          expect(Object.keys(result.artifacts)).toEqual([
+            'default:skill:my-skill',
+          ]);
+        });
+
+        it('emits entries with source: "default"', () => {
+          expect(result.artifacts['default:skill:my-skill'].source).toBe(
+            'default',
+          );
+        });
       });
 
-      it('defaults to source: "user" under the user: key prefix when FileModification.source is undefined', () => {
-        const result = service.buildLockFile({
-          fileModifications: [skillFileMod()],
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions,
-          codingAgents: ['claude'],
-          packageSlugs: [],
-          artifactSpaceIds: {},
-          artifactPackageIds: {},
+      describe('when FileModification.source is undefined', () => {
+        let result: ReturnType<typeof service.buildLockFile>;
+
+        beforeEach(() => {
+          result = service.buildLockFile({
+            fileModifications: [skillFileMod()],
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions,
+            codingAgents: ['claude'],
+            packageSlugs: [],
+            artifactSpaceIds: {},
+            artifactPackageIds: {},
+          });
         });
 
-        expect(Object.keys(result.artifacts)).toEqual(['user:skill:my-skill']);
-        expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
+        it('defaults to entries under the user: key prefix', () => {
+          expect(Object.keys(result.artifacts)).toEqual([
+            'user:skill:my-skill',
+          ]);
+        });
+
+        it('defaults to source: "user"', () => {
+          expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
+        });
       });
 
-      it('emits both default and user entries side-by-side when the same slug appears with both sources', () => {
-        const result = service.buildLockFile({
-          fileModifications: [
-            skillFileMod({ source: 'default' }),
-            skillFileMod({
-              path: '.cursor/skills/my-skill/SKILL.md',
-              source: 'user',
-            }),
-          ],
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions,
-          codingAgents: ['claude', 'cursor'],
-          packageSlugs: [],
-          artifactSpaceIds: {},
-          artifactPackageIds: {},
+      describe('when the same slug appears with both sources', () => {
+        let result: ReturnType<typeof service.buildLockFile>;
+
+        beforeEach(() => {
+          result = service.buildLockFile({
+            fileModifications: [
+              skillFileMod({ source: 'default' }),
+              skillFileMod({
+                path: '.cursor/skills/my-skill/SKILL.md',
+                source: 'user',
+              }),
+            ],
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions,
+            codingAgents: ['claude', 'cursor'],
+            packageSlugs: [],
+            artifactSpaceIds: {},
+            artifactPackageIds: {},
+          });
         });
 
-        expect(Object.keys(result.artifacts).sort()).toEqual([
-          'default:skill:my-skill',
-          'user:skill:my-skill',
-        ]);
-        expect(result.artifacts['default:skill:my-skill'].source).toBe(
-          'default',
-        );
-        expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
+        it('emits both default and user entries side-by-side', () => {
+          expect(Object.keys(result.artifacts).sort()).toEqual([
+            'default:skill:my-skill',
+            'user:skill:my-skill',
+          ]);
+        });
+
+        it('sets source: "default" on the default entry', () => {
+          expect(result.artifacts['default:skill:my-skill'].source).toBe(
+            'default',
+          );
+        });
+
+        it('sets source: "user" on the user entry', () => {
+          expect(result.artifacts['user:skill:my-skill'].source).toBe('user');
+        });
       });
     });
   });

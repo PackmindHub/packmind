@@ -36,7 +36,7 @@ describe('PluginsController', () => {
   });
 
   describe('render', () => {
-    it('delegates to the service with the assembled command', async () => {
+    describe('delegates to the service with the assembled command', () => {
       const response: RenderPackageAsPluginResponse = {
         files: [
           {
@@ -48,21 +48,29 @@ describe('PluginsController', () => {
         pluginName: 'security',
         pluginVersion: '0.1.0',
       };
-      service.renderPlugin.mockResolvedValue(response);
+      let result: RenderPackageAsPluginResponse;
 
-      const result = await controller.render(orgId, body, request);
-
-      expect(service.renderPlugin).toHaveBeenCalledWith({
-        userId,
-        organizationId: orgId,
-        packageSlug: 'security',
-        mode: 'marketplace',
-        pluginRoot: 'plugins/security/',
-        pluginName: 'security',
-        gitRemoteUrl: undefined,
-        gitBranch: undefined,
+      beforeEach(async () => {
+        service.renderPlugin.mockResolvedValue(response);
+        result = await controller.render(orgId, body, request);
       });
-      expect(result).toBe(response);
+
+      it('calls the service with the assembled command', () => {
+        expect(service.renderPlugin).toHaveBeenCalledWith({
+          userId,
+          organizationId: orgId,
+          packageSlug: 'security',
+          mode: 'marketplace',
+          pluginRoot: 'plugins/security/',
+          pluginName: 'security',
+          gitRemoteUrl: undefined,
+          gitBranch: undefined,
+        });
+      });
+
+      it('returns the service result', () => {
+        expect(result).toBe(response);
+      });
     });
 
     it('passes gitRemoteUrl and gitBranch from the body into the command', async () => {
@@ -109,19 +117,27 @@ describe('PluginsController', () => {
       gitRemoteUrl: 'git@github.com:acme/repo.git',
     };
 
-    it('maps the body into the command and returns the service result', async () => {
+    describe('maps the body into the command and returns the service result', () => {
       const response: TrackPluginDeletedResponse = { tracked: true };
-      service.trackPluginDeleted.mockResolvedValue(response);
+      let result: TrackPluginDeletedResponse;
 
-      const result = await controller.trackDeleted(orgId, trackBody, request);
-
-      expect(service.trackPluginDeleted).toHaveBeenCalledWith({
-        userId,
-        organizationId: orgId,
-        packageSlug: 'security',
-        gitRemoteUrl: 'git@github.com:acme/repo.git',
+      beforeEach(async () => {
+        service.trackPluginDeleted.mockResolvedValue(response);
+        result = await controller.trackDeleted(orgId, trackBody, request);
       });
-      expect(result).toBe(response);
+
+      it('calls the service with the assembled command', () => {
+        expect(service.trackPluginDeleted).toHaveBeenCalledWith({
+          userId,
+          organizationId: orgId,
+          packageSlug: 'security',
+          gitRemoteUrl: 'git@github.com:acme/repo.git',
+        });
+      });
+
+      it('returns the service result', () => {
+        expect(result).toBe(response);
+      });
     });
 
     it('translates PackagesNotFoundError to a NotFoundException', async () => {

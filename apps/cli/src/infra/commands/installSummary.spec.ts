@@ -56,15 +56,24 @@ describe('buildInstallSummary', () => {
   });
 
   describe('when packmind.json was created (Cedric scenario)', () => {
-    it('includes a "Created packmind.json" line and the package slugs', () => {
-      const summary = buildInstallSummary(
-        make({
-          configCreated: true,
-          packagesAdded: ['@testing/cli-e2e'],
-        }),
-      );
-      expect(summary).toContain('✅ Created packmind.json');
-      expect(summary).toContain('@testing/cli-e2e');
+    describe('includes a "Created packmind.json" line and the package slugs', () => {
+      let summary: string;
+      beforeEach(() => {
+        summary = buildInstallSummary(
+          make({
+            configCreated: true,
+            packagesAdded: ['@testing/cli-e2e'],
+          }),
+        );
+      });
+
+      it('includes a "Created packmind.json" line', () => {
+        expect(summary).toContain('✅ Created packmind.json');
+      });
+
+      it('includes the package slug', () => {
+        expect(summary).toContain('@testing/cli-e2e');
+      });
     });
 
     it('never emits the bare "Nothing to install" message', () => {
@@ -79,15 +88,24 @@ describe('buildInstallSummary', () => {
   });
 
   describe('when packages were added to existing config', () => {
-    it('includes an "Added N package(s)" line and the new slugs only', () => {
-      const summary = buildInstallSummary(
-        make({
-          configCreated: false,
-          packagesAdded: ['@space/new-one'],
-        }),
-      );
-      expect(summary).toContain('✅ Added 1 package to packmind.json');
-      expect(summary).toContain('@space/new-one');
+    describe('includes an "Added N package(s)" line and the new slugs only', () => {
+      let summary: string;
+      beforeEach(() => {
+        summary = buildInstallSummary(
+          make({
+            configCreated: false,
+            packagesAdded: ['@space/new-one'],
+          }),
+        );
+      });
+
+      it('includes an "Added 1 package to packmind.json" line', () => {
+        expect(summary).toContain('✅ Added 1 package to packmind.json');
+      });
+
+      it('includes the new slug', () => {
+        expect(summary).toContain('@space/new-one');
+      });
     });
   });
 
@@ -122,23 +140,33 @@ describe('buildInstallSummary', () => {
       expect(summary).toBe('✅ Synced 1 skill');
     });
 
-    it('does not flip to "Synced" when only an unrelated file (e.g. CLAUDE.md index) was rewritten', () => {
-      const summary = buildInstallSummary(
-        make({
-          filesCreated: 1,
-          filesUpdated: 1,
-          standardsCount: 1,
-          skillsCount: 1,
-        }),
-      );
-      expect(summary).toContain('✅ Already up to date');
-      expect(summary).not.toContain('Synced');
+    describe('when only an unrelated file (e.g. CLAUDE.md index) was rewritten', () => {
+      let summary: string;
+      beforeEach(() => {
+        summary = buildInstallSummary(
+          make({
+            filesCreated: 1,
+            filesUpdated: 1,
+            standardsCount: 1,
+            skillsCount: 1,
+          }),
+        );
+      });
+
+      it('does not flip to "Synced"', () => {
+        expect(summary).not.toContain('Synced');
+      });
+
+      it('returns "Already up to date"', () => {
+        expect(summary).toContain('✅ Already up to date');
+      });
     });
   });
 
   describe('when packages added but no artifacts available to render', () => {
-    it('does not say "Nothing to install"', () => {
-      const summary = buildInstallSummary(
+    let summary: string;
+    beforeEach(() => {
+      summary = buildInstallSummary(
         make({
           configCreated: true,
           packagesAdded: ['@empty/pkg'],
@@ -150,7 +178,13 @@ describe('buildInstallSummary', () => {
           },
         }),
       );
+    });
+
+    it('does not say "Nothing to install"', () => {
       expect(summary).not.toContain('Nothing to install');
+    });
+
+    it('says "Created packmind.json"', () => {
       expect(summary).toContain('Created packmind.json');
     });
   });
@@ -163,10 +197,11 @@ describe('buildInstallSummary', () => {
   });
 
   describe('when an agent rendering was re-created (e.g. .claude/skills was rm -rf-ed)', () => {
-    it('reports the restored artifact and does not say "Already up to date"', () => {
+    let summary: string;
+    beforeEach(() => {
       // Agent-only rendering: no `.packmind/` mirror so `skillsCount` stays 0,
       // but the InstallUseCase tracked the skill as changed via artifactId.
-      const summary = buildInstallSummary(
+      summary = buildInstallSummary(
         make({
           filesCreated: 1,
           skillsCount: 0,
@@ -179,21 +214,34 @@ describe('buildInstallSummary', () => {
           },
         }),
       );
+    });
+
+    it('reports the restored artifact', () => {
       expect(summary).toContain('✅ Synced 1 skill');
+    });
+
+    it('does not say "Already up to date"', () => {
       expect(summary).not.toContain('Already up to date');
     });
   });
 
   describe('when both config created and content synced', () => {
-    it('combines both lines', () => {
-      const summary = buildInstallSummary(
+    let summary: string;
+    beforeEach(() => {
+      summary = buildInstallSummary(
         make({
           configCreated: true,
           packagesAdded: ['@a/b'],
           standardsChanged: 2,
         }),
       );
+    });
+
+    it('includes the "Created packmind.json" line', () => {
       expect(summary).toContain('Created packmind.json');
+    });
+
+    it('includes the "Synced 2 standards" line', () => {
       expect(summary).toContain('Synced 2 standards');
     });
   });
@@ -225,8 +273,9 @@ describe('buildIncapableArtifactsWarning', () => {
   });
 
   describe('Cedric scenario: skills in source but no skill-capable agent', () => {
-    it('warns about skills with the count and capable agent suggestions', () => {
-      const warning = buildIncapableArtifactsWarning(
+    let warning: string | null;
+    beforeEach(() => {
+      warning = buildIncapableArtifactsWarning(
         make({
           resolvedAgents: ['agents_md', 'packmind'],
           sourceArtifacts: {
@@ -237,17 +286,33 @@ describe('buildIncapableArtifactsWarning', () => {
           },
         }),
       );
+    });
+
+    it('warns about skills (is not null)', () => {
       expect(warning).not.toBeNull();
+    });
+
+    it('lists the current agents', () => {
       expect(warning).toContain('agents_md, packmind');
+    });
+
+    it('mentions the skill count', () => {
       expect(warning).toContain('3 skills');
+    });
+
+    it('suggests a capable agent', () => {
       expect(warning).toContain('claude');
+    });
+
+    it('includes the config agents command', () => {
       expect(warning).toContain('packmind-cli config agents');
     });
   });
 
   describe('multi-type mismatch', () => {
-    it('produces a single consolidated block listing every unsupported type', () => {
-      const warning = buildIncapableArtifactsWarning(
+    let warning: string | null;
+    beforeEach(() => {
+      warning = buildIncapableArtifactsWarning(
         make({
           resolvedAgents: ['agents_md'],
           sourceArtifacts: {
@@ -258,17 +323,33 @@ describe('buildIncapableArtifactsWarning', () => {
           },
         }),
       );
+    });
+
+    it('produces a non-null warning', () => {
       expect(warning).not.toBeNull();
+    });
+
+    it('lists unsupported skills count', () => {
       expect(warning).toContain('2 skills');
+    });
+
+    it('lists unsupported commands count', () => {
       expect(warning).toContain('4 commands');
+    });
+
+    it('lists unsupported recipes count', () => {
       expect(warning).toContain('1 recipe');
-      expect(warning).not.toContain('5 standards'); // supported, not warned
+    });
+
+    it('does not warn about supported standards', () => {
+      expect(warning).not.toContain('5 standards');
     });
   });
 
   describe('singular form', () => {
-    it('uses "1 skill" not "1 skills"', () => {
-      const warning = buildIncapableArtifactsWarning(
+    let warning: string | null;
+    beforeEach(() => {
+      warning = buildIncapableArtifactsWarning(
         make({
           resolvedAgents: ['agents_md'],
           sourceArtifacts: {
@@ -279,7 +360,13 @@ describe('buildIncapableArtifactsWarning', () => {
           },
         }),
       );
+    });
+
+    it('uses "1 skill" not "1 skills"', () => {
       expect(warning).toContain('1 skill');
+    });
+
+    it('does not use the plural form "1 skills"', () => {
       expect(warning).not.toContain('1 skills');
     });
   });

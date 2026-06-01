@@ -153,15 +153,27 @@ describe('EnsureCliVersionUseCase', () => {
       );
     });
 
-    it('treats 0.28.1-next as matching 0.28.1', async () => {
-      const outcome = await useCase.execute({
-        baseDirectory: BASE_DIRECTORY,
-        currentCliVersion: '0.28.1-next',
+    describe('when the current CLI is a -next version', () => {
+      let outcome: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        outcome = await useCase.execute({
+          baseDirectory: BASE_DIRECTORY,
+          currentCliVersion: '0.28.1-next',
+        });
       });
 
-      expect(outcome).toEqual({ kind: 'match' });
-      expect(installDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
-      expect(lockFileRepository.write).not.toHaveBeenCalled();
+      it('returns the match outcome', () => {
+        expect(outcome).toEqual({ kind: 'match' });
+      });
+
+      it('does not trigger a default-skills install', () => {
+        expect(installDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
+      });
+
+      it('does not write to the lockfile', () => {
+        expect(lockFileRepository.write).not.toHaveBeenCalled();
+      });
     });
 
     it('also treats a -next lockVersion as matching the released CLI', async () => {
@@ -202,53 +214,79 @@ describe('EnsureCliVersionUseCase', () => {
       });
     });
 
-    it('triggers the default-skills install with the current CLI version', async () => {
-      await useCase.execute({
-        baseDirectory: BASE_DIRECTORY,
-        currentCliVersion: '0.28.1',
-        includeBeta: true,
+    describe('when triggering the default-skills install', () => {
+      beforeEach(async () => {
+        await useCase.execute({
+          baseDirectory: BASE_DIRECTORY,
+          currentCliVersion: '0.28.1',
+          includeBeta: true,
+        });
       });
 
-      expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledTimes(1);
-      expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
-        baseDirectory: BASE_DIRECTORY,
-        cliVersion: '0.28.1',
-        includeBeta: true,
-      });
-    });
-
-    it('rewrites the lockfile with the verbatim new cliVersion', async () => {
-      await useCase.execute({
-        baseDirectory: BASE_DIRECTORY,
-        currentCliVersion: '0.28.1-next',
+      it('calls the install use case once', () => {
+        expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledTimes(1);
       });
 
-      expect(lockFileRepository.write).toHaveBeenCalledTimes(1);
-      expect(lockFileRepository.write).toHaveBeenCalledWith(BASE_DIRECTORY, {
-        ...existingLockFile,
-        cliVersion: '0.28.1-next',
+      it('calls the install use case with the current CLI version', () => {
+        expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          baseDirectory: BASE_DIRECTORY,
+          cliVersion: '0.28.1',
+          includeBeta: true,
+        });
       });
     });
 
-    it('treats a -next current vs released lock as an upgrade when major/minor/patch is higher', async () => {
-      lockFileRepository.read.mockResolvedValue(
-        buildLockFile({ cliVersion: '0.27.0' }),
-      );
-
-      const outcome = await useCase.execute({
-        baseDirectory: BASE_DIRECTORY,
-        currentCliVersion: '0.28.0-next',
+    describe('when rewriting the lockfile', () => {
+      beforeEach(async () => {
+        await useCase.execute({
+          baseDirectory: BASE_DIRECTORY,
+          currentCliVersion: '0.28.1-next',
+        });
       });
 
-      expect(outcome).toEqual({
-        kind: 'newer',
-        lockVersion: '0.27.0',
-        upgraded: true,
+      it('writes the lockfile exactly once', () => {
+        expect(lockFileRepository.write).toHaveBeenCalledTimes(1);
       });
-      expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
-        baseDirectory: BASE_DIRECTORY,
-        cliVersion: '0.28.0-next',
-        includeBeta: undefined,
+
+      it('writes the lockfile with the verbatim new cliVersion', () => {
+        expect(lockFileRepository.write).toHaveBeenCalledWith(BASE_DIRECTORY, {
+          ...existingLockFile,
+          cliVersion: '0.28.1-next',
+        });
+      });
+    });
+
+    describe('when the -next current version has a higher major/minor/patch than the lock', () => {
+      beforeEach(() => {
+        lockFileRepository.read.mockResolvedValue(
+          buildLockFile({ cliVersion: '0.27.0' }),
+        );
+      });
+
+      it('returns the newer outcome', async () => {
+        const outcome = await useCase.execute({
+          baseDirectory: BASE_DIRECTORY,
+          currentCliVersion: '0.28.0-next',
+        });
+
+        expect(outcome).toEqual({
+          kind: 'newer',
+          lockVersion: '0.27.0',
+          upgraded: true,
+        });
+      });
+
+      it('triggers the default-skills install with the -next version', async () => {
+        await useCase.execute({
+          baseDirectory: BASE_DIRECTORY,
+          currentCliVersion: '0.28.0-next',
+        });
+
+        expect(installDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          baseDirectory: BASE_DIRECTORY,
+          cliVersion: '0.28.0-next',
+          includeBeta: undefined,
+        });
       });
     });
   });
@@ -314,20 +352,36 @@ describe('EnsureCliVersionUseCase', () => {
       ).rejects.toBe(error);
     });
 
-    it('propagates errors from the default-skills install', async () => {
-      lockFileRepository.read.mockResolvedValue(
-        buildLockFile({ cliVersion: '0.27.0' }),
-      );
-      const error = new Error('install failed');
-      installDefaultSkillsUseCase.execute.mockRejectedValue(error);
+    describe('when the default-skills install throws', () => {
+      let error: Error;
 
-      await expect(
-        useCase.execute({
-          baseDirectory: BASE_DIRECTORY,
-          currentCliVersion: '0.28.1',
-        }),
-      ).rejects.toBe(error);
-      expect(lockFileRepository.write).not.toHaveBeenCalled();
+      beforeEach(() => {
+        lockFileRepository.read.mockResolvedValue(
+          buildLockFile({ cliVersion: '0.27.0' }),
+        );
+        error = new Error('install failed');
+        installDefaultSkillsUseCase.execute.mockRejectedValue(error);
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          useCase.execute({
+            baseDirectory: BASE_DIRECTORY,
+            currentCliVersion: '0.28.1',
+          }),
+        ).rejects.toBe(error);
+      });
+
+      it('does not write to the lockfile', async () => {
+        await useCase
+          .execute({
+            baseDirectory: BASE_DIRECTORY,
+            currentCliVersion: '0.28.1',
+          })
+          .catch(() => undefined);
+
+        expect(lockFileRepository.write).not.toHaveBeenCalled();
+      });
     });
 
     it('propagates errors from the lockfile write', async () => {

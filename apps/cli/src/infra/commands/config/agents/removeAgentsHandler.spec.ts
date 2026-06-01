@@ -29,8 +29,6 @@ describe('removeAgentsHandler', () => {
   let deps: RemoveAgentsHandlerDependencies;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
     mockConfigRepository = {
       readConfig: jest.fn(),
       writeConfig: jest.fn(),
@@ -51,6 +49,7 @@ describe('removeAgentsHandler', () => {
       getCwd: () => '/project',
     };
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when no agent names are provided', () => {
     beforeEach(() => {

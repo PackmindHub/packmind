@@ -5,12 +5,18 @@ import {
 
 describe('skillsCapabilityWarning', () => {
   describe('configuredAgentsSupportSkills', () => {
-    it('returns true when any agent supports skills', () => {
-      expect(configuredAgentsSupportSkills(['agents_md', 'claude'])).toBe(true);
+    describe('when any agent supports skills', () => {
+      it('returns true', () => {
+        expect(configuredAgentsSupportSkills(['agents_md', 'claude'])).toBe(
+          true,
+        );
+      });
     });
 
-    it('returns false when no configured agent supports skills', () => {
-      expect(configuredAgentsSupportSkills(['agents_md'])).toBe(false);
+    describe('when no configured agent supports skills', () => {
+      it('returns false', () => {
+        expect(configuredAgentsSupportSkills(['agents_md'])).toBe(false);
+      });
     });
 
     it('returns false on an empty agent list', () => {
@@ -42,8 +48,11 @@ describe('skillsCapabilityWarning', () => {
         expect(warning).toContain('do not support skills');
       });
 
-      it('points to packmind-cli config agents with a capable example', () => {
+      it('points to packmind-cli config agents', () => {
         expect(warning).toContain('packmind-cli config agents');
+      });
+
+      it('includes a capable agent example', () => {
         expect(warning).toContain('claude');
       });
     });

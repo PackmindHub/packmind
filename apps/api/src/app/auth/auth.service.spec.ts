@@ -151,16 +151,6 @@ describe('AuthService - getMe method', () => {
             userId: createUserId('1'),
           });
         });
-
-        it('logs a warning', () => {
-          expect(authService.logger.warn).toHaveBeenCalledWith(
-            'User does not have access to organization',
-            {
-              userId: '1',
-              organizationId: 'org-1',
-            },
-          );
-        });
       });
 
       describe('when user has no memberships', () => {

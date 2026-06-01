@@ -15,9 +15,11 @@ describe('RenderMode', () => {
       expect(RENDER_MODE_ORDER[claudeIndex + 1]).toBe(RenderMode.CLAUDE_PLUGIN);
     });
 
-    it('keeps CLAUDE_PLUGIN through normalization when requested', () => {
-      const normalized = normalizeRenderModes([RenderMode.CLAUDE_PLUGIN]);
-      expect(normalized).toContain(RenderMode.CLAUDE_PLUGIN);
+    describe('when requested', () => {
+      it('keeps CLAUDE_PLUGIN through normalization', () => {
+        const normalized = normalizeRenderModes([RenderMode.CLAUDE_PLUGIN]);
+        expect(normalized).toContain(RenderMode.CLAUDE_PLUGIN);
+      });
     });
   });
 });

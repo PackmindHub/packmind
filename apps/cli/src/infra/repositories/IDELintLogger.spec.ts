@@ -12,8 +12,8 @@ describe('IDELintLogger', () => {
 
   beforeEach(() => {
     logger = new IDELintLogger();
-    jest.clearAllMocks();
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('logViolation', () => {
     describe('when violation has error severity', () => {

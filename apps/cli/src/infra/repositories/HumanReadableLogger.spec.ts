@@ -19,8 +19,8 @@ describe('HumanReadableLogger', () => {
 
   beforeEach(() => {
     logger = new HumanReadableLogger();
-    jest.clearAllMocks();
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('logViolation', () => {
     describe('when violation has error severity', () => {
