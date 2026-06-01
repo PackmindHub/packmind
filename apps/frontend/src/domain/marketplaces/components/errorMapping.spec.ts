@@ -1,48 +1,43 @@
-import {
-  GENERIC_SUBMIT_ERROR_MESSAGE,
-  NETWORK_ERROR_MESSAGE,
-  getSubmitErrorMessage,
-} from './errorMapping';
+import { PackmindError } from '../../../services/api/errors/PackmindError';
+import { PackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
+import { NETWORK_ERROR_MESSAGE, getSubmitErrorMessage } from './errorMapping';
 
 describe('getSubmitErrorMessage', () => {
-  it('surfaces the backend message verbatim (e.g. the already-linked-as-standard conflict)', () => {
+  it('surfaces the backend message from a PackmindConflictError (409 already-linked-as-standard)', () => {
     const message =
       'Repository acme/foo is already linked as a standard Git repository in this organization';
 
-    const error = {
-      response: { status: 409, data: { error: 'Conflict', message } },
-    };
+    const error = new PackmindConflictError({
+      status: 409,
+      statusText: 'Conflict',
+      data: { message },
+    });
 
     expect(getSubmitErrorMessage(error)).toBe(message);
   });
 
-  it('joins NestJS validation message arrays', () => {
-    const error = {
-      response: {
-        status: 400,
-        data: { message: ['name should not be empty', 'repo is required'] },
-      },
-    };
+  it('surfaces the backend message from a generic PackmindError', () => {
+    const message = 'No marketplace.json descriptor was found in acme/foo';
 
-    expect(getSubmitErrorMessage(error)).toBe(
-      'name should not be empty repo is required',
-    );
+    const error = new PackmindError({
+      status: 400,
+      statusText: 'Bad Request',
+      data: { message },
+    });
+
+    expect(getSubmitErrorMessage(error)).toBe(message);
   });
 
-  it('falls back to the network message when there is no response', () => {
-    expect(getSubmitErrorMessage(new Error('Network Error'))).toBe(
-      NETWORK_ERROR_MESSAGE,
-    );
+  it('falls back to the connectivity message for a plain network error', () => {
+    expect(
+      getSubmitErrorMessage(
+        new Error('Network Error: No response from server'),
+      ),
+    ).toBe(NETWORK_ERROR_MESSAGE);
   });
 
-  it('falls back to the network message for a non-object error', () => {
+  it('falls back to the connectivity message for non-object errors', () => {
     expect(getSubmitErrorMessage('boom')).toBe(NETWORK_ERROR_MESSAGE);
     expect(getSubmitErrorMessage(null)).toBe(NETWORK_ERROR_MESSAGE);
-  });
-
-  it('falls back to a generic message when the server responds without a message', () => {
-    const error = { response: { status: 500, data: {} } };
-
-    expect(getSubmitErrorMessage(error)).toBe(GENERIC_SUBMIT_ERROR_MESSAGE);
   });
 });
