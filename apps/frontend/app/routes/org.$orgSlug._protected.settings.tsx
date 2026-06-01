@@ -11,6 +11,8 @@ import {
   useGetMeQuery,
 } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  PMFeatureFlag,
   PMFlex,
   PMGrid,
   PMHeading,
@@ -96,6 +98,11 @@ export default function SettingsIndexRouteModule() {
                 label="Users"
                 exact
                 data-testid={SettingsRouteDataTestIds.UsersLink}
+              />,
+              <SidebarNavigationLink
+                url={orgSlug ? routes.org.toSettingsSpaces(orgSlug) : '#'}
+                label="Spaces"
+                exact
               />,
             ]}
           />

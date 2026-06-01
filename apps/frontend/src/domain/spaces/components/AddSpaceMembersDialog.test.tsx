@@ -253,6 +253,57 @@ describe('AddSpaceMembersDialog', () => {
           expect(mockSetOpen).toHaveBeenCalledWith(false);
         });
       });
+
+      it('calls onSuccess when provided after the mutation resolves', async () => {
+        const onSuccess = jest.fn();
+        const mockMutateAsync = jest
+          .fn()
+          .mockResolvedValue({ memberships: [] });
+        mockUseAddMembersToSpaceMutation.mockReturnValue(
+          createMockMutation({ mutateAsync: mockMutateAsync }),
+        );
+
+        renderWithProviders(
+          <AddSpaceMembersDialog {...defaultProps} onSuccess={onSuccess} />,
+        );
+
+        selectUser('charlie.brown');
+        await screen.findByText('charlie.brown');
+
+        const addButton = screen.getByRole('button', {
+          name: /add 1 member$/i,
+        });
+        fireEvent.click(addButton);
+
+        await waitFor(() => {
+          expect(onSuccess).toHaveBeenCalled();
+        });
+      });
+
+      it('does not call onSuccess when the mutation rejects', async () => {
+        const onSuccess = jest.fn();
+        const mockMutateAsync = jest.fn().mockRejectedValue(new Error('boom'));
+        mockUseAddMembersToSpaceMutation.mockReturnValue(
+          createMockMutation({ mutateAsync: mockMutateAsync }),
+        );
+
+        renderWithProviders(
+          <AddSpaceMembersDialog {...defaultProps} onSuccess={onSuccess} />,
+        );
+
+        selectUser('charlie.brown');
+        await screen.findByText('charlie.brown');
+
+        const addButton = screen.getByRole('button', {
+          name: /add 1 member$/i,
+        });
+        fireEvent.click(addButton);
+
+        await waitFor(() => {
+          expect(mockMutateAsync).toHaveBeenCalled();
+        });
+        expect(onSuccess).not.toHaveBeenCalled();
+      });
     });
   });
 

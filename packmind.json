@@ -7,5 +7,6 @@
     "@frontend/generic": "*",
     "@cli/generic": "*",
     "@testing/unit-tests": "*"
+    "@global/proprietary": "*"
   }
 }

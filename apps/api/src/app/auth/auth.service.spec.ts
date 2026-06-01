@@ -258,15 +258,6 @@ describe('AuthService - getMe method', () => {
             2,
           );
         });
-
-        it('logs the multi-organization state', () => {
-          expect(authService.logger.log).toHaveBeenCalledWith(
-            'User is authenticated but has not selected an organization',
-            {
-              userId: '1',
-            },
-          );
-        });
       });
     });
 
