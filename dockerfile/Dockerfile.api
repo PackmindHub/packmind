@@ -26,8 +26,10 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate && \
     chmod -R a+rX "$COREPACK_HOME"
 USER node
 
-# Copy optimized API package.json and install only required dependencies
+# Copy optimized API package.json + the workspace lockfile so transitive
+# versions are pinned for reproducible builds (mirrors the mcp-server image)
 COPY --chown=node:node apps/api/*package*.json package.json
+COPY --chown=node:node pnpm-lock.yaml ./
 RUN pnpm install --prod --ignore-scripts
 
 # Copy the built application and migrations bundle with correct ownership
@@ -64,9 +66,11 @@ RUN --mount=type=bind,source=.,target=/build-context \
 USER node
 ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 
-# Install migration dependencies, then prune the shared pnpm store once at the end
-# (pruning between installs may force re-downloads of packages shared by both projects)
+# Install migration dependencies against the pinned workspace lockfile, then
+# prune the shared pnpm store once at the end (pruning between installs may
+# force re-downloads of packages shared by both projects)
 WORKDIR /app/migrations
+COPY --chown=node:node pnpm-lock.yaml ./
 RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Return to app directory
