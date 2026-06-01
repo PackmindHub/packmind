@@ -600,15 +600,15 @@ describe('...', () => {
               ).toBe(true);
             });
 
-            it('records the well-known packmind-create-skill default entry', () => {
+            it('records the well-known packmind-update-playbook default entry', () => {
               expect(
-                lockFile.artifacts['default:skill:packmind-create-skill'],
+                lockFile.artifacts['default:skill:packmind-update-playbook'],
               ).toBeDefined();
             });
 
-            it('tags the packmind-create-skill entry with source: "default"', () => {
+            it('tags the packmind-update-playbook entry with source: "default"', () => {
               expect(
-                lockFile.artifacts['default:skill:packmind-create-skill']
+                lockFile.artifacts['default:skill:packmind-update-playbook']
                   .source,
               ).toBe('default');
             });
