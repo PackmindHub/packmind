@@ -1,9 +1,6 @@
 import { FileUpdates } from '@packmind/types';
 import { CliListCommandsDeployer } from './CliListCommandsDeployer';
-import { CreateCommandDeployer } from './CreateCommandDeployer';
 import { CreatePackageDeployer } from './CreatePackageDeployer';
-import { CreateSkillDeployer } from './CreateSkillDeployer';
-import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
@@ -38,10 +35,7 @@ export type DefaultSkillsDeployResult = {
 
 export class DefaultSkillsDeployer {
   private readonly skillDeployers: ISkillDeployer[] = [
-    new CreateSkillDeployer(),
-    new CreateStandardDeployer(),
     new OnboardDeployer(),
-    new CreateCommandDeployer(),
     new CreatePackageDeployer(),
     new CliListCommandsDeployer(),
     new UpdatePlaybookDeployer(),
