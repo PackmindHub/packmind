@@ -2,7 +2,7 @@ import {
   detectPluginMode,
   readMarketplace,
   writeMarketplace,
-  isRemoteSource,
+  classifySource,
   findPluginEntry,
   upsertPluginEntry,
   removePluginEntry,
@@ -114,23 +114,44 @@ describe('marketplace.json helpers', () => {
     });
   });
 
-  describe('isRemoteSource', () => {
-    it('returns true for git sources', () => {
-      expect(isRemoteSource('git@my-provider.com/security-repo.git')).toBe(
-        true,
+  describe('classifySource', () => {
+    it('returns local for ./-prefixed relative paths', () => {
+      expect(classifySource('./plugins/security')).toBe('local');
+      expect(classifySource('./backend/plugins/security')).toBe('local');
+    });
+
+    it('returns remote for object sources (github, url, git-subdir, npm)', () => {
+      expect(classifySource({ source: 'github', repo: 'org/repo' })).toBe(
+        'remote',
+      );
+      expect(
+        classifySource({ source: 'url', url: 'https://example.com/x.git' }),
+      ).toBe('remote');
+      expect(
+        classifySource({
+          source: 'git-subdir',
+          url: 'https://example.com/x.git',
+          path: 'plugins/a',
+        }),
+      ).toBe('remote');
+      expect(classifySource({ source: 'npm', package: '@scope/pkg' })).toBe(
+        'remote',
       );
     });
 
-    it('returns true for https sources', () => {
-      expect(isRemoteSource('https://github.com/org/repo.git')).toBe(true);
+    it('returns invalid for bare relative paths', () => {
+      expect(classifySource('plugins/security')).toBe('invalid');
     });
 
-    it('returns false for relative sources', () => {
-      expect(isRemoteSource('./plugins/security')).toBe(false);
+    it('returns invalid for absolute paths', () => {
+      expect(classifySource('/plugins/security')).toBe('invalid');
     });
 
-    it('returns false for absolute path sources', () => {
-      expect(isRemoteSource('/plugins/security')).toBe(false);
+    it('returns invalid for raw git URLs as strings', () => {
+      expect(classifySource('git@my-provider.com/security-repo.git')).toBe(
+        'invalid',
+      );
+      expect(classifySource('https://github.com/org/repo.git')).toBe('invalid');
     });
   });
 

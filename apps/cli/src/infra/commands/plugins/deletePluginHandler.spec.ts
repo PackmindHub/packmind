@@ -79,6 +79,16 @@ describe('deletePluginHandler', () => {
       });
       mkdirSync(join(tmp, 'plugins/security/commands'), { recursive: true });
       writeFileSync(join(tmp, 'plugins/security/commands/a.md'), 'A');
+      confirmOverwrite.mockResolvedValue(true);
+    });
+
+    it('prompts the user for confirmation before deleting', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(confirmOverwrite).toHaveBeenCalledTimes(1);
+      expect(confirmOverwrite).toHaveBeenCalledWith(
+        expect.stringContaining('./plugins/security'),
+      );
     });
 
     it('removes the rendered folder', async () => {
@@ -131,6 +141,45 @@ describe('deletePluginHandler', () => {
     });
   });
 
+  describe('marketplace mode when the user declines confirmation', () => {
+    beforeEach(() => {
+      writeMarketplaceManifest({
+        name: 'mp',
+        plugins: [{ name: 'security', source: './plugins/security' }],
+      });
+      mkdirSync(join(tmp, 'plugins/security/commands'), { recursive: true });
+      writeFileSync(join(tmp, 'plugins/security/commands/a.md'), 'A');
+      confirmOverwrite.mockResolvedValue(false);
+    });
+
+    it('does not remove the rendered folder', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(existsSync(join(tmp, 'plugins/security/commands/a.md'))).toBe(
+        true,
+      );
+    });
+
+    it('does not mutate marketplace.json', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
+      expect(findPluginEntry(mp, 'security')).toBeDefined();
+    });
+
+    it('exits zero', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(exit).toHaveBeenCalledWith(0);
+    });
+
+    it('does not track the deletion', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).not.toHaveBeenCalled();
+    });
+  });
+
   describe('marketplace mode with a remote entry', () => {
     beforeEach(() => {
       writeMarketplaceManifest({
@@ -138,7 +187,7 @@ describe('deletePluginHandler', () => {
         plugins: [
           {
             name: 'security',
-            source: 'git@my-provider.com/security-repo.git',
+            source: { source: 'github', repo: 'org/security-repo' },
           },
         ],
       });
@@ -151,6 +200,49 @@ describe('deletePluginHandler', () => {
         'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
       );
       expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not mutate marketplace.json', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
+      expect(findPluginEntry(mp, 'security')).toBeDefined();
+    });
+
+    it('does not track the deletion', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(trackPluginDeleted).not.toHaveBeenCalled();
+    });
+
+    it('does not prompt the user', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(confirmOverwrite).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('marketplace mode with an invalid source format', () => {
+    beforeEach(() => {
+      writeMarketplaceManifest({
+        name: 'mp',
+        plugins: [{ name: 'security', source: 'plugins/security' }],
+      });
+    });
+
+    it('refuses with an unsupported-source error and exits non-zero', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining('unsupported source format'),
+      );
+      expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not prompt the user', async () => {
+      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(confirmOverwrite).not.toHaveBeenCalled();
     });
 
     it('does not mutate marketplace.json', async () => {
