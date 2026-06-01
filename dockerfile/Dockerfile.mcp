@@ -20,7 +20,7 @@ WORKDIR /app
 # (otherwise corepack prepare runs as root and pnpm install re-downloads under node's home)
 USER root
 ENV COREPACK_HOME=/usr/local/share/node/corepack
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate && \
+RUN corepack enable && corepack prepare pnpm@11.5.0 --activate && \
     chmod -R a+rX "$COREPACK_HOME"
 USER node
 

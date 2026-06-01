@@ -104,7 +104,7 @@ services:
       - |
         apk add --no-cache git
         corepack enable
-        corepack prepare pnpm@9.15.0 --activate
+        corepack prepare pnpm@11.5.0 --activate
         if ! pnpm install --frozen-lockfile --prefer-offline; then
           echo "[deps] lockfile drift detected — run 'pnpm install' locally and commit pnpm-lock.yaml" >&2
           exit 1
@@ -126,7 +126,7 @@ services:
         set -euo pipefail
         echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
         corepack enable
-        corepack prepare pnpm@9.15.0 --activate
+        corepack prepare pnpm@11.5.0 --activate
         cd packages/migrations
         pnpm typeorm migration:run --dataSource=datasourceDocker.ts --transaction each
       '
@@ -329,7 +329,7 @@ services:
     ports:
       - '9323:9323'
     working_dir: /packmind/apps/e2e-tests
-    entrypoint: sh -c "corepack enable && corepack prepare pnpm@9.15.0 --activate && cd /packmind && pnpm e2e"
+    entrypoint: sh -c "corepack enable && corepack prepare pnpm@11.5.0 --activate && cd /packmind && pnpm e2e"
     environment:
       BASE_URL: http://frontend:4200
       CI: 'true'
