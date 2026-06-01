@@ -702,56 +702,77 @@ describe('StandardService', () => {
           .mockResolvedValue([example1, example2, example3, example4]);
       });
 
-      it('copies all versions in a single bulk call', async () => {
-        await standardService.duplicateStandardToSpace(
-          standardId,
-          destinationSpaceId,
-          newUserId,
-        );
+      describe('copies all versions in a single bulk call', () => {
+        beforeEach(async () => {
+          await standardService.duplicateStandardToSpace(
+            standardId,
+            destinationSpaceId,
+            newUserId,
+          );
+        });
 
-        expect(standardVersionRepository.addMany).toHaveBeenCalledTimes(1);
-        expect(standardVersionRepository.addMany).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ name: version1.name }),
-            expect.objectContaining({ name: version2.name }),
-          ]),
-        );
+        it('calls addMany exactly once', () => {
+          expect(standardVersionRepository.addMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls addMany with all versions', () => {
+          expect(standardVersionRepository.addMany).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({ name: version1.name }),
+              expect.objectContaining({ name: version2.name }),
+            ]),
+          );
+        });
       });
 
-      it('copies all rules in a single bulk call', async () => {
-        await standardService.duplicateStandardToSpace(
-          standardId,
-          destinationSpaceId,
-          newUserId,
-        );
+      describe('copies all rules in a single bulk call', () => {
+        beforeEach(async () => {
+          await standardService.duplicateStandardToSpace(
+            standardId,
+            destinationSpaceId,
+            newUserId,
+          );
+        });
 
-        expect(ruleRepository.addMany).toHaveBeenCalledTimes(1);
-        expect(ruleRepository.addMany).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ content: rule1v1.content }),
-            expect.objectContaining({ content: rule2v1.content }),
-            expect.objectContaining({ content: rule1v2.content }),
-            expect.objectContaining({ content: rule2v2.content }),
-          ]),
-        );
+        it('calls addMany exactly once', () => {
+          expect(ruleRepository.addMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls addMany with all rules', () => {
+          expect(ruleRepository.addMany).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({ content: rule1v1.content }),
+              expect.objectContaining({ content: rule2v1.content }),
+              expect.objectContaining({ content: rule1v2.content }),
+              expect.objectContaining({ content: rule2v2.content }),
+            ]),
+          );
+        });
       });
 
-      it('copies all examples in a single bulk call', async () => {
-        await standardService.duplicateStandardToSpace(
-          standardId,
-          destinationSpaceId,
-          newUserId,
-        );
+      describe('copies all examples in a single bulk call', () => {
+        beforeEach(async () => {
+          await standardService.duplicateStandardToSpace(
+            standardId,
+            destinationSpaceId,
+            newUserId,
+          );
+        });
 
-        expect(ruleExampleRepository.addMany).toHaveBeenCalledTimes(1);
-        expect(ruleExampleRepository.addMany).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ lang: example1.lang }),
-            expect.objectContaining({ lang: example2.lang }),
-            expect.objectContaining({ lang: example3.lang }),
-            expect.objectContaining({ lang: example4.lang }),
-          ]),
-        );
+        it('calls addMany exactly once', () => {
+          expect(ruleExampleRepository.addMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls addMany with all examples', () => {
+          expect(ruleExampleRepository.addMany).toHaveBeenCalledWith(
+            expect.arrayContaining([
+              expect.objectContaining({ lang: example1.lang }),
+              expect.objectContaining({ lang: example2.lang }),
+              expect.objectContaining({ lang: example3.lang }),
+              expect.objectContaining({ lang: example4.lang }),
+            ]),
+          );
+        });
       });
 
       it('returns rule mappings for all rules', async () => {

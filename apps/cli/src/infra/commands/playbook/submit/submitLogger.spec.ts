@@ -78,9 +78,7 @@ describe('collectParts', () => {
 });
 
 describe('logPackageAddGuidance', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when a single standard is created', () => {
     it('logs a command with the standard slug', () => {

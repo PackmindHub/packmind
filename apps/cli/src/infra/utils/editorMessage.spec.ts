@@ -65,8 +65,11 @@ describe('openEditorForMessage', () => {
   const mockedResolveEditor = resolveEditorModule.resolveEditor as jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     mockedResolveEditor.mockReturnValue('nano');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('when editor exits successfully', () => {
@@ -96,28 +99,32 @@ describe('openEditorForMessage', () => {
       expect(mockedUnlinkSync).toHaveBeenCalledTimes(1);
     });
 
-    it('writes the default template to the temp file when no prefill is given', () => {
-      mockedReadFileSync.mockReturnValue('message');
+    describe('when no prefill is given', () => {
+      it('writes the default template to the temp file', () => {
+        mockedReadFileSync.mockReturnValue('message');
 
-      openEditorForMessage();
+        openEditorForMessage();
 
-      expect(mockedWriteFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-msg-'),
-        expect.stringContaining('# Enter a message'),
-        'utf-8',
-      );
+        expect(mockedWriteFileSync).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-msg-'),
+          expect.stringContaining('# Enter a message'),
+          'utf-8',
+        );
+      });
     });
 
-    it('writes the prefill verbatim when provided', () => {
-      mockedReadFileSync.mockReturnValue('updated content');
+    describe('when prefill is provided', () => {
+      it('writes the prefill verbatim', () => {
+        mockedReadFileSync.mockReturnValue('updated content');
 
-      openEditorForMessage('original content\n# kept comment');
+        openEditorForMessage('original content\n# kept comment');
 
-      expect(mockedWriteFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-msg-'),
-        'original content\n# kept comment',
-        'utf-8',
-      );
+        expect(mockedWriteFileSync).toHaveBeenCalledWith(
+          expect.stringContaining('packmind-msg-'),
+          'original content\n# kept comment',
+          'utf-8',
+        );
+      });
     });
 
     it('uses the editor returned by resolveEditor', () => {
@@ -157,14 +164,43 @@ describe('openEditorForMessage', () => {
   });
 
   describe('when no editor can be resolved', () => {
-    it('propagates the EDITOR_NOT_FOUND_MESSAGE from the resolver and does not touch the filesystem', () => {
+    beforeEach(() => {
       mockedResolveEditor.mockImplementation(() => {
         throw new Error(EDITOR_NOT_FOUND_MESSAGE);
       });
+    });
 
+    it('propagates the EDITOR_NOT_FOUND_MESSAGE from the resolver', () => {
       expect(() => openEditorForMessage()).toThrow(EDITOR_NOT_FOUND_MESSAGE);
+    });
+
+    it('does not spawn the editor', () => {
+      try {
+        openEditorForMessage();
+      } catch {
+        // expected
+      }
+
       expect(mockedSpawnSync).not.toHaveBeenCalled();
+    });
+
+    it('does not write to the filesystem', () => {
+      try {
+        openEditorForMessage();
+      } catch {
+        // expected
+      }
+
       expect(mockedWriteFileSync).not.toHaveBeenCalled();
+    });
+
+    it('does not delete from the filesystem', () => {
+      try {
+        openEditorForMessage();
+      } catch {
+        // expected
+      }
+
       expect(mockedUnlinkSync).not.toHaveBeenCalled();
     });
   });

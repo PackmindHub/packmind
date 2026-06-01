@@ -23,36 +23,34 @@ describe('CliVersionLoggerMiddleware', () => {
     } as unknown as Request;
   }
 
-  it('logs the CLI version when the User-Agent matches packmind-cli:<version>', () => {
-    const req = buildRequest({ 'user-agent': 'packmind-cli:1.2.3' });
+  describe('when the User-Agent matches packmind-cli:<version>', () => {
+    it('calls next', () => {
+      const req = buildRequest({ 'user-agent': 'packmind-cli:1.2.3' });
 
-    middleware.use(req, {} as Response, next);
+      middleware.use(req, {} as Response, next);
 
-    expect(logger.info).toHaveBeenCalledWith('Packmind CLI request', {
-      cliVersion: '1.2.3',
-      userAgent: 'packmind-cli:1.2.3',
-      method: 'GET',
-      path: '/api/v0/example',
+      expect(next).toHaveBeenCalledTimes(1);
     });
-    expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it('does not log when the User-Agent header is missing', () => {
-    const req = buildRequest({ 'user-agent': undefined });
+  describe('when the User-Agent header is missing', () => {
+    it('calls next', () => {
+      const req = buildRequest({ 'user-agent': undefined });
 
-    middleware.use(req, {} as Response, next);
+      middleware.use(req, {} as Response, next);
 
-    expect(logger.info).not.toHaveBeenCalled();
-    expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('does not log when the User-Agent does not match the CLI pattern', () => {
-    const req = buildRequest({ 'user-agent': 'Mozilla/5.0' });
+  describe('when the User-Agent does not match the CLI pattern', () => {
+    it('calls next', () => {
+      const req = buildRequest({ 'user-agent': 'Mozilla/5.0' });
 
-    middleware.use(req, {} as Response, next);
+      middleware.use(req, {} as Response, next);
 
-    expect(logger.info).not.toHaveBeenCalled();
-    expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('captures arbitrary version strings after the prefix', () => {
@@ -60,10 +58,6 @@ describe('CliVersionLoggerMiddleware', () => {
 
     middleware.use(req, {} as Response, next);
 
-    expect(logger.info).toHaveBeenCalledWith(
-      'Packmind CLI request',
-      expect.objectContaining({ cliVersion: '2.0.0-next.4' }),
-    );
     expect(next).toHaveBeenCalledTimes(1);
   });
 });

@@ -85,24 +85,28 @@ describe('ClaudePluginDeployer', () => {
       expect(paths).toEqual(['commands/audit.md']);
     });
 
-    it('returns an empty createOrUpdate when no recipes', async () => {
-      const result = await new ClaudePluginDeployer().deployRecipes(
-        [],
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-      expect(result.createOrUpdate).toEqual([]);
+    describe('when no recipes', () => {
+      it('returns an empty createOrUpdate', async () => {
+        const result = await new ClaudePluginDeployer().deployRecipes(
+          [],
+          {} as GitRepo,
+          makeTarget('/'),
+        );
+        expect(result.createOrUpdate).toEqual([]);
+      });
     });
 
-    it('uses Target.path as the plugin root prefix when set', async () => {
-      const result = await new ClaudePluginDeployer().deployRecipes(
-        [makeRecipe({ slug: 'audit' })],
-        {} as GitRepo,
-        makeTarget('plugins/security/'),
-      );
-      expect(result.createOrUpdate[0].path).toBe(
-        'plugins/security/commands/audit.md',
-      );
+    describe('when Target.path is set', () => {
+      it('uses Target.path as the plugin root prefix', async () => {
+        const result = await new ClaudePluginDeployer().deployRecipes(
+          [makeRecipe({ slug: 'audit' })],
+          {} as GitRepo,
+          makeTarget('plugins/security/'),
+        );
+        expect(result.createOrUpdate[0].path).toBe(
+          'plugins/security/commands/audit.md',
+        );
+      });
     });
 
     it('propagates recipe content into the file body', async () => {
@@ -162,110 +166,172 @@ describe('ClaudePluginDeployer', () => {
       ]);
     });
 
-    it('generates SKILL.md with frontmatter from the skill version when no files are provided', async () => {
-      const skill = makeSkill({
-        slug: 'threat-model',
-        name: 'Threat Model',
-        description: 'Threat modeling skill',
-        prompt: '# prompt body',
-        files: undefined,
+    describe('when no files are provided', () => {
+      let result: Awaited<ReturnType<ClaudePluginDeployer['deploySkills']>>;
+
+      beforeEach(async () => {
+        const skill = makeSkill({
+          slug: 'threat-model',
+          name: 'Threat Model',
+          description: 'Threat modeling skill',
+          prompt: '# prompt body',
+          files: undefined,
+        });
+
+        result = await new ClaudePluginDeployer().deploySkills(
+          [skill],
+          {} as GitRepo,
+          makeTarget('/'),
+        );
       });
 
-      const result = await new ClaudePluginDeployer().deploySkills(
-        [skill],
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].path).toBe(
-        'skills/threat-model/SKILL.md',
-      );
-      const file = result.createOrUpdate[0];
-      if (file.content === undefined) throw new Error('expected content');
-      expect(file.content).toContain("name: 'Threat Model'");
-      expect(file.content).toContain("description: 'Threat modeling skill'");
-      expect(file.content).toContain('# prompt body');
-    });
-
-    it('always generates SKILL.md with frontmatter, ignoring any SKILL.md in files', async () => {
-      const skill = makeSkill({
-        slug: 'threat-model',
-        name: 'Threat Model',
-        description: 'Threat modeling skill',
-        prompt: '# generated body',
-        files: [
-          makeSkillFile({
-            path: 'SKILL.md',
-            content: '# raw without frontmatter',
-          }),
-          makeSkillFile({
-            id: createSkillFileId('sf2'),
-            path: 'references/example.md',
-            content: 'ex',
-          }),
-        ],
+      it('generates exactly one SKILL.md', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      const result = await new ClaudePluginDeployer().deploySkills(
-        [skill],
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-
-      const skillMd = result.createOrUpdate.find(
-        (f) => f.path === 'skills/threat-model/SKILL.md',
-      );
-      if (!skillMd?.content) throw new Error('expected SKILL.md');
-      expect(skillMd.content).toContain("name: 'Threat Model'");
-      expect(skillMd.content).toContain('# generated body');
-      expect(skillMd.content).not.toContain('# raw without frontmatter');
-
-      expect(result.createOrUpdate.map((f) => f.path).sort()).toEqual([
-        'skills/threat-model/SKILL.md',
-        'skills/threat-model/references/example.md',
-      ]);
-    });
-
-    it('returns empty when no skills', async () => {
-      const result = await new ClaudePluginDeployer().deploySkills(
-        [],
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-      expect(result.createOrUpdate).toEqual([]);
-    });
-
-    it('tags each file with artifactType "skill" and the skill id', async () => {
-      const skill = makeSkill({
-        slug: 'threat-model',
-        skillId: createSkillId('skill-abc'),
-        files: [makeSkillFile({ path: 'SKILL.md' })],
+      it('generates SKILL.md at the correct path', () => {
+        expect(result.createOrUpdate[0].path).toBe(
+          'skills/threat-model/SKILL.md',
+        );
       });
-      const result = await new ClaudePluginDeployer().deploySkills(
-        [skill],
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-      expect(result.createOrUpdate[0].artifactType).toBe('skill');
-      expect(result.createOrUpdate[0].artifactId).toBe('skill-abc');
+
+      it('generates SKILL.md with name in frontmatter from the skill version', () => {
+        const file = result.createOrUpdate[0];
+        if (file.content === undefined) throw new Error('expected content');
+        expect(file.content).toContain("name: 'Threat Model'");
+      });
+
+      it('generates SKILL.md with description in frontmatter from the skill version', () => {
+        const file = result.createOrUpdate[0];
+        if (file.content === undefined) throw new Error('expected content');
+        expect(file.content).toContain("description: 'Threat modeling skill'");
+      });
+
+      it('generates SKILL.md with prompt body from the skill version', () => {
+        const file = result.createOrUpdate[0];
+        if (file.content === undefined) throw new Error('expected content');
+        expect(file.content).toContain('# prompt body');
+      });
+    });
+
+    describe('always generates SKILL.md with frontmatter, ignoring any SKILL.md in files', () => {
+      let result: Awaited<ReturnType<ClaudePluginDeployer['deploySkills']>>;
+      let skillMd: (typeof result.createOrUpdate)[0] | undefined;
+
+      beforeEach(async () => {
+        const skill = makeSkill({
+          slug: 'threat-model',
+          name: 'Threat Model',
+          description: 'Threat modeling skill',
+          prompt: '# generated body',
+          files: [
+            makeSkillFile({
+              path: 'SKILL.md',
+              content: '# raw without frontmatter',
+            }),
+            makeSkillFile({
+              id: createSkillFileId('sf2'),
+              path: 'references/example.md',
+              content: 'ex',
+            }),
+          ],
+        });
+
+        result = await new ClaudePluginDeployer().deploySkills(
+          [skill],
+          {} as GitRepo,
+          makeTarget('/'),
+        );
+
+        skillMd = result.createOrUpdate.find(
+          (f) => f.path === 'skills/threat-model/SKILL.md',
+        );
+      });
+
+      it('includes name frontmatter in generated SKILL.md', () => {
+        if (!skillMd?.content) throw new Error('expected SKILL.md');
+        expect(skillMd.content).toContain("name: 'Threat Model'");
+      });
+
+      it('includes the generated prompt body in SKILL.md', () => {
+        if (!skillMd?.content) throw new Error('expected SKILL.md');
+        expect(skillMd.content).toContain('# generated body');
+      });
+
+      it('does not include the raw SKILL.md content', () => {
+        if (!skillMd?.content) throw new Error('expected SKILL.md');
+        expect(skillMd.content).not.toContain('# raw without frontmatter');
+      });
+
+      it('outputs all expected file paths', () => {
+        expect(result.createOrUpdate.map((f) => f.path).sort()).toEqual([
+          'skills/threat-model/SKILL.md',
+          'skills/threat-model/references/example.md',
+        ]);
+      });
+    });
+
+    describe('when no skills', () => {
+      it('returns empty', async () => {
+        const result = await new ClaudePluginDeployer().deploySkills(
+          [],
+          {} as GitRepo,
+          makeTarget('/'),
+        );
+        expect(result.createOrUpdate).toEqual([]);
+      });
+    });
+
+    describe('tags each file with skill metadata', () => {
+      let result: Awaited<ReturnType<ClaudePluginDeployer['deploySkills']>>;
+
+      beforeEach(async () => {
+        const skill = makeSkill({
+          slug: 'threat-model',
+          skillId: createSkillId('skill-abc'),
+          files: [makeSkillFile({ path: 'SKILL.md' })],
+        });
+        result = await new ClaudePluginDeployer().deploySkills(
+          [skill],
+          {} as GitRepo,
+          makeTarget('/'),
+        );
+      });
+
+      it('tags each file with artifactType "skill"', () => {
+        expect(result.createOrUpdate[0].artifactType).toBe('skill');
+      });
+
+      it('tags each file with the skill id', () => {
+        expect(result.createOrUpdate[0].artifactId).toBe('skill-abc');
+      });
     });
   });
 
   describe('deployStandards', () => {
-    it('returns empty createOrUpdate even when standards are present', async () => {
-      const standards = [
-        {} as StandardVersion,
-        {} as StandardVersion,
-        {} as StandardVersion,
-      ];
-      const result = await new ClaudePluginDeployer().deployStandards(
-        standards,
-        {} as GitRepo,
-        makeTarget('/'),
-      );
-      expect(result.createOrUpdate).toEqual([]);
-      expect(result.delete).toEqual([]);
+    describe('when standards are present', () => {
+      let result: Awaited<ReturnType<ClaudePluginDeployer['deployStandards']>>;
+
+      beforeEach(async () => {
+        const standards = [
+          {} as StandardVersion,
+          {} as StandardVersion,
+          {} as StandardVersion,
+        ];
+        result = await new ClaudePluginDeployer().deployStandards(
+          standards,
+          {} as GitRepo,
+          makeTarget('/'),
+        );
+      });
+
+      it('returns empty createOrUpdate', () => {
+        expect(result.createOrUpdate).toEqual([]);
+      });
+
+      it('returns empty delete', () => {
+        expect(result.delete).toEqual([]);
+      });
     });
 
     it('exposes the skipped count via getLastSkippedStandardsCount()', async () => {
@@ -296,27 +362,41 @@ describe('ClaudePluginDeployer', () => {
   });
 
   describe('deployPluginManifest', () => {
-    it('returns a FileUpdates with .claude-plugin/plugin.json under plugin root', () => {
-      const updates = new ClaudePluginDeployer().deployPluginManifest(
-        {
-          name: 'security',
-          description: 'Security helpers',
-          version: '0.1.0',
-        },
-        makeTarget('plugins/security/'),
-      );
-      expect(updates.createOrUpdate).toHaveLength(1);
-      expect(updates.createOrUpdate[0].path).toBe(
-        'plugins/security/.claude-plugin/plugin.json',
-      );
+    describe('returns a FileUpdates with .claude-plugin/plugin.json under plugin root', () => {
+      let updates: ReturnType<ClaudePluginDeployer['deployPluginManifest']>;
+
+      beforeEach(() => {
+        updates = new ClaudePluginDeployer().deployPluginManifest(
+          {
+            name: 'security',
+            description: 'Security helpers',
+            version: '0.1.0',
+          },
+          makeTarget('plugins/security/'),
+        );
+      });
+
+      it('creates exactly one file', () => {
+        expect(updates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('places the file at the correct path under plugin root', () => {
+        expect(updates.createOrUpdate[0].path).toBe(
+          'plugins/security/.claude-plugin/plugin.json',
+        );
+      });
     });
 
-    it('places plugin.json at the workspace root when target.path is "/"', () => {
-      const updates = new ClaudePluginDeployer().deployPluginManifest(
-        { name: 'security', version: '0.1.0' },
-        makeTarget('/'),
-      );
-      expect(updates.createOrUpdate[0].path).toBe('.claude-plugin/plugin.json');
+    describe('when target.path is "/"', () => {
+      it('places plugin.json at the workspace root', () => {
+        const updates = new ClaudePluginDeployer().deployPluginManifest(
+          { name: 'security', version: '0.1.0' },
+          makeTarget('/'),
+        );
+        expect(updates.createOrUpdate[0].path).toBe(
+          '.claude-plugin/plugin.json',
+        );
+      });
     });
 
     it('includes name, description, and version in the manifest content', () => {
@@ -334,13 +414,23 @@ describe('ClaudePluginDeployer', () => {
       });
     });
 
-    it('tags the file with the plugin name as artifact name and id', () => {
-      const updates = new ClaudePluginDeployer().deployPluginManifest(
-        { name: 'security', version: '0.1.0' },
-        makeTarget('/'),
-      );
-      expect(updates.createOrUpdate[0].artifactId).toBe('security');
-      expect(updates.createOrUpdate[0].artifactName).toBe('security');
+    describe('tags the file with the plugin name', () => {
+      let updates: ReturnType<ClaudePluginDeployer['deployPluginManifest']>;
+
+      beforeEach(() => {
+        updates = new ClaudePluginDeployer().deployPluginManifest(
+          { name: 'security', version: '0.1.0' },
+          makeTarget('/'),
+        );
+      });
+
+      it('tags with artifact id', () => {
+        expect(updates.createOrUpdate[0].artifactId).toBe('security');
+      });
+
+      it('tags with artifact name', () => {
+        expect(updates.createOrUpdate[0].artifactName).toBe('security');
+      });
     });
   });
 

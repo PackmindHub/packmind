@@ -167,20 +167,32 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
           expect(listMarkdownFiles(commandsDir).length).toBeGreaterThan(0);
         });
 
-        it('adds the plugin entry to marketplace.json', () => {
-          const marketplace = readMarketplace(context.testDir);
-          const entry = marketplace.plugins.find((p) => p.name === pkg.slug);
-          expect(entry).toBeDefined();
-          expect(entry?.source).toBe(`./plugins/${pkg.slug}`);
+        describe('when adding the plugin entry to marketplace.json', () => {
+          it('adds an entry for the package slug', () => {
+            const marketplace = readMarketplace(context.testDir);
+            const entry = marketplace.plugins.find((p) => p.name === pkg.slug);
+            expect(entry).toBeDefined();
+          });
+
+          it('sets the entry source to the rendered plugin path', () => {
+            const marketplace = readMarketplace(context.testDir);
+            const entry = marketplace.plugins.find((p) => p.name === pkg.slug);
+            expect(entry?.source).toBe(`./plugins/${pkg.slug}`);
+          });
         });
 
-        it('confirms what was rendered and that marketplace.json was updated', () => {
-          expect(result.stdout).toMatch(
-            new RegExp(`Rendered \\d+ files into \\./plugins/${pkg.slug}/`),
-          );
-          expect(result.stdout).toContain(
-            'Updated .claude-plugin/marketplace.json',
-          );
+        describe('when confirming the render output', () => {
+          it('reports the number of rendered files and the destination path', () => {
+            expect(result.stdout).toMatch(
+              new RegExp(`Rendered \\d+ files into \\./plugins/${pkg.slug}/`),
+            );
+          });
+
+          it('reports that marketplace.json was updated', () => {
+            expect(result.stdout).toContain(
+              'Updated .claude-plugin/marketplace.json',
+            );
+          });
         });
       });
 
@@ -403,12 +415,18 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
           );
         });
 
-        it('does not emit any standards markdown files', () => {
-          const pluginRoot = path.join(context.testDir, 'plugins', pkg.slug);
-          const rulesDir = path.join(pluginRoot, 'rules');
-          const standardsDir = path.join(pluginRoot, 'standards');
-          expect(listMarkdownFiles(rulesDir).length).toBe(0);
-          expect(listMarkdownFiles(standardsDir).length).toBe(0);
+        describe('when checking that no standards markdown files are emitted', () => {
+          it('does not emit any markdown files in the rules directory', () => {
+            const pluginRoot = path.join(context.testDir, 'plugins', pkg.slug);
+            const rulesDir = path.join(pluginRoot, 'rules');
+            expect(listMarkdownFiles(rulesDir).length).toBe(0);
+          });
+
+          it('does not emit any markdown files in the standards directory', () => {
+            const pluginRoot = path.join(context.testDir, 'plugins', pkg.slug);
+            const standardsDir = path.join(pluginRoot, 'standards');
+            expect(listMarkdownFiles(standardsDir).length).toBe(0);
+          });
         });
       });
 

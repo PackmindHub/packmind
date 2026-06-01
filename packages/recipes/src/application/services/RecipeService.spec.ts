@@ -515,14 +515,19 @@ describe('RecipeService', () => {
           .mockResolvedValue([version1, version2]);
       });
 
-      it('copies all versions in a single bulk call', async () => {
+      beforeEach(async () => {
         await recipeService.duplicateRecipeToSpace(
           recipeId,
           destinationSpaceId,
           newUserId,
         );
+      });
 
+      it('copies all versions in a single bulk call', () => {
         expect(recipeVersionRepository.addMany).toHaveBeenCalledTimes(1);
+      });
+
+      it('copies all versions with correct data', () => {
         expect(recipeVersionRepository.addMany).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({ name: version1.name }),

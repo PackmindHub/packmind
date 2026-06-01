@@ -130,20 +130,29 @@ describe('TrackPluginDeletedUseCase', () => {
   });
 
   describe('when a git remote url is provided', () => {
-    it('resolves the package and emits PluginDeletedEvent with the marketplace repo', async () => {
-      const result = await useCase.execute(
+    let emitted: PluginDeletedEvent;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      result = await useCase.execute(
         buildCommand({
           gitRemoteUrl: 'https://github.com/acme/marketplace.git',
         }),
       );
+      emitted = eventEmitterService.emit.mock.calls[0][0] as PluginDeletedEvent;
+    });
 
+    it('resolves the package by slug and space', () => {
       expect(
         packageService.getPackagesBySlugsAndSpaceWithArtefacts,
       ).toHaveBeenCalledWith(['security'], defaultSpace.id);
-      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-      const emitted = eventEmitterService.emit.mock
-        .calls[0][0] as PluginDeletedEvent;
+    });
+
+    it('emits a PluginDeletedEvent', () => {
       expect(emitted).toBeInstanceOf(PluginDeletedEvent);
+    });
+
+    it('emits the event with the marketplace repo in the payload', () => {
       expect(emitted.payload).toEqual({
         userId: createUserId(userId),
         organizationId,
@@ -152,19 +161,23 @@ describe('TrackPluginDeletedUseCase', () => {
         packageSlug: pkg.slug,
         marketplaceRepo: 'https://github.com/acme/marketplace.git',
       });
+    });
+
+    it('returns tracked true', () => {
       expect(result).toEqual({ tracked: true });
     });
   });
 
   describe('when no git remote url is provided', () => {
-    it('emits PluginDeletedEvent without the marketplace repo', async () => {
-      const result = await useCase.execute(
-        buildCommand({ gitRemoteUrl: '   ' }),
-      );
+    let emitted: PluginDeletedEvent;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-      const emitted = eventEmitterService.emit.mock
-        .calls[0][0] as PluginDeletedEvent;
+    beforeEach(async () => {
+      result = await useCase.execute(buildCommand({ gitRemoteUrl: '   ' }));
+      emitted = eventEmitterService.emit.mock.calls[0][0] as PluginDeletedEvent;
+    });
+
+    it('emits the event with the correct payload', () => {
       expect(emitted.payload).toEqual({
         userId: createUserId(userId),
         organizationId,
@@ -172,29 +185,44 @@ describe('TrackPluginDeletedUseCase', () => {
         packageId: pkg.id,
         packageSlug: pkg.slug,
       });
+    });
+
+    it('emits the event without the marketplaceRepo property', () => {
       expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
+    });
+
+    it('returns tracked true', () => {
       expect(result).toEqual({ tracked: true });
     });
 
-    it('emits PluginDeletedEvent without the marketplace repo when undefined', async () => {
-      await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
-
-      expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-      const emitted = eventEmitterService.emit.mock
-        .calls[0][0] as PluginDeletedEvent;
-      expect(emitted.payload).not.toHaveProperty('marketplaceRepo');
+    describe('when gitRemoteUrl is undefined', () => {
+      it('emits the event without the marketplaceRepo property', async () => {
+        eventEmitterService.emit.mockClear();
+        await useCase.execute(buildCommand({ gitRemoteUrl: undefined }));
+        const emittedForUndefined = eventEmitterService.emit.mock
+          .calls[0][0] as PluginDeletedEvent;
+        expect(emittedForUndefined.payload).not.toHaveProperty(
+          'marketplaceRepo',
+        );
+      });
     });
   });
 
   describe('when the package does not exist', () => {
-    it('throws PackagesNotFoundError and does not emit an event', async () => {
+    beforeEach(() => {
       packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
         [],
       );
+    });
 
+    it('throws PackagesNotFoundError', async () => {
       await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
         PackagesNotFoundError,
       );
+    });
+
+    it('does not emit an event', async () => {
+      await useCase.execute(buildCommand()).catch(() => undefined);
       expect(eventEmitterService.emit).not.toHaveBeenCalled();
     });
   });

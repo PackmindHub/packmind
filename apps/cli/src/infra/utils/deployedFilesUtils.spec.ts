@@ -168,39 +168,51 @@ describe('fetchDeployedFiles', () => {
       expect(result.some((f) => f.path.startsWith('.packmind/'))).toBe(false);
     });
 
-    it('strips the "Full standard is available here" footer from deployed content', async () => {
-      const standardBody = [
-        '# Standard: Frontend testing',
-        '',
-        'My summary :',
-        '* Rule one',
-        '',
-        'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
-      ].join('\n');
-      gateway = {
-        deployment: {
-          getContentByVersions: jest.fn().mockResolvedValue({
-            fileUpdates: {
-              createOrUpdate: [
-                {
-                  path: '.claude/rules/packmind/standard-frontend-testing.md',
-                  content: standardBody,
-                },
-              ],
-            },
-          }),
-        },
-      };
+    describe('when the deployed content contains a "Full standard is available here" footer', () => {
+      let result: Awaited<ReturnType<typeof fetchDeployedFiles>>;
 
-      const result = await fetchDeployedFiles(gateway, lockFile, {
-        projectDir: homeClaudeDir,
+      beforeEach(async () => {
+        const standardBody = [
+          '# Standard: Frontend testing',
+          '',
+          'My summary :',
+          '* Rule one',
+          '',
+          'Full standard is available here for further request: [Frontend testing](../../../.packmind/standards/frontend-testing.md)',
+        ].join('\n');
+        gateway = {
+          deployment: {
+            getContentByVersions: jest.fn().mockResolvedValue({
+              fileUpdates: {
+                createOrUpdate: [
+                  {
+                    path: '.claude/rules/packmind/standard-frontend-testing.md',
+                    content: standardBody,
+                  },
+                ],
+              },
+            }),
+          },
+        };
+
+        result = await fetchDeployedFiles(gateway, lockFile, {
+          projectDir: homeClaudeDir,
+        });
       });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].content).not.toContain(
-        'Full standard is available here for further request:',
-      );
-      expect(result[0].content).toContain('* Rule one');
+      it('returns exactly one file', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('strips the footer from the deployed content', () => {
+        expect(result[0].content).not.toContain(
+          'Full standard is available here for further request:',
+        );
+      });
+
+      it('preserves the rest of the content', () => {
+        expect(result[0].content).toContain('* Rule one');
+      });
     });
   });
 

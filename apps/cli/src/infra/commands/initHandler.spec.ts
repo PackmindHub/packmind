@@ -582,128 +582,182 @@ describe('initHandler', () => {
       });
     });
 
-    it('calls ensureCliVersion exactly once with the running CLI version', async () => {
-      await initHandler(deps);
-
-      expect(mockEnsureCliVersion).toHaveBeenCalledTimes(1);
-      expect(mockEnsureCliVersion).toHaveBeenCalledWith(
-        expect.objectContaining({
-          baseDirectory: '/project',
-          currentCliVersion: '1.2.3',
-          includeBeta: false,
-        }),
-      );
-    });
-
-    it('emits a warning when ensureCliVersion returns "older"', async () => {
-      mockEnsureCliVersion.mockResolvedValue({
-        kind: 'older',
-        lockVersion: '99.0.0',
+    describe('when calling ensureCliVersion', () => {
+      beforeEach(async () => {
+        await initHandler(deps);
       });
 
-      await initHandler(deps);
-
-      const warnings = mockConsoleLogger.logWarningConsole.mock.calls.map(
-        ([msg]) => msg,
-      );
-      const driftWarnings = warnings.filter((msg: string) =>
-        msg.includes('older than the version recorded in packmind-lock.json'),
-      );
-      expect(driftWarnings).toHaveLength(1);
-      expect(driftWarnings[0]).toContain('99.0.0');
-    });
-
-    it('emits an info line when ensureCliVersion returns "newer"', async () => {
-      mockEnsureCliVersion.mockResolvedValue({
-        kind: 'newer',
-        lockVersion: '0.0.1',
-        upgraded: true,
+      it('calls ensureCliVersion exactly once', () => {
+        expect(mockEnsureCliVersion).toHaveBeenCalledTimes(1);
       });
 
-      await initHandler(deps);
-
-      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('CLI upgrade detected'),
-      );
-    });
-
-    it('emits no drift-related output when ensureCliVersion returns "match"', async () => {
-      mockEnsureCliVersion.mockResolvedValue({ kind: 'match' });
-
-      await initHandler(deps);
-
-      const warnings = mockConsoleLogger.logWarningConsole.mock.calls
-        .map(([msg]) => msg)
-        .filter((msg: string) =>
-          msg.includes('older than the version recorded'),
+      it('calls ensureCliVersion with the running CLI version', () => {
+        expect(mockEnsureCliVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            baseDirectory: '/project',
+            currentCliVersion: '1.2.3',
+            includeBeta: false,
+          }),
         );
-      const upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
-        .map(([msg]) => msg)
-        .filter((msg: string) => msg.includes('CLI upgrade detected'));
-      expect(warnings).toHaveLength(0);
-      expect(upgradeInfos).toHaveLength(0);
+      });
     });
 
-    it('continues init when ensureCliVersion throws', async () => {
-      mockEnsureCliVersion.mockRejectedValue(new Error('boom'));
+    describe('when ensureCliVersion returns "older"', () => {
+      let driftWarnings: string[];
 
-      const result = await initHandler(deps);
+      beforeEach(async () => {
+        mockEnsureCliVersion.mockResolvedValue({
+          kind: 'older',
+          lockVersion: '99.0.0',
+        });
 
-      expect(result.success).toBe(true);
-      expect(mockInstallDefaultSkills).toHaveBeenCalled();
+        await initHandler(deps);
+
+        const warnings = mockConsoleLogger.logWarningConsole.mock.calls.map(
+          ([msg]) => msg,
+        );
+        driftWarnings = warnings.filter((msg: string) =>
+          msg.includes('older than the version recorded in packmind-lock.json'),
+        );
+      });
+
+      it('emits exactly one drift warning', () => {
+        expect(driftWarnings).toHaveLength(1);
+      });
+
+      it('includes the lock version in the warning', () => {
+        expect(driftWarnings[0]).toContain('99.0.0');
+      });
     });
 
-    it('skips ensureCliVersion when no dependency is provided', async () => {
-      const depsWithoutEnsure: InitHandlerDependencies = {
-        ...deps,
-        ensureCliVersion: undefined,
-      };
+    describe('when ensureCliVersion returns "newer"', () => {
+      beforeEach(async () => {
+        mockEnsureCliVersion.mockResolvedValue({
+          kind: 'newer',
+          lockVersion: '0.0.1',
+          upgraded: true,
+        });
 
-      await initHandler(depsWithoutEnsure);
+        await initHandler(deps);
+      });
 
-      expect(mockEnsureCliVersion).not.toHaveBeenCalled();
+      it('emits an info line about CLI upgrade detected', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('CLI upgrade detected'),
+        );
+      });
+    });
+
+    describe('when ensureCliVersion returns "match"', () => {
+      let warnings: string[];
+      let upgradeInfos: string[];
+
+      beforeEach(async () => {
+        mockEnsureCliVersion.mockResolvedValue({ kind: 'match' });
+
+        await initHandler(deps);
+
+        warnings = mockConsoleLogger.logWarningConsole.mock.calls
+          .map(([msg]) => msg)
+          .filter((msg: string) =>
+            msg.includes('older than the version recorded'),
+          );
+        upgradeInfos = mockConsoleLogger.logInfoConsole.mock.calls
+          .map(([msg]) => msg)
+          .filter((msg: string) => msg.includes('CLI upgrade detected'));
+      });
+
+      it('emits no drift-related warnings', () => {
+        expect(warnings).toHaveLength(0);
+      });
+
+      it('emits no upgrade info lines', () => {
+        expect(upgradeInfos).toHaveLength(0);
+      });
+    });
+
+    describe('when ensureCliVersion throws', () => {
+      let result: { success: boolean; errors: string[] };
+
+      beforeEach(async () => {
+        mockEnsureCliVersion.mockRejectedValue(new Error('boom'));
+
+        result = await initHandler(deps);
+      });
+
+      it('continues init and returns success', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('still calls installDefaultSkills', () => {
+        expect(mockInstallDefaultSkills).toHaveBeenCalled();
+      });
+    });
+
+    describe('when no ensureCliVersion dependency is provided', () => {
+      beforeEach(async () => {
+        const depsWithoutEnsure: InitHandlerDependencies = {
+          ...deps,
+          ensureCliVersion: undefined,
+        };
+
+        await initHandler(depsWithoutEnsure);
+      });
+
+      it('skips ensureCliVersion', () => {
+        expect(mockEnsureCliVersion).not.toHaveBeenCalled();
+      });
     });
   });
 
   describe('silent cleanup of obsolete default skills', () => {
-    it('invokes the silent cleanup helper when default-skills reports obsolete skills', async () => {
+    describe('when default-skills reports obsolete skills', () => {
       const incompatibleInstalledSkills = [
         {
           skillName: 'obsolete-skill',
           filePaths: ['.packmind/skills/obsolete-skill.md'],
         },
       ];
-      mockInstallDefaultSkills.mockResolvedValue({
-        filesCreated: 0,
-        filesUpdated: 0,
-        errors: [],
-        skippedSkillsCount: 0,
-        skippedIncompatibleSkillNames: [],
-        incompatibleInstalledSkills,
+
+      beforeEach(async () => {
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills,
+        });
+
+        await initHandler(deps);
       });
 
-      await initHandler(deps);
-
-      expect(
-        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
-      ).toHaveBeenCalledWith(incompatibleInstalledSkills, '/project');
+      it('invokes the silent cleanup helper', () => {
+        expect(
+          mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+        ).toHaveBeenCalledWith(incompatibleInstalledSkills, '/project');
+      });
     });
 
-    it('does not invoke the silent cleanup helper when none are reported', async () => {
-      mockInstallDefaultSkills.mockResolvedValue({
-        filesCreated: 0,
-        filesUpdated: 0,
-        errors: [],
-        skippedSkillsCount: 0,
-        skippedIncompatibleSkillNames: [],
-        incompatibleInstalledSkills: [],
+    describe('when none are reported', () => {
+      beforeEach(async () => {
+        mockInstallDefaultSkills.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          errors: [],
+          skippedSkillsCount: 0,
+          skippedIncompatibleSkillNames: [],
+          incompatibleInstalledSkills: [],
+        });
+
+        await initHandler(deps);
       });
 
-      await initHandler(deps);
-
-      expect(
-        mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
-      ).not.toHaveBeenCalled();
+      it('does not invoke the silent cleanup helper', () => {
+        expect(
+          mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
+        ).not.toHaveBeenCalled();
+      });
     });
   });
 });

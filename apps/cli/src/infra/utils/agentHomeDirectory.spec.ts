@@ -14,10 +14,12 @@ describe('isAgentHomeDirectory', () => {
     (os.homedir as jest.Mock).mockReturnValue(mockHomedir);
   });
 
-  it('returns "claude" when cwd is the user\'s ~/.claude directory', () => {
-    expect(isAgentHomeDirectory(path.join(mockHomedir, '.claude'))).toBe(
-      'claude',
-    );
+  describe("when cwd is the user's ~/.claude directory", () => {
+    it('returns "claude"', () => {
+      expect(isAgentHomeDirectory(path.join(mockHomedir, '.claude'))).toBe(
+        'claude',
+      );
+    });
   });
 
   it('normalises the cwd before comparing', () => {
@@ -31,18 +33,26 @@ describe('isAgentHomeDirectory', () => {
     ).toBeNull();
   });
 
-  it('returns null when the directory only ends with ".claude"', () => {
-    expect(
-      isAgentHomeDirectory(path.join('/tmp', 'project', '.claude')),
-    ).toBeNull();
+  describe('when the directory only ends with ".claude"', () => {
+    it('returns null', () => {
+      expect(
+        isAgentHomeDirectory(path.join('/tmp', 'project', '.claude')),
+      ).toBeNull();
+    });
   });
 
-  it("returns null when cwd is the user's home directory itself", () => {
-    expect(isAgentHomeDirectory(mockHomedir)).toBeNull();
+  describe("when cwd is the user's home directory itself", () => {
+    it('returns null', () => {
+      expect(isAgentHomeDirectory(mockHomedir)).toBeNull();
+    });
   });
 
-  it('returns null when no agent home directory matches', () => {
-    expect(isAgentHomeDirectory(path.join(mockHomedir, '.cursor'))).toBeNull();
+  describe('when no agent home directory matches', () => {
+    it('returns null', () => {
+      expect(
+        isAgentHomeDirectory(path.join(mockHomedir, '.cursor')),
+      ).toBeNull();
+    });
   });
 });
 

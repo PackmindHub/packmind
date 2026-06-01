@@ -23,7 +23,7 @@ describe('renderPluginHandler', () => {
   let getCurrentBranch: jest.Mock;
   let exit: jest.Mock;
   let log: jest.Mock;
-  let error: jest.Mock;
+  const printedErrors: string[] = [];
   let confirmOverwrite: jest.Mock;
 
   const buildResponse = (
@@ -47,7 +47,7 @@ describe('renderPluginHandler', () => {
     exit: exit as never,
     getCwd: () => tmp,
     log: log as never,
-    error: error as never,
+    error: (msg: string) => printedErrors.push(msg),
     confirmOverwrite: confirmOverwrite as never,
   });
 
@@ -60,6 +60,7 @@ describe('renderPluginHandler', () => {
   };
 
   beforeEach(() => {
+    printedErrors.length = 0;
     tmp = mkdtempSync(join(tmpdir(), 'pm-render-'));
     renderPlugin = jest.fn().mockResolvedValue(buildResponse());
     tryGetGitRepositoryRoot = jest.fn().mockResolvedValue(tmp);
@@ -69,7 +70,6 @@ describe('renderPluginHandler', () => {
     getCurrentBranch = jest.fn().mockReturnValue('main');
     exit = jest.fn();
     log = jest.fn();
-    error = jest.fn();
     confirmOverwrite = jest.fn();
   });
 
@@ -78,16 +78,22 @@ describe('renderPluginHandler', () => {
   });
 
   describe('when no plugin manifest exists', () => {
-    it('prints an error and exits non-zero', async () => {
+    beforeEach(async () => {
       await renderPluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
-      expect(error).toHaveBeenCalledWith(
-        expect.stringContaining('No .claude-plugin'),
-      );
+    it('prints an error', () => {
+      expect(printedErrors[0]).toMatch(/No .claude-plugin/);
+    });
+
+    it('exits non-zero', () => {
       expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call renderPlugin', () => {
       expect(renderPlugin).not.toHaveBeenCalled();
     });
   });
@@ -127,27 +133,34 @@ describe('renderPluginHandler', () => {
       );
     });
 
-    it('writes each rendered file under the cwd', async () => {
-      renderPlugin.mockResolvedValue(
-        buildResponse({
-          files: [
-            { path: 'plugins/security/commands/a.md', content: 'A' },
-            { path: 'plugins/security/skills/b/SKILL.md', content: 'B' },
-          ],
-        }),
-      );
+    describe('when multiple files are returned', () => {
+      beforeEach(async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({
+            files: [
+              { path: 'plugins/security/commands/a.md', content: 'A' },
+              { path: 'plugins/security/skills/b/SKILL.md', content: 'B' },
+            ],
+          }),
+        );
 
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+      });
 
-      expect(
-        readFileSync(join(tmp, 'plugins/security/commands/a.md'), 'utf8'),
-      ).toBe('A');
-      expect(
-        readFileSync(join(tmp, 'plugins/security/skills/b/SKILL.md'), 'utf8'),
-      ).toBe('B');
+      it('writes the first file', () => {
+        expect(
+          readFileSync(join(tmp, 'plugins/security/commands/a.md'), 'utf8'),
+        ).toBe('A');
+      });
+
+      it('writes the second file', () => {
+        expect(
+          readFileSync(join(tmp, 'plugins/security/skills/b/SKILL.md'), 'utf8'),
+        ).toBe('B');
+      });
     });
 
     it('upserts the plugin entry into marketplace.json', async () => {
@@ -164,28 +177,34 @@ describe('renderPluginHandler', () => {
       });
     });
 
-    it('reports skipped standards when present', async () => {
-      renderPlugin.mockResolvedValue(
-        buildResponse({ skippedStandardsCount: 3 }),
-      );
+    describe('when skipped standards are present', () => {
+      it('reports skipped standards', async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({ skippedStandardsCount: 3 }),
+        );
 
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
 
-      expect(log).toHaveBeenCalledWith(
-        expect.stringContaining('Skipped 3 standards'),
-      );
+        expect(log).toHaveBeenCalledWith(
+          expect.stringContaining('Skipped 3 standards'),
+        );
+      });
     });
 
-    it('does not report skipped standards when none', async () => {
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+    describe('when no standards are skipped', () => {
+      it('does not report skipped standards', async () => {
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
 
-      expect(log).not.toHaveBeenCalledWith(expect.stringContaining('Skipped'));
+        expect(log).not.toHaveBeenCalledWith(
+          expect.stringContaining('Skipped'),
+        );
+      });
     });
 
     it('exits zero on success', async () => {
@@ -197,17 +216,19 @@ describe('renderPluginHandler', () => {
       expect(exit).toHaveBeenCalledWith(0);
     });
 
-    it('passes empty git context when not in a git repository', async () => {
-      tryGetGitRepositoryRoot.mockResolvedValue(null);
+    describe('when not in a git repository', () => {
+      it('passes empty git context', async () => {
+        tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
 
-      expect(renderPlugin).toHaveBeenCalledWith(
-        expect.objectContaining({ gitRemoteUrl: '', gitBranch: '' }),
-      );
+        expect(renderPlugin).toHaveBeenCalledWith(
+          expect.objectContaining({ gitRemoteUrl: '', gitBranch: '' }),
+        );
+      });
     });
   });
 
@@ -284,52 +305,67 @@ describe('renderPluginHandler', () => {
         ).toBe('A');
       });
 
-      it('updates the description when it changed', async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
+      describe('when the description changed', () => {
+        beforeEach(async () => {
+          await renderPluginHandler(
+            { packageSlug: { packageSlug: 'security' } },
+            buildDeps(),
+          );
+        });
 
-        const mp = readMarketplace(
-          join(tmp, '.claude-plugin/marketplace.json'),
-        );
-        const entry = findPluginEntry(mp, 'security');
-        expect(entry?.source).toBe('./backend/plugins/security');
-        expect(entry?.description).toBe('Security plugin');
+        it('preserves the existing source path', () => {
+          const mp = readMarketplace(
+            join(tmp, '.claude-plugin/marketplace.json'),
+          );
+          const entry = findPluginEntry(mp, 'security');
+          expect(entry?.source).toBe('./backend/plugins/security');
+        });
+
+        it('updates the description', () => {
+          const mp = readMarketplace(
+            join(tmp, '.claude-plugin/marketplace.json'),
+          );
+          const entry = findPluginEntry(mp, 'security');
+          expect(entry?.description).toBe('Security plugin');
+        });
       });
 
-      it('clears the description when the package no longer has one', async () => {
-        renderPlugin.mockResolvedValue(
-          buildResponse({ pluginDescription: undefined }),
-        );
+      describe('when the package no longer has a description', () => {
+        it('clears the description', async () => {
+          renderPlugin.mockResolvedValue(
+            buildResponse({ pluginDescription: undefined }),
+          );
 
-        await renderPluginHandler(
-          { packageSlug: parsePackageSlug('security') },
-          buildDeps(),
-        );
+          await renderPluginHandler(
+            { packageSlug: parsePackageSlug('security') },
+            buildDeps(),
+          );
 
-        const mp = readMarketplace(
-          join(tmp, '.claude-plugin/marketplace.json'),
-        );
-        const entry = findPluginEntry(mp, 'security');
-        expect(entry?.description).toBeUndefined();
+          const mp = readMarketplace(
+            join(tmp, '.claude-plugin/marketplace.json'),
+          );
+          const entry = findPluginEntry(mp, 'security');
+          expect(entry?.description).toBeUndefined();
+        });
       });
 
-      it('clears the description when the package description is an empty string', async () => {
-        renderPlugin.mockResolvedValue(
-          buildResponse({ pluginDescription: '' }),
-        );
+      describe('when the package description is an empty string', () => {
+        it('clears the description', async () => {
+          renderPlugin.mockResolvedValue(
+            buildResponse({ pluginDescription: '' }),
+          );
 
-        await renderPluginHandler(
-          { packageSlug: parsePackageSlug('security') },
-          buildDeps(),
-        );
+          await renderPluginHandler(
+            { packageSlug: parsePackageSlug('security') },
+            buildDeps(),
+          );
 
-        const mp = readMarketplace(
-          join(tmp, '.claude-plugin/marketplace.json'),
-        );
-        const entry = findPluginEntry(mp, 'security');
-        expect(entry?.description).toBeUndefined();
+          const mp = readMarketplace(
+            join(tmp, '.claude-plugin/marketplace.json'),
+          );
+          const entry = findPluginEntry(mp, 'security');
+          expect(entry?.description).toBeUndefined();
+        });
       });
 
       it('exits zero', async () => {
@@ -394,42 +430,34 @@ describe('renderPluginHandler', () => {
       });
     });
 
-    it('exits non-zero with a remote-source error', async () => {
+    beforeEach(async () => {
       await renderPluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
-      expect(error).toHaveBeenCalledWith(
+    it('reports the remote-source error', () => {
+      expect(printedErrors[0]).toBe(
         'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
       );
+    });
+
+    it('exits non-zero', () => {
       expect(exit).toHaveBeenCalledWith(1);
     });
 
-    it('does not render or prompt', async () => {
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('does not render', () => {
       expect(renderPlugin).not.toHaveBeenCalled();
+    });
+
+    it('does not prompt', () => {
       expect(confirmOverwrite).not.toHaveBeenCalled();
     });
 
-    it('does not mutate marketplace.json', async () => {
-      const before = readFileSync(
-        join(tmp, '.claude-plugin/marketplace.json'),
-        'utf8',
-      );
-
-      await renderPluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
-      expect(
-        readFileSync(join(tmp, '.claude-plugin/marketplace.json'), 'utf8'),
-      ).toBe(before);
+    it('does not mutate marketplace.json', () => {
+      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
+      expect(findPluginEntry(mp, 'security')).toBeDefined();
     });
   });
 
@@ -536,48 +564,32 @@ describe('renderPluginHandler', () => {
         writeStandaloneManifest({ name: 'frontend' });
       });
 
-      it('exits non-zero with the documented message', async () => {
+      beforeEach(async () => {
         await renderPluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
-        expect(error).toHaveBeenCalledWith(
+      it('reports the documented error', () => {
+        expect(printedErrors[0]).toBe(
           "The plugin 'security' is not handled in this repo.",
         );
+      });
+
+      it('exits non-zero', () => {
         expect(exit).toHaveBeenCalledWith(1);
       });
 
-      it('does not call the gateway', async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not call the gateway', () => {
         expect(renderPlugin).not.toHaveBeenCalled();
       });
 
-      it('does not prompt for overwrite', async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not prompt for overwrite', () => {
         expect(confirmOverwrite).not.toHaveBeenCalled();
       });
 
-      it('writes no files', async () => {
-        renderPlugin.mockResolvedValue(
-          buildResponse({
-            files: [{ path: 'commands/a.md', content: 'A' }],
-          }),
-        );
-
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('writes no files', () => {
         expect(existsSync(join(tmp, 'commands/a.md'))).toBe(false);
       });
     });

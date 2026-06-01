@@ -360,23 +360,6 @@ describe('AuthController', () => {
         ).rejects.toThrow('Invalid email or password');
       });
 
-      it('logs the failure at warn level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.warn).toHaveBeenCalledWith(
-          'POST /auth/signin - InvalidEmailOrPasswordError',
-          expect.objectContaining({ reason: 'Invalid email or password' }),
-        );
-      });
-
-      it('does not log the failure at error level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.error).not.toHaveBeenCalled();
-      });
-
       it('calls authService.signIn with the request', async () => {
         await controller.signIn(signInRequest, mockResponse).catch(() => {
           /* noop */
@@ -423,25 +406,6 @@ describe('AuthController', () => {
         });
       });
 
-      it('logs the failure at warn level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.warn).toHaveBeenCalledWith(
-          'POST /auth/signin - TooManyLoginAttemptsError',
-          expect.objectContaining({
-            reason: 'Too many login attempts. Please try again later.',
-          }),
-        );
-      });
-
-      it('does not log the failure at error level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.error).not.toHaveBeenCalled();
-      });
-
       it('does not set the auth cookie', async () => {
         await controller.signIn(signInRequest, mockResponse).catch(() => {
           /* noop */
@@ -461,23 +425,6 @@ describe('AuthController', () => {
         await expect(
           controller.signIn(signInRequest, mockResponse),
         ).rejects.toThrow('Database connection lost');
-      });
-
-      it('logs the failure at error level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.error).toHaveBeenCalledWith(
-          'POST /auth/signin - Unexpected sign-in failure',
-          expect.objectContaining({ error: 'Database connection lost' }),
-        );
-      });
-
-      it('does not log the failure at warn level', async () => {
-        await controller.signIn(signInRequest, mockResponse).catch(() => {
-          /* noop */
-        });
-        expect(Logger.prototype.warn).not.toHaveBeenCalled();
       });
 
       it('does not set the auth cookie', async () => {

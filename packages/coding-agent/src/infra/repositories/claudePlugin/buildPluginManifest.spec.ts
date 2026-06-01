@@ -15,21 +15,33 @@ describe('buildPluginManifest', () => {
     });
   });
 
-  it('omits description when none provided', () => {
-    const manifest = buildPluginManifest({
-      name: 'security',
-      version: '0.1.0',
+  describe('when none provided', () => {
+    it('omits description', () => {
+      const manifest = buildPluginManifest({
+        name: 'security',
+        version: '0.1.0',
+      });
+      const parsed = JSON.parse(manifest);
+      expect(parsed).not.toHaveProperty('description');
     });
-    const parsed = JSON.parse(manifest);
-    expect(parsed).not.toHaveProperty('description');
   });
 
-  it('formats JSON with 2-space indent and trailing newline', () => {
-    const manifest = buildPluginManifest({
-      name: 'security',
-      version: '0.1.0',
+  describe('formats JSON', () => {
+    let manifest: string;
+
+    beforeEach(() => {
+      manifest = buildPluginManifest({
+        name: 'security',
+        version: '0.1.0',
+      });
     });
-    expect(manifest.endsWith('\n')).toBe(true);
-    expect(manifest).toContain('  "name"');
+
+    it('adds a trailing newline', () => {
+      expect(manifest.endsWith('\n')).toBe(true);
+    });
+
+    it('uses 2-space indent', () => {
+      expect(manifest).toContain('  "name"');
+    });
   });
 });

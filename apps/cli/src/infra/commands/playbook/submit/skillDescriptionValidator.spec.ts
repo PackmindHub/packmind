@@ -48,31 +48,57 @@ describe('validateProposalSkillDescriptions', () => {
   });
 
   describe('when a createSkill payload exceeds 1024 chars', () => {
-    it('returns an actionable error mentioning the skill name', () => {
+    let errors: string[];
+
+    beforeEach(() => {
       const longDescription = 'a'.repeat(1025);
       const proposals: ProposalItem[] = [
         makeCreateSkillProposal('my-skill', longDescription),
       ];
+      errors = validateProposalSkillDescriptions(proposals);
+    });
 
-      const errors = validateProposalSkillDescriptions(proposals);
+    it('returns one error', () => {
       expect(errors).toHaveLength(1);
+    });
+
+    it('mentions the skill name in the error', () => {
       expect(errors[0]).toContain('Skill "my-skill"');
+    });
+
+    it('mentions the actual character count in the error', () => {
       expect(errors[0]).toContain('1025 characters');
+    });
+
+    it('mentions the maximum allowed characters in the error', () => {
       expect(errors[0]).toContain('maximum of 1024');
     });
   });
 
   describe('when an updateSkillDescription payload exceeds 1024 chars', () => {
-    it('returns an actionable error mentioning the artefactId', () => {
+    let errors: string[];
+
+    beforeEach(() => {
       const longValue = 'b'.repeat(1500);
       const proposals: ProposalItem[] = [
         makeUpdateDescriptionProposal('skill-uuid-123', 'old', longValue),
       ];
+      errors = validateProposalSkillDescriptions(proposals);
+    });
 
-      const errors = validateProposalSkillDescriptions(proposals);
+    it('returns one error', () => {
       expect(errors).toHaveLength(1);
+    });
+
+    it('mentions the artefactId in the error', () => {
       expect(errors[0]).toContain('skill-uuid-123');
+    });
+
+    it('mentions the actual character count in the error', () => {
       expect(errors[0]).toContain('1500 characters');
+    });
+
+    it('mentions the maximum allowed characters in the error', () => {
       expect(errors[0]).toContain('maximum of 1024');
     });
   });

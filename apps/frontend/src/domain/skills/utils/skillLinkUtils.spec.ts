@@ -55,34 +55,68 @@ describe('buildSkillLinkTransformer', () => {
     );
   });
 
-  it('resolves relative links from a sub-directory file', () => {
-    const transform = buildSkillLinkTransformer({
-      ...ctx,
-      currentFilePath: 'subdir/page.md',
+  describe('resolves relative links from a sub-directory file', () => {
+    let transform: (href: string) => string;
+
+    beforeEach(() => {
+      transform = buildSkillLinkTransformer({
+        ...ctx,
+        currentFilePath: 'subdir/page.md',
+      });
     });
-    expect(transform('./neighbor.md')).toBe(
-      '/org/acme/space/team/skills/my-skill/files/subdir/neighbor.md',
-    );
-    expect(transform('../top.md')).toBe(
-      '/org/acme/space/team/skills/my-skill/files/top.md',
-    );
+
+    it('resolves a sibling link', () => {
+      expect(transform('./neighbor.md')).toBe(
+        '/org/acme/space/team/skills/my-skill/files/subdir/neighbor.md',
+      );
+    });
+
+    it('resolves a parent-directory link', () => {
+      expect(transform('../top.md')).toBe(
+        '/org/acme/space/team/skills/my-skill/files/top.md',
+      );
+    });
   });
 
-  it('leaves http(s), mailto, root-absolute, and anchor hrefs unchanged', () => {
-    const transform = buildSkillLinkTransformer(ctx);
-    expect(transform('https://example.com/x')).toBe('https://example.com/x');
-    expect(transform('http://example.com/x')).toBe('http://example.com/x');
-    expect(transform('mailto:foo@bar.com')).toBe('mailto:foo@bar.com');
-    expect(transform('//cdn.example.com/x')).toBe('//cdn.example.com/x');
-    expect(transform('/some/other/path')).toBe('/some/other/path');
-    expect(transform('#section')).toBe('#section');
+  describe('leaves external and non-relative hrefs unchanged', () => {
+    let transform: (href: string) => string;
+
+    beforeEach(() => {
+      transform = buildSkillLinkTransformer(ctx);
+    });
+
+    it('leaves https hrefs unchanged', () => {
+      expect(transform('https://example.com/x')).toBe('https://example.com/x');
+    });
+
+    it('leaves http hrefs unchanged', () => {
+      expect(transform('http://example.com/x')).toBe('http://example.com/x');
+    });
+
+    it('leaves mailto hrefs unchanged', () => {
+      expect(transform('mailto:foo@bar.com')).toBe('mailto:foo@bar.com');
+    });
+
+    it('leaves protocol-relative hrefs unchanged', () => {
+      expect(transform('//cdn.example.com/x')).toBe('//cdn.example.com/x');
+    });
+
+    it('leaves root-absolute hrefs unchanged', () => {
+      expect(transform('/some/other/path')).toBe('/some/other/path');
+    });
+
+    it('leaves anchor hrefs unchanged', () => {
+      expect(transform('#section')).toBe('#section');
+    });
   });
 
-  it('returns the href unchanged when slugs are missing', () => {
-    const transform = buildSkillLinkTransformer({
-      ...ctx,
-      orgSlug: undefined,
+  describe('when slugs are missing', () => {
+    it('returns the href unchanged', () => {
+      const transform = buildSkillLinkTransformer({
+        ...ctx,
+        orgSlug: undefined,
+      });
+      expect(transform('./helpers/foo.md')).toBe('./helpers/foo.md');
     });
-    expect(transform('./helpers/foo.md')).toBe('./helpers/foo.md');
   });
 });

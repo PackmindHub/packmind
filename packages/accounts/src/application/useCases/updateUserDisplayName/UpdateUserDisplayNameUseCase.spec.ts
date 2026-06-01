@@ -187,7 +187,9 @@ describe('UpdateUserDisplayNameUseCase', () => {
     });
 
     describe('when display name exceeds max length', () => {
-      it('throws InvalidDisplayNameError', async () => {
+      let executePromise: Promise<UpdateUserDisplayNameResponse>;
+
+      beforeEach(() => {
         const command: UpdateUserDisplayNameCommand & MemberContext = {
           userId: String(userId),
           organizationId,
@@ -197,22 +199,15 @@ describe('UpdateUserDisplayNameUseCase', () => {
           membership,
         };
 
-        await expect(useCase.executeForMembers(command)).rejects.toThrow(
-          InvalidDisplayNameError,
-        );
+        executePromise = useCase.executeForMembers(command);
+      });
+
+      it('throws InvalidDisplayNameError', async () => {
+        await expect(executePromise).rejects.toThrow(InvalidDisplayNameError);
       });
 
       it('does not call updateUser', async () => {
-        const command: UpdateUserDisplayNameCommand & MemberContext = {
-          userId: String(userId),
-          organizationId,
-          displayName: 'a'.repeat(256),
-          user,
-          organization,
-          membership,
-        };
-
-        await expect(useCase.executeForMembers(command)).rejects.toThrow();
+        await executePromise.catch(() => undefined);
         expect(mockUserService.updateUser).not.toHaveBeenCalled();
       });
     });
@@ -269,10 +264,12 @@ describe('UpdateUserDisplayNameUseCase', () => {
         result = await useCase.executeForMembers(command);
       });
 
-      it('sets display name to null when only whitespace', () => {
-        expect(mockUserService.updateUser).toHaveBeenCalledWith({
-          ...user,
-          displayName: null,
+      describe('when only whitespace', () => {
+        it('sets display name to null', () => {
+          expect(mockUserService.updateUser).toHaveBeenCalledWith({
+            ...user,
+            displayName: null,
+          });
         });
       });
 
