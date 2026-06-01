@@ -1152,7 +1152,9 @@ describe('ApplyPlaybookUseCase', () => {
                 ],
               }),
             )
-            .catch(() => {});
+            .catch(() => {
+              /* expected rejection ignored */
+            });
 
           expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
         });

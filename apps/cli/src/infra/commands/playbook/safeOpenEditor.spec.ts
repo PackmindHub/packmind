@@ -1,6 +1,5 @@
 import { safeOpenEditor } from './safeOpenEditor';
 import * as editorMessageModule from '../../utils/editorMessage';
-import * as consoleLoggerModule from '../../utils/consoleLogger';
 
 jest.mock('../../utils/editorMessage');
 jest.mock('../../utils/consoleLogger');
@@ -8,8 +7,6 @@ jest.mock('../../utils/consoleLogger');
 describe('safeOpenEditor', () => {
   const mockedOpenEditorForMessage =
     editorMessageModule.openEditorForMessage as jest.Mock;
-  const mockedLogErrorConsole =
-    consoleLoggerModule.logErrorConsole as jest.Mock;
 
   afterEach(() => {
     jest.clearAllMocks();

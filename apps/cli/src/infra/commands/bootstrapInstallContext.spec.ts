@@ -21,7 +21,6 @@ jest.mock('../utils/consoleLogger', () => ({
 }));
 
 import { bootstrapInstallContext } from './bootstrapInstallContext';
-import * as consoleLogger from '../utils/consoleLogger';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
@@ -33,8 +32,6 @@ import {
   RenderMode,
   UserOrganizationRole,
 } from '@packmind/types';
-
-const mockLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
 function makeHierarchicalResult(hasConfigs: boolean): HierarchicalConfigResult {
   return { packages: {}, configPaths: [], hasConfigs };
