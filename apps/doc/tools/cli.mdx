@@ -27,6 +27,8 @@ The Packmind CLI provides the following commands:
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
 - **`packages list`** - List all packages in your organization
+- **`plugins render`** - Render a Packmind package as a Claude plugin
+- **`plugins delete`** - Delete a rendered Claude plugin from this workspace
 - **`update`** - Update the CLI to the latest version
 
 ## Installation
@@ -934,6 +936,158 @@ packmind-cli packages add --to backend --skill debugging-workflow
   skills via CLI to organize them into packages. This is particularly useful
   when automating package management in scripts or CI/CD pipelines.
 </Tip>
+
+## Plugins Command
+
+Publish a Packmind package as a [Claude Code plugin](https://docs.claude.com/en/docs/claude-code/plugins) so its commands and skills can be installed directly into Claude Code, either from your own [Claude marketplace](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces) or as a standalone plugin repository.
+
+A rendered plugin contains the package's commands (as Claude slash commands) and skills (as Claude skills). Standards are not rendered because Claude plugins do not support them — when a package contains standards, the CLI reports how many were skipped.
+
+### Choose Your Workspace Mode
+
+The `plugins` commands detect what kind of workspace you are in by looking inside the `.claude-plugin/` directory:
+
+| File present                      | Mode            | Use case                                                                      |
+| --------------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| `.claude-plugin/marketplace.json` | **Marketplace** | A repository that hosts multiple plugins, each under `plugins/<plugin-name>/` |
+| `.claude-plugin/plugin.json`      | **Standalone**  | A repository that contains a single plugin at its root                        |
+| Neither                           | _Not supported_ | The CLI exits with an error asking you to create one of the manifests first   |
+
+<Tip>
+  **Setting up a marketplace** — Create a `.claude-plugin/marketplace.json` file at the root of a Git repository with the shape `{ "name": "<marketplace-name>", "owner": { "name": "<your-name>" }, "plugins": [] }`. The CLI fills in the `plugins` array for you as you render packages. See Anthropic's [marketplace documentation](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces) for the full schema.
+</Tip>
+
+<Tip>
+  **Setting up a standalone plugin** — Create a `.claude-plugin/plugin.json` file at the root of a Git repository with at least `{ "name": "<plugin-name>" }`. The plugin name must match the package slug you intend to render.
+</Tip>
+
+### Plugins Render
+
+Render a Packmind package as a Claude plugin in the current workspace.
+
+```bash
+packmind-cli plugins render <package-slug>
+```
+
+**Arguments:**
+
+- `<package-slug>` — Slug of the package to render (for example, `security` or `@my-space/security`)
+
+#### Marketplace Workflow
+
+Run the command from the root of your marketplace repository (the directory that contains `.claude-plugin/marketplace.json`):
+
+```bash
+packmind-cli plugins render security
+```
+
+The CLI will:
+
+1. Download the package's commands and skills from your Packmind organization
+2. Write them under `plugins/security/` (commands in `plugins/security/commands/`, skills in `plugins/security/skills/`)
+3. Add or update the plugin entry inside `.claude-plugin/marketplace.json`, pointing `source` to `./plugins/security`
+
+**Example output:**
+
+```
+Rendered 12 files into ./plugins/security/
+Skipped 3 standards (not supported in Claude plugins).
+Updated .claude-plugin/marketplace.json
+```
+
+When the same plugin is rendered again, the CLI asks for confirmation before overwriting:
+
+```
+Plugin "security" already exists at "./plugins/security". Overwrite? [y/N]
+```
+
+#### Standalone Workflow
+
+Run the command from the root of your standalone plugin repository (the directory that contains `.claude-plugin/plugin.json`):
+
+```bash
+packmind-cli plugins render security
+```
+
+The CLI will:
+
+1. Verify that the package slug matches the `name` field declared in `plugin.json`
+2. Download the package's commands and skills
+3. Write them directly at the repository root (`commands/` and `skills/`)
+
+Because a standalone repository already represents the plugin, the CLI always asks for confirmation before overwriting existing files:
+
+```
+Plugin "security" already exists in this workspace. Overwrite? [y/N]
+```
+
+<Note>
+  **Git remote detected automatically** — When the workspace is a Git repository
+  with a remote, the CLI captures the remote URL and current branch and sends
+  them to Packmind so the distribution is tracked alongside your other
+  deployments.
+</Note>
+
+### Plugins Delete
+
+Remove a rendered plugin from the current workspace and notify Packmind that the distribution has been deleted.
+
+```bash
+packmind-cli plugins delete <package-slug>
+```
+
+**Arguments:**
+
+- `<package-slug>` — Slug of the plugin to delete (matches the package slug used during `render`)
+
+#### Marketplace Workflow
+
+Run the command from the root of your marketplace repository:
+
+```bash
+packmind-cli plugins delete security
+```
+
+The CLI will:
+
+1. Locate the plugin entry in `.claude-plugin/marketplace.json`
+2. Ask for confirmation:
+
+   ```
+   Remove ./plugins/security and update marketplace.json for plugin "security"? [y/N]
+   ```
+
+3. Delete the plugin directory (for example, `./plugins/security`) and remove its entry from `marketplace.json`
+
+If the plugin is not declared in `marketplace.json`, the command exits without changes:
+
+```
+Plugin "security" is not declared in marketplace.json. Nothing to delete.
+```
+
+#### Standalone Workflow
+
+Run the command from the root of your standalone plugin repository:
+
+```bash
+packmind-cli plugins delete security
+```
+
+After confirmation, the CLI removes the rendered `commands/` and `skills/` directories. The `.claude-plugin/plugin.json` manifest is left untouched so you can re-render the plugin later.
+
+### Troubleshooting
+
+- **Problem**: `No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found in this directory.`
+- **Solution**: Run the command from the root of a workspace that contains one of these manifests. Create the appropriate manifest first if the workspace is brand new.
+
+- **Problem**: `The plugin '<name>' is not handled in this repo.` (standalone mode)
+- **Solution**: The package slug you passed does not match the `name` declared in `.claude-plugin/plugin.json`. Update the manifest or pass the matching slug.
+
+- **Problem**: `Plugin "<name>" has a remote source. Run this command in the workspace of the remote plugin.`
+- **Solution**: The marketplace entry points to a remote source (for example, a GitHub repository) rather than a local folder. Switch to the workspace that owns the remote plugin and run the command there.
+
+- **Problem**: Some content from the package is missing in the rendered plugin.
+- **Solution**: Standards are intentionally skipped because Claude plugins do not support them. Check the `Skipped N standards` line in the command output to see how many were excluded.
 
 ## Playbook Command
 

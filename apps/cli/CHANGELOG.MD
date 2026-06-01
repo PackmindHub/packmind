@@ -8,6 +8,16 @@
 
 ## Removed
 
+# [0.30.0] - 2026-06-01
+
+## Added
+
+- new commands `plugins render` and `plugins delete` allowing to publish a Packmind package to a Claude marketplace.
+
+## Fixed
+
+- query rendering settings on Packmind when installing default skills.
+
 # [0.29.1] - 2026-05-28
 
 ## Added
@@ -379,7 +389,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.0...HEAD
+[0.30.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.1...release-cli/0.30.0
 [0.29.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.0...release-cli/0.29.1
 [0.29.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.1...release-cli/0.29.0
 [0.28.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.28.0...release-cli/0.28.1

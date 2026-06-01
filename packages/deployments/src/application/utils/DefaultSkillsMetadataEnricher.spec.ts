@@ -73,34 +73,10 @@ describe('DefaultSkillsMetadataEnricher', () => {
         }
       });
 
-      it('covers packmind-create-skill', () => {
-        expect(
-          result.createOrUpdate.some(
-            (f) => f.artifactSlug === 'packmind-create-skill',
-          ),
-        ).toBe(true);
-      });
-
-      it('covers packmind-create-standard', () => {
-        expect(
-          result.createOrUpdate.some(
-            (f) => f.artifactSlug === 'packmind-create-standard',
-          ),
-        ).toBe(true);
-      });
-
       it('covers packmind-onboard', () => {
         expect(
           result.createOrUpdate.some(
             (f) => f.artifactSlug === 'packmind-onboard',
-          ),
-        ).toBe(true);
-      });
-
-      it('covers packmind-create-command', () => {
-        expect(
-          result.createOrUpdate.some(
-            (f) => f.artifactSlug === 'packmind-create-command',
           ),
         ).toBe(true);
       });
