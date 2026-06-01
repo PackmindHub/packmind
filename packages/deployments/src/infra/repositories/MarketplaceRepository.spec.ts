@@ -149,63 +149,94 @@ describe('MarketplaceRepository', () => {
       });
     });
 
-    it('persists the descriptor and pluginCount', async () => {
-      const marketplace = marketplaceFactory({
-        organizationId: organization.id,
-        gitRepoId: gitRepo.id,
-        addedBy: user.id,
-        pluginCount: 7,
+    describe('persists the descriptor and pluginCount', () => {
+      let marketplace: Marketplace;
+      let found: Marketplace | null;
+
+      beforeEach(async () => {
+        marketplace = marketplaceFactory({
+          organizationId: organization.id,
+          gitRepoId: gitRepo.id,
+          addedBy: user.id,
+          pluginCount: 7,
+        });
+
+        await repository.add(marketplace);
+        found = await repository.findById(marketplace.id);
       });
 
-      await repository.add(marketplace);
-      const found = await repository.findById(marketplace.id);
+      it('persists the descriptor', () => {
+        expect(found?.descriptor).toEqual(marketplace.descriptor);
+      });
 
-      expect(found?.descriptor).toEqual(marketplace.descriptor);
-      expect(found?.pluginCount).toBe(7);
+      it('persists the pluginCount', () => {
+        expect(found?.pluginCount).toBe(7);
+      });
     });
   });
 
   describe('findByOrganizationId', () => {
-    it('returns marketplaces linked to the organization', async () => {
-      const marketplaceA = marketplaceFactory({
-        organizationId: organization.id,
-        gitRepoId: gitRepo.id,
-        addedBy: user.id,
-      });
-      const marketplaceB = marketplaceFactory({
-        organizationId: organization.id,
-        gitRepoId: otherGitRepo.id,
-        addedBy: user.id,
-      });
-      await repository.add(marketplaceA);
-      await repository.add(marketplaceB);
+    describe('returns marketplaces linked to the organization', () => {
+      let marketplaceA: Marketplace;
+      let marketplaceB: Marketplace;
+      let result: Marketplace[];
 
-      const result = await repository.findByOrganizationId(organization.id);
+      beforeEach(async () => {
+        marketplaceA = marketplaceFactory({
+          organizationId: organization.id,
+          gitRepoId: gitRepo.id,
+          addedBy: user.id,
+        });
+        marketplaceB = marketplaceFactory({
+          organizationId: organization.id,
+          gitRepoId: otherGitRepo.id,
+          addedBy: user.id,
+        });
+        await repository.add(marketplaceA);
+        await repository.add(marketplaceB);
 
-      expect(result).toHaveLength(2);
-      expect(result.map((m) => m.id).sort()).toEqual(
-        [marketplaceA.id, marketplaceB.id].sort(),
-      );
+        result = await repository.findByOrganizationId(organization.id);
+      });
+
+      it('returns both marketplaces', () => {
+        expect(result).toHaveLength(2);
+      });
+
+      it('returns the marketplaces of the organization', () => {
+        expect(result.map((m) => m.id).sort()).toEqual(
+          [marketplaceA.id, marketplaceB.id].sort(),
+        );
+      });
     });
 
-    it('excludes marketplaces from other organizations', async () => {
-      const ours = marketplaceFactory({
-        organizationId: organization.id,
-        gitRepoId: gitRepo.id,
-        addedBy: user.id,
-      });
-      const theirs = marketplaceFactory({
-        organizationId: otherOrganization.id,
-        gitRepoId: otherGitRepo.id,
-        addedBy: user.id,
-      });
-      await repository.add(ours);
-      await repository.add(theirs);
+    describe('excludes marketplaces from other organizations', () => {
+      let ours: Marketplace;
+      let result: Marketplace[];
 
-      const result = await repository.findByOrganizationId(organization.id);
+      beforeEach(async () => {
+        ours = marketplaceFactory({
+          organizationId: organization.id,
+          gitRepoId: gitRepo.id,
+          addedBy: user.id,
+        });
+        const theirs = marketplaceFactory({
+          organizationId: otherOrganization.id,
+          gitRepoId: otherGitRepo.id,
+          addedBy: user.id,
+        });
+        await repository.add(ours);
+        await repository.add(theirs);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toEqual(ours.id);
+        result = await repository.findByOrganizationId(organization.id);
+      });
+
+      it('returns only one marketplace', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('returns the marketplace of the organization', () => {
+        expect(result[0].id).toEqual(ours.id);
+      });
     });
 
     it('excludes soft-deleted marketplaces', async () => {
@@ -223,10 +254,12 @@ describe('MarketplaceRepository', () => {
       expect(result).toHaveLength(0);
     });
 
-    it('returns an empty array when the organization has no marketplaces', async () => {
-      const result = await repository.findByOrganizationId(organization.id);
+    describe('when the organization has no marketplaces', () => {
+      it('returns an empty array', async () => {
+        const result = await repository.findByOrganizationId(organization.id);
 
-      expect(result).toEqual([]);
+        expect(result).toEqual([]);
+      });
     });
   });
 
@@ -247,82 +280,92 @@ describe('MarketplaceRepository', () => {
       expect(result?.id).toEqual(marketplace.id);
     });
 
-    it('returns null when the gitRepo is linked to a different organization', async () => {
-      await repository.add(
-        marketplaceFactory({
-          organizationId: otherOrganization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-        }),
-      );
+    describe('when the gitRepo is linked to a different organization', () => {
+      it('returns null', async () => {
+        await repository.add(
+          marketplaceFactory({
+            organizationId: otherOrganization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+          }),
+        );
 
-      const result = await repository.findByOrganizationAndGitRepo(
-        organization.id,
-        gitRepo.id,
-      );
+        const result = await repository.findByOrganizationAndGitRepo(
+          organization.id,
+          gitRepo.id,
+        );
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
 
-    it('returns null when the marketplace has been soft-deleted', async () => {
-      const marketplace = await repository.add(
-        marketplaceFactory({
-          organizationId: organization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-        }),
-      );
-      await repository.deleteById(marketplace.id);
+    describe('when the marketplace has been soft-deleted', () => {
+      it('returns null', async () => {
+        const marketplace = await repository.add(
+          marketplaceFactory({
+            organizationId: organization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+          }),
+        );
+        await repository.deleteById(marketplace.id);
 
-      const result = await repository.findByOrganizationAndGitRepo(
-        organization.id,
-        gitRepo.id,
-      );
+        const result = await repository.findByOrganizationAndGitRepo(
+          organization.id,
+          gitRepo.id,
+        );
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
   });
 
   describe('findByOrganizationAndId', () => {
-    it('returns the marketplace when it belongs to the organization', async () => {
-      const marketplace = marketplaceFactory({
-        organizationId: organization.id,
-        gitRepoId: gitRepo.id,
-        addedBy: user.id,
+    describe('when it belongs to the organization', () => {
+      it('returns the marketplace', async () => {
+        const marketplace = marketplaceFactory({
+          organizationId: organization.id,
+          gitRepoId: gitRepo.id,
+          addedBy: user.id,
+        });
+        await repository.add(marketplace);
+
+        const result = await repository.findByOrganizationAndId(
+          organization.id,
+          marketplace.id,
+        );
+
+        expect(result?.id).toEqual(marketplace.id);
       });
-      await repository.add(marketplace);
-
-      const result = await repository.findByOrganizationAndId(
-        organization.id,
-        marketplace.id,
-      );
-
-      expect(result?.id).toEqual(marketplace.id);
     });
 
-    it('returns null when the marketplace belongs to a different organization', async () => {
-      const marketplace = marketplaceFactory({
-        organizationId: otherOrganization.id,
-        gitRepoId: otherGitRepo.id,
-        addedBy: user.id,
+    describe('when the marketplace belongs to a different organization', () => {
+      it('returns null', async () => {
+        const marketplace = marketplaceFactory({
+          organizationId: otherOrganization.id,
+          gitRepoId: otherGitRepo.id,
+          addedBy: user.id,
+        });
+        await repository.add(marketplace);
+
+        const result = await repository.findByOrganizationAndId(
+          organization.id,
+          marketplace.id,
+        );
+
+        expect(result).toBeNull();
       });
-      await repository.add(marketplace);
-
-      const result = await repository.findByOrganizationAndId(
-        organization.id,
-        marketplace.id,
-      );
-
-      expect(result).toBeNull();
     });
 
-    it('returns null when the marketplace id does not exist', async () => {
-      const result = await repository.findByOrganizationAndId(
-        organization.id,
-        createMarketplaceId(uuidv4()),
-      );
+    describe('when the marketplace id does not exist', () => {
+      it('returns null', async () => {
+        const result = await repository.findByOrganizationAndId(
+          organization.id,
+          createMarketplaceId(uuidv4()),
+        );
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
 
     it('excludes soft-deleted marketplaces', async () => {
@@ -390,102 +433,157 @@ describe('MarketplaceRepository', () => {
   });
 
   describe('updateState', () => {
-    it('updates state and lastValidatedAt only when descriptor/pluginCount are omitted', async () => {
-      const marketplace = await repository.add(
-        marketplaceFactory({
-          organizationId: organization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-          state: 'healthy',
-        }),
-      );
-      const validatedAt = new Date('2026-03-15T10:00:00.000Z');
+    describe('when descriptor/pluginCount are omitted', () => {
+      let marketplace: Marketplace;
+      let validatedAt: Date;
+      let refreshed: Marketplace | null;
 
-      await repository.updateState(marketplace.id, {
-        state: 'unreachable',
-        lastValidatedAt: validatedAt,
+      beforeEach(async () => {
+        marketplace = await repository.add(
+          marketplaceFactory({
+            organizationId: organization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+            state: 'healthy',
+          }),
+        );
+        validatedAt = new Date('2026-03-15T10:00:00.000Z');
+
+        await repository.updateState(marketplace.id, {
+          state: 'unreachable',
+          lastValidatedAt: validatedAt,
+        });
+
+        refreshed = await repository.findById(marketplace.id);
       });
 
-      const refreshed = await repository.findById(marketplace.id);
-      expect(refreshed?.state).toBe('unreachable');
-      expect(refreshed?.lastValidatedAt).toEqual(validatedAt);
-      // Descriptor + pluginCount untouched
-      expect(refreshed?.descriptor).toEqual(marketplace.descriptor);
-      expect(refreshed?.pluginCount).toBe(marketplace.pluginCount);
+      it('updates state', () => {
+        expect(refreshed?.state).toBe('unreachable');
+      });
+
+      it('updates lastValidatedAt', () => {
+        expect(refreshed?.lastValidatedAt).toEqual(validatedAt);
+      });
+
+      it('leaves the descriptor untouched', () => {
+        expect(refreshed?.descriptor).toEqual(marketplace.descriptor);
+      });
+
+      it('leaves the pluginCount untouched', () => {
+        expect(refreshed?.pluginCount).toBe(marketplace.pluginCount);
+      });
     });
 
-    it('updates descriptor and pluginCount when supplied (drift case)', async () => {
-      const marketplace = await repository.add(
-        marketplaceFactory({
-          organizationId: organization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-          state: 'healthy',
-          pluginCount: 2,
-        }),
-      );
-      const validatedAt = new Date('2026-04-01T12:00:00.000Z');
-      const newDescriptor = {
-        vendor: 'anthropic' as const,
-        name: 'updated-marketplace',
-        version: '2.0.0',
-        plugins: [
-          { slug: 'plugin-one', name: 'Plugin One', version: '2.0.0' },
-          { slug: 'plugin-three', name: 'Plugin Three' },
-          { slug: 'plugin-four', name: 'Plugin Four' },
-        ],
-        raw: { changed: true },
+    describe('when descriptor and pluginCount are supplied (drift case)', () => {
+      let validatedAt: Date;
+      let newDescriptor: {
+        vendor: 'anthropic';
+        name: string;
+        version: string;
+        plugins: { slug: string; name: string; version?: string }[];
+        raw: { changed: boolean };
       };
+      let refreshed: Marketplace | null;
 
-      await repository.updateState(marketplace.id, {
-        state: 'drift',
-        lastValidatedAt: validatedAt,
-        descriptor: newDescriptor,
-        pluginCount: newDescriptor.plugins.length,
+      beforeEach(async () => {
+        const marketplace = await repository.add(
+          marketplaceFactory({
+            organizationId: organization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+            state: 'healthy',
+            pluginCount: 2,
+          }),
+        );
+        validatedAt = new Date('2026-04-01T12:00:00.000Z');
+        newDescriptor = {
+          vendor: 'anthropic' as const,
+          name: 'updated-marketplace',
+          version: '2.0.0',
+          plugins: [
+            { slug: 'plugin-one', name: 'Plugin One', version: '2.0.0' },
+            { slug: 'plugin-three', name: 'Plugin Three' },
+            { slug: 'plugin-four', name: 'Plugin Four' },
+          ],
+          raw: { changed: true },
+        };
+
+        await repository.updateState(marketplace.id, {
+          state: 'drift',
+          lastValidatedAt: validatedAt,
+          descriptor: newDescriptor,
+          pluginCount: newDescriptor.plugins.length,
+        });
+
+        refreshed = await repository.findById(marketplace.id);
       });
 
-      const refreshed = await repository.findById(marketplace.id);
-      expect(refreshed?.state).toBe('drift');
-      expect(refreshed?.lastValidatedAt).toEqual(validatedAt);
-      expect(refreshed?.descriptor).toEqual(newDescriptor);
-      expect(refreshed?.pluginCount).toBe(3);
+      it('updates state', () => {
+        expect(refreshed?.state).toBe('drift');
+      });
+
+      it('updates lastValidatedAt', () => {
+        expect(refreshed?.lastValidatedAt).toEqual(validatedAt);
+      });
+
+      it('updates descriptor', () => {
+        expect(refreshed?.descriptor).toEqual(newDescriptor);
+      });
+
+      it('updates pluginCount', () => {
+        expect(refreshed?.pluginCount).toBe(3);
+      });
     });
 
-    it('throws when the target marketplace does not exist', async () => {
-      await expect(
-        repository.updateState(createMarketplaceId(uuidv4()), {
-          state: 'healthy',
-          lastValidatedAt: new Date(),
-        }),
-      ).rejects.toThrow();
+    describe('when the target marketplace does not exist', () => {
+      it('throws', async () => {
+        await expect(
+          repository.updateState(createMarketplaceId(uuidv4()), {
+            state: 'healthy',
+            lastValidatedAt: new Date(),
+          }),
+        ).rejects.toThrow();
+      });
     });
   });
 
   describe('unique (organizationId, gitRepoId) partial index', () => {
-    it('allows re-linking a (org, gitRepo) pair after soft-delete', async () => {
-      const initial = await repository.add(
-        marketplaceFactory({
-          organizationId: organization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-        }),
-      );
-      await repository.deleteById(initial.id);
+    describe('re-linking a (org, gitRepo) pair after soft-delete', () => {
+      let initial: Marketplace;
+      let relinked: Marketplace;
+      let activeForRepo: Marketplace | null;
 
-      const relinked = await repository.add(
-        marketplaceFactory({
-          organizationId: organization.id,
-          gitRepoId: gitRepo.id,
-          addedBy: user.id,
-        }),
-      );
+      beforeEach(async () => {
+        initial = await repository.add(
+          marketplaceFactory({
+            organizationId: organization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+          }),
+        );
+        await repository.deleteById(initial.id);
 
-      expect(relinked.id).not.toEqual(initial.id);
-      const activeForRepo = await repository.findByOrganizationAndGitRepo(
-        organization.id,
-        gitRepo.id,
-      );
-      expect(activeForRepo?.id).toEqual(relinked.id);
+        relinked = await repository.add(
+          marketplaceFactory({
+            organizationId: organization.id,
+            gitRepoId: gitRepo.id,
+            addedBy: user.id,
+          }),
+        );
+
+        activeForRepo = await repository.findByOrganizationAndGitRepo(
+          organization.id,
+          gitRepo.id,
+        );
+      });
+
+      it('creates a new marketplace distinct from the soft-deleted one', () => {
+        expect(relinked.id).not.toEqual(initial.id);
+      });
+
+      it('returns the re-linked marketplace as active for the repo', () => {
+        expect(activeForRepo?.id).toEqual(relinked.id);
+      });
     });
   });
 });

@@ -102,22 +102,42 @@ describe('GitRepo finder isolation (AC-15)', () => {
   afterAll(() => fixture.destroy());
 
   describe('GitRepo finder defaults filter type=standard', () => {
-    it('getOrganizationRepositories excludes marketplace repos', async () => {
-      const repos = await gitPort.getOrganizationRepositories(
-        dataFactory.organization.id,
-      );
+    describe('getOrganizationRepositories', () => {
+      let ids: string[];
 
-      const ids = repos.map((r) => r.id);
-      expect(ids).toContain(standardGitRepo.id);
-      expect(ids).not.toContain(marketplaceGitRepo.id);
+      beforeEach(async () => {
+        const repos = await gitPort.getOrganizationRepositories(
+          dataFactory.organization.id,
+        );
+
+        ids = repos.map((r) => r.id);
+      });
+
+      it('includes the standard repo', () => {
+        expect(ids).toContain(standardGitRepo.id);
+      });
+
+      it('excludes the marketplace repo', () => {
+        expect(ids).not.toContain(marketplaceGitRepo.id);
+      });
     });
 
-    it('listRepos for the provider excludes marketplace repos', async () => {
-      const repos = await gitPort.listRepos(gitProvider.id);
+    describe('listRepos for the provider', () => {
+      let ids: string[];
 
-      const ids = repos.map((r) => r.id);
-      expect(ids).toContain(standardGitRepo.id);
-      expect(ids).not.toContain(marketplaceGitRepo.id);
+      beforeEach(async () => {
+        const repos = await gitPort.listRepos(gitProvider.id);
+
+        ids = repos.map((r) => r.id);
+      });
+
+      it('includes the standard repo', () => {
+        expect(ids).toContain(standardGitRepo.id);
+      });
+
+      it('excludes the marketplace repo', () => {
+        expect(ids).not.toContain(marketplaceGitRepo.id);
+      });
     });
 
     it('findGitRepoByOwnerAndRepo never returns the marketplace row by its coords', async () => {
@@ -141,15 +161,17 @@ describe('GitRepo finder isolation (AC-15)', () => {
     // (standard-only). Passing a marketplace id should be treated as
     // "repository not found", confirming the marketplace cannot accidentally
     // become a deployment target.
-    it('throws when the gitRepoId is marketplace-typed', async () => {
-      await expect(
-        testApp.deploymentsHexa.getAdapter().addTarget({
-          ...dataFactory.packmindCommand(),
-          name: 'Should not be allowed',
-          path: '/',
-          gitRepoId: marketplaceGitRepo.id,
-        }),
-      ).rejects.toThrow(/Repository with id .* not found/);
+    describe('when the gitRepoId is marketplace-typed', () => {
+      it('throws', async () => {
+        await expect(
+          testApp.deploymentsHexa.getAdapter().addTarget({
+            ...dataFactory.packmindCommand(),
+            name: 'Should not be allowed',
+            path: '/',
+            gitRepoId: marketplaceGitRepo.id,
+          }),
+        ).rejects.toThrow(/Repository with id .* not found/);
+      });
     });
 
     it('still allows AddTarget on the standard-typed gitRepoId', async () => {
@@ -165,50 +187,68 @@ describe('GitRepo finder isolation (AC-15)', () => {
   });
 
   describe('Marketplace-aware finders see only marketplace rows', () => {
-    it('the marketplace row is reachable via the underlying GitRepo schema query', async () => {
+    describe('the marketplace row reached via the underlying GitRepo schema query', () => {
       // Sanity check that the marketplace row really exists, so the
       // assertions above are meaningful (rather than passing because the
       // fixture is empty).
-      const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
-      const found = await gitRepoRepo.findOne({
-        where: { id: marketplaceGitRepo.id },
+      let found: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
+        found = (await gitRepoRepo.findOne({
+          where: { id: marketplaceGitRepo.id },
+        })) as GitRepo | null;
       });
 
-      expect(found).not.toBeNull();
-      expect(found?.type).toBe('marketplace');
+      it('is reachable', () => {
+        expect(found).not.toBeNull();
+      });
+
+      it('has type marketplace', () => {
+        expect(found?.type).toBe('marketplace');
+      });
     });
   });
 
   describe('LinkMarketplace rejects collision with an existing standard repo', () => {
-    it('throws GitRepoAlreadyLinkedAsStandardError when the same coords are already standard', async () => {
-      await expect(
-        testApp.deploymentsHexa.getAdapter().linkMarketplace({
-          ...dataFactory.packmindCommand(),
-          gitProviderId: gitProvider.id,
-          owner: standardGitRepo.owner,
-          repo: standardGitRepo.repo,
-          branch: standardGitRepo.branch,
-          name: 'Should-be-rejected Marketplace',
-        }),
-      ).rejects.toThrow(GitRepoAlreadyLinkedAsStandardError);
+    describe('when the same coords are already standard', () => {
+      it('throws GitRepoAlreadyLinkedAsStandardError', async () => {
+        await expect(
+          testApp.deploymentsHexa.getAdapter().linkMarketplace({
+            ...dataFactory.packmindCommand(),
+            gitProviderId: gitProvider.id,
+            owner: standardGitRepo.owner,
+            repo: standardGitRepo.repo,
+            branch: standardGitRepo.branch,
+            name: 'Should-be-rejected Marketplace',
+          }),
+        ).rejects.toThrow(GitRepoAlreadyLinkedAsStandardError);
+      });
     });
 
-    it('does not enqueue a reconciliation job when the link is rejected', async () => {
-      try {
-        await testApp.deploymentsHexa.getAdapter().linkMarketplace({
-          ...dataFactory.packmindCommand(),
-          gitProviderId: gitProvider.id,
-          owner: standardGitRepo.owner,
-          repo: standardGitRepo.repo,
-          branch: standardGitRepo.branch,
-          name: 'Should-be-rejected Marketplace',
-        });
-      } catch {
-        // expected
-      }
+    describe('when the link is rejected', () => {
+      beforeEach(async () => {
+        try {
+          await testApp.deploymentsHexa.getAdapter().linkMarketplace({
+            ...dataFactory.packmindCommand(),
+            gitProviderId: gitProvider.id,
+            owner: standardGitRepo.owner,
+            repo: standardGitRepo.repo,
+            branch: standardGitRepo.branch,
+            name: 'Should-be-rejected Marketplace',
+          });
+        } catch {
+          // expected
+        }
+      });
 
-      expect(scheduleRecurringSpy).not.toHaveBeenCalled();
-      expect(addJobSpy).not.toHaveBeenCalled();
+      it('does not schedule a recurring reconciliation job', () => {
+        expect(scheduleRecurringSpy).not.toHaveBeenCalled();
+      });
+
+      it('does not enqueue a reconciliation job', () => {
+        expect(addJobSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });

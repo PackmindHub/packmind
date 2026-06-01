@@ -208,30 +208,71 @@ describe('Marketplace lifecycle integration', () => {
     });
 
     describe('after linkMarketplace', () => {
-      it('persists a Marketplace row for the organization', async () => {
-        const marketplaceRepo =
-          fixture.datasource.getRepository(MarketplaceSchema);
-        const stored = await marketplaceRepo.findOne({
-          where: { id: linkResponse.id },
+      describe('the persisted Marketplace row', () => {
+        let stored: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
+
+        beforeEach(async () => {
+          const marketplaceRepo =
+            fixture.datasource.getRepository(MarketplaceSchema);
+          stored = await marketplaceRepo.findOne({
+            where: { id: linkResponse.id },
+          });
         });
 
-        expect(stored).not.toBeNull();
-        expect(stored?.organizationId).toBe(dataFactory.organization.id);
-        expect(stored?.name).toBe('Anthropic Marketplace');
-        expect(stored?.vendor).toBe('anthropic');
-        expect(stored?.pluginCount).toBe(3);
+        it('exists', () => {
+          expect(stored).not.toBeNull();
+        });
+
+        it('belongs to the organization', () => {
+          expect(stored?.organizationId).toBe(dataFactory.organization.id);
+        });
+
+        it('keeps the marketplace name', () => {
+          expect(stored?.name).toBe('Anthropic Marketplace');
+        });
+
+        it('records the vendor', () => {
+          expect(stored?.vendor).toBe('anthropic');
+        });
+
+        it('records the plugin count', () => {
+          expect(stored?.pluginCount).toBe(3);
+        });
       });
 
-      it('persists the underlying GitRepo with type=marketplace', async () => {
-        const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
-        const storedRepo = await gitRepoRepo.findOne({
-          where: { id: linkResponse.gitRepoId },
+      describe('the persisted GitRepo', () => {
+        let storedRepo: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
+
+        beforeEach(async () => {
+          const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
+          storedRepo = await gitRepoRepo.findOne({
+            where: { id: linkResponse.gitRepoId },
+          });
         });
 
-        expect(storedRepo).not.toBeNull();
-        expect(storedRepo?.type).toBe('marketplace');
-        expect(storedRepo?.owner).toBe('anthropic');
-        expect(storedRepo?.repo).toBe('marketplace');
+        it('exists', () => {
+          expect(storedRepo).not.toBeNull();
+        });
+
+        it('has type=marketplace', () => {
+          expect(storedRepo?.type).toBe('marketplace');
+        });
+
+        it('keeps the owner', () => {
+          expect(storedRepo?.owner).toBe('anthropic');
+        });
+
+        it('keeps the repo name', () => {
+          expect(storedRepo?.repo).toBe('marketplace');
+        });
       });
 
       it('fetched the descriptor exactly once via the git port', () => {
@@ -249,42 +290,83 @@ describe('Marketplace lifecycle integration', () => {
         ).toHaveBeenCalledTimes(1);
       });
 
-      it('emits MarketplaceLinkedEvent with the expected payload', () => {
-        const payload =
-          stubMarketplaceAdapter.onMarketplaceLinked.mock.calls[0][0];
-        expect(payload.marketplaceId).toBe(linkResponse.id);
-        expect(payload.organizationId).toBe(dataFactory.organization.id);
-        expect(payload.gitRepoId).toBe(linkResponse.gitRepoId);
-        expect(payload.addedBy).toBe(dataFactory.user.id);
-        expect(payload.userId).toBe(dataFactory.user.id);
+      describe('the emitted MarketplaceLinkedEvent payload', () => {
+        let payload: MarketplaceLinkedPayload;
+
+        beforeEach(() => {
+          payload = stubMarketplaceAdapter.onMarketplaceLinked.mock.calls[0][0];
+        });
+
+        it('carries the marketplaceId', () => {
+          expect(payload.marketplaceId).toBe(linkResponse.id);
+        });
+
+        it('carries the organizationId', () => {
+          expect(payload.organizationId).toBe(dataFactory.organization.id);
+        });
+
+        it('carries the gitRepoId', () => {
+          expect(payload.gitRepoId).toBe(linkResponse.gitRepoId);
+        });
+
+        it('carries addedBy', () => {
+          expect(payload.addedBy).toBe(dataFactory.user.id);
+        });
+
+        it('carries the userId', () => {
+          expect(payload.userId).toBe(dataFactory.user.id);
+        });
       });
 
-      it('enqueues the recurring reconciliation job', () => {
-        expect(scheduleRecurringSpy).toHaveBeenCalledTimes(1);
-        expect(scheduleRecurringSpy).toHaveBeenCalledWith(linkResponse.id);
+      describe('enqueues the recurring reconciliation job', () => {
+        it('calls scheduleRecurring exactly once', () => {
+          expect(scheduleRecurringSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('schedules with the marketplace id', () => {
+          expect(scheduleRecurringSpy).toHaveBeenCalledWith(linkResponse.id);
+        });
       });
 
-      it('enqueues an immediate reconciliation run', () => {
-        expect(addJobSpy).toHaveBeenCalledTimes(1);
-        expect(addJobSpy).toHaveBeenCalledWith({
-          marketplaceId: linkResponse.id,
+      describe('enqueues an immediate reconciliation run', () => {
+        it('calls addJob exactly once', () => {
+          expect(addJobSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('adds the job with the marketplace id', () => {
+          expect(addJobSpy).toHaveBeenCalledWith({
+            marketplaceId: linkResponse.id,
+          });
         });
       });
     });
 
     describe('listMarketplaces', () => {
-      it('returns the marketplace to org members', async () => {
-        const memberUser = await seedNonAdminMember();
+      describe('for org members', () => {
+        let items: Awaited<
+          ReturnType<
+            ReturnType<
+              typeof testApp.deploymentsHexa.getAdapter
+            >['listMarketplaces']
+          >
+        >;
 
-        const items = await testApp.deploymentsHexa
-          .getAdapter()
-          .listMarketplaces({
+        beforeEach(async () => {
+          const memberUser = await seedNonAdminMember();
+
+          items = await testApp.deploymentsHexa.getAdapter().listMarketplaces({
             userId: memberUser.id,
             organizationId: dataFactory.organization.id,
           });
+        });
 
-        expect(items).toHaveLength(1);
-        expect(items[0].id).toBe(linkResponse.id);
+        it('returns a single marketplace', () => {
+          expect(items).toHaveLength(1);
+        });
+
+        it('returns the linked marketplace', () => {
+          expect(items[0].id).toBe(linkResponse.id);
+        });
       });
 
       it('denormalizes addedByUserName onto each list item', async () => {
@@ -318,38 +400,85 @@ describe('Marketplace lifecycle integration', () => {
         });
       });
 
-      it('soft-deletes the Marketplace row', async () => {
-        const marketplaceRepo =
-          fixture.datasource.getRepository(MarketplaceSchema);
+      describe('soft-deletes the Marketplace row', () => {
+        let liveRow: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
+        let softDeletedRow: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
 
-        const liveRow = await marketplaceRepo.findOne({
-          where: { id: marketplaceId },
-        });
-        expect(liveRow).toBeNull();
+        beforeEach(async () => {
+          const marketplaceRepo =
+            fixture.datasource.getRepository(MarketplaceSchema);
 
-        const softDeletedRow = await marketplaceRepo.findOne({
-          where: { id: marketplaceId },
-          withDeleted: true,
+          liveRow = await marketplaceRepo.findOne({
+            where: { id: marketplaceId },
+          });
+
+          softDeletedRow = await marketplaceRepo.findOne({
+            where: { id: marketplaceId },
+            withDeleted: true,
+          });
         });
-        expect(softDeletedRow).not.toBeNull();
-        expect(softDeletedRow?.deletedAt).not.toBeNull();
+
+        it('hides the row from live queries', () => {
+          expect(liveRow).toBeNull();
+        });
+
+        it('keeps the row available with withDeleted', () => {
+          expect(softDeletedRow).not.toBeNull();
+        });
+
+        it('stamps deletedAt on the row', () => {
+          expect(softDeletedRow?.deletedAt).not.toBeNull();
+        });
       });
 
-      it('soft-deletes the underlying marketplace-typed GitRepo', async () => {
-        const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
+      describe('soft-deletes the underlying marketplace-typed GitRepo', () => {
+        let liveRow: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
+        let softDeletedRow: Awaited<
+          ReturnType<
+            ReturnType<typeof fixture.datasource.getRepository>['findOne']
+          >
+        >;
 
-        const liveRow = await gitRepoRepo.findOne({
-          where: { id: linkResponse.gitRepoId },
-        });
-        expect(liveRow).toBeNull();
+        beforeEach(async () => {
+          const gitRepoRepo = fixture.datasource.getRepository(GitRepoSchema);
 
-        const softDeletedRow = await gitRepoRepo.findOne({
-          where: { id: linkResponse.gitRepoId },
-          withDeleted: true,
+          liveRow = await gitRepoRepo.findOne({
+            where: { id: linkResponse.gitRepoId },
+          });
+
+          softDeletedRow = await gitRepoRepo.findOne({
+            where: { id: linkResponse.gitRepoId },
+            withDeleted: true,
+          });
         });
-        expect(softDeletedRow).not.toBeNull();
-        expect(softDeletedRow?.deletedAt).not.toBeNull();
-        expect(softDeletedRow?.type).toBe('marketplace');
+
+        it('hides the row from live queries', () => {
+          expect(liveRow).toBeNull();
+        });
+
+        it('keeps the row available with withDeleted', () => {
+          expect(softDeletedRow).not.toBeNull();
+        });
+
+        it('stamps deletedAt on the row', () => {
+          expect(softDeletedRow?.deletedAt).not.toBeNull();
+        });
+
+        it('keeps the type as marketplace', () => {
+          expect(softDeletedRow?.type).toBe('marketplace');
+        });
       });
 
       it('emits MarketplaceUnlinkedEvent exactly once', () => {
@@ -358,18 +487,39 @@ describe('Marketplace lifecycle integration', () => {
         ).toHaveBeenCalledTimes(1);
       });
 
-      it('emits MarketplaceUnlinkedEvent with the expected payload', () => {
-        const payload =
-          stubMarketplaceAdapter.onMarketplaceUnlinked.mock.calls[0][0];
-        expect(payload.marketplaceId).toBe(marketplaceId);
-        expect(payload.organizationId).toBe(dataFactory.organization.id);
-        expect(payload.gitRepoId).toBe(linkResponse.gitRepoId);
-        expect(payload.userId).toBe(dataFactory.user.id);
+      describe('the emitted MarketplaceUnlinkedEvent payload', () => {
+        let payload: MarketplaceUnlinkedPayload;
+
+        beforeEach(() => {
+          payload =
+            stubMarketplaceAdapter.onMarketplaceUnlinked.mock.calls[0][0];
+        });
+
+        it('carries the marketplaceId', () => {
+          expect(payload.marketplaceId).toBe(marketplaceId);
+        });
+
+        it('carries the organizationId', () => {
+          expect(payload.organizationId).toBe(dataFactory.organization.id);
+        });
+
+        it('carries the gitRepoId', () => {
+          expect(payload.gitRepoId).toBe(linkResponse.gitRepoId);
+        });
+
+        it('carries the userId', () => {
+          expect(payload.userId).toBe(dataFactory.user.id);
+        });
       });
 
-      it('cancels the recurring reconciliation job', () => {
-        expect(cancelRecurringSpy).toHaveBeenCalledTimes(1);
-        expect(cancelRecurringSpy).toHaveBeenCalledWith(marketplaceId);
+      describe('cancels the recurring reconciliation job', () => {
+        it('calls cancelRecurring exactly once', () => {
+          expect(cancelRecurringSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('cancels with the marketplace id', () => {
+          expect(cancelRecurringSpy).toHaveBeenCalledWith(marketplaceId);
+        });
       });
 
       it('removes the marketplace from listMarketplaces results', async () => {

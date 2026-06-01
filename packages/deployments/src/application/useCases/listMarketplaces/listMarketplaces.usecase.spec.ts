@@ -122,30 +122,51 @@ describe('ListMarketplacesUseCase', () => {
   });
 
   describe('member happy path', () => {
-    it('returns hydrated marketplace list items', async () => {
-      const result = await useCase.execute(command);
+    describe('hydrated marketplace list items', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(result).toHaveLength(2);
-      expect(result[0]).toMatchObject({
-        id: m1.id,
-        name: 'ACME Plugins',
-        state: 'healthy',
-        pluginCount: 1,
-        addedByUserName: otherAdmin.displayName,
+      beforeEach(async () => {
+        result = await useCase.execute(command);
       });
-      expect(result[1]).toMatchObject({
-        id: m2.id,
-        state: 'drift',
-        pluginCount: 4,
-        addedByUserName: otherAdmin.displayName,
+
+      it('returns one item per linked marketplace', () => {
+        expect(result).toHaveLength(2);
+      });
+
+      it('hydrates the first marketplace', () => {
+        expect(result[0]).toMatchObject({
+          id: m1.id,
+          name: 'ACME Plugins',
+          state: 'healthy',
+          pluginCount: 1,
+          addedByUserName: otherAdmin.displayName,
+        });
+      });
+
+      it('hydrates the second marketplace', () => {
+        expect(result[1]).toMatchObject({
+          id: m2.id,
+          state: 'drift',
+          pluginCount: 4,
+          addedByUserName: otherAdmin.displayName,
+        });
       });
     });
 
-    it('preserves the denormalized pluginCount from the row', async () => {
-      const result = await useCase.execute(command);
+    describe('denormalized pluginCount from the row', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(result[0].pluginCount).toBe(1);
-      expect(result[1].pluginCount).toBe(4);
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+      });
+
+      it('preserves the pluginCount of the first marketplace', () => {
+        expect(result[0].pluginCount).toBe(1);
+      });
+
+      it('preserves the pluginCount of the second marketplace', () => {
+        expect(result[1].pluginCount).toBe(4);
+      });
     });
 
     it('de-duplicates user lookups for marketplaces added by the same user', async () => {
@@ -157,12 +178,14 @@ describe('ListMarketplacesUseCase', () => {
       expect(mockAccountsPort.getUserById).toHaveBeenCalledTimes(2);
     });
 
-    it('returns an empty list when no marketplaces are linked', async () => {
-      mockMarketplaceRepository.findByOrganizationId.mockResolvedValue([]);
+    describe('when no marketplaces are linked', () => {
+      it('returns an empty list', async () => {
+        mockMarketplaceRepository.findByOrganizationId.mockResolvedValue([]);
 
-      const result = await useCase.execute(command);
+        const result = await useCase.execute(command);
 
-      expect(result).toEqual([]);
+        expect(result).toEqual([]);
+      });
     });
   });
 

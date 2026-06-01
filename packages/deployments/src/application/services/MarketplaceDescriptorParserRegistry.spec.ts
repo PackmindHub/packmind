@@ -33,32 +33,51 @@ describe('MarketplaceDescriptorParserRegistry', () => {
 
   describe('parse', () => {
     describe('when the first registered parser claims the content', () => {
-      it('returns the descriptor produced by that parser', () => {
-        const claiming = buildParser({
+      let claiming: jest.Mocked<IMarketplaceDescriptorParser>;
+      let fallback: jest.Mocked<IMarketplaceDescriptorParser>;
+      let result: MarketplaceDescriptor;
+
+      beforeEach(() => {
+        claiming = buildParser({
           canParse: jest.fn().mockReturnValue(true),
           parse: jest.fn().mockReturnValue(sampleDescriptor),
         });
-        const fallback = buildParser();
+        fallback = buildParser();
         const registry = new MarketplaceDescriptorParserRegistry(
           [claiming, fallback],
           logger,
         );
 
-        const result = registry.parse('{"name":"Test Marketplace"}');
+        result = registry.parse('{"name":"Test Marketplace"}');
+      });
 
+      it('returns the descriptor produced by that parser', () => {
         expect(result).toBe(sampleDescriptor);
+      });
+
+      it('invokes the claiming parser once', () => {
         expect(claiming.parse).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not consult the fallback parser', () => {
         expect(fallback.canParse).not.toHaveBeenCalled();
+      });
+
+      it('does not parse with the fallback parser', () => {
         expect(fallback.parse).not.toHaveBeenCalled();
       });
     });
 
     describe('when the first parser declines but the second claims', () => {
-      it('falls through to the next parser', () => {
-        const declining = buildParser({
+      let declining: jest.Mocked<IMarketplaceDescriptorParser>;
+      let claiming: jest.Mocked<IMarketplaceDescriptorParser>;
+      let result: MarketplaceDescriptor;
+
+      beforeEach(() => {
+        declining = buildParser({
           canParse: jest.fn().mockReturnValue(false),
         });
-        const claiming = buildParser({
+        claiming = buildParser({
           canParse: jest.fn().mockReturnValue(true),
           parse: jest.fn().mockReturnValue(sampleDescriptor),
         });
@@ -67,11 +86,22 @@ describe('MarketplaceDescriptorParserRegistry', () => {
           logger,
         );
 
-        const result = registry.parse('{"foo":"bar"}');
+        result = registry.parse('{"foo":"bar"}');
+      });
 
+      it('falls through to the next parser', () => {
         expect(result).toBe(sampleDescriptor);
+      });
+
+      it('consults the declining parser once', () => {
         expect(declining.canParse).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not parse with the declining parser', () => {
         expect(declining.parse).not.toHaveBeenCalled();
+      });
+
+      it('parses with the claiming parser once', () => {
         expect(claiming.parse).toHaveBeenCalledTimes(1);
       });
     });
@@ -129,8 +159,11 @@ describe('MarketplaceDescriptorParserRegistry', () => {
     });
 
     describe('when a claiming parser throws an unexpected error', () => {
-      it('wraps it in a MarketplaceDescriptorParseError carrying the cause', () => {
-        const cause = new Error('boom');
+      let cause: Error;
+      let thrown: unknown;
+
+      beforeEach(() => {
+        cause = new Error('boom');
         const claiming = buildParser({
           canParse: jest.fn().mockReturnValue(true),
           parse: jest.fn().mockImplementation(() => {
@@ -142,49 +175,83 @@ describe('MarketplaceDescriptorParserRegistry', () => {
           logger,
         );
 
-        let thrown: unknown;
         try {
           registry.parse('{"foo":"bar"}');
         } catch (error) {
           thrown = error;
         }
+      });
 
+      it('wraps it in a MarketplaceDescriptorParseError', () => {
         expect(thrown).toBeInstanceOf(MarketplaceDescriptorParseError);
+      });
+
+      it('carries the original error as the cause', () => {
         expect((thrown as MarketplaceDescriptorParseError).cause).toBe(cause);
       });
     });
 
     describe('when the input is not valid JSON', () => {
-      it('throws MarketplaceDescriptorParseError without consulting parsers', () => {
-        const parser = buildParser({
-          canParse: jest.fn().mockReturnValue(true),
-        });
-        const registry = new MarketplaceDescriptorParserRegistry(
-          [parser],
-          logger,
-        );
+      describe('without consulting parsers', () => {
+        let parser: jest.Mocked<IMarketplaceDescriptorParser>;
+        let registry: MarketplaceDescriptorParserRegistry;
 
-        expect(() => registry.parse('{ not valid json')).toThrow(
-          MarketplaceDescriptorParseError,
-        );
-        expect(parser.canParse).not.toHaveBeenCalled();
-        expect(parser.parse).not.toHaveBeenCalled();
+        beforeEach(() => {
+          parser = buildParser({
+            canParse: jest.fn().mockReturnValue(true),
+          });
+          registry = new MarketplaceDescriptorParserRegistry([parser], logger);
+        });
+
+        it('throws MarketplaceDescriptorParseError', () => {
+          expect(() => registry.parse('{ not valid json')).toThrow(
+            MarketplaceDescriptorParseError,
+          );
+        });
+
+        it('does not consult canParse on any parser', () => {
+          try {
+            registry.parse('{ not valid json');
+          } catch {
+            // expected
+          }
+
+          expect(parser.canParse).not.toHaveBeenCalled();
+        });
+
+        it('does not call parse on any parser', () => {
+          try {
+            registry.parse('{ not valid json');
+          } catch {
+            // expected
+          }
+
+          expect(parser.parse).not.toHaveBeenCalled();
+        });
       });
 
-      it('preserves the underlying SyntaxError on the cause property', () => {
-        const registry = new MarketplaceDescriptorParserRegistry([], logger);
-
+      describe('with no parsers registered', () => {
         let thrown: unknown;
-        try {
-          registry.parse('not json at all');
-        } catch (error) {
-          thrown = error;
-        }
 
-        expect(thrown).toBeInstanceOf(MarketplaceDescriptorParseError);
-        expect(
-          (thrown as MarketplaceDescriptorParseError).cause,
-        ).toBeInstanceOf(SyntaxError);
+        beforeEach(() => {
+          const registry = new MarketplaceDescriptorParserRegistry([], logger);
+
+          try {
+            registry.parse('not json at all');
+          } catch (error) {
+            thrown = error;
+          }
+        });
+
+        it('throws a MarketplaceDescriptorParseError', () => {
+          expect(thrown).toBeInstanceOf(MarketplaceDescriptorParseError);
+        });
+
+        it('preserves the underlying SyntaxError on the cause property', () => {
+          expect(
+            (thrown as MarketplaceDescriptorParseError).cause,
+          ).toBeInstanceOf(SyntaxError);
+        });
       });
     });
 

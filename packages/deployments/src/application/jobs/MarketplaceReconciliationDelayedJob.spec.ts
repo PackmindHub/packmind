@@ -134,7 +134,9 @@ describe('MarketplaceReconciliationDelayedJob', () => {
   });
 
   describe('healthy state — descriptor unchanged', () => {
-    beforeEach(() => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'abc',
         content: JSON.stringify(baseDescriptor.raw),
@@ -144,25 +146,44 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         ...baseDescriptor,
         raw: { reformatted: true },
       });
+
+      result = await job.runJob('job-1', input, new AbortController());
     });
 
-    it('persists state="healthy" with a fresh lastValidatedAt and no descriptor update', async () => {
-      const result = await job.runJob('job-1', input, new AbortController());
-
+    it('persists state="healthy"', () => {
       expect(result.state).toBe('healthy');
+    });
+
+    it('updates state exactly once', () => {
       expect(mockMarketplaceRepository.updateState).toHaveBeenCalledTimes(1);
-      const [calledId, patch] =
-        mockMarketplaceRepository.updateState.mock.calls[0];
+    });
+
+    it('updates the state for the reconciled marketplace id', () => {
+      const [calledId] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(calledId).toBe(marketplaceId);
+    });
+
+    it('patches the state to "healthy"', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.state).toBe('healthy');
+    });
+
+    it('patches a fresh lastValidatedAt', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.lastValidatedAt).toBeInstanceOf(Date);
+    });
+
+    it('does not patch the descriptor', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.descriptor).toBeUndefined();
+    });
+
+    it('does not patch the plugin count', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.pluginCount).toBeUndefined();
     });
 
-    it('reads the descriptor file from the marketplace-typed GitRepo', async () => {
-      await job.runJob('job-1', input, new AbortController());
-
+    it('reads the descriptor file from the marketplace-typed GitRepo', () => {
       expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
         gitRepo,
         MARKETPLACE_DESCRIPTOR_FILENAME,
@@ -184,117 +205,196 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       raw: { version: '2.0.0' },
     };
 
-    beforeEach(() => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
       mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'def',
         content: JSON.stringify(driftedDescriptor.raw),
       });
       mockParserRegistry.parse.mockReturnValue(driftedDescriptor);
+
+      result = await job.runJob('job-2', input, new AbortController());
     });
 
-    it('persists state="drift" along with the new descriptor and plugin count', async () => {
-      const result = await job.runJob('job-2', input, new AbortController());
-
+    it('persists state="drift"', () => {
       expect(result.state).toBe('drift');
+    });
+
+    it('updates state exactly once', () => {
       expect(mockMarketplaceRepository.updateState).toHaveBeenCalledTimes(1);
-      const [calledId, patch] =
-        mockMarketplaceRepository.updateState.mock.calls[0];
+    });
+
+    it('updates the state for the reconciled marketplace id', () => {
+      const [calledId] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(calledId).toBe(marketplaceId);
+    });
+
+    it('patches the state to "drift"', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.state).toBe('drift');
+    });
+
+    it('patches the new descriptor', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.descriptor).toBe(driftedDescriptor);
+    });
+
+    it('patches the new plugin count', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.pluginCount).toBe(driftedDescriptor.plugins.length);
+    });
+
+    it('patches a fresh lastValidatedAt', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
       expect(patch.lastValidatedAt).toBeInstanceOf(Date);
     });
   });
 
   describe('unreachable state', () => {
-    it('persists state="unreachable" when getFileFromRepo throws', async () => {
-      mockGitPort.getFileFromRepo.mockRejectedValue(
-        new Error('upstream timeout'),
-      );
+    describe('when getFileFromRepo throws', () => {
+      let result: MarketplaceReconciliationJobOutput;
 
-      const result = await job.runJob('job-3', input, new AbortController());
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockRejectedValue(
+          new Error('upstream timeout'),
+        );
 
-      expect(result.state).toBe('unreachable');
-      expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
-        marketplaceId,
-        {
-          state: 'unreachable',
-          lastValidatedAt: expect.any(Date),
-        },
-      );
-      // Descriptor untouched.
-      const patch = mockMarketplaceRepository.updateState.mock.calls[0][1];
-      expect(patch.descriptor).toBeUndefined();
-      expect(patch.pluginCount).toBeUndefined();
-    });
-
-    it('persists state="unreachable" when getFileFromRepo returns null', async () => {
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
-      const result = await job.runJob('job-4', input, new AbortController());
-
-      expect(result.state).toBe('unreachable');
-      expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
-        marketplaceId,
-        {
-          state: 'unreachable',
-          lastValidatedAt: expect.any(Date),
-        },
-      );
-    });
-
-    it('persists state="unreachable" when the parser throws', async () => {
-      mockGitPort.getFileFromRepo.mockResolvedValue({
-        sha: 'abc',
-        content: 'not really json',
-      });
-      mockParserRegistry.parse.mockImplementation(() => {
-        throw new Error('parse error');
+        result = await job.runJob('job-3', input, new AbortController());
       });
 
-      const result = await job.runJob('job-5', input, new AbortController());
+      it('persists state="unreachable"', () => {
+        expect(result.state).toBe('unreachable');
+      });
 
-      expect(result.state).toBe('unreachable');
-      expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
-        marketplaceId,
-        {
-          state: 'unreachable',
-          lastValidatedAt: expect.any(Date),
-        },
-      );
+      it('updates the state with a fresh lastValidatedAt', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          {
+            state: 'unreachable',
+            lastValidatedAt: expect.any(Date),
+          },
+        );
+      });
+
+      it('leaves the descriptor untouched', () => {
+        const patch = mockMarketplaceRepository.updateState.mock.calls[0][1];
+        expect(patch.descriptor).toBeUndefined();
+      });
+
+      it('leaves the plugin count untouched', () => {
+        const patch = mockMarketplaceRepository.updateState.mock.calls[0][1];
+        expect(patch.pluginCount).toBeUndefined();
+      });
     });
 
-    it('persists state="unreachable" when the marketplace-typed GitRepo cannot be resolved', async () => {
-      mockGitRepoService.findMarketplaceGitRepoById.mockResolvedValue(null);
+    describe('when getFileFromRepo returns null', () => {
+      let result: MarketplaceReconciliationJobOutput;
 
-      const result = await job.runJob('job-6', input, new AbortController());
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.state).toBe('unreachable');
-      expect(mockGitPort.getFileFromRepo).not.toHaveBeenCalled();
-      expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
-        marketplaceId,
-        {
-          state: 'unreachable',
-          lastValidatedAt: expect.any(Date),
-        },
-      );
+        result = await job.runJob('job-4', input, new AbortController());
+      });
+
+      it('persists state="unreachable"', () => {
+        expect(result.state).toBe('unreachable');
+      });
+
+      it('updates the state with a fresh lastValidatedAt', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          {
+            state: 'unreachable',
+            lastValidatedAt: expect.any(Date),
+          },
+        );
+      });
+    });
+
+    describe('when the parser throws', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: 'not really json',
+        });
+        mockParserRegistry.parse.mockImplementation(() => {
+          throw new Error('parse error');
+        });
+
+        result = await job.runJob('job-5', input, new AbortController());
+      });
+
+      it('persists state="unreachable"', () => {
+        expect(result.state).toBe('unreachable');
+      });
+
+      it('updates the state with a fresh lastValidatedAt', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          {
+            state: 'unreachable',
+            lastValidatedAt: expect.any(Date),
+          },
+        );
+      });
+    });
+
+    describe('when the marketplace-typed GitRepo cannot be resolved', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitRepoService.findMarketplaceGitRepoById.mockResolvedValue(null);
+
+        result = await job.runJob('job-6', input, new AbortController());
+      });
+
+      it('persists state="unreachable"', () => {
+        expect(result.state).toBe('unreachable');
+      });
+
+      it('does not fetch the descriptor file', () => {
+        expect(mockGitPort.getFileFromRepo).not.toHaveBeenCalled();
+      });
+
+      it('updates the state with a fresh lastValidatedAt', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          {
+            state: 'unreachable',
+            lastValidatedAt: expect.any(Date),
+          },
+        );
+      });
     });
   });
 
   describe('soft-deleted marketplace', () => {
-    beforeEach(() => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
       mockMarketplaceRepository.findById.mockResolvedValue(null);
+
+      result = await job.runJob('job-7', input, new AbortController());
     });
 
-    it('skips the job without updating state or fetching the descriptor', async () => {
-      const result = await job.runJob('job-7', input, new AbortController());
-
+    it('returns state="unreachable"', () => {
       expect(result.state).toBe('unreachable');
+    });
+
+    it('does not resolve the marketplace-typed GitRepo', () => {
       expect(
         mockGitRepoService.findMarketplaceGitRepoById,
       ).not.toHaveBeenCalled();
+    });
+
+    it('does not fetch the descriptor', () => {
       expect(mockGitPort.getFileFromRepo).not.toHaveBeenCalled();
+    });
+
+    it('does not update state', () => {
       expect(mockMarketplaceRepository.updateState).not.toHaveBeenCalled();
     });
   });

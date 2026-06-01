@@ -36,8 +36,13 @@ describe('getSubmitErrorMessage', () => {
     ).toBe(NETWORK_ERROR_MESSAGE);
   });
 
-  it('falls back to the connectivity message for non-object errors', () => {
-    expect(getSubmitErrorMessage('boom')).toBe(NETWORK_ERROR_MESSAGE);
-    expect(getSubmitErrorMessage(null)).toBe(NETWORK_ERROR_MESSAGE);
+  describe('when the error is a non-object value', () => {
+    it('falls back to the connectivity message for a string error', () => {
+      expect(getSubmitErrorMessage('boom')).toBe(NETWORK_ERROR_MESSAGE);
+    });
+
+    it('falls back to the connectivity message for a null error', () => {
+      expect(getSubmitErrorMessage(null)).toBe(NETWORK_ERROR_MESSAGE);
+    });
   });
 });

@@ -10,20 +10,24 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
 
   describe('canParse', () => {
     describe('when the raw object has the anthropic-shaped plugins array', () => {
-      it('returns true when no vendor field is present', () => {
-        const raw = { name: 'demo', plugins: [{ name: 'plugin-a' }] };
+      describe('when no vendor field is present', () => {
+        it('returns true', () => {
+          const raw = { name: 'demo', plugins: [{ name: 'plugin-a' }] };
 
-        expect(parser.canParse(raw)).toBe(true);
+          expect(parser.canParse(raw)).toBe(true);
+        });
       });
 
-      it('returns true when vendor is explicitly anthropic', () => {
-        const raw = {
-          vendor: 'anthropic',
-          name: 'demo',
-          plugins: [{ name: 'plugin-a' }],
-        };
+      describe('when vendor is explicitly anthropic', () => {
+        it('returns true', () => {
+          const raw = {
+            vendor: 'anthropic',
+            name: 'demo',
+            plugins: [{ name: 'plugin-a' }],
+          };
 
-        expect(parser.canParse(raw)).toBe(true);
+          expect(parser.canParse(raw)).toBe(true);
+        });
       });
     });
 
@@ -40,22 +44,34 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
     });
 
     describe('when the shape is structurally foreign', () => {
-      it('returns false when plugins is missing', () => {
-        expect(parser.canParse({ name: 'demo' })).toBe(false);
+      describe('when plugins is missing', () => {
+        it('returns false', () => {
+          expect(parser.canParse({ name: 'demo' })).toBe(false);
+        });
       });
 
-      it('returns false when plugins is not an array', () => {
-        expect(parser.canParse({ name: 'demo', plugins: {} })).toBe(false);
+      describe('when plugins is not an array', () => {
+        it('returns false', () => {
+          expect(parser.canParse({ name: 'demo', plugins: {} })).toBe(false);
+        });
       });
 
       it('returns false for null', () => {
         expect(parser.canParse(null)).toBe(false);
       });
 
-      it('returns false for a non-object primitive', () => {
-        expect(parser.canParse('a string')).toBe(false);
-        expect(parser.canParse(42)).toBe(false);
-        expect(parser.canParse(undefined)).toBe(false);
+      describe('for a non-object primitive', () => {
+        it('returns false for a string', () => {
+          expect(parser.canParse('a string')).toBe(false);
+        });
+
+        it('returns false for a number', () => {
+          expect(parser.canParse(42)).toBe(false);
+        });
+
+        it('returns false for undefined', () => {
+          expect(parser.canParse(undefined)).toBe(false);
+        });
       });
 
       it('returns false for a top-level array', () => {
@@ -66,7 +82,7 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
 
   describe('parse', () => {
     describe('with a valid descriptor', () => {
-      it('returns a normalized MarketplaceDescriptor with vendor=anthropic', () => {
+      describe('returns a normalized MarketplaceDescriptor with vendor=anthropic', () => {
         const raw = {
           name: 'Acme Marketplace',
           version: '1.2.0',
@@ -76,16 +92,34 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
           ],
         };
 
-        const result = parser.parse(raw);
+        let result: ReturnType<AnthropicMarketplaceDescriptorParser['parse']>;
 
-        expect(result.vendor).toBe('anthropic');
-        expect(result.name).toBe('Acme Marketplace');
-        expect(result.version).toBe('1.2.0');
-        expect(result.plugins).toEqual([
-          { slug: 'plugin-a', name: 'Plugin A' },
-          { slug: 'plugin-b', name: 'Plugin B', version: '2.0.0' },
-        ]);
-        expect(result.raw).toBe(raw);
+        beforeEach(() => {
+          result = parser.parse(raw);
+        });
+
+        it('sets the vendor to anthropic', () => {
+          expect(result.vendor).toBe('anthropic');
+        });
+
+        it('preserves the name', () => {
+          expect(result.name).toBe('Acme Marketplace');
+        });
+
+        it('preserves the version', () => {
+          expect(result.version).toBe('1.2.0');
+        });
+
+        it('normalizes the plugins with slugs', () => {
+          expect(result.plugins).toEqual([
+            { slug: 'plugin-a', name: 'Plugin A' },
+            { slug: 'plugin-b', name: 'Plugin B', version: '2.0.0' },
+          ]);
+        });
+
+        it('exposes the original raw object', () => {
+          expect(result.raw).toBe(raw);
+        });
       });
 
       it('preserves unknown top-level + plugin fields on raw', () => {
@@ -100,39 +134,57 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
         expect(result.raw).toBe(raw);
       });
 
-      it('omits version when the descriptor does not declare one', () => {
-        const raw = { name: 'demo', plugins: [{ name: 'plugin-a' }] };
+      describe('when the descriptor does not declare a version', () => {
+        it('omits version', () => {
+          const raw = { name: 'demo', plugins: [{ name: 'plugin-a' }] };
 
-        const result = parser.parse(raw);
+          const result = parser.parse(raw);
 
-        expect(result.version).toBeUndefined();
+          expect(result.version).toBeUndefined();
+        });
       });
     });
 
     describe('when a required field is missing', () => {
-      it('throws MarketplaceDescriptorParseError when name is missing', () => {
+      describe('when name is missing', () => {
         const raw = { plugins: [{ name: 'plugin-a' }] };
 
         let thrown: unknown;
-        try {
-          parser.parse(raw);
-        } catch (error) {
-          thrown = error;
-        }
 
-        expect(thrown).toBeInstanceOf(MarketplaceDescriptorParseError);
-        expect((thrown as MarketplaceDescriptorParseError).cause).toBeDefined();
-        expect(
-          Array.isArray((thrown as MarketplaceDescriptorParseError).cause),
-        ).toBe(true);
+        beforeEach(() => {
+          thrown = undefined;
+          try {
+            parser.parse(raw);
+          } catch (error) {
+            thrown = error;
+          }
+        });
+
+        it('throws MarketplaceDescriptorParseError', () => {
+          expect(thrown).toBeInstanceOf(MarketplaceDescriptorParseError);
+        });
+
+        it('defines a cause on the error', () => {
+          expect(
+            (thrown as MarketplaceDescriptorParseError).cause,
+          ).toBeDefined();
+        });
+
+        it('exposes the cause as an array', () => {
+          expect(
+            Array.isArray((thrown as MarketplaceDescriptorParseError).cause),
+          ).toBe(true);
+        });
       });
 
-      it('throws MarketplaceDescriptorParseError when a plugin has no name', () => {
-        const raw = { name: 'demo', plugins: [{ version: '1.0.0' }] };
+      describe('when a plugin has no name', () => {
+        it('throws MarketplaceDescriptorParseError', () => {
+          const raw = { name: 'demo', plugins: [{ version: '1.0.0' }] };
 
-        expect(() => parser.parse(raw)).toThrow(
-          MarketplaceDescriptorParseError,
-        );
+          expect(() => parser.parse(raw)).toThrow(
+            MarketplaceDescriptorParseError,
+          );
+        });
       });
     });
 

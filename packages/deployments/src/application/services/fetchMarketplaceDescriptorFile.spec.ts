@@ -15,82 +15,116 @@ describe('fetchMarketplaceDescriptorFile', () => {
     return { getFileFromRepo } as unknown as IGitPort;
   }
 
-  it('returns the descriptor from the official .claude-plugin path when present', async () => {
-    const getFileFromRepo = jest
-      .fn()
-      .mockResolvedValue({ sha: 'sha-1', content: '{"plugins":[]}' });
-    const gitPort = makeGitPort(getFileFromRepo);
+  describe('when the official .claude-plugin path is present', () => {
+    let getFileFromRepo: jest.Mock;
+    let result: Awaited<ReturnType<typeof fetchMarketplaceDescriptorFile>>;
 
-    const result = await fetchMarketplaceDescriptorFile(
-      gitPort,
-      gitRepo,
-      'main',
-    );
+    beforeEach(async () => {
+      getFileFromRepo = jest
+        .fn()
+        .mockResolvedValue({ sha: 'sha-1', content: '{"plugins":[]}' });
+      const gitPort = makeGitPort(getFileFromRepo);
 
-    expect(result).toEqual({
-      path: '.claude-plugin/marketplace.json',
-      sha: 'sha-1',
-      content: '{"plugins":[]}',
+      result = await fetchMarketplaceDescriptorFile(gitPort, gitRepo, 'main');
     });
-    expect(getFileFromRepo).toHaveBeenCalledTimes(1);
-    expect(getFileFromRepo).toHaveBeenCalledWith(
-      gitRepo,
-      '.claude-plugin/marketplace.json',
-      'main',
-    );
-  });
 
-  it('falls back to the root marketplace.json when the official path is missing', async () => {
-    const getFileFromRepo = jest
-      .fn()
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ sha: 'sha-2', content: '{"plugins":[]}' });
-    const gitPort = makeGitPort(getFileFromRepo);
-
-    const result = await fetchMarketplaceDescriptorFile(
-      gitPort,
-      gitRepo,
-      'main',
-    );
-
-    expect(result).toEqual({
-      path: 'marketplace.json',
-      sha: 'sha-2',
-      content: '{"plugins":[]}',
+    it('returns the descriptor from the official .claude-plugin path', () => {
+      expect(result).toEqual({
+        path: '.claude-plugin/marketplace.json',
+        sha: 'sha-1',
+        content: '{"plugins":[]}',
+      });
     });
-    expect(getFileFromRepo).toHaveBeenCalledTimes(2);
-    expect(getFileFromRepo).toHaveBeenNthCalledWith(
-      2,
-      gitRepo,
-      'marketplace.json',
-      'main',
-    );
+
+    it('probes a single path', () => {
+      expect(getFileFromRepo).toHaveBeenCalledTimes(1);
+    });
+
+    it('probes the official .claude-plugin path', () => {
+      expect(getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        'main',
+      );
+    });
   });
 
-  it('returns null when no candidate path exists', async () => {
-    const getFileFromRepo = jest.fn().mockResolvedValue(null);
-    const gitPort = makeGitPort(getFileFromRepo);
+  describe('when the official path is missing', () => {
+    let getFileFromRepo: jest.Mock;
+    let result: Awaited<ReturnType<typeof fetchMarketplaceDescriptorFile>>;
 
-    const result = await fetchMarketplaceDescriptorFile(
-      gitPort,
-      gitRepo,
-      'main',
-    );
+    beforeEach(async () => {
+      getFileFromRepo = jest
+        .fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ sha: 'sha-2', content: '{"plugins":[]}' });
+      const gitPort = makeGitPort(getFileFromRepo);
 
-    expect(result).toBeNull();
-    expect(getFileFromRepo).toHaveBeenCalledTimes(2);
+      result = await fetchMarketplaceDescriptorFile(gitPort, gitRepo, 'main');
+    });
+
+    it('falls back to the root marketplace.json', () => {
+      expect(result).toEqual({
+        path: 'marketplace.json',
+        sha: 'sha-2',
+        content: '{"plugins":[]}',
+      });
+    });
+
+    it('probes both candidate paths', () => {
+      expect(getFileFromRepo).toHaveBeenCalledTimes(2);
+    });
+
+    it('probes the root marketplace.json on the second attempt', () => {
+      expect(getFileFromRepo).toHaveBeenNthCalledWith(
+        2,
+        gitRepo,
+        'marketplace.json',
+        'main',
+      );
+    });
   });
 
-  it('propagates transport errors instead of probing further', async () => {
-    const getFileFromRepo = jest
-      .fn()
-      .mockRejectedValue(new Error('network down'));
-    const gitPort = makeGitPort(getFileFromRepo);
+  describe('when no candidate path exists', () => {
+    let getFileFromRepo: jest.Mock;
+    let result: Awaited<ReturnType<typeof fetchMarketplaceDescriptorFile>>;
 
-    await expect(
-      fetchMarketplaceDescriptorFile(gitPort, gitRepo, 'main'),
-    ).rejects.toThrow('network down');
-    expect(getFileFromRepo).toHaveBeenCalledTimes(1);
+    beforeEach(async () => {
+      getFileFromRepo = jest.fn().mockResolvedValue(null);
+      const gitPort = makeGitPort(getFileFromRepo);
+
+      result = await fetchMarketplaceDescriptorFile(gitPort, gitRepo, 'main');
+    });
+
+    it('returns null', () => {
+      expect(result).toBeNull();
+    });
+
+    it('probes both candidate paths', () => {
+      expect(getFileFromRepo).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('when the transport throws', () => {
+    let getFileFromRepo: jest.Mock;
+    let act: () => Promise<unknown>;
+
+    beforeEach(async () => {
+      getFileFromRepo = jest.fn().mockRejectedValue(new Error('network down'));
+      const gitPort = makeGitPort(getFileFromRepo);
+
+      act = () => fetchMarketplaceDescriptorFile(gitPort, gitRepo, 'main');
+
+      await act().catch(() => undefined);
+    });
+
+    it('propagates the transport error', async () => {
+      await expect(act()).rejects.toThrow('network down');
+    });
+
+    it('does not probe further', () => {
+      expect(getFileFromRepo).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('forwards an undefined branch so the port uses the default branch', async () => {

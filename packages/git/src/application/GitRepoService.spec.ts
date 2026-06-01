@@ -293,21 +293,25 @@ describe('GitRepoService', () => {
   });
 
   describe('findMarketplaceGitRepo', () => {
-    it('filters to type=marketplace and scopes to the organization', async () => {
-      const marketplaceRepo: GitRepo = gitRepoFactory({
-        id: createGitRepoId('marketplace-repo-1'),
-        type: 'marketplace',
-      });
+    const marketplaceRepo: GitRepo = gitRepoFactory({
+      id: createGitRepoId('marketplace-repo-1'),
+      type: 'marketplace',
+    });
+    let result: GitRepo | null;
+
+    beforeEach(async () => {
       mockGitRepoRepository.findByOwnerAndRepoInOrganization.mockResolvedValue(
         marketplaceRepo,
       );
 
-      const result = await gitRepoService.findMarketplaceGitRepo(
+      result = await gitRepoService.findMarketplaceGitRepo(
         createOrganizationId('org-1'),
         'test-owner',
         'test-repo',
       );
+    });
 
+    it('filters to type=marketplace and scopes to the organization', () => {
       expect(
         mockGitRepoRepository.findByOwnerAndRepoInOrganization,
       ).toHaveBeenCalledWith(
@@ -316,44 +320,58 @@ describe('GitRepoService', () => {
         createOrganizationId('org-1'),
         expect.objectContaining({ type: 'marketplace' }),
       );
+    });
+
+    it('returns the marketplace repository', () => {
       expect(result).toEqual(marketplaceRepo);
     });
   });
 
   describe('findMarketplaceGitReposByOrganization', () => {
-    it('filters to type=marketplace', async () => {
-      const marketplaceRepos = [
-        gitRepoFactory({ type: 'marketplace' }),
-        gitRepoFactory({ type: 'marketplace' }),
-      ];
+    const marketplaceRepos = [
+      gitRepoFactory({ type: 'marketplace' }),
+      gitRepoFactory({ type: 'marketplace' }),
+    ];
+    let result: GitRepo[];
+
+    beforeEach(async () => {
       mockGitRepoRepository.findByOrganizationId.mockResolvedValue(
         marketplaceRepos,
       );
 
-      const result = await gitRepoService.findMarketplaceGitReposByOrganization(
+      result = await gitRepoService.findMarketplaceGitReposByOrganization(
         createOrganizationId('org-1'),
       );
+    });
 
+    it('filters to type=marketplace', () => {
       expect(mockGitRepoRepository.findByOrganizationId).toHaveBeenCalledWith(
         createOrganizationId('org-1'),
         expect.objectContaining({ type: 'marketplace' }),
       );
+    });
+
+    it('returns the marketplace repositories', () => {
       expect(result).toEqual(marketplaceRepos);
     });
   });
 
   describe('findGitRepoIgnoringType', () => {
-    it('passes the special "any" sentinel so neither type is excluded', async () => {
+    let result: GitRepo | null;
+
+    beforeEach(async () => {
       mockGitRepoRepository.findByOwnerAndRepoInOrganization.mockResolvedValue(
         mockGitRepo,
       );
 
-      const result = await gitRepoService.findGitRepoIgnoringType(
+      result = await gitRepoService.findGitRepoIgnoringType(
         createOrganizationId('org-1'),
         'test-owner',
         'test-repo',
       );
+    });
 
+    it('passes the special "any" sentinel so neither type is excluded', () => {
       expect(
         mockGitRepoRepository.findByOwnerAndRepoInOrganization,
       ).toHaveBeenCalledWith(
@@ -362,6 +380,9 @@ describe('GitRepoService', () => {
         createOrganizationId('org-1'),
         expect.objectContaining({ type: 'any' }),
       );
+    });
+
+    it('returns the matched repository', () => {
       expect(result).toEqual(mockGitRepo);
     });
   });

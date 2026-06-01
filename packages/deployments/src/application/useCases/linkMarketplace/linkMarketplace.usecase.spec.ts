@@ -177,31 +177,85 @@ describe('LinkMarketplaceUseCase', () => {
   });
 
   describe('admin happy path — private (token-bearing) provider', () => {
-    it('creates a marketplace row enriched with addedByUserName', async () => {
-      const response = await useCase.execute(baseCommand);
+    describe('marketplace row enriched with addedByUserName', () => {
+      let response: Awaited<ReturnType<LinkMarketplaceUseCase['execute']>>;
 
-      expect(mockMarketplaceRepository.add).toHaveBeenCalledTimes(1);
-      const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
-      expect(inserted.organizationId).toBe(organizationId);
-      expect(inserted.gitRepoId).toBe(createdGitRepo.id);
-      expect(inserted.name).toBe('ACME Plugins');
-      expect(inserted.vendor).toBe('anthropic');
-      expect(inserted.descriptor).toBe(descriptor);
-      expect(inserted.pluginCount).toBe(descriptor.plugins.length);
-      expect(response.addedByUserName).toBe(adminUser.displayName);
+      beforeEach(async () => {
+        response = await useCase.execute(baseCommand);
+      });
+
+      it('creates exactly one marketplace row', () => {
+        expect(mockMarketplaceRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('sets the organizationId on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.organizationId).toBe(organizationId);
+      });
+
+      it('sets the gitRepoId on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.gitRepoId).toBe(createdGitRepo.id);
+      });
+
+      it('sets the name on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.name).toBe('ACME Plugins');
+      });
+
+      it('sets the vendor on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.vendor).toBe('anthropic');
+      });
+
+      it('sets the descriptor on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.descriptor).toBe(descriptor);
+      });
+
+      it('sets the pluginCount on the inserted row', () => {
+        const inserted = mockMarketplaceRepository.add.mock.calls[0][0];
+        expect(inserted.pluginCount).toBe(descriptor.plugins.length);
+      });
+
+      it('enriches the response with addedByUserName', () => {
+        expect(response.addedByUserName).toBe(adminUser.displayName);
+      });
     });
 
-    it('fetches marketplace.json from the requested repo', async () => {
-      await useCase.execute(baseCommand);
+    describe('fetching marketplace.json from the requested repo', () => {
+      beforeEach(async () => {
+        await useCase.execute(baseCommand);
+      });
 
-      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledTimes(1);
-      const [gitRepoArg, pathArg, branchArg] =
-        mockGitPort.getFileFromRepo.mock.calls[0];
-      expect(gitRepoArg.owner).toBe('acme');
-      expect(gitRepoArg.repo).toBe('plugins');
-      expect(gitRepoArg.type).toBe('marketplace');
-      expect(pathArg).toBe(MARKETPLACE_DESCRIPTOR_FILENAME);
-      expect(branchArg).toBe('main');
+      it('fetches the file exactly once', () => {
+        expect(mockGitPort.getFileFromRepo).toHaveBeenCalledTimes(1);
+      });
+
+      it('targets the requested owner', () => {
+        const [gitRepoArg] = mockGitPort.getFileFromRepo.mock.calls[0];
+        expect(gitRepoArg.owner).toBe('acme');
+      });
+
+      it('targets the requested repo', () => {
+        const [gitRepoArg] = mockGitPort.getFileFromRepo.mock.calls[0];
+        expect(gitRepoArg.repo).toBe('plugins');
+      });
+
+      it('uses a marketplace-typed git repo', () => {
+        const [gitRepoArg] = mockGitPort.getFileFromRepo.mock.calls[0];
+        expect(gitRepoArg.type).toBe('marketplace');
+      });
+
+      it('reads the marketplace descriptor filename', () => {
+        const [, pathArg] = mockGitPort.getFileFromRepo.mock.calls[0];
+        expect(pathArg).toBe(MARKETPLACE_DESCRIPTOR_FILENAME);
+      });
+
+      it('reads from the requested branch', () => {
+        const [, , branchArg] = mockGitPort.getFileFromRepo.mock.calls[0];
+        expect(branchArg).toBe('main');
+      });
     });
 
     it('persists a marketplace-typed GitRepo via GitRepoService.addGitRepo', async () => {
@@ -218,26 +272,53 @@ describe('LinkMarketplaceUseCase', () => {
       );
     });
 
-    it('emits MarketplaceLinkedEvent', async () => {
-      await useCase.execute(baseCommand);
+    describe('emitting MarketplaceLinkedEvent', () => {
+      beforeEach(async () => {
+        await useCase.execute(baseCommand);
+      });
 
-      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
-      const emitted = mockEventEmitterService.emit.mock.calls[0][0];
-      expect(emitted).toBeInstanceOf(MarketplaceLinkedEvent);
-      expect(emitted.payload.organizationId).toBe(organizationId);
-      expect(emitted.payload.gitRepoId).toBe(createdGitRepo.id);
-      expect(emitted.payload.addedBy).toBe(userId);
+      it('emits exactly one event', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      });
+
+      it('emits a MarketplaceLinkedEvent instance', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted).toBeInstanceOf(MarketplaceLinkedEvent);
+      });
+
+      it('sets the organizationId on the event payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.organizationId).toBe(organizationId);
+      });
+
+      it('sets the gitRepoId on the event payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.gitRepoId).toBe(createdGitRepo.id);
+      });
+
+      it('sets the addedBy on the event payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.addedBy).toBe(userId);
+      });
     });
 
-    it('schedules the repeatable reconciliation cron and seeds an immediate run', async () => {
-      await useCase.execute(baseCommand);
+    describe('scheduling reconciliation', () => {
+      beforeEach(async () => {
+        await useCase.execute(baseCommand);
+      });
 
-      const insertedId = mockMarketplaceRepository.add.mock.calls[0][0].id;
-      expect(mockReconciliationJob.scheduleRecurring).toHaveBeenCalledWith(
-        insertedId,
-      );
-      expect(mockReconciliationJob.addJob).toHaveBeenCalledWith({
-        marketplaceId: insertedId,
+      it('schedules the repeatable reconciliation cron', () => {
+        const insertedId = mockMarketplaceRepository.add.mock.calls[0][0].id;
+        expect(mockReconciliationJob.scheduleRecurring).toHaveBeenCalledWith(
+          insertedId,
+        );
+      });
+
+      it('seeds an immediate reconciliation run', () => {
+        const insertedId = mockMarketplaceRepository.add.mock.calls[0][0].id;
+        expect(mockReconciliationJob.addJob).toHaveBeenCalledWith({
+          marketplaceId: insertedId,
+        });
       });
     });
   });
@@ -249,10 +330,12 @@ describe('LinkMarketplaceUseCase', () => {
       });
     });
 
-    it('still rejects the private link path when the provider has no token', async () => {
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        GitProviderMissingTokenError,
-      );
+    describe('when the provider has no token', () => {
+      it('still rejects the private link path', async () => {
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          GitProviderMissingTokenError,
+        );
+      });
     });
   });
 
@@ -271,27 +354,40 @@ describe('LinkMarketplaceUseCase', () => {
       });
     });
 
-    it('does not call any downstream service', async () => {
-      try {
-        await useCase.execute(baseCommand);
-      } catch {
-        // expected
-      }
-      expect(mockMarketplaceRepository.add).not.toHaveBeenCalled();
-      expect(mockGitRepoService.addGitRepo).not.toHaveBeenCalled();
-      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    describe('does not call any downstream service', () => {
+      beforeEach(async () => {
+        try {
+          await useCase.execute(baseCommand);
+        } catch {
+          // expected
+        }
+      });
+
+      it('does not persist a marketplace row', () => {
+        expect(mockMarketplaceRepository.add).not.toHaveBeenCalled();
+      });
+
+      it('does not persist a git repo', () => {
+        expect(mockGitRepoService.addGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', () => {
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
     });
   });
 
   describe('provider validation errors', () => {
-    it('throws GitProviderNotFoundError when the provider is missing', async () => {
-      mockGitPort.listProviders = jest
-        .fn()
-        .mockResolvedValue({ providers: [] });
+    describe('when the provider is missing', () => {
+      it('throws GitProviderNotFoundError', async () => {
+        mockGitPort.listProviders = jest
+          .fn()
+          .mockResolvedValue({ providers: [] });
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        GitProviderNotFoundError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          GitProviderNotFoundError,
+        );
+      });
     });
 
     it('throws GitProviderOrganizationMismatchError on cross-org provider', async () => {
@@ -310,44 +406,50 @@ describe('LinkMarketplaceUseCase', () => {
   });
 
   describe('cross-type collisions', () => {
-    it('throws MarketplaceAlreadyLinkedError when a marketplace-typed repo exists', async () => {
-      mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
-        id: createGitRepoId(uuidv4()),
-        owner: 'acme',
-        repo: 'plugins',
-        branch: 'main',
-        providerId: gitProviderId,
-        type: 'marketplace',
-      } as GitRepo);
+    describe('when a marketplace-typed repo exists', () => {
+      it('throws MarketplaceAlreadyLinkedError', async () => {
+        mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
+          id: createGitRepoId(uuidv4()),
+          owner: 'acme',
+          repo: 'plugins',
+          branch: 'main',
+          providerId: gitProviderId,
+          type: 'marketplace',
+        } as GitRepo);
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        MarketplaceAlreadyLinkedError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          MarketplaceAlreadyLinkedError,
+        );
+      });
     });
 
-    it('throws GitRepoAlreadyLinkedAsStandardError when a standard-typed repo exists', async () => {
-      mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
-        id: createGitRepoId(uuidv4()),
-        owner: 'acme',
-        repo: 'plugins',
-        branch: 'main',
-        providerId: gitProviderId,
-        type: 'standard',
-      } as GitRepo);
+    describe('when a standard-typed repo exists', () => {
+      it('throws GitRepoAlreadyLinkedAsStandardError', async () => {
+        mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
+          id: createGitRepoId(uuidv4()),
+          owner: 'acme',
+          repo: 'plugins',
+          branch: 'main',
+          providerId: gitProviderId,
+          type: 'standard',
+        } as GitRepo);
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        GitRepoAlreadyLinkedAsStandardError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          GitRepoAlreadyLinkedAsStandardError,
+        );
+      });
     });
   });
 
   describe('descriptor errors', () => {
-    it('throws MarketplaceDescriptorNotFoundError when marketplace.json is missing', async () => {
-      mockGitPort.getFileFromRepo = jest.fn().mockResolvedValue(null);
+    describe('when marketplace.json is missing', () => {
+      it('throws MarketplaceDescriptorNotFoundError', async () => {
+        mockGitPort.getFileFromRepo = jest.fn().mockResolvedValue(null);
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        MarketplaceDescriptorNotFoundError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          MarketplaceDescriptorNotFoundError,
+        );
+      });
     });
 
     it('propagates UnknownMarketplaceDescriptorError from the registry', async () => {

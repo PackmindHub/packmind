@@ -125,30 +125,61 @@ describe('UnlinkMarketplaceUseCase', () => {
   });
 
   describe('admin happy path', () => {
-    it('soft-deletes the marketplace and underlying git repo', async () => {
-      const response = await useCase.execute(command);
+    describe('soft-deletion of the marketplace and underlying git repo', () => {
+      let response: Awaited<ReturnType<UnlinkMarketplaceUseCase['execute']>>;
 
-      expect(mockMarketplaceRepository.deleteById).toHaveBeenCalledWith(
-        marketplaceId,
-        userId,
-      );
-      expect(mockGitPort.deleteGitRepo).toHaveBeenCalledWith(
-        gitRepoId,
-        userId,
-        organizationId,
-      );
-      expect(response.marketplaceId).toBe(marketplaceId);
+      beforeEach(async () => {
+        response = await useCase.execute(command);
+      });
+
+      it('soft-deletes the marketplace', () => {
+        expect(mockMarketplaceRepository.deleteById).toHaveBeenCalledWith(
+          marketplaceId,
+          userId,
+        );
+      });
+
+      it('deletes the underlying git repo', () => {
+        expect(mockGitPort.deleteGitRepo).toHaveBeenCalledWith(
+          gitRepoId,
+          userId,
+          organizationId,
+        );
+      });
+
+      it('returns the marketplace id', () => {
+        expect(response.marketplaceId).toBe(marketplaceId);
+      });
     });
 
-    it('emits MarketplaceUnlinkedEvent', async () => {
-      await useCase.execute(command);
+    describe('emitting MarketplaceUnlinkedEvent', () => {
+      beforeEach(async () => {
+        await useCase.execute(command);
+      });
 
-      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
-      const emitted = mockEventEmitterService.emit.mock.calls[0][0];
-      expect(emitted).toBeInstanceOf(MarketplaceUnlinkedEvent);
-      expect(emitted.payload.marketplaceId).toBe(marketplaceId);
-      expect(emitted.payload.gitRepoId).toBe(gitRepoId);
-      expect(emitted.payload.organizationId).toBe(organizationId);
+      it('emits exactly one event', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      });
+
+      it('emits a MarketplaceUnlinkedEvent instance', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted).toBeInstanceOf(MarketplaceUnlinkedEvent);
+      });
+
+      it('emits the marketplace id in the payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.marketplaceId).toBe(marketplaceId);
+      });
+
+      it('emits the git repo id in the payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.gitRepoId).toBe(gitRepoId);
+      });
+
+      it('emits the organization id in the payload', () => {
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted.payload.organizationId).toBe(organizationId);
+      });
     });
 
     it('cancels the repeatable reconciliation cron via the job manager', async () => {
@@ -175,15 +206,26 @@ describe('UnlinkMarketplaceUseCase', () => {
       });
     });
 
-    it('does not delete anything', async () => {
-      try {
-        await useCase.execute(command);
-      } catch {
-        // expected
-      }
-      expect(mockMarketplaceRepository.deleteById).not.toHaveBeenCalled();
-      expect(mockGitPort.deleteGitRepo).not.toHaveBeenCalled();
-      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    describe('does not delete anything', () => {
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // expected
+        }
+      });
+
+      it('does not delete the marketplace', () => {
+        expect(mockMarketplaceRepository.deleteById).not.toHaveBeenCalled();
+      });
+
+      it('does not delete the git repo', () => {
+        expect(mockGitPort.deleteGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', () => {
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -198,15 +240,26 @@ describe('UnlinkMarketplaceUseCase', () => {
       );
     });
 
-    it('does not delete or emit', async () => {
-      try {
-        await useCase.execute(command);
-      } catch {
-        // expected
-      }
-      expect(mockMarketplaceRepository.deleteById).not.toHaveBeenCalled();
-      expect(mockGitPort.deleteGitRepo).not.toHaveBeenCalled();
-      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    describe('does not delete or emit', () => {
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // expected
+        }
+      });
+
+      it('does not delete the marketplace', () => {
+        expect(mockMarketplaceRepository.deleteById).not.toHaveBeenCalled();
+      });
+
+      it('does not delete the git repo', () => {
+        expect(mockGitPort.deleteGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any event', () => {
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
     });
   });
 });

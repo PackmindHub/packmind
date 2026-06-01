@@ -170,7 +170,10 @@ describe('Marketplace HTTP boundary error mapping', () => {
 
   describe('linkMarketplace', () => {
     describe('non-admin denial (AC-4)', () => {
-      it('throws OrganizationAdminRequiredError → 403 ForbiddenException', async () => {
+      let raw: unknown;
+      let mapped: unknown;
+
+      beforeEach(async () => {
         const memberUserId = await seedNonAdminMember();
         // Use a real provider; the admin check fires before the use case
         // resolves it, so no further fixtures are needed.
@@ -178,7 +181,7 @@ describe('Marketplace HTTP boundary error mapping', () => {
           gitProviderFactory({ token: 'gh-pat-test-token' }),
         );
 
-        const { raw, mapped } = await captureMappedError(
+        ({ raw, mapped } = await captureMappedError(
           testApp.deploymentsHexa.getAdapter().linkMarketplace({
             userId: memberUserId,
             organizationId: dataFactory.organization.id,
@@ -188,18 +191,26 @@ describe('Marketplace HTTP boundary error mapping', () => {
             branch: 'main',
             name: 'Anthropic Marketplace',
           }),
-        );
+        ));
+      });
 
+      it('throws OrganizationAdminRequiredError', () => {
         expect(raw).toBeInstanceOf(OrganizationAdminRequiredError);
+      });
+
+      it('maps to 403 ForbiddenException', () => {
         expect(mapped).toBeInstanceOf(ForbiddenException);
       });
     });
 
     describe('GitProviderNotFoundError → 404', () => {
-      it('maps to NotFoundException', async () => {
+      let raw: unknown;
+      let mapped: unknown;
+
+      beforeEach(async () => {
         const missingProviderId = createGitProviderId(uuidv4());
 
-        const { raw, mapped } = await captureMappedError(
+        ({ raw, mapped } = await captureMappedError(
           testApp.deploymentsHexa.getAdapter().linkMarketplace({
             ...dataFactory.packmindCommand(),
             gitProviderId: missingProviderId,
@@ -208,124 +219,172 @@ describe('Marketplace HTTP boundary error mapping', () => {
             branch: 'main',
             name: 'Anthropic Marketplace',
           }),
-        );
+        ));
+      });
 
+      it('throws GitProviderNotFoundError', () => {
         expect(raw).toBeInstanceOf(GitProviderNotFoundError);
+      });
+
+      it('maps to NotFoundException', () => {
         expect(mapped).toBeInstanceOf(NotFoundException);
       });
     });
 
     describe('GitProviderMissingTokenError → 400', () => {
-      it('maps to BadRequestException when the provider has no token', async () => {
-        // Create a token-bearing provider through the normal flow, then null
-        // the token at the DB level so the link use case sees a tokenless
-        // provider — the `addGitProvider` use case rejects empty tokens up
-        // front, so we cannot construct this state via the public API.
-        const { gitProvider } = await dataFactory.withGitProvider(
-          gitProviderFactory({ token: 'gh-pat-temp' }),
-        );
-        await fixture.datasource
-          .createQueryRunner()
-          .query('UPDATE git_providers SET token = NULL WHERE id = $1', [
-            gitProvider.id,
-          ]);
+      describe('when the provider has no token', () => {
+        let raw: unknown;
+        let mapped: unknown;
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().linkMarketplace({
-            ...dataFactory.packmindCommand(),
-            gitProviderId: gitProvider.id,
-            owner: 'anthropic',
-            repo: 'marketplace',
-            branch: 'main',
-            name: 'Anthropic Marketplace',
-          }),
-        );
+        beforeEach(async () => {
+          // Create a token-bearing provider through the normal flow, then null
+          // the token at the DB level so the link use case sees a tokenless
+          // provider — the `addGitProvider` use case rejects empty tokens up
+          // front, so we cannot construct this state via the public API.
+          const { gitProvider } = await dataFactory.withGitProvider(
+            gitProviderFactory({ token: 'gh-pat-temp' }),
+          );
+          await fixture.datasource
+            .createQueryRunner()
+            .query('UPDATE git_providers SET token = NULL WHERE id = $1', [
+              gitProvider.id,
+            ]);
 
-        expect(raw).toBeInstanceOf(GitProviderMissingTokenError);
-        expect(mapped).toBeInstanceOf(BadRequestException);
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().linkMarketplace({
+              ...dataFactory.packmindCommand(),
+              gitProviderId: gitProvider.id,
+              owner: 'anthropic',
+              repo: 'marketplace',
+              branch: 'main',
+              name: 'Anthropic Marketplace',
+            }),
+          ));
+        });
+
+        it('throws GitProviderMissingTokenError', () => {
+          expect(raw).toBeInstanceOf(GitProviderMissingTokenError);
+        });
+
+        it('maps to BadRequestException', () => {
+          expect(mapped).toBeInstanceOf(BadRequestException);
+        });
       });
     });
 
     describe('MarketplaceDescriptorNotFoundError → 400', () => {
-      it('maps to BadRequestException when marketplace.json is missing', async () => {
-        const { gitProvider } = await dataFactory.withGitProvider(
-          gitProviderFactory({ token: 'gh-pat-test-token' }),
-        );
-        // Use a fresh git port spy that returns null (no descriptor file).
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+      describe('when marketplace.json is missing', () => {
+        let raw: unknown;
+        let mapped: unknown;
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().linkMarketplace({
-            ...dataFactory.packmindCommand(),
-            gitProviderId: gitProvider.id,
-            owner: 'anthropic',
-            repo: 'no-marketplace-json-here',
-            branch: 'main',
-            name: 'Anthropic Marketplace',
-          }),
-        );
+        beforeEach(async () => {
+          const { gitProvider } = await dataFactory.withGitProvider(
+            gitProviderFactory({ token: 'gh-pat-test-token' }),
+          );
+          // Use a fresh git port spy that returns null (no descriptor file).
+          jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-        expect(raw).toBeInstanceOf(MarketplaceDescriptorNotFoundError);
-        expect(mapped).toBeInstanceOf(BadRequestException);
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().linkMarketplace({
+              ...dataFactory.packmindCommand(),
+              gitProviderId: gitProvider.id,
+              owner: 'anthropic',
+              repo: 'no-marketplace-json-here',
+              branch: 'main',
+              name: 'Anthropic Marketplace',
+            }),
+          ));
+        });
+
+        it('throws MarketplaceDescriptorNotFoundError', () => {
+          expect(raw).toBeInstanceOf(MarketplaceDescriptorNotFoundError);
+        });
+
+        it('maps to BadRequestException', () => {
+          expect(mapped).toBeInstanceOf(BadRequestException);
+        });
       });
     });
 
     describe('UnknownMarketplaceDescriptorError → 400', () => {
-      it('maps to BadRequestException when no registered parser claims the descriptor', async () => {
-        const { gitProvider } = await dataFactory.withGitProvider(
-          gitProviderFactory({ token: 'gh-pat-test-token' }),
-        );
-        // No `plugins` array → AnthropicParser declines → registry throws
-        // UnknownMarketplaceDescriptorError.
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-          sha: 'mock-sha',
-          content: JSON.stringify({ name: 'foreign-format', other: 'shape' }),
+      describe('when no registered parser claims the descriptor', () => {
+        let raw: unknown;
+        let mapped: unknown;
+
+        beforeEach(async () => {
+          const { gitProvider } = await dataFactory.withGitProvider(
+            gitProviderFactory({ token: 'gh-pat-test-token' }),
+          );
+          // No `plugins` array → AnthropicParser declines → registry throws
+          // UnknownMarketplaceDescriptorError.
+          jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
+            sha: 'mock-sha',
+            content: JSON.stringify({ name: 'foreign-format', other: 'shape' }),
+          });
+
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().linkMarketplace({
+              ...dataFactory.packmindCommand(),
+              gitProviderId: gitProvider.id,
+              owner: 'foreign',
+              repo: 'descriptor',
+              branch: 'main',
+              name: 'Foreign Format Marketplace',
+            }),
+          ));
         });
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().linkMarketplace({
-            ...dataFactory.packmindCommand(),
-            gitProviderId: gitProvider.id,
-            owner: 'foreign',
-            repo: 'descriptor',
-            branch: 'main',
-            name: 'Foreign Format Marketplace',
-          }),
-        );
+        it('throws UnknownMarketplaceDescriptorError', () => {
+          expect(raw).toBeInstanceOf(UnknownMarketplaceDescriptorError);
+        });
 
-        expect(raw).toBeInstanceOf(UnknownMarketplaceDescriptorError);
-        expect(mapped).toBeInstanceOf(BadRequestException);
+        it('maps to BadRequestException', () => {
+          expect(mapped).toBeInstanceOf(BadRequestException);
+        });
       });
     });
 
     describe('MarketplaceDescriptorParseError → 400', () => {
-      it('maps to BadRequestException when the descriptor is malformed JSON', async () => {
-        const { gitProvider } = await dataFactory.withGitProvider(
-          gitProviderFactory({ token: 'gh-pat-test-token' }),
-        );
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-          sha: 'mock-sha',
-          content: '{ this is not valid json',
+      describe('when the descriptor is malformed JSON', () => {
+        let raw: unknown;
+        let mapped: unknown;
+
+        beforeEach(async () => {
+          const { gitProvider } = await dataFactory.withGitProvider(
+            gitProviderFactory({ token: 'gh-pat-test-token' }),
+          );
+          jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
+            sha: 'mock-sha',
+            content: '{ this is not valid json',
+          });
+
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().linkMarketplace({
+              ...dataFactory.packmindCommand(),
+              gitProviderId: gitProvider.id,
+              owner: 'broken',
+              repo: 'descriptor',
+              branch: 'main',
+              name: 'Broken Descriptor Marketplace',
+            }),
+          ));
         });
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().linkMarketplace({
-            ...dataFactory.packmindCommand(),
-            gitProviderId: gitProvider.id,
-            owner: 'broken',
-            repo: 'descriptor',
-            branch: 'main',
-            name: 'Broken Descriptor Marketplace',
-          }),
-        );
+        it('throws MarketplaceDescriptorParseError', () => {
+          expect(raw).toBeInstanceOf(MarketplaceDescriptorParseError);
+        });
 
-        expect(raw).toBeInstanceOf(MarketplaceDescriptorParseError);
-        expect(mapped).toBeInstanceOf(BadRequestException);
+        it('maps to BadRequestException', () => {
+          expect(mapped).toBeInstanceOf(BadRequestException);
+        });
       });
     });
 
     describe('MarketplaceAlreadyLinkedError → 409 with verbatim contract message (AC-5)', () => {
-      it('maps to ConflictException carrying the exact contract message', async () => {
+      let raw: unknown;
+      let mapped: unknown;
+
+      beforeEach(async () => {
         const { gitProvider } = await dataFactory.withGitProvider(
           gitProviderFactory({ token: 'gh-pat-test-token' }),
         );
@@ -349,7 +408,7 @@ describe('Marketplace HTTP boundary error mapping', () => {
         });
 
         // Second link with the same coords — should be rejected.
-        const { raw, mapped } = await captureMappedError(
+        ({ raw, mapped } = await captureMappedError(
           testApp.deploymentsHexa.getAdapter().linkMarketplace({
             ...dataFactory.packmindCommand(),
             gitProviderId: gitProvider.id,
@@ -358,13 +417,24 @@ describe('Marketplace HTTP boundary error mapping', () => {
             branch: 'main',
             name: 'Anthropic Marketplace (again)',
           }),
-        );
+        ));
+      });
 
+      it('throws MarketplaceAlreadyLinkedError', () => {
         expect(raw).toBeInstanceOf(MarketplaceAlreadyLinkedError);
+      });
+
+      it('carries the exact contract message on the raw error', () => {
         expect((raw as Error).message).toBe(
           'The marketplace anthropic/marketplace has already been linked to your organization',
         );
+      });
+
+      it('maps to ConflictException', () => {
         expect(mapped).toBeInstanceOf(ConflictException);
+      });
+
+      it('carries the exact contract message on the mapped exception', () => {
         expect((mapped as ConflictException).message).toBe(
           'The marketplace anthropic/marketplace has already been linked to your organization',
         );
@@ -372,66 +442,94 @@ describe('Marketplace HTTP boundary error mapping', () => {
     });
 
     describe('GitRepoAlreadyLinkedAsStandardError → 409', () => {
-      it('maps to ConflictException when the coords are already a standard repo', async () => {
-        const { gitProvider } = await dataFactory.withGitProvider(
-          gitProviderFactory({ token: 'gh-pat-test-token' }),
-        );
-        // Seed a standard repo via the normal flow.
-        await dataFactory.withGitRepo({
-          owner: 'octocat',
-          repo: 'hello-world',
-          branch: 'main',
-          providerId: gitProvider.id,
-        });
+      describe('when the coords are already a standard repo', () => {
+        let raw: unknown;
+        let mapped: unknown;
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().linkMarketplace({
-            ...dataFactory.packmindCommand(),
-            gitProviderId: gitProvider.id,
+        beforeEach(async () => {
+          const { gitProvider } = await dataFactory.withGitProvider(
+            gitProviderFactory({ token: 'gh-pat-test-token' }),
+          );
+          // Seed a standard repo via the normal flow.
+          await dataFactory.withGitRepo({
             owner: 'octocat',
             repo: 'hello-world',
             branch: 'main',
-            name: 'Trying to link as marketplace',
-          }),
-        );
+            providerId: gitProvider.id,
+          });
 
-        expect(raw).toBeInstanceOf(GitRepoAlreadyLinkedAsStandardError);
-        expect(mapped).toBeInstanceOf(ConflictException);
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().linkMarketplace({
+              ...dataFactory.packmindCommand(),
+              gitProviderId: gitProvider.id,
+              owner: 'octocat',
+              repo: 'hello-world',
+              branch: 'main',
+              name: 'Trying to link as marketplace',
+            }),
+          ));
+        });
+
+        it('throws GitRepoAlreadyLinkedAsStandardError', () => {
+          expect(raw).toBeInstanceOf(GitRepoAlreadyLinkedAsStandardError);
+        });
+
+        it('maps to ConflictException', () => {
+          expect(mapped).toBeInstanceOf(ConflictException);
+        });
       });
     });
   });
 
   describe('unlinkMarketplace', () => {
     describe('MarketplaceNotFoundError → 404 (AC-10)', () => {
-      it('maps to NotFoundException when the marketplace does not exist', async () => {
-        const unknownMarketplaceId = createMarketplaceId(uuidv4());
+      describe('when the marketplace does not exist', () => {
+        let raw: unknown;
+        let mapped: unknown;
 
-        const { raw, mapped } = await captureMappedError(
-          testApp.deploymentsHexa.getAdapter().unlinkMarketplace({
-            ...dataFactory.packmindCommand(),
-            marketplaceId: unknownMarketplaceId,
-          }),
-        );
+        beforeEach(async () => {
+          const unknownMarketplaceId = createMarketplaceId(uuidv4());
 
-        expect(raw).toBeInstanceOf(MarketplaceNotFoundError);
-        expect(mapped).toBeInstanceOf(NotFoundException);
+          ({ raw, mapped } = await captureMappedError(
+            testApp.deploymentsHexa.getAdapter().unlinkMarketplace({
+              ...dataFactory.packmindCommand(),
+              marketplaceId: unknownMarketplaceId,
+            }),
+          ));
+        });
+
+        it('throws MarketplaceNotFoundError', () => {
+          expect(raw).toBeInstanceOf(MarketplaceNotFoundError);
+        });
+
+        it('maps to NotFoundException', () => {
+          expect(mapped).toBeInstanceOf(NotFoundException);
+        });
       });
     });
 
     describe('non-admin denial (AC-4)', () => {
-      it('throws OrganizationAdminRequiredError → 403 ForbiddenException', async () => {
+      let raw: unknown;
+      let mapped: unknown;
+
+      beforeEach(async () => {
         const memberUserId = await seedNonAdminMember();
         const someMarketplaceId = createMarketplaceId(uuidv4());
 
-        const { raw, mapped } = await captureMappedError(
+        ({ raw, mapped } = await captureMappedError(
           testApp.deploymentsHexa.getAdapter().unlinkMarketplace({
             userId: memberUserId,
             organizationId: dataFactory.organization.id,
             marketplaceId: someMarketplaceId,
           }),
-        );
+        ));
+      });
 
+      it('throws OrganizationAdminRequiredError', () => {
         expect(raw).toBeInstanceOf(OrganizationAdminRequiredError);
+      });
+
+      it('maps to 403 ForbiddenException', () => {
         expect(mapped).toBeInstanceOf(ForbiddenException);
       });
     });

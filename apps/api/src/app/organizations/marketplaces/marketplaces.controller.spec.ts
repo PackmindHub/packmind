@@ -120,25 +120,34 @@ describe('MarketplacesController', () => {
       name: 'Anthropic Marketplace',
     };
 
-    it('forwards the command to the deployment adapter and returns the response', async () => {
-      mockDeploymentAdapter.linkMarketplace.mockResolvedValue(linkResponse);
+    describe('on successful link', () => {
+      let result: LinkMarketplaceResponse;
 
-      const result = await controller.linkMarketplace(
-        organizationId,
-        body,
-        baseRequest,
-      );
+      beforeEach(async () => {
+        mockDeploymentAdapter.linkMarketplace.mockResolvedValue(linkResponse);
 
-      expect(result).toEqual(linkResponse);
-      expect(mockDeploymentAdapter.linkMarketplace).toHaveBeenCalledWith({
-        userId,
-        organizationId,
-        gitProviderId,
-        owner: body.owner,
-        repo: body.repo,
-        branch: body.branch,
-        name: body.name,
-        source: 'ui',
+        result = await controller.linkMarketplace(
+          organizationId,
+          body,
+          baseRequest,
+        );
+      });
+
+      it('returns the response from the deployment adapter', () => {
+        expect(result).toEqual(linkResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(mockDeploymentAdapter.linkMarketplace).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProviderId,
+          owner: body.owner,
+          repo: body.repo,
+          branch: body.branch,
+          name: body.name,
+          source: 'ui',
+        });
       });
     });
 
@@ -262,21 +271,32 @@ describe('MarketplacesController', () => {
   describe('DELETE /organizations/:orgId/marketplaces/:marketplaceId (unlinkMarketplace)', () => {
     const unlinkResponse: UnlinkMarketplaceResponse = { marketplaceId };
 
-    it('forwards the command to the deployment adapter and returns the response', async () => {
-      mockDeploymentAdapter.unlinkMarketplace.mockResolvedValue(unlinkResponse);
+    describe('on successful unlink', () => {
+      let result: UnlinkMarketplaceResponse;
 
-      const result = await controller.unlinkMarketplace(
-        organizationId,
-        marketplaceId,
-        baseRequest,
-      );
+      beforeEach(async () => {
+        mockDeploymentAdapter.unlinkMarketplace.mockResolvedValue(
+          unlinkResponse,
+        );
 
-      expect(result).toEqual(unlinkResponse);
-      expect(mockDeploymentAdapter.unlinkMarketplace).toHaveBeenCalledWith({
-        userId,
-        organizationId,
-        marketplaceId,
-        source: 'ui',
+        result = await controller.unlinkMarketplace(
+          organizationId,
+          marketplaceId,
+          baseRequest,
+        );
+      });
+
+      it('returns the response from the deployment adapter', () => {
+        expect(result).toEqual(unlinkResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(mockDeploymentAdapter.unlinkMarketplace).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          marketplaceId,
+          source: 'ui',
+        });
       });
     });
 
@@ -325,34 +345,42 @@ describe('MarketplacesController', () => {
   });
 
   describe('GET /organizations/:orgId/marketplaces (listMarketplaces)', () => {
-    it('returns 200-equivalent body with the list of marketplaces for any member', async () => {
+    describe('for any member', () => {
       const listResponse: ListMarketplacesResponse = [
         { ...marketplace, addedByUserName: 'Test User' },
       ];
-      mockDeploymentAdapter.listMarketplaces.mockResolvedValue(listResponse);
+      let result: ListMarketplacesResponse;
 
-      const result = await controller.listMarketplaces(
-        organizationId,
-        baseRequest,
-      );
+      beforeEach(async () => {
+        mockDeploymentAdapter.listMarketplaces.mockResolvedValue(listResponse);
 
-      expect(result).toEqual(listResponse);
-      expect(mockDeploymentAdapter.listMarketplaces).toHaveBeenCalledWith({
-        userId,
-        organizationId,
-        source: 'ui',
+        result = await controller.listMarketplaces(organizationId, baseRequest);
+      });
+
+      it('returns 200-equivalent body with the list of marketplaces', () => {
+        expect(result).toEqual(listResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(mockDeploymentAdapter.listMarketplaces).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          source: 'ui',
+        });
       });
     });
 
-    it('returns an empty array when the organization has no marketplaces', async () => {
-      mockDeploymentAdapter.listMarketplaces.mockResolvedValue([]);
+    describe('when the organization has no marketplaces', () => {
+      it('returns an empty array', async () => {
+        mockDeploymentAdapter.listMarketplaces.mockResolvedValue([]);
 
-      const result = await controller.listMarketplaces(
-        organizationId,
-        baseRequest,
-      );
+        const result = await controller.listMarketplaces(
+          organizationId,
+          baseRequest,
+        );
 
-      expect(result).toEqual([]);
+        expect(result).toEqual([]);
+      });
     });
 
     it('rethrows unknown errors unchanged', async () => {
@@ -377,26 +405,35 @@ describe('MarketplacesController', () => {
       pluginCount: 3,
     };
 
-    it('forwards the command to the deployment adapter and returns the response', async () => {
-      mockDeploymentAdapter.validateMarketplaceUrl.mockResolvedValue(
-        validateResponse,
-      );
+    describe('on successful validation', () => {
+      let result: ValidateMarketplaceUrlResponse;
 
-      const result = await controller.validateMarketplaceUrl(
-        organizationId,
-        query,
-        baseRequest,
-      );
+      beforeEach(async () => {
+        mockDeploymentAdapter.validateMarketplaceUrl.mockResolvedValue(
+          validateResponse,
+        );
 
-      expect(result).toEqual(validateResponse);
-      expect(mockDeploymentAdapter.validateMarketplaceUrl).toHaveBeenCalledWith(
-        {
+        result = await controller.validateMarketplaceUrl(
+          organizationId,
+          query,
+          baseRequest,
+        );
+      });
+
+      it('returns the response from the deployment adapter', () => {
+        expect(result).toEqual(validateResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(
+          mockDeploymentAdapter.validateMarketplaceUrl,
+        ).toHaveBeenCalledWith({
           userId,
           organizationId,
           url: query.url,
           source: 'ui',
-        },
-      );
+        });
+      });
     });
 
     describe('error mapping', () => {

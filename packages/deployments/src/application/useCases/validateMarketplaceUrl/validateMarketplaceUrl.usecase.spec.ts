@@ -127,24 +127,28 @@ describe('ValidateMarketplaceUrlUseCase', () => {
   });
 
   describe('not-public — no tokenless provider matches the host', () => {
-    it('throws MarketplaceUrlNotReachableError when no providers exist', async () => {
-      mockGitPort.listProviders = jest
-        .fn()
-        .mockResolvedValue({ providers: [] });
+    describe('when no providers exist', () => {
+      it('throws MarketplaceUrlNotReachableError', async () => {
+        mockGitPort.listProviders = jest
+          .fn()
+          .mockResolvedValue({ providers: [] });
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        MarketplaceUrlNotReachableError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          MarketplaceUrlNotReachableError,
+        );
+      });
     });
 
-    it('throws MarketplaceUrlNotReachableError when only token-bearing providers match', async () => {
-      mockGitPort.listProviders = jest.fn().mockResolvedValue({
-        providers: [{ ...tokenlessProvider, hasToken: true }],
-      });
+    describe('when only token-bearing providers match', () => {
+      it('throws MarketplaceUrlNotReachableError', async () => {
+        mockGitPort.listProviders = jest.fn().mockResolvedValue({
+          providers: [{ ...tokenlessProvider, hasToken: true }],
+        });
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        MarketplaceUrlNotReachableError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          MarketplaceUrlNotReachableError,
+        );
+      });
     });
 
     it('throws MarketplaceUrlNotReachableError on a host mismatch', async () => {
@@ -167,23 +171,27 @@ describe('ValidateMarketplaceUrlUseCase', () => {
       ).rejects.toBeInstanceOf(MarketplaceUrlNotReachableError);
     });
 
-    it('throws MarketplaceUrlNotReachableError when the URL has no repo segment', async () => {
-      await expect(
-        useCase.execute({
-          ...baseCommand,
-          url: 'https://github.com/acme',
-        }),
-      ).rejects.toBeInstanceOf(MarketplaceUrlNotReachableError);
+    describe('when the URL has no repo segment', () => {
+      it('throws MarketplaceUrlNotReachableError', async () => {
+        await expect(
+          useCase.execute({
+            ...baseCommand,
+            url: 'https://github.com/acme',
+          }),
+        ).rejects.toBeInstanceOf(MarketplaceUrlNotReachableError);
+      });
     });
   });
 
   describe('descriptor not-found', () => {
-    it('throws MarketplaceDescriptorNotFoundError when marketplace.json is missing', async () => {
-      mockGitPort.getFileFromRepo = jest.fn().mockResolvedValue(null);
+    describe('when marketplace.json is missing', () => {
+      it('throws MarketplaceDescriptorNotFoundError', async () => {
+        mockGitPort.getFileFromRepo = jest.fn().mockResolvedValue(null);
 
-      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
-        MarketplaceDescriptorNotFoundError,
-      );
+        await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+          MarketplaceDescriptorNotFoundError,
+        );
+      });
     });
   });
 
