@@ -7,7 +7,11 @@
 # makes pnpm compare against the workspace-root specifiers (not the CLI's),
 # so we resolve fresh against the CLI's package.json.
 #
-# A short-circuit avoids re-installing when node_modules already exists.
+# To avoid serving a stale dependency tree, we fingerprint the CLI package.json
+# and only short-circuit when an existing node_modules was installed from the
+# exact same manifest. Any change to the CLI's deps invalidates the cache and
+# triggers a fresh install. (Full lockfile pinning is not achievable here given
+# the --ignore-workspace constraint above; CI runners rebuild from scratch.)
 set -e
 
 DIST_DIR="dist/apps/cli"
@@ -17,8 +21,16 @@ if [ ! -d "$DIST_DIR" ]; then
   exit 1
 fi
 
-if [ -d "$DIST_DIR/node_modules" ]; then
+PKG_JSON="$DIST_DIR/package.json"
+HASH_FILE="$DIST_DIR/node_modules/.deps-hash"
+
+# Fingerprint the manifest with node (always available in this repo) so the
+# check is portable across alpine/macOS/Windows runners.
+CURRENT_HASH="$(node -e "process.stdout.write(require('crypto').createHash('sha256').update(require('fs').readFileSync('$PKG_JSON')).digest('hex'))")"
+
+if [ -d "$DIST_DIR/node_modules" ] && [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE")" = "$CURRENT_HASH" ]; then
   exit 0
 fi
 
 (cd "$DIST_DIR" && pnpm install --prod --ignore-scripts --no-frozen-lockfile --ignore-workspace)
+printf '%s' "$CURRENT_HASH" > "$HASH_FILE"
