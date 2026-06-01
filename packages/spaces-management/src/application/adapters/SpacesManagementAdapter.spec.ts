@@ -81,7 +81,7 @@ describe('SpacesManagementAdapter', () => {
   });
 
   describe('listOrganizationSpacesForManagement', () => {
-    it('instantiates ListOrganizationSpacesForManagementUseCase with the configured ports and returns its response', async () => {
+    it('returns the use case response', async () => {
       const result = await adapter.listOrganizationSpacesForManagement({
         userId: userId as unknown as string,
         organizationId: organizationId as unknown as string,
@@ -94,6 +94,15 @@ describe('SpacesManagementAdapter', () => {
         page: 1,
         pageSize: 1000,
       });
+    });
+
+    it('delegates to findOrgPagePaginated with the correct arguments', async () => {
+      await adapter.listOrganizationSpacesForManagement({
+        userId: userId as unknown as string,
+        organizationId: organizationId as unknown as string,
+        page: 1,
+      });
+
       expect(spacesPort.findOrgPagePaginated).toHaveBeenCalledWith(
         organizationId,
         1,

@@ -71,34 +71,40 @@ describe('CreateSpaceUseCase', () => {
       );
     });
 
-    it('creates an open space when type is open', async () => {
-      await useCase.execute(buildCommand({ type: SpaceType.open }));
+    describe('when type is open', () => {
+      it('creates an open space', async () => {
+        await useCase.execute(buildCommand({ type: SpaceType.open }));
 
-      expect(spacesPort.createSpace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: SpaceType.open,
-        }),
-      );
+        expect(spacesPort.createSpace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SpaceType.open,
+          }),
+        );
+      });
     });
 
-    it('creates a restricted space when type is restricted', async () => {
-      await useCase.execute(buildCommand({ type: SpaceType.restricted }));
+    describe('when type is restricted', () => {
+      it('creates a restricted space', async () => {
+        await useCase.execute(buildCommand({ type: SpaceType.restricted }));
 
-      expect(spacesPort.createSpace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: SpaceType.restricted,
-        }),
-      );
+        expect(spacesPort.createSpace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SpaceType.restricted,
+          }),
+        );
+      });
     });
 
-    it('defaults to private type when no type provided', async () => {
-      await useCase.execute(buildCommand());
+    describe('when no type provided', () => {
+      it('defaults to private type', async () => {
+        await useCase.execute(buildCommand());
 
-      expect(spacesPort.createSpace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: SpaceType.private,
-        }),
-      );
+        expect(spacesPort.createSpace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SpaceType.private,
+          }),
+        );
+      });
     });
 
     it('adds the creator as admin member of the space', async () => {
@@ -138,34 +144,40 @@ describe('CreateSpaceUseCase', () => {
       );
     });
 
-    it('creates a private space when no type provided', async () => {
-      await useCase.execute(buildCommand());
+    describe('when no type provided', () => {
+      it('creates a private space', async () => {
+        await useCase.execute(buildCommand());
 
-      expect(spacesPort.createSpace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: SpaceType.private,
-        }),
-      );
+        expect(spacesPort.createSpace).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SpaceType.private,
+          }),
+        );
+      });
     });
 
-    it('throws OrganizationAdminRequiredError when type is open', async () => {
-      await expect(
-        useCase.execute(buildCommand({ type: SpaceType.open })),
-      ).rejects.toThrow(OrganizationAdminRequiredError);
+    describe('when type is open', () => {
+      it('throws OrganizationAdminRequiredError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.open })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
+
+      it('does not create the space', async () => {
+        await useCase
+          .execute(buildCommand({ type: SpaceType.open }))
+          .catch(() => undefined);
+
+        expect(spacesPort.createSpace).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws OrganizationAdminRequiredError when type is restricted', async () => {
-      await expect(
-        useCase.execute(buildCommand({ type: SpaceType.restricted })),
-      ).rejects.toThrow(OrganizationAdminRequiredError);
-    });
-
-    it('does not create the space when type is open', async () => {
-      await useCase
-        .execute(buildCommand({ type: SpaceType.open }))
-        .catch(() => undefined);
-
-      expect(spacesPort.createSpace).not.toHaveBeenCalled();
+    describe('when type is restricted', () => {
+      it('throws OrganizationAdminRequiredError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.restricted })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
     });
 
     it('adds the creator as admin member of the space', async () => {

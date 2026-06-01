@@ -130,7 +130,7 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
           );
         });
 
-        it('references all artefacts in packmind-lock.json', () => {
+        it('references the public artefact in packmind-lock.json', () => {
           const packmindLock = JSON.parse(
             readFile(`packmind-lock.json`, context.testDir),
           ) as PackmindLockFile;
@@ -141,6 +141,13 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             id: publicCommand.id,
             name: publicCommand.name,
           });
+        });
+
+        it('references the private artefact in packmind-lock.json', () => {
+          const packmindLock = JSON.parse(
+            readFile(`packmind-lock.json`, context.testDir),
+          ) as PackmindLockFile;
+
           expect(
             findCommandEntry(packmindLock, privateCommand.slug),
           ).toMatchObject({
@@ -247,7 +254,7 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
             );
           });
 
-          it('references all artefacts in packmind-lock.json', () => {
+          it('references the public artefact in packmind-lock.json', () => {
             const packmindLock = JSON.parse(
               readFile(`packmind-lock.json`, context.testDir),
             ) as PackmindLockFile;
@@ -258,6 +265,13 @@ describeForVersion('>= 0.26.0', 'install command with unjoined spaces', () => {
               id: publicCommand.id,
               name: publicCommand.name,
             });
+          });
+
+          it('references the private artefact in packmind-lock.json', () => {
+            const packmindLock = JSON.parse(
+              readFile(`packmind-lock.json`, context.testDir),
+            ) as PackmindLockFile;
+
             expect(
               findCommandEntry(packmindLock, privateCommand.slug),
             ).toMatchObject({

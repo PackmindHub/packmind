@@ -146,27 +146,46 @@ describe('SkillRepository', () => {
   });
 
   describe('countBySpaceIds', () => {
-    it('returns a Map of spaceId -> count, omitting spaces with zero skills', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
-      const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
-      const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
-      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
-      await spaceRepo.save([spaceA, spaceB, spaceC]);
+    describe('when counting skills per space', () => {
+      let counts: Awaited<ReturnType<typeof skillRepository.countBySpaceIds>>;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
 
-      await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
-      await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
-      await skillRepository.add(skillFactory({ spaceId: spaceB.id }));
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
 
-      const counts = await skillRepository.countBySpaceIds([
-        spaceA.id,
-        spaceB.id,
-        spaceC.id,
-      ]);
+        await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
+        await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
+        await skillRepository.add(skillFactory({ spaceId: spaceB.id }));
 
-      expect(counts.get(spaceA.id)).toBe(2);
-      expect(counts.get(spaceB.id)).toBe(1);
-      expect(counts.has(spaceC.id)).toBe(false);
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await skillRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero skills', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
     });
 
     it('returns an empty Map for empty input', async () => {
@@ -180,9 +199,7 @@ describe('SkillRepository', () => {
       const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
       await spaceRepo.save(space);
 
-      const aliveSkill = await skillRepository.add(
-        skillFactory({ spaceId: space.id }),
-      );
+      await skillRepository.add(skillFactory({ spaceId: space.id }));
       const deletedSkill = await skillRepository.add(
         skillFactory({ spaceId: space.id }),
       );
@@ -191,7 +208,6 @@ describe('SkillRepository', () => {
       const counts = await skillRepository.countBySpaceIds([space.id]);
 
       expect(counts.get(space.id)).toBe(1);
-      expect(aliveSkill.spaceId).toBe(space.id);
     });
 
     it('omits unknown space IDs from the result Map', async () => {

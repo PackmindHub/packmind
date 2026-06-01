@@ -478,16 +478,24 @@ describe('UserSpaceMembershipRepository', () => {
         expect(rows).toHaveLength(3);
       });
 
-      it('groups admins by space correctly', () => {
+      it('contains one admin row for spaceA', () => {
         const spaceAUserIds = rows
           .filter((r) => r.spaceId === space.id)
           .map((r) => r.user.id);
+        expect(spaceAUserIds).toEqual([adminAUserId]);
+      });
+
+      it('contains two admin rows for spaceB', () => {
         const spaceBUserIds = rows
           .filter((r) => r.spaceId === spaceB.id)
           .map((r) => r.user.id);
-
-        expect(spaceAUserIds).toEqual([adminAUserId]);
         expect(spaceBUserIds).toHaveLength(2);
+      });
+
+      it('contains the correct admin IDs for spaceB', () => {
+        const spaceBUserIds = rows
+          .filter((r) => r.spaceId === spaceB.id)
+          .map((r) => r.user.id);
         expect(new Set(spaceBUserIds)).toEqual(
           new Set([adminB1UserId, adminB2UserId]),
         );
@@ -497,14 +505,18 @@ describe('UserSpaceMembershipRepository', () => {
         expect(rows.some((r) => r.user.displayName === 'Member B')).toBe(false);
       });
 
-      it('uses User.displayName when present', () => {
-        const adminA = rows.find((r) => r.user.id === adminAUserId);
-        expect(adminA?.user.displayName).toBe('Admin A');
+      describe('when displayName is present', () => {
+        it('uses User.displayName', () => {
+          const adminA = rows.find((r) => r.user.id === adminAUserId);
+          expect(adminA?.user.displayName).toBe('Admin A');
+        });
       });
 
-      it('falls back to email local-part when displayName is null', () => {
-        const adminB2 = rows.find((r) => r.user.id === adminB2UserId);
-        expect(adminB2?.user.displayName).toBe('adminb2.long.handle');
+      describe('when displayName is null', () => {
+        it('falls back to email local-part', () => {
+          const adminB2 = rows.find((r) => r.user.id === adminB2UserId);
+          expect(adminB2?.user.displayName).toBe('adminb2.long.handle');
+        });
       });
     });
 
@@ -547,18 +559,30 @@ describe('UserSpaceMembershipRepository', () => {
       );
     });
 
-    it('returns a Map of spaceId -> count for the requested role; spaces with zero are absent', async () => {
-      await createMembership({ role: UserSpaceRole.MEMBER });
-      await createMembership({ role: UserSpaceRole.MEMBER });
-      await createMembership({ spaceId: spaceB.id, role: UserSpaceRole.ADMIN });
+    describe('when counting members by role', () => {
+      let counts: Awaited<ReturnType<typeof repository.countByRoleForSpaceIds>>;
 
-      const counts = await repository.countByRoleForSpaceIds(
-        [space.id, spaceB.id],
-        UserSpaceRole.MEMBER,
-      );
+      beforeEach(async () => {
+        await createMembership({ role: UserSpaceRole.MEMBER });
+        await createMembership({ role: UserSpaceRole.MEMBER });
+        await createMembership({
+          spaceId: spaceB.id,
+          role: UserSpaceRole.ADMIN,
+        });
 
-      expect(counts.get(space.id)).toBe(2);
-      expect(counts.has(spaceB.id)).toBe(false);
+        counts = await repository.countByRoleForSpaceIds(
+          [space.id, spaceB.id],
+          UserSpaceRole.MEMBER,
+        );
+      });
+
+      it('returns the correct count for the space with members', () => {
+        expect(counts.get(space.id)).toBe(2);
+      });
+
+      it('omits spaces with zero matching-role memberships', () => {
+        expect(counts.has(spaceB.id)).toBe(false);
+      });
     });
 
     it('returns an empty Map for empty input', async () => {
@@ -596,18 +620,24 @@ describe('UserSpaceMembershipRepository', () => {
       );
     });
 
-    it('returns a Map of spaceId -> total user count across all roles; spaces with zero are absent', async () => {
-      await createMembership({ role: UserSpaceRole.ADMIN });
-      await createMembership({ role: UserSpaceRole.MEMBER });
-      await createMembership({ role: UserSpaceRole.MEMBER });
+    describe('when counting users across all roles', () => {
+      let counts: Awaited<ReturnType<typeof repository.countUsersForSpaceIds>>;
 
-      const counts = await repository.countUsersForSpaceIds([
-        space.id,
-        spaceB.id,
-      ]);
+      beforeEach(async () => {
+        await createMembership({ role: UserSpaceRole.ADMIN });
+        await createMembership({ role: UserSpaceRole.MEMBER });
+        await createMembership({ role: UserSpaceRole.MEMBER });
 
-      expect(counts.get(space.id)).toBe(3);
-      expect(counts.has(spaceB.id)).toBe(false);
+        counts = await repository.countUsersForSpaceIds([space.id, spaceB.id]);
+      });
+
+      it('returns the correct total user count for the space', () => {
+        expect(counts.get(space.id)).toBe(3);
+      });
+
+      it('omits spaces with zero users', () => {
+        expect(counts.has(spaceB.id)).toBe(false);
+      });
     });
 
     it('returns an empty Map for empty input', async () => {

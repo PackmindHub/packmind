@@ -1481,7 +1481,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       skillsPort.getSkillFiles.mockResolvedValue([]);
     });
 
-    it('rejects with an actionable SkillValidationError before saving', async () => {
+    it('rejects with an actionable error message before saving', async () => {
       await expect(
         useCase.execute({
           userId,
@@ -1494,6 +1494,19 @@ describe('ApplyChangeProposalsUseCase', () => {
       ).rejects.toThrow(
         /description longer than 1024 characters\. Edit your skill and upload it again\./,
       );
+    });
+
+    it('does not save the skill version on validation failure', async () => {
+      await useCase
+        .execute({
+          userId,
+          organizationId,
+          spaceId,
+          artefactId: skillId,
+          accepted: [toAcceptedProposal(updateDescriptionProposal)],
+          rejected: [],
+        })
+        .catch(() => undefined);
 
       expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
     });
@@ -1544,7 +1557,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       skillsPort.saveSkillVersion.mockResolvedValue(legacySkillVersion);
     });
 
-    it('allows the update without flagging the legacy description', async () => {
+    it('resolves without flagging the legacy description', async () => {
       await expect(
         useCase.execute({
           userId,
@@ -1555,6 +1568,17 @@ describe('ApplyChangeProposalsUseCase', () => {
           rejected: [],
         }),
       ).resolves.toBeDefined();
+    });
+
+    it('saves the skill version for the name update', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: skillId,
+        accepted: [toAcceptedProposal(updateNameProposal)],
+        rejected: [],
+      });
 
       expect(skillsPort.saveSkillVersion).toHaveBeenCalled();
     });

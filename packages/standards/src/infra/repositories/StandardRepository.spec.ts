@@ -221,33 +221,54 @@ describe('StandardRepository', () => {
   });
 
   describe('countBySpaceIds', () => {
-    it('returns a Map of spaceId -> count, omitting spaces with zero standards', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
-      const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
-      const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
-      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
-      await spaceRepo.save([spaceA, spaceB, spaceC]);
+    describe('when counting standards per space', () => {
+      let counts: Awaited<
+        ReturnType<typeof standardRepository.countBySpaceIds>
+      >;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
 
-      await standardRepository.add(
-        standardFactory({ spaceId: spaceA.id, slug: 'std-a-1' }),
-      );
-      await standardRepository.add(
-        standardFactory({ spaceId: spaceA.id, slug: 'std-a-2' }),
-      );
-      await standardRepository.add(
-        standardFactory({ spaceId: spaceB.id, slug: 'std-b-1' }),
-      );
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
 
-      const counts = await standardRepository.countBySpaceIds([
-        spaceA.id,
-        spaceB.id,
-        spaceC.id,
-      ]);
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceA.id, slug: 'std-a-1' }),
+        );
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceA.id, slug: 'std-a-2' }),
+        );
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceB.id, slug: 'std-b-1' }),
+        );
 
-      expect(counts.get(spaceA.id)).toBe(2);
-      expect(counts.get(spaceB.id)).toBe(1);
-      expect(counts.has(spaceC.id)).toBe(false);
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await standardRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero standards', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
     });
 
     it('returns an empty Map for empty input', async () => {

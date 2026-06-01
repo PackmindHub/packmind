@@ -128,82 +128,94 @@ describe('PreviewArtifactRenderingUseCase', () => {
           });
         });
 
-        it('uses the standard slug when the command carries a single standard', async () => {
-          const result = await useCase.execute({
-            codingAgent: 'claude',
-            recipeVersions: [],
-            standardVersions: [standardVersion],
-            skillVersions: [],
-          });
+        describe('when the command carries a single standard', () => {
+          it('uses the standard slug', async () => {
+            const result = await useCase.execute({
+              codingAgent: 'claude',
+              recipeVersions: [],
+              standardVersions: [standardVersion],
+              skillVersions: [],
+            });
 
-          expect(result.fileName).toBe('packmind-claude-test-standard.zip');
+            expect(result.fileName).toBe('packmind-claude-test-standard.zip');
+          });
         });
 
-        it('uses the skill slug when the command carries a single skill', async () => {
-          const result = await useCase.execute({
-            codingAgent: 'cursor',
-            recipeVersions: [],
-            standardVersions: [],
-            skillVersions: [skillVersion],
-          });
+        describe('when the command carries a single skill', () => {
+          it('uses the skill slug', async () => {
+            const result = await useCase.execute({
+              codingAgent: 'cursor',
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [skillVersion],
+            });
 
-          expect(result.fileName).toBe('packmind-cursor-test-skill.zip');
+            expect(result.fileName).toBe('packmind-cursor-test-skill.zip');
+          });
         });
 
-        it('slugifies the artifact name when slug is empty', async () => {
-          const withEmptySlug: RecipeVersion = {
-            ...recipeVersion,
-            slug: '',
-            name: 'My Cool Thing!',
-          };
+        describe('when slug is empty', () => {
+          it('slugifies the artifact name', async () => {
+            const withEmptySlug: RecipeVersion = {
+              ...recipeVersion,
+              slug: '',
+              name: 'My Cool Thing!',
+            };
 
-          const result = await useCase.execute({
-            codingAgent: 'claude',
-            recipeVersions: [withEmptySlug],
-            standardVersions: [],
-            skillVersions: [],
+            const result = await useCase.execute({
+              codingAgent: 'claude',
+              recipeVersions: [withEmptySlug],
+              standardVersions: [],
+              skillVersions: [],
+            });
+
+            expect(result.fileName).toBe('packmind-claude-my-cool-thing.zip');
           });
-
-          expect(result.fileName).toBe('packmind-claude-my-cool-thing.zip');
         });
 
-        it('falls back to "preview" when both slug and name are empty', async () => {
-          const emptyArtifact: RecipeVersion = {
-            ...recipeVersion,
-            slug: '',
-            name: '',
-          };
+        describe('when both slug and name are empty', () => {
+          it('falls back to "preview"', async () => {
+            const emptyArtifact: RecipeVersion = {
+              ...recipeVersion,
+              slug: '',
+              name: '',
+            };
 
-          const result = await useCase.execute({
-            codingAgent: 'claude',
-            recipeVersions: [emptyArtifact],
-            standardVersions: [],
-            skillVersions: [],
+            const result = await useCase.execute({
+              codingAgent: 'claude',
+              recipeVersions: [emptyArtifact],
+              standardVersions: [],
+              skillVersions: [],
+            });
+
+            expect(result.fileName).toBe('packmind-claude-preview.zip');
           });
-
-          expect(result.fileName).toBe('packmind-claude-preview.zip');
         });
 
-        it('falls back to "preview" when the command carries multiple artifacts', async () => {
-          const result = await useCase.execute({
-            codingAgent: 'claude',
-            recipeVersions: [recipeVersion],
-            standardVersions: [standardVersion],
-            skillVersions: [],
-          });
+        describe('when the command carries multiple artifacts', () => {
+          it('falls back to "preview"', async () => {
+            const result = await useCase.execute({
+              codingAgent: 'claude',
+              recipeVersions: [recipeVersion],
+              standardVersions: [standardVersion],
+              skillVersions: [],
+            });
 
-          expect(result.fileName).toBe('packmind-claude-preview.zip');
+            expect(result.fileName).toBe('packmind-claude-preview.zip');
+          });
         });
 
-        it('falls back to "preview" when the command carries no artifacts', async () => {
-          const result = await useCase.execute({
-            codingAgent: 'copilot',
-            recipeVersions: [],
-            standardVersions: [],
-            skillVersions: [],
-          });
+        describe('when the command carries no artifacts', () => {
+          it('falls back to "preview"', async () => {
+            const result = await useCase.execute({
+              codingAgent: 'copilot',
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            });
 
-          expect(result.fileName).toBe('packmind-copilot-preview.zip');
+            expect(result.fileName).toBe('packmind-copilot-preview.zip');
+          });
         });
       });
 

@@ -169,16 +169,20 @@ describe('CreateSpaceUseCase', () => {
         expect(result).toEqual(createdSpace);
       });
 
-      it('throws OrganizationAdminRequiredError when requesting open type', async () => {
-        await expect(
-          useCase.execute(buildCommand({ type: SpaceType.open })),
-        ).rejects.toThrow(OrganizationAdminRequiredError);
+      describe('when requesting open type', () => {
+        it('throws OrganizationAdminRequiredError', async () => {
+          await expect(
+            useCase.execute(buildCommand({ type: SpaceType.open })),
+          ).rejects.toThrow(OrganizationAdminRequiredError);
+        });
       });
 
-      it('throws OrganizationAdminRequiredError when requesting restricted type', async () => {
-        await expect(
-          useCase.execute(buildCommand({ type: SpaceType.restricted })),
-        ).rejects.toThrow(OrganizationAdminRequiredError);
+      describe('when requesting restricted type', () => {
+        it('throws OrganizationAdminRequiredError', async () => {
+          await expect(
+            useCase.execute(buildCommand({ type: SpaceType.restricted })),
+          ).rejects.toThrow(OrganizationAdminRequiredError);
+        });
       });
     });
 

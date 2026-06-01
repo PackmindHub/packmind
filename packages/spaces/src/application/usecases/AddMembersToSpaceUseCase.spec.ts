@@ -278,7 +278,7 @@ describe('AddMembersToSpaceUseCase', () => {
         );
       });
 
-      it('adds members without checking space-admin membership', async () => {
+      it('adds members and returns the created memberships', async () => {
         const result = await useCase.execute(
           buildCommand({
             members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
@@ -286,6 +286,15 @@ describe('AddMembersToSpaceUseCase', () => {
         );
 
         expect(result).toHaveLength(1);
+      });
+
+      it('emits the membership event without checking space-admin membership', async () => {
+        await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
             payload: expect.objectContaining({
@@ -294,6 +303,15 @@ describe('AddMembersToSpaceUseCase', () => {
             }),
           }),
         );
+      });
+
+      it('does not check space membership for org admins', async () => {
+        await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
         expect(membershipService.findMembership).not.toHaveBeenCalled();
       });
     });

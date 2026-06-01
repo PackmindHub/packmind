@@ -41,7 +41,7 @@ describe('OrganizationsSpacesSkillsChangeProposalsController', () => {
     };
 
     describe('when the service throws SkillValidationError', () => {
-      it('translates it to BadRequestException with the use-case-supplied message', async () => {
+      it('translates it to BadRequestException', async () => {
         const validationError = new SkillValidationError([
           {
             field: 'description',
@@ -61,6 +61,18 @@ describe('OrganizationsSpacesSkillsChangeProposalsController', () => {
             request,
           ),
         ).rejects.toThrow(BadRequestException);
+      });
+
+      it('preserves the use-case-supplied message', async () => {
+        const validationError = new SkillValidationError([
+          {
+            field: 'description',
+            message: 'description must not exceed 1024 characters',
+          },
+        ]);
+        validationError.message =
+          'A submitted skill has a description longer than 1024 characters. Edit your skill and upload it again.';
+        service.applySkillChangeProposals.mockRejectedValue(validationError);
 
         await expect(
           controller.applySkillChangeProposals(

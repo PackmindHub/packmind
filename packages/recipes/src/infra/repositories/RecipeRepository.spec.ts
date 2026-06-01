@@ -130,27 +130,46 @@ describe('RecipeRepository', () => {
   });
 
   describe('countBySpaceIds', () => {
-    it('returns a Map of spaceId -> count, omitting spaces with zero recipes', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
-      const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
-      const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
-      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
-      await spaceRepo.save([spaceA, spaceB, spaceC]);
+    describe('when counting recipes per space', () => {
+      let counts: Awaited<ReturnType<typeof recipeRepository.countBySpaceIds>>;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
 
-      await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
-      await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
-      await recipeRepository.add(recipeFactory({ spaceId: spaceB.id }));
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
 
-      const counts = await recipeRepository.countBySpaceIds([
-        spaceA.id,
-        spaceB.id,
-        spaceC.id,
-      ]);
+        await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
+        await recipeRepository.add(recipeFactory({ spaceId: spaceA.id }));
+        await recipeRepository.add(recipeFactory({ spaceId: spaceB.id }));
 
-      expect(counts.get(spaceA.id)).toBe(2);
-      expect(counts.get(spaceB.id)).toBe(1);
-      expect(counts.has(spaceC.id)).toBe(false);
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await recipeRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero recipes', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
     });
 
     it('returns an empty Map for empty input', async () => {
@@ -164,9 +183,7 @@ describe('RecipeRepository', () => {
       const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
       await spaceRepo.save(space);
 
-      const aliveRecipe = await recipeRepository.add(
-        recipeFactory({ spaceId: space.id }),
-      );
+      await recipeRepository.add(recipeFactory({ spaceId: space.id }));
       const deletedRecipe = await recipeRepository.add(
         recipeFactory({ spaceId: space.id }),
       );
@@ -175,7 +192,6 @@ describe('RecipeRepository', () => {
       const counts = await recipeRepository.countBySpaceIds([space.id]);
 
       expect(counts.get(space.id)).toBe(1);
-      expect(aliveRecipe.spaceId).toBe(space.id);
     });
 
     it('omits unknown space IDs from the result Map', async () => {

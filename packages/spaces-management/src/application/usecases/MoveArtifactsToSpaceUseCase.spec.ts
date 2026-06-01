@@ -1016,7 +1016,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNotInSourceSpaceError);
       });
 
-      it('does not duplicate or mark as moved', async () => {
+      it('does not duplicate the standard', async () => {
         await useCase
           .execute(
             buildCommand({
@@ -1028,6 +1028,19 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           });
 
         expect(standardsPort.duplicateStandardToSpace).not.toHaveBeenCalled();
+      });
+
+      it('does not mark the standard as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: standardId, type: 'standard' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
         expect(standardsPort.markStandardAsMoved).not.toHaveBeenCalled();
       });
     });
@@ -1054,7 +1067,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNotInSourceSpaceError);
       });
 
-      it('does not duplicate or mark as moved', async () => {
+      it('does not duplicate the skill', async () => {
         await useCase
           .execute(
             buildCommand({
@@ -1066,6 +1079,19 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           });
 
         expect(skillsPort.duplicateSkillToSpace).not.toHaveBeenCalled();
+      });
+
+      it('does not mark the skill as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: skillId, type: 'skill' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
         expect(skillsPort.markSkillAsMoved).not.toHaveBeenCalled();
       });
     });
@@ -1092,7 +1118,7 @@ describe('MoveArtifactsToSpaceUseCase', () => {
         ).rejects.toThrow(ArtifactNotInSourceSpaceError);
       });
 
-      it('does not duplicate or mark as moved', async () => {
+      it('does not duplicate the command', async () => {
         await useCase
           .execute(
             buildCommand({
@@ -1104,6 +1130,19 @@ describe('MoveArtifactsToSpaceUseCase', () => {
           });
 
         expect(recipesPort.duplicateRecipeToSpace).not.toHaveBeenCalled();
+      });
+
+      it('does not mark the command as moved', async () => {
+        await useCase
+          .execute(
+            buildCommand({
+              artifacts: [{ id: recipeId, type: 'command' }],
+            }),
+          )
+          .catch(() => {
+            /* expected */
+          });
+
         expect(recipesPort.markRecipeAsMoved).not.toHaveBeenCalled();
       });
     });

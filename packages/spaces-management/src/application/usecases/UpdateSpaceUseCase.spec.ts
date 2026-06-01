@@ -145,12 +145,14 @@ describe('UpdateSpaceUseCase', () => {
       );
     });
 
-    it('emits SpaceRenamedEvent when the name changes', async () => {
-      await useCase.execute(buildCommand({ name: 'security' }));
+    describe('when the name changes', () => {
+      it('emits SpaceRenamedEvent', async () => {
+        await useCase.execute(buildCommand({ name: 'security' }));
 
-      expect(eventEmitterService.emit).toHaveBeenCalledWith(
-        expect.any(SpaceRenamedEvent),
-      );
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(SpaceRenamedEvent),
+        );
+      });
     });
 
     it('does not emit SpaceVisibilityUpdatedEvent', async () => {
@@ -186,20 +188,24 @@ describe('UpdateSpaceUseCase', () => {
       );
     });
 
-    it('does not emit SpaceRenamedEvent when only color changes', async () => {
-      await useCase.execute(buildCommand({ color: 'purple' as SpaceColor }));
+    describe('when only color changes', () => {
+      it('does not emit SpaceRenamedEvent', async () => {
+        await useCase.execute(buildCommand({ color: 'purple' as SpaceColor }));
 
-      expect(eventEmitterService.emit).not.toHaveBeenCalledWith(
-        expect.any(SpaceRenamedEvent),
-      );
+        expect(eventEmitterService.emit).not.toHaveBeenCalledWith(
+          expect.any(SpaceRenamedEvent),
+        );
+      });
     });
 
-    it('throws InvalidSpaceColorError when color is invalid', async () => {
-      await expect(
-        useCase.execute(
-          buildCommand({ color: 'chartreuse' as unknown as SpaceColor }),
-        ),
-      ).rejects.toBeInstanceOf(InvalidSpaceColorError);
+    describe('when color is invalid', () => {
+      it('throws InvalidSpaceColorError', async () => {
+        await expect(
+          useCase.execute(
+            buildCommand({ color: 'chartreuse' as unknown as SpaceColor }),
+          ),
+        ).rejects.toBeInstanceOf(InvalidSpaceColorError);
+      });
     });
   });
 
@@ -319,16 +325,20 @@ describe('UpdateSpaceUseCase', () => {
       spacesPort.getSpaceById.mockResolvedValue(existingSpace);
     });
 
-    it('throws OrganizationAdminRequiredError when org member changes type to open', async () => {
-      await expect(
-        useCase.execute(buildCommand({ type: SpaceType.open })),
-      ).rejects.toThrow(OrganizationAdminRequiredError);
+    describe('when org member changes type to open', () => {
+      it('throws OrganizationAdminRequiredError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.open })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
     });
 
-    it('throws OrganizationAdminRequiredError when org member changes type to restricted', async () => {
-      await expect(
-        useCase.execute(buildCommand({ type: SpaceType.restricted })),
-      ).rejects.toThrow(OrganizationAdminRequiredError);
+    describe('when org member changes type to restricted', () => {
+      it('throws OrganizationAdminRequiredError', async () => {
+        await expect(
+          useCase.execute(buildCommand({ type: SpaceType.restricted })),
+        ).rejects.toThrow(OrganizationAdminRequiredError);
+      });
     });
 
     it('allows org admin to change type to open', async () => {
@@ -413,10 +423,15 @@ describe('UpdateSpaceUseCase', () => {
       }));
     });
 
-    it('updates the space without checking space membership', async () => {
+    it('does not check space membership for org admins', async () => {
       await useCase.execute(buildCommand({ name: 'security' }));
 
       expect(spacesPort.findMembership).not.toHaveBeenCalled();
+    });
+
+    it('updates the space with the provided fields', async () => {
+      await useCase.execute(buildCommand({ name: 'security' }));
+
       expect(spacesPort.updateSpace).toHaveBeenCalledWith(
         spaceId,
         expect.objectContaining({ name: 'security' }),

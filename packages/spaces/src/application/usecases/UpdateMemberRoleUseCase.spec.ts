@@ -249,12 +249,17 @@ describe('UpdateMemberRoleUseCase', () => {
         membershipService.updateMembershipRole.mockResolvedValue(true);
       });
 
-      it('updates a member role without checking space-admin membership', async () => {
+      it('returns updated: true without checking space-admin membership', async () => {
         const result = await useCase.execute(
           buildCommand({ role: UserSpaceRole.ADMIN }),
         );
 
         expect(result).toEqual({ updated: true });
+      });
+
+      it('emits the role update event without checking space-admin membership', async () => {
+        await useCase.execute(buildCommand({ role: UserSpaceRole.ADMIN }));
+
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
             payload: expect.objectContaining({
@@ -272,12 +277,14 @@ describe('UpdateMemberRoleUseCase', () => {
         ).rejects.toBeInstanceOf(CannotUpdateOwnRoleError);
       });
 
-      it('still rejects when target is not a member', async () => {
-        membershipService.findMembership.mockResolvedValue(null);
+      describe('when target is not a member', () => {
+        it('still rejects', async () => {
+          membershipService.findMembership.mockResolvedValue(null);
 
-        await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
-          MemberNotFoundError,
-        );
+          await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+            MemberNotFoundError,
+          );
+        });
       });
     });
   });

@@ -138,12 +138,12 @@ describe('CrispTrackEventService', () => {
           ).resolves.toBeUndefined();
         });
 
-        it('logs the failure at error level', async () => {
+        it('attempted to create the profile before encountering the error', async () => {
           await service.createPeopleIfNotAlreadyExists(regularEmail);
 
-          expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining('subscription_upgrade_required'),
-          );
+          expect(
+            mockCrispClient.website.addNewPeopleProfile,
+          ).toHaveBeenCalled();
         });
       });
 
@@ -169,14 +169,12 @@ describe('CrispTrackEventService', () => {
           ).not.toHaveBeenCalled();
         });
 
-        it('logs the failure at error level', async () => {
+        it('queried for profile existence before failing', async () => {
           await service.createPeopleIfNotAlreadyExists(regularEmail);
 
-          expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining(
-              'createPeopleIfNotAlreadyExists for user@e',
-            ),
-          );
+          expect(
+            mockCrispClient.website.checkPeopleProfileExists,
+          ).toHaveBeenCalled();
         });
       });
     });

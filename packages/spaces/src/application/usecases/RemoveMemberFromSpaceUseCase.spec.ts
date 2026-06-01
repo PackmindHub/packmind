@@ -255,10 +255,15 @@ describe('RemoveMemberFromSpaceUseCase', () => {
         membershipService.removeSpaceMembership.mockResolvedValue(true);
       });
 
-      it('removes a member without checking space-admin membership', async () => {
+      it('removes a member and returns removed: true', async () => {
         const result = await useCase.execute(buildCommand());
 
         expect(result).toEqual({ removed: true });
+      });
+
+      it('emits the removal event without checking space-admin membership', async () => {
+        await useCase.execute(buildCommand());
+
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
             payload: expect.objectContaining({
@@ -267,6 +272,11 @@ describe('RemoveMemberFromSpaceUseCase', () => {
             }),
           }),
         );
+      });
+
+      it('does not check space membership for org admins', async () => {
+        await useCase.execute(buildCommand());
+
         expect(membershipService.findMembership).not.toHaveBeenCalled();
       });
 

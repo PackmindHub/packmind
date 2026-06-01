@@ -895,18 +895,20 @@ describe('AmplitudeEventListener', () => {
       listener.setAccountsAdapter(mockAccountsPort as unknown as IAccountsPort);
     });
 
-    it('skips trackEvent when user email starts with test-', async () => {
-      mockAccountsPort.getUserById.mockResolvedValue(
-        buildUser({
-          id: createUserId('user-test'),
-          email: 'test-abc@example.com',
-        }),
-      );
+    describe('when user email starts with test-', () => {
+      it('skips trackEvent', async () => {
+        mockAccountsPort.getUserById.mockResolvedValue(
+          buildUser({
+            id: createUserId('user-test'),
+            email: 'test-abc@example.com',
+          }),
+        );
 
-      eventEmitterService.emit(buildEvent('user-test'));
-      await flushPromises();
+        eventEmitterService.emit(buildEvent('user-test'));
+        await flushPromises();
 
-      expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+        expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
+      });
     });
 
     it('matches test- prefix case-insensitively', async () => {
@@ -937,7 +939,7 @@ describe('AmplitudeEventListener', () => {
       expect(mockAdapter.trackEvent).toHaveBeenCalledTimes(1);
     });
 
-    it('caches the lookup so getUserById is called once per user', async () => {
+    it('calls getUserById only once for repeated events for the same user', async () => {
       mockAccountsPort.getUserById.mockResolvedValue(
         buildUser({
           id: createUserId('user-test'),
@@ -953,16 +955,35 @@ describe('AmplitudeEventListener', () => {
       await flushPromises();
 
       expect(mockAccountsPort.getUserById).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips trackEvent for all repeated events for a test- user', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test'),
+          email: 'test-abc@example.com',
+        }),
+      );
+
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+      eventEmitterService.emit(buildEvent('user-test'));
+      await flushPromises();
+
       expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
     });
 
-    it('falls through (tracks) when getUserById throws', async () => {
-      mockAccountsPort.getUserById.mockRejectedValue(new Error('db down'));
+    describe('when getUserById throws', () => {
+      it('falls through and tracks the event', async () => {
+        mockAccountsPort.getUserById.mockRejectedValue(new Error('db down'));
 
-      eventEmitterService.emit(buildEvent('user-unknown'));
-      await flushPromises();
+        eventEmitterService.emit(buildEvent('user-unknown'));
+        await flushPromises();
 
-      expect(mockAdapter.trackEvent).toHaveBeenCalledTimes(1);
+        expect(mockAdapter.trackEvent).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('skips identifyOrganizationGroup for test users on OrganizationCreatedEvent', async () => {
@@ -985,6 +1006,27 @@ describe('AmplitudeEventListener', () => {
       await flushPromises();
 
       expect(mockAdapter.identifyOrganizationGroup).not.toHaveBeenCalled();
+    });
+
+    it('skips trackEvent for test users on OrganizationCreatedEvent', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(
+        buildUser({
+          id: createUserId('user-test'),
+          email: 'test-abc@example.com',
+        }),
+      );
+
+      const event = new OrganizationCreatedEvent({
+        userId: createUserId('user-test'),
+        organizationId: createOrganizationId('org-test'),
+        name: 'test-org',
+        method: 'trial',
+        source: 'api',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
       expect(mockAdapter.trackEvent).not.toHaveBeenCalled();
     });
   });
@@ -1020,32 +1062,34 @@ describe('AmplitudeEventListener', () => {
       );
     });
 
-    it('omits marketplaceRepo when absent (standalone mode)', async () => {
-      const event = new PluginRenderedEvent({
-        userId: createUserId('user-123'),
-        organizationId: createOrganizationId('org-456'),
-        packageId: createPackageId('pkg-789'),
-        packageSlug: 'default/my-package',
-        mode: 'standalone',
-        pluginRoot: '/tmp/plugins/my-package',
-        source: 'cli',
-      });
-
-      eventEmitterService.emit(event);
-      await flushPromises();
-
-      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
-        'user-123',
-        'org-456',
-        'plugin_rendered',
-        {
-          packageId: 'pkg-789',
+    describe('when absent (standalone mode)', () => {
+      it('omits marketplaceRepo from the tracked event', async () => {
+        const event = new PluginRenderedEvent({
+          userId: createUserId('user-123'),
+          organizationId: createOrganizationId('org-456'),
+          packageId: createPackageId('pkg-789'),
           packageSlug: 'default/my-package',
           mode: 'standalone',
           pluginRoot: '/tmp/plugins/my-package',
           source: 'cli',
-        },
-      );
+        });
+
+        eventEmitterService.emit(event);
+        await flushPromises();
+
+        expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-456',
+          'plugin_rendered',
+          {
+            packageId: 'pkg-789',
+            packageSlug: 'default/my-package',
+            mode: 'standalone',
+            pluginRoot: '/tmp/plugins/my-package',
+            source: 'cli',
+          },
+        );
+      });
     });
   });
 
@@ -1076,28 +1120,30 @@ describe('AmplitudeEventListener', () => {
       );
     });
 
-    it('omits marketplaceRepo when absent', async () => {
-      const event = new PluginDeletedEvent({
-        userId: createUserId('user-123'),
-        organizationId: createOrganizationId('org-456'),
-        packageId: createPackageId('pkg-789'),
-        packageSlug: 'default/my-package',
-        source: 'cli',
-      });
-
-      eventEmitterService.emit(event);
-      await flushPromises();
-
-      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
-        'user-123',
-        'org-456',
-        'plugin_deleted',
-        {
-          packageId: 'pkg-789',
+    describe('when absent', () => {
+      it('omits marketplaceRepo from the tracked event', async () => {
+        const event = new PluginDeletedEvent({
+          userId: createUserId('user-123'),
+          organizationId: createOrganizationId('org-456'),
+          packageId: createPackageId('pkg-789'),
           packageSlug: 'default/my-package',
           source: 'cli',
-        },
-      );
+        });
+
+        eventEmitterService.emit(event);
+        await flushPromises();
+
+        expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-456',
+          'plugin_deleted',
+          {
+            packageId: 'pkg-789',
+            packageSlug: 'default/my-package',
+            source: 'cli',
+          },
+        );
+      });
     });
   });
 });

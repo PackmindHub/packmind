@@ -22,7 +22,7 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
     expect(command.page).toBe(1);
   });
 
-  it('shapes the Response type with items, totalCount, page, and pageSize', () => {
+  it('shapes the Response type with items', () => {
     const response: ListOrganizationSpacesForManagementResponse = {
       items: [],
       totalCount: 0,
@@ -30,6 +30,15 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
       pageSize: ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
     };
     expect(response.items).toHaveLength(0);
+  });
+
+  it('shapes the Response type with pageSize', () => {
+    const response: ListOrganizationSpacesForManagementResponse = {
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
+    };
     expect(response.pageSize).toBe(ORGA_SPACE_MANAGEMENT_PAGE_SIZE);
   });
 
@@ -48,6 +57,13 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
   });
 
   it('declares SpaceManagementListItem as Space enriched with aggregations', () => {
+    const mockItem = {
+      admins: [],
+      memberIds: [],
+      membersCount: 5,
+      artifactsCount: 3,
+    } as unknown as SpaceManagementListItem;
+
     const buildItem = (
       item: SpaceManagementListItem,
     ): Pick<
@@ -59,6 +75,8 @@ describe('IListOrganizationSpacesForManagementUseCase contract', () => {
       membersCount: item.membersCount,
       artifactsCount: item.artifactsCount,
     });
-    expect(typeof buildItem).toBe('function');
+
+    const result = buildItem(mockItem);
+    expect(result.membersCount).toBe(5);
   });
 });

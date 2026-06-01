@@ -173,20 +173,22 @@ describe('SkillChangeProposalValidator', () => {
       expect(result).toEqual({ artefactVersion: 0 });
     });
 
-    it('throws SkillValidationError when the description exceeds the maximum length', async () => {
-      const command = buildCommand({
-        type: ChangeProposalType.createSkill,
-        artefactId: null,
-        payload: {
-          name: 'New Skill',
-          description: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
-          prompt: 'Do something useful',
-        },
-      });
+    describe('when the description exceeds the maximum length', () => {
+      it('throws SkillValidationError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.createSkill,
+          artefactId: null,
+          payload: {
+            name: 'New Skill',
+            description: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
+            prompt: 'Do something useful',
+          },
+        });
 
-      await expect(validator.validate(command)).rejects.toBeInstanceOf(
-        SkillValidationError,
-      );
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          SkillValidationError,
+        );
+      });
     });
   });
 
@@ -205,18 +207,20 @@ describe('SkillChangeProposalValidator', () => {
       expect(result).toEqual({ artefactVersion: 2 });
     });
 
-    it('throws SkillValidationError when the new value exceeds the maximum length', async () => {
-      const command = buildCommand({
-        type: ChangeProposalType.updateSkillDescription,
-        payload: {
-          oldValue: 'desc',
-          newValue: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
-        },
-      });
+    describe('when the new value exceeds the maximum length', () => {
+      it('throws SkillValidationError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateSkillDescription,
+          payload: {
+            oldValue: 'desc',
+            newValue: 'a'.repeat(DESCRIPTION_MAX_LENGTH + 1),
+          },
+        });
 
-      await expect(validator.validate(command)).rejects.toBeInstanceOf(
-        SkillValidationError,
-      );
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          SkillValidationError,
+        );
+      });
     });
 
     it('allows shrinking a legacy oversized description back under the cap', async () => {
