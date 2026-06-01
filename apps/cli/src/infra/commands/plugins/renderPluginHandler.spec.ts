@@ -261,6 +261,34 @@ describe('renderPluginHandler', () => {
         expect(entry?.description).toBe('Security plugin');
       });
 
+      it('clears the description when the package no longer has one', async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({ pluginDescription: undefined }),
+        );
+
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        const entry = findPluginEntry(mp, 'security');
+        expect(entry?.description).toBeUndefined();
+      });
+
+      it('clears the description when the package description is an empty string', async () => {
+        renderPlugin.mockResolvedValue(
+          buildResponse({ pluginDescription: '' }),
+        );
+
+        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        const entry = findPluginEntry(mp, 'security');
+        expect(entry?.description).toBeUndefined();
+      });
+
       it('exits zero', async () => {
         await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
 
@@ -305,7 +333,7 @@ describe('renderPluginHandler', () => {
         plugins: [
           {
             name: 'security',
-            source: 'git@my-provider.com/security-repo.git',
+            source: { source: 'github', repo: 'org/security-repo' },
           },
         ],
       });
@@ -316,6 +344,44 @@ describe('renderPluginHandler', () => {
 
       expect(error).toHaveBeenCalledWith(
         'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
+      );
+      expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not render or prompt', async () => {
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(renderPlugin).not.toHaveBeenCalled();
+      expect(confirmOverwrite).not.toHaveBeenCalled();
+    });
+
+    it('does not mutate marketplace.json', async () => {
+      const before = readFileSync(
+        join(tmp, '.claude-plugin/marketplace.json'),
+        'utf8',
+      );
+
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(
+        readFileSync(join(tmp, '.claude-plugin/marketplace.json'), 'utf8'),
+      ).toBe(before);
+    });
+  });
+
+  describe('marketplace mode with an entry that has an invalid source format', () => {
+    beforeEach(() => {
+      writeMarketplaceManifest({
+        name: 'mp',
+        plugins: [{ name: 'security', source: 'plugins/security' }],
+      });
+    });
+
+    it('exits non-zero with an unsupported-source error', async () => {
+      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining('unsupported source format'),
       );
       expect(exit).toHaveBeenCalledWith(1);
     });

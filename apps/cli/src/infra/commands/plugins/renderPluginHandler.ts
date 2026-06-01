@@ -8,7 +8,7 @@ import {
   writeMarketplace,
   findPluginEntry,
   upsertPluginEntry,
-  isRemoteSource,
+  classifySource,
 } from './pluginsContext';
 import { resolveGitContext } from './resolveGitContext';
 
@@ -52,16 +52,25 @@ export async function renderPluginHandler(
     const existing = findPluginEntry(marketplace, pluginName);
 
     if (existing) {
-      if (isRemoteSource(existing.source)) {
+      const kind = classifySource(existing.source);
+      if (kind === 'remote') {
         deps.error(
           `Plugin "${pluginName}" has a remote source. Run this command in the workspace of the remote plugin.`,
         );
         deps.exit(1);
         return;
       }
+      if (kind === 'invalid') {
+        deps.error(
+          `Plugin "${pluginName}" has an unsupported source format. Local sources must be a string starting with "./".`,
+        );
+        deps.exit(1);
+        return;
+      }
 
+      const existingLocalSource = existing.source as string;
       const confirmed = await deps.confirmOverwrite(
-        `Plugin "${pluginName}" already exists at "${existing.source}". Overwrite? [y/N] `,
+        `Plugin "${pluginName}" already exists at "${existingLocalSource}". Overwrite? [y/N] `,
       );
       if (!confirmed) {
         deps.log('No changes made.');
@@ -69,8 +78,8 @@ export async function renderPluginHandler(
         return;
       }
 
-      const existingPluginRoot = existing.source
-        .replace(/^\.?\//, '')
+      const existingPluginRoot = existingLocalSource
+        .replace(/^\.\//, '')
         .replace(/\/?$/, '/');
       const response = await deps.packmindCliHexa.renderPlugin({
         packageSlug: args.packageSlug,
@@ -83,21 +92,17 @@ export async function renderPluginHandler(
 
       writeFiles(cwd, response.files);
 
-      if (
-        response.pluginDescription &&
-        response.pluginDescription !== existing.description
-      ) {
-        writeMarketplace(
-          manifestPath,
-          upsertPluginEntry(marketplace, {
-            ...existing,
-            description: response.pluginDescription,
-          }),
-        );
-      }
+      const nextEntry: typeof existing = {
+        name: existing.name,
+        source: existing.source,
+        ...(response.pluginDescription
+          ? { description: response.pluginDescription }
+          : {}),
+      };
+      writeMarketplace(manifestPath, upsertPluginEntry(marketplace, nextEntry));
 
       deps.log(
-        `Re-rendered ${response.files.length} files into ${existing.source}`,
+        `Re-rendered ${response.files.length} files into ${existingLocalSource}`,
       );
       reportSkippedStandards(deps, response.skippedStandardsCount);
       deps.exit(0);

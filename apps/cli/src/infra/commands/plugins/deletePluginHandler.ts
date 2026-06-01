@@ -7,7 +7,7 @@ import {
   writeMarketplace,
   findPluginEntry,
   removePluginEntry,
-  isRemoteSource,
+  classifySource,
 } from './pluginsContext';
 import { resolveGitContext } from './resolveGitContext';
 import { logWarningConsole } from '../../utils/consoleLogger';
@@ -56,17 +56,35 @@ export async function deletePluginHandler(
       return;
     }
 
-    if (isRemoteSource(entry.source)) {
+    const kind = classifySource(entry.source);
+    if (kind === 'remote') {
       deps.error(
         `Plugin "${pluginName}" has a remote source. Run this command in the workspace of the remote plugin.`,
       );
       deps.exit(1);
       return;
     }
+    if (kind === 'invalid') {
+      deps.error(
+        `Plugin "${pluginName}" has an unsupported source format. Local sources must be a string starting with "./".`,
+      );
+      deps.exit(1);
+      return;
+    }
 
-    rmSync(join(cwd, entry.source), { recursive: true, force: true });
+    const localSource = entry.source as string;
+    const confirmed = await deps.confirmOverwrite(
+      `Remove ${localSource} and update marketplace.json for plugin "${pluginName}"? [y/N] `,
+    );
+    if (!confirmed) {
+      deps.log('No changes made.');
+      deps.exit(0);
+      return;
+    }
+
+    rmSync(join(cwd, localSource), { recursive: true, force: true });
     writeMarketplace(manifestPath, removePluginEntry(marketplace, pluginName));
-    deps.log(`Removed ${entry.source} and updated marketplace.json`);
+    deps.log(`Removed ${localSource} and updated marketplace.json`);
     await trackDeletion(deps, args.packageSlug, gitRemoteUrl);
     deps.exit(0);
     return;

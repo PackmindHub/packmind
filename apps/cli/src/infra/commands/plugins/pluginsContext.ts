@@ -20,11 +20,18 @@ export function detectPluginMode(cwd: string): PluginContext {
   return { mode: 'none' };
 }
 
+export type RemoteSourceObject = {
+  source: 'github' | 'url' | 'git-subdir' | 'npm';
+  [key: string]: unknown;
+};
+
 export type MarketplaceEntry = {
   name: string;
-  source: string;
+  source: string | RemoteSourceObject;
   description?: string;
 };
+
+export type SourceKind = 'local' | 'remote' | 'invalid';
 
 export type Marketplace = {
   plugins: MarketplaceEntry[];
@@ -41,8 +48,17 @@ export function writeMarketplace(path: string, content: Marketplace): void {
   writeFileSync(path, `${JSON.stringify(content, null, 2)}\n`);
 }
 
-export function isRemoteSource(source: string): boolean {
-  return !source.startsWith('./') && !source.startsWith('/');
+export function classifySource(source: MarketplaceEntry['source']): SourceKind {
+  if (typeof source === 'object' && source !== null) {
+    return 'remote';
+  }
+  if (typeof source !== 'string') {
+    return 'invalid';
+  }
+  if (source.startsWith('./')) {
+    return 'local';
+  }
+  return 'invalid';
 }
 
 export function findPluginEntry(
