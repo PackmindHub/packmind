@@ -9,6 +9,24 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+# Standard: Backend Tests Redaction
+
+Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
+* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
+* Avoid testing that a method is a function; instead invoke the method and assert its observable behavior
+* Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling
+* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
+* Never write dummy tests without logic (like expect.true.toBe(true))
+* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
+* Use afterEach to call datasource.destroy() to clean up the test database whenever you initialize it in beforeEach
+* Use afterEach(() => jest.clearAllMocks()) instead of beforeEach(() => jest.clearAllMocks()) to clear mocks after each test and prevent inter-test pollution
+* Use assertive, verb-first unit test names instead of starting with 'should'
+* Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks
+* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
+* Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
+
+Full standard is available here for further request: [Backend Tests Redaction](../../.packmind/standards/backend-tests-redaction.md)
+
 # Standard: Changelog
 
 Maintain CHANGELOG.MD using Keep a Changelog format with a top [Unreleased] section linked to HEAD, ISO 8601 dates (YYYY-MM-DD), and per-release comparison links like [X.Y.Z]: https://github.com/PackmindHub/packmind/compare/release/<previous>...release/X.Y.Z to ensure accurate, consistent release documentation and version links. :
