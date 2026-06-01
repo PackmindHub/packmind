@@ -4,9 +4,9 @@
   "private": true,
   "engines": {
     "node": "24.15.0",
-    "pnpm": ">=9.0.0 <10.0.0"
+    "pnpm": ">=11.0.0 <12.0.0"
   },
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@11.5.0",
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t build",
     "chakra:typegen": "pnpm --filter ./packages/ui exec chakra typegen ./src/lib/theme/theme.ts",
@@ -207,17 +207,5 @@
     "winston": "^3.17.0",
     "yaml": "^2.8.3",
     "zod": "^3.25.76"
-  },
-  "pnpm": {
-    "overrides": {
-      "fast-xml-parser": "5.5.6"
-    },
-    "onlyBuiltDependencies": [
-      "bcrypt",
-      "@swc/core",
-      "esbuild",
-      "@nestjs/core",
-      "@swc/cli"
-    ]
   }
 }

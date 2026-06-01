@@ -1,3 +1,28 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+# Moved from package.json "pnpm".overrides (pnpm 11 no longer reads it from package.json)
+overrides:
+  fast-xml-parser: 5.5.6
+
+# Converted from package.json "pnpm".onlyBuiltDependencies (removed in pnpm 11 → allowBuilds map)
+allowBuilds:
+  bcrypt: true
+  '@swc/core': true
+  esbuild: true
+  '@nestjs/core': true
+  '@swc/cli': true
+  # Not built under pnpm 9 either (was absent from onlyBuiltDependencies); kept disabled.
+  nx: false
+
+# Moved from .npmrc (pnpm 11 keeps only registry/auth settings in .npmrc)
+packageManagerStrict: false
+autoInstallPeers: true
+strictPeerDependencies: false
+shamefullyHoist: false
+enablePrePostScripts: true
+publicHoistPattern:
+  - '@types/*'
+  - '*eslint*'
+  - '*prettier*'
