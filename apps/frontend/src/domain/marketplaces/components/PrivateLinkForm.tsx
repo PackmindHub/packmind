@@ -35,7 +35,6 @@ interface DraftState {
   owner: string;
   repo: string;
   branch: string;
-  name: string;
 }
 
 const EMPTY_DRAFT: DraftState = {
@@ -43,17 +42,17 @@ const EMPTY_DRAFT: DraftState = {
   owner: '',
   repo: '',
   branch: 'main',
-  name: '',
 };
 
 /**
- * Private path: pick a connected `GitProvider`, fill in the repo coordinates,
- * pick a display name. Empty providers branch deep-links to settings via
- * `<GitNotConnectedNotice/>`.
+ * Private path: pick a connected `GitProvider`, fill in the repo coordinates.
+ * Empty providers branch deep-links to settings via `<GitNotConnectedNotice/>`.
  *
- * Validation is intentionally lightweight — all four required fields must be
- * present. Deeper validation (repo existence, marketplace.json present) is
- * the backend's responsibility and surfaces through `SubmitErrorBanner`.
+ * The marketplace display name is not a separate input — it is the repository
+ * name, sent through as `name` on submit. Validation is intentionally
+ * lightweight: provider, owner, repo, and branch must all be present. Deeper
+ * validation (repo existence, marketplace.json present) is the backend's
+ * responsibility and surfaces through `SubmitErrorBanner`.
  */
 export const PrivateLinkForm = ({
   organizationId,
@@ -77,8 +76,7 @@ export const PrivateLinkForm = ({
         draft.gitProviderId.trim() &&
         draft.owner.trim() &&
         draft.repo.trim() &&
-        draft.branch.trim() &&
-        draft.name.trim(),
+        draft.branch.trim(),
       ),
     [draft],
   );
@@ -104,12 +102,15 @@ export const PrivateLinkForm = ({
     event.preventDefault();
     if (!fieldsValid) return;
 
+    const repo = draft.repo.trim();
     const body: LinkMarketplaceRequestBody = {
       gitProviderId: draft.gitProviderId as GitProviderId,
       owner: draft.owner.trim(),
-      repo: draft.repo.trim(),
+      repo,
       branch: draft.branch.trim(),
-      name: draft.name.trim(),
+      // The marketplace display name is the repository name — there is no
+      // separate name field.
+      name: repo,
     };
 
     try {
@@ -127,7 +128,7 @@ export const PrivateLinkForm = ({
         {errorReason && (
           <SubmitErrorBanner
             reason={errorReason}
-            name={draft.name.trim()}
+            name={draft.repo.trim()}
             repoPath={
               draft.owner && draft.repo
                 ? `${draft.owner}/${draft.repo}`
@@ -181,15 +182,6 @@ export const PrivateLinkForm = ({
             value={draft.branch}
             onChange={handleField('branch')}
             aria-label="Branch"
-          />
-        </Field>
-
-        <Field label="Display name">
-          <PMInput
-            placeholder="e.g. Billing playbook"
-            value={draft.name}
-            onChange={handleField('name')}
-            aria-label="Display name"
           />
         </Field>
 

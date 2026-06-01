@@ -107,8 +107,13 @@ describe('PrivateLinkForm', () => {
     expect(submit).toBeDisabled();
   });
 
-  it('calls useLinkMarketplace.mutateAsync with trimmed form values on submit', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue({ name: 'Acme Playbook' });
+  it('does not render a separate display-name field', () => {
+    renderForm();
+    expect(screen.queryByLabelText('Display name')).not.toBeInTheDocument();
+  });
+
+  it('calls useLinkMarketplace.mutateAsync with the repo name as the display name on submit', async () => {
+    const mutateAsync = jest.fn().mockResolvedValue({ name: 'marketplace' });
     useLinkMarketplaceMock.mockReturnValue({ mutateAsync, isPending: false });
 
     const onLinked = jest.fn();
@@ -121,13 +126,10 @@ describe('PrivateLinkForm', () => {
       target: { value: '  acme-eng  ' },
     });
     fireEvent.change(screen.getByLabelText('Repository name'), {
-      target: { value: 'marketplace' },
+      target: { value: '  marketplace  ' },
     });
     fireEvent.change(screen.getByLabelText('Branch'), {
       target: { value: 'main' },
-    });
-    fireEvent.change(screen.getByLabelText('Display name'), {
-      target: { value: '  Billing playbook  ' },
     });
 
     await act(async () => {
@@ -139,7 +141,7 @@ describe('PrivateLinkForm', () => {
       owner: 'acme-eng',
       repo: 'marketplace',
       branch: 'main',
-      name: 'Billing playbook',
+      name: 'marketplace',
     });
     expect(onLinked).toHaveBeenCalled();
   });
