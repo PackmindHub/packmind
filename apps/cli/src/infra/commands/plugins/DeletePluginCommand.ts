@@ -1,15 +1,16 @@
-import { command, positional, string } from 'cmd-ts';
+import { command, positional } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { deletePluginHandler } from './deletePluginHandler';
 import { confirmOverwrite } from './confirmOverwrite';
+import { PackageSlugArgType } from '../customParameters/PackageSlugArgType';
 
 export const deletePluginCommand = command({
   name: 'delete',
   description: 'Delete a rendered Packmind plugin from this workspace',
   args: {
     packageSlug: positional({
-      type: string,
+      type: PackageSlugArgType,
       displayName: 'package-slug',
       description: 'Package slug (e.g. security or @my-space/security)',
     }),

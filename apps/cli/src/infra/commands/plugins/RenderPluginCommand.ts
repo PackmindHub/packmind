@@ -1,15 +1,16 @@
-import { command, positional, string } from 'cmd-ts';
+import { command, positional } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { renderPluginHandler } from './renderPluginHandler';
 import { confirmOverwrite } from './confirmOverwrite';
+import { PackageSlugArgType } from '../customParameters/PackageSlugArgType';
 
 export const renderPluginCommand = command({
   name: 'render',
   description: 'Render a Packmind package as a Claude plugin',
   args: {
     packageSlug: positional({
-      type: string,
+      type: PackageSlugArgType,
       displayName: 'package-slug',
       description: 'Package slug (e.g. security or @my-space/security)',
     }),

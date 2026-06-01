@@ -3,6 +3,10 @@ import { dirname, join } from 'path';
 import { RenderedPluginFile } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
+  ParsedPackageSlug,
+  displayableParsedPackageSlug,
+} from '../../../domain/entities/PackageSlug';
+import {
   detectPluginMode,
   readMarketplace,
   writeMarketplace,
@@ -13,7 +17,7 @@ import {
 import { resolveGitContext } from './resolveGitContext';
 
 export type RenderPluginArgs = {
-  packageSlug: string;
+  packageSlug: ParsedPackageSlug;
 };
 
 export type RenderPluginHandlerDependencies = {
@@ -40,7 +44,8 @@ export async function renderPluginHandler(
     return;
   }
 
-  const pluginName = pluginNameFromSlug(args.packageSlug);
+  const pluginName = args.packageSlug.packageSlug;
+  const packageSlug = displayableParsedPackageSlug(args.packageSlug);
   const { gitRemoteUrl, gitBranch } = await resolveGitContext(
     deps.packmindCliHexa,
     cwd,
@@ -74,7 +79,7 @@ export async function renderPluginHandler(
         .replace(/^\.\//, '')
         .replace(/\/?$/, '/');
       const response = await deps.packmindCliHexa.renderPlugin({
-        packageSlug: args.packageSlug,
+        packageSlug,
         mode: 'marketplace',
         pluginRoot: existingPluginRoot,
         pluginName,
@@ -103,7 +108,7 @@ export async function renderPluginHandler(
 
     const pluginRoot = `plugins/${pluginName}/`;
     const response = await deps.packmindCliHexa.renderPlugin({
-      packageSlug: args.packageSlug,
+      packageSlug,
       mode: 'marketplace',
       pluginRoot,
       pluginName,
@@ -149,7 +154,7 @@ export async function renderPluginHandler(
     }
 
     const response = await deps.packmindCliHexa.renderPlugin({
-      packageSlug: args.packageSlug,
+      packageSlug,
       mode: 'standalone',
       pluginRoot: '/',
       pluginName,
@@ -164,10 +169,6 @@ export async function renderPluginHandler(
     deps.exit(0);
     return;
   }
-}
-
-function pluginNameFromSlug(packageSlug: string): string {
-  return packageSlug.split('/').pop() as string;
 }
 
 function reportSkippedStandards(
