@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  PMBox,
   PMButton,
   PMCloseButton,
   PMDrawer,
@@ -13,7 +12,6 @@ import {
 } from '@packmind/ui';
 import type { OrganizationId } from '@packmind/types';
 import { PrivateLinkForm } from './PrivateLinkForm';
-import { PublicLinkForm } from './PublicLinkForm';
 
 export interface LinkMarketplacePanelProps {
   organizationId: OrganizationId | string;
@@ -21,22 +19,25 @@ export interface LinkMarketplacePanelProps {
   orgSlug?: string;
 }
 
-type VisibilityTab = 'private' | 'public';
-
 /**
- * Drawer + tabbed entry point for the link-marketplace flow.
+ * Drawer entry point for the link-marketplace flow.
  *
- * The drawer owns the open/close state and tab selection so the route module
- * stays a thin composition. On a successful link, the drawer closes and a
- * success toast surfaces; the underlying `useLinkMarketplace` hook already
- * invalidates the marketplace list, so the index refreshes on its own.
+ * The drawer owns the open/close state so the route module stays a thin
+ * composition. On a successful link, the drawer closes and a success toast
+ * surfaces; the underlying `useLinkMarketplace` hook already invalidates the
+ * marketplace list, so the index refreshes on its own.
+ *
+ * Only the private (connected-provider) path is exposed. The public-URL path
+ * (`PublicLinkForm`) is intentionally not rendered: it submits an empty
+ * `gitProviderId`, which the backend `LinkMarketplaceUseCase` rejects, so the
+ * flow is a dead end until tokenless-provider resolution lands. The form is
+ * kept in the tree so the tab can return once the backend supports it.
  */
 export const LinkMarketplacePanel = ({
   organizationId,
   orgSlug,
 }: Readonly<LinkMarketplacePanelProps>) => {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<VisibilityTab>('private');
 
   const handleLinked = () => {
     setOpen(false);
@@ -77,25 +78,13 @@ export const LinkMarketplacePanel = ({
                 </PMVStack>
               </PMDrawer.Header>
 
-              <PMBox paddingX={5} paddingTop={4}>
-                <VisibilityTabs active={activeTab} onChange={setActiveTab} />
-              </PMBox>
-
               <PMDrawer.Body paddingTop={4}>
-                {activeTab === 'private' ? (
-                  <PrivateLinkForm
-                    organizationId={organizationId}
-                    orgSlug={orgSlug ?? ''}
-                    onLinked={handleLinked}
-                    onCancel={() => setOpen(false)}
-                  />
-                ) : (
-                  <PublicLinkForm
-                    organizationId={organizationId}
-                    onLinked={handleLinked}
-                    onCancel={() => setOpen(false)}
-                  />
-                )}
+                <PrivateLinkForm
+                  organizationId={organizationId}
+                  orgSlug={orgSlug ?? ''}
+                  onLinked={handleLinked}
+                  onCancel={() => setOpen(false)}
+                />
               </PMDrawer.Body>
 
               <PMDrawer.CloseTrigger asChild>
@@ -106,55 +95,5 @@ export const LinkMarketplacePanel = ({
         </PMPortal>
       </PMDrawer.Root>
     </>
-  );
-};
-
-interface VisibilityTabsProps {
-  active: VisibilityTab;
-  onChange: (tab: VisibilityTab) => void;
-}
-
-const TABS: Array<{ id: VisibilityTab; label: string; hint: string }> = [
-  {
-    id: 'private',
-    label: 'Private',
-    hint: 'Use a Git provider you have already connected.',
-  },
-  {
-    id: 'public',
-    label: 'Public',
-    hint: 'Paste the URL of a publicly readable repository.',
-  },
-];
-
-const VisibilityTabs = ({
-  active,
-  onChange,
-}: Readonly<VisibilityTabsProps>) => {
-  const helper = TABS.find((tab) => tab.id === active)?.hint ?? '';
-
-  return (
-    <PMVStack align="stretch" gap={2}>
-      <PMHStack gap={2} role="tablist" aria-label="Link path">
-        {TABS.map((tab) => {
-          const isActive = tab.id === active;
-          return (
-            <PMButton
-              key={tab.id}
-              variant={isActive ? 'primary' : 'tertiary'}
-              size="sm"
-              onClick={() => onChange(tab.id)}
-              role="tab"
-              aria-selected={isActive}
-            >
-              {tab.label}
-            </PMButton>
-          );
-        })}
-      </PMHStack>
-      <PMText variant="small" color="faded">
-        {helper}
-      </PMText>
-    </PMVStack>
   );
 };

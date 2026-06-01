@@ -7,7 +7,11 @@ import { LinkMarketplacePanel } from './LinkMarketplacePanel';
 
 jest.mock('../../git/api/queries', () => ({
   useGetGitProvidersQuery: () => ({
-    data: { providers: [] },
+    data: {
+      providers: [
+        { id: 'provider-1', source: 'github', url: 'https://github.com' },
+      ],
+    },
     isLoading: false,
   }),
 }));
@@ -53,7 +57,7 @@ describe('LinkMarketplacePanel', () => {
     ).toBeInTheDocument();
   });
 
-  it('opens the drawer with the private tab active by default', async () => {
+  it('opens the drawer straight onto the private link form', async () => {
     renderPanel();
 
     await act(async () => {
@@ -62,13 +66,12 @@ describe('LinkMarketplacePanel', () => {
       );
     });
 
-    const privateTab = await screen.findByRole('tab', { name: 'Private' });
-    expect(privateTab).toHaveAttribute('aria-selected', 'true');
-    const publicTab = screen.getByRole('tab', { name: 'Public' });
-    expect(publicTab).toHaveAttribute('aria-selected', 'false');
+    expect(
+      await screen.findByRole('form', { name: 'Link a private marketplace' }),
+    ).toBeInTheDocument();
   });
 
-  it('switches to the public tab when the user clicks Public', async () => {
+  it('does not expose the public marketplace path', async () => {
     renderPanel();
 
     await act(async () => {
@@ -77,14 +80,12 @@ describe('LinkMarketplacePanel', () => {
       );
     });
 
-    const publicTab = await screen.findByRole('tab', { name: 'Public' });
-    await act(async () => {
-      fireEvent.click(publicTab);
-    });
-
-    expect(publicTab).toHaveAttribute('aria-selected', 'true');
+    await screen.findByRole('form', { name: 'Link a private marketplace' });
     expect(
-      screen.getByRole('form', { name: 'Link a public marketplace' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('tab', { name: 'Public' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('form', { name: 'Link a public marketplace' }),
+    ).not.toBeInTheDocument();
   });
 });
