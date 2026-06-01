@@ -2,6 +2,8 @@
 
 ## Added
 
+- new commands `plugins render` and `plugins delete` allowing to publish a Packmind package to a Claude marketplace.
+
 ## Changed
 
 ## Fixed
