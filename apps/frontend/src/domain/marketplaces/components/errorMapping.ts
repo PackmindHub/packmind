@@ -1,72 +1,49 @@
 import type { AxiosError } from 'axios';
-import type { SubmitErrorReason } from './SubmitErrorBanner';
+
+/** Shown when the request never reached the server (no HTTP response). */
+export const NETWORK_ERROR_MESSAGE =
+  'The server could not be reached. Check your connection and try again.';
+
+/** Shown when the server responded but carried no usable message. */
+export const GENERIC_SUBMIT_ERROR_MESSAGE =
+  'Something went wrong while linking the marketplace. Please try again.';
 
 /**
- * Maps a thrown error from `useLinkMarketplace` / `useValidateMarketplaceUrl`
- * to the matching `SubmitErrorReason` that `SubmitErrorBanner` understands.
+ * Extracts a human-readable message from a thrown link / validate-url error.
  *
- * The backend HTTP layer (`marketplaces.controller.ts`) translates each typed
- * domain error to a specific status code + the error class name in the
- * response body — we key off both. Anything we can't classify falls through
- * to `'network'`.
+ * The backend (`marketplaces.controller.ts`) maps each typed domain error to a
+ * NestJS HTTP exception whose body carries a descriptive `message` — we surface
+ * it verbatim so the user sees the real reason (e.g. "Repository acme/foo is
+ * already linked as a standard Git repository in this organization") instead of
+ * a generic banner.
+ *
+ * Fallbacks: when the request never reached the server we show a connectivity
+ * message; when it reached the server but carried no message we show a generic
+ * one.
  */
-export function mapMutationErrorToReason(error: unknown): SubmitErrorReason {
+export function getSubmitErrorMessage(error: unknown): string {
   if (!error || typeof error !== 'object') {
-    return 'network';
+    return NETWORK_ERROR_MESSAGE;
   }
 
-  const axiosError = error as AxiosError<{
-    error?: string;
-    name?: string;
-    message?: string;
-  }>;
+  const axiosError = error as AxiosError<{ message?: string | string[] }>;
+  const response = axiosError.response;
 
-  const data = axiosError.response?.data;
-  const status = axiosError.response?.status;
-
-  const candidate =
-    (typeof data?.error === 'string' && data.error) ||
-    (typeof data?.name === 'string' && data.name) ||
-    (typeof data?.message === 'string' && data.message) ||
-    '';
-
-  const haystack = candidate.toLowerCase();
-
-  if (
-    status === 409 &&
-    haystack.includes('marketplace') &&
-    haystack.includes('alreadylinked')
-  ) {
-    return 'marketplace-already-linked';
+  if (!response) {
+    return NETWORK_ERROR_MESSAGE;
   }
 
-  if (
-    status === 409 &&
-    haystack.includes('gitrepo') &&
-    haystack.includes('standard')
-  ) {
-    return 'gitrepo-already-linked-as-standard';
+  const message = response.data?.message;
+
+  // NestJS validation pipes return `message` as a string array; join them.
+  if (Array.isArray(message)) {
+    const joined = message.filter((m) => typeof m === 'string').join(' ');
+    if (joined.trim()) {
+      return joined;
+    }
+  } else if (typeof message === 'string' && message.trim()) {
+    return message;
   }
 
-  if (haystack.includes('descriptornotfound')) {
-    return 'descriptor-not-found';
-  }
-
-  if (haystack.includes('unknownmarketplacedescriptor')) {
-    return 'unknown-descriptor';
-  }
-
-  if (haystack.includes('descriptorparseerror')) {
-    return 'descriptor-parse-error';
-  }
-
-  if (haystack.includes('urlnotreachable')) {
-    return 'url-not-reachable';
-  }
-
-  if (haystack.includes('notpublic')) {
-    return 'not-public';
-  }
-
-  return 'network';
+  return GENERIC_SUBMIT_ERROR_MESSAGE;
 }

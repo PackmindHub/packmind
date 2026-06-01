@@ -12,8 +12,8 @@ import { OrganizationId } from '@packmind/types';
 import { useLinkMarketplace, useValidateMarketplaceUrl } from '../api/queries';
 import { LinkMarketplaceRequestBody } from '../api/gateways';
 import { AgentsFieldset } from './AgentsFieldset';
-import { SubmitErrorBanner, SubmitErrorReason } from './SubmitErrorBanner';
-import { mapMutationErrorToReason } from './errorMapping';
+import { SubmitErrorBanner } from './SubmitErrorBanner';
+import { getSubmitErrorMessage } from './errorMapping';
 
 export interface PublicLinkFormProps {
   organizationId: OrganizationId | string;
@@ -36,9 +36,7 @@ export const PublicLinkForm = ({
   const [url, setUrl] = useState('');
   const [debouncedUrl, setDebouncedUrl] = useState('');
   const [name, setName] = useState('');
-  const [errorReason, setErrorReason] = useState<SubmitErrorReason | null>(
-    null,
-  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Debounce — keeps the validate-url request quiet while the user is typing.
   useEffect(() => {
@@ -78,10 +76,8 @@ export const PublicLinkForm = ({
     };
   }, [validation.data, validationKind]);
 
-  const validationErrorReason: SubmitErrorReason | null =
-    validationKind === 'error'
-      ? mapMutationErrorToReason(validation.error)
-      : null;
+  const validationErrorMessage: string | null =
+    validationKind === 'error' ? getSubmitErrorMessage(validation.error) : null;
 
   const canSubmit =
     validationKind === 'verified' &&
@@ -117,19 +113,17 @@ export const PublicLinkForm = ({
       setName('');
       onLinked();
     } catch (error) {
-      setErrorReason(mapMutationErrorToReason(error));
+      setErrorMessage(getSubmitErrorMessage(error));
     }
   };
 
   return (
     <form onSubmit={handleSubmit} aria-label="Link a public marketplace">
       <PMVStack align="stretch" gap={4}>
-        {errorReason && (
-          <SubmitErrorBanner reason={errorReason} name={name.trim()} />
-        )}
+        {errorMessage && <SubmitErrorBanner message={errorMessage} />}
 
-        {validationErrorReason && (
-          <SubmitErrorBanner reason={validationErrorReason} />
+        {validationErrorMessage && (
+          <SubmitErrorBanner message={validationErrorMessage} />
         )}
 
         <PMVStack align="stretch" gap={1}>
@@ -141,7 +135,7 @@ export const PublicLinkForm = ({
             value={url}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               setUrl(event.target.value);
-              setErrorReason(null);
+              setErrorMessage(null);
             }}
             aria-label="Repository URL"
           />

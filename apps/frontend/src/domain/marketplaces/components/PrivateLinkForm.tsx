@@ -20,8 +20,8 @@ import { useLinkMarketplace } from '../api/queries';
 import { LinkMarketplaceRequestBody } from '../api/gateways';
 import { AgentsFieldset } from './AgentsFieldset';
 import { GitNotConnectedNotice } from './GitNotConnectedNotice';
-import { SubmitErrorBanner, SubmitErrorReason } from './SubmitErrorBanner';
-import { mapMutationErrorToReason } from './errorMapping';
+import { SubmitErrorBanner } from './SubmitErrorBanner';
+import { getSubmitErrorMessage } from './errorMapping';
 
 export interface PrivateLinkFormProps {
   organizationId: OrganizationId | string;
@@ -64,9 +64,7 @@ export const PrivateLinkForm = ({
   const linkMutation = useLinkMarketplace(organizationId);
 
   const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT);
-  const [errorReason, setErrorReason] = useState<SubmitErrorReason | null>(
-    null,
-  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const providers = providersQuery.data?.providers ?? [];
 
@@ -95,7 +93,7 @@ export const PrivateLinkForm = ({
     (key: keyof DraftState) =>
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setDraft((current) => ({ ...current, [key]: event.target.value }));
-      setErrorReason(null);
+      setErrorMessage(null);
     };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -118,24 +116,14 @@ export const PrivateLinkForm = ({
       setDraft(EMPTY_DRAFT);
       onLinked();
     } catch (error) {
-      setErrorReason(mapMutationErrorToReason(error));
+      setErrorMessage(getSubmitErrorMessage(error));
     }
   };
 
   return (
     <form onSubmit={handleSubmit} aria-label="Link a private marketplace">
       <PMVStack align="stretch" gap={4}>
-        {errorReason && (
-          <SubmitErrorBanner
-            reason={errorReason}
-            name={draft.repo.trim()}
-            repoPath={
-              draft.owner && draft.repo
-                ? `${draft.owner}/${draft.repo}`
-                : undefined
-            }
-          />
-        )}
+        {errorMessage && <SubmitErrorBanner message={errorMessage} />}
 
         <Field label="Git provider">
           <PMNativeSelect
