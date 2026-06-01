@@ -19,7 +19,6 @@ import {
   ILinkMarketplaceUseCase,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
-  MARKETPLACE_DESCRIPTOR_FILENAME,
   Marketplace,
   MarketplaceAlreadyLinkedError,
   MarketplaceDescriptorNotFoundError,
@@ -29,6 +28,7 @@ import {
 import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
+import { fetchMarketplaceDescriptorFile } from '../../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 
 const origin = 'LinkMarketplaceUseCase';
@@ -175,10 +175,12 @@ export class LinkMarketplaceUseCase
       type: 'marketplace',
     };
 
-    // 3. Fetch marketplace.json.
-    const file = await this.gitPort.getFileFromRepo(
+    // 3. Fetch the marketplace descriptor, probing the official
+    //    `.claude-plugin/marketplace.json` path first and falling back to a
+    //    bare root `marketplace.json`.
+    const file = await fetchMarketplaceDescriptorFile(
+      this.gitPort,
       provisionalGitRepo,
-      MARKETPLACE_DESCRIPTOR_FILENAME,
       branch,
     );
     if (!file) {

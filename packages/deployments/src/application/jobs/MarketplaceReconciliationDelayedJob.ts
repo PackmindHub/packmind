@@ -18,6 +18,7 @@ import {
 } from '@packmind/types';
 import { Job } from 'bullmq';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 
 /**
@@ -202,12 +203,16 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       return { state: 'unreachable', lastValidatedAt };
     }
 
-    // Step 3 — Fetch the descriptor from git.
-    let descriptorFile: { sha: string; content: string } | null;
+    // Step 3 — Fetch the descriptor from git, probing the official
+    // `.claude-plugin/marketplace.json` path first and falling back to a bare
+    // root `marketplace.json`.
+    let descriptorFile: Awaited<
+      ReturnType<typeof fetchMarketplaceDescriptorFile>
+    >;
     try {
-      descriptorFile = await this.gitPort.getFileFromRepo(
+      descriptorFile = await fetchMarketplaceDescriptorFile(
+        this.gitPort,
         gitRepo,
-        MARKETPLACE_DESCRIPTOR_FILENAME,
         gitRepo.branch,
       );
     } catch (error) {

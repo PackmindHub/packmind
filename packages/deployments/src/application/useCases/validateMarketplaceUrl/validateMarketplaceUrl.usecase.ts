@@ -8,12 +8,12 @@ import {
   IAccountsPort,
   IGitPort,
   IValidateMarketplaceUrlUseCase,
-  MARKETPLACE_DESCRIPTOR_FILENAME,
   MarketplaceDescriptorNotFoundError,
   MarketplaceUrlNotReachableError,
   ValidateMarketplaceUrlCommand,
   ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
+import { fetchMarketplaceDescriptorFile } from '../../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 
 const origin = 'ValidateMarketplaceUrlUseCase';
@@ -112,11 +112,11 @@ export class ValidateMarketplaceUrlUseCase
       type: 'marketplace',
     };
 
-    let file: Awaited<ReturnType<IGitPort['getFileFromRepo']>>;
+    let file: Awaited<ReturnType<typeof fetchMarketplaceDescriptorFile>>;
     try {
-      file = await this.gitPort.getFileFromRepo(
+      file = await fetchMarketplaceDescriptorFile(
+        this.gitPort,
         provisionalGitRepo,
-        MARKETPLACE_DESCRIPTOR_FILENAME,
         parsed.branch,
       );
     } catch (error) {
