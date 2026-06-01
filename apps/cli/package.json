@@ -1,6 +1,6 @@
 {
   "name": "@packmind/cli",
-  "version": "0.29.1-next",
+  "version": "0.30.0",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
