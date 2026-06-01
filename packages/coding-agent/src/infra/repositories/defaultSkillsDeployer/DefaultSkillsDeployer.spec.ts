@@ -22,10 +22,7 @@ describe('DefaultSkillsDeployer', () => {
           const deployedSlugs = result.deployedSkills.map((s) => s.slug);
           expect(deployedSlugs).toEqual(
             expect.arrayContaining([
-              'packmind-create-skill',
-              'packmind-create-standard',
               'packmind-onboard',
-              'packmind-create-command',
               'packmind-create-package',
               'packmind-cli-list-commands',
               'packmind-update-playbook',
@@ -48,26 +45,8 @@ describe('DefaultSkillsDeployer', () => {
         });
       });
 
-      it('includes packmind-create-skill', () => {
-        expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
-          true,
-        );
-      });
-
-      it('includes packmind-create-standard', () => {
-        expect(paths.some((p) => p.includes('packmind-create-standard'))).toBe(
-          true,
-        );
-      });
-
       it('includes packmind-onboard', () => {
         expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-      });
-
-      it('includes packmind-create-command', () => {
-        expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-          true,
-        );
       });
 
       it('includes packmind-create-package', () => {
@@ -108,26 +87,8 @@ describe('DefaultSkillsDeployer', () => {
         paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
       });
 
-      it('includes packmind-create-skill', () => {
-        expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
-          true,
-        );
-      });
-
-      it('includes packmind-create-standard', () => {
-        expect(paths.some((p) => p.includes('packmind-create-standard'))).toBe(
-          true,
-        );
-      });
-
       it('includes packmind-onboard', () => {
         expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-      });
-
-      it('includes packmind-create-command', () => {
-        expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-          true,
-        );
       });
 
       it('includes packmind-versions/next/apply-changes.md for update-playbook', () => {
@@ -168,26 +129,8 @@ describe('DefaultSkillsDeployer', () => {
           paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
-        it('includes packmind-create-skill', () => {
-          expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
-            true,
-          );
-        });
-
-        it('includes packmind-create-standard', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-create-standard')),
-          ).toBe(true);
-        });
-
         it('excludes packmind-onboard (requires 0.16.0)', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
-        });
-
-        it('excludes packmind-create-command (requires 0.15.0)', () => {
-          expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-            false,
-          );
         });
 
         it('excludes packmind-update-playbook (requires 0.21.0)', () => {
@@ -243,26 +186,8 @@ describe('DefaultSkillsDeployer', () => {
           paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
-        it('includes packmind-create-skill', () => {
-          expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
-            true,
-          );
-        });
-
-        it('includes packmind-create-standard', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-create-standard')),
-          ).toBe(true);
-        });
-
         it('includes packmind-onboard', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-        });
-
-        it('includes packmind-create-command', () => {
-          expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-            true,
-          );
         });
 
         it('includes packmind-create-package', () => {
@@ -304,26 +229,8 @@ describe('DefaultSkillsDeployer', () => {
           paths = result.fileUpdates.createOrUpdate.map((f) => f.path);
         });
 
-        it('includes packmind-create-skill regardless of cliVersion', () => {
-          expect(paths.some((p) => p.includes('packmind-create-skill'))).toBe(
-            true,
-          );
-        });
-
-        it('includes packmind-create-standard regardless of cliVersion', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-create-standard')),
-          ).toBe(true);
-        });
-
         it('includes packmind-onboard regardless of cliVersion', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-        });
-
-        it('includes packmind-create-command regardless of cliVersion', () => {
-          expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-            true,
-          );
         });
 
         it('returns 0 skipped skills', () => {
