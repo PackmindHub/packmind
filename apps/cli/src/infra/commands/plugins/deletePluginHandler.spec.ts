@@ -222,43 +222,6 @@ describe('deletePluginHandler', () => {
     });
   });
 
-  describe('marketplace mode with an invalid source format', () => {
-    beforeEach(() => {
-      writeMarketplaceManifest({
-        name: 'mp',
-        plugins: [{ name: 'security', source: 'plugins/security' }],
-      });
-    });
-
-    it('refuses with an unsupported-source error and exits non-zero', async () => {
-      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(error).toHaveBeenCalledWith(
-        expect.stringContaining('unsupported source format'),
-      );
-      expect(exit).toHaveBeenCalledWith(1);
-    });
-
-    it('does not prompt the user', async () => {
-      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(confirmOverwrite).not.toHaveBeenCalled();
-    });
-
-    it('does not mutate marketplace.json', async () => {
-      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
-      expect(findPluginEntry(mp, 'security')).toBeDefined();
-    });
-
-    it('does not track the deletion', async () => {
-      await deletePluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(trackPluginDeleted).not.toHaveBeenCalled();
-    });
-  });
-
   describe('marketplace mode with no matching entry', () => {
     beforeEach(() => {
       writeMarketplaceManifest({

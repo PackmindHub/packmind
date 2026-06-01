@@ -190,7 +190,9 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         beforeEach(async () => {
           writeMarketplace(context.testDir, { plugins: [] });
           await context.runCli(`plugins render ${scopedSlug}`);
-          result = await context.runCli(`plugins delete ${scopedSlug}`);
+          result = await context.runCli(`plugins delete ${scopedSlug}`, {
+            stdin: 'y\n',
+          });
         });
 
         it('exits successfully', () => {
@@ -491,7 +493,9 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         beforeEach(async () => {
           writeMarketplace(context.testDir, { plugins: [] });
           await context.runCli(`plugins render ${scopedSlug}`);
-          result = await context.runCli(`plugins delete ${scopedSlug}`);
+          result = await context.runCli(`plugins delete ${scopedSlug}`, {
+            stdin: 'y\n',
+          });
         });
 
         it('exits successfully despite best-effort tracking', () => {

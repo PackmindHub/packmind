@@ -52,17 +52,9 @@ export async function renderPluginHandler(
     const existing = findPluginEntry(marketplace, pluginName);
 
     if (existing) {
-      const kind = classifySource(existing.source);
-      if (kind === 'remote') {
+      if (classifySource(existing.source) === 'remote') {
         deps.error(
           `Plugin "${pluginName}" has a remote source. Run this command in the workspace of the remote plugin.`,
-        );
-        deps.exit(1);
-        return;
-      }
-      if (kind === 'invalid') {
-        deps.error(
-          `Plugin "${pluginName}" has an unsupported source format. Local sources must be a string starting with "./".`,
         );
         deps.exit(1);
         return;
