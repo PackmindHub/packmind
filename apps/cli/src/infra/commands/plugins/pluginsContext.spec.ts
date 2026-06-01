@@ -139,19 +139,20 @@ describe('marketplace.json helpers', () => {
       );
     });
 
-    it('returns invalid for bare relative paths', () => {
-      expect(classifySource('plugins/security')).toBe('invalid');
+    it('returns local for absolute paths', () => {
+      expect(classifySource('/plugins/security')).toBe('local');
     });
 
-    it('returns invalid for absolute paths', () => {
-      expect(classifySource('/plugins/security')).toBe('invalid');
-    });
-
-    it('returns invalid for raw git URLs as strings', () => {
+    it('returns remote for string shortcut formats (github:, url:, raw URLs)', () => {
+      expect(classifySource('github:owner/repo')).toBe('remote');
+      expect(classifySource('https://github.com/org/repo.git')).toBe('remote');
       expect(classifySource('git@my-provider.com/security-repo.git')).toBe(
-        'invalid',
+        'remote',
       );
-      expect(classifySource('https://github.com/org/repo.git')).toBe('invalid');
+    });
+
+    it('returns remote for bare relative paths', () => {
+      expect(classifySource('plugins/security')).toBe('remote');
     });
   });
 

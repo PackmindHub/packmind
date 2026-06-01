@@ -369,44 +369,6 @@ describe('renderPluginHandler', () => {
     });
   });
 
-  describe('marketplace mode with an entry that has an invalid source format', () => {
-    beforeEach(() => {
-      writeMarketplaceManifest({
-        name: 'mp',
-        plugins: [{ name: 'security', source: 'plugins/security' }],
-      });
-    });
-
-    it('exits non-zero with an unsupported-source error', async () => {
-      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(error).toHaveBeenCalledWith(
-        expect.stringContaining('unsupported source format'),
-      );
-      expect(exit).toHaveBeenCalledWith(1);
-    });
-
-    it('does not render or prompt', async () => {
-      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(renderPlugin).not.toHaveBeenCalled();
-      expect(confirmOverwrite).not.toHaveBeenCalled();
-    });
-
-    it('does not mutate marketplace.json', async () => {
-      const before = readFileSync(
-        join(tmp, '.claude-plugin/marketplace.json'),
-        'utf8',
-      );
-
-      await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
-
-      expect(
-        readFileSync(join(tmp, '.claude-plugin/marketplace.json'), 'utf8'),
-      ).toBe(before);
-    });
-  });
-
   describe('standalone mode', () => {
     const writeStandaloneManifest = (content: unknown) => {
       mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });

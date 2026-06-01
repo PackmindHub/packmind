@@ -31,7 +31,7 @@ export type MarketplaceEntry = {
   description?: string;
 };
 
-export type SourceKind = 'local' | 'remote' | 'invalid';
+export type SourceKind = 'local' | 'remote';
 
 export type Marketplace = {
   plugins: MarketplaceEntry[];
@@ -49,16 +49,13 @@ export function writeMarketplace(path: string, content: Marketplace): void {
 }
 
 export function classifySource(source: MarketplaceEntry['source']): SourceKind {
-  if (typeof source === 'object' && source !== null) {
-    return 'remote';
-  }
-  if (typeof source !== 'string') {
-    return 'invalid';
-  }
-  if (source.startsWith('./')) {
+  if (
+    typeof source === 'string' &&
+    (source.startsWith('./') || source.startsWith('/'))
+  ) {
     return 'local';
   }
-  return 'invalid';
+  return 'remote';
 }
 
 export function findPluginEntry(
