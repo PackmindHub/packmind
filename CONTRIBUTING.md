@@ -2,16 +2,31 @@
 
 ## Starting the stack:
 
-You will need node 24.15.0 and docker to start the development stack:
+You will need node 24.15.0 and docker to start the development stack. This repo
+uses **pnpm** (pinned via `packageManager` in `package.json`); enable it through
+corepack — no global install needed:
 
 ```shell
 nvm use
-npm i
+corepack enable
+pnpm install --frozen-lockfile
 PACKMIND_EDITION=oss node scripts/select-tsconfig.mjs
 docker compose --profile=dev up
 ```
 
 The app should be available at [http://localhost:4200](http://localhost:4200)
+
+## Migrating an existing checkout from npm to pnpm
+
+If you previously worked with npm, run the one-shot migration script from the
+repo root. It removes stale `node_modules` and `package-lock.json`, activates
+pnpm via corepack, installs against the lockfile, and regenerates the tsconfig:
+
+```shell
+./pnpm_migrate.sh
+```
+
+The script is safe to re-run.
 
 ## Switching packmind-cli versions (pvm)
 
