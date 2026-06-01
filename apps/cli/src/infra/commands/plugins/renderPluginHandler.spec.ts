@@ -11,6 +11,7 @@ import {
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { RenderPackageAsPluginResponse } from '@packmind/types';
+import { parsePackageSlug } from '../../../domain/entities/PackageSlug';
 
 type Deps = Parameters<typeof renderPluginHandler>[1];
 
@@ -302,7 +303,10 @@ describe('renderPluginHandler', () => {
           buildResponse({ pluginDescription: undefined }),
         );
 
-        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+        await renderPluginHandler(
+          { packageSlug: parsePackageSlug('security') },
+          buildDeps(),
+        );
 
         const mp = readMarketplace(
           join(tmp, '.claude-plugin/marketplace.json'),
@@ -316,7 +320,10 @@ describe('renderPluginHandler', () => {
           buildResponse({ pluginDescription: '' }),
         );
 
-        await renderPluginHandler({ packageSlug: 'security' }, buildDeps());
+        await renderPluginHandler(
+          { packageSlug: parsePackageSlug('security') },
+          buildDeps(),
+        );
 
         const mp = readMarketplace(
           join(tmp, '.claude-plugin/marketplace.json'),
