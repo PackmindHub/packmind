@@ -133,7 +133,7 @@ describe('renderPluginHandler', () => {
       );
     });
 
-    describe('writes each rendered file under the cwd', () => {
+    describe('when multiple files are returned', () => {
       beforeEach(async () => {
         renderPlugin.mockResolvedValue(
           buildResponse({
@@ -430,56 +430,34 @@ describe('renderPluginHandler', () => {
       });
     });
 
-    describe('exits non-zero with a remote-source error', () => {
-      beforeEach(async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-      });
-
-      it('reports the remote-source error', () => {
-        expect(printedErrors[0]).toBe(
-          'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
-        );
-      });
-
-      it('exits non-zero', () => {
-        expect(exit).toHaveBeenCalledWith(1);
-      });
-    });
-
-    describe('does not render or prompt', () => {
-      beforeEach(async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-      });
-
-      it('does not render', () => {
-        expect(renderPlugin).not.toHaveBeenCalled();
-      });
-
-      it('does not prompt', () => {
-        expect(confirmOverwrite).not.toHaveBeenCalled();
-      });
-    });
-
-    it('does not mutate marketplace.json', async () => {
-      const before = readFileSync(
-        join(tmp, '.claude-plugin/marketplace.json'),
-        'utf8',
-      );
-
+    beforeEach(async () => {
       await renderPluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
-      expect(
-        readFileSync(join(tmp, '.claude-plugin/marketplace.json'), 'utf8'),
-      ).toBe(before);
+    it('reports the remote-source error', () => {
+      expect(printedErrors[0]).toBe(
+        'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
+      );
+    });
+
+    it('exits non-zero', () => {
+      expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not render', () => {
+      expect(renderPlugin).not.toHaveBeenCalled();
+    });
+
+    it('does not prompt', () => {
+      expect(confirmOverwrite).not.toHaveBeenCalled();
+    });
+
+    it('does not mutate marketplace.json', () => {
+      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
+      expect(findPluginEntry(mp, 'security')).toBeDefined();
     });
   });
 
@@ -586,55 +564,32 @@ describe('renderPluginHandler', () => {
         writeStandaloneManifest({ name: 'frontend' });
       });
 
-      describe('exits non-zero with the documented message', () => {
-        beforeEach(async () => {
-          await renderPluginHandler(
-            { packageSlug: { packageSlug: 'security' } },
-            buildDeps(),
-          );
-        });
-
-        it('reports the documented error', () => {
-          expect(printedErrors[0]).toBe(
-            "The plugin 'security' is not handled in this repo.",
-          );
-        });
-
-        it('exits non-zero', () => {
-          expect(exit).toHaveBeenCalledWith(1);
-        });
-      });
-
-      it('does not call the gateway', async () => {
+      beforeEach(async () => {
         await renderPluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('reports the documented error', () => {
+        expect(printedErrors[0]).toBe(
+          "The plugin 'security' is not handled in this repo.",
+        );
+      });
+
+      it('exits non-zero', () => {
+        expect(exit).toHaveBeenCalledWith(1);
+      });
+
+      it('does not call the gateway', () => {
         expect(renderPlugin).not.toHaveBeenCalled();
       });
 
-      it('does not prompt for overwrite', async () => {
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not prompt for overwrite', () => {
         expect(confirmOverwrite).not.toHaveBeenCalled();
       });
 
-      it('writes no files', async () => {
-        renderPlugin.mockResolvedValue(
-          buildResponse({
-            files: [{ path: 'commands/a.md', content: 'A' }],
-          }),
-        );
-
-        await renderPluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('writes no files', () => {
         expect(existsSync(join(tmp, 'commands/a.md'))).toBe(false);
       });
     });

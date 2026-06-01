@@ -59,21 +59,18 @@ describe('deletePluginHandler', () => {
   });
 
   describe('when no plugin manifest exists', () => {
-    it('prints an error', async () => {
+    beforeEach(async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
+    it('prints an error', () => {
       expect(printedErrors[0]).toMatch(/No .claude-plugin/);
     });
 
-    it('exits non-zero', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('exits non-zero', () => {
       expect(exit).toHaveBeenCalledWith(1);
     });
   });
@@ -92,94 +89,69 @@ describe('deletePluginHandler', () => {
       confirmOverwrite.mockResolvedValue(true);
     });
 
-    it('prompts the user for confirmation before deleting', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
+    describe('when the user confirms', () => {
+      beforeEach(async () => {
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+      });
 
-      expect(confirmOverwrite).toHaveBeenCalledTimes(1);
-    });
+      it('prompts the user for confirmation before deleting', () => {
+        expect(confirmOverwrite).toHaveBeenCalledTimes(1);
+      });
 
-    it('prompts with a message containing the plugin path', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
+      it('prompts with a message containing the plugin path', () => {
+        expect(confirmOverwrite).toHaveBeenCalledWith(
+          expect.stringContaining('./plugins/security'),
+        );
+      });
 
-      expect(confirmOverwrite).toHaveBeenCalledWith(
-        expect.stringContaining('./plugins/security'),
-      );
-    });
+      it('removes the rendered folder', () => {
+        expect(existsSync(join(tmp, 'plugins/security'))).toBe(false);
+      });
 
-    it('removes the rendered folder', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+      it('removes the entry from marketplace.json', () => {
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        expect(findPluginEntry(mp, 'security')).toBeUndefined();
+      });
 
-      expect(existsSync(join(tmp, 'plugins/security'))).toBe(false);
-    });
+      it('preserves sibling entries in marketplace.json', () => {
+        const mp = readMarketplace(
+          join(tmp, '.claude-plugin/marketplace.json'),
+        );
+        expect(findPluginEntry(mp, 'backend')).toBeDefined();
+      });
 
-    it('removes the entry from marketplace.json', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
+      it('exits zero', () => {
+        expect(exit).toHaveBeenCalledWith(0);
+      });
 
-      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
-      expect(findPluginEntry(mp, 'security')).toBeUndefined();
-    });
+      it('tracks the deletion once', () => {
+        expect(trackPluginDeleted).toHaveBeenCalledTimes(1);
+      });
 
-    it('preserves sibling entries in marketplace.json', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
-      const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
-      expect(findPluginEntry(mp, 'backend')).toBeDefined();
-    });
-
-    it('exits zero', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
-      expect(exit).toHaveBeenCalledWith(0);
-    });
-
-    it('tracks the deletion once', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
-      expect(trackPluginDeleted).toHaveBeenCalledTimes(1);
-    });
-
-    it('tracks the deletion with the resolved git remote url', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
-      expect(trackPluginDeleted).toHaveBeenCalledWith({
-        packageSlug: 'security',
-        gitRemoteUrl: 'git@github.com:org/repo.git',
+      it('tracks the deletion with the resolved git remote url', () => {
+        expect(trackPluginDeleted).toHaveBeenCalledWith({
+          packageSlug: 'security',
+          gitRemoteUrl: 'git@github.com:org/repo.git',
+        });
       });
     });
 
     describe('when not in a git repository', () => {
-      it('tracks with an empty git remote url', async () => {
+      beforeEach(async () => {
         tryGetGitRepositoryRoot.mockResolvedValue(null);
 
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('tracks with an empty git remote url', () => {
         expect(trackPluginDeleted).toHaveBeenCalledWith({
           packageSlug: 'security',
           gitRemoteUrl: '',
@@ -188,14 +160,16 @@ describe('deletePluginHandler', () => {
     });
 
     describe('when tracking fails', () => {
-      it('still exits zero', async () => {
+      beforeEach(async () => {
         trackPluginDeleted.mockRejectedValue(new Error('network'));
 
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('still exits zero', () => {
         expect(exit).toHaveBeenCalledWith(0);
       });
     });
@@ -212,42 +186,29 @@ describe('deletePluginHandler', () => {
       confirmOverwrite.mockResolvedValue(false);
     });
 
-    it('does not remove the rendered folder', async () => {
+    beforeEach(async () => {
       await deletePluginHandler(
         { packageSlug: parsePackageSlug('security') },
         buildDeps(),
       );
+    });
 
+    it('does not remove the rendered folder', () => {
       expect(existsSync(join(tmp, 'plugins/security/commands/a.md'))).toBe(
         true,
       );
     });
 
-    it('does not mutate marketplace.json', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
-
+    it('does not mutate marketplace.json', () => {
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(findPluginEntry(mp, 'security')).toBeDefined();
     });
 
-    it('exits zero', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
-
+    it('exits zero', () => {
       expect(exit).toHaveBeenCalledWith(0);
     });
 
-    it('does not track the deletion', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
-
+    it('does not track the deletion', () => {
       expect(trackPluginDeleted).not.toHaveBeenCalled();
     });
   });
@@ -265,51 +226,33 @@ describe('deletePluginHandler', () => {
       });
     });
 
-    it('refuses with a remote-source error', async () => {
+    beforeEach(async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
+    it('refuses with a remote-source error', () => {
       expect(printedErrors[0]).toBe(
         'Plugin "security" has a remote source. Run this command in the workspace of the remote plugin.',
       );
     });
 
-    it('exits non-zero', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('exits non-zero', () => {
       expect(exit).toHaveBeenCalledWith(1);
     });
 
-    it('does not mutate marketplace.json', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('does not mutate marketplace.json', () => {
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(findPluginEntry(mp, 'security')).toBeDefined();
     });
 
-    it('does not track the deletion', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('does not track the deletion', () => {
       expect(trackPluginDeleted).not.toHaveBeenCalled();
     });
 
-    it('does not prompt the user', async () => {
-      await deletePluginHandler(
-        { packageSlug: parsePackageSlug('security') },
-        buildDeps(),
-      );
-
+    it('does not prompt the user', () => {
       expect(confirmOverwrite).not.toHaveBeenCalled();
     });
   });
@@ -322,42 +265,29 @@ describe('deletePluginHandler', () => {
       });
     });
 
-    it('prints a nothing-to-delete message', async () => {
+    beforeEach(async () => {
       await deletePluginHandler(
         { packageSlug: { packageSlug: 'security' } },
         buildDeps(),
       );
+    });
 
+    it('prints a nothing-to-delete message', () => {
       expect(log).toHaveBeenCalledWith(
         'Plugin "security" is not declared in marketplace.json. Nothing to delete.',
       );
     });
 
-    it('exits zero', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('exits zero', () => {
       expect(exit).toHaveBeenCalledWith(0);
     });
 
-    it('does not mutate marketplace.json', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('does not mutate marketplace.json', () => {
       const mp = readMarketplace(join(tmp, '.claude-plugin/marketplace.json'));
       expect(mp.plugins).toHaveLength(1);
     });
 
-    it('does not track the deletion', async () => {
-      await deletePluginHandler(
-        { packageSlug: { packageSlug: 'security' } },
-        buildDeps(),
-      );
-
+    it('does not track the deletion', () => {
       expect(trackPluginDeleted).not.toHaveBeenCalled();
     });
   });
@@ -381,48 +311,30 @@ describe('deletePluginHandler', () => {
         confirmOverwrite.mockResolvedValue(true);
       });
 
-      it('removes the commands directory', async () => {
+      beforeEach(async () => {
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('removes the commands directory', () => {
         expect(existsSync(join(tmp, 'commands'))).toBe(false);
       });
 
-      it('removes the skills directory', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('removes the skills directory', () => {
         expect(existsSync(join(tmp, 'skills'))).toBe(false);
       });
 
-      it('leaves plugin.json untouched', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('leaves plugin.json untouched', () => {
         expect(existsSync(join(tmp, '.claude-plugin/plugin.json'))).toBe(true);
       });
 
-      it('exits zero', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('exits zero', () => {
         expect(exit).toHaveBeenCalledWith(0);
       });
 
-      it('tracks the deletion', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('tracks the deletion', () => {
         expect(trackPluginDeleted).toHaveBeenCalledWith({
           packageSlug: 'security',
           gitRemoteUrl: 'git@github.com:org/repo.git',
@@ -438,30 +350,22 @@ describe('deletePluginHandler', () => {
         confirmOverwrite.mockResolvedValue(false);
       });
 
-      it('does not remove the rendered files', async () => {
+      beforeEach(async () => {
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('does not remove the rendered files', () => {
         expect(existsSync(join(tmp, 'commands/a.md'))).toBe(true);
       });
 
-      it('exits zero', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('exits zero', () => {
         expect(exit).toHaveBeenCalledWith(0);
       });
 
-      it('does not track the deletion', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not track the deletion', () => {
         expect(trackPluginDeleted).not.toHaveBeenCalled();
       });
     });
@@ -471,41 +375,28 @@ describe('deletePluginHandler', () => {
         writeStandaloneManifest({ name: 'frontend' });
       });
 
-      it('prints the documented error message', async () => {
+      beforeEach(async () => {
         await deletePluginHandler(
           { packageSlug: { packageSlug: 'security' } },
           buildDeps(),
         );
+      });
 
+      it('prints the documented error message', () => {
         expect(printedErrors[0]).toBe(
           "The plugin 'security' is not handled in this repo.",
         );
       });
 
-      it('exits non-zero', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('exits non-zero', () => {
         expect(exit).toHaveBeenCalledWith(1);
       });
 
-      it('does not prompt', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not prompt', () => {
         expect(confirmOverwrite).not.toHaveBeenCalled();
       });
 
-      it('does not track the deletion', async () => {
-        await deletePluginHandler(
-          { packageSlug: { packageSlug: 'security' } },
-          buildDeps(),
-        );
-
+      it('does not track the deletion', () => {
         expect(trackPluginDeleted).not.toHaveBeenCalled();
       });
     });
