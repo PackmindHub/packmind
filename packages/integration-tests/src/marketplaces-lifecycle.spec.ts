@@ -234,10 +234,13 @@ describe('Marketplace lifecycle integration', () => {
         expect(storedRepo?.repo).toBe('marketplace');
       });
 
-      it('fetched marketplace.json via the git port', () => {
+      it('fetched the descriptor exactly once via the git port', () => {
         expect(getFileFromRepoSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('probed .claude-plugin/marketplace.json as the descriptor path', () => {
         const [, filePath] = getFileFromRepoSpy.mock.calls[0];
-        expect(filePath).toBe('marketplace.json');
+        expect(filePath).toBe('.claude-plugin/marketplace.json');
       });
 
       it('emits MarketplaceLinkedEvent exactly once', () => {
