@@ -12,9 +12,7 @@ module.exports = {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   transform: swcTransformWithDecorators,
-  transformIgnorePatterns: [
-    'node_modules/(?!(?:.*[\\\\/])?(slug)[@\\\\/])',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(?:.*[\\\\/])?(slug)[@\\\\/])'],
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/integration-tests',
   moduleNameMapper: pathsToModuleNameMapper(
