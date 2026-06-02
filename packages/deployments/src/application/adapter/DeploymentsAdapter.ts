@@ -505,6 +505,7 @@ export class DeploymentsAdapter
 
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
       this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
