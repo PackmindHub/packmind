@@ -5,9 +5,9 @@ import { PackageId } from '../Package';
 /**
  * Payload emitted when one or more Packmind packages are deleted in batch.
  *
- * Consumed by the deployments listener that cascades each affected package's
- * live marketplace distributions to `to_be_removed`. `userId` and
- * `organizationId` are merged in via the `UserEvent` base.
+ * Generic deployments-domain event: downstream listeners may subscribe to
+ * react to package deletion (e.g. cascading cleanup of derived resources).
+ * `userId` and `organizationId` are merged in via the `UserEvent` base.
  */
 export interface PackagesDeletedPayload {
   packageIds: PackageId[];
