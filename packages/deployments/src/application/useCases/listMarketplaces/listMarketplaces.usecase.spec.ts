@@ -1,11 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  createGitProviderId,
   createGitRepoId,
   createMarketplaceId,
   createOrganizationId,
   createUserId,
+  GitProviderId,
+  GitRepo,
   IAccountsPort,
+  IGitPort,
   ListMarketplacesCommand,
   Marketplace,
   Organization,
@@ -13,6 +17,7 @@ import {
   User,
   UserId,
 } from '@packmind/types';
+import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { ListMarketplacesUseCase } from './listMarketplaces.usecase';
 
@@ -82,7 +87,29 @@ describe('ListMarketplacesUseCase', () => {
     pluginCount: 4,
   } as unknown as Marketplace;
 
+  const providerId: GitProviderId = createGitProviderId(uuidv4());
+
+  const gitRepo1: GitRepo = {
+    id: m1.gitRepoId,
+    owner: 'acme',
+    repo: 'plugins',
+    branch: 'main',
+    providerId,
+    type: 'marketplace',
+  };
+
+  const gitRepo2: GitRepo = {
+    id: m2.gitRepoId,
+    owner: 'beta-group/sub',
+    repo: 'others',
+    branch: 'main',
+    providerId,
+    type: 'marketplace',
+  };
+
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
+  let mockGitRepoService: jest.Mocked<GitRepoService>;
+  let mockGitPort: jest.Mocked<IGitPort>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let useCase: ListMarketplacesUseCase;
 
@@ -110,8 +137,34 @@ describe('ListMarketplacesUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    mockGitRepoService = {
+      findMarketplaceGitRepoById: jest
+        .fn()
+        .mockImplementation(async (id: GitRepo['id']) => {
+          if (id === m1.gitRepoId) return gitRepo1;
+          if (id === m2.gitRepoId) return gitRepo2;
+          return null;
+        }),
+    } as unknown as jest.Mocked<GitRepoService>;
+
+    mockGitPort = {
+      listProviders: jest.fn().mockResolvedValue({
+        providers: [
+          {
+            id: providerId,
+            source: 'github',
+            organizationId,
+            url: 'https://github.com',
+            hasToken: true,
+          },
+        ],
+      }),
+    } as unknown as jest.Mocked<IGitPort>;
+
     useCase = new ListMarketplacesUseCase(
       mockMarketplaceRepository,
+      mockGitRepoService,
+      mockGitPort,
       mockAccountsPort,
       stubLogger(),
     );
@@ -150,6 +203,45 @@ describe('ListMarketplacesUseCase', () => {
           pluginCount: 4,
           addedByUserName: otherAdmin.displayName,
         });
+      });
+    });
+
+    describe('repository enrichment', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+      });
+
+      it('resolves the repository coordinates and provider for the first marketplace', () => {
+        expect(result[0].repository).toMatchObject({
+          owner: 'acme',
+          repo: 'plugins',
+          branch: 'main',
+          providerSource: 'github',
+        });
+      });
+
+      it('builds the repository web url for the first marketplace', () => {
+        expect(result[0].repository?.url).toBe(
+          'https://github.com/acme/plugins',
+        );
+      });
+
+      it('preserves a group/subgroup owner path in the second marketplace url', () => {
+        expect(result[1].repository?.url).toBe(
+          'https://github.com/beta-group/sub/others',
+        );
+      });
+    });
+
+    describe('when the backing git repo can no longer be resolved', () => {
+      it('sets repository to null', async () => {
+        mockGitRepoService.findMarketplaceGitRepoById.mockResolvedValue(null);
+
+        const result = await useCase.execute(command);
+
+        expect(result[0].repository).toBeNull();
       });
     });
 

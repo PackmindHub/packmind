@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { PMButton, PMConfirmationModal, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMButton,
+  PMConfirmationModal,
+  PMLink,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import type { MarketplaceId, MarketplaceListItem } from '@packmind/types';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
 
@@ -15,10 +21,9 @@ export interface MarketplaceRowProps {
  * Composition mirrors `apps/playground/src/prototypes/marketplaces/components/MarketplaceRow.tsx`
  * but adapted to the data shape `ListMarketplacesUseCase` actually returns:
  * `name`, `vendor`, `state`, `pluginCount`, `addedByUserName`,
- * `lastValidatedAt`. The Git repo coordinates (owner/repo) live on the related
- * `GitRepo` row and are not part of v1's list endpoint, so they are
- * intentionally omitted — the descriptor name is shown as a secondary line
- * when it differs from the display name.
+ * `lastValidatedAt`, and the backing `repository` (owner/repo, provider and a
+ * web URL) — the descriptor name is shown as a secondary line when it differs
+ * from the display name.
  *
  * Returns a plain object rather than JSX so it can drop straight into
  * `PMTable`'s `data` array.
@@ -31,6 +36,7 @@ export function MarketplaceRow({
   return {
     id: marketplace.id,
     name: <MarketplaceNameCell marketplace={marketplace} />,
+    repository: <MarketplaceRepositoryCell marketplace={marketplace} />,
     vendor: <PMText variant="small">{vendorLabel(marketplace.vendor)}</PMText>,
     state: <MarketplaceStateBadge state={marketplace.state} />,
     pluginCount: (
@@ -71,6 +77,47 @@ const MarketplaceNameCell = ({
       )}
   </PMVStack>
 );
+
+/**
+ * Shows the backing repository as `owner/repo`, linking out to the provider's
+ * web URL when one is known, with the provider name on a secondary line. Falls
+ * back to a dash when the backing `GitRepo` could not be resolved.
+ */
+const MarketplaceRepositoryCell = ({
+  marketplace,
+}: Readonly<{ marketplace: MarketplaceListItem }>) => {
+  const repository = marketplace.repository;
+  if (!repository) {
+    return (
+      <PMText variant="small" color="faded">
+        —
+      </PMText>
+    );
+  }
+
+  const label = `${repository.owner}/${repository.repo}`;
+
+  return (
+    <PMVStack gap={0} align="start">
+      {repository.url ? (
+        <PMLink
+          href={repository.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="underline"
+          aria-label={`Open ${label} on ${providerLabel(repository.providerSource)}`}
+        >
+          {label}
+        </PMLink>
+      ) : (
+        <PMText variant="small">{label}</PMText>
+      )}
+      <PMText variant="small" color="faded">
+        {providerLabel(repository.providerSource)}
+      </PMText>
+    </PMVStack>
+  );
+};
 
 /**
  * Inline button + confirmation modal used to unlink a marketplace. Owns its
@@ -122,6 +169,17 @@ function vendorLabel(vendor: string): string {
   }
 }
 
+function providerLabel(source: string): string {
+  switch (source) {
+    case 'github':
+      return 'GitHub';
+    case 'gitlab':
+      return 'GitLab';
+    default:
+      return 'Unknown provider';
+  }
+}
+
 /**
  * Short human-readable representation of the last reconciliation timestamp.
  * Falls back to `'Pending'` while the first reconciliation job is queued.
@@ -156,4 +214,5 @@ function formatLastValidated(lastValidatedAt: Date | null): string {
 export const __testables__ = {
   formatLastValidated,
   vendorLabel,
+  providerLabel,
 };

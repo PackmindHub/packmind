@@ -368,7 +368,17 @@ describe('MarketplacesController', () => {
   describe('GET /organizations/:orgId/marketplaces (listMarketplaces)', () => {
     describe('for any member', () => {
       const listResponse: ListMarketplacesResponse = [
-        { ...marketplace, addedByUserName: 'Test User' },
+        {
+          ...marketplace,
+          addedByUserName: 'Test User',
+          repository: {
+            owner: 'acme',
+            repo: 'plugins',
+            branch: 'main',
+            providerSource: 'github',
+            url: 'https://github.com/acme/plugins',
+          },
+        },
       ];
       let result: ListMarketplacesResponse;
 

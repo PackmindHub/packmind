@@ -595,6 +595,8 @@ export class DeploymentsAdapter
 
     this._listMarketplacesUseCase = new ListMarketplacesUseCase(
       this.marketplaceRepository,
+      this.gitRepoService,
+      this.gitPort,
       this.accountsPort,
     );
 

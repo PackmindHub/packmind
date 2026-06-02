@@ -34,6 +34,7 @@ export interface MarketplacesIndexProps {
 
 const COLUMNS: PMTableColumn[] = [
   { key: 'name', header: 'Marketplace', grow: true },
+  { key: 'repository', header: 'Repository', width: '200px' },
   { key: 'vendor', header: 'Agent', width: '120px' },
   { key: 'state', header: 'State', width: '120px', align: 'center' },
   {

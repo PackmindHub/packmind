@@ -27,6 +27,13 @@ const buildMarketplace = (
   updatedAt: new Date('2026-04-01T10:00:00.000Z'),
   deletedAt: null,
   addedByUserName: 'Jane Admin',
+  repository: {
+    owner: 'acme',
+    repo: 'plugins',
+    branch: 'main',
+    providerSource: 'github',
+    url: 'https://github.com/acme/plugins',
+  },
   ...overrides,
 });
 

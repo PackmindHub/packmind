@@ -386,6 +386,18 @@ describe('Marketplace lifecycle integration', () => {
 
         expect(items[0].pluginCount).toBe(3);
       });
+
+      it('enriches each list item with its backing repository', async () => {
+        const items = await testApp.deploymentsHexa
+          .getAdapter()
+          .listMarketplaces(dataFactory.packmindCommand());
+
+        expect(items[0].repository).toMatchObject({
+          owner: 'anthropic',
+          repo: 'marketplace',
+          url: 'https://github.com/anthropic/marketplace',
+        });
+      });
     });
 
     describe('unlinkMarketplace', () => {
