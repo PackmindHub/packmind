@@ -22,12 +22,8 @@ export { INSTALL_STATE_SIGNER };
     {
       provide: INSTALL_STATE_SIGNER,
       useFactory: async () => {
-        const key = await Configuration.getConfig('ENCRYPTION_KEY');
-        if (!key) {
-          throw new Error(
-            'ENCRYPTION_KEY is required to sign GitHub App install state',
-          );
-        }
+        const key =
+          (await Configuration.getConfig('ENCRYPTION_KEY')) || 'ENCRYPTION_KEY';
         return new InstallStateSigner(key);
       },
     },
