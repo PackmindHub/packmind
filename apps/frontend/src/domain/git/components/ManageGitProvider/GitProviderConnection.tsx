@@ -311,6 +311,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
                       <GitHubAppConnection
                         organizationId={organizationId}
                         url={formData.url}
+                        editingProvider={editingProvider}
                       />
                     </PMBox>
                   ),

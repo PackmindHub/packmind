@@ -9,7 +9,8 @@ import {
 import { MemoryRouter } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import { OrganizationId } from '@packmind/types';
+import { GitProviderId, OrganizationId } from '@packmind/types';
+import { GitProviderUI } from '../../../types/GitProviderTypes';
 import {
   GitHubAppInstallSlot,
   GitHubAppConnection,
@@ -38,6 +39,18 @@ jest.mock('@tanstack/react-query', () => ({
 }));
 
 const mockOrganizationId = 'org-1' as OrganizationId;
+
+const buildConnectedAppProvider = (
+  overrides: Partial<GitProviderUI> = {},
+): GitProviderUI => ({
+  id: 'prov-1' as GitProviderId,
+  source: 'github',
+  organizationId: mockOrganizationId,
+  hasAuth: true,
+  url: 'https://github.com',
+  authMethod: 'app',
+  ...overrides,
+});
 
 const createMockInstallUrlMutation = (
   overrides: Record<string, unknown> = {},
@@ -346,6 +359,97 @@ describe('GitHubAppInstallSlot', () => {
 
       expect(mockInvalidateQueries).not.toHaveBeenCalled();
       expect(mockOnClose).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when editingProvider is a connected GitHub App provider', () => {
+    it('renders a "View Packmind on GitHub" link instead of the install button', async () => {
+      const installUrl =
+        'https://github.com/apps/packmind/installations/new?state=abc';
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        installUrl,
+        state: 'abc',
+      });
+
+      mockUseGithubAppInstallUrlMutation.mockReturnValue(
+        createMockInstallUrlMutation({
+          mutateAsync: mockMutateAsync,
+        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+      );
+
+      renderWithProviders(
+        <GitHubAppInstallSlot
+          organizationId={mockOrganizationId}
+          editingProvider={buildConnectedAppProvider()}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('link', { name: /view packmind on github/i }),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByRole('button', { name: /install packmind on github/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('opens the install URL in a new tab via the link', async () => {
+      const installUrl =
+        'https://github.com/apps/packmind/installations/new?state=abc';
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        installUrl,
+        state: 'abc',
+      });
+
+      mockUseGithubAppInstallUrlMutation.mockReturnValue(
+        createMockInstallUrlMutation({
+          mutateAsync: mockMutateAsync,
+        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+      );
+
+      renderWithProviders(
+        <GitHubAppInstallSlot
+          organizationId={mockOrganizationId}
+          editingProvider={buildConnectedAppProvider()}
+        />,
+      );
+
+      const link = await screen.findByRole('link', {
+        name: /view packmind on github/i,
+      });
+      expect(link).toHaveAttribute('href', installUrl);
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
+    });
+
+    it('still renders the install button when editingProvider is App but hasAuth is false', () => {
+      renderWithProviders(
+        <GitHubAppInstallSlot
+          organizationId={mockOrganizationId}
+          editingProvider={buildConnectedAppProvider({ hasAuth: false })}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /install packmind on github/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /view packmind on github/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('still renders the install button when editingProvider uses token auth', () => {
+      renderWithProviders(
+        <GitHubAppInstallSlot
+          organizationId={mockOrganizationId}
+          editingProvider={buildConnectedAppProvider({ authMethod: 'token' })}
+        />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /install packmind on github/i }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -785,6 +889,38 @@ describe('GitHubAppConnection', () => {
 
       expect(
         screen.queryByRole('button', { name: /revoke app connection/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders the "View Packmind on GitHub" link when editingProvider is a connected App provider', async () => {
+      const installUrl =
+        'https://github.com/apps/packmind/installations/new?state=abc';
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        installUrl,
+        state: 'abc',
+      });
+
+      mockUseGithubAppInstallUrlMutation.mockReturnValue(
+        createMockInstallUrlMutation({
+          mutateAsync: mockMutateAsync,
+        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+      );
+
+      renderWithProviders(
+        <GitHubAppConnection
+          organizationId={mockOrganizationId}
+          url="https://github.com"
+          editingProvider={buildConnectedAppProvider()}
+        />,
+      );
+
+      const link = await screen.findByRole('link', {
+        name: /view packmind on github/i,
+      });
+      expect(link).toHaveAttribute('href', installUrl);
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(
+        screen.queryByRole('button', { name: /install packmind on github/i }),
       ).not.toBeInTheDocument();
     });
   });

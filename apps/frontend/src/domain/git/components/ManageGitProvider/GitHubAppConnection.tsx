@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PMAlert, PMButton, PMVStack, PMText, PMSkeleton } from '@packmind/ui';
+import {
+  PMAlert,
+  PMButton,
+  PMVStack,
+  PMText,
+  PMSkeleton,
+  PMLink,
+} from '@packmind/ui';
 import { OrganizationId } from '@packmind/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
@@ -9,11 +16,13 @@ import {
   useGetGithubAppManifestMutation,
 } from '../../api/queries/GitProviderQueries';
 import { GET_GIT_PROVIDERS_KEY } from '../../api/queryKeys';
+import { GitProviderUI } from '../../types/GitProviderTypes';
 
 interface GitHubAppConnectionProps {
   organizationId: OrganizationId;
   url: string;
   onClose?: () => void;
+  editingProvider?: GitProviderUI | null;
 }
 
 type AppInstalledMessage = {
@@ -25,10 +34,15 @@ type AppInstalledMessage = {
 export const GitHubAppInstallSlot: React.FC<{
   organizationId: OrganizationId;
   onClose?: () => void;
-}> = ({ organizationId, onClose }) => {
+  editingProvider?: GitProviderUI | null;
+}> = ({ organizationId, onClose, editingProvider }) => {
   const queryClient = useQueryClient();
   const installUrlMutation = useGithubAppInstallUrlMutation();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
+
+  const isConnectedApp =
+    editingProvider?.authMethod === 'app' && editingProvider?.hasAuth === true;
 
   const handleMessage = useCallback(
     async (event: MessageEvent) => {
@@ -52,6 +66,23 @@ export const GitHubAppInstallSlot: React.FC<{
     };
   }, [handleMessage]);
 
+  const { mutateAsync: fetchInstallUrl } = installUrlMutation;
+  useEffect(() => {
+    if (!isConnectedApp) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { installUrl } = await fetchInstallUrl();
+        if (!cancelled) setViewUrl(installUrl);
+      } catch {
+        // The mutation already surfaces its error via installUrlMutation.error.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isConnectedApp, fetchInstallUrl]);
+
   const handleInstallClick = async () => {
     if (!organizationId) return;
     setLocalError(null);
@@ -73,6 +104,36 @@ export const GitHubAppInstallSlot: React.FC<{
     (installUrlMutation.error
       ? (installUrlMutation.error.message ?? 'Failed to get install URL.')
       : null);
+
+  if (isConnectedApp) {
+    return (
+      <PMVStack alignItems="stretch" gap={4}>
+        {errorMessage && (
+          <PMAlert.Root status="error">
+            <PMAlert.Indicator />
+            <PMAlert.Content>
+              <PMAlert.Description>{errorMessage}</PMAlert.Description>
+            </PMAlert.Content>
+          </PMAlert.Root>
+        )}
+        {viewUrl ? (
+          <PMLink
+            href={viewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="underline"
+          >
+            View Packmind on GitHub
+          </PMLink>
+        ) : (
+          <PMSkeleton h={6} w="60%" rounded="sm" />
+        )}
+        <PMText variant="small" color="secondary">
+          Opens the Packmind app page on GitHub in a new tab.
+        </PMText>
+      </PMVStack>
+    );
+  }
 
   return (
     <PMVStack alignItems="stretch" gap={4}>
@@ -171,6 +232,7 @@ const OssConnectButton: React.FC<{
 export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
   organizationId,
   onClose,
+  editingProvider,
 }) => {
   const { data: me } = useGetMeQuery();
   const edition: 'cloud' | 'oss' = me?.edition ?? 'oss';
@@ -184,7 +246,11 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
 
   if (edition === 'cloud') {
     return (
-      <GitHubAppInstallSlot organizationId={organizationId} onClose={onClose} />
+      <GitHubAppInstallSlot
+        organizationId={organizationId}
+        onClose={onClose}
+        editingProvider={editingProvider}
+      />
     );
   }
 
@@ -217,7 +283,11 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
 
   if (appStatus?.hasApp) {
     return (
-      <GitHubAppInstallSlot organizationId={organizationId} onClose={onClose} />
+      <GitHubAppInstallSlot
+        organizationId={organizationId}
+        onClose={onClose}
+        editingProvider={editingProvider}
+      />
     );
   }
 
