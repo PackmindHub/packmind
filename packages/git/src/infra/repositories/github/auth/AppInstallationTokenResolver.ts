@@ -230,9 +230,5 @@ export function mintAppJwt(appId: number, privateKeyPem: string): string {
  * (`+` → `-`, `/` → `_`, strip trailing `=`).
  */
 export function base64Url(buf: Buffer): string {
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
+  return buf.toString('base64url');
 }
