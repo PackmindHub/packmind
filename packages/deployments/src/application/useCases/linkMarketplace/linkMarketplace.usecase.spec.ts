@@ -439,6 +439,19 @@ describe('LinkMarketplaceUseCase', () => {
         );
       });
     });
+
+    describe('provider scoping', () => {
+      it('scopes the collision check to the target provider', async () => {
+        await useCase.execute(baseCommand);
+
+        expect(mockGitRepoService.findGitRepoIgnoringType).toHaveBeenCalledWith(
+          organizationId,
+          baseCommand.owner,
+          baseCommand.repo,
+          { providerId: gitProviderId },
+        );
+      });
+    });
   });
 
   describe('descriptor errors', () => {

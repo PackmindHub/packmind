@@ -160,12 +160,17 @@ export class GitRepoService {
    * Find a GitRepo by owner/repo within an organization without any type
    * filter. Used by `LinkMarketplaceUseCase` for its pre-flight collision
    * check between standard and marketplace types.
+   *
+   * Pass `opts.providerId` to scope the lookup to a single Git provider —
+   * the same `owner/repo` pair can legitimately exist on two different
+   * providers within one org (e.g. a GitHub and a GitLab `acme/plugins`), so
+   * the collision check must not treat them as the same repository.
    */
   async findGitRepoIgnoringType(
     organizationId: OrganizationId,
     owner: string,
     repo: string,
-    opts?: Pick<QueryOption, 'includeDeleted'>,
+    opts?: Pick<QueryOption, 'includeDeleted'> & { providerId?: GitProviderId },
   ): Promise<GitRepo | null> {
     return this.gitRepoRepository.findByOwnerAndRepoInOrganization(
       owner,

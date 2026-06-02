@@ -38,6 +38,7 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
     organizationId: OrganizationId,
     opts?: Pick<QueryOption, 'includeDeleted'> & {
       type?: GitRepoTypeFilter;
+      providerId?: GitProviderId;
     },
   ): Promise<GitRepo | null>;
   findByProviderId(

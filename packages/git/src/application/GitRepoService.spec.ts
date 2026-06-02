@@ -385,5 +385,26 @@ describe('GitRepoService', () => {
     it('returns the matched repository', () => {
       expect(result).toEqual(mockGitRepo);
     });
+
+    it('forwards a supplied providerId filter to the repository', async () => {
+      await gitRepoService.findGitRepoIgnoringType(
+        createOrganizationId('org-1'),
+        'test-owner',
+        'test-repo',
+        { providerId: createGitProviderId('provider-1') },
+      );
+
+      expect(
+        mockGitRepoRepository.findByOwnerAndRepoInOrganization,
+      ).toHaveBeenLastCalledWith(
+        'test-owner',
+        'test-repo',
+        createOrganizationId('org-1'),
+        expect.objectContaining({
+          type: 'any',
+          providerId: createGitProviderId('provider-1'),
+        }),
+      );
+    });
   });
 });
