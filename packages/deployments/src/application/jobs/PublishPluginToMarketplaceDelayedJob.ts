@@ -271,6 +271,20 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       // title so reviewers see the Packmind-managed channel at a glance.
       const commitMessage = MARKETPLACE_SYNC_PR_TITLE;
 
+      // Ensure the rolling-PR branch exists. First publish creates it from the
+      // marketplace's default branch; subsequent publishes are a no-op.
+      try {
+        await this.gitPort.createBranchFromBase(
+          marketplaceGitRepo,
+          MARKETPLACE_SYNC_BRANCH,
+        );
+      } catch (error) {
+        throw new PublishJobFailure(
+          'other',
+          `Failed to ensure rolling-PR branch: ${getErrorMessage(error)}`,
+        );
+      }
+
       let gitCommit: GitCommit | undefined;
       try {
         gitCommit = await this.gitPort.commitToGit(

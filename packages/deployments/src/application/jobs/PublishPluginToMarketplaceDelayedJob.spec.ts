@@ -158,6 +158,7 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       getFileFromRepo: jest
         .fn()
         .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      createBranchFromBase: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
@@ -202,6 +203,21 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         ]),
         MARKETPLACE_SYNC_PR_TITLE,
       );
+    });
+
+    it('ensures the rolling-PR branch exists before committing', () => {
+      expect(mockGitPort.createBranchFromBase).toHaveBeenCalledWith(
+        gitRepo,
+        MARKETPLACE_SYNC_BRANCH,
+      );
+    });
+
+    it('ensures the branch before pushing the commit', () => {
+      const branchCallOrder =
+        mockGitPort.createBranchFromBase.mock.invocationCallOrder[0];
+      const commitCallOrder =
+        mockGitPort.commitToGit.mock.invocationCallOrder[0];
+      expect(branchCallOrder).toBeLessThan(commitCallOrder);
     });
 
     it('updates the distribution status to success with a content hash', () => {

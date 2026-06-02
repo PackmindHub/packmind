@@ -1531,6 +1531,79 @@ describe('GitlabRepository', () => {
     });
   });
 
+  describe('createBranchFromBase', () => {
+    const encodedProjectPath = encodeURIComponent('testowner/testrepo');
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.resolve({ data: { name: 'packmind/sync' } });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+
+        await gitlabRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new branch', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post.mockResolvedValue({ data: {} });
+
+        await gitlabRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base branch', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/repository/branches`,
+          null,
+          {
+            params: {
+              branch: 'packmind/sync',
+              ref: 'main',
+            },
+          },
+        );
+      });
+    });
+
+    describe('when probing the target branch fails with a non-404 error', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.reject(new Error('Boom'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('propagates the error without attempting to create the branch', async () => {
+        await expect(
+          gitlabRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to ensure branch 'packmind/sync' on GitLab: Boom`,
+        );
+      });
+    });
+  });
+
   describe('isValidBranch', () => {
     it('returns true for main branch', () => {
       expect(gitlabRepository.isValidBranch('refs/heads/main')).toBe(true);
