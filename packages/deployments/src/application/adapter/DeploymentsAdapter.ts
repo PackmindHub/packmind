@@ -63,6 +63,7 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  FindMarketplaceDistributionByIdCommand,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListDeploymentsByPackageCommand,
@@ -72,12 +73,15 @@ import {
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
+  ListMarketplaceDistributionsForPackageCommand,
+  ListMarketplaceDistributionsForPackageResponse,
   ListMarketplacesCommand,
   ListMarketplacesResponse,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  MarketplaceDistribution,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
@@ -87,6 +91,8 @@ import {
   RemovePackageFromTargetsResponse,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
+  PublishPackageOnMarketplaceCommand,
+  PublishPackageOnMarketplaceResponse,
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
@@ -107,9 +113,11 @@ import { GitRepoService } from '@packmind/git';
 import { IDeploymentsDelayedJobs } from '../../domain/jobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
+import { PublishPluginToMarketplaceJobFactory } from '../../infra/jobs/PublishPluginToMarketplaceJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { TargetResolutionService } from '../services/TargetResolutionService';
@@ -126,7 +134,9 @@ import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipFor
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
+import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
 import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
+import { PublishPackageOnMarketplaceUseCase } from '../useCases/publishPackageOnMarketplace';
 import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
 import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
@@ -217,12 +227,15 @@ export class DeploymentsAdapter
   private _unlinkMarketplaceUseCase!: UnlinkMarketplaceUseCase;
   private _listMarketplacesUseCase!: ListMarketplacesUseCase;
   private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
+  private _publishPackageOnMarketplaceUseCase!: PublishPackageOnMarketplaceUseCase;
+  private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly marketplaceRepository: IMarketplaceRepository,
+    private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly gitRepoService: GitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -255,6 +268,7 @@ export class DeploymentsAdapter
     // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
       ports.jobsService,
+      ports.eventEmitterService,
     );
 
     // Step 3: Validate all required ports are set
@@ -605,6 +619,28 @@ export class DeploymentsAdapter
       this.marketplaceDescriptorParserRegistry,
       this.accountsPort,
     );
+
+    this._publishPackageOnMarketplaceUseCase =
+      new PublishPackageOnMarketplaceUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.gitPort,
+        this.gitRepoService,
+        this.marketplaceDescriptorParserRegistry,
+        ports.eventEmitterService,
+        this.deploymentsDelayedJobs.publishPluginToMarketplaceDelayedJob,
+        this.accountsPort,
+      );
+
+    this._listMarketplaceDistributionsForPackageUseCase =
+      new ListMarketplaceDistributionsForPackageUseCase(
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.accountsPort,
+      );
   }
 
   /**
@@ -613,6 +649,7 @@ export class DeploymentsAdapter
    */
   private async buildDelayedJobs(
     jobsService: JobsService,
+    eventEmitterService: PackmindEventEmitterService,
   ): Promise<IDeploymentsDelayedJobs> {
     this.logger.debug('Building delayed jobs for Deployments domain');
 
@@ -651,10 +688,87 @@ export class DeploymentsAdapter
       );
     }
 
+    // Marketplace plugin publish queue. The worker is intentionally
+    // single-concurrency — Git pushes onto the rolling `packmind/sync` branch
+    // must be serialized across simultaneous publish attempts. The renderer
+    // is provided as a lazy callable so it can reach the
+    // `RenderPackageAsPluginUseCase` that is constructed later in
+    // `initialize()`.
+    const publishPluginToMarketplaceFactory =
+      new PublishPluginToMarketplaceJobFactory(
+        this.marketplaceDistributionRepository,
+        this.marketplaceRepository,
+        this.deploymentsServices.getPackageService(),
+        this.gitRepoService,
+        this.gitPort!,
+        this.marketplaceDescriptorParserRegistry,
+        async (params) => this.renderPluginForPublishJob(params),
+        eventEmitterService,
+      );
+    jobsService.registerJobQueue(
+      publishPluginToMarketplaceFactory.getQueueName(),
+      publishPluginToMarketplaceFactory,
+    );
+    await publishPluginToMarketplaceFactory.createQueue();
+
+    if (!publishPluginToMarketplaceFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for publish plugin to marketplace',
+      );
+    }
+
     this.logger.debug('Deployments delayed jobs built successfully');
     return {
       publishArtifactsDelayedJob: jobFactory.delayedJob,
       marketplaceReconciliationDelayedJob: reconciliationFactory.delayedJob,
+      publishPluginToMarketplaceDelayedJob:
+        publishPluginToMarketplaceFactory.delayedJob,
+    };
+  }
+
+  /**
+   * Renderer callable used by the `PublishPluginToMarketplaceDelayedJob`.
+   *
+   * Wraps `RenderPackageAsPluginUseCase` so the job spec stays decoupled from
+   * the rendering hexagon. The package is resolved via the existing
+   * `@<space-slug>/<package-slug>` selector to keep the rendering path
+   * consistent across surfaces.
+   */
+  private async renderPluginForPublishJob(params: {
+    package: import('@packmind/types').Package;
+    userId: string;
+    organizationId: string;
+  }): Promise<
+    import('../jobs/PublishPluginToMarketplaceDelayedJob').PluginRendererResult
+  > {
+    if (!this.spacesPort) {
+      throw new Error(
+        'DeploymentsAdapter: SpacesPort missing — renderer cannot run',
+      );
+    }
+    const space = await this.spacesPort.getSpaceById(params.package.spaceId);
+    if (!space) {
+      throw new Error(
+        `Space ${params.package.spaceId} not found for package ${params.package.slug}`,
+      );
+    }
+    const slug = `@${space.slug}/${params.package.slug}`;
+    const pluginRoot = `plugins/${params.package.slug}`;
+
+    const response = await this._renderPackageAsPluginUseCase.execute({
+      userId: params.userId,
+      organizationId: params.organizationId,
+      packageSlug: slug,
+      mode: 'marketplace',
+      pluginRoot,
+      pluginName: params.package.name,
+    });
+
+    return {
+      files: response.files.map((f) => ({ path: f.path, content: f.content })),
+      pluginName: response.pluginName,
+      pluginVersion: response.pluginVersion,
+      pluginDescription: response.pluginDescription,
     };
   }
 
@@ -937,5 +1051,32 @@ export class DeploymentsAdapter
     command: ValidateMarketplaceUrlCommand,
   ): Promise<ValidateMarketplaceUrlResponse> {
     return this._validateMarketplaceUrlUseCase.execute(command);
+  }
+
+  async publishPackageOnMarketplace(
+    command: PublishPackageOnMarketplaceCommand,
+  ): Promise<PublishPackageOnMarketplaceResponse> {
+    return this._publishPackageOnMarketplaceUseCase.execute(command);
+  }
+
+  async listMarketplaceDistributionsForPackage(
+    command: ListMarketplaceDistributionsForPackageCommand,
+  ): Promise<ListMarketplaceDistributionsForPackageResponse> {
+    return this._listMarketplaceDistributionsForPackageUseCase.execute(command);
+  }
+
+  async findMarketplaceDistributionById(
+    command: FindMarketplaceDistributionByIdCommand,
+  ): Promise<MarketplaceDistribution | null> {
+    const row = await this.marketplaceDistributionRepository.findById(
+      command.marketplaceDistributionId,
+    );
+    if (!row) {
+      return null;
+    }
+    if (row.organizationId !== command.organizationId) {
+      return null;
+    }
+    return row;
   }
 }

@@ -90,11 +90,9 @@ export class DeploymentsHexa extends BaseHexa<
         ) as Repository<Marketplace>,
       );
 
-      // Persistence for marketplace publish attempts. Wired here so the
-      // publish use case + delayed job (Phase 2) can pick it up via the
-      // adapter. Pure-persistence registration on its own — no adapter or
-      // use-case wiring lands in this commit to honor the early-push
-      // checkpoint (AC18).
+      // Persistence for marketplace publish attempts. Passed through to the
+      // adapter so the publish use case and its delayed job can read/write
+      // the marketplace distribution rows.
       this.marketplaceDistributionRepository =
         new MarketplaceDistributionRepository(
           this.dataSource.getRepository(
@@ -125,6 +123,7 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
         this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
         this.marketplaceDescriptorParserRegistry,
         this.gitRepoService,
       );

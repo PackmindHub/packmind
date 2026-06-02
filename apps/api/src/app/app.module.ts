@@ -52,6 +52,7 @@ import { OrganizationGitModule } from './organizations/git/git.module';
 import { OrganizationGitProvidersModule } from './organizations/git/providers/git-providers.module';
 import { OrganizationGitRepositoriesModule } from './organizations/git/repositories/git-repositories.module';
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
+import { OrganizationMarketplaceDistributionsModule } from './organizations/marketplace-distributions/marketplace-distributions.module';
 import { OrganizationMarketplacesModule } from './organizations/marketplaces/marketplaces.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationPluginsModule } from './organizations/plugins/plugins.module';
@@ -191,6 +192,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'llm',
             module: OrganizationLlmModule,
+          },
+          {
+            path: 'marketplace-distributions',
+            module: OrganizationMarketplaceDistributionsModule,
           },
           {
             path: 'marketplaces',

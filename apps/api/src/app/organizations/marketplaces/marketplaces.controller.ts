@@ -6,6 +6,8 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -23,6 +25,7 @@ import {
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GitProviderTokenInvalidError,
   GitRepoAlreadyLinkedAsStandardError,
   IDeploymentPort,
   LinkMarketplaceCommand,
@@ -30,12 +33,17 @@ import {
   ListMarketplacesCommand,
   ListMarketplacesResponse,
   MarketplaceAlreadyLinkedError,
+  MarketplaceDescriptorBadFormatError,
   MarketplaceDescriptorNotFoundError,
   MarketplaceDescriptorParseError,
   MarketplaceId,
   MarketplaceNotFoundError,
+  MarketplacePluginNameConflictError,
   MarketplaceUrlNotReachableError,
   OrganizationId,
+  PackageId,
+  PublishPackageOnMarketplaceCommand,
+  PublishPackageOnMarketplaceResponse,
   UnknownMarketplaceDescriptorError,
   UnlinkMarketplaceCommand,
   UnlinkMarketplaceResponse,
@@ -45,6 +53,7 @@ import {
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
 import { LinkMarketplaceBodyDto } from './dto/LinkMarketplaceBody.dto';
+import { PublishPackageOnMarketplaceBodyDto } from './dto/PublishPackageOnMarketplaceBody.dto';
 import { ValidateMarketplaceUrlQueryDto } from './dto/ValidateMarketplaceUrlQuery.dto';
 
 const origin = 'OrganizationMarketplacesController';
@@ -303,6 +312,64 @@ export class MarketplacesController {
     }
   }
 
+  @Post(':marketplaceId/publish')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async publishPackageOnMarketplace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Body() body: PublishPackageOnMarketplaceBodyDto,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<PublishPackageOnMarketplaceResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Publishing package',
+      {
+        organizationId,
+        marketplaceId,
+        packageId: body.packageId,
+        author: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: PublishPackageOnMarketplaceCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        packageId: body.packageId as PackageId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.publishPackageOnMarketplace(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Publish enqueued',
+        {
+          organizationId,
+          marketplaceId,
+          marketplaceDistributionId: response.marketplaceDistributionId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Failed to publish package',
+        {
+          organizationId,
+          marketplaceId,
+          // Never echo the git token — only the failure category surfaces.
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
   /**
    * Maps typed domain errors thrown by the use cases to NestJS HTTP exceptions
    * with the contract messages the frontend relies on. Anything else falls
@@ -312,10 +379,16 @@ export class MarketplacesController {
     if (error instanceof MarketplaceAlreadyLinkedError) {
       return new ConflictException(error.message);
     }
+    if (error instanceof MarketplacePluginNameConflictError) {
+      return new ConflictException(error.message);
+    }
     if (error instanceof GitRepoAlreadyLinkedAsStandardError) {
       return new ConflictException(error.message);
     }
     if (error instanceof MarketplaceDescriptorNotFoundError) {
+      return new BadRequestException(error.message);
+    }
+    if (error instanceof MarketplaceDescriptorBadFormatError) {
       return new BadRequestException(error.message);
     }
     if (error instanceof UnknownMarketplaceDescriptorError) {
@@ -349,6 +422,9 @@ export class MarketplacesController {
       return new BadRequestException(
         USER_FACING_ERROR_MESSAGE.gitProviderMissingToken,
       );
+    }
+    if (error instanceof GitProviderTokenInvalidError) {
+      return new BadRequestException(error.message);
     }
     return error;
   }
