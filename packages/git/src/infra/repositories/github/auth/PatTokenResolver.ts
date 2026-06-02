@@ -21,4 +21,8 @@ export class PatTokenResolver implements IGithubTokenResolver {
     // No-op. PAT revocation is out of band; see step 6 for the App-side
     // implementation that persists revokedAt.
   }
+
+  getKind(): 'user' {
+    return 'user';
+  }
 }

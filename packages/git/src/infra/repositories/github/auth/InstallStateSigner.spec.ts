@@ -149,6 +149,37 @@ describe('InstallStateSigner', () => {
     });
   });
 
+  describe('organizationGitHubAppId payload field', () => {
+    it('round-trips organizationGitHubAppId when present', () => {
+      const signer = signerWithFixedNow();
+      const state = signer.sign({
+        orgId: 'org-1',
+        userId: 'user-1',
+        kind: 'install',
+        organizationGitHubAppId: '00000000-0000-0000-0000-000000000aaa',
+      });
+      const payload = signer.verify(state);
+
+      expect(payload.organizationGitHubAppId).toBe(
+        '00000000-0000-0000-0000-000000000aaa',
+      );
+      expect(payload.kind).toBe('install');
+    });
+
+    it('omits organizationGitHubAppId for manifest-kind tokens', () => {
+      const signer = signerWithFixedNow();
+      const state = signer.sign({
+        orgId: 'org-1',
+        userId: 'user-1',
+        kind: 'manifest',
+      });
+      const payload = signer.verify(state);
+
+      expect(payload.organizationGitHubAppId).toBeUndefined();
+      expect(payload.kind).toBe('manifest');
+    });
+  });
+
   describe('wrong key', () => {
     it('throws InvalidInstallStateError when verifying with a different key', () => {
       const signerA = new InstallStateSigner(

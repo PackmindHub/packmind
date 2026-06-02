@@ -20,7 +20,7 @@ export interface GitProviderUI {
   id: GitProviderId;
   source: GitProviderVendor;
   organizationId: OrganizationId;
-  hasToken: boolean;
+  hasAuth: boolean;
   url: string | null;
   repos?: GitRepoUI[];
   authMethod?: GitProviderAuthMethod;

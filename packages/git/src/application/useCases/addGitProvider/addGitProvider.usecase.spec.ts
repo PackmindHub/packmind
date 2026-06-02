@@ -4,6 +4,7 @@ import {
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
+  createOrganizationGitHubAppId,
 } from '@packmind/types';
 import {
   IAccountsPort,
@@ -217,8 +218,12 @@ describe('AddGitProviderUseCase', () => {
       });
     });
 
+    const orgGitHubAppId = createOrganizationGitHubAppId(
+      '00000000-0000-0000-0000-000000000aaa',
+    );
+
     describe('app auth method on Cloud edition', () => {
-      it('succeeds when only appInstallationId is provided', async () => {
+      it('succeeds when only appInstallationId is provided (Cloud does not require organizationGitHubAppId)', async () => {
         const uc = makeUseCase('cloud');
         const expectedResult = gitProviderFactory({
           organizationId,
@@ -262,13 +267,14 @@ describe('AddGitProviderUseCase', () => {
     });
 
     describe('app auth method on OSS edition', () => {
-      it('succeeds when appInstallationId is provided', async () => {
+      it('succeeds when appInstallationId and organizationGitHubAppId are provided', async () => {
         const uc = makeUseCase('oss');
         const expectedResult = gitProviderFactory({
           organizationId,
           token: null,
           authMethod: 'app',
           appInstallationId: 42,
+          organizationGitHubAppId: orgGitHubAppId,
         });
         mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
 
@@ -279,6 +285,7 @@ describe('AddGitProviderUseCase', () => {
             token: null,
             authMethod: 'app',
             appInstallationId: 42,
+            organizationGitHubAppId: orgGitHubAppId,
           },
           organizationId,
           userId: memberUser.id,
@@ -297,11 +304,32 @@ describe('AddGitProviderUseCase', () => {
               url: 'https://github.com',
               token: null,
               authMethod: 'app' as const,
+              organizationGitHubAppId: orgGitHubAppId,
             },
             organizationId,
             userId: memberUser.id,
           }),
         ).rejects.toThrow('GitHub App installation ID is required');
+      });
+
+      it('throws when organizationGitHubAppId is missing on OSS', async () => {
+        const uc = makeUseCase('oss');
+
+        await expect(
+          uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: null,
+              authMethod: 'app',
+              appInstallationId: 42,
+            },
+            organizationId,
+            userId: memberUser.id,
+          }),
+        ).rejects.toThrow(
+          'organizationGitHubAppId is required when authMethod is "app"',
+        );
       });
 
       it('throws BadRequestException when token is set with app authMethod', async () => {
@@ -315,6 +343,7 @@ describe('AddGitProviderUseCase', () => {
               token: 'some-token',
               authMethod: 'app',
               appInstallationId: 42,
+              organizationGitHubAppId: orgGitHubAppId,
             },
             organizationId,
             userId: memberUser.id,

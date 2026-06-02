@@ -96,10 +96,10 @@ describe('GithubAppCallbackRouteModule', () => {
     mockUseGetMeQuery.mockReturnValue({
       data: authenticatedMe,
       isLoading: false,
-    } as ReturnType<typeof useGetMeQuery>);
+    } as unknown as ReturnType<typeof useGetMeQuery>);
 
     mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-      createMockMutation() as ReturnType<
+      createMockMutation() as unknown as ReturnType<
         typeof useSubmitGithubAppCallbackMutation
       >,
     );
@@ -137,7 +137,7 @@ describe('GithubAppCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppCallbackMutation
         >,
       );
@@ -145,62 +145,11 @@ describe('GithubAppCallbackRouteModule', () => {
       renderWithProviders(<GithubAppCallbackRouteModule />);
 
       await waitFor(() => {
-        expect(mockMutate).toHaveBeenCalledWith(
-          { installationId: 12345, state: 'stored-state-token' },
-          expect.any(Object),
-        );
+        expect(mockMutate).toHaveBeenCalledWith({
+          installationId: 12345,
+          state: 'stored-state-token',
+        });
       });
-    });
-  });
-
-  describe('when the callback mutation succeeds', () => {
-    it('calls window.opener.postMessage with the correct payload', async () => {
-      const mockMutate = jest.fn().mockImplementation((_, options) => {
-        options?.onSuccess?.({ id: 'prov-new' });
-      });
-
-      mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
-          typeof useSubmitGithubAppCallbackMutation
-        >,
-      );
-
-      renderWithProviders(<GithubAppCallbackRouteModule />);
-
-      await waitFor(() => {
-        expect(window.opener?.postMessage).toHaveBeenCalledWith(
-          {
-            type: 'packmind:github-app-installed',
-            providerId: 'prov-new',
-            orgId: 'org-1',
-          },
-          window.location.origin,
-        );
-      });
-    });
-
-    it('calls window.close after 50ms timeout', async () => {
-      const mockMutate = jest.fn().mockImplementation((_, options) => {
-        options?.onSuccess?.({ id: 'prov-new' });
-      });
-
-      mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
-          typeof useSubmitGithubAppCallbackMutation
-        >,
-      );
-
-      renderWithProviders(<GithubAppCallbackRouteModule />);
-
-      await waitFor(() => {
-        expect(mockMutate).toHaveBeenCalled();
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(50);
-      });
-
-      expect(window.close).toHaveBeenCalled();
     });
   });
 
@@ -210,7 +159,7 @@ describe('GithubAppCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: new Error('Installation already exists'),
-        }) as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
+        }) as unknown as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
       );
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
@@ -225,7 +174,7 @@ describe('GithubAppCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: new Error('Bad request'),
-        }) as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
+        }) as unknown as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
       );
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
@@ -248,7 +197,7 @@ describe('GithubAppCallbackRouteModule', () => {
           reset: mockReset,
           isError: true,
           error: new Error('Bad request'),
-        }) as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
+        }) as unknown as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
       );
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
@@ -275,7 +224,7 @@ describe('GithubAppCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppCallbackMutation
         >,
       );
@@ -296,7 +245,7 @@ describe('GithubAppCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppCallbackMutation
         >,
       );
@@ -308,7 +257,7 @@ describe('GithubAppCallbackRouteModule', () => {
           message: 'not authenticated',
         },
         isLoading: false,
-      } as ReturnType<typeof useGetMeQuery>);
+      } as unknown as ReturnType<typeof useGetMeQuery>);
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
 
@@ -323,7 +272,7 @@ describe('GithubAppCallbackRouteModule', () => {
           message: 'not authenticated',
         },
         isLoading: false,
-      } as ReturnType<typeof useGetMeQuery>);
+      } as unknown as ReturnType<typeof useGetMeQuery>);
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
 
@@ -340,7 +289,7 @@ describe('GithubAppCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppCallbackMutation
         >,
       );

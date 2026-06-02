@@ -36,4 +36,11 @@ describe('PatTokenResolver', () => {
       await expect(resolver.getToken()).resolves.toBe('ghp_xxx');
     });
   });
+
+  describe('getKind', () => {
+    it('reports the user kind', () => {
+      const resolver = new PatTokenResolver('ghp_xxx');
+      expect(resolver.getKind()).toBe('user');
+    });
+  });
 });

@@ -448,7 +448,8 @@ describe('TargetResolutionService', () => {
               source: 'github',
               organizationId,
               url: 'https://github.com',
-              hasToken: false,
+              authMethod: 'token',
+              hasAuth: false,
             },
           ],
         });
@@ -524,7 +525,8 @@ describe('TargetResolutionService', () => {
               source: 'github',
               organizationId,
               url: 'https://github.com',
-              hasToken: false,
+              authMethod: 'token',
+              hasAuth: false,
             },
           ],
         });

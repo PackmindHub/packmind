@@ -63,7 +63,7 @@ describe('ListProvidersUseCase', () => {
 
   describe('when providers exist', () => {
     describe('with token set', () => {
-      it('returns providers with hasToken true', async () => {
+      it('returns providers with hasAuth true', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: 'valid-token',
@@ -80,7 +80,7 @@ describe('ListProvidersUseCase', () => {
             source: provider.source,
             organizationId: provider.organizationId,
             url: provider.url,
-            hasToken: true,
+            hasAuth: true,
           }),
         ]);
       });
@@ -101,7 +101,7 @@ describe('ListProvidersUseCase', () => {
     });
 
     describe('with token null', () => {
-      it('returns providers with hasToken false', async () => {
+      it('returns providers with hasAuth false', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: null,
@@ -112,12 +112,12 @@ describe('ListProvidersUseCase', () => {
 
         const result = await useCase.execute({ organizationId, userId });
 
-        expect(result.providers[0].hasToken).toBe(false);
+        expect(result.providers[0].hasAuth).toBe(false);
       });
     });
 
     describe('with token empty string', () => {
-      it('returns providers with hasToken false', async () => {
+      it('returns providers with hasAuth false', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: '',
@@ -128,7 +128,7 @@ describe('ListProvidersUseCase', () => {
 
         const result = await useCase.execute({ organizationId, userId });
 
-        expect(result.providers[0].hasToken).toBe(false);
+        expect(result.providers[0].hasAuth).toBe(false);
       });
     });
 
@@ -151,12 +151,79 @@ describe('ListProvidersUseCase', () => {
         result = await useCase.execute({ organizationId, userId });
       });
 
-      it('returns hasToken true for provider with token', () => {
-        expect(result.providers[0].hasToken).toBe(true);
+      it('returns hasAuth true for provider with token', () => {
+        expect(result.providers[0].hasAuth).toBe(true);
       });
 
-      it('returns hasToken false for provider without token', () => {
-        expect(result.providers[1].hasToken).toBe(false);
+      it('returns hasAuth false for provider without token', () => {
+        expect(result.providers[1].hasAuth).toBe(false);
+      });
+    });
+
+    describe('with authMethod=app', () => {
+      it('returns hasAuth true when installationId is set and not revoked', async () => {
+        const provider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        const result = await useCase.execute({ organizationId, userId });
+
+        expect(result.providers[0].hasAuth).toBe(true);
+      });
+
+      it('returns hasAuth true when installationId is a string (TypeORM bigint shape)', async () => {
+        const provider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: '42' as unknown as number,
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        const result = await useCase.execute({ organizationId, userId });
+
+        expect(result.providers[0].hasAuth).toBe(true);
+      });
+
+      it('returns hasAuth false when the app installation has been revoked', async () => {
+        const provider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+          revokedAt: new Date('2026-05-01T00:00:00Z'),
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        const result = await useCase.execute({ organizationId, userId });
+
+        expect(result.providers[0].hasAuth).toBe(false);
+      });
+
+      it('returns hasAuth false when installationId is missing', async () => {
+        const provider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: undefined,
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        const result = await useCase.execute({ organizationId, userId });
+
+        expect(result.providers[0].hasAuth).toBe(false);
       });
     });
   });

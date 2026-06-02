@@ -158,7 +158,7 @@ describe('GitProvidersService', () => {
         });
       });
 
-      it('calls signer.sign with string-cast orgId and userId', async () => {
+      it('calls signer.sign without organizationGitHubAppId on cloud edition', async () => {
         Configuration.getConfig.mockResolvedValue('packmind-cloud');
 
         await service.buildGithubAppInstallUrl({
@@ -169,6 +169,8 @@ describe('GitProvidersService', () => {
         expect(mockSigner.sign).toHaveBeenCalledWith({
           orgId: 'org-123',
           userId: 'user-456',
+          kind: 'install',
+          organizationGitHubAppId: undefined,
         });
       });
 
@@ -218,7 +220,7 @@ describe('GitProvidersService', () => {
         });
       });
 
-      it('calls signer.sign with string-cast orgId and userId', async () => {
+      it('calls signer.sign including the stored OrganizationGitHubApp id on oss edition', async () => {
         (
           mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
         ).mockResolvedValue(activeApp);
@@ -231,6 +233,8 @@ describe('GitProvidersService', () => {
         expect(mockSigner.sign).toHaveBeenCalledWith({
           orgId: 'org-123',
           userId: 'user-456',
+          kind: 'install',
+          organizationGitHubAppId: 'app-1',
         });
       });
 
@@ -256,14 +260,40 @@ describe('GitProvidersService', () => {
   describe('completeGithubAppInstall', () => {
     const orgId = createOrganizationId('org-123');
     const userId = createUserId('user-456');
+    const orgGitHubAppId = createOrganizationGitHubAppId(
+      '00000000-0000-0000-0000-000000000aaa',
+    );
+    const activeApp: OrganizationGitHubApp = {
+      id: orgGitHubAppId,
+      organizationId: orgId,
+      appId: 42,
+      appSlug: 'my-oss-app',
+      appClientId: 'Iv1.abc',
+      appClientSecret: 'secret',
+      appPrivateKey: 'pem',
+      appWebhookSecret: 'whsecret',
+      revokedAt: null,
+    };
     const validPayload = {
       orgId: 'org-123',
       userId: 'user-456',
       nonce: 'abc',
       exp: Math.floor(Date.now() / 1000) + 600,
+      kind: 'install' as const,
+      organizationGitHubAppId: orgGitHubAppId,
     };
 
-    it('calls gitAdapter.addGitProvider with correct app-method command', async () => {
+    beforeEach(() => {
+      // OSS is the canonical app-install path; cloud uses a shared App and
+      // doesn't bind the install to an OrganizationGitHubApp row.
+      resolvePackmindEdition.mockResolvedValue('oss');
+      (
+        mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
+      ).mockResolvedValue(activeApp);
+      (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([]);
+    });
+
+    it('calls gitAdapter.addGitProvider with correct app-method command including the OrganizationGitHubApp id', async () => {
       mockSigner.verify.mockReturnValue(validPayload);
       const mockProvider = {
         id: 'prov-1',
@@ -288,10 +318,185 @@ describe('GitProvidersService', () => {
             authMethod: 'app',
             source: 'github',
             appInstallationId: 12345,
+            organizationGitHubAppId: orgGitHubAppId,
           }),
           allowTokenlessProvider: true,
         }),
       );
+    });
+
+    it('throws BadRequestException on oss when state lacks organizationGitHubAppId', async () => {
+      mockSigner.verify.mockReturnValue({
+        ...validPayload,
+        organizationGitHubAppId: undefined,
+      });
+
+      await expect(
+        service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Invalid or expired state token'),
+      );
+    });
+
+    it('throws BadRequestException on oss when the active app no longer matches the state', async () => {
+      mockSigner.verify.mockReturnValue(validPayload);
+      (
+        mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
+      ).mockResolvedValue({
+        ...activeApp,
+        id: createOrganizationGitHubAppId(
+          '00000000-0000-0000-0000-000000000bbb',
+        ),
+      });
+
+      await expect(
+        service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'GitHub App is no longer active for this organization. Restart the install flow.',
+        ),
+      );
+    });
+
+    describe('repository materialization', () => {
+      const mockProvider = {
+        id: 'prov-1',
+        source: 'github',
+        authMethod: 'app',
+      };
+
+      beforeEach(() => {
+        mockSigner.verify.mockReturnValue(validPayload);
+        (mockGitAdapter.addGitProvider as jest.Mock).mockResolvedValue(
+          mockProvider,
+        );
+      });
+
+      it('calls addGitRepo for each repo the installation can access', async () => {
+        (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
+          {
+            name: 'repo-a',
+            owner: 'acme',
+            private: false,
+            defaultBranch: 'main',
+            stars: 0,
+          },
+          {
+            name: 'repo-b',
+            owner: 'acme',
+            private: true,
+            defaultBranch: 'develop',
+            stars: 5,
+          },
+        ]);
+
+        await service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        });
+
+        expect(mockGitAdapter.addGitRepo).toHaveBeenCalledTimes(2);
+        expect(mockGitAdapter.addGitRepo).toHaveBeenNthCalledWith(1, {
+          userId: 'user-456',
+          organizationId: 'org-123',
+          gitProviderId: 'prov-1',
+          owner: 'acme',
+          repo: 'repo-a',
+          branch: 'main',
+          allowTokenlessProvider: true,
+          source: 'web',
+        });
+        expect(mockGitAdapter.addGitRepo).toHaveBeenNthCalledWith(2, {
+          userId: 'user-456',
+          organizationId: 'org-123',
+          gitProviderId: 'prov-1',
+          owner: 'acme',
+          repo: 'repo-b',
+          branch: 'develop',
+          allowTokenlessProvider: true,
+          source: 'web',
+        });
+      });
+
+      it('does not call addGitRepo when the installation has no repos', async () => {
+        (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([]);
+
+        const result = await service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        });
+
+        expect(mockGitAdapter.addGitRepo).not.toHaveBeenCalled();
+        expect(result).toEqual(mockProvider);
+      });
+
+      it('continues materializing remaining repos when one addGitRepo call fails', async () => {
+        (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
+          {
+            name: 'repo-a',
+            owner: 'acme',
+            private: false,
+            defaultBranch: 'main',
+            stars: 0,
+          },
+          {
+            name: 'repo-b',
+            owner: 'acme',
+            private: true,
+            defaultBranch: 'main',
+            stars: 0,
+          },
+        ]);
+        (mockGitAdapter.addGitRepo as jest.Mock)
+          .mockRejectedValueOnce(new Error('repo-a already exists'))
+          .mockResolvedValueOnce({ id: 'repo-b-id' });
+
+        const result = await service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        });
+
+        expect(mockGitAdapter.addGitRepo).toHaveBeenCalledTimes(2);
+        expect(result).toEqual(mockProvider);
+      });
+
+      it('still returns the provider when listAvailableRepos throws', async () => {
+        (mockGitAdapter.listAvailableRepos as jest.Mock).mockRejectedValue(
+          new Error('GitHub API rate limit'),
+        );
+
+        const result = await service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'web',
+        });
+
+        expect(mockGitAdapter.addGitRepo).not.toHaveBeenCalled();
+        expect(result).toEqual(mockProvider);
+      });
     });
 
     it('throws BadRequestException when signer.verify throws InvalidInstallStateError', async () => {
@@ -526,7 +731,7 @@ describe('GitProvidersService', () => {
       mockedAxios.isAxiosError = jest.fn().mockReturnValue(false);
       (
         mockGitAdapter.upsertOrganizationGitHubApp as jest.Mock
-      ).mockResolvedValue({});
+      ).mockImplementation((app) => Promise.resolve(app));
     });
 
     it('returns installUrl pointing to the new app slug', async () => {
@@ -564,7 +769,7 @@ describe('GitProvidersService', () => {
       );
     });
 
-    it('calls signer.sign with kind install to build the install URL', async () => {
+    it('calls signer.sign with kind install and the new OrganizationGitHubApp id to build the install URL', async () => {
       await service.completeGithubAppManifest({
         orgId,
         userId,
@@ -572,11 +777,14 @@ describe('GitProvidersService', () => {
         state: 'MANIFEST_STATE',
       });
 
-      expect(mockSigner.sign).toHaveBeenCalledWith({
-        orgId: 'org-123',
-        userId: 'user-456',
-        kind: 'install',
-      });
+      expect(mockSigner.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orgId: 'org-123',
+          userId: 'user-456',
+          kind: 'install',
+          organizationGitHubAppId: expect.any(String),
+        }),
+      );
     });
 
     it('throws BadRequestException when state kind is install', async () => {

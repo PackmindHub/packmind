@@ -18,7 +18,6 @@ import {
   useGithubAppInstallUrlMutation,
   useGetGithubAppStatusQuery,
   useGetGithubAppManifestMutation,
-  useRevokeGithubAppMutation,
 } from '../../../api/queries/GitProviderQueries';
 import { GET_GIT_PROVIDERS_KEY } from '../../../api/queryKeys';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
@@ -27,7 +26,6 @@ jest.mock('../../../api/queries/GitProviderQueries', () => ({
   useGithubAppInstallUrlMutation: jest.fn(),
   useGetGithubAppStatusQuery: jest.fn(),
   useGetGithubAppManifestMutation: jest.fn(),
-  useRevokeGithubAppMutation: jest.fn(),
 }));
 
 jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
@@ -66,17 +64,6 @@ const createMockManifestMutation = (
     state: 'manifest-state-abc',
     manifestPostUrl: 'https://github.com/settings/apps/new',
   }),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: jest.fn(),
-  ...overrides,
-});
-
-const createMockRevokeMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue(undefined),
   isPending: false,
   isSuccess: false,
   isError: false,
@@ -401,10 +388,6 @@ describe('GitHubAppConnection', () => {
     useGetGithubAppManifestMutation as jest.MockedFunction<
       typeof useGetGithubAppManifestMutation
     >;
-  const mockUseRevokeGithubAppMutation =
-    useRevokeGithubAppMutation as jest.MockedFunction<
-      typeof useRevokeGithubAppMutation
-    >;
   const mockUseGetMeQuery = useGetMeQuery as jest.MockedFunction<
     typeof useGetMeQuery
   >;
@@ -435,11 +418,6 @@ describe('GitHubAppConnection', () => {
     mockUseGetGithubAppManifestMutation.mockReturnValue(
       createMockManifestMutation() as ReturnType<
         typeof useGetGithubAppManifestMutation
-      >,
-    );
-    mockUseRevokeGithubAppMutation.mockReturnValue(
-      createMockRevokeMutation() as ReturnType<
-        typeof useRevokeGithubAppMutation
       >,
     );
 
@@ -784,19 +762,6 @@ describe('GitHubAppConnection', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the re-register action button', () => {
-      renderWithProviders(
-        <GitHubAppConnection
-          organizationId={mockOrganizationId}
-          url="https://github.com"
-        />,
-      );
-
-      expect(
-        screen.getByRole('button', { name: /re-register github app/i }),
-      ).toBeInTheDocument();
-    });
-
     it('does not render the connect to github button', () => {
       renderWithProviders(
         <GitHubAppConnection
@@ -810,9 +775,7 @@ describe('GitHubAppConnection', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('opens the confirm dialog when re-register is clicked', async () => {
-      const user = userEvent.setup();
-
+    it('does not render the revoke action (moved to Advanced panel)', () => {
       renderWithProviders(
         <GitHubAppConnection
           organizationId={mockOrganizationId}
@@ -820,51 +783,9 @@ describe('GitHubAppConnection', () => {
         />,
       );
 
-      await user.click(
-        screen.getByRole('button', { name: /re-register github app/i }),
-      );
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/this will revoke packmind/i),
-        ).toBeInTheDocument();
-      });
-    });
-
-    it('calls the revoke mutation when confirm dialog is confirmed', async () => {
-      const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue(undefined);
-
-      mockUseRevokeGithubAppMutation.mockReturnValue(
-        createMockRevokeMutation({
-          mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useRevokeGithubAppMutation>,
-      );
-
-      renderWithProviders(
-        <GitHubAppConnection
-          organizationId={mockOrganizationId}
-          url="https://github.com"
-        />,
-      );
-
-      await user.click(
-        screen.getByRole('button', { name: /re-register github app/i }),
-      );
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /revoke and re-register/i }),
-        ).toBeInTheDocument();
-      });
-
-      await user.click(
-        screen.getByRole('button', { name: /revoke and re-register/i }),
-      );
-
-      await waitFor(() => {
-        expect(mockMutateAsync).toHaveBeenCalled();
-      });
+      expect(
+        screen.queryByRole('button', { name: /revoke app connection/i }),
+      ).not.toBeInTheDocument();
     });
   });
 });

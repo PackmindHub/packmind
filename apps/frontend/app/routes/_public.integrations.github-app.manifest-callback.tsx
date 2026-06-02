@@ -13,12 +13,6 @@ import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { useSubmitGithubAppManifestCallbackMutation } from '../../src/domain/git/api/queries/GitProviderQueries';
 import { routes } from '../../src/shared/utils/routes';
 
-// Exported for testability — tests can mock this module-level function
-// without needing to redefine jsdom's window.location.
-export const redirectToInstallUrl = (url: string) => {
-  window.location.replace(url);
-};
-
 export default function GithubAppManifestCallbackRouteModule() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -47,26 +41,15 @@ export default function GithubAppManifestCallbackRouteModule() {
     if (submittedRef.current) return;
     if (!code || !state || !me?.authenticated || !me.organization?.id) return;
     submittedRef.current = true;
-
-    manifestCallbackMutation.mutate(
-      { code, state },
-      {
-        onSuccess: ({ installUrl }) => {
-          redirectToInstallUrl(installUrl);
-          // Diagnostic: if the page is still visible 2s later, the redirect was a no-op.
-          window.setTimeout(() => {
-            if (document.visibilityState === 'visible') {
-              console.error(
-                '[manifest-callback] window.location.replace did not navigate',
-                { installUrl },
-              );
-            }
-          }, 2000);
-        },
-      },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code, state, me?.authenticated, me?.organization?.id, retryCount]);
+    manifestCallbackMutation.mutate({ code, state });
+  }, [
+    code,
+    state,
+    me?.authenticated,
+    me?.organization?.id,
+    retryCount,
+    manifestCallbackMutation,
+  ]);
 
   const handleRetry = () => {
     submittedRef.current = false;

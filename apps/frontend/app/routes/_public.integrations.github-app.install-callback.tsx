@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router';
 import {
   PMAlert,
   PMButton,
+  PMLink,
   PMSpinner,
   PMVStack,
   PMHStack,
@@ -25,8 +26,6 @@ export default function GithubAppCallbackRouteModule() {
   const installationId = rawInstallationId ? Number(rawInstallationId) : null;
   const isValidInstallationId =
     installationId !== null && !Number.isNaN(installationId);
-  // GitHub sends 'install' for new, 'update' for re-installs. Both are acceptable.
-  // 'request' means a user requested an install (no installationId yet) — skip.
   const isValidSetupAction =
     setupAction === 'install' || setupAction === 'update';
 
@@ -44,7 +43,6 @@ export default function GithubAppCallbackRouteModule() {
     }
   }, [me, authLoading, navigate]);
 
-  // Fire the callback POST exactly once
   useEffect(() => {
     if (submittedRef.current) return;
     if (
@@ -56,27 +54,7 @@ export default function GithubAppCallbackRouteModule() {
     )
       return;
     submittedRef.current = true;
-
-    callbackMutation.mutate(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      { installationId: installationId!, state },
-      {
-        onSuccess: (provider) => {
-          window.opener?.postMessage(
-            {
-              type: 'packmind:github-app-installed',
-              providerId: provider.id,
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              orgId: me.organization!.id,
-            },
-            window.location.origin,
-          );
-          // Small delay so the parent processes the message before we tear down the window.
-          window.setTimeout(() => window.close(), 50);
-        },
-      },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    callbackMutation.mutate({ installationId: installationId, state });
   }, [
     isValidInstallationId,
     isValidSetupAction,
@@ -84,6 +62,8 @@ export default function GithubAppCallbackRouteModule() {
     me?.authenticated,
     me?.organization?.id,
     retryCount,
+    callbackMutation,
+    installationId,
   ]);
 
   const handleRetry = () => {
@@ -165,29 +145,33 @@ export default function GithubAppCallbackRouteModule() {
     );
   }
 
-  // Mutation success
+  // Mutation succeeded — redirect is in flight; show unambiguous terminal state
   if (callbackMutation.isSuccess) {
+    const settingsHref =
+      me?.organization?.slug && routes.org.toSettingsGit(me.organization.slug);
     return (
-      <PMVStack gap={4} alignItems="stretch">
-        <PMAlert.Root status="success">
-          <PMAlert.Indicator />
-          <PMAlert.Content>
-            <PMAlert.Title>Install complete</PMAlert.Title>
-            <PMAlert.Description>
-              Install complete — you can close this window.
-            </PMAlert.Description>
-          </PMAlert.Content>
-        </PMAlert.Root>
+      <PMVStack gap={4} align="center">
+        <PMHStack gap={2} justify="center">
+          <PMSpinner size="sm" />
+          <PMText color="secondary">Redirecting back to Packmind…</PMText>
+        </PMHStack>
+        {settingsHref && (
+          <PMText fontSize="sm" color="secondary">
+            If you weren&apos;t redirected,{' '}
+            <PMLink href={settingsHref}>click here to continue</PMLink>.
+          </PMText>
+        )}
       </PMVStack>
     );
   }
 
-  // Initial state while waiting for effect to fire
+  // Initial state while waiting for the effect to fire (none of the mutation
+  // states are true yet — installation_id/state/auth conditions not yet satisfied)
   return (
     <PMVStack gap={4} align="center">
       <PMHStack gap={2} justify="center">
         <PMSpinner size="sm" />
-        <PMText color="secondary">Completing GitHub App install…</PMText>
+        <PMText color="secondary">Initializing…</PMText>
       </PMHStack>
     </PMVStack>
   );

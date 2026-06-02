@@ -7,6 +7,7 @@ import {
   InvalidGitProviderCredentialsError,
   Organization,
   User,
+  createOrganizationGitHubAppId,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -120,8 +121,11 @@ describe('UpdateGitProviderUseCase', () => {
       ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
     });
 
-    it('succeeds when appInstallationId is provided when switching', async () => {
+    it('succeeds when appInstallationId and organizationGitHubAppId are provided when switching', async () => {
       const uc = makeUseCase('oss');
+      const orgGitHubAppId = createOrganizationGitHubAppId(
+        '00000000-0000-0000-0000-000000000aaa',
+      );
       const existingProvider = gitProviderFactory({
         organizationId,
         token: 'old-token',
@@ -132,6 +136,7 @@ describe('UpdateGitProviderUseCase', () => {
         token: null,
         authMethod: 'app',
         appInstallationId: 42,
+        organizationGitHubAppId: orgGitHubAppId,
       });
       mockGitProviderService.findGitProviderById.mockResolvedValue(
         existingProvider,
@@ -146,6 +151,7 @@ describe('UpdateGitProviderUseCase', () => {
           authMethod: 'app',
           token: null,
           appInstallationId: 42,
+          organizationGitHubAppId: orgGitHubAppId,
         },
         userId: String(adminUser.id),
         organizationId: String(organizationId),
@@ -158,11 +164,15 @@ describe('UpdateGitProviderUseCase', () => {
   describe('updating an app-method provider', () => {
     it('succeeds when replacing appInstallationId', async () => {
       const uc = makeUseCase('oss');
+      const orgGitHubAppId = createOrganizationGitHubAppId(
+        '00000000-0000-0000-0000-000000000aaa',
+      );
       const existingProvider = gitProviderFactory({
         organizationId,
         token: null,
         authMethod: 'app',
         appInstallationId: 42,
+        organizationGitHubAppId: orgGitHubAppId,
       });
       const updatedProvider = gitProviderFactory({
         ...existingProvider,

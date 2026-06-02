@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  PMAlert,
-  PMButton,
-  PMVStack,
-  PMText,
-  PMSkeleton,
-  PMDialog,
-  PMCloseButton,
-  PMPortal,
-  PMHStack,
-} from '@packmind/ui';
+import { PMAlert, PMButton, PMVStack, PMText, PMSkeleton } from '@packmind/ui';
 import { OrganizationId } from '@packmind/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
@@ -17,7 +7,6 @@ import {
   useGithubAppInstallUrlMutation,
   useGetGithubAppStatusQuery,
   useGetGithubAppManifestMutation,
-  useRevokeGithubAppMutation,
 } from '../../api/queries/GitProviderQueries';
 import { GET_GIT_PROVIDERS_KEY } from '../../api/queryKeys';
 
@@ -96,7 +85,7 @@ export const GitHubAppInstallSlot: React.FC<{
         </PMAlert.Root>
       )}
       <PMButton
-        intent="primary"
+        variant="primary"
         loading={installUrlMutation.isPending}
         disabled={installUrlMutation.isPending}
         onClick={handleInstallClick}
@@ -115,76 +104,6 @@ export const GitHubAppInstallSlot: React.FC<{
  * backwards-compatible import resolution during the transition period.
  */
 export const GitHubAppCloudInstallSlot = GitHubAppInstallSlot;
-
-const ReregisterDialog: React.FC<{
-  onConfirm: () => Promise<void>;
-  isConfirming: boolean;
-}> = ({ onConfirm, isConfirming }) => {
-  const [open, setOpen] = useState(false);
-
-  const handleConfirm = async () => {
-    await onConfirm();
-    setOpen(false);
-  };
-
-  return (
-    <PMDialog.Root
-      open={open}
-      onOpenChange={(details: { open: boolean }) => {
-        if (!isConfirming) {
-          setOpen(details.open);
-        }
-      }}
-      size="md"
-      scrollBehavior="inside"
-      closeOnInteractOutside={false}
-    >
-      <PMDialog.Trigger asChild>
-        <PMButton variant="tertiary" size="sm" onClick={() => setOpen(true)}>
-          Re-register GitHub App
-        </PMButton>
-      </PMDialog.Trigger>
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Re-register GitHub App</PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton disabled={isConfirming} />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                This will revoke Packmind&apos;s stored credentials for your
-                GitHub App. The existing App on GitHub.com will remain — you can
-                delete it from GitHub&apos;s settings page if you no longer need
-                it. Continue?
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMHStack gap={3} justifyContent="flex-end">
-                <PMDialog.Trigger asChild>
-                  <PMButton variant="tertiary" disabled={isConfirming}>
-                    Cancel
-                  </PMButton>
-                </PMDialog.Trigger>
-                <PMButton
-                  variant="danger"
-                  loading={isConfirming}
-                  disabled={isConfirming}
-                  onClick={handleConfirm}
-                >
-                  Revoke and Re-register
-                </PMButton>
-              </PMHStack>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
-  );
-};
 
 const OssConnectButton: React.FC<{
   organizationId: OrganizationId;
@@ -235,7 +154,7 @@ const OssConnectButton: React.FC<{
         </PMAlert.Root>
       )}
       <PMButton
-        intent="primary"
+        variant="primary"
         loading={manifestMutation.isPending}
         disabled={manifestMutation.isPending}
         onClick={handleConnectClick}
@@ -245,27 +164,6 @@ const OssConnectButton: React.FC<{
       <PMText variant="small" color="secondary">
         This will register a new GitHub App for your organization.
       </PMText>
-    </PMVStack>
-  );
-};
-
-const OssAppRegisteredSlot: React.FC<{
-  organizationId: OrganizationId;
-  onClose?: () => void;
-}> = ({ organizationId, onClose }) => {
-  const revokeMutation = useRevokeGithubAppMutation();
-
-  const handleRevoke = async () => {
-    await revokeMutation.mutateAsync();
-  };
-
-  return (
-    <PMVStack alignItems="stretch" gap={4}>
-      <GitHubAppInstallSlot organizationId={organizationId} onClose={onClose} />
-      <ReregisterDialog
-        onConfirm={handleRevoke}
-        isConfirming={revokeMutation.isPending}
-      />
     </PMVStack>
   );
 };
@@ -319,7 +217,7 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
 
   if (appStatus?.hasApp) {
     return (
-      <OssAppRegisteredSlot organizationId={organizationId} onClose={onClose} />
+      <GitHubAppInstallSlot organizationId={organizationId} onClose={onClose} />
     );
   }
 

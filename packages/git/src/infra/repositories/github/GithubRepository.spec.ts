@@ -11,6 +11,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 const stubResolver = (): IGithubTokenResolver => ({
   getToken: jest.fn().mockResolvedValue('test-github-token'),
   onUnauthorized: jest.fn().mockResolvedValue(undefined),
+  getKind: jest.fn().mockReturnValue('user'),
 });
 
 describe('GithubRepository', () => {

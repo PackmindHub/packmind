@@ -32,4 +32,12 @@ export interface IGithubTokenResolver {
    * persist a `revokedAt` timestamp on the provider row.
    */
   onUnauthorized(): Promise<void>;
+
+  /**
+   * Identifies the authentication kind backing this resolver so callers
+   * can pick the correct GitHub endpoint family. `/user/...` endpoints
+   * require a user-scoped bearer (PAT); App installation tokens must use
+   * `/installation/...` endpoints instead.
+   */
+  getKind(): 'user' | 'installation';
 }

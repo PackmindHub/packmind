@@ -96,10 +96,10 @@ describe('GithubAppManifestCallbackRouteModule', () => {
     mockUseGetMeQuery.mockReturnValue({
       data: authenticatedMe,
       isLoading: false,
-    } as ReturnType<typeof useGetMeQuery>);
+    } as unknown as ReturnType<typeof useGetMeQuery>);
 
     mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-      createMockMutation() as ReturnType<
+      createMockMutation() as unknown as ReturnType<
         typeof useSubmitGithubAppManifestCallbackMutation
       >,
     );
@@ -123,7 +123,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppManifestCallbackMutation
         >,
       );
@@ -131,77 +131,15 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
 
       await waitFor(() => {
-        expect(mockMutate).toHaveBeenCalledWith(
-          { code: 'gh-manifest-code-abc', state: 'signed-state-token' },
-          expect.any(Object),
-        );
+        expect(mockMutate).toHaveBeenCalledWith({
+          code: 'gh-manifest-code-abc',
+          state: 'signed-state-token',
+        });
       });
     });
   });
 
   describe('when the manifest callback mutation succeeds', () => {
-    it('invokes the onSuccess callback with the returned installUrl', async () => {
-      const installUrl = 'https://github.com/apps/my-org-app/installations/new';
-      const onSuccessCapture = jest.fn();
-
-      const mockMutate = jest
-        .fn()
-        .mockImplementation(
-          (
-            _body: unknown,
-            options: { onSuccess?: (result: { installUrl: string }) => void },
-          ) => {
-            onSuccessCapture(options?.onSuccess);
-            options?.onSuccess?.({ installUrl });
-          },
-        );
-
-      mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
-          typeof useSubmitGithubAppManifestCallbackMutation
-        >,
-      );
-
-      renderWithProviders(<GithubAppManifestCallbackRouteModule />);
-
-      await waitFor(() => {
-        expect(onSuccessCapture).toHaveBeenCalledWith(expect.any(Function));
-      });
-    });
-
-    it('calls mutate with the correct installUrl argument shape', async () => {
-      const installUrl = 'https://github.com/apps/my-org-app/installations/new';
-      let capturedOnSuccess:
-        | ((result: { installUrl: string }) => void)
-        | undefined;
-
-      const mockMutate = jest
-        .fn()
-        .mockImplementation(
-          (
-            _body: unknown,
-            options: { onSuccess?: (result: { installUrl: string }) => void },
-          ) => {
-            capturedOnSuccess = options?.onSuccess;
-          },
-        );
-
-      mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
-          typeof useSubmitGithubAppManifestCallbackMutation
-        >,
-      );
-
-      renderWithProviders(<GithubAppManifestCallbackRouteModule />);
-
-      await waitFor(() => {
-        expect(capturedOnSuccess).toBeDefined();
-      });
-
-      // Verify the onSuccess callback is callable with the expected shape
-      expect(() => capturedOnSuccess?.({ installUrl })).not.toThrow();
-    });
-
     it('renders the redirecting copy when isSuccess is true', () => {
       const installUrl = 'https://github.com/apps/test/installations/new';
 
@@ -209,7 +147,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isSuccess: true,
           data: { installUrl },
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -224,7 +164,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isSuccess: true,
           data: { installUrl },
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -242,7 +184,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: new Error('Invalid state signature'),
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -255,7 +199,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: new Error(),
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -274,7 +220,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
           reset: mockReset,
           isError: true,
           error: new Error('Server error'),
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -295,7 +243,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: authError,
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -312,7 +262,9 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         createMockMutation({
           isError: true,
           error: authError,
-        }) as ReturnType<typeof useSubmitGithubAppManifestCallbackMutation>,
+        }) as unknown as ReturnType<
+          typeof useSubmitGithubAppManifestCallbackMutation
+        >,
       );
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -339,7 +291,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppManifestCallbackMutation
         >,
       );
@@ -373,7 +325,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppManifestCallbackMutation
         >,
       );
@@ -385,7 +337,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
           message: 'not authenticated',
         },
         isLoading: false,
-      } as ReturnType<typeof useGetMeQuery>);
+      } as unknown as ReturnType<typeof useGetMeQuery>);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
 
@@ -400,7 +352,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
           message: 'not authenticated',
         },
         isLoading: false,
-      } as ReturnType<typeof useGetMeQuery>);
+      } as unknown as ReturnType<typeof useGetMeQuery>);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
 
@@ -420,7 +372,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
           organization: undefined,
         },
         isLoading: false,
-      } as ReturnType<typeof useGetMeQuery>);
+      } as unknown as ReturnType<typeof useGetMeQuery>);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
 
@@ -433,7 +385,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
       const mockMutate = jest.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
-        createMockMutation({ mutate: mockMutate }) as ReturnType<
+        createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
           typeof useSubmitGithubAppManifestCallbackMutation
         >,
       );

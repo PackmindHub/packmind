@@ -12,6 +12,7 @@ import { GitProviderConnection } from './ManageGitProvider/GitProviderConnection
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { WebHookConfig } from './WebHookConfig';
 import { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';
+import { GitProviderAdvancedPanel } from './ManageGitProvider/GitProviderAdvancedPanel';
 
 interface ManageGitProviderDialogProps {
   organizationId: OrganizationId;
@@ -25,7 +26,7 @@ export const ManageGitProviderDialog: React.FC<
   ManageGitProviderDialogProps
 > = ({ organizationId, editingProvider = null, onSuccess, open, setOpen }) => {
   const [displayedScreen, setDisplayedScreen] = React.useState<
-    'connection' | 'webhook' | 'repositories'
+    'connection' | 'webhook' | 'repositories' | 'advanced'
   >('connection');
 
   return (
@@ -81,6 +82,14 @@ export const ManageGitProviderDialog: React.FC<
                   Repositories
                 </PMLink>
               )}
+              {editingProvider && (
+                <PMLink
+                  onClick={() => setDisplayedScreen('advanced')}
+                  variant={displayedScreen === 'advanced' ? 'active' : 'plain'}
+                >
+                  Advanced
+                </PMLink>
+              )}
             </PMVStack>
 
             <PMVStack gap={6} align={'stretch'} overflow={'auto'}>
@@ -117,6 +126,19 @@ export const ManageGitProviderDialog: React.FC<
                   backgroundColor="primary"
                 >
                   <RepositoriesManagement provider={editingProvider} />
+                </PMPageSection>
+              )}
+
+              {displayedScreen === 'advanced' && editingProvider && (
+                <PMPageSection
+                  title="Advanced"
+                  headingLevel="h5"
+                  backgroundColor="primary"
+                >
+                  <GitProviderAdvancedPanel
+                    editingProvider={editingProvider}
+                    onRevoked={() => setOpen(false)}
+                  />
                 </PMPageSection>
               )}
             </PMVStack>

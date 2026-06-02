@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { AccountsHexa } from '@packmind/accounts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
@@ -18,6 +19,7 @@ import {
   ListProvidersCommand,
   ListProvidersResponse,
   OrganizationGitHubApp,
+  OrganizationGitHubAppId,
   OrganizationId,
   UserId,
   createOrganizationGitHubAppId,
@@ -126,6 +128,7 @@ export class GitProvidersService {
     const edition = await resolvePackmindEdition();
 
     let slug: string;
+    let organizationGitHubAppId: string | undefined;
 
     if (edition === 'oss') {
       const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
@@ -137,6 +140,7 @@ export class GitProvidersService {
         );
       }
       slug = record.appSlug;
+      organizationGitHubAppId = String(record.id);
     } else {
       const configuredSlug = await Configuration.getConfig('GITHUB_APP_SLUG');
       if (!configuredSlug) {
@@ -145,11 +149,17 @@ export class GitProvidersService {
         );
       }
       slug = configuredSlug;
+      // Cloud edition uses a shared App with credentials in env. The install
+      // is still bound to the org-side OrganizationGitHubApp row in OSS only.
+      // On cloud we leave organizationGitHubAppId unset; the resolver path on
+      // cloud doesn't read it.
     }
 
     const state = this.signer.sign({
       orgId: String(command.organizationId),
       userId: String(command.userId),
+      kind: 'install',
+      organizationGitHubAppId,
     });
 
     const installUrl =
@@ -276,7 +286,7 @@ export class GitProvidersService {
     }
 
     const app: OrganizationGitHubApp = {
-      id: createOrganizationGitHubAppId(),
+      id: createOrganizationGitHubAppId(uuidv4()),
       organizationId: command.orgId,
       appId: conversionData.id,
       appSlug: conversionData.slug,
@@ -286,12 +296,13 @@ export class GitProvidersService {
       appWebhookSecret: conversionData.webhook_secret,
     };
 
-    await this.gitAdapter.upsertOrganizationGitHubApp(app);
+    const persistedApp = await this.gitAdapter.upsertOrganizationGitHubApp(app);
 
     const installState = this.signer.sign({
       orgId: String(command.orgId),
       userId: String(command.userId),
       kind: 'install',
+      organizationGitHubAppId: String(persistedApp.id),
     });
 
     const installUrl =
@@ -324,6 +335,10 @@ export class GitProvidersService {
       throw new BadRequestException('Invalid or expired state token');
     }
 
+    if (payload.kind !== 'install') {
+      throw new BadRequestException('Invalid or expired state token');
+    }
+
     if (
       !Number.isInteger(command.installationId) ||
       command.installationId <= 0 ||
@@ -334,6 +349,31 @@ export class GitProvidersService {
       );
     }
 
+    const edition = await resolvePackmindEdition();
+    let organizationGitHubAppId: OrganizationGitHubAppId | null = null;
+
+    if (edition === 'oss') {
+      // OSS binds every app-auth provider to a specific stored App so that
+      // re-running the manifest flow doesn't silently rebind old installations
+      // to a newer App (which would 404 at the next JWT exchange).
+      if (!payload.organizationGitHubAppId) {
+        throw new BadRequestException('Invalid or expired state token');
+      }
+
+      const app = await this.gitAdapter.getActiveOrganizationGitHubApp(
+        command.organizationId,
+      );
+      if (!app || String(app.id) !== payload.organizationGitHubAppId) {
+        throw new BadRequestException(
+          'GitHub App is no longer active for this organization. Restart the install flow.',
+        );
+      }
+
+      organizationGitHubAppId = createOrganizationGitHubAppId(
+        payload.organizationGitHubAppId,
+      );
+    }
+
     const addCommand: AddGitProviderCommand = {
       userId: String(command.userId),
       organizationId: String(command.organizationId),
@@ -341,6 +381,7 @@ export class GitProvidersService {
         source: 'github',
         authMethod: 'app',
         appInstallationId: command.installationId,
+        organizationGitHubAppId,
         url: null,
         token: null,
       },
@@ -348,7 +389,80 @@ export class GitProvidersService {
       source: command.source,
     };
 
-    return this.gitAdapter.addGitProvider(addCommand);
+    const provider = await this.gitAdapter.addGitProvider(addCommand);
+
+    await this.materializeReposForAppInstallation(provider, command);
+
+    return provider;
+  }
+
+  // After a GitHub App installation completes, mirror the repos the install
+  // can access into Packmind: a GitRepo on its default branch and a Default
+  // target via the addGitRepo use case. Per-repo failures are logged and
+  // swallowed so a single bad repo does not abort the rest — the provider
+  // is already persisted and the user can re-trigger setup later.
+  private async materializeReposForAppInstallation(
+    provider: GitProvider,
+    command: CompleteGithubAppInstallCommand,
+  ): Promise<void> {
+    let availableRepos: Awaited<ReturnType<IGitPort['listAvailableRepos']>>;
+    try {
+      availableRepos = await this.gitAdapter.listAvailableRepos(provider.id);
+    } catch (error) {
+      this.logger.warn(
+        'Failed to list available repos after GitHub App install',
+        {
+          providerId: provider.id,
+          organizationId: command.organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      return;
+    }
+
+    this.logger.info('Materializing repos after GitHub App install', {
+      providerId: provider.id,
+      organizationId: command.organizationId,
+      count: availableRepos.length,
+    });
+
+    let materialized = 0;
+    for (const availableRepo of availableRepos) {
+      try {
+        await this.gitAdapter.addGitRepo({
+          userId: String(command.userId),
+          organizationId: String(command.organizationId),
+          gitProviderId: provider.id,
+          owner: availableRepo.owner,
+          repo: availableRepo.name,
+          branch: availableRepo.defaultBranch,
+          allowTokenlessProvider: true,
+          source: command.source,
+        });
+        materialized += 1;
+      } catch (error) {
+        this.logger.warn(
+          'Failed to materialize repo after GitHub App install',
+          {
+            providerId: provider.id,
+            organizationId: command.organizationId,
+            owner: availableRepo.owner,
+            repo: availableRepo.name,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
+    }
+
+    this.logger.info(
+      'Repo materialization completed after GitHub App install',
+      {
+        providerId: provider.id,
+        organizationId: command.organizationId,
+        materialized,
+        attempted: availableRepos.length,
+      },
+    );
   }
 
   async addRepositoryToProvider(

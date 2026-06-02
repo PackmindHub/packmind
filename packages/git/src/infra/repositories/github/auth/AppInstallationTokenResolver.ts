@@ -135,6 +135,10 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
     }
   }
 
+  getKind(): 'installation' {
+    return 'installation';
+  }
+
   private isCacheValid(): boolean {
     if (!this.cachedToken) return false;
     return Date.now() < this.cachedToken.expiresAt;

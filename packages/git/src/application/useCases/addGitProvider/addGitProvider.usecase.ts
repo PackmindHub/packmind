@@ -41,6 +41,7 @@ export class AddGitProviderUseCase
         authMethod: gitProvider.authMethod ?? 'token',
         token: gitProvider.token ?? null,
         appInstallationId: gitProvider.appInstallationId ?? null,
+        organizationGitHubAppId: gitProvider.organizationGitHubAppId ?? null,
       },
       this.edition,
       { allowTokenless: allowTokenlessProvider },

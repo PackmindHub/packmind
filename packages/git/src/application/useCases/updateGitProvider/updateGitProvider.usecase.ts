@@ -75,6 +75,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
           authMethod: nextAuthMethod,
           token: gitProvider.token ?? null,
           appInstallationId: gitProvider.appInstallationId ?? null,
+          organizationGitHubAppId: gitProvider.organizationGitHubAppId ?? null,
         }
       : {
           authMethod: nextAuthMethod,
@@ -82,6 +83,10 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
           appInstallationId:
             gitProvider.appInstallationId ??
             existingProvider.appInstallationId ??
+            null,
+          organizationGitHubAppId:
+            gitProvider.organizationGitHubAppId ??
+            existingProvider.organizationGitHubAppId ??
             null,
         };
 

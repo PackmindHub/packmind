@@ -4,6 +4,7 @@ export type CredentialView = {
   authMethod: 'token' | 'app';
   token: string | null;
   appInstallationId: number | null;
+  organizationGitHubAppId: string | null;
 };
 
 function isMissing(value: string | number | null | undefined): boolean {
@@ -16,7 +17,7 @@ function isPresent(value: string | number | null | undefined): boolean {
 
 export function validateProviderCredentials(
   view: CredentialView,
-  _edition: 'cloud' | 'oss',
+  edition: 'cloud' | 'oss',
   { allowTokenless = false }: { allowTokenless?: boolean } = {},
 ): void {
   if (view.authMethod !== 'token' && view.authMethod !== 'app') {
@@ -36,6 +37,12 @@ export function validateProviderCredentials(
       );
     }
 
+    if (isPresent(view.organizationGitHubAppId)) {
+      throw new InvalidGitProviderCredentialsError(
+        'App credentials must not be set when authMethod is "token"',
+      );
+    }
+
     return;
   }
 
@@ -49,6 +56,16 @@ export function validateProviderCredentials(
   if (isMissing(view.appInstallationId)) {
     throw new InvalidGitProviderCredentialsError(
       'GitHub App installation ID is required',
+    );
+  }
+
+  // OSS binds each app-auth provider to a specific stored OrganizationGitHubApp
+  // so re-running the manifest doesn't silently rebind installations to a new
+  // App (which would 404 at JWT exchange). Cloud uses a shared env-configured
+  // App and has no per-org App row.
+  if (edition === 'oss' && isMissing(view.organizationGitHubAppId)) {
+    throw new InvalidGitProviderCredentialsError(
+      'organizationGitHubAppId is required when authMethod is "app"',
     );
   }
 }

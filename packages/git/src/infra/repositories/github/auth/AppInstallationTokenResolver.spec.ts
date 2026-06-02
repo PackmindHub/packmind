@@ -242,6 +242,13 @@ describe('AppInstallationTokenResolver', () => {
     });
   });
 
+  describe('getKind', () => {
+    it('reports the installation kind', () => {
+      const resolver = buildResolver();
+      expect(resolver.getKind()).toBe('installation');
+    });
+  });
+
   describe('integration (gated on GITHUB_APP_* env)', () => {
     const hasEnv =
       !!process.env['GITHUB_APP_ID'] &&

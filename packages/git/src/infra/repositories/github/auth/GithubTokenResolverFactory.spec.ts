@@ -6,6 +6,7 @@ import {
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
 import {
+  GitHubAppRevokedError,
   GitProvider,
   OrganizationGitHubApp,
   createGitProviderId,
@@ -51,12 +52,19 @@ class StubConfig implements IConfigProvider {
 
 class StubOrgGitHubAppRepository implements Pick<
   IOrganizationGitHubAppRepository,
-  'findActiveByOrganizationId'
+  'findActiveByOrganizationId' | 'findById'
 > {
-  constructor(private readonly result: OrganizationGitHubApp | null) {}
+  constructor(
+    private readonly result: OrganizationGitHubApp | null,
+    private readonly findByIdResult: OrganizationGitHubApp | null = result,
+  ) {}
 
   async findActiveByOrganizationId(): Promise<OrganizationGitHubApp | null> {
     return this.result;
+  }
+
+  async findById(): Promise<OrganizationGitHubApp | null> {
+    return this.findByIdResult;
   }
 }
 
@@ -104,8 +112,6 @@ describe('GithubTokenResolverFactory', () => {
       const provider = makeProvider({
         authMethod: 'app',
         appInstallationId: 987654,
-        appId: undefined,
-        appPrivateKey: undefined,
       });
 
       const resolver = await factory.build(provider);
@@ -161,9 +167,9 @@ describe('GithubTokenResolverFactory', () => {
   });
 
   describe('authMethod = "app", edition = "oss"', () => {
-    it('reads appId and appPrivateKey from active OrganizationGitHubApp and returns AppInstallationTokenResolver', async () => {
+    it('looks up OrganizationGitHubApp by the provider FK and returns AppInstallationTokenResolver', async () => {
       const orgApp = makeOrgApp();
-      const repo = new StubOrgGitHubAppRepository(orgApp);
+      const repo = new StubOrgGitHubAppRepository(null, orgApp);
       const factory = new GithubTokenResolverFactory(
         new StubConfig({}),
         'oss',
@@ -173,6 +179,7 @@ describe('GithubTokenResolverFactory', () => {
       const provider = makeProvider({
         authMethod: 'app',
         appInstallationId: 111222,
+        organizationGitHubAppId: orgApp.id,
       });
 
       const resolver = await factory.build(provider);
@@ -180,8 +187,11 @@ describe('GithubTokenResolverFactory', () => {
       expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
     });
 
-    it('throws when no active OrganizationGitHubApp exists for the organization', async () => {
-      const repo = new StubOrgGitHubAppRepository(null);
+    it('throws GitHubAppRevokedError when the referenced App is revoked', async () => {
+      const orgApp = makeOrgApp({
+        revokedAt: new Date('2026-05-01T00:00:00Z'),
+      });
+      const repo = new StubOrgGitHubAppRepository(null, orgApp);
       const factory = new GithubTokenResolverFactory(
         new StubConfig({}),
         'oss',
@@ -191,10 +201,50 @@ describe('GithubTokenResolverFactory', () => {
       const provider = makeProvider({
         authMethod: 'app',
         appInstallationId: 111222,
+        organizationGitHubAppId: orgApp.id,
+      });
+
+      await expect(factory.build(provider)).rejects.toBeInstanceOf(
+        GitHubAppRevokedError,
+      );
+    });
+
+    it('throws when the referenced OrganizationGitHubApp does not exist', async () => {
+      const repo = new StubOrgGitHubAppRepository(null, null);
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        repo as unknown as IOrganizationGitHubAppRepository,
+      );
+      const provider = makeProvider({
+        authMethod: 'app',
+        appInstallationId: 111222,
+        organizationGitHubAppId: createOrganizationGitHubAppId('missing-app'),
       });
 
       await expect(factory.build(provider)).rejects.toThrow(
-        /no active OrganizationGitHubApp found for organization/,
+        /OrganizationGitHubApp missing-app not found/,
+      );
+    });
+
+    it('throws when the GitProvider has no organizationGitHubAppId FK', async () => {
+      const orgApp = makeOrgApp();
+      const repo = new StubOrgGitHubAppRepository(null, orgApp);
+      const factory = new GithubTokenResolverFactory(
+        new StubConfig({}),
+        'oss',
+        undefined,
+        repo as unknown as IOrganizationGitHubAppRepository,
+      );
+      const provider = makeProvider({
+        authMethod: 'app',
+        appInstallationId: 111222,
+        organizationGitHubAppId: undefined,
+      });
+
+      await expect(factory.build(provider)).rejects.toThrow(
+        /no organizationGitHubAppId/,
       );
     });
 
@@ -208,29 +258,12 @@ describe('GithubTokenResolverFactory', () => {
       const provider = makeProvider({
         authMethod: 'app',
         appInstallationId: 111222,
+        organizationGitHubAppId: createOrganizationGitHubAppId('app-1'),
       });
 
       await expect(factory.build(provider)).rejects.toThrow(
         /orgGitHubAppRepository is required for oss edition/,
       );
-    });
-
-    it('throws when the error message includes the organization id', async () => {
-      const orgId = createOrganizationId('specific-org-id');
-      const repo = new StubOrgGitHubAppRepository(null);
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'oss',
-        undefined,
-        repo as unknown as IOrganizationGitHubAppRepository,
-      );
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 111222,
-        organizationId: orgId,
-      });
-
-      await expect(factory.build(provider)).rejects.toThrow(/specific-org-id/);
     });
   });
 

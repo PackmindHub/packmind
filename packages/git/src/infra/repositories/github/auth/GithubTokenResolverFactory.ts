@@ -1,4 +1,4 @@
-import { GitProvider } from '@packmind/types';
+import { GitHubAppRevokedError, GitProvider } from '@packmind/types';
 import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IGithubTokenResolver } from '../../../../domain/repositories/IGithubTokenResolver';
@@ -114,21 +114,34 @@ export class GithubTokenResolverFactory {
         }
       } else {
         // oss: read app credentials from the OrganizationGitHubApp record
+        // referenced by the GitProvider's FK. Using a FK (not "the active App
+        // for this org") binds each install to the App it was originally
+        // installed against, so re-running the manifest never silently rebinds
+        // old installations to a different App — that would 404 at JWT exchange.
         if (!this.orgGitHubAppRepository) {
           throw new Error(
             'GithubTokenResolverFactory: orgGitHubAppRepository is required for oss edition with app auth',
           );
         }
 
-        const app =
-          await this.orgGitHubAppRepository.findActiveByOrganizationId(
-            provider.organizationId,
+        if (!provider.organizationGitHubAppId) {
+          throw new Error(
+            `GithubTokenResolverFactory: provider ${provider.id} has authMethod 'app' but no organizationGitHubAppId (oss edition)`,
           );
+        }
+
+        const app = await this.orgGitHubAppRepository.findById(
+          provider.organizationGitHubAppId,
+        );
 
         if (!app) {
           throw new Error(
-            `GithubTokenResolverFactory: no active OrganizationGitHubApp found for organization ${provider.organizationId} (oss edition)`,
+            `GithubTokenResolverFactory: OrganizationGitHubApp ${provider.organizationGitHubAppId} not found (oss edition)`,
           );
+        }
+
+        if (app.revokedAt) {
+          throw new GitHubAppRevokedError(String(provider.id));
         }
 
         appIdRaw = app.appId;

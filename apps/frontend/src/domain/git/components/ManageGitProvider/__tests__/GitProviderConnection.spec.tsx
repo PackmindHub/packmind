@@ -113,7 +113,7 @@ const mockGitProviderUI = (
   id: 'prov-1' as GitProviderId,
   source: 'github',
   organizationId: mockOrganizationId,
-  hasToken: true,
+  hasAuth: true,
   url: 'https://github.com',
   ...overrides,
 });

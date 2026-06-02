@@ -44,7 +44,8 @@ describe('DeleteTargetUseCase', () => {
     source: 'github',
     organizationId,
     url: 'https://github.com',
-    hasToken: true,
+    authMethod: 'token',
+    hasAuth: true,
   };
 
   const mockProviderWithoutToken: GitProviderWithoutToken = {
@@ -52,7 +53,8 @@ describe('DeleteTargetUseCase', () => {
     source: 'github',
     organizationId,
     url: 'https://github.com',
-    hasToken: false,
+    authMethod: 'token',
+    hasAuth: false,
   };
 
   beforeEach(() => {
