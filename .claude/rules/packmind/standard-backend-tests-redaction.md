@@ -1,6 +1,11 @@
 ---
-applyTo: '**/*.spec.ts'
+name: 'Backend Tests Redaction'
+paths:
+  - "**/*.spec.ts"
+alwaysApply: false
+description: 'Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe(''when...'')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution.'
 ---
+
 # Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
@@ -17,4 +22,4 @@ Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 * Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 
-Full standard is available here for further request: [Backend Tests Redaction](../../.packmind/standards/backend-tests-redaction.md)
+Full standard is available here for further request: [Backend Tests Redaction](../../../.packmind/standards/backend-tests-redaction.md)
