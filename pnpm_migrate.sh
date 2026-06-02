@@ -9,9 +9,10 @@
 # What it does:
 #   1. Verifies the active Node version matches .nvmrc
 #   2. Activates the pinned pnpm version via corepack
-#   3. Removes stale npm artifacts (package-lock.json + all node_modules)
-#   4. Installs dependencies with pnpm against the committed lockfile
-#   5. Regenerates the effective tsconfig (PACKMIND_EDITION=oss)
+#   3. Pins the pnpm store outside the checkout (keeps IDEs from indexing 80k+ files)
+#   4. Removes stale npm artifacts (package-lock.json + all node_modules)
+#   5. Installs dependencies with pnpm against the committed lockfile
+#   6. Regenerates the effective tsconfig (PACKMIND_EDITION=oss)
 #
 set -euo pipefail
 
@@ -50,10 +51,23 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 echo "    pnpm $(pnpm --version) ready"
 
+# 2b. Pin the content-addressable store OUTSIDE the checkout. Without a proper
+#     pnpm home, pnpm falls back to an in-repo .pnpm-store/ holding 80k+ files,
+#     which makes IDEs (WebStorm/IntelliJ) index/watch them and crash.
+PNPM_STORE_DIR="${PNPM_STORE_DIR:-$HOME/.pnpm-store}"
+echo "==> Pinning pnpm store -> ${PNPM_STORE_DIR}"
+# On a machine that never ran `pnpm setup`, the global bin dir isn't on PATH and
+# `pnpm config set --global` aborts. Putting it on PATH for this one call lets the
+# write succeed regardless.
+PATH="${HOME}/Library/pnpm/bin:${HOME}/.local/share/pnpm:${PATH}" \
+  pnpm config set --global store-dir "$PNPM_STORE_DIR" >/dev/null 2>&1 || true
+echo "    store-dir = $(pnpm config get store-dir)"
+
 # 3. Remove npm artifacts (root lockfile + every node_modules in the workspace)
 echo "==> Removing stale npm artifacts (package-lock.json, node_modules)"
 rm -f package-lock.json
 find . -name node_modules -type d -prune -exec rm -rf '{}' +
+rm -rf .pnpm-store   # stray in-repo store from an earlier pnpm fallback
 
 # 4. Install with pnpm
 echo "==> Installing dependencies with pnpm"

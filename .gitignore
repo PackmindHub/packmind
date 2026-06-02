@@ -1,4 +1,5 @@
 .nx-daemon/
+.pnpm-store/
 node_modules/
 .vscode/
 .idea/
