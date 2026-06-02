@@ -34,7 +34,9 @@ import {
   PluginRenderedEvent,
   PluginDeletedEvent,
   MarketplaceLinkedEvent,
+  MarketplacePluginRemovalInitiatedEvent,
   MarketplaceUnlinkedEvent,
+  createMarketplaceDistributionId,
   createMarketplaceId,
   createGitRepoId,
   createPackageId,
@@ -1201,6 +1203,70 @@ describe('AmplitudeEventListener', () => {
           source: 'ui',
         },
       );
+    });
+  });
+
+  describe('MarketplacePluginRemovalInitiatedEvent', () => {
+    it('tracks marketplace_plugin_removal_initiated event with correct payload', async () => {
+      const event = new MarketplacePluginRemovalInitiatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        marketplaceId: createMarketplaceId('mkt-789'),
+        distributionId: createMarketplaceDistributionId('dist-001'),
+        packageId: createPackageId('pkg-789'),
+        packageSlug: 'default/my-package',
+        pluginSlug: 'my-plugin',
+        trigger: 'from_marketplace',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'marketplace_plugin_removal_initiated',
+        {
+          marketplace_id: 'mkt-789',
+          plugin_slug: 'my-plugin',
+          actor_id: 'user-123',
+          trigger: 'from_marketplace',
+          source: 'ui',
+        },
+      );
+    });
+
+    describe('when triggered by package deletion cascade', () => {
+      it('tracks the cascade trigger', async () => {
+        const event = new MarketplacePluginRemovalInitiatedEvent({
+          userId: createUserId('user-123'),
+          organizationId: createOrganizationId('org-456'),
+          marketplaceId: createMarketplaceId('mkt-789'),
+          distributionId: createMarketplaceDistributionId('dist-002'),
+          packageId: createPackageId('pkg-790'),
+          packageSlug: 'default/other-package',
+          pluginSlug: 'other-plugin',
+          trigger: 'from_packmind_package',
+          source: 'ui',
+        });
+
+        eventEmitterService.emit(event);
+        await flushPromises();
+
+        expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-456',
+          'marketplace_plugin_removal_initiated',
+          {
+            marketplace_id: 'mkt-789',
+            plugin_slug: 'other-plugin',
+            actor_id: 'user-123',
+            trigger: 'from_packmind_package',
+            source: 'ui',
+          },
+        );
+      });
     });
   });
 });

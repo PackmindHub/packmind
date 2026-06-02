@@ -41,6 +41,7 @@ import {
   PluginRenderedEvent,
   PluginDeletedEvent,
   MarketplaceLinkedEvent,
+  MarketplacePluginRemovalInitiatedEvent,
   MarketplaceUnlinkedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
@@ -139,6 +140,10 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(PluginDeletedEvent, this.onPluginDeleted);
     this.subscribe(MarketplaceLinkedEvent, this.onMarketplaceLinked);
     this.subscribe(MarketplaceUnlinkedEvent, this.onMarketplaceUnlinked);
+    this.subscribe(
+      MarketplacePluginRemovalInitiatedEvent,
+      this.onMarketplacePluginRemovalInitiated,
+    );
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -580,6 +585,21 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       (payload) => ({
         marketplaceId: payload.marketplaceId,
         gitRepoId: payload.gitRepoId,
+      }),
+    );
+  };
+
+  private onMarketplacePluginRemovalInitiated = async (
+    event: MarketplacePluginRemovalInitiatedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'marketplace_plugin_removal_initiated',
+      (payload) => ({
+        marketplace_id: payload.marketplaceId,
+        plugin_slug: payload.pluginSlug,
+        actor_id: payload.userId,
+        trigger: payload.trigger,
       }),
     );
   };
