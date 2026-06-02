@@ -57,3 +57,10 @@ docker/nginx/ssl
 
 .nx/polygraph
 .nx/self-healing
+
+# Michel agent — local experimentation, not for the public repo
+sprites/
+videos/
+.sprite
+.env.michel
+.claude/skills/michel-*/
