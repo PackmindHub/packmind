@@ -19,19 +19,18 @@ const origin = 'AppInstallationTokenResolver';
  *
  * Revocation handling: we follow a "401-on-next-call" strategy. If any
  * downstream API call returns 401, `onUnauthorized()` is invoked by the
- * Axios response interceptor on `GithubProvider`/`GithubRepository`. We
- * (a) flush the in-memory cache so the next `getToken()` will re-mint
- * and re-exchange, and (b) invoke the optional `onRevoke` callback —
- * which `GithubTokenResolverFactory` wires by default (oss edition) to
- * persist `revoked_at` on the `OrganizationGitHubApp` row, so subsequent
- * `factory.build()` calls fail fast before minting another JWT.
+ * Axios response interceptor on `GithubProvider`/`GithubRepository` and
+ * flushes the in-memory cache so the next `getToken()` re-mints and
+ * re-exchanges — letting transient 401s (rate limit, clock skew, brief
+ * outage) self-recover. We deliberately do NOT auto-persist revocation
+ * here; permanent revocation is an explicit user action handled through
+ * `RevokeGithubAppUseCase`.
  */
 export interface AppInstallationTokenResolverParams {
   providerId: GitProviderId;
   appId: number;
   privateKeyPem: string;
   installationId: number;
-  onRevoke?: () => Promise<void>;
 }
 
 interface CachedToken {
@@ -54,7 +53,6 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
   private readonly appId: number;
   private readonly privateKeyPem: string;
   private readonly installationId: number;
-  private readonly onRevoke?: () => Promise<void>;
   private readonly httpClient: AxiosInstance;
   private cachedToken: CachedToken | null = null;
 
@@ -71,7 +69,6 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
     this.appId = params.appId;
     this.privateKeyPem = params.privateKeyPem;
     this.installationId = params.installationId;
-    this.onRevoke = params.onRevoke;
 
     // IMPORTANT: dedicated Axios instance for /app/installations/.../access_tokens.
     // It must NOT share interceptors with GithubProvider/GithubRepository —
@@ -128,13 +125,6 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
       installationId: this.installationId,
     });
     this.cachedToken = null;
-
-    if (this.onRevoke) {
-      // Intentionally not wrapped in try/catch. If persisting revoked_at
-      // fails we want the caller (Axios response interceptor in the
-      // provider) to see the error.
-      await this.onRevoke();
-    }
   }
 
   getKind(): 'installation' {

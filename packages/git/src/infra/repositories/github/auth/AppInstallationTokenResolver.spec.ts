@@ -40,16 +40,13 @@ describe('AppInstallationTokenResolver', () => {
     jest.clearAllMocks();
   });
 
-  function buildResolver(
-    overrides: Partial<{ onRevoke: () => Promise<void> }> = {},
-  ) {
+  function buildResolver() {
     return new AppInstallationTokenResolver(
       {
         providerId: 'provider-1' as never, // GitProviderId brand; cast in test only
         appId: 12345,
         privateKeyPem,
         installationId: 67890,
-        onRevoke: overrides.onRevoke,
       },
       logger,
     );
@@ -218,27 +215,6 @@ describe('AppInstallationTokenResolver', () => {
       const after = await resolver.getToken();
       expect(after).toBe('ghs_second');
       expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
-    });
-
-    it('invokes the onRevoke callback when provided', async () => {
-      const onRevoke = jest.fn().mockResolvedValue(undefined);
-      const resolver = buildResolver({ onRevoke });
-
-      await resolver.onUnauthorized();
-
-      expect(onRevoke).toHaveBeenCalledTimes(1);
-    });
-
-    it('propagates errors from onRevoke', async () => {
-      const onRevoke = jest.fn().mockRejectedValue(new Error('db down'));
-      const resolver = buildResolver({ onRevoke });
-
-      await expect(resolver.onUnauthorized()).rejects.toThrow('db down');
-    });
-
-    it('is a no-op for onRevoke when none is provided', async () => {
-      const resolver = buildResolver();
-      await expect(resolver.onUnauthorized()).resolves.toBeUndefined();
     });
   });
 

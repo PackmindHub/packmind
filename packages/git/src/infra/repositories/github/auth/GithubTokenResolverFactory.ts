@@ -21,16 +21,6 @@ const origin = 'GithubTokenResolverFactory';
  */
 export type PackmindEdition = 'oss' | 'cloud';
 
-export type GithubTokenResolverFactoryBuildOpts = {
-  /**
-   * Optional callback invoked when the resolver detects a revoked credential
-   * (e.g. on a 401 from GitHub). When omitted in the oss edition with an
-   * App-installation provider, the factory registers a default that marks
-   * `OrganizationGitHubApp.revokedAt` for the provider's organization.
-   */
-  onRevoke?: () => Promise<void>;
-};
-
 /**
  * Minimal config port — keeps the factory unit-testable without
  * binding to the real `Configuration` singleton.
@@ -70,10 +60,7 @@ export class GithubTokenResolverFactory {
     });
   }
 
-  async build(
-    provider: GitProvider,
-    opts: GithubTokenResolverFactoryBuildOpts = {},
-  ): Promise<IGithubTokenResolver> {
+  async build(provider: GitProvider): Promise<IGithubTokenResolver> {
     if (provider.authMethod === 'token') {
       if (!provider.token) {
         throw new Error(
@@ -99,7 +86,6 @@ export class GithubTokenResolverFactory {
 
       let appIdRaw: string | number | null | undefined;
       let privateKeyPem: string | null | undefined;
-      let onRevoke: (() => Promise<void>) | undefined = opts.onRevoke;
 
       if (this.edition === 'cloud') {
         appIdRaw = await this.config.getConfig('GITHUB_APP_ID');
@@ -149,24 +135,6 @@ export class GithubTokenResolverFactory {
 
         appIdRaw = app.appId;
         privateKeyPem = app.appPrivateKey;
-
-        // Default onRevoke: when a 401 from GitHub flags the installation as
-        // revoked, persist that on the OrganizationGitHubApp row so future
-        // build() calls fail fast at the app.revokedAt check above instead
-        // of minting another doomed JWT. Only on oss — cloud has no per-org
-        // App record to mark.
-        if (!onRevoke) {
-          const orgGitHubAppRepository = this.orgGitHubAppRepository;
-          const logger = this.logger;
-          onRevoke = async () => {
-            logger.warn('GitHub App installation revocation detected via 401', {
-              providerId: provider.id,
-              organizationId: provider.organizationId,
-              organizationGitHubAppId: provider.organizationGitHubAppId,
-            });
-            await orgGitHubAppRepository.markRevoked(provider.organizationId);
-          };
-        }
       }
 
       const appId = Number(appIdRaw);
@@ -190,7 +158,6 @@ export class GithubTokenResolverFactory {
         appId,
         privateKeyPem,
         installationId,
-        onRevoke,
       });
     }
 

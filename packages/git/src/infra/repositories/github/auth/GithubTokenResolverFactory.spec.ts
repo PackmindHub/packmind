@@ -52,10 +52,8 @@ class StubConfig implements IConfigProvider {
 
 class StubOrgGitHubAppRepository implements Pick<
   IOrganizationGitHubAppRepository,
-  'findActiveByOrganizationId' | 'findById' | 'markRevoked'
+  'findActiveByOrganizationId' | 'findById'
 > {
-  public markRevoked = jest.fn(async (): Promise<void> => undefined);
-
   constructor(
     private readonly result: OrganizationGitHubApp | null,
     private readonly findByIdResult: OrganizationGitHubApp | null = result,
@@ -266,92 +264,6 @@ describe('GithubTokenResolverFactory', () => {
       await expect(factory.build(provider)).rejects.toThrow(
         /orgGitHubAppRepository is required for oss edition/,
       );
-    });
-  });
-
-  describe('default onRevoke wiring (oss + app)', () => {
-    describe('when no opts.onRevoke is supplied', () => {
-      let repo: StubOrgGitHubAppRepository;
-      let provider: GitProvider;
-
-      beforeEach(async () => {
-        const orgApp = makeOrgApp();
-        repo = new StubOrgGitHubAppRepository(null, orgApp);
-        const factory = new GithubTokenResolverFactory(
-          new StubConfig({}),
-          'oss',
-          undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
-        );
-        provider = makeProvider({
-          authMethod: 'app',
-          appInstallationId: 111222,
-          organizationGitHubAppId: orgApp.id,
-        });
-        const resolver = await factory.build(provider);
-        await resolver.onUnauthorized();
-      });
-
-      it('invokes markRevoked exactly once', () => {
-        expect(repo.markRevoked).toHaveBeenCalledTimes(1);
-      });
-
-      it('invokes markRevoked with the provider organizationId', () => {
-        expect(repo.markRevoked).toHaveBeenCalledWith(provider.organizationId);
-      });
-    });
-
-    describe('when opts.onRevoke override is provided', () => {
-      let repo: StubOrgGitHubAppRepository;
-      let override: jest.Mock;
-
-      beforeEach(async () => {
-        const orgApp = makeOrgApp();
-        repo = new StubOrgGitHubAppRepository(null, orgApp);
-        const factory = new GithubTokenResolverFactory(
-          new StubConfig({}),
-          'oss',
-          undefined,
-          repo as unknown as IOrganizationGitHubAppRepository,
-        );
-        const provider = makeProvider({
-          authMethod: 'app',
-          appInstallationId: 111222,
-          organizationGitHubAppId: orgApp.id,
-        });
-        override = jest.fn().mockResolvedValue(undefined);
-        const resolver = await factory.build(provider, { onRevoke: override });
-        await resolver.onUnauthorized();
-      });
-
-      it('invokes the override exactly once', () => {
-        expect(override).toHaveBeenCalledTimes(1);
-      });
-
-      it('does not invoke markRevoked', () => {
-        expect(repo.markRevoked).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('default onRevoke wiring (cloud + app)', () => {
-    it('does not register a default onRevoke', async () => {
-      const config = new StubConfig({
-        GITHUB_APP_ID: '123456',
-        GITHUB_APP_PRIVATE_KEY:
-          '-----BEGIN RSA PRIVATE KEY-----\nMOCK\n-----END RSA PRIVATE KEY-----',
-      });
-      const factory = new GithubTokenResolverFactory(config, 'cloud');
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 987654,
-      });
-
-      const resolver = await factory.build(provider);
-
-      // Cloud has no per-org App row to persist to; onUnauthorized is a
-      // no-op for persistence and must not throw.
-      await expect(resolver.onUnauthorized()).resolves.toBeUndefined();
     });
   });
 
