@@ -9,7 +9,6 @@ export {
 } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 export type {
   PackmindEdition,
-  GithubTokenResolverFactoryBuildOpts,
   IConfigProvider,
 } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 export {
