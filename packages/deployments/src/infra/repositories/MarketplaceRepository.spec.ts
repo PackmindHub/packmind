@@ -8,7 +8,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { MarketplaceRepository } from './MarketplaceRepository';
 import { MarketplaceSchema } from '../schemas/MarketplaceSchema';
 import { marketplaceFactory } from './__factories__/marketplaceFactory';
-import { GitRepoSchema, GitProviderSchema } from '@packmind/git';
+import {
+  GitRepoSchema,
+  GitProviderSchema,
+  OrganizationGitHubAppSchema,
+} from '@packmind/git';
 import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 import {
   OrganizationSchema,
@@ -33,6 +37,7 @@ describe('MarketplaceRepository', () => {
     OrganizationSchema,
     UserSchema,
     UserOrganizationMembershipSchema,
+    OrganizationGitHubAppSchema,
     GitProviderSchema,
     GitRepoSchema,
     MarketplaceSchema,

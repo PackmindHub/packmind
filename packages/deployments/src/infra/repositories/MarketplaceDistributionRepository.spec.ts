@@ -12,7 +12,11 @@ import { PackageSchema } from '../schemas/PackageSchema';
 import { marketplaceDistributionFactory } from './__factories__/marketplaceDistributionFactory';
 import { marketplaceFactory } from './__factories__/marketplaceFactory';
 import { packageFactory } from '../../../test/packageFactory';
-import { GitRepoSchema, GitProviderSchema } from '@packmind/git';
+import {
+  GitRepoSchema,
+  GitProviderSchema,
+  OrganizationGitHubAppSchema,
+} from '@packmind/git';
 import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 import {
   OrganizationSchema,
@@ -43,6 +47,7 @@ describe('MarketplaceDistributionRepository', () => {
     OrganizationSchema,
     UserSchema,
     UserOrganizationMembershipSchema,
+    OrganizationGitHubAppSchema,
     GitProviderSchema,
     GitRepoSchema,
     MarketplaceSchema,
