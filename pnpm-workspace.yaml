@@ -14,7 +14,14 @@ allowBuilds:
   '@nestjs/core': true
   '@swc/cli': true
   # Not built under pnpm 9 either (was absent from onlyBuiltDependencies); kept disabled.
+  # Native modules ship prebuilt binaries; their postinstall scripts are not required.
   nx: false
+  '@google/genai': false
+  '@parcel/watcher': false
+  less: false
+  msgpackr-extract: false
+  protobufjs: false
+  unrs-resolver: false
 
 # Moved from .npmrc (pnpm 11 keeps only registry/auth settings in .npmrc)
 packageManagerStrict: false
