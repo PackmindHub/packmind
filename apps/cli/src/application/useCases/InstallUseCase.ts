@@ -24,6 +24,8 @@ import {
 import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
 import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
 import { stripFullStandardLinkFooter } from '../../infra/utils/stripFullStandardLinkFooter';
+import { displayableParsedPackageSlug } from '../../domain/entities/PackageSlug';
+import assert from 'assert';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -103,7 +105,11 @@ export class InstallUseCase implements IInstallUseCase {
     let normalizedPackages: string[] = [];
 
     if (hasExplicitPackages) {
-      normalizedPackages = await this.normalizePackageSlugs(command.packages!);
+      const explicitPackageSlugs = (command.packages ?? []).map(
+        displayableParsedPackageSlug,
+      );
+      normalizedPackages =
+        await this.normalizePackageSlugs(explicitPackageSlugs);
       await this.validatePackageAccess(normalizedPackages);
 
       const normalizedConfigPackages = config
@@ -113,9 +119,11 @@ export class InstallUseCase implements IInstallUseCase {
         ...new Set([...normalizedConfigPackages, ...normalizedPackages]),
       ];
     } else {
+      // Note: config exists as we throw an error before if there's no explicit package not config.
+      assert(config);
       packagesSlugs = await this.normalizeAndSaveConfigPackages(
         baseDirectory,
-        config!,
+        config,
       );
     }
 

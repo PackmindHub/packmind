@@ -20,6 +20,9 @@ describe('CommandDiffStrategy', () => {
 
   beforeEach(() => {
     strategy = new CommandDiffStrategy();
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

@@ -32,9 +32,11 @@ describe('addAgentsHandler', () => {
   let mockPromptConfirm: jest.Mock;
   let deps: AddAgentsHandlerDependencies;
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
+  });
 
+  beforeEach(() => {
     mockConfigRepository = {
       readConfig: jest.fn(),
       writeConfig: jest.fn(),

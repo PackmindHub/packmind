@@ -1110,30 +1110,54 @@ describe('ApplyPlaybookUseCase', () => {
         skillsPort.getSkillFiles.mockResolvedValue([]);
       });
 
-      it('throws an error with an actionable message before saving the new version', async () => {
+      describe('when the new description exceeds 1024 characters', () => {
         const longDescription = 'a'.repeat(1025);
 
-        await expect(
-          useCase.execute(
-            buildCommand({
-              proposals: [
-                {
-                  spaceId,
-                  type: ChangeProposalType.updateSkillDescription,
-                  artefactId: skillId,
-                  payload: {
-                    oldValue: 'A short description',
-                    newValue: longDescription,
+        it('throws an error with an actionable message', async () => {
+          await expect(
+            useCase.execute(
+              buildCommand({
+                proposals: [
+                  {
+                    spaceId,
+                    type: ChangeProposalType.updateSkillDescription,
+                    artefactId: skillId,
+                    payload: {
+                      oldValue: 'A short description',
+                      newValue: longDescription,
+                    },
                   },
-                },
-              ],
-            }),
-          ),
-        ).rejects.toThrow(
-          /description longer than 1024 characters\. Edit your skill and upload it again\./,
-        );
+                ],
+              }),
+            ),
+          ).rejects.toThrow(
+            /description longer than 1024 characters\. Edit your skill and upload it again\./,
+          );
+        });
 
-        expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
+        it('does not save the new version', async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                proposals: [
+                  {
+                    spaceId,
+                    type: ChangeProposalType.updateSkillDescription,
+                    artefactId: skillId,
+                    payload: {
+                      oldValue: 'A short description',
+                      newValue: longDescription,
+                    },
+                  },
+                ],
+              }),
+            )
+            .catch(() => {
+              /* expected rejection ignored */
+            });
+
+          expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -1155,34 +1179,43 @@ describe('ApplyPlaybookUseCase', () => {
         userId,
       };
 
-      it('allows the update without flagging the legacy description', async () => {
-        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
-        skillsPort.getSkillFiles.mockResolvedValue([]);
-        skillsPort.saveSkillVersion.mockResolvedValue({
-          ...skillVersion,
-          id: newSkillVersionId,
-          name: 'Renamed Skill',
-          version: 2,
+      describe('allows the update without flagging the legacy description', () => {
+        let result: ApplyPlaybookResponse;
+
+        beforeEach(async () => {
+          skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+          skillsPort.getSkillFiles.mockResolvedValue([]);
+          skillsPort.saveSkillVersion.mockResolvedValue({
+            ...skillVersion,
+            id: newSkillVersionId,
+            name: 'Renamed Skill',
+            version: 2,
+          });
+
+          result = await useCase.execute(
+            buildCommand({
+              proposals: [
+                {
+                  spaceId,
+                  type: ChangeProposalType.updateSkillName,
+                  artefactId: skillId,
+                  payload: {
+                    oldValue: 'Legacy Skill',
+                    newValue: 'Renamed Skill',
+                  },
+                },
+              ],
+            }),
+          );
         });
 
-        const result = await useCase.execute(
-          buildCommand({
-            proposals: [
-              {
-                spaceId,
-                type: ChangeProposalType.updateSkillName,
-                artefactId: skillId,
-                payload: {
-                  oldValue: 'Legacy Skill',
-                  newValue: 'Renamed Skill',
-                },
-              },
-            ],
-          }),
-        );
+        it('returns success', () => {
+          expect(result.success).toBe(true);
+        });
 
-        expect(result.success).toBe(true);
-        expect(skillsPort.saveSkillVersion).toHaveBeenCalledTimes(1);
+        it('saves the new skill version', () => {
+          expect(skillsPort.saveSkillVersion).toHaveBeenCalledTimes(1);
+        });
       });
     });
 

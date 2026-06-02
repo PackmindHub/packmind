@@ -550,24 +550,37 @@ describe('InstallDefaultSkillsUseCase', () => {
         });
       });
 
-      it('writes a fresh lockfileVersion: 2 lockfile with the slice as artifacts', async () => {
-        await useCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('writes a fresh lockfile', () => {
+        let writtenBaseDir: string;
+        let writtenLockFile: PackmindLockFile;
+
+        beforeEach(async () => {
+          await useCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+          [writtenBaseDir, writtenLockFile] = mockWriteLockFile.mock
+            .calls[0] as [string, PackmindLockFile];
         });
 
-        expect(mockWriteLockFile).toHaveBeenCalledTimes(1);
-        const [writtenBaseDir, writtenLockFile] = mockWriteLockFile.mock
-          .calls[0] as [string, PackmindLockFile];
-        expect(writtenBaseDir).toBe(BASE_DIR);
-        expect(writtenLockFile).toEqual({
-          lockfileVersion: 2,
-          cliVersion: '0.25.0',
-          packageSlugs: [],
-          agents: [],
-          artifacts: {
-            'default:skill:packmind-create-skill': defaultEntry,
-          },
+        it('calls writeLockFile once', () => {
+          expect(mockWriteLockFile).toHaveBeenCalledTimes(1);
+        });
+
+        it('writes to the correct base directory', () => {
+          expect(writtenBaseDir).toBe(BASE_DIR);
+        });
+
+        it('writes a lockfileVersion: 2 lockfile with the slice as artifacts', () => {
+          expect(writtenLockFile).toEqual({
+            lockfileVersion: 2,
+            cliVersion: '0.25.0',
+            packageSlugs: [],
+            agents: [],
+            artifacts: {
+              'default:skill:packmind-create-skill': defaultEntry,
+            },
+          });
         });
       });
     });
@@ -653,19 +666,33 @@ describe('InstallDefaultSkillsUseCase', () => {
         expect(writtenLockFile.lockfileVersion).toBe(2);
       });
 
-      it('preserves other top-level fields (packageSlugs, agents, cliVersion)', async () => {
-        await useCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('preserves other top-level fields', () => {
+        let writtenLockFile: PackmindLockFile;
+
+        beforeEach(async () => {
+          await useCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+          [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+            string,
+            PackmindLockFile,
+          ];
         });
 
-        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
-          string,
-          PackmindLockFile,
-        ];
-        expect(writtenLockFile.packageSlugs).toEqual(['@my-space/my-package']);
-        expect(writtenLockFile.agents).toEqual(['claude']);
-        expect(writtenLockFile.cliVersion).toBe('0.20.0');
+        it('preserves packageSlugs', () => {
+          expect(writtenLockFile.packageSlugs).toEqual([
+            '@my-space/my-package',
+          ]);
+        });
+
+        it('preserves agents', () => {
+          expect(writtenLockFile.agents).toEqual(['claude']);
+        });
+
+        it('preserves cliVersion', () => {
+          expect(writtenLockFile.cliVersion).toBe('0.20.0');
+        });
       });
     });
 
@@ -740,22 +767,31 @@ describe('InstallDefaultSkillsUseCase', () => {
         });
       });
 
-      it('preserves stale default-skill entries (cleanup is out of scope)', async () => {
-        await useCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('merges stale and new default-skill entries', () => {
+        let writtenLockFile: PackmindLockFile;
+
+        beforeEach(async () => {
+          await useCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+          [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+            string,
+            PackmindLockFile,
+          ];
         });
 
-        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
-          string,
-          PackmindLockFile,
-        ];
-        expect(
-          writtenLockFile.artifacts['default:skill:packmind-stale-skill'],
-        ).toEqual(staleDefaultEntry);
-        expect(
-          writtenLockFile.artifacts['default:skill:packmind-create-skill'],
-        ).toEqual(defaultEntry);
+        it('preserves stale default-skill entries (cleanup is out of scope)', () => {
+          expect(
+            writtenLockFile.artifacts['default:skill:packmind-stale-skill'],
+          ).toEqual(staleDefaultEntry);
+        });
+
+        it('includes the new default-skill entry', () => {
+          expect(
+            writtenLockFile.artifacts['default:skill:packmind-create-skill'],
+          ).toEqual(defaultEntry);
+        });
       });
     });
 
@@ -849,26 +885,35 @@ describe('InstallDefaultSkillsUseCase', () => {
         });
       });
 
-      it('keeps the user-skill entry byte-equal after execute', async () => {
-        await useCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('keeps the user-skill entry byte-equal after execute', () => {
+        let writtenLockFile: PackmindLockFile;
+
+        beforeEach(async () => {
+          await useCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
+          [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
+            string,
+            PackmindLockFile,
+          ];
         });
 
-        const [, writtenLockFile] = mockWriteLockFile.mock.calls[0] as [
-          string,
-          PackmindLockFile,
-        ];
-        expect(writtenLockFile.artifacts['user:skill:my-custom-skill']).toEqual(
-          userSkillEntrySnapshotBefore,
-        );
-        // Byte-equality on the serialized form — the strongest possible
-        // assertion that the user-skill entry was not mutated in any way.
-        expect(
-          JSON.stringify(
+        it('keeps the user-skill entry equal to the snapshot', () => {
+          expect(
             writtenLockFile.artifacts['user:skill:my-custom-skill'],
-          ),
-        ).toBe(JSON.stringify(userSkillEntrySnapshotBefore));
+          ).toEqual(userSkillEntrySnapshotBefore);
+        });
+
+        it('keeps the user-skill entry byte-equal on serialized form', () => {
+          // Byte-equality on the serialized form — the strongest possible
+          // assertion that the user-skill entry was not mutated in any way.
+          expect(
+            JSON.stringify(
+              writtenLockFile.artifacts['user:skill:my-custom-skill'],
+            ),
+          ).toBe(JSON.stringify(userSkillEntrySnapshotBefore));
+        });
       });
 
       it('updates the existing default-skill entry', async () => {
@@ -987,29 +1032,43 @@ describe('InstallDefaultSkillsUseCase', () => {
         bootstrapUseCase = buildUseCase();
       });
 
-      it('writes the mapped agents to packmind.json once', async () => {
-        await bootstrapUseCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('writes the mapped agents to packmind.json', () => {
+        beforeEach(async () => {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
         });
 
-        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
-        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
-          BASE_DIR,
-          mappedAgents,
-        );
+        it('calls updateAgentsConfig once', () => {
+          expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls updateAgentsConfig with the mapped agents', () => {
+          expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
+            BASE_DIR,
+            mappedAgents,
+          );
+        });
       });
 
-      it('passes the bootstrapped agents to getDefaults via the re-read', async () => {
-        await bootstrapUseCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('passes the bootstrapped agents to getDefaults via the re-read', () => {
+        beforeEach(async () => {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
         });
 
-        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
-        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
-          expect.objectContaining({ agents: mappedAgents }),
-        );
+        it('calls getDefaults once', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls getDefaults with the bootstrapped agents', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+            expect.objectContaining({ agents: mappedAgents }),
+          );
+        });
       });
     });
 
@@ -1032,29 +1091,43 @@ describe('InstallDefaultSkillsUseCase', () => {
         bootstrapUseCase = buildUseCase();
       });
 
-      it('writes the default-mapped agents to packmind.json once', async () => {
-        await bootstrapUseCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('writes the default-mapped agents to packmind.json', () => {
+        beforeEach(async () => {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
         });
 
-        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
-        expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
-          BASE_DIR,
-          fallbackAgents,
-        );
+        it('calls updateAgentsConfig once', () => {
+          expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls updateAgentsConfig with the default-mapped agents', () => {
+          expect(bootstrapUpdateAgentsConfig).toHaveBeenCalledWith(
+            BASE_DIR,
+            fallbackAgents,
+          );
+        });
       });
 
-      it('passes the default-mapped agents to getDefaults via the re-read', async () => {
-        await bootstrapUseCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('passes the default-mapped agents to getDefaults via the re-read', () => {
+        beforeEach(async () => {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
         });
 
-        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
-        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
-          expect.objectContaining({ agents: fallbackAgents }),
-        );
+        it('calls getDefaults once', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls getDefaults with the default-mapped agents', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+            expect.objectContaining({ agents: fallbackAgents }),
+          );
+        });
       });
     });
 
@@ -1192,16 +1265,23 @@ describe('InstallDefaultSkillsUseCase', () => {
         expect(bootstrapUpdateAgentsConfig).not.toHaveBeenCalled();
       });
 
-      it('calls getDefaults with agents: undefined', async () => {
-        await bootstrapUseCase.execute({
-          cliVersion: '0.25.0',
-          baseDirectory: BASE_DIR,
+      describe('calls getDefaults with agents: undefined', () => {
+        beforeEach(async () => {
+          await bootstrapUseCase.execute({
+            cliVersion: '0.25.0',
+            baseDirectory: BASE_DIR,
+          });
         });
 
-        expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
-        expect(bootstrapGetDefaults).toHaveBeenCalledWith(
-          expect.objectContaining({ agents: undefined }),
-        );
+        it('calls getDefaults once', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledTimes(1);
+        });
+
+        it('calls getDefaults with agents: undefined', () => {
+          expect(bootstrapGetDefaults).toHaveBeenCalledWith(
+            expect.objectContaining({ agents: undefined }),
+          );
+        });
       });
     });
 

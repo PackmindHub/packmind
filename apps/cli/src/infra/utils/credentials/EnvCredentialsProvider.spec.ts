@@ -220,35 +220,47 @@ describe('EnvCredentialsProvider', () => {
     });
 
     describe('when both env variables are set', () => {
-      it('returns the API key from PACKMIND_API_KEY', () => {
-        const preferredKey = createTestApiKey({
-          host: 'https://preferred.host.com',
-        });
+      let credentials: ReturnType<EnvCredentialsProvider['loadCredentials']>;
+      const preferredKey = createTestApiKey({
+        host: 'https://preferred.host.com',
+      });
+
+      beforeEach(() => {
         const fallbackKey = createTestApiKey({
           host: 'https://fallback.host.com',
         });
         process.env.PACKMIND_API_KEY = preferredKey;
         process.env.PACKMIND_API_KEY_V3 = fallbackKey;
         const provider = new EnvCredentialsProvider();
+        credentials = provider.loadCredentials();
+      });
 
-        const credentials = provider.loadCredentials();
-
+      it('returns the API key from PACKMIND_API_KEY', () => {
         expect(credentials?.apiKey).toBe(preferredKey);
+      });
+
+      it('returns the host from PACKMIND_API_KEY', () => {
         expect(credentials?.host).toBe('https://preferred.host.com');
       });
     });
 
     describe('when only PACKMIND_API_KEY_V3 is set', () => {
-      it('falls back to PACKMIND_API_KEY_V3', () => {
-        const fallbackKey = createTestApiKey({
-          host: 'https://fallback.host.com',
-        });
+      let credentials: ReturnType<EnvCredentialsProvider['loadCredentials']>;
+      const fallbackKey = createTestApiKey({
+        host: 'https://fallback.host.com',
+      });
+
+      beforeEach(() => {
         process.env.PACKMIND_API_KEY_V3 = fallbackKey;
         const provider = new EnvCredentialsProvider();
+        credentials = provider.loadCredentials();
+      });
 
-        const credentials = provider.loadCredentials();
-
+      it('falls back to PACKMIND_API_KEY_V3 for the API key', () => {
         expect(credentials?.apiKey).toBe(fallbackKey);
+      });
+
+      it('falls back to PACKMIND_API_KEY_V3 for the host', () => {
         expect(credentials?.host).toBe('https://fallback.host.com');
       });
     });

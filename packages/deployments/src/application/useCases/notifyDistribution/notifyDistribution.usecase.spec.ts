@@ -1000,34 +1000,48 @@ describe('parseGitRepoInfo', () => {
     );
   });
 
-  it('parses GitHub HTTPS URL when repo name contains a dot', () => {
-    const result = parseGitRepoInfo('https://github.com/acme/web.frontend');
+  describe('when repo name contains a dot', () => {
+    it('parses GitHub HTTPS URL', () => {
+      const result = parseGitRepoInfo('https://github.com/acme/web.frontend');
 
-    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+      expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+    });
   });
 
-  it('parses GitHub HTTPS URL when repo name contains a dot and .git suffix', () => {
-    const result = parseGitRepoInfo('https://github.com/acme/web.frontend.git');
+  describe('when repo name contains a dot and .git suffix', () => {
+    it('parses GitHub HTTPS URL', () => {
+      const result = parseGitRepoInfo(
+        'https://github.com/acme/web.frontend.git',
+      );
 
-    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+      expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+    });
   });
 
-  it('parses GitHub HTTPS URL when repo name contains multiple dots', () => {
-    const result = parseGitRepoInfo('https://github.com/acme/my.cool.repo');
+  describe('when repo name contains multiple dots', () => {
+    it('parses GitHub HTTPS URL', () => {
+      const result = parseGitRepoInfo('https://github.com/acme/my.cool.repo');
 
-    expect(result).toEqual({ owner: 'acme', repo: 'my.cool.repo' });
+      expect(result).toEqual({ owner: 'acme', repo: 'my.cool.repo' });
+    });
   });
 
-  it('parses SSH URL when repo name contains a dot', () => {
-    const result = parseGitRepoInfo('git@github.com:acme/web.frontend.git');
+  describe('when repo name contains a dot', () => {
+    it('parses SSH URL', () => {
+      const result = parseGitRepoInfo('git@github.com:acme/web.frontend.git');
 
-    expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+      expect(result).toEqual({ owner: 'acme', repo: 'web.frontend' });
+    });
   });
 
-  it('parses URL when both owner and repo contain dots', () => {
-    const result = parseGitRepoInfo('https://github.com/acme.io/web.frontend');
+  describe('when both owner and repo contain dots', () => {
+    it('parses URL', () => {
+      const result = parseGitRepoInfo(
+        'https://github.com/acme.io/web.frontend',
+      );
 
-    expect(result).toEqual({ owner: 'acme.io', repo: 'web.frontend' });
+      expect(result).toEqual({ owner: 'acme.io', repo: 'web.frontend' });
+    });
   });
 
   it('parses self-hosted URL with trailing slash and dotted repo', () => {

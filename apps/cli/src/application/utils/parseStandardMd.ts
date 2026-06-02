@@ -50,6 +50,7 @@ const AGENT_PARSERS: Record<
 > = {
   packmind: parsePackmindStandard,
   claude: parseClaudeStandard,
+  claude_plugin: () => null, // plugin mode does not render standards (Rule 3)
   cursor: parseCursorStandard,
   continue: parseContinueStandard,
   copilot: parseCopilotStandard,

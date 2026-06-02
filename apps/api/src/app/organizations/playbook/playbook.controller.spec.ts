@@ -28,8 +28,10 @@ describe('PlaybookController', () => {
   });
 
   describe('when applyPlaybook throws SkillValidationError', () => {
-    it('translates it to a BadRequestException, passing the error message through', async () => {
-      const validationError = new SkillValidationError([
+    let validationError: SkillValidationError;
+
+    beforeEach(() => {
+      validationError = new SkillValidationError([
         {
           field: 'description',
           message: 'description must not exceed 1024 characters',
@@ -38,14 +40,18 @@ describe('PlaybookController', () => {
       validationError.message =
         'A submitted skill has a description longer than 1024 characters. Edit your skill and upload it again.';
       service.applyPlaybook.mockRejectedValue(validationError);
+    });
 
+    it('throws a BadRequestException', async () => {
       await expect(
         controller.apply(request, orgId, {
           proposals,
           message: 'msg',
         }),
       ).rejects.toThrow(BadRequestException);
+    });
 
+    it('passes the error message through', async () => {
       await expect(
         controller.apply(request, orgId, {
           proposals,

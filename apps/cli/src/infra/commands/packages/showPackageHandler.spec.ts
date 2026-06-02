@@ -8,6 +8,7 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
+import { parsePackageSlug } from '../../../domain/entities/PackageSlug';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logConsole: jest.fn(),
@@ -66,7 +67,10 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
 
-        await showPackageHandler({ slug: '@global/backend' }, deps);
+        await showPackageHandler(
+          { slug: parsePackageSlug('@global/backend') },
+          deps,
+        );
       });
 
       it('calls getPackageBySlug with the slug and spaceId', () => {
@@ -91,7 +95,10 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
 
-        await showPackageHandler({ slug: '@unknown-space/backend' }, deps);
+        await showPackageHandler(
+          { slug: parsePackageSlug('@unknown-space/backend') },
+          deps,
+        );
       });
 
       it('displays a space-not-found error', () => {
@@ -115,7 +122,10 @@ describe('showPackageHandler', () => {
           new Error('Package does not exist'),
         );
 
-        await showPackageHandler({ slug: '@frontend/backend' }, deps);
+        await showPackageHandler(
+          { slug: parsePackageSlug('@frontend/backend') },
+          deps,
+        );
       });
 
       it('displays a package-not-in-space error', () => {
@@ -138,7 +148,10 @@ describe('showPackageHandler', () => {
           new Error('Network error'),
         );
 
-        await showPackageHandler({ slug: '@global/backend' }, deps);
+        await showPackageHandler(
+          { slug: parsePackageSlug('@global/backend') },
+          deps,
+        );
       });
 
       it('surfaces the original error message', () => {
@@ -162,7 +175,10 @@ describe('showPackageHandler', () => {
           PACKAGE_SUMMARY_FRONTEND,
         );
 
-        await showPackageHandler({ slug: '@frontend/backend' }, deps);
+        await showPackageHandler(
+          { slug: parsePackageSlug('@frontend/backend') },
+          deps,
+        );
       });
 
       it('calls getPackageBySlug with the slug and spaceId for the requested space', () => {
@@ -189,7 +205,7 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('calls getPackageBySlug with the correct spaceId', () => {
@@ -214,7 +230,7 @@ describe('showPackageHandler', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.getSpaces.mockResolvedValue([]);
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('displays a package-not-found error', () => {
@@ -241,7 +257,7 @@ describe('showPackageHandler', () => {
           },
         );
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('auto-resolves to the single matching space', () => {
@@ -268,7 +284,7 @@ describe('showPackageHandler', () => {
           },
         );
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('displays a disambiguation error listing both spaces', () => {
@@ -289,7 +305,7 @@ describe('showPackageHandler', () => {
           new Error('Network error'),
         );
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('surfaces the original error message', () => {
@@ -310,7 +326,7 @@ describe('showPackageHandler', () => {
           new Error('Package does not exist'),
         );
 
-        await showPackageHandler({ slug: 'backend' }, deps);
+        await showPackageHandler({ slug: parsePackageSlug('backend') }, deps);
       });
 
       it('displays a package-not-found error', () => {
@@ -329,7 +345,10 @@ describe('showPackageHandler', () => {
     beforeEach(async () => {
       mockPackmindCliHexa.getSpaces.mockResolvedValue([SPACE_GLOBAL]);
 
-      await showPackageHandler({ slug: '@global/backend' }, deps);
+      await showPackageHandler(
+        { slug: parsePackageSlug('@global/backend') },
+        deps,
+      );
     });
 
     it('logs fetching message', () => {

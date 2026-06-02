@@ -9,9 +9,9 @@ describe('FileVersionCacheProvider', () => {
   let provider: FileVersionCacheProvider;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     provider = new FileVersionCacheProvider();
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('read', () => {
     describe('when the cache file does not exist', () => {
@@ -108,32 +108,47 @@ describe('FileVersionCacheProvider', () => {
         mockFs.existsSync.mockReturnValue(false);
       });
 
-      it('creates the directory and writes the file', () => {
-        provider.write({
-          latestVersion: '1.2.3',
-          checkedAt: new Date('2026-05-19T10:00:00.000Z'),
+      describe('creates the directory and writes the file', () => {
+        beforeEach(() => {
+          provider.write({
+            latestVersion: '1.2.3',
+            checkedAt: new Date('2026-05-19T10:00:00.000Z'),
+          });
         });
 
-        expect(mockFs.mkdirSync).toHaveBeenCalledWith(
-          expect.stringContaining('.packmind'),
-          { recursive: true, mode: 0o700 },
-        );
-        expect(mockFs.writeFileSync).toHaveBeenCalledWith(
-          expect.stringMatching(/version-check\.json\.\d+\.tmp$/),
-          expect.any(String),
-          { mode: 0o600 },
-        );
+        it('creates the cache directory', () => {
+          expect(mockFs.mkdirSync).toHaveBeenCalledWith(
+            expect.stringContaining('.packmind'),
+            { recursive: true, mode: 0o700 },
+          );
+        });
+
+        it('writes the temp file', () => {
+          expect(mockFs.writeFileSync).toHaveBeenCalledWith(
+            expect.stringMatching(/version-check\.json\.\d+\.tmp$/),
+            expect.any(String),
+            { mode: 0o600 },
+          );
+        });
       });
 
-      it('renames the temp file onto the final cache path', () => {
-        provider.write({
-          latestVersion: '1.2.3',
-          checkedAt: new Date('2026-05-19T10:00:00.000Z'),
+      describe('renames the temp file onto the final cache path', () => {
+        beforeEach(() => {
+          provider.write({
+            latestVersion: '1.2.3',
+            checkedAt: new Date('2026-05-19T10:00:00.000Z'),
+          });
         });
 
-        const [tmpPath, finalPath] = mockFs.renameSync.mock.calls[0];
-        expect(tmpPath).toMatch(/version-check\.json\.\d+\.tmp$/);
-        expect(finalPath).toMatch(/version-check\.json$/);
+        it('uses a temp path with the expected suffix', () => {
+          const [tmpPath] = mockFs.renameSync.mock.calls[0];
+          expect(tmpPath).toMatch(/version-check\.json\.\d+\.tmp$/);
+        });
+
+        it('renames to the final cache path', () => {
+          const [, finalPath] = mockFs.renameSync.mock.calls[0];
+          expect(finalPath).toMatch(/version-check\.json$/);
+        });
       });
 
       it('serializes checkedAt as an ISO string', () => {

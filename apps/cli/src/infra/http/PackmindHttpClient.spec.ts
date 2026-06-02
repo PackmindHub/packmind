@@ -57,18 +57,22 @@ describe('PackmindHttpClient', () => {
     });
 
     describe('when JWT includes organization.role', () => {
-      it('returns role "admin" when the JWT role is admin', () => {
-        const client = new PackmindHttpClient(
-          createTestApiKey('org-456', 'admin'),
-        );
-        expect(client.getAuthContext().role).toBe('admin');
+      describe('when the JWT role is admin', () => {
+        it('returns role "admin"', () => {
+          const client = new PackmindHttpClient(
+            createTestApiKey('org-456', 'admin'),
+          );
+          expect(client.getAuthContext().role).toBe('admin');
+        });
       });
 
-      it('returns role "member" when the JWT role is member', () => {
-        const client = new PackmindHttpClient(
-          createTestApiKey('org-456', 'member'),
-        );
-        expect(client.getAuthContext().role).toBe('member');
+      describe('when the JWT role is member', () => {
+        it('returns role "member"', () => {
+          const client = new PackmindHttpClient(
+            createTestApiKey('org-456', 'member'),
+          );
+          expect(client.getAuthContext().role).toBe('member');
+        });
       });
     });
 

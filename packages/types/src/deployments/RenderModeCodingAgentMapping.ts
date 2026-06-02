@@ -8,6 +8,7 @@ export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
   [RenderMode.JUNIE]: CodingAgents.junie,
   [RenderMode.GH_COPILOT]: CodingAgents.copilot,
   [RenderMode.CLAUDE]: CodingAgents.claude,
+  [RenderMode.CLAUDE_PLUGIN]: CodingAgents.claude_plugin,
   [RenderMode.CURSOR]: CodingAgents.cursor,
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
   [RenderMode.CONTINUE]: CodingAgents.continue,

@@ -71,12 +71,16 @@ describe('AGENT_CAPABILITIES', () => {
 });
 
 describe('hasCapableAgent', () => {
-  it('returns true when at least one agent supports the capability', () => {
-    expect(hasCapableAgent(['agents_md', 'claude'], 'skills')).toBe(true);
+  describe('when at least one agent supports the capability', () => {
+    it('returns true', () => {
+      expect(hasCapableAgent(['agents_md', 'claude'], 'skills')).toBe(true);
+    });
   });
 
-  it('returns false when no agent supports the capability', () => {
-    expect(hasCapableAgent(['agents_md', 'packmind'], 'skills')).toBe(false);
+  describe('when no agent supports the capability', () => {
+    it('returns false', () => {
+      expect(hasCapableAgent(['agents_md', 'packmind'], 'skills')).toBe(false);
+    });
   });
 
   it('returns false on empty agent list', () => {
@@ -85,16 +89,36 @@ describe('hasCapableAgent', () => {
 });
 
 describe('capableAgentsFor', () => {
-  it('returns every agent whose capability is true', () => {
-    const result = capableAgentsFor('skills');
-    expect(result).toContain<CodingAgent>('claude');
-    expect(result).not.toContain<CodingAgent>('agents_md');
-    expect(result).not.toContain<CodingAgent>('packmind');
+  describe('returns every agent whose capability is true', () => {
+    it('contains claude', () => {
+      expect(capableAgentsFor('skills')).toContain<CodingAgent>('claude');
+    });
+
+    it('does not contain agents_md', () => {
+      expect(capableAgentsFor('skills')).not.toContain<CodingAgent>(
+        'agents_md',
+      );
+    });
+
+    it('does not contain packmind', () => {
+      expect(capableAgentsFor('skills')).not.toContain<CodingAgent>('packmind');
+    });
   });
 
-  it('returns the right agents for standards (every agent supports standards in this design)', () => {
-    expect(capableAgentsFor('standards')).toEqual(
-      expect.arrayContaining([...VALID_CODING_AGENTS]),
-    );
+  describe('returns every agent that supports standards', () => {
+    it('contains all agents except claude_plugin', () => {
+      const agentsWithStandards = VALID_CODING_AGENTS.filter(
+        (agent) => agent !== 'claude_plugin',
+      );
+      expect(capableAgentsFor('standards')).toEqual(
+        expect.arrayContaining([...agentsWithStandards]),
+      );
+    });
+
+    it('does not contain claude_plugin', () => {
+      expect(capableAgentsFor('standards')).not.toContain<CodingAgent>(
+        'claude_plugin',
+      );
+    });
   });
 });

@@ -4,11 +4,15 @@ import {
   logInfoConsole,
   logErrorConsole,
 } from '../../utils/consoleLogger';
-import { parsePackageSlug } from '../../utils/packageSlugUtils';
 import { IGetPackageSummaryResult } from '../../../domain/useCases/IGetPackageSummaryUseCase';
+import {
+  displayableParsedPackageSlug,
+  isFullParsedPackageSlug,
+  ParsedPackageSlug,
+} from '../../../domain/entities/PackageSlug';
 
 export type ShowPackageArgs = {
-  slug: string;
+  slug: ParsedPackageSlug;
 };
 
 export type ShowPackageHandlerDependencies = {
@@ -31,15 +35,13 @@ function isNotFoundError(err: unknown): boolean {
 }
 
 async function resolvePackage(
-  slug: string,
+  slug: ParsedPackageSlug,
   packmindCliHexa: PackmindCliHexa,
 ): Promise<{ pkg: IGetPackageSummaryResult; fullSlug: string }> {
   const allSpaces = await packmindCliHexa.getSpaces();
 
-  const parsed = parsePackageSlug(slug);
-
-  if (parsed) {
-    const { spaceSlug, pkgSlug } = parsed;
+  if (isFullParsedPackageSlug(slug)) {
+    const { spaceSlug, packageSlug } = slug;
 
     const matchedSpace = allSpaces.find((s) => s.slug === spaceSlug);
     if (!matchedSpace) {
@@ -49,26 +51,26 @@ async function resolvePackage(
     let pkg: IGetPackageSummaryResult;
     try {
       pkg = await packmindCliHexa.getPackageBySlug({
-        slug: pkgSlug,
+        slug: packageSlug,
         spaceId: matchedSpace.id,
       });
     } catch (err) {
       if (isNotFoundError(err)) {
         throw new Error(
-          `Package '${pkgSlug}' not found in space '@${spaceSlug}'.`,
+          `Package '${packageSlug}' not found in space '@${spaceSlug}'.`,
         );
       }
       throw err;
     }
 
-    return { pkg, fullSlug: `@${spaceSlug}/${pkgSlug}` };
+    return { pkg, fullSlug: `@${spaceSlug}/${packageSlug}` };
   }
 
   // Unqualified slug — probe each space in parallel
   const results = await Promise.allSettled(
     allSpaces.map(async (space) => ({
       pkg: await packmindCliHexa.getPackageBySlug({
-        slug,
+        slug: slug.packageSlug,
         spaceId: space.id,
       }),
       spaceSlug: space.slug,
@@ -93,19 +95,19 @@ async function resolvePackage(
     if (realError) {
       throw realError.reason;
     }
-    throw new Error(`Package '${slug}' not found in any space.`);
+    throw new Error(`Package '${slug.packageSlug}' not found in any space.`);
   }
 
   if (matches.length > 1) {
-    const example = `@${matches[0].spaceSlug}/${slug}`;
+    const example = `@${matches[0].spaceSlug}/${slug.packageSlug}`;
     throw new Error(
-      `Package '${slug}' exists in multiple spaces (${matches.map((m) => `@${m.spaceSlug}`).join(', ')}). Please specify the space using the @space/package format (e.g. ${example}).`,
+      `Package '${slug.packageSlug}' exists in multiple spaces (${matches.map((m) => `@${m.spaceSlug}`).join(', ')}). Please specify the space using the @space/package format (e.g. ${example}).`,
     );
   }
 
   return {
     pkg: matches[0].pkg,
-    fullSlug: `@${matches[0].spaceSlug}/${slug}`,
+    fullSlug: `@${matches[0].spaceSlug}/${slug.packageSlug}`,
   };
 }
 
@@ -116,7 +118,9 @@ export async function showPackageHandler(
   const { packmindCliHexa, exit } = deps;
 
   try {
-    logInfoConsole(`Fetching package details for '${args.slug}'...`);
+    logInfoConsole(
+      `Fetching package details for '${displayableParsedPackageSlug(args.slug)}'...`,
+    );
 
     const { pkg, fullSlug } = await resolvePackage(args.slug, packmindCliHexa);
 

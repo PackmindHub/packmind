@@ -53,6 +53,7 @@ import { OrganizationGitProvidersModule } from './organizations/git/providers/gi
 import { OrganizationGitRepositoriesModule } from './organizations/git/repositories/git-repositories.module';
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
+import { OrganizationPluginsModule } from './organizations/plugins/plugins.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
 import {
   SpacesManagementHexa,
@@ -167,6 +168,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
                 module: OrganizationTargetsModule,
               },
             ],
+          },
+          {
+            path: 'plugins',
+            module: OrganizationPluginsModule,
           },
           {
             path: 'git',

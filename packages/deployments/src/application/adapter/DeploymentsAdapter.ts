@@ -86,8 +86,12 @@ import {
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
+  RenderPackageAsPluginCommand,
+  RenderPackageAsPluginResponse,
   Target,
   TargetWithRepository,
+  TrackPluginDeletedCommand,
+  TrackPluginDeletedResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
@@ -133,6 +137,8 @@ import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetD
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
+import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase';
+import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -188,6 +194,8 @@ export class DeploymentsAdapter
   private _getDashboardNonLiveUseCase!: GetDashboardNonLiveUseCase;
   private _getDeployedContentUseCase!: GetDeployedContentUseCase;
   private _installPackagesUseCase!: InstallPackagesUseCase;
+  private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
+  private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
 
   constructor(
@@ -379,6 +387,26 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
       this.spacesPort,
+      ports.eventEmitterService,
+    );
+
+    this._renderPackageAsPluginUseCase = new RenderPackageAsPluginUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.recipesPort,
+      this.standardsPort,
+      this.skillsPort,
+      this.spacesPort,
+      this.accountsPort,
+      targetResolutionService,
+      this.distributionRepository,
+      this.distributedPackageRepository,
+      ports.eventEmitterService,
+    );
+
+    this._trackPluginDeletedUseCase = new TrackPluginDeletedUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.spacesPort,
+      this.accountsPort,
       ports.eventEmitterService,
     );
 
@@ -677,6 +705,18 @@ export class DeploymentsAdapter
     command: InstallPackagesCommand,
   ): Promise<InstallPackagesResponse> {
     return this._installPackagesUseCase.execute(command);
+  }
+
+  async renderPackageAsPlugin(
+    command: RenderPackageAsPluginCommand,
+  ): Promise<RenderPackageAsPluginResponse> {
+    return this._renderPackageAsPluginUseCase.execute(command);
+  }
+
+  async trackPluginDeleted(
+    command: TrackPluginDeletedCommand,
+  ): Promise<TrackPluginDeletedResponse> {
+    return this._trackPluginDeletedUseCase.execute(command);
   }
 
   async listPackagesBySpace(

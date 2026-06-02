@@ -9,6 +9,8 @@ import {
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IPullContentUseCase,
+  IRenderPackageAsPluginUseCase,
+  ITrackPluginDeletedUseCase,
   RenderMode,
 } from '@packmind/types';
 import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway';
@@ -144,6 +146,42 @@ export class DeploymentGateway implements IDeploymentGateway {
         },
       );
     };
+
+  public renderPlugin: Gateway<IRenderPackageAsPluginUseCase> = async (
+    command,
+  ) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/plugins/render`,
+      {
+        method: 'POST',
+        body: {
+          packageSlug: command.packageSlug,
+          mode: command.mode,
+          pluginRoot: command.pluginRoot,
+          pluginName: command.pluginName,
+          gitRemoteUrl: command.gitRemoteUrl,
+          gitBranch: command.gitBranch,
+        },
+      },
+    );
+  };
+
+  public trackPluginDeleted: Gateway<ITrackPluginDeletedUseCase> = async (
+    command,
+  ) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/plugins/track-deleted`,
+      {
+        method: 'POST',
+        body: {
+          packageSlug: command.packageSlug,
+          gitRemoteUrl: command.gitRemoteUrl,
+        },
+      },
+    );
+  };
 
   public getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
     async () => {

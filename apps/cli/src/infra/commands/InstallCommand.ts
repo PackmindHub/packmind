@@ -1,4 +1,11 @@
-import { command, restPositionals, string, option, flag } from 'cmd-ts';
+import {
+  command,
+  restPositionals,
+  string,
+  option,
+  flag,
+  optional,
+} from 'cmd-ts';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -30,6 +37,11 @@ import {
   configuredAgentsSupportSkills,
 } from './skillsCapabilityWarning';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
+import { PackageSlugArgType } from './customParameters/PackageSlugArgType';
+import {
+  displayableParsedPackageSlug,
+  ParsedPackageSlug,
+} from '../../domain/entities/PackageSlug';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -186,8 +198,9 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   packmindCliHexa: PackmindCliHexa;
   cwd: string;
   configRepository: IConfigFileRepository;
+  resolvedAgents: CodingAgent[];
 }): Promise<void> {
-  const { packmindCliHexa, cwd, configRepository } = params;
+  const { packmindCliHexa, cwd, configRepository, resolvedAgents } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
 
@@ -195,11 +208,19 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     return;
   }
 
-  const config = await configRepository.readConfig(cwd);
-  const configuredAgents = config?.agents ?? [];
+  // Prefer the server-resolved agents from the package install (they already
+  // include the organisation-level fallback). Only fall back to reading
+  // config.agents on the edge case where no install actually ran — e.g. a
+  // cleanup with packagesSlugs.length === 0 — so the prior local behaviour
+  // is preserved.
+  let agents: CodingAgent[] = resolvedAgents;
+  if (agents.length === 0) {
+    const config = await configRepository.readConfig(cwd);
+    agents = config?.agents ?? [];
+  }
 
-  if (!configuredAgentsSupportSkills(configuredAgents)) {
-    logWarningConsole(buildSkillsSkippedWarning(configuredAgents));
+  if (!configuredAgentsSupportSkills(agents)) {
+    logWarningConsole(buildSkillsSkippedWarning(agents));
     return;
   }
 
@@ -207,6 +228,7 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
       baseDirectory: cwd,
+      agents,
     });
 
     if (skillsResult.incompatibleInstalledSkills.length > 0) {
@@ -246,9 +268,9 @@ export async function installHandler({
   skipInstalledAt,
 }: {
   installPath: string;
-  packages: string[];
+  packages: ParsedPackageSlug[];
   list: boolean;
-  show: string;
+  show: ParsedPackageSlug | undefined;
   status: boolean;
   skipInstalledAt: boolean;
 }): Promise<void> {
@@ -274,7 +296,7 @@ export async function installHandler({
   }
 
   if (show) {
-    const showCommand = `packmind-cli packages show ${show}`;
+    const showCommand = `packmind-cli packages show ${displayableParsedPackageSlug(show)}`;
     logErrorConsole('Command "packmind-cli install --show" has been removed.');
     logConsole(`Use ${formatCommand(showCommand)} instead.`);
     process.exit(1);
@@ -316,7 +338,7 @@ export async function installHandler({
     agentDetectionService: new AgentArtifactDetectionService(),
     packmindGateway: packmindCliHexa.getPackmindGateway(),
     baseDirectory: cwd,
-    packages,
+    packages: packages.map(displayableParsedPackageSlug),
     isTTY: process.stdin.isTTY ?? false,
     installDefaultSkills:
       packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
@@ -427,6 +449,7 @@ export async function installHandler({
         packmindCliHexa,
         cwd,
         configRepository,
+        resolvedAgents: combined.resolvedAgents,
       });
     }
   }
@@ -457,7 +480,7 @@ export const installCommand = command({
         'Run install in the specified directory instead of the current directory',
     }),
     packages: restPositionals({
-      type: string,
+      type: PackageSlugArgType,
       displayName: 'packages',
       description: 'Package slugs to install (e.g. @my-space/my-package)',
     }),
@@ -471,10 +494,9 @@ export const installCommand = command({
       description: '[Deprecated] List available packages',
     }),
     show: option({
-      type: string,
+      type: optional(PackageSlugArgType),
       long: 'show',
       description: '[Deprecated] Show details of a specific package',
-      defaultValue: () => '',
     }),
     skipInstalledAt: flag({
       long: 'skip-installed-at',

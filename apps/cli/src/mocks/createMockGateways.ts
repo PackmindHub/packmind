@@ -127,7 +127,10 @@ export function createMockDeploymentGateway(
     getContentByVersions: jest.fn(),
     notifyDistribution: jest.fn(),
     notifyArtefactsDistribution: jest.fn(),
+    renderPlugin: jest.fn(),
+    trackPluginDeleted: jest.fn(),
     getRenderModeConfiguration: jest.fn(),
+    updateRenderModeConfiguration: jest.fn(),
     getLatestVersion: jest.fn().mockResolvedValue({ version: 1 }),
     ...overrides,
   };

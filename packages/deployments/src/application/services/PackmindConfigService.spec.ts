@@ -151,37 +151,41 @@ describe('PackmindConfigService', () => {
           });
         });
 
-        it('replaces the bare entry even when a different space is provided', () => {
-          const existingPackages = {
-            'pkg-a': '*',
-          };
+        describe('when a different space is provided', () => {
+          it('replaces the bare entry', () => {
+            const existingPackages = {
+              'pkg-a': '*',
+            };
 
-          const result = service.generateConfigContent(
-            ['@other-space/pkg-a'],
-            existingPackages,
-          );
+            const result = service.generateConfigContent(
+              ['@other-space/pkg-a'],
+              existingPackages,
+            );
 
-          expect(result).toEqual({
-            packages: {
-              '@other-space/pkg-a': '*',
-            },
+            expect(result).toEqual({
+              packages: {
+                '@other-space/pkg-a': '*',
+              },
+            });
           });
         });
 
-        it('does not duplicate when the prefixed entry already exists', () => {
-          const existingPackages = {
-            '@my-space/pkg-a': '*',
-          };
-
-          const result = service.generateConfigContent(
-            ['@my-space/pkg-a'],
-            existingPackages,
-          );
-
-          expect(result).toEqual({
-            packages: {
+        describe('when the prefixed entry already exists', () => {
+          it('does not duplicate', () => {
+            const existingPackages = {
               '@my-space/pkg-a': '*',
-            },
+            };
+
+            const result = service.generateConfigContent(
+              ['@my-space/pkg-a'],
+              existingPackages,
+            );
+
+            expect(result).toEqual({
+              packages: {
+                '@my-space/pkg-a': '*',
+              },
+            });
           });
         });
       });

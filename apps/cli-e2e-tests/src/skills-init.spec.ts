@@ -76,12 +76,22 @@ describeForVersion('>= 0.24.0', 'skills init command', () => {
             }
           });
 
-          it('tags every entry with source: "default"', () => {
-            const entries = Object.values(lockFile.artifacts);
-            expect(entries.length).toBeGreaterThan(0);
-            for (const entry of entries) {
-              expect(entry.source).toBe('default');
-            }
+          describe('when checking lockfile artifact entries', () => {
+            let entries: PackmindLockFile['artifacts'][string][];
+
+            beforeEach(() => {
+              entries = Object.values(lockFile.artifacts);
+            });
+
+            it('has at least one entry', () => {
+              expect(entries.length).toBeGreaterThan(0);
+            });
+
+            it('tags every entry with source: "default"', () => {
+              for (const entry of entries) {
+                expect(entry.source).toBe('default');
+              }
+            });
           });
         },
       );

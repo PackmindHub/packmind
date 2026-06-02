@@ -128,14 +128,21 @@ describeForVersion('> 0.28.1', 'CLI version drift (skills init)', () => {
         // user-authored skills, so the previous implementation was reverted.
         it('does not remove the on-disk skill file', () => {
           expect(fileExists(skillPath, context.testDir)).toBe(true);
+        });
+
+        it('does not remove the on-disk skill directory', () => {
           expect(
             fileExists('.claude/skills/fake-obsolete-skill', context.testDir),
           ).toBe(true);
         });
 
-        it('does not prompt the user before any cleanup', () => {
+        it('does not prompt the user with "Are you sure" before any cleanup', () => {
           const combined = result.stdout + result.stderr;
           expect(combined).not.toMatch(/Are you sure/i);
+        });
+
+        it('does not prompt the user with "(y/n)" before any cleanup', () => {
+          const combined = result.stdout + result.stderr;
           expect(combined).not.toMatch(/\(y\/n\)/i);
         });
       });

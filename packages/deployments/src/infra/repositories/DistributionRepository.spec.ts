@@ -866,8 +866,11 @@ describe('DistributionRepository', () => {
         );
       });
 
-      it('returns the skill version', () => {
+      it('returns one skill version', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('returns the expected skill version', () => {
         expect(result[0].id).toBe(skv1.id);
       });
 
@@ -922,6 +925,9 @@ describe('DistributionRepository', () => {
 
       it('excludes versions whose parent skill is soft-deleted', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('keeps only the live skill version', () => {
         expect(result[0].id).toBe(liveSkv.id);
       });
     });
@@ -1011,6 +1017,9 @@ describe('DistributionRepository', () => {
 
       it('excludes versions whose parent skill is soft-deleted', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('keeps only the live skill version', () => {
         expect(result[0].id).toBe(liveSkv.id);
       });
 
@@ -1933,36 +1942,51 @@ describe('DistributionRepository', () => {
       ]);
     });
 
-    it('orders by (target_id, package_id, createdAt DESC) so DISTINCT ON keeps the latest', async () => {
-      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+    describe('orders by (target_id, package_id, createdAt DESC) so DISTINCT ON keeps the latest', () => {
+      beforeEach(async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+        await repository.findActivePackageOperationsBySpace(spaceId);
+      });
 
-      await repository.findActivePackageOperationsBySpace(spaceId);
+      it('orders by target_id first', () => {
+        expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+          'distribution.target_id',
+        );
+      });
 
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
-        'distribution.target_id',
-      );
-      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
-        'distributedPackage.package_id',
-      );
-      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
-        'distribution.createdAt',
-        'DESC',
-      );
+      it('adds order by package_id', () => {
+        expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+          'distributedPackage.package_id',
+        );
+      });
+
+      it('adds order by createdAt DESC', () => {
+        expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+          'distribution.createdAt',
+          'DESC',
+        );
+      });
     });
 
-    it('joins distributedPackages and package without selecting them', async () => {
-      (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+    describe('joins distributedPackages and package without selecting them', () => {
+      beforeEach(async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+        await repository.findActivePackageOperationsBySpace(spaceId);
+      });
 
-      await repository.findActivePackageOperationsBySpace(spaceId);
+      it('joins distributedPackages', () => {
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        );
+      });
 
-      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
-        'distribution.distributedPackages',
-        'distributedPackage',
-      );
-      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
-        'distributedPackage.package',
-        'package',
-      );
+      it('joins package', () => {
+        expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+          'distributedPackage.package',
+          'package',
+        );
+      });
     });
 
     describe('when no rows match the space', () => {

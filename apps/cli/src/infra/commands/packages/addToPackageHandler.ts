@@ -8,12 +8,16 @@ import {
   logInfoConsole,
   formatCommand,
 } from '../../utils/consoleLogger';
-import { parsePackageSlug } from '../../utils/packageSlugUtils';
 import {
   IAddToPackageUseCase,
   ItemType,
 } from '../../../domain/useCases/IAddToPackageUseCase';
 import { ItemNotFoundError } from '../../../domain/errors/ItemNotFoundError';
+import {
+  FullParsedPackageSlug,
+  isFullParsedPackageSlug,
+  ParsedPackageSlug,
+} from '../../../domain/entities/PackageSlug';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +29,7 @@ export interface IAddToPackageHandlerResult {
 }
 
 export type AddToPackageHandlerArgs = {
-  to: string;
+  to: ParsedPackageSlug;
   itemType: ItemType;
   itemSlugs: string[];
   originSkill?: string;
@@ -54,22 +58,19 @@ function formatItemList(items: string[]): string {
 }
 
 function resolvePackageRef(
-  to: string,
+  to: ParsedPackageSlug,
   allSpaces: Space[],
   exit: (code: number) => void,
-): { pkgSlug: string; spaceSlug: string } {
-  const parsed = parsePackageSlug(to);
-
-  if (parsed) {
-    const spaceExists = allSpaces.find((s) => s.slug === parsed.spaceSlug);
+): FullParsedPackageSlug {
+  if (isFullParsedPackageSlug(to)) {
+    const spaceExists = allSpaces.find((s) => s.slug === to.spaceSlug);
     if (!spaceExists) {
-      logErrorConsole(`Space '${parsed.spaceSlug}' not found.`);
-      logInfoConsole(
-        `Available spaces: ${allSpaces.map((s) => `@${s.slug}`).join(', ')}`,
-      );
+      logErrorConsole(`Space '${to.spaceSlug}' not found.`);
+      const availableSpaceSlugs = allSpaces.map((s) => `@${s.slug}`).join(', ');
+      logInfoConsole(`Available spaces: ${availableSpaceSlugs}`);
       exit(1);
     }
-    return parsed;
+    return to;
   }
 
   if (allSpaces.length > 1) {
@@ -78,7 +79,7 @@ function resolvePackageRef(
     );
     logInfoConsole(`For example:`);
     allSpaces.forEach((s) => {
-      logInfoConsole(`  --to @${s.slug}/${to}`);
+      logInfoConsole(`  --to @${s.slug}/${to.packageSlug}`);
     });
     logInfoConsole(
       `Run \`packmind-cli packages list\` to see available packages per space.`,
@@ -86,7 +87,7 @@ function resolvePackageRef(
     exit(1);
   }
 
-  return { pkgSlug: to, spaceSlug: allSpaces[0].slug };
+  return { ...to, spaceSlug: allSpaces[0].slug };
 }
 
 // ─── Use-case invocation ──────────────────────────────────────────────────────
@@ -155,13 +156,17 @@ export async function addToPackageHandler(
   const { hexa, exit } = deps;
 
   const allSpaces = await hexa.getSpaces();
-  const { pkgSlug, spaceSlug } = resolvePackageRef(args.to, allSpaces, exit);
+  const { packageSlug, spaceSlug } = resolvePackageRef(
+    args.to,
+    allSpaces,
+    exit,
+  );
 
   const gateway = hexa.getPackmindGateway();
   const useCase = new AddToPackageUseCase(gateway, hexa.getSpaceService());
 
   const result = await executeAddToPackage(
-    pkgSlug,
+    packageSlug,
     spaceSlug,
     args.itemType,
     args.itemSlugs,

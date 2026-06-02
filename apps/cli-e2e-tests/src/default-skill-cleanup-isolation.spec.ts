@@ -210,34 +210,57 @@ describeForVersion(
           expect(result.returnCode).toBe(0);
         });
 
-        it('preserves the user-skill SKILL.md byte-for-byte on disk', () => {
-          expect(fileExists(USER_SKILL_REL_PATH, context.testDir)).toBe(true);
-          const after = readFile(USER_SKILL_REL_PATH, context.testDir);
-          expect(after).toBe(userSkillContentBefore);
+        describe('when checking the user-skill SKILL.md on disk', () => {
+          it('preserves the user-skill SKILL.md file on disk', () => {
+            expect(fileExists(USER_SKILL_REL_PATH, context.testDir)).toBe(true);
+          });
+
+          it('preserves the user-skill SKILL.md content byte-for-byte', () => {
+            const after = readFile(USER_SKILL_REL_PATH, context.testDir);
+            expect(after).toBe(userSkillContentBefore);
+          });
         });
 
-        it('preserves the user-skill companion file byte-for-byte on disk', () => {
-          expect(
-            fileExists(USER_SKILL_COMPANION_REL_PATH, context.testDir),
-          ).toBe(true);
-          const after = readFile(
-            USER_SKILL_COMPANION_REL_PATH,
-            context.testDir,
-          );
-          expect(after).toBe(userSkillCompanionContentBefore);
+        describe('when checking the user-skill companion file on disk', () => {
+          it('preserves the user-skill companion file on disk', () => {
+            expect(
+              fileExists(USER_SKILL_COMPANION_REL_PATH, context.testDir),
+            ).toBe(true);
+          });
+
+          it('preserves the user-skill companion file content byte-for-byte', () => {
+            const after = readFile(
+              USER_SKILL_COMPANION_REL_PATH,
+              context.testDir,
+            );
+            expect(after).toBe(userSkillCompanionContentBefore);
+          });
         });
 
-        it('preserves the user-skill lockfile entry byte-for-byte', () => {
-          const entryAfter =
-            lockFileAfter.artifacts[`user:skill:${USER_SKILL_SLUG}`];
-          expect(entryAfter).toBeDefined();
-          // Deep-equal check on the entry payload itself.
-          expect(entryAfter).toEqual(userSkillEntryBefore);
-          // Byte-equality on the serialized form — the strongest possible
-          // assertion that the user-skill entry was not mutated in any way.
-          expect(JSON.stringify(entryAfter)).toBe(
-            JSON.stringify(userSkillEntryBefore),
-          );
+        describe('when checking the user-skill lockfile entry', () => {
+          let entryAfter: PackmindLockFileEntry;
+
+          beforeEach(() => {
+            entryAfter =
+              lockFileAfter.artifacts[`user:skill:${USER_SKILL_SLUG}`];
+          });
+
+          it('preserves the user-skill lockfile entry as defined', () => {
+            expect(entryAfter).toBeDefined();
+          });
+
+          it('preserves the user-skill lockfile entry deep-equal to the original', () => {
+            // Deep-equal check on the entry payload itself.
+            expect(entryAfter).toEqual(userSkillEntryBefore);
+          });
+
+          it('preserves the user-skill lockfile entry byte-for-byte in serialized form', () => {
+            // Byte-equality on the serialized form — the strongest possible
+            // assertion that the user-skill entry was not mutated in any way.
+            expect(JSON.stringify(entryAfter)).toBe(
+              JSON.stringify(userSkillEntryBefore),
+            );
+          });
         });
 
         it('keeps the user-skill key under the user: prefix', () => {
@@ -249,11 +272,21 @@ describeForVersion(
           ).toBe(true);
         });
 
-        it('retains the default-skill entry tagged source: "default"', () => {
-          const entryAfter =
-            lockFileAfter.artifacts[`default:skill:${DEFAULT_SKILL_SLUG}`];
-          expect(entryAfter).toBeDefined();
-          expect(entryAfter.source).toBe('default');
+        describe('when checking the default-skill lockfile entry', () => {
+          let entryAfter: PackmindLockFileEntry;
+
+          beforeEach(() => {
+            entryAfter =
+              lockFileAfter.artifacts[`default:skill:${DEFAULT_SKILL_SLUG}`];
+          });
+
+          it('retains the default-skill entry in the lockfile', () => {
+            expect(entryAfter).toBeDefined();
+          });
+
+          it('retains the default-skill entry tagged source: "default"', () => {
+            expect(entryAfter.source).toBe('default');
+          });
         });
 
         it('does not duplicate the user-skill entry under default: prefix', () => {

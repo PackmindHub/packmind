@@ -181,9 +181,9 @@ describe('buildProposals', () => {
   ) => Promise<TargetContext>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     defaultGetTargetContext = jest.fn().mockResolvedValue(makeTargetContext());
   });
+  afterEach(() => jest.clearAllMocks());
 
   describe('when entry is a created standard', () => {
     it('generates one proposal', async () => {
