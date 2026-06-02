@@ -2,11 +2,11 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
-# Moved from package.json "pnpm".overrides (pnpm 11 no longer reads it from package.json)
+# Moved from package.json "pnpm".overrides — centralized here for pnpm 11
 overrides:
   fast-xml-parser: 5.5.6
 
-# Converted from package.json "pnpm".onlyBuiltDependencies (removed in pnpm 11 → allowBuilds map)
+# Converted from package.json "pnpm".onlyBuiltDependencies (list) to the allowBuilds map form
 allowBuilds:
   bcrypt: true
   '@swc/core': true
