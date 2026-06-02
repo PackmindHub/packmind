@@ -70,12 +70,13 @@ describe('LinkMarketplaceUseCase', () => {
     source: 'github',
     organizationId,
     url: 'https://github.com',
-    hasToken: true,
+    hasAuth: true,
+    authMethod: 'token',
   };
 
   const providerWithoutToken: GitProviderWithoutToken = {
     ...providerWithToken,
-    hasToken: false,
+    hasAuth: false,
   };
 
   const descriptor: MarketplaceDescriptor = {

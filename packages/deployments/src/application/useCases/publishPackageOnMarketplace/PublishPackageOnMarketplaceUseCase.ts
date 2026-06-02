@@ -228,13 +228,13 @@ export class PublishPackageOnMarketplaceUseCase
         providersResponse.providers.find(
           (p) => p.id === provisionalGitRepo.providerId,
         );
-      if (!provider || !provider.hasToken) {
+      if (!provider || !provider.hasAuth) {
         this.logger.warn(
-          'Git provider token preflight failed — provider missing or no token',
+          'Git provider token preflight failed — provider missing or no auth',
           {
             providerId: provisionalGitRepo.providerId,
             hasProvider: !!provider,
-            hasToken: provider?.hasToken ?? false,
+            hasAuth: provider?.hasAuth ?? false,
           },
         );
         throw new GitProviderTokenInvalidError();

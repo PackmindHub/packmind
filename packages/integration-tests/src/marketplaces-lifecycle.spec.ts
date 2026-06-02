@@ -86,7 +86,7 @@ describe('Marketplace lifecycle integration', () => {
     await dataFactory.withUserAndOrganization({ email: 'admin@example.com' });
 
     // A token-bearing GitProvider — `LinkMarketplaceUseCase` requires
-    // `hasToken=true` so it can fetch `marketplace.json`. We seed via the
+    // `hasAuth=true` so it can fetch `marketplace.json`. We seed via the
     // existing factory (token: 'test-token') so the live use case sees a
     // realistic provider.
     ({ gitProvider } = await dataFactory.withGitProvider(

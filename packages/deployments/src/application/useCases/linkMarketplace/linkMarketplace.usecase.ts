@@ -123,7 +123,7 @@ export class LinkMarketplaceUseCase
         organization.id,
       );
     }
-    if (!gitProvider.hasToken) {
+    if (!gitProvider.hasAuth) {
       this.logger.error('Git provider has no token configured', {
         gitProviderId,
         organizationId: organization.id,

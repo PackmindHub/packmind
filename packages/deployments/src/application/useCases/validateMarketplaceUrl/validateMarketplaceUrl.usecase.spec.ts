@@ -53,7 +53,8 @@ describe('ValidateMarketplaceUrlUseCase', () => {
     source: 'github',
     organizationId,
     url: 'https://github.com',
-    hasToken: false,
+    hasAuth: false,
+    authMethod: 'token',
   };
 
   const descriptor: MarketplaceDescriptor = {
@@ -142,7 +143,7 @@ describe('ValidateMarketplaceUrlUseCase', () => {
     describe('when only token-bearing providers match', () => {
       it('throws MarketplaceUrlNotReachableError', async () => {
         mockGitPort.listProviders = jest.fn().mockResolvedValue({
-          providers: [{ ...tokenlessProvider, hasToken: true }],
+          providers: [{ ...tokenlessProvider, hasAuth: true }],
         });
 
         await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
