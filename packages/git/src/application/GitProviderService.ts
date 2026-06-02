@@ -5,6 +5,7 @@ import {
   GitProvider,
   GitProviderId,
   createGitProviderId,
+  createGitRepoId,
 } from '@packmind/types';
 import { GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
@@ -95,6 +96,45 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.checkBranchExists(owner, repo, branch);
+  }
+
+  async createBranchFromBase(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    baseBranch: string,
+    targetBranch: string,
+  ): Promise<void> {
+    // Resolve provider + token, then build an IGitRepo bound to the BASE
+    // branch so the underlying client knows where to fork from. The factory
+    // only consumes owner/repo/branch from the GitRepo shape, so the synthetic
+    // id/providerId/type fields are inert here.
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (!gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const syntheticGitRepo: GitRepo = {
+      id: createGitRepoId(uuidv4()),
+      owner,
+      repo,
+      branch: baseBranch,
+      providerId: gitProviderId,
+      type: 'standard',
+    };
+
+    const gitRepoInstance = this.gitRepoFactory.createGitRepo(
+      syntheticGitRepo,
+      gitProvider,
+    );
+
+    await gitRepoInstance.createBranchFromBase(targetBranch);
   }
 
   async listAvailableTargets(

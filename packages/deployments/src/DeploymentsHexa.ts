@@ -23,12 +23,25 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  Marketplace,
+  MarketplaceDistribution,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import {
+  GitRepoRepository,
+  GitRepoSchema,
+  GitRepoService,
+} from '@packmind/git';
+import { DataSource, Repository } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { DeploymentsListener } from './application/listeners/DeploymentsListener';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
+import { MarketplaceDescriptorParserRegistry } from './application/services/MarketplaceDescriptorParserRegistry';
+import { AnthropicMarketplaceDescriptorParser } from './application/services/parsers/AnthropicMarketplaceDescriptorParser';
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
+import { MarketplaceDistributionRepository } from './infra/repositories/MarketplaceDistributionRepository';
+import { MarketplaceRepository } from './infra/repositories/MarketplaceRepository';
+import { MarketplaceDistributionSchema } from './infra/schemas/MarketplaceDistributionSchema';
+import { MarketplaceSchema } from './infra/schemas/MarketplaceSchema';
 
 const origin = 'DeploymentsHexa';
 
@@ -47,6 +60,10 @@ export class DeploymentsHexa extends BaseHexa<
 > {
   private readonly repositories: DeploymentsRepositories;
   private readonly services: DeploymentsServices;
+  private readonly marketplaceRepository: MarketplaceRepository;
+  private readonly marketplaceDistributionRepository: MarketplaceDistributionRepository;
+  private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry;
+  private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
   private readonly listener: DeploymentsListener;
 
@@ -64,11 +81,51 @@ export class DeploymentsHexa extends BaseHexa<
       // Initialize services (no longer depends on GitPort)
       this.services = new DeploymentsServices(this.repositories);
 
+      // Build the marketplace repository against MarketplaceSchema. Kept
+      // outside DeploymentsRepositories for now because marketplace use
+      // cases are the only consumers.
+      this.marketplaceRepository = new MarketplaceRepository(
+        this.dataSource.getRepository(
+          MarketplaceSchema,
+        ) as Repository<Marketplace>,
+      );
+
+      // Persistence for marketplace publish attempts. Passed through to the
+      // adapter so the publish use case and its delayed job can read/write
+      // the marketplace distribution rows.
+      this.marketplaceDistributionRepository =
+        new MarketplaceDistributionRepository(
+          this.dataSource.getRepository(
+            MarketplaceDistributionSchema,
+          ) as Repository<MarketplaceDistribution>,
+        );
+
+      // Vendor-agnostic parser registry. New marketplace vendors plug in by
+      // appending to this array — link/unlink use cases do not branch on
+      // vendor.
+      this.marketplaceDescriptorParserRegistry =
+        new MarketplaceDescriptorParserRegistry([
+          new AnthropicMarketplaceDescriptorParser(),
+        ]);
+
+      // LinkMarketplaceUseCase needs the GitRepoService for the cross-type
+      // collision check (`findGitRepoIgnoringType`) and to persist the
+      // marketplace-typed GitRepo. The service is constructed from the
+      // GitRepoRepository (re-exported from @packmind/git so this Hexa can
+      // wire it without reaching into git's internals).
+      this.gitRepoService = new GitRepoService(
+        new GitRepoRepository(this.dataSource.getRepository(GitRepoSchema)),
+      );
+
       // Create adapter in constructor - ports will be set during initialize()
       this.adapter = new DeploymentsAdapter(
         this.services,
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.marketplaceDescriptorParserRegistry,
+        this.gitRepoService,
       );
 
       // Create listener - will be initialized during initialize()

@@ -1,4 +1,7 @@
 export * from './DeploymentsServices';
+export * from './fetchMarketplaceDescriptorFile';
+export * from './MarketplaceDescriptorParserRegistry';
+export * from './parsers';
 export * from './PackageService';
 export * from './packageSlugHelpers';
 export * from './PackmindConfigService';

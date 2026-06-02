@@ -173,3 +173,26 @@ export class UnsupportedGitProviderError extends Error {
     }
   }
 }
+
+/**
+ * Error thrown when attempting to link a marketplace whose `(owner, repo)`
+ * coordinates already match an existing standard (non-marketplace) GitRepo
+ * in the same organization. Linking the repo as a marketplace would create a
+ * cross-type collision; the link is rejected so the admin can resolve the
+ * conflict explicitly.
+ */
+export class GitRepoAlreadyLinkedAsStandardError extends Error {
+  constructor(
+    public readonly owner: string,
+    public readonly repo: string,
+  ) {
+    super(
+      `Repository ${owner}/${repo} is already linked as a standard Git repository in this organization`,
+    );
+    this.name = 'GitRepoAlreadyLinkedAsStandardError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitRepoAlreadyLinkedAsStandardError);
+    }
+  }
+}

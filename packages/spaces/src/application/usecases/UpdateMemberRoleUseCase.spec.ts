@@ -29,7 +29,7 @@ describe('UpdateMemberRoleUseCase', () => {
   const organization = organizationFactory({ id: organizationId });
   const user = userFactory({
     id: userId,
-    memberships: [{ userId, organizationId, role: 'admin' }],
+    memberships: [{ userId, organizationId, role: 'member' }],
   });
 
   let useCase: UpdateMemberRoleUseCase;
@@ -229,6 +229,62 @@ describe('UpdateMemberRoleUseCase', () => {
 
       it('throws an access error', async () => {
         await expect(useCase.execute(buildCommand())).rejects.toThrow();
+      });
+    });
+
+    describe('when caller is an org admin without space admin role', () => {
+      beforeEach(() => {
+        const orgAdmin = userFactory({
+          id: userId,
+          memberships: [{ userId, organizationId, role: 'admin' }],
+        });
+        accountsPort.getUserById.mockResolvedValue(orgAdmin);
+        membershipService.findMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId: targetUserId,
+            spaceId,
+            role: UserSpaceRole.MEMBER,
+          }),
+        );
+        membershipService.updateMembershipRole.mockResolvedValue(true);
+      });
+
+      it('returns updated: true without checking space-admin membership', async () => {
+        const result = await useCase.execute(
+          buildCommand({ role: UserSpaceRole.ADMIN }),
+        );
+
+        expect(result).toEqual({ updated: true });
+      });
+
+      it('emits the role update event without checking space-admin membership', async () => {
+        await useCase.execute(buildCommand({ role: UserSpaceRole.ADMIN }));
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+              newRole: UserSpaceRole.ADMIN,
+            }),
+          }),
+        );
+      });
+
+      it('still rejects self-role-update', async () => {
+        await expect(
+          useCase.execute(buildCommand({ targetUserId: userId })),
+        ).rejects.toBeInstanceOf(CannotUpdateOwnRoleError);
+      });
+
+      describe('when target is not a member', () => {
+        it('still rejects', async () => {
+          membershipService.findMembership.mockResolvedValue(null);
+
+          await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+            MemberNotFoundError,
+          );
+        });
       });
     });
   });

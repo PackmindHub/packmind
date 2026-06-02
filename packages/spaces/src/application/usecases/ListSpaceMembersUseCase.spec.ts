@@ -131,5 +131,33 @@ describe('ListSpaceMembersUseCase', () => {
         );
       });
     });
+
+    describe('when the user is an organization admin but not a space member', () => {
+      const adminUser = userFactory({
+        id: userId,
+        memberships: [{ userId, organizationId, role: 'admin' }],
+      });
+      const memberships = [
+        userSpaceMembershipFactory({ spaceId, role: UserSpaceRole.MEMBER }),
+      ];
+
+      beforeEach(() => {
+        accountsPort.getUserById.mockResolvedValue(adminUser);
+        spacesPort.findMembership.mockResolvedValue(null);
+        membershipService.listSpaceMembers.mockResolvedValue(memberships);
+      });
+
+      it('returns all memberships', async () => {
+        const result = await useCase.execute(buildCommand());
+
+        expect(result).toEqual(memberships);
+      });
+
+      it('does not check space membership for org admins', async () => {
+        await useCase.execute(buildCommand());
+
+        expect(spacesPort.findMembership).not.toHaveBeenCalled();
+      });
+    });
   });
 });

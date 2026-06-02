@@ -86,6 +86,19 @@ export interface IGitPort {
   ): Promise<{ sha: string; content: string } | null>;
 
   /**
+   * Ensure a branch exists on a git repository, creating it from a base branch
+   * if missing. No-op when the target branch already exists.
+   *
+   * Used by the marketplace-publish flow to bootstrap the rolling `packmind/sync`
+   * branch from the marketplace's default branch on the first publish.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch used when creating)
+   * @param branch - The target branch name to ensure exists
+   * @returns Promise resolving when the branch is guaranteed to exist
+   */
+  createBranchFromBase(repo: GitRepo, branch: string): Promise<void>;
+
+  /**
    * Handle webhook payload for a git repository with file content
    *
    * @param command - The webhook command

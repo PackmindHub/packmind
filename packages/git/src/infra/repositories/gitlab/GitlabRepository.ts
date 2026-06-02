@@ -533,6 +533,100 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const baseBranch = this.options.branch || 'main';
+
+    this.logger.info('Ensuring branch exists on GitLab repository', {
+      projectPath: this.projectPath,
+      baseBranch,
+      targetBranch,
+    });
+
+    // Step 1: Check if the target branch already exists. If GitLab returns
+    // 2xx, the branch is present and no work is needed.
+    const encodedTargetBranch = encodeURIComponent(targetBranch);
+    try {
+      await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/repository/branches/${encodedTargetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        projectPath: this.projectPath,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitLab', {
+          projectPath: this.projectPath,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitLab: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Create the target branch from the base branch. GitLab's branch
+    // creation endpoint validates that `ref` (the base) exists; propagate any
+    // failure verbatim so the caller can surface it.
+    try {
+      await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/repository/branches`,
+        null,
+        {
+          params: {
+            branch: targetBranch,
+            ref: baseBranch,
+          },
+        },
+      );
+
+      this.logger.info('Created target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitLab: ${errorMessage}`,
+      );
+    }
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
+  }
+
   isValidBranch(ref: string): boolean {
     // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
     const branchName = ref.replace('refs/heads/', '');

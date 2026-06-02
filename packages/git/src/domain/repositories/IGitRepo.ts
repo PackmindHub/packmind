@@ -49,4 +49,14 @@ export interface IGitRepo {
     path: string,
     branch: string,
   ): Promise<{ path: string }[]>;
+
+  /**
+   * Ensure a target branch exists on the repository, creating it from the
+   * repository's configured base branch when missing.
+   *
+   * No-op when the target branch already exists.
+   *
+   * @param targetBranch - The branch name to ensure exists
+   */
+  createBranchFromBase(targetBranch: string): Promise<void>;
 }

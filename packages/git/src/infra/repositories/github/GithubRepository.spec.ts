@@ -1011,6 +1011,97 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('createBranchFromBase', () => {
+    const baseBranchSha = 'base-branch-sha-abc';
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: 'existing-sync-sha' } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new ref', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: baseBranchSha } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({ data: {} });
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base SHA', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/refs`,
+          {
+            ref: 'refs/heads/packmind/sync',
+            sha: baseBranchSha,
+          },
+        );
+      });
+    });
+
+    describe('when fetching the base branch ref fails', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.reject(new Error('Network down'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+      });
+
+      it('propagates an error mentioning the base branch', async () => {
+        await expect(
+          githubRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to fetch base branch 'main' on GitHub: Network down`,
+        );
+      });
+    });
+  });
+
   describe('isValidBranch', () => {
     it('returns true for main branch', () => {
       const result = githubRepository.isValidBranch('refs/heads/main');

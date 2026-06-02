@@ -40,12 +40,19 @@ import {
   InstallPackagesResponse,
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
+  FindMarketplaceDistributionByIdCommand,
+  LinkMarketplaceCommand,
+  LinkMarketplaceResponse,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
+  ListMarketplaceDistributionsForPackageCommand,
+  ListMarketplaceDistributionsForPackageResponse,
+  ListMarketplacesCommand,
+  ListMarketplacesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -56,6 +63,8 @@ import {
   NotifyDistributionResponse,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
+  PublishPackageOnMarketplaceCommand,
+  PublishPackageOnMarketplaceResponse,
   PublishPackagesCommand,
   PullContentCommand,
   RemovePackageFromTargetsCommand,
@@ -64,12 +73,17 @@ import {
   RenderPackageAsPluginResponse,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  UnlinkMarketplaceCommand,
+  UnlinkMarketplaceResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
+  ValidateMarketplaceUrlCommand,
+  ValidateMarketplaceUrlResponse,
 } from '../contracts';
 import { Distribution } from '../Distribution';
+import { MarketplaceDistribution } from '../MarketplaceDistribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -574,4 +588,103 @@ export interface IDeploymentPort {
    * Exposes the typed use case instance for consumers that need the port-typed reference.
    */
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
+
+  /**
+   * Links a Git repository as an organization-level marketplace.
+   *
+   * Admin-only at the use-case boundary. Validates the target git provider,
+   * fetches and parses `marketplace.json`, persists a marketplace-typed
+   * `GitRepo` together with a `Marketplace` row, emits
+   * `MarketplaceLinkedEvent`, and seeds the reconciliation job.
+   *
+   * @param command - Command containing git provider, owner/repo/branch, and display name
+   * @returns Promise of the created marketplace enriched with `addedByUserName`
+   */
+  linkMarketplace(
+    command: LinkMarketplaceCommand,
+  ): Promise<LinkMarketplaceResponse>;
+
+  /**
+   * Unlinks a marketplace from the caller's organization.
+   *
+   * Admin-only. Soft-deletes the `Marketplace` row and the underlying
+   * marketplace-typed `GitRepo`, removes the reconciliation job, and emits
+   * `MarketplaceUnlinkedEvent`. The underlying Git repository is never
+   * touched.
+   *
+   * @param command - Command containing the marketplace id
+   * @returns Promise resolving to the unlinked marketplace id
+   */
+  unlinkMarketplace(
+    command: UnlinkMarketplaceCommand,
+  ): Promise<UnlinkMarketplaceResponse>;
+
+  /**
+   * Lists all marketplaces linked to the caller's organization. Open to any
+   * organization member.
+   *
+   * @param command - Command carrying the organization/user context
+   * @returns Promise of presentation DTOs enriched with `addedByUserName` and `pluginCount`
+   */
+  listMarketplaces(
+    command: ListMarketplacesCommand,
+  ): Promise<ListMarketplacesResponse>;
+
+  /**
+   * Pre-flight validation of a public marketplace URL. Resolves a tokenless
+   * git provider for the URL host, fetches `marketplace.json` and validates
+   * the descriptor through the parser registry.
+   *
+   * @param command - Command containing the marketplace URL
+   * @returns Promise of `{ kind: 'verified', repoPath, defaultBranch, pluginCount }`
+   */
+  validateMarketplaceUrl(
+    command: ValidateMarketplaceUrlCommand,
+  ): Promise<ValidateMarketplaceUrlResponse>;
+
+  /**
+   * Publishes a Packmind package as a managed plugin on a linked marketplace.
+   *
+   * Member-scoped — any org member of both the package's organization and the
+   * marketplace's organization can trigger the publish. Persists an
+   * `in_progress` `MarketplaceDistribution` row, enqueues the BullMQ publish
+   * job (single-worker concurrency), and emits
+   * `PluginPublishAttemptedEvent`. The terminal status (`success`, `failure`,
+   * or `no_changes`) is written by the worker and observable through
+   * `findMarketplaceDistributionById`.
+   *
+   * @param command - Command containing marketplaceId, packageId and auth context
+   * @returns Promise resolving to the in-progress distribution metadata
+   * @throws MarketplaceNotFoundError when the marketplace is missing or
+   *         belongs to a different organization
+   * @throws GitProviderTokenInvalidError when the marketplace git provider's
+   *         token is missing or expired
+   * @throws MarketplaceDescriptorNotFoundError / MarketplaceDescriptorBadFormatError
+   *         when `marketplace.json` is unreachable or unparseable
+   * @throws MarketplacePluginNameConflictError when an unmanaged plugin
+   *         already exposes the same slug
+   */
+  publishPackageOnMarketplace(
+    command: PublishPackageOnMarketplaceCommand,
+  ): Promise<PublishPackageOnMarketplaceResponse>;
+
+  /**
+   * Lists every marketplace distribution row attached to a package — newest
+   * first. Used by the frontend status helper to poll the publish lifecycle.
+   *
+   * @param command - Command containing packageId and auth context
+   * @returns Promise of the marketplace distribution rows (empty when none)
+   */
+  listMarketplaceDistributionsForPackage(
+    command: ListMarketplaceDistributionsForPackageCommand,
+  ): Promise<ListMarketplaceDistributionsForPackageResponse>;
+
+  /**
+   * Looks up a single marketplace distribution row by id, scoped to the
+   * caller's organization. Returns `null` when the row is missing or belongs
+   * to another organization (callers should map `null` to HTTP 404).
+   */
+  findMarketplaceDistributionById(
+    command: FindMarketplaceDistributionByIdCommand,
+  ): Promise<MarketplaceDistribution | null>;
 }

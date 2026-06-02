@@ -378,6 +378,25 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     );
   }
 
+  public async createBranchFromBase(
+    repo: GitRepo,
+    branch: string,
+  ): Promise<void> {
+    // Mirrors the commitToGit plumbing: resolve the provider via the
+    // GitProviderService and let it dispatch to the right IGitRepo
+    // implementation. The repo's `branch` field is the BASE branch used to
+    // bootstrap the target branch when it is missing.
+    await this.gitServices
+      .getGitProviderService()
+      .createBranchFromBase(
+        repo.providerId,
+        repo.owner,
+        repo.repo,
+        repo.branch,
+        branch,
+      );
+  }
+
   public async handleWebHook(
     command: HandleWebHookCommand,
   ): Promise<HandleWebHookResult> {
