@@ -50,6 +50,22 @@ import { ValidateMarketplaceUrlQueryDto } from './dto/ValidateMarketplaceUrlQuer
 const origin = 'OrganizationMarketplacesController';
 
 /**
+ * User-facing messages for errors whose underlying domain message embeds an
+ * internal identifier (a provider/marketplace UUID). The raw `error.message`
+ * is still logged for diagnostics, but the HTTP response must never leak a
+ * UUID to the end user.
+ */
+const USER_FACING_ERROR_MESSAGE = {
+  gitProviderNotFound: 'The selected Git provider could not be found.',
+  gitProviderOrganizationMismatch:
+    'The selected Git provider does not belong to your organization.',
+  gitProviderMissingToken:
+    'The selected Git provider has no access token configured. Connect it in your Git settings and try again.',
+  marketplaceNotFound:
+    'The marketplace could not be found. It may have already been unlinked.',
+} as const;
+
+/**
  * Mask the first 6 characters of a string identifier and replace the rest
  * with `*`, per `standard-compliance-logging-personal-information.md`. Used
  * to log the `addedBy` user id without leaking the full value.
@@ -312,19 +328,27 @@ export class MarketplacesController {
       return new BadRequestException(error.message);
     }
     if (error instanceof MarketplaceNotFoundError) {
-      return new NotFoundException(error.message);
+      return new NotFoundException(
+        USER_FACING_ERROR_MESSAGE.marketplaceNotFound,
+      );
     }
     if (error instanceof OrganizationAdminRequiredError) {
       return new ForbiddenException(error.message);
     }
     if (error instanceof GitProviderNotFoundError) {
-      return new NotFoundException(error.message);
+      return new NotFoundException(
+        USER_FACING_ERROR_MESSAGE.gitProviderNotFound,
+      );
     }
     if (error instanceof GitProviderOrganizationMismatchError) {
-      return new ForbiddenException(error.message);
+      return new ForbiddenException(
+        USER_FACING_ERROR_MESSAGE.gitProviderOrganizationMismatch,
+      );
     }
     if (error instanceof GitProviderMissingTokenError) {
-      return new BadRequestException(error.message);
+      return new BadRequestException(
+        USER_FACING_ERROR_MESSAGE.gitProviderMissingToken,
+      );
     }
     return error;
   }

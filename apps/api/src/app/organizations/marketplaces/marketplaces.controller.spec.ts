@@ -214,17 +214,22 @@ describe('MarketplacesController', () => {
         ).rejects.toBeInstanceOf(BadRequestException);
       });
 
-      it('maps GitProviderNotFoundError to NotFoundException (404)', async () => {
+      it('maps GitProviderNotFoundError to NotFoundException (404) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderNotFoundError(gitProviderId),
         );
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toMatchObject({
+          constructor: NotFoundException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the provider id never reaches the user.
+          message: 'The selected Git provider could not be found.',
+        });
       });
 
-      it('maps GitProviderOrganizationMismatchError to ForbiddenException (403)', async () => {
+      it('maps GitProviderOrganizationMismatchError to ForbiddenException (403) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderOrganizationMismatchError(
             gitProviderId,
@@ -234,17 +239,27 @@ describe('MarketplacesController', () => {
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toMatchObject({
+          constructor: ForbiddenException,
+          message:
+            'The selected Git provider does not belong to your organization.',
+        });
       });
 
-      it('maps GitProviderMissingTokenError to BadRequestException (400)', async () => {
+      it('maps GitProviderMissingTokenError to BadRequestException (400) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderMissingTokenError(gitProviderId),
         );
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(BadRequestException);
+        ).rejects.toMatchObject({
+          constructor: BadRequestException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the provider id never reaches the user.
+          message:
+            'The selected Git provider has no access token configured. Connect it in your Git settings and try again.',
+        });
       });
 
       it('maps OrganizationAdminRequiredError to ForbiddenException (403) for non-admin link attempts', async () => {
@@ -301,7 +316,7 @@ describe('MarketplacesController', () => {
     });
 
     describe('error mapping', () => {
-      it('maps MarketplaceNotFoundError to NotFoundException (404)', async () => {
+      it('maps MarketplaceNotFoundError to NotFoundException (404) without leaking the marketplace UUID', async () => {
         mockDeploymentAdapter.unlinkMarketplace.mockRejectedValue(
           new MarketplaceNotFoundError(marketplaceId),
         );
@@ -312,7 +327,13 @@ describe('MarketplacesController', () => {
             marketplaceId,
             baseRequest,
           ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toMatchObject({
+          constructor: NotFoundException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the marketplace id never reaches the user.
+          message:
+            'The marketplace could not be found. It may have already been unlinked.',
+        });
       });
 
       it('maps OrganizationAdminRequiredError to ForbiddenException (403) for non-admin unlink attempts', async () => {
