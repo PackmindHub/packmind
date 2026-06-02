@@ -8,3 +8,5 @@ export * from './MarketplaceNotFoundError';
 export * from './MarketplacePluginNameConflictError';
 export * from './MarketplaceUrlNotReachableError';
 export * from './GitProviderTokenInvalidError';
+export * from './PluginDistributionNotFoundError';
+export * from './PluginDistributionInvalidStateError';
