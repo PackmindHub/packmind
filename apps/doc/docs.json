@@ -80,6 +80,7 @@
         "icon": "shield",
         "pages": [
           "governance/distribution",
+          "governance/retire-plugin",
           "governance/git-repository-connection",
           "governance/overview"
         ]
