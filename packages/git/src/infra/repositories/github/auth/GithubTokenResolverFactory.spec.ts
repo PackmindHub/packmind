@@ -72,32 +72,43 @@ describe('GithubTokenResolverFactory', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('authMethod = "token"', () => {
-    it('returns a PatTokenResolver constructed with provider.token', async () => {
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'cloud',
-      );
-      const provider = makeProvider({
-        authMethod: 'token',
-        token: 'ghp_actual',
+    describe('when provider.token is set', () => {
+      let resolver: Awaited<ReturnType<GithubTokenResolverFactory['build']>>;
+
+      beforeEach(async () => {
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'cloud',
+        );
+        const provider = makeProvider({
+          authMethod: 'token',
+          token: 'ghp_actual',
+        });
+
+        resolver = await factory.build(provider);
       });
 
-      const resolver = await factory.build(provider);
+      it('returns a PatTokenResolver', () => {
+        expect(resolver).toBeInstanceOf(PatTokenResolver);
+      });
 
-      expect(resolver).toBeInstanceOf(PatTokenResolver);
-      await expect(resolver.getToken()).resolves.toBe('ghp_actual');
+      it('constructs the resolver with provider.token', async () => {
+        await expect(resolver.getToken()).resolves.toBe('ghp_actual');
+      });
     });
 
-    it('throws when authMethod = "token" but token is empty', async () => {
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'cloud',
-      );
-      const provider = makeProvider({ authMethod: 'token', token: null });
+    describe('when token is empty', () => {
+      it('throws', async () => {
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'cloud',
+        );
+        const provider = makeProvider({ authMethod: 'token', token: null });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /provider\.token is empty/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /provider\.token is empty/,
+        );
+      });
     });
   });
 
@@ -119,50 +130,56 @@ describe('GithubTokenResolverFactory', () => {
       expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
     });
 
-    it('throws a clear error when GITHUB_APP_ID is missing', async () => {
-      const config = new StubConfig({
-        GITHUB_APP_PRIVATE_KEY: 'pem',
-      });
-      const factory = new GithubTokenResolverFactory(config, 'cloud');
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 987654,
-      });
+    describe('when GITHUB_APP_ID is missing', () => {
+      it('throws a clear error', async () => {
+        const config = new StubConfig({
+          GITHUB_APP_PRIVATE_KEY: 'pem',
+        });
+        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 987654,
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /GITHUB_APP_ID is not configured/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /GITHUB_APP_ID is not configured/,
+        );
+      });
     });
 
-    it('throws a clear error when GITHUB_APP_PRIVATE_KEY is missing', async () => {
-      const config = new StubConfig({
-        GITHUB_APP_ID: '123456',
-      });
-      const factory = new GithubTokenResolverFactory(config, 'cloud');
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 987654,
-      });
+    describe('when GITHUB_APP_PRIVATE_KEY is missing', () => {
+      it('throws a clear error', async () => {
+        const config = new StubConfig({
+          GITHUB_APP_ID: '123456',
+        });
+        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 987654,
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /GITHUB_APP_PRIVATE_KEY is not configured/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /GITHUB_APP_PRIVATE_KEY is not configured/,
+        );
+      });
     });
 
-    it('throws when appInstallationId is missing', async () => {
-      const config = new StubConfig({
-        GITHUB_APP_ID: '123456',
-        GITHUB_APP_PRIVATE_KEY: 'pem',
-      });
-      const factory = new GithubTokenResolverFactory(config, 'cloud');
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: undefined,
-      });
+    describe('when appInstallationId is missing', () => {
+      it('throws', async () => {
+        const config = new StubConfig({
+          GITHUB_APP_ID: '123456',
+          GITHUB_APP_PRIVATE_KEY: 'pem',
+        });
+        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: undefined,
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /appInstallationId is missing/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /appInstallationId is missing/,
+        );
+      });
     });
   });
 
@@ -187,97 +204,113 @@ describe('GithubTokenResolverFactory', () => {
       expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
     });
 
-    it('throws GitHubAppRevokedError when the referenced App is revoked', async () => {
-      const orgApp = makeOrgApp({
-        revokedAt: new Date('2026-05-01T00:00:00Z'),
-      });
-      const repo = new StubOrgGitHubAppRepository(null, orgApp);
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'oss',
-        undefined,
-        repo as unknown as IOrganizationGitHubAppRepository,
-      );
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 111222,
-        organizationGitHubAppId: orgApp.id,
-      });
+    describe('when the referenced App is revoked', () => {
+      it('throws GitHubAppRevokedError', async () => {
+        const orgApp = makeOrgApp({
+          revokedAt: new Date('2026-05-01T00:00:00Z'),
+        });
+        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'oss',
+          undefined,
+          repo as unknown as IOrganizationGitHubAppRepository,
+        );
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 111222,
+          organizationGitHubAppId: orgApp.id,
+        });
 
-      await expect(factory.build(provider)).rejects.toBeInstanceOf(
-        GitHubAppRevokedError,
-      );
+        await expect(factory.build(provider)).rejects.toBeInstanceOf(
+          GitHubAppRevokedError,
+        );
+      });
     });
 
-    it('throws when the referenced OrganizationGitHubApp does not exist', async () => {
-      const repo = new StubOrgGitHubAppRepository(null, null);
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'oss',
-        undefined,
-        repo as unknown as IOrganizationGitHubAppRepository,
-      );
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 111222,
-        organizationGitHubAppId: createOrganizationGitHubAppId('missing-app'),
-      });
+    describe('when the referenced OrganizationGitHubApp does not exist', () => {
+      it('throws', async () => {
+        const repo = new StubOrgGitHubAppRepository(null, null);
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'oss',
+          undefined,
+          repo as unknown as IOrganizationGitHubAppRepository,
+        );
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 111222,
+          organizationGitHubAppId: createOrganizationGitHubAppId('missing-app'),
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /OrganizationGitHubApp missing-app not found/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /OrganizationGitHubApp missing-app not found/,
+        );
+      });
     });
 
-    it('throws when the GitProvider has no organizationGitHubAppId FK', async () => {
-      const orgApp = makeOrgApp();
-      const repo = new StubOrgGitHubAppRepository(null, orgApp);
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'oss',
-        undefined,
-        repo as unknown as IOrganizationGitHubAppRepository,
-      );
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 111222,
-        organizationGitHubAppId: undefined,
-      });
+    describe('when the GitProvider has no organizationGitHubAppId FK', () => {
+      it('throws', async () => {
+        const orgApp = makeOrgApp();
+        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'oss',
+          undefined,
+          repo as unknown as IOrganizationGitHubAppRepository,
+        );
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 111222,
+          organizationGitHubAppId: undefined,
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /no organizationGitHubAppId/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /no organizationGitHubAppId/,
+        );
+      });
     });
 
-    it('throws when orgGitHubAppRepository is not provided', async () => {
-      const factory = new GithubTokenResolverFactory(
-        new StubConfig({}),
-        'oss',
-        undefined,
-        null,
-      );
-      const provider = makeProvider({
-        authMethod: 'app',
-        appInstallationId: 111222,
-        organizationGitHubAppId: createOrganizationGitHubAppId('app-1'),
-      });
+    describe('when orgGitHubAppRepository is not provided', () => {
+      it('throws', async () => {
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          'oss',
+          undefined,
+          null,
+        );
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 111222,
+          organizationGitHubAppId: createOrganizationGitHubAppId('app-1'),
+        });
 
-      await expect(factory.build(provider)).rejects.toThrow(
-        /orgGitHubAppRepository is required for oss edition/,
-      );
+        await expect(factory.build(provider)).rejects.toThrow(
+          /orgGitHubAppRepository is required for oss edition/,
+        );
+      });
     });
   });
 
   describe('resolveEdition', () => {
-    it('returns "oss" when PACKMIND_EDITION=oss', () => {
-      expect(resolveEdition({ PACKMIND_EDITION: 'oss' })).toBe('oss');
+    describe('when PACKMIND_EDITION=oss', () => {
+      it('returns "oss"', () => {
+        expect(resolveEdition({ PACKMIND_EDITION: 'oss' })).toBe('oss');
+      });
     });
 
-    it('returns "cloud" when PACKMIND_EDITION=proprietary', () => {
-      expect(resolveEdition({ PACKMIND_EDITION: 'proprietary' })).toBe('cloud');
+    describe('when PACKMIND_EDITION=proprietary', () => {
+      it('returns "cloud"', () => {
+        expect(resolveEdition({ PACKMIND_EDITION: 'proprietary' })).toBe(
+          'cloud',
+        );
+      });
     });
 
-    it('returns "cloud" when PACKMIND_EDITION is unset', () => {
-      expect(resolveEdition({})).toBe('cloud');
+    describe('when PACKMIND_EDITION is unset', () => {
+      it('returns "cloud"', () => {
+        expect(resolveEdition({})).toBe('cloud');
+      });
     });
   });
 });

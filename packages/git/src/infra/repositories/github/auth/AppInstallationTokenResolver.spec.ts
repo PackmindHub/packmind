@@ -62,19 +62,29 @@ describe('AppInstallationTokenResolver', () => {
   }
 
   describe('mintAppJwt (pure helper)', () => {
-    it('produces a JWT with three base64url segments', () => {
-      const jwt = mintAppJwt(42, privateKeyPem);
-      const parts = jwt.split('.');
-      expect(parts).toHaveLength(3);
-      parts.forEach((segment) => {
-        expect(segment).toMatch(/^[A-Za-z0-9_-]+$/);
+    describe('produces a JWT with three base64url segments', () => {
+      let parts: string[];
+
+      beforeEach(() => {
+        const jwt = mintAppJwt(42, privateKeyPem);
+        parts = jwt.split('.');
+      });
+
+      it('has three segments', () => {
+        expect(parts).toHaveLength(3);
+      });
+
+      it('uses base64url charset in every segment', () => {
+        parts.forEach((segment) => {
+          expect(segment).toMatch(/^[A-Za-z0-9_-]+$/);
+        });
       });
     });
 
-    it('encodes header and payload with expected fields', () => {
-      const before = Math.floor(Date.now() / 1000);
-      const jwt = mintAppJwt(42, privateKeyPem);
-      const [encodedHeader, encodedPayload] = jwt.split('.');
+    describe('encodes header and payload with expected fields', () => {
+      let before: number;
+      let encodedHeader: string;
+      let encodedPayload: string;
 
       const decode = (segment: string): unknown =>
         JSON.parse(
@@ -84,12 +94,31 @@ describe('AppInstallationTokenResolver', () => {
           ).toString('utf8'),
         );
 
-      expect(decode(encodedHeader)).toEqual({ alg: 'RS256', typ: 'JWT' });
-      const payload = decode(encodedPayload) as Record<string, number>;
-      expect(payload.iss).toBe(42);
-      expect(payload.iat).toBeLessThanOrEqual(before);
-      // exp ≤ iat + 10 minutes (GitHub upper bound)
-      expect(payload.exp - payload.iat).toBeLessThanOrEqual(600);
+      beforeEach(() => {
+        before = Math.floor(Date.now() / 1000);
+        const jwt = mintAppJwt(42, privateKeyPem);
+        [encodedHeader, encodedPayload] = jwt.split('.');
+      });
+
+      it('encodes the header with alg and typ', () => {
+        expect(decode(encodedHeader)).toEqual({ alg: 'RS256', typ: 'JWT' });
+      });
+
+      it('sets iss to the app id', () => {
+        const payload = decode(encodedPayload) as Record<string, number>;
+        expect(payload.iss).toBe(42);
+      });
+
+      it('sets iat at or before the current time', () => {
+        const payload = decode(encodedPayload) as Record<string, number>;
+        expect(payload.iat).toBeLessThanOrEqual(before);
+      });
+
+      it('keeps exp within the 10 minute GitHub upper bound', () => {
+        const payload = decode(encodedPayload) as Record<string, number>;
+        // exp ≤ iat + 10 minutes (GitHub upper bound)
+        expect(payload.exp - payload.iat).toBeLessThanOrEqual(600);
+      });
     });
 
     it('produces a signature verifiable with the corresponding public key', () => {
@@ -117,17 +146,38 @@ describe('AppInstallationTokenResolver', () => {
 
   describe('getToken', () => {
     describe('when no token is cached', () => {
-      it('mints a JWT, exchanges it, and returns the access token', async () => {
+      let token: string;
+      let url: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let body: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let opts: any;
+
+      beforeEach(async () => {
         mockExchangeResponse('ghs_installation_abc', 60 * 60 * 1000);
         const resolver = buildResolver();
 
-        const token = await resolver.getToken();
+        token = await resolver.getToken();
+        [url, body, opts] = mockHttpClient.post.mock.calls[0];
+      });
 
+      it('returns the access token from the exchange', () => {
         expect(token).toBe('ghs_installation_abc');
+      });
+
+      it('calls the exchange endpoint exactly once', () => {
         expect(mockHttpClient.post).toHaveBeenCalledTimes(1);
-        const [url, body, opts] = mockHttpClient.post.mock.calls[0];
+      });
+
+      it('posts to the installation access tokens URL', () => {
         expect(url).toBe('/app/installations/67890/access_tokens');
+      });
+
+      it('sends an empty body', () => {
         expect(body).toEqual({});
+      });
+
+      it('passes a bearer JWT in the Authorization header', () => {
         expect(opts.headers.Authorization).toMatch(
           /^Bearer [\w-]+\.[\w-]+\.[\w-]+$/,
         );
@@ -135,20 +185,31 @@ describe('AppInstallationTokenResolver', () => {
     });
 
     describe('when a valid token is cached', () => {
-      it('does not re-mint or re-exchange on subsequent calls', async () => {
+      let first: string;
+      let second: string;
+
+      beforeEach(async () => {
         mockExchangeResponse('ghs_installation_abc', 60 * 60 * 1000);
         const resolver = buildResolver();
 
-        const first = await resolver.getToken();
-        const second = await resolver.getToken();
+        first = await resolver.getToken();
+        second = await resolver.getToken();
+      });
 
+      it('returns the same token on subsequent calls', () => {
         expect(first).toBe(second);
+      });
+
+      it('does not re-exchange on subsequent calls', () => {
         expect(mockHttpClient.post).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('when the cached token is close to expiry', () => {
-      it('refreshes after expires_at - safety margin', async () => {
+      let first: string;
+      let second: string;
+
+      beforeEach(async () => {
         jest.useFakeTimers();
         const now = new Date('2030-01-01T00:00:00Z').getTime();
         jest.setSystemTime(now);
@@ -163,8 +224,7 @@ describe('AppInstallationTokenResolver', () => {
         });
 
         const resolver = buildResolver();
-        const first = await resolver.getToken();
-        expect(first).toBe('ghs_short');
+        first = await resolver.getToken();
 
         // Advance past safety margin so cache is stale.
         jest.setSystemTime(now + 10_000);
@@ -176,23 +236,42 @@ describe('AppInstallationTokenResolver', () => {
           },
         });
 
-        const second = await resolver.getToken();
+        second = await resolver.getToken();
+      });
+
+      it('returns the short-lived token on the first call', () => {
+        expect(first).toBe('ghs_short');
+      });
+
+      it('refreshes to a new token after the safety margin', () => {
         expect(second).toBe('ghs_fresh');
+      });
+
+      it('re-exchanges with the GitHub API on the refresh', () => {
         expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
       });
     });
 
     describe('when the token exchange fails', () => {
-      it('throws a provider-friendly error and does not cache', async () => {
+      let resolver: AppInstallationTokenResolver;
+      let firstCall: Promise<string>;
+
+      beforeEach(() => {
         mockHttpClient.post.mockRejectedValue({
           isAxiosError: true,
           response: { status: 404, data: { message: 'Not Found' } },
         });
-        const resolver = buildResolver();
+        resolver = buildResolver();
+        firstCall = resolver.getToken();
+        firstCall.catch(() => undefined);
+      });
 
-        await expect(resolver.getToken()).rejects.toThrow(
-          /Failed to exchange App JWT/,
-        );
+      it('throws a provider-friendly error', async () => {
+        await expect(firstCall).rejects.toThrow(/Failed to exchange App JWT/);
+      });
+
+      it('does not cache the failure so the next call triggers a new exchange', async () => {
+        await firstCall.catch(() => undefined);
 
         // Should still be uncached → next call triggers a new exchange.
         mockExchangeResponse('ghs_after_recovery', 60 * 60 * 1000);
@@ -203,18 +282,33 @@ describe('AppInstallationTokenResolver', () => {
   });
 
   describe('onUnauthorized', () => {
-    it('clears the cache so the next getToken re-mints and re-exchanges', async () => {
-      mockExchangeResponse('ghs_first', 60 * 60 * 1000);
-      const resolver = buildResolver();
-      await resolver.getToken();
-      expect(mockHttpClient.post).toHaveBeenCalledTimes(1);
+    describe('clears the cache so the next getToken re-mints and re-exchanges', () => {
+      let callCountAfterFirst: number;
+      let after: string;
 
-      await resolver.onUnauthorized();
+      beforeEach(async () => {
+        mockExchangeResponse('ghs_first', 60 * 60 * 1000);
+        const resolver = buildResolver();
+        await resolver.getToken();
+        callCountAfterFirst = mockHttpClient.post.mock.calls.length;
 
-      mockExchangeResponse('ghs_second', 60 * 60 * 1000);
-      const after = await resolver.getToken();
-      expect(after).toBe('ghs_second');
-      expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
+        await resolver.onUnauthorized();
+
+        mockExchangeResponse('ghs_second', 60 * 60 * 1000);
+        after = await resolver.getToken();
+      });
+
+      it('exchanges once for the initial getToken', () => {
+        expect(callCountAfterFirst).toBe(1);
+      });
+
+      it('returns the freshly minted token on the next getToken', () => {
+        expect(after).toBe('ghs_second');
+      });
+
+      it('re-exchanges with the GitHub API after clearing the cache', () => {
+        expect(mockHttpClient.post).toHaveBeenCalledTimes(2);
+      });
     });
   });
 

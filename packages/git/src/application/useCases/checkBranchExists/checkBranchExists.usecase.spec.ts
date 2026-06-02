@@ -55,75 +55,109 @@ describe('CheckBranchExistsUseCase', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('when authMethod is "token"', () => {
-    it('rejects when the provider has no token', async () => {
-      mockGitProviderService.findGitProviderById.mockResolvedValue({
-        ...tokenProvider,
-        token: null,
-      } as GitProvider);
-
-      await expect(
-        useCase.execute({ gitProviderId: providerId, ...args }),
-      ).rejects.toThrow('Git provider token not configured');
-      expect(mockGitProviderService.checkBranchExists).not.toHaveBeenCalled();
-    });
-
-    it('delegates to checkBranchExists when the token is present', async () => {
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        tokenProvider,
-      );
-      mockGitProviderService.checkBranchExists.mockResolvedValue(true);
-
-      const result = await useCase.execute({
-        gitProviderId: providerId,
-        ...args,
+    describe('when the provider has no token', () => {
+      beforeEach(() => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue({
+          ...tokenProvider,
+          token: null,
+        } as GitProvider);
       });
 
-      expect(result).toBe(true);
-      expect(mockGitProviderService.checkBranchExists).toHaveBeenCalledWith(
-        providerId,
-        args.owner,
-        args.repo,
-        args.branch,
-      );
+      it('rejects', async () => {
+        await expect(
+          useCase.execute({ gitProviderId: providerId, ...args }),
+        ).rejects.toThrow('Git provider token not configured');
+      });
+
+      it('does not call checkBranchExists', async () => {
+        await useCase
+          .execute({ gitProviderId: providerId, ...args })
+          .catch(() => undefined);
+        expect(mockGitProviderService.checkBranchExists).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the token is present', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          tokenProvider,
+        );
+        mockGitProviderService.checkBranchExists.mockResolvedValue(true);
+
+        result = await useCase.execute({
+          gitProviderId: providerId,
+          ...args,
+        });
+      });
+
+      it('returns true', () => {
+        expect(result).toBe(true);
+      });
+
+      it('delegates to checkBranchExists', () => {
+        expect(mockGitProviderService.checkBranchExists).toHaveBeenCalledWith(
+          providerId,
+          args.owner,
+          args.repo,
+          args.branch,
+        );
+      });
     });
   });
 
   describe('when authMethod is "app"', () => {
-    it('delegates to checkBranchExists even though token is null', async () => {
-      mockGitProviderService.findGitProviderById.mockResolvedValue(appProvider);
-      mockGitProviderService.checkBranchExists.mockResolvedValue(true);
+    describe('when token is null', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      const result = await useCase.execute({
-        gitProviderId: providerId,
-        ...args,
+      beforeEach(async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          appProvider,
+        );
+        mockGitProviderService.checkBranchExists.mockResolvedValue(true);
+
+        result = await useCase.execute({
+          gitProviderId: providerId,
+          ...args,
+        });
       });
 
-      expect(result).toBe(true);
-      expect(mockGitProviderService.checkBranchExists).toHaveBeenCalledWith(
-        providerId,
-        args.owner,
-        args.repo,
-        args.branch,
-      );
+      it('returns true', () => {
+        expect(result).toBe(true);
+      });
+
+      it('delegates to checkBranchExists', () => {
+        expect(mockGitProviderService.checkBranchExists).toHaveBeenCalledWith(
+          providerId,
+          args.owner,
+          args.repo,
+          args.branch,
+        );
+      });
     });
   });
 
   describe('input validation', () => {
-    it('rejects when gitProviderId is missing', async () => {
-      await expect(
-        useCase.execute({
-          gitProviderId: undefined as unknown as GitProviderId,
-          ...args,
-        }),
-      ).rejects.toThrow('Git provider ID is required');
+    describe('when gitProviderId is missing', () => {
+      it('rejects', async () => {
+        await expect(
+          useCase.execute({
+            gitProviderId: undefined as unknown as GitProviderId,
+            ...args,
+          }),
+        ).rejects.toThrow('Git provider ID is required');
+      });
     });
 
-    it('rejects when the provider does not exist', async () => {
-      mockGitProviderService.findGitProviderById.mockResolvedValue(null);
+    describe('when the provider does not exist', () => {
+      it('rejects', async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(null);
 
-      await expect(
-        useCase.execute({ gitProviderId: providerId, ...args }),
-      ).rejects.toThrow('Git provider not found');
+        await expect(
+          useCase.execute({ gitProviderId: providerId, ...args }),
+        ).rejects.toThrow('Git provider not found');
+      });
     });
   });
 });

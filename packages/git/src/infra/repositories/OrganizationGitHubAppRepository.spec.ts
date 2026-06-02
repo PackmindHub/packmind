@@ -257,11 +257,13 @@ describe('OrganizationGitHubAppRepository', () => {
     });
   });
 
-  it('returns null when no app exists for the organization', async () => {
-    const found = await repository.findActiveByOrganizationId(
-      createOrganizationId(uuidv4()),
-    );
-    expect(found).toBeNull();
+  describe('when no app exists for the organization', () => {
+    it('returns null', async () => {
+      const found = await repository.findActiveByOrganizationId(
+        createOrganizationId(uuidv4()),
+      );
+      expect(found).toBeNull();
+    });
   });
 
   it('returns null for a non-existent ID', async () => {

@@ -69,167 +69,179 @@ describe('UpdateGitProviderUseCase', () => {
   });
 
   describe('updating token on a token-method provider', () => {
-    it('succeeds when only token is updated', async () => {
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: 'old-token',
-        authMethod: 'token',
-      });
-      const updatedProvider = gitProviderFactory({
-        ...existingProvider,
-        token: 'new-token',
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-      mockGitProviderService.updateGitProvider.mockResolvedValue(
-        updatedProvider,
-      );
+    describe('when only token is updated', () => {
+      it('succeeds', async () => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'old-token',
+          authMethod: 'token',
+        });
+        const updatedProvider = gitProviderFactory({
+          ...existingProvider,
+          token: 'new-token',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue(
+          updatedProvider,
+        );
 
-      const result = await useCase.execute({
-        id: existingProvider.id,
-        gitProvider: { token: 'new-token' },
-        userId: String(adminUser.id),
-        organizationId: String(organizationId),
-      });
-
-      expect(result).toEqual(updatedProvider);
-    });
-  });
-
-  describe('switching authMethod from token to app', () => {
-    it('throws BadRequestException when switching without providing appInstallationId', async () => {
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: 'old-token',
-        authMethod: 'token',
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-
-      await expect(
-        useCase.execute({
-          id: existingProvider.id,
-          gitProvider: {
-            authMethod: 'app',
-            // missing appInstallationId
-          },
-          userId: String(adminUser.id),
-          organizationId: String(organizationId),
-        }),
-      ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
-    });
-
-    it('succeeds when appInstallationId and organizationGitHubAppId are provided when switching', async () => {
-      const uc = makeUseCase('oss');
-      const orgGitHubAppId = createOrganizationGitHubAppId(
-        '00000000-0000-0000-0000-000000000aaa',
-      );
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: 'old-token',
-        authMethod: 'token',
-      });
-      const updatedProvider = gitProviderFactory({
-        ...existingProvider,
-        token: null,
-        authMethod: 'app',
-        appInstallationId: 42,
-        organizationGitHubAppId: orgGitHubAppId,
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-      mockGitProviderService.updateGitProvider.mockResolvedValue(
-        updatedProvider,
-      );
-
-      const result = await uc.execute({
-        id: existingProvider.id,
-        gitProvider: {
-          authMethod: 'app',
-          token: null,
-          appInstallationId: 42,
-          organizationGitHubAppId: orgGitHubAppId,
-        },
-        userId: String(adminUser.id),
-        organizationId: String(organizationId),
-      });
-
-      expect(result).toEqual(updatedProvider);
-    });
-  });
-
-  describe('updating an app-method provider', () => {
-    it('succeeds when replacing appInstallationId', async () => {
-      const uc = makeUseCase('oss');
-      const orgGitHubAppId = createOrganizationGitHubAppId(
-        '00000000-0000-0000-0000-000000000aaa',
-      );
-      const existingProvider = gitProviderFactory({
-        organizationId,
-        token: null,
-        authMethod: 'app',
-        appInstallationId: 42,
-        organizationGitHubAppId: orgGitHubAppId,
-      });
-      const updatedProvider = gitProviderFactory({
-        ...existingProvider,
-        appInstallationId: 99,
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-      mockGitProviderService.updateGitProvider.mockResolvedValue(
-        updatedProvider,
-      );
-
-      const result = await uc.execute({
-        id: existingProvider.id,
-        gitProvider: { appInstallationId: 99 },
-        userId: String(adminUser.id),
-        organizationId: String(organizationId),
-      });
-
-      expect(result).toEqual(updatedProvider);
-    });
-  });
-
-  describe('existing error cases', () => {
-    it('throws GitProviderNotFoundError when provider does not exist', async () => {
-      mockGitProviderService.findGitProviderById.mockResolvedValue(null);
-      const provider = gitProviderFactory({ organizationId });
-
-      await expect(
-        useCase.execute({
-          id: provider.id,
-          gitProvider: { source: GitProviderVendors.github },
-          userId: String(adminUser.id),
-          organizationId: String(organizationId),
-        }),
-      ).rejects.toBeInstanceOf(GitProviderNotFoundError);
-    });
-
-    it('throws GitProviderOrganizationMismatchError when organization does not match', async () => {
-      const otherOrgId = createOrganizationId('other-org');
-      const existingProvider = gitProviderFactory({
-        organizationId: otherOrgId,
-        token: 'token',
-        authMethod: 'token',
-      });
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        existingProvider,
-      );
-
-      await expect(
-        useCase.execute({
+        const result = await useCase.execute({
           id: existingProvider.id,
           gitProvider: { token: 'new-token' },
           userId: String(adminUser.id),
           organizationId: String(organizationId),
-        }),
-      ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
+        });
+
+        expect(result).toEqual(updatedProvider);
+      });
+    });
+  });
+
+  describe('switching authMethod from token to app', () => {
+    describe('when switching without providing appInstallationId', () => {
+      it('throws BadRequestException', async () => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'old-token',
+          authMethod: 'token',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+
+        await expect(
+          useCase.execute({
+            id: existingProvider.id,
+            gitProvider: {
+              authMethod: 'app',
+              // missing appInstallationId
+            },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
+    });
+
+    describe('when appInstallationId and organizationGitHubAppId are provided when switching', () => {
+      it('succeeds', async () => {
+        const uc = makeUseCase('oss');
+        const orgGitHubAppId = createOrganizationGitHubAppId(
+          '00000000-0000-0000-0000-000000000aaa',
+        );
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'old-token',
+          authMethod: 'token',
+        });
+        const updatedProvider = gitProviderFactory({
+          ...existingProvider,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+          organizationGitHubAppId: orgGitHubAppId,
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue(
+          updatedProvider,
+        );
+
+        const result = await uc.execute({
+          id: existingProvider.id,
+          gitProvider: {
+            authMethod: 'app',
+            token: null,
+            appInstallationId: 42,
+            organizationGitHubAppId: orgGitHubAppId,
+          },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+
+        expect(result).toEqual(updatedProvider);
+      });
+    });
+  });
+
+  describe('updating an app-method provider', () => {
+    describe('when replacing appInstallationId', () => {
+      it('succeeds', async () => {
+        const uc = makeUseCase('oss');
+        const orgGitHubAppId = createOrganizationGitHubAppId(
+          '00000000-0000-0000-0000-000000000aaa',
+        );
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+          organizationGitHubAppId: orgGitHubAppId,
+        });
+        const updatedProvider = gitProviderFactory({
+          ...existingProvider,
+          appInstallationId: 99,
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue(
+          updatedProvider,
+        );
+
+        const result = await uc.execute({
+          id: existingProvider.id,
+          gitProvider: { appInstallationId: 99 },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+
+        expect(result).toEqual(updatedProvider);
+      });
+    });
+  });
+
+  describe('existing error cases', () => {
+    describe('when provider does not exist', () => {
+      it('throws GitProviderNotFoundError', async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(null);
+        const provider = gitProviderFactory({ organizationId });
+
+        await expect(
+          useCase.execute({
+            id: provider.id,
+            gitProvider: { source: GitProviderVendors.github },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
+      });
+    });
+
+    describe('when organization does not match', () => {
+      it('throws GitProviderOrganizationMismatchError', async () => {
+        const otherOrgId = createOrganizationId('other-org');
+        const existingProvider = gitProviderFactory({
+          organizationId: otherOrgId,
+          token: 'token',
+          authMethod: 'token',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+
+        await expect(
+          useCase.execute({
+            id: existingProvider.id,
+            gitProvider: { token: 'new-token' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
+      });
     });
   });
 });

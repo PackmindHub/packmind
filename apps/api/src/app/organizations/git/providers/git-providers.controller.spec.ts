@@ -102,49 +102,56 @@ describe('GitProvidersController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('getGithubAppInstallUrl', () => {
-    it('calls the service and returns its result when edition is cloud', async () => {
-      resolvePackmindEdition.mockResolvedValue('cloud');
+    describe('when edition is cloud', () => {
+      it('calls the service and returns its result', async () => {
+        resolvePackmindEdition.mockResolvedValue('cloud');
 
-      const expected = {
-        installUrl:
-          'https://github.com/apps/my-app/installations/new?state=abc',
-        state: 'abc',
-      };
-      mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
+        const expected = {
+          installUrl:
+            'https://github.com/apps/my-app/installations/new?state=abc',
+          state: 'abc',
+        };
+        mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
 
-      const result = await controller.getGithubAppInstallUrl(
-        orgId,
-        mockRequest,
-      );
+        const result = await controller.getGithubAppInstallUrl(
+          orgId,
+          mockRequest,
+        );
 
-      expect(result).toBe(expected);
+        expect(result).toBe(expected);
+      });
     });
 
-    it('calls the service and returns its result when edition is oss', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-
+    describe('when edition is oss', () => {
       const expected = {
         installUrl:
           'https://github.com/apps/my-oss-app/installations/new?state=abc',
         state: 'abc',
       };
-      mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
+      let result: Awaited<ReturnType<typeof controller.getGithubAppInstallUrl>>;
 
-      const result = await controller.getGithubAppInstallUrl(
-        orgId,
-        mockRequest,
-      );
+      beforeEach(async () => {
+        resolvePackmindEdition.mockResolvedValue('oss');
+        mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
 
-      expect(result).toBe(expected);
-      expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith({
-        organizationId: orgId,
-        userId,
+        result = await controller.getGithubAppInstallUrl(orgId, mockRequest);
+      });
+
+      it('returns the service result', () => {
+        expect(result).toBe(expected);
+      });
+
+      it('calls the service with the organizationId and userId', () => {
+        expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith({
+          organizationId: orgId,
+          userId,
+        });
       });
     });
   });
 
   describe('completeGithubAppInstall', () => {
-    it('calls the service with correct command and returns its result on happy path', async () => {
+    describe('on happy path', () => {
       const mockProvider = {
         id: 'prov-1',
         source: 'github',
@@ -154,66 +161,85 @@ describe('GitProvidersController', () => {
         url: null,
         token: null,
       };
-      mockService.completeGithubAppInstall.mockResolvedValue(
-        mockProvider as never,
-      );
+      let result: Awaited<
+        ReturnType<typeof controller.completeGithubAppInstall>
+      >;
 
-      const body = { installationId: 99, state: 'valid-state' };
-      const result = await controller.completeGithubAppInstall(
-        orgId,
-        mockRequest,
-        body,
-      );
+      beforeEach(async () => {
+        mockService.completeGithubAppInstall.mockResolvedValue(
+          mockProvider as never,
+        );
 
-      expect(result).toBe(mockProvider);
-      expect(mockService.completeGithubAppInstall).toHaveBeenCalledWith({
-        organizationId: orgId,
-        userId,
-        installationId: 99,
-        state: 'valid-state',
-        source: 'web',
+        const body = { installationId: 99, state: 'valid-state' };
+        result = await controller.completeGithubAppInstall(
+          orgId,
+          mockRequest,
+          body,
+        );
+      });
+
+      it('returns the service result', () => {
+        expect(result).toBe(mockProvider);
+      });
+
+      it('calls the service with the correct command', () => {
+        expect(mockService.completeGithubAppInstall).toHaveBeenCalledWith({
+          organizationId: orgId,
+          userId,
+          installationId: 99,
+          state: 'valid-state',
+          source: 'web',
+        });
       });
     });
 
-    it('throws BadRequestException when state is missing', async () => {
-      const body = { installationId: 1 } as {
-        installationId: number;
-        state: string;
-      };
+    describe('when state is missing', () => {
+      it('throws BadRequestException', async () => {
+        const body = { installationId: 1 } as {
+          installationId: number;
+          state: string;
+        };
 
-      await expect(
-        controller.completeGithubAppInstall(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
+        await expect(
+          controller.completeGithubAppInstall(orgId, mockRequest, body),
+        ).rejects.toThrow(BadRequestException);
+      });
     });
 
-    it('throws BadRequestException when state is empty string', async () => {
-      const body = { installationId: 1, state: '' };
+    describe('when state is empty string', () => {
+      it('throws BadRequestException', async () => {
+        const body = { installationId: 1, state: '' };
 
-      await expect(
-        controller.completeGithubAppInstall(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
+        await expect(
+          controller.completeGithubAppInstall(orgId, mockRequest, body),
+        ).rejects.toThrow(BadRequestException);
+      });
     });
 
-    it('throws BadRequestException when installationId is missing', async () => {
-      const body = { state: 'abc' } as {
-        installationId: number;
-        state: string;
-      };
+    describe('when installationId is missing', () => {
+      it('throws BadRequestException', async () => {
+        const body = { state: 'abc' } as {
+          installationId: number;
+          state: string;
+        };
 
-      await expect(
-        controller.completeGithubAppInstall(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
+        await expect(
+          controller.completeGithubAppInstall(orgId, mockRequest, body),
+        ).rejects.toThrow(BadRequestException);
+      });
     });
 
-    it('throws BadRequestException when installationId is not a number', async () => {
-      const body = {
-        installationId: 'not-a-number' as unknown as number,
-        state: 'abc',
-      };
+    describe('when installationId is not a number', () => {
+      it('throws BadRequestException', async () => {
+        const body = {
+          installationId: 'not-a-number' as unknown as number,
+          state: 'abc',
+        };
 
-      await expect(
-        controller.completeGithubAppInstall(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
+        await expect(
+          controller.completeGithubAppInstall(orgId, mockRequest, body),
+        ).rejects.toThrow(BadRequestException);
+      });
     });
 
     it('propagates BadRequestException from service unchanged', async () => {
@@ -257,197 +283,280 @@ describe('GitProvidersController', () => {
       manifestPostUrl: 'https://github.com/settings/apps/new',
     };
 
-    it('returns manifest, state, and manifestPostUrl when edition is oss', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.buildGithubAppManifest.mockResolvedValue(manifestResponse);
+    describe('when edition is oss', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('oss');
+        mockService.buildGithubAppManifest.mockResolvedValue(manifestResponse);
+      });
 
-      const result = await controller.getGithubAppManifest(orgId, mockRequest);
+      it('returns manifest, state, and manifestPostUrl', async () => {
+        const result = await controller.getGithubAppManifest(
+          orgId,
+          mockRequest,
+        );
 
-      expect(result).toBe(manifestResponse);
-    });
+        expect(result).toBe(manifestResponse);
+      });
 
-    it('calls the service with orgId and userId when edition is oss', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.buildGithubAppManifest.mockResolvedValue(manifestResponse);
+      it('calls the service with orgId and userId', async () => {
+        await controller.getGithubAppManifest(orgId, mockRequest);
 
-      await controller.getGithubAppManifest(orgId, mockRequest);
-
-      expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith({
-        orgId,
-        userId,
+        expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith({
+          orgId,
+          userId,
+        });
       });
     });
 
-    it('throws NotImplementedException and does not call service when edition is cloud', async () => {
-      resolvePackmindEdition.mockResolvedValue('cloud');
+    describe('when edition is cloud', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('cloud');
+      });
 
-      await expect(
-        controller.getGithubAppManifest(orgId, mockRequest),
-      ).rejects.toThrow(NotImplementedException);
+      it('throws NotImplementedException', async () => {
+        await expect(
+          controller.getGithubAppManifest(orgId, mockRequest),
+        ).rejects.toThrow(NotImplementedException);
+      });
 
-      expect(mockService.buildGithubAppManifest).not.toHaveBeenCalled();
+      it('does not call service', async () => {
+        await controller
+          .getGithubAppManifest(orgId, mockRequest)
+          .catch(() => undefined);
+
+        expect(mockService.buildGithubAppManifest).not.toHaveBeenCalled();
+      });
     });
   });
 
   describe('completeGithubAppManifest', () => {
     const validBody = { code: 'gh-code-123', state: 'MANIFEST_STATE' };
 
-    it('calls service and returns installUrl when edition is oss', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.completeGithubAppManifest.mockResolvedValue({
-        installUrl:
-          'https://github.com/apps/my-app/installations/new?state=abc',
+    describe('when edition is oss', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('oss');
       });
 
-      const result = await controller.completeGithubAppManifest(
-        orgId,
-        mockRequest,
-        validBody,
-      );
+      describe('on happy path', () => {
+        let result: Awaited<
+          ReturnType<typeof controller.completeGithubAppManifest>
+        >;
 
-      expect(result).toEqual({
-        installUrl:
-          'https://github.com/apps/my-app/installations/new?state=abc',
+        beforeEach(async () => {
+          mockService.completeGithubAppManifest.mockResolvedValue({
+            installUrl:
+              'https://github.com/apps/my-app/installations/new?state=abc',
+          });
+
+          result = await controller.completeGithubAppManifest(
+            orgId,
+            mockRequest,
+            validBody,
+          );
+        });
+
+        it('returns installUrl', () => {
+          expect(result).toEqual({
+            installUrl:
+              'https://github.com/apps/my-app/installations/new?state=abc',
+          });
+        });
+
+        it('calls the service with the correct command', () => {
+          expect(mockService.completeGithubAppManifest).toHaveBeenCalledWith({
+            orgId,
+            userId,
+            code: 'gh-code-123',
+            state: 'MANIFEST_STATE',
+          });
+        });
       });
-      expect(mockService.completeGithubAppManifest).toHaveBeenCalledWith({
-        orgId,
-        userId,
-        code: 'gh-code-123',
-        state: 'MANIFEST_STATE',
+
+      describe('when code is missing', () => {
+        it('throws BadRequestException', async () => {
+          const body = { state: 'MANIFEST_STATE' } as {
+            code: string;
+            state: string;
+          };
+
+          await expect(
+            controller.completeGithubAppManifest(orgId, mockRequest, body),
+          ).rejects.toThrow(BadRequestException);
+        });
+      });
+
+      describe('when code is empty string', () => {
+        it('throws BadRequestException', async () => {
+          await expect(
+            controller.completeGithubAppManifest(orgId, mockRequest, {
+              code: '',
+              state: 'MANIFEST_STATE',
+            }),
+          ).rejects.toThrow(BadRequestException);
+        });
+      });
+
+      describe('when state is missing', () => {
+        it('throws BadRequestException', async () => {
+          const body = { code: 'gh-code-123' } as {
+            code: string;
+            state: string;
+          };
+
+          await expect(
+            controller.completeGithubAppManifest(orgId, mockRequest, body),
+          ).rejects.toThrow(BadRequestException);
+        });
+      });
+
+      it('propagates BadRequestException from service unchanged', async () => {
+        mockService.completeGithubAppManifest.mockRejectedValue(
+          new BadRequestException('Invalid manifest state'),
+        );
+
+        await expect(
+          controller.completeGithubAppManifest(orgId, mockRequest, validBody),
+        ).rejects.toThrow(new BadRequestException('Invalid manifest state'));
       });
     });
 
-    it('throws NotImplementedException and does not call service when edition is cloud', async () => {
-      resolvePackmindEdition.mockResolvedValue('cloud');
+    describe('when edition is cloud', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('cloud');
+      });
 
-      await expect(
-        controller.completeGithubAppManifest(orgId, mockRequest, validBody),
-      ).rejects.toThrow(NotImplementedException);
+      it('throws NotImplementedException', async () => {
+        await expect(
+          controller.completeGithubAppManifest(orgId, mockRequest, validBody),
+        ).rejects.toThrow(NotImplementedException);
+      });
 
-      expect(mockService.completeGithubAppManifest).not.toHaveBeenCalled();
-    });
+      it('does not call service', async () => {
+        await controller
+          .completeGithubAppManifest(orgId, mockRequest, validBody)
+          .catch(() => undefined);
 
-    it('throws BadRequestException when code is missing', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-
-      const body = { state: 'MANIFEST_STATE' } as {
-        code: string;
-        state: string;
-      };
-
-      await expect(
-        controller.completeGithubAppManifest(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException when code is empty string', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-
-      await expect(
-        controller.completeGithubAppManifest(orgId, mockRequest, {
-          code: '',
-          state: 'MANIFEST_STATE',
-        }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException when state is missing', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-
-      const body = { code: 'gh-code-123' } as {
-        code: string;
-        state: string;
-      };
-
-      await expect(
-        controller.completeGithubAppManifest(orgId, mockRequest, body),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('propagates BadRequestException from service unchanged', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.completeGithubAppManifest.mockRejectedValue(
-        new BadRequestException('Invalid manifest state'),
-      );
-
-      await expect(
-        controller.completeGithubAppManifest(orgId, mockRequest, validBody),
-      ).rejects.toThrow(new BadRequestException('Invalid manifest state'));
+        expect(mockService.completeGithubAppManifest).not.toHaveBeenCalled();
+      });
     });
   });
 
   describe('getGithubAppStatus', () => {
-    it('returns service result on cloud edition', async () => {
-      resolvePackmindEdition.mockResolvedValue('cloud');
+    describe('on cloud edition', () => {
       const expected = { hasApp: true };
-      mockService.getGithubAppStatus.mockResolvedValue(expected);
+      let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
-      const result = await controller.getGithubAppStatus(orgId);
+      beforeEach(async () => {
+        resolvePackmindEdition.mockResolvedValue('cloud');
+        mockService.getGithubAppStatus.mockResolvedValue(expected);
 
-      expect(result).toBe(expected);
-      expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({ orgId });
+        result = await controller.getGithubAppStatus(orgId);
+      });
+
+      it('returns the service result', () => {
+        expect(result).toBe(expected);
+      });
+
+      it('calls the service with orgId', () => {
+        expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({ orgId });
+      });
     });
 
-    it('returns service result with appSlug on oss edition when app exists', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      const expected = {
-        hasApp: true,
-        appSlug: 'my-packmind-app',
-        revokedAt: null,
-      };
-      mockService.getGithubAppStatus.mockResolvedValue(expected);
+    describe('on oss edition', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('oss');
+      });
 
-      const result = await controller.getGithubAppStatus(orgId);
+      describe('when app exists', () => {
+        const expected = {
+          hasApp: true,
+          appSlug: 'my-packmind-app',
+          revokedAt: null,
+        };
+        let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
-      expect(result).toBe(expected);
-      expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({ orgId });
-    });
+        beforeEach(async () => {
+          mockService.getGithubAppStatus.mockResolvedValue(expected);
 
-    it('returns hasApp false when no app exists on oss edition', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      const expected = { hasApp: false, appSlug: undefined, revokedAt: null };
-      mockService.getGithubAppStatus.mockResolvedValue(expected);
+          result = await controller.getGithubAppStatus(orgId);
+        });
 
-      const result = await controller.getGithubAppStatus(orgId);
+        it('returns the service result with appSlug', () => {
+          expect(result).toBe(expected);
+        });
 
-      expect(result).toBe(expected);
+        it('calls the service with orgId', () => {
+          expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({
+            orgId,
+          });
+        });
+      });
+
+      describe('when no app exists', () => {
+        it('returns hasApp false', async () => {
+          const expected = {
+            hasApp: false,
+            appSlug: undefined,
+            revokedAt: null,
+          };
+          mockService.getGithubAppStatus.mockResolvedValue(expected);
+
+          const result = await controller.getGithubAppStatus(orgId);
+
+          expect(result).toBe(expected);
+        });
+      });
     });
   });
 
   describe('revokeGithubApp', () => {
-    it('calls service and returns void on oss edition', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.revokeGithubApp.mockResolvedValue(undefined);
+    describe('on oss edition', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('oss');
+      });
 
-      await controller.revokeGithubApp(orgId, mockRequest);
+      it('calls service and returns void', async () => {
+        mockService.revokeGithubApp.mockResolvedValue(undefined);
 
-      expect(mockService.revokeGithubApp).toHaveBeenCalledWith({
-        orgId,
-        userId,
+        await controller.revokeGithubApp(orgId, mockRequest);
+
+        expect(mockService.revokeGithubApp).toHaveBeenCalledWith({
+          orgId,
+          userId,
+        });
+      });
+
+      it('propagates NotFoundException from service unchanged', async () => {
+        mockService.revokeGithubApp.mockRejectedValue(
+          new BadRequestException(
+            'No active GitHub App found for this organization',
+          ),
+        );
+
+        await expect(
+          controller.revokeGithubApp(orgId, mockRequest),
+        ).rejects.toThrow(BadRequestException);
       });
     });
 
-    it('throws NotImplementedException and does not call service when edition is cloud', async () => {
-      resolvePackmindEdition.mockResolvedValue('cloud');
+    describe('when edition is cloud', () => {
+      beforeEach(() => {
+        resolvePackmindEdition.mockResolvedValue('cloud');
+      });
 
-      await expect(
-        controller.revokeGithubApp(orgId, mockRequest),
-      ).rejects.toThrow(NotImplementedException);
+      it('throws NotImplementedException', async () => {
+        await expect(
+          controller.revokeGithubApp(orgId, mockRequest),
+        ).rejects.toThrow(NotImplementedException);
+      });
 
-      expect(mockService.revokeGithubApp).not.toHaveBeenCalled();
-    });
+      it('does not call service', async () => {
+        await controller
+          .revokeGithubApp(orgId, mockRequest)
+          .catch(() => undefined);
 
-    it('propagates NotFoundException from service unchanged', async () => {
-      resolvePackmindEdition.mockResolvedValue('oss');
-      mockService.revokeGithubApp.mockRejectedValue(
-        new BadRequestException(
-          'No active GitHub App found for this organization',
-        ),
-      );
-
-      await expect(
-        controller.revokeGithubApp(orgId, mockRequest),
-      ).rejects.toThrow(BadRequestException);
+        expect(mockService.revokeGithubApp).not.toHaveBeenCalled();
+      });
     });
   });
 });

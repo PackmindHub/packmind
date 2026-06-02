@@ -15,12 +15,23 @@ describe('PatTokenResolver', () => {
       await expect(resolver.getToken()).resolves.toBe('ghp_xxx');
     });
 
-    it('returns the same value on repeated calls', async () => {
-      const resolver = new PatTokenResolver('ghp_xxx');
-      const first = await resolver.getToken();
-      const second = await resolver.getToken();
-      expect(first).toBe(second);
-      expect(first).toBe('ghp_xxx');
+    describe('when called multiple times', () => {
+      let first: string;
+      let second: string;
+
+      beforeEach(async () => {
+        const resolver = new PatTokenResolver('ghp_xxx');
+        first = await resolver.getToken();
+        second = await resolver.getToken();
+      });
+
+      it('returns the same value across calls', () => {
+        expect(first).toBe(second);
+      });
+
+      it('returns the original token value', () => {
+        expect(first).toBe('ghp_xxx');
+      });
     });
   });
 

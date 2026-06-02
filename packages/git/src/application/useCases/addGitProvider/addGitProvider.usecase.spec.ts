@@ -176,45 +176,51 @@ describe('AddGitProviderUseCase', () => {
       );
 
     describe('token auth method', () => {
-      it('succeeds when token is present', async () => {
-        const uc = makeUseCase('oss');
-        const expectedResult = gitProviderFactory({
-          organizationId,
-          token: 'my-token',
-          authMethod: 'token',
-        });
-        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
-
-        const result = await uc.execute({
-          gitProvider: {
-            source: GitProviderVendors.github,
-            url: 'https://github.com',
+      describe('when token is present', () => {
+        it('succeeds', async () => {
+          const uc = makeUseCase('oss');
+          const expectedResult = gitProviderFactory({
+            organizationId,
             token: 'my-token',
             authMethod: 'token',
-          },
-          organizationId,
-          userId: memberUser.id,
-        });
+          });
+          mockGitProviderService.addGitProvider.mockResolvedValue(
+            expectedResult,
+          );
 
-        expect(result).toEqual(expectedResult);
-      });
-
-      it('throws BadRequestException when token is missing and allowTokenlessProvider is false', async () => {
-        const uc = makeUseCase('oss');
-
-        await expect(
-          uc.execute({
+          const result = await uc.execute({
             gitProvider: {
               source: GitProviderVendors.github,
               url: 'https://github.com',
-              token: '',
+              token: 'my-token',
               authMethod: 'token',
             },
             organizationId,
             userId: memberUser.id,
-            allowTokenlessProvider: false,
-          }),
-        ).rejects.toThrow('Git provider token is required');
+          });
+
+          expect(result).toEqual(expectedResult);
+        });
+      });
+
+      describe('when token is missing and allowTokenlessProvider is false', () => {
+        it('throws BadRequestException', async () => {
+          const uc = makeUseCase('oss');
+
+          await expect(
+            uc.execute({
+              gitProvider: {
+                source: GitProviderVendors.github,
+                url: 'https://github.com',
+                token: '',
+                authMethod: 'token',
+              },
+              organizationId,
+              userId: memberUser.id,
+              allowTokenlessProvider: false,
+            }),
+          ).rejects.toThrow('Git provider token is required');
+        });
       });
     });
 
@@ -223,132 +229,148 @@ describe('AddGitProviderUseCase', () => {
     );
 
     describe('app auth method on Cloud edition', () => {
-      it('succeeds when only appInstallationId is provided (Cloud does not require organizationGitHubAppId)', async () => {
-        const uc = makeUseCase('cloud');
-        const expectedResult = gitProviderFactory({
-          organizationId,
-          token: null,
-          authMethod: 'app',
-          appInstallationId: 42,
-        });
-        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
-
-        const result = await uc.execute({
-          gitProvider: {
-            source: GitProviderVendors.github,
-            url: 'https://github.com',
+      describe('when only appInstallationId is provided (Cloud does not require organizationGitHubAppId)', () => {
+        it('succeeds', async () => {
+          const uc = makeUseCase('cloud');
+          const expectedResult = gitProviderFactory({
+            organizationId,
             token: null,
             authMethod: 'app',
             appInstallationId: 42,
-          },
-          organizationId,
-          userId: memberUser.id,
-        });
+          });
+          mockGitProviderService.addGitProvider.mockResolvedValue(
+            expectedResult,
+          );
 
-        expect(result).toEqual(expectedResult);
-      });
-
-      it('throws when appInstallationId is missing on Cloud', async () => {
-        const uc = makeUseCase('cloud');
-
-        await expect(
-          uc.execute({
+          const result = await uc.execute({
             gitProvider: {
               source: GitProviderVendors.github,
               url: 'https://github.com',
               token: null,
               authMethod: 'app',
+              appInstallationId: 42,
             },
             organizationId,
             userId: memberUser.id,
-          }),
-        ).rejects.toThrow('GitHub App installation ID is required');
+          });
+
+          expect(result).toEqual(expectedResult);
+        });
+      });
+
+      describe('when appInstallationId is missing on Cloud', () => {
+        it('throws', async () => {
+          const uc = makeUseCase('cloud');
+
+          await expect(
+            uc.execute({
+              gitProvider: {
+                source: GitProviderVendors.github,
+                url: 'https://github.com',
+                token: null,
+                authMethod: 'app',
+              },
+              organizationId,
+              userId: memberUser.id,
+            }),
+          ).rejects.toThrow('GitHub App installation ID is required');
+        });
       });
     });
 
     describe('app auth method on OSS edition', () => {
-      it('succeeds when appInstallationId and organizationGitHubAppId are provided', async () => {
-        const uc = makeUseCase('oss');
-        const expectedResult = gitProviderFactory({
-          organizationId,
-          token: null,
-          authMethod: 'app',
-          appInstallationId: 42,
-          organizationGitHubAppId: orgGitHubAppId,
-        });
-        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
-
-        const result = await uc.execute({
-          gitProvider: {
-            source: GitProviderVendors.github,
-            url: 'https://github.com',
+      describe('when appInstallationId and organizationGitHubAppId are provided', () => {
+        it('succeeds', async () => {
+          const uc = makeUseCase('oss');
+          const expectedResult = gitProviderFactory({
+            organizationId,
             token: null,
             authMethod: 'app',
             appInstallationId: 42,
             organizationGitHubAppId: orgGitHubAppId,
-          },
-          organizationId,
-          userId: memberUser.id,
+          });
+          mockGitProviderService.addGitProvider.mockResolvedValue(
+            expectedResult,
+          );
+
+          const result = await uc.execute({
+            gitProvider: {
+              source: GitProviderVendors.github,
+              url: 'https://github.com',
+              token: null,
+              authMethod: 'app',
+              appInstallationId: 42,
+              organizationGitHubAppId: orgGitHubAppId,
+            },
+            organizationId,
+            userId: memberUser.id,
+          });
+
+          expect(result).toEqual(expectedResult);
         });
-
-        expect(result).toEqual(expectedResult);
       });
 
-      it('throws when appInstallationId is missing', async () => {
-        const uc = makeUseCase('oss');
+      describe('when appInstallationId is missing', () => {
+        it('throws', async () => {
+          const uc = makeUseCase('oss');
 
-        await expect(
-          uc.execute({
-            gitProvider: {
-              source: GitProviderVendors.github as GitProviderVendor,
-              url: 'https://github.com',
-              token: null,
-              authMethod: 'app' as const,
-              organizationGitHubAppId: orgGitHubAppId,
-            },
-            organizationId,
-            userId: memberUser.id,
-          }),
-        ).rejects.toThrow('GitHub App installation ID is required');
+          await expect(
+            uc.execute({
+              gitProvider: {
+                source: GitProviderVendors.github as GitProviderVendor,
+                url: 'https://github.com',
+                token: null,
+                authMethod: 'app' as const,
+                organizationGitHubAppId: orgGitHubAppId,
+              },
+              organizationId,
+              userId: memberUser.id,
+            }),
+          ).rejects.toThrow('GitHub App installation ID is required');
+        });
       });
 
-      it('throws when organizationGitHubAppId is missing on OSS', async () => {
-        const uc = makeUseCase('oss');
+      describe('when organizationGitHubAppId is missing on OSS', () => {
+        it('throws', async () => {
+          const uc = makeUseCase('oss');
 
-        await expect(
-          uc.execute({
-            gitProvider: {
-              source: GitProviderVendors.github,
-              url: 'https://github.com',
-              token: null,
-              authMethod: 'app',
-              appInstallationId: 42,
-            },
-            organizationId,
-            userId: memberUser.id,
-          }),
-        ).rejects.toThrow(
-          'organizationGitHubAppId is required when authMethod is "app"',
-        );
+          await expect(
+            uc.execute({
+              gitProvider: {
+                source: GitProviderVendors.github,
+                url: 'https://github.com',
+                token: null,
+                authMethod: 'app',
+                appInstallationId: 42,
+              },
+              organizationId,
+              userId: memberUser.id,
+            }),
+          ).rejects.toThrow(
+            'organizationGitHubAppId is required when authMethod is "app"',
+          );
+        });
       });
 
-      it('throws BadRequestException when token is set with app authMethod', async () => {
-        const uc = makeUseCase('oss');
+      describe('when token is set with app authMethod', () => {
+        it('throws BadRequestException', async () => {
+          const uc = makeUseCase('oss');
 
-        await expect(
-          uc.execute({
-            gitProvider: {
-              source: GitProviderVendors.github,
-              url: 'https://github.com',
-              token: 'some-token',
-              authMethod: 'app',
-              appInstallationId: 42,
-              organizationGitHubAppId: orgGitHubAppId,
-            },
-            organizationId,
-            userId: memberUser.id,
-          }),
-        ).rejects.toThrow('Token must not be set when authMethod is "app"');
+          await expect(
+            uc.execute({
+              gitProvider: {
+                source: GitProviderVendors.github,
+                url: 'https://github.com',
+                token: 'some-token',
+                authMethod: 'app',
+                appInstallationId: 42,
+                organizationGitHubAppId: orgGitHubAppId,
+              },
+              organizationId,
+              userId: memberUser.id,
+            }),
+          ).rejects.toThrow('Token must not be set when authMethod is "app"');
+        });
       });
     });
   });

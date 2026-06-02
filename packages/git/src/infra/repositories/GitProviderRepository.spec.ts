@@ -92,11 +92,14 @@ describe('GitProviderRepository', () => {
   });
 
   describe('when storing an app-auth provider with organizationGitHubAppId', () => {
-    it('round-trips organizationGitHubAppId through add/findById', async () => {
+    let orgGitHubAppId: ReturnType<typeof createOrganizationGitHubAppId>;
+    let found: Awaited<ReturnType<typeof gitProviderRepository.findById>>;
+
+    beforeEach(async () => {
       const orgAppRepo = fixture.datasource.getRepository(
         OrganizationGitHubAppSchema,
       );
-      const orgGitHubAppId = createOrganizationGitHubAppId(uuidv4());
+      orgGitHubAppId = createOrganizationGitHubAppId(uuidv4());
       await orgAppRepo.save({
         id: orgGitHubAppId,
         organizationId: testOrganization.id,
@@ -117,10 +120,18 @@ describe('GitProviderRepository', () => {
       });
       await gitProviderRepository.add(provider);
 
-      const found = await gitProviderRepository.findById(provider.id);
+      found = await gitProviderRepository.findById(provider.id);
+    });
 
+    it('round-trips organizationGitHubAppId through add/findById', () => {
       expect(found?.organizationGitHubAppId).toBe(orgGitHubAppId);
+    });
+
+    it('persists appInstallationId', () => {
       expect(found?.appInstallationId).toBeDefined();
+    });
+
+    it('persists authMethod as app', () => {
       expect(found?.authMethod).toBe('app');
     });
   });

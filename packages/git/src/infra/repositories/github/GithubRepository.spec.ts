@@ -89,9 +89,14 @@ describe('GithubRepository', () => {
       });
     });
 
-    it('registers request and response interceptors for token injection', () => {
-      expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalled();
-      expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalled();
+    describe('when registering interceptors for token injection', () => {
+      it('registers a request interceptor', () => {
+        expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalled();
+      });
+
+      it('registers a response interceptor', () => {
+        expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalled();
+      });
     });
   });
 
