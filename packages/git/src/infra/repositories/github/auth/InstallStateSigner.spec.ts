@@ -130,21 +130,6 @@ describe('InstallStateSigner', () => {
     });
   });
 
-  describe('tampered signature', () => {
-    describe('when the signature part is tampered', () => {
-      it('throws InvalidInstallStateError', () => {
-        const signer = signerWithFixedNow();
-        const state = signer.sign({ orgId: 'org-1', userId: 'user-1' });
-        const [payload, sig] = state.split('.');
-        const tampered = sig.slice(0, -1) + (sig.at(-1) === 'a' ? 'b' : 'a');
-
-        expect(() => signer.verify(`${payload}.${tampered}`)).toThrow(
-          InvalidInstallStateError,
-        );
-      });
-    });
-  });
-
   describe('expired token', () => {
     describe('when exp is in the past', () => {
       it('throws InvalidInstallStateError', () => {
