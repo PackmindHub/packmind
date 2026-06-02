@@ -114,7 +114,7 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
     const provider = providers.find((p) => p.id === repository.providerId);
     if (!provider) return true; // Default to allowing edit if provider not found
 
-    return provider.hasToken;
+    return provider.hasAuth;
   };
 
   // Sort targets with Root target first, then by creation date

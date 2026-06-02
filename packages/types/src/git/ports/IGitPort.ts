@@ -24,6 +24,7 @@ import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
 import { DeleteItem, FileModification } from '../../deployments/FileUpdates';
+import { OrganizationGitHubApp } from '../OrganizationGitHubApp';
 
 export const IGitPortName = 'IGitPort' as const;
 
@@ -285,4 +286,39 @@ export interface IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string>;
+
+  /**
+   * Persist (upsert) an OrganizationGitHubApp record.
+   * If an active record already exists for the org it is revoked first,
+   * then the new record is inserted (within a transaction).
+   * Used exclusively by the OSS manifest-callback flow.
+   *
+   * @param app - The fully-populated OrganizationGitHubApp to persist
+   * @returns The persisted (decrypted) record
+   */
+  upsertOrganizationGitHubApp(
+    app: OrganizationGitHubApp,
+  ): Promise<OrganizationGitHubApp>;
+
+  /**
+   * Returns the active (non-revoked) OrganizationGitHubApp for the given org,
+   * or null if none exists.
+   *
+   * @param orgId - The organization ID
+   * @returns The active app record, or null
+   */
+  getActiveOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<OrganizationGitHubApp | null>;
+
+  /**
+   * Marks the active OrganizationGitHubApp for the given org as revoked.
+   * No-ops if no active record exists.
+   * Note: this does NOT cascade-delete existing GitProvider rows pointing at this org.
+   * Those providers will start failing at next token mint. Admin must re-register
+   * and users will need to re-install the new app.
+   *
+   * @param orgId - The organization ID
+   */
+  revokeOrganizationGitHubApp(orgId: OrganizationId): Promise<void>;
 }

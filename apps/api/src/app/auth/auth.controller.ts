@@ -26,6 +26,7 @@ import { WorkOsService } from './workos.service';
 import { SocialProvider } from '@packmind/types';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
+import { resolvePackmindEdition } from '../shared/utils/edition';
 import {
   SignInUserCommand,
   SignInUserResponse,
@@ -322,7 +323,9 @@ export class AuthController {
         error: getErrorMessage(error),
       });
       response.status(HttpStatus.UNAUTHORIZED);
+      const edition = await resolvePackmindEdition();
       return {
+        edition,
         message: 'Failed to get user info',
         authenticated: false,
       } as GetMeResponse;

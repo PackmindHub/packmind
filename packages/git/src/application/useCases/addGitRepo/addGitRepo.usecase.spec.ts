@@ -113,6 +113,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: 'token',
+        authMethod: 'token',
       };
 
       expectedResult = {
@@ -237,6 +238,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: 'token',
+        authMethod: 'token',
       };
 
       expectedResult = {
@@ -307,6 +309,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: 'token',
+        authMethod: 'token',
       };
 
       expectedResult = {
@@ -448,6 +451,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId: createOrganizationId(uuidv4()), // Different organization
         url: 'https://github.com',
         token: 'token',
+        authMethod: 'token',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -475,6 +479,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: null,
+        authMethod: 'token',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -502,6 +507,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: 'token',
+        authMethod: 'token',
       };
 
       const existingRepo: GitRepo = {
@@ -544,6 +550,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: null,
+        authMethod: 'token',
       };
 
       const expectedResult: GitRepo = {
@@ -585,6 +592,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: null,
+        authMethod: 'token',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -612,6 +620,7 @@ describe('AddGitRepoUseCase', () => {
         organizationId,
         url: 'https://github.com',
         token: null,
+        authMethod: 'token',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(

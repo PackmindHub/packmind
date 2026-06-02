@@ -70,16 +70,9 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    // Get the token from the provider
-    const token = gitProvider.token;
-
-    if (!token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create an instance of IGitProvider using the factory
+    // Create an instance of IGitProvider using the factory (token validation delegated)
     const providerInstance =
-      this.gitProviderFactory.createGitProvider(gitProvider);
+      await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.listAvailableRepositories(); // Always filters for write-only repositories
   }
 
@@ -99,16 +92,9 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    // Get the token from the provider
-    const token = gitProvider.token;
-
-    if (!token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create an instance of IGitProvider using the factory
+    // Create an instance of IGitProvider using the factory (token validation delegated)
     const providerInstance =
-      this.gitProviderFactory.createGitProvider(gitProvider);
+      await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.checkBranchExists(owner, repo, branch);
   }
 
@@ -164,12 +150,8 @@ export class GitProviderService {
       throw new Error('Git provider not found for this repository');
     }
 
-    if (!gitProvider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create an instance of IGitRepo using the factory
-    const gitRepoInstance = this.gitRepoFactory.createGitRepo(
+    // Create an instance of IGitRepo using the factory (token validation delegated)
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
       gitRepo,
       gitProvider,
     );

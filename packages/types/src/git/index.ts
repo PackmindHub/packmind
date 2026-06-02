@@ -2,6 +2,7 @@ export * from './GitRepoId';
 export * from './GitCommit';
 export * from './GitProvider';
 export * from './GitRepo';
+export * from './OrganizationGitHubApp';
 export * from './GitRepoType';
 export * from './errors';
 export * from './contracts';

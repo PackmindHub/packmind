@@ -815,16 +815,88 @@ describe('AuthController', () => {
       });
 
       it('returns error response', () => {
-        expect(result).toEqual({
-          message: 'Failed to get user info',
-          authenticated: false,
-          user: undefined,
-          organization: undefined,
-        });
+        expect(result).toEqual(
+          expect.objectContaining({
+            message: 'Failed to get user info',
+            authenticated: false,
+          }),
+        );
       });
 
       it('sets 401 status', () => {
         expect(mockResponseWithStatus.status).toHaveBeenCalledWith(401);
+      });
+    });
+  });
+
+  describe('GET /auth/me - edition flag', () => {
+    const mockRequest = {
+      cookies: { auth_token: 'valid-token' },
+    } as Request;
+    const mockResponseWithStatus = {
+      status: jest.fn().mockReturnThis(),
+    } as unknown as Response;
+
+    describe('when edition is cloud (PACKMIND_EDITION=proprietary)', () => {
+      beforeEach(async () => {
+        mockConfiguration.getConfig.mockResolvedValue('proprietary');
+        mockAuthService.getMe.mockResolvedValue({
+          edition: 'cloud' as const,
+          user: {
+            id: createUserId('1'),
+            email: 'test@example.com',
+            displayName: null,
+          },
+          organization: {
+            id: createOrganizationId('org-1'),
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin' as const,
+          },
+          authenticated: true,
+        });
+      });
+
+      it('returns edition "cloud" in the response', async () => {
+        const result = await controller.getMe(
+          mockRequest,
+          mockResponseWithStatus,
+        );
+        expect(result.edition).toBe('cloud');
+      });
+    });
+
+    describe('when PACKMIND_EDITION is not set (OSS default)', () => {
+      beforeEach(() => {
+        mockConfiguration.getConfig.mockResolvedValue(undefined);
+        mockAuthService.getMe.mockResolvedValue({
+          edition: 'oss' as const,
+          message: 'No valid access token found',
+          authenticated: false,
+        });
+      });
+
+      it('returns edition "oss" in the response', async () => {
+        const result = await controller.getMe(
+          mockRequest,
+          mockResponseWithStatus,
+        );
+        expect(result.edition).toBe('oss');
+      });
+    });
+
+    describe('when service throws and fallback catch block runs', () => {
+      beforeEach(() => {
+        mockConfiguration.getConfig.mockResolvedValue(undefined);
+        mockAuthService.getMe.mockRejectedValue(new Error('Unexpected error'));
+      });
+
+      it('returns edition "oss" in the fallback response', async () => {
+        const result = await controller.getMe(
+          mockRequest,
+          mockResponseWithStatus,
+        );
+        expect(result.edition).toBe('oss');
       });
     });
   });

@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   BaseHexaOpts,
+  Configuration,
   HexaRegistry,
   JobsService,
 } from '@packmind/node-utils';
@@ -20,6 +21,7 @@ import { FetchFileContentCallback } from './application/jobs/FetchFileContentDel
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
+import { GithubTokenResolverFactory } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 
 const origin = 'GitHexa';
 
@@ -35,6 +37,7 @@ const origin = 'GitHexa';
 
 export type GitHexaOpts = BaseHexaOpts & {
   gitRepoFactory?: IGitRepoFactory;
+  githubTokenResolverFactory?: GithubTokenResolverFactory;
 };
 
 const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
@@ -79,6 +82,15 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('Initializing GitHexa (adapter retrieval phase)');
 
     try {
+      // Resolve edition once at bootstrap so use cases get the correct value
+      const rawEdition = await Configuration.getConfig('PACKMIND_EDITION');
+      const edition: 'cloud' | 'oss' =
+        rawEdition === 'proprietary' || rawEdition === 'cloud'
+          ? 'cloud'
+          : 'oss';
+
+      this.adapter.setEdition(edition);
+
       // Get all required ports and services
       const ports = {
         [IAccountsPortName]:

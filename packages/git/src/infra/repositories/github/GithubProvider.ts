@@ -1,4 +1,5 @@
 import { IGitProvider } from '../../../domain/repositories/IGitProvider';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
@@ -9,17 +10,34 @@ export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
 
   constructor(
-    private readonly token: string,
+    private readonly resolver: IGithubTokenResolver,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.client = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    // Inject token from resolver on every request
+    this.client.interceptors.request.use(async (config) => {
+      const token = await resolver.getToken();
+      config.headers['Authorization'] = `token ${token}`;
+      return config;
+    });
+
+    // Fire onUnauthorized hook on 401 responses
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error?.response?.status === 401) {
+          await resolver.onUnauthorized();
+        }
+        return Promise.reject(error);
+      },
+    );
   }
 
   async listAvailableRepositories(): Promise<
@@ -34,62 +52,96 @@ export class GithubProvider implements IGitProvider {
     }[]
   > {
     try {
-      const response = await this.client.get('/user/repos', {
-        params: {
-          sort: 'updated',
-          per_page: 100,
-        },
-      });
+      // Installation tokens authenticate as the App installation, not a user,
+      // so `/user/repos` returns nothing. GitHub returns the same repo shape
+      // from both endpoints, only the envelope differs (array vs.
+      // `{ repositories: [...] }`).
+      const kind = this.resolver.getKind();
+      const rawRepos =
+        kind === 'installation'
+          ? await this.fetchInstallationRepos()
+          : await this.fetchUserRepos();
 
-      if (!response.data || !Array.isArray(response.data)) {
+      if (!Array.isArray(rawRepos)) {
         return [];
       }
 
-      return response.data
-        .filter((repo) => repo && repo.name && repo.owner && repo.owner.login)
-        .filter((repo) => {
-          // Always filter for write-only repositories
-          // Check if permissions object exists and has the push property
-          if (!repo.permissions) {
-            this.logger.warn(
-              'Repository missing permissions object, excluding from results',
-              {
-                repoName: repo.name,
-                owner: repo.owner?.login,
-              },
-            );
-            return false;
-          }
+      const baseRepos = rawRepos.filter(
+        (repo) => repo && repo.name && repo.owner && repo.owner.login,
+      );
 
-          if (typeof repo.permissions.push !== 'boolean') {
-            this.logger.warn(
-              'Repository permissions.push is not a boolean, excluding from results',
-              {
-                repoName: repo.name,
-                owner: repo.owner?.login,
-                pushValue: repo.permissions.push,
-              },
-            );
-            return false;
-          }
+      // For `/user/repos` the response includes read-only repos the user has
+      // visibility into, so we filter by `permissions.push === true`.
+      // For `/installation/repositories` GitHub already only returns repos
+      // the App was explicitly granted access to. The per-repo `permissions`
+      // object for installation tokens does not reliably reflect the App's
+      // contents:write grant (e.g. `push` may be false or absent), so the
+      // same filter would silently drop every repo — the bug we are fixing.
+      // Trust the App-installation list as-is.
+      const filteredRepos =
+        kind === 'installation'
+          ? baseRepos
+          : baseRepos.filter((repo) => {
+              if (!repo.permissions) {
+                this.logger.warn(
+                  'Repository missing permissions object, excluding from results',
+                  {
+                    repoName: repo.name,
+                    owner: repo.owner?.login,
+                  },
+                );
+                return false;
+              }
 
-          return repo.permissions.push === true;
-        })
-        .map((repo) => ({
-          name: repo.name,
-          owner: repo.owner.login,
-          description: repo.description || undefined,
-          private: repo.private,
-          defaultBranch: repo.default_branch,
-          language: repo.language || undefined,
-          stars: repo.stargazers_count,
-        }));
+              if (typeof repo.permissions.push !== 'boolean') {
+                this.logger.warn(
+                  'Repository permissions.push is not a boolean, excluding from results',
+                  {
+                    repoName: repo.name,
+                    owner: repo.owner?.login,
+                    pushValue: repo.permissions.push,
+                  },
+                );
+                return false;
+              }
+
+              return repo.permissions.push === true;
+            });
+
+      return filteredRepos.map((repo) => ({
+        name: repo.name,
+        owner: repo.owner.login,
+        description: repo.description || undefined,
+        private: repo.private,
+        defaultBranch: repo.default_branch,
+        language: repo.language || undefined,
+        stars: repo.stargazers_count,
+      }));
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw new Error('Failed to fetch repositories from GitHub');
     }
+  }
+
+  private async fetchUserRepos(): Promise<unknown> {
+    const response = await this.client.get('/user/repos', {
+      params: {
+        sort: 'updated',
+        per_page: 100,
+      },
+    });
+    return response.data;
+  }
+
+  private async fetchInstallationRepos(): Promise<unknown> {
+    const response = await this.client.get('/installation/repositories', {
+      params: {
+        per_page: 100,
+      },
+    });
+    return response.data?.repositories;
   }
 
   async checkBranchExists(
