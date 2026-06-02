@@ -24,6 +24,7 @@ import {
   IStandardsPort,
   IStandardsPortName,
   Marketplace,
+  MarketplaceDistribution,
 } from '@packmind/types';
 import {
   GitRepoRepository,
@@ -37,7 +38,9 @@ import { DeploymentsServices } from './application/services/DeploymentsServices'
 import { MarketplaceDescriptorParserRegistry } from './application/services/MarketplaceDescriptorParserRegistry';
 import { AnthropicMarketplaceDescriptorParser } from './application/services/parsers/AnthropicMarketplaceDescriptorParser';
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
+import { MarketplaceDistributionRepository } from './infra/repositories/MarketplaceDistributionRepository';
 import { MarketplaceRepository } from './infra/repositories/MarketplaceRepository';
+import { MarketplaceDistributionSchema } from './infra/schemas/MarketplaceDistributionSchema';
 import { MarketplaceSchema } from './infra/schemas/MarketplaceSchema';
 
 const origin = 'DeploymentsHexa';
@@ -58,6 +61,7 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly repositories: DeploymentsRepositories;
   private readonly services: DeploymentsServices;
   private readonly marketplaceRepository: MarketplaceRepository;
+  private readonly marketplaceDistributionRepository: MarketplaceDistributionRepository;
   private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry;
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
@@ -85,6 +89,18 @@ export class DeploymentsHexa extends BaseHexa<
           MarketplaceSchema,
         ) as Repository<Marketplace>,
       );
+
+      // Persistence for marketplace publish attempts. Wired here so the
+      // publish use case + delayed job (Phase 2) can pick it up via the
+      // adapter. Pure-persistence registration on its own — no adapter or
+      // use-case wiring lands in this commit to honor the early-push
+      // checkpoint (AC18).
+      this.marketplaceDistributionRepository =
+        new MarketplaceDistributionRepository(
+          this.dataSource.getRepository(
+            MarketplaceDistributionSchema,
+          ) as Repository<MarketplaceDistribution>,
+        );
 
       // Vendor-agnostic parser registry. New marketplace vendors plug in by
       // appending to this array — link/unlink use cases do not branch on

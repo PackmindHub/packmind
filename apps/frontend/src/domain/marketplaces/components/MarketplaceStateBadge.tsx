@@ -36,6 +36,12 @@ const STATE_PRESENTATION: Record<MarketplaceState, StatePresentation> = {
     tooltip:
       'The marketplace repository could not be reached on the last check.',
   },
+  bad_format: {
+    label: 'Bad format',
+    colorPalette: 'red',
+    tooltip:
+      'The marketplace descriptor is missing or unparseable. Fix marketplace.json to publish again.',
+  },
 };
 
 export const MarketplaceStateBadge = ({
