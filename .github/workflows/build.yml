@@ -376,7 +376,11 @@ jobs:
           PROD_CLI_DIR="$(mktemp -d)"
           cd "${PROD_CLI_DIR}"
           pnpm init
-          pnpm add @packmind/cli
+          # Throwaway install: only need the CLI binary resolvable to run --version.
+          # bcrypt/msgpackr-extract ship prebuilt binaries, so their build scripts
+          # are not required. Disable strictDepBuilds (default true in pnpm 11) to
+          # avoid ERR_PNPM_IGNORED_BUILDS here where there is no allowBuilds config.
+          pnpm add @packmind/cli --config.strictDepBuilds=false
           CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
           cd -
           echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
