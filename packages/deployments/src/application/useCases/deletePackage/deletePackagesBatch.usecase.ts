@@ -1,6 +1,12 @@
 import { PackageService } from '../../services/PackageService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { UserId } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  PackagesDeletedEvent,
+  UserId,
+} from '@packmind/types';
 import {
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
@@ -12,6 +18,7 @@ const origin = 'DeletePackagesBatchUsecase';
 export class DeletePackagesBatchUsecase implements IDeletePackagesBatchUseCase {
   constructor(
     private readonly packageService: PackageService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -58,6 +65,18 @@ export class DeletePackagesBatchUsecase implements IDeletePackagesBatchUseCase {
         count: packageIds.length,
       });
       await this.packageService.deletePackages(packageIds, userId as UserId);
+
+      // Emit PackagesDeletedEvent so the deployments-domain listener can
+      // cascade live marketplace distributions to `to_be_removed`.
+      this.eventEmitterService.emit(
+        new PackagesDeletedEvent({
+          userId: createUserId(userId),
+          organizationId: createOrganizationId(organizationId),
+          source: command.source ?? 'ui',
+          packageIds,
+          spaceId,
+        }),
+      );
 
       this.logger.info('Packages deletion completed successfully', {
         count: packageIds.length,

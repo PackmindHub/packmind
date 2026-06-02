@@ -34,3 +34,31 @@ export const marketplaceDistributionFactory: Factory<
     ...overrides,
   } as MarketplaceDistribution;
 };
+
+/**
+ * Chainable helper: builds a `to_be_removed` distribution.
+ *
+ * Used by repository specs, use-case specs and integration tests covering
+ * the pending-removal lifecycle.
+ */
+export const toBeRemovedMarketplaceDistributionFactory: Factory<
+  MarketplaceDistribution
+> = (overrides?: Partial<MarketplaceDistribution>) =>
+  marketplaceDistributionFactory({
+    status: DistributionStatus.to_be_removed,
+    ...overrides,
+  });
+
+/**
+ * Chainable helper: builds a terminal `removed` distribution.
+ *
+ * Used by reconciliation-job specs covering the terminal transition once a
+ * pending-removal slug has disappeared from the marketplace descriptor.
+ */
+export const removedMarketplaceDistributionFactory: Factory<
+  MarketplaceDistribution
+> = (overrides?: Partial<MarketplaceDistribution>) =>
+  marketplaceDistributionFactory({
+    status: DistributionStatus.removed,
+    ...overrides,
+  });

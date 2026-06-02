@@ -7,6 +7,12 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  CancelPluginRemovalCommand,
+  CancelPluginRemovalResponse,
+  ListMarketplaceDistributionsCommand,
+  ListMarketplaceDistributionsResponse,
+  MarkPluginForRemovalCommand,
+  MarkPluginForRemovalResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -133,9 +139,12 @@ import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDef
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
+import { CancelPluginRemovalUseCase } from '../useCases/cancelPluginRemoval';
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
 import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
+import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
 import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
+import { MarkPluginForRemovalUseCase } from '../useCases/markPluginForRemoval';
 import { PublishPackageOnMarketplaceUseCase } from '../useCases/publishPackageOnMarketplace';
 import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
 import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
@@ -229,6 +238,9 @@ export class DeploymentsAdapter
   private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
   private _publishPackageOnMarketplaceUseCase!: PublishPackageOnMarketplaceUseCase;
   private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
+  private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
+  private _cancelPluginRemovalUseCase!: CancelPluginRemovalUseCase;
+  private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -538,6 +550,7 @@ export class DeploymentsAdapter
 
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
       this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
@@ -641,6 +654,30 @@ export class DeploymentsAdapter
         this.spacesPort,
         this.accountsPort,
       );
+
+    // Plugin removal use cases (gated behind marketplace-plugin-removal flag
+    // on the frontend; backend remains symmetric to link/unlink).
+    this._markPluginForRemovalUseCase = new MarkPluginForRemovalUseCase(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
+      this.accountsPort,
+    );
+
+    this._cancelPluginRemovalUseCase = new CancelPluginRemovalUseCase(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.accountsPort,
+    );
+
+    this._listMarketplaceDistributionsUseCase =
+      new ListMarketplaceDistributionsUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.accountsPort,
+      );
   }
 
   /**
@@ -672,6 +709,7 @@ export class DeploymentsAdapter
     // so the queue is initialized alongside the rest of the worker pool.
     const reconciliationFactory = new MarketplaceReconciliationJobFactory(
       this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
       this.gitRepoService,
       this.gitPort!,
       this.marketplaceDescriptorParserRegistry,
@@ -1078,5 +1116,23 @@ export class DeploymentsAdapter
       return null;
     }
     return row;
+  }
+
+  async markPluginForRemoval(
+    command: MarkPluginForRemovalCommand,
+  ): Promise<MarkPluginForRemovalResponse> {
+    return this._markPluginForRemovalUseCase.execute(command);
+  }
+
+  async cancelPluginRemoval(
+    command: CancelPluginRemovalCommand,
+  ): Promise<CancelPluginRemovalResponse> {
+    return this._cancelPluginRemovalUseCase.execute(command);
+  }
+
+  async listMarketplaceDistributions(
+    command: ListMarketplaceDistributionsCommand,
+  ): Promise<ListMarketplaceDistributionsResponse> {
+    return this._listMarketplaceDistributionsUseCase.execute(command);
   }
 }

@@ -37,5 +37,13 @@ export type MarketplaceDescriptor = {
   version?: string;
   plugins: PluginRef[];
   packmindLock?: MarketplaceDescriptorPackmindLock;
+  /**
+   * Plugin slugs Packmind expects to find in the descriptor but that were
+   * absent on the latest reconciliation sweep AND not covered by a
+   * `to_be_removed` distribution. Populated by
+   * `MarketplaceReconciliationDelayedJob` to drive the "Drift detected"
+   * indicator on the marketplace details view.
+   */
+  driftedPluginSlugs?: string[];
   raw: unknown;
 };

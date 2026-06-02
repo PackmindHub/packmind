@@ -1,5 +1,6 @@
 import { Repository } from 'typeorm';
 import {
+  DistributionStatus,
   MarketplaceDistribution,
   MarketplaceDistributionId,
   MarketplaceId,
@@ -157,6 +158,156 @@ export class MarketplaceDistributionRepository
           error: error instanceof Error ? error.message : String(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async findLatestSuccessfulByPackageAndMarketplace(
+    packageId: PackageId,
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution | null> {
+    this.logger.info(
+      'Finding latest successful marketplace distribution by package and marketplace',
+      { packageId, marketplaceId },
+    );
+
+    try {
+      const row = await this.repository
+        .createQueryBuilder('marketplace_distribution')
+        .where('marketplace_distribution.packageId = :packageId', {
+          packageId,
+        })
+        .andWhere('marketplace_distribution.marketplaceId = :marketplaceId', {
+          marketplaceId,
+        })
+        .andWhere('marketplace_distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('marketplace_distribution.createdAt', 'DESC')
+        .getOne();
+
+      this.logger.info(
+        'Latest successful marketplace distribution lookup completed',
+        { packageId, marketplaceId, found: !!row },
+      );
+      return row;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find latest successful marketplace distribution',
+        {
+          packageId,
+          marketplaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findActiveByPackageId(
+    packageId: PackageId,
+  ): Promise<MarketplaceDistribution[]> {
+    this.logger.info(
+      'Finding active (success-state) marketplace distributions by package ID',
+      { packageId },
+    );
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('marketplace_distribution')
+        .where('marketplace_distribution.packageId = :packageId', {
+          packageId,
+        })
+        .andWhere('marketplace_distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('marketplace_distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info('Active marketplace distributions found by package ID', {
+        packageId,
+        count: rows.length,
+      });
+      return rows;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find active marketplace distributions by package ID',
+        {
+          packageId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findPendingRemovalsByMarketplaceId(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution[]> {
+    this.logger.info(
+      'Finding pending-removal marketplace distributions by marketplace ID',
+      { marketplaceId },
+    );
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('marketplace_distribution')
+        .where('marketplace_distribution.marketplaceId = :marketplaceId', {
+          marketplaceId,
+        })
+        .andWhere('marketplace_distribution.status = :status', {
+          status: DistributionStatus.to_be_removed,
+        })
+        .orderBy('marketplace_distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Pending-removal marketplace distributions found by marketplace ID',
+        { marketplaceId, count: rows.length },
+      );
+      return rows;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find pending-removal marketplace distributions',
+        {
+          marketplaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findSuccessfulByMarketplaceId(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution[]> {
+    this.logger.info(
+      'Finding successful marketplace distributions by marketplace ID',
+      { marketplaceId },
+    );
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('marketplace_distribution')
+        .where('marketplace_distribution.marketplaceId = :marketplaceId', {
+          marketplaceId,
+        })
+        .andWhere('marketplace_distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('marketplace_distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Successful marketplace distributions found by marketplace ID',
+        { marketplaceId, count: rows.length },
+      );
+      return rows;
+    } catch (error) {
+      this.logger.error('Failed to find successful marketplace distributions', {
+        marketplaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

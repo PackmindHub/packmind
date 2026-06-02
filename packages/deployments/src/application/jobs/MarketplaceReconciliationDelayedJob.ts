@@ -8,6 +8,7 @@ import {
 } from '@packmind/node-utils';
 import { GitRepoService } from '@packmind/git';
 import {
+  DistributionStatus,
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   MarketplaceDescriptor,
@@ -17,6 +18,7 @@ import {
   MarketplaceState,
 } from '@packmind/types';
 import { Job } from 'bullmq';
+import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
@@ -93,6 +95,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       >
     >,
     private readonly marketplaceRepository: IMarketplaceRepository,
+    private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
@@ -278,20 +281,89 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       return { state: 'bad_format', lastValidatedAt };
     }
 
-    // Step 5 — Diff descriptor (ignoring `raw`).
-    const state: MarketplaceState = descriptorsEquivalent(
+    // Step 5 — Cross-check `MarketplaceDistribution` rows against the
+    // descriptor's slug set. Two outcomes:
+    //   (a) `to_be_removed` rows whose slug is no longer in the descriptor
+    //       transition to terminal `removed` (no domain event).
+    //   (b) `success` rows whose slug is absent AND not covered by a
+    //       `to_be_removed` row contribute to drift detection.
+    const descriptorSlugs = new Set(descriptor.plugins.map((p) => p.slug));
+    const [successDistributions, pendingRemovalDistributions] =
+      await Promise.all([
+        this.marketplaceDistributionRepository.findSuccessfulByMarketplaceId(
+          marketplace.id,
+        ),
+        this.marketplaceDistributionRepository.findPendingRemovalsByMarketplaceId(
+          marketplace.id,
+        ),
+      ]);
+
+    // (a) Transition `to_be_removed → removed` for slugs that vanished.
+    const pendingRemovalSlugs = new Set<string>();
+    for (const pending of pendingRemovalDistributions) {
+      pendingRemovalSlugs.add(pending.pluginSlug);
+      if (!descriptorSlugs.has(pending.pluginSlug)) {
+        try {
+          await this.marketplaceDistributionRepository.updateStatus(
+            pending.id,
+            { status: DistributionStatus.removed },
+          );
+          this.logger.info(
+            `[${this.origin}] Marketplace plugin distribution transitioned to terminal removed`,
+            {
+              distributionId: pending.id,
+              marketplaceId: marketplace.id,
+              fromStatus: DistributionStatus.to_be_removed,
+              toStatus: DistributionStatus.removed,
+            },
+          );
+        } catch (error) {
+          this.logger.error(
+            `[${this.origin}] Failed to mark distribution as removed`,
+            {
+              distributionId: pending.id,
+              marketplaceId: marketplace.id,
+              error: getErrorMessage(error),
+            },
+          );
+        }
+      }
+    }
+
+    // (b) Drift detection (AC9, AC10): a slug carried by a `success`
+    // distribution is missing AND is not in `pendingRemovalSlugs`.
+    const driftedPluginSlugs: string[] = [];
+    for (const live of successDistributions) {
+      if (
+        !descriptorSlugs.has(live.pluginSlug) &&
+        !pendingRemovalSlugs.has(live.pluginSlug)
+      ) {
+        driftedPluginSlugs.push(live.pluginSlug);
+      }
+    }
+
+    // Step 6 — Decide final state.
+    //   - If `success` slugs went missing without a pending-removal pair →
+    //     `drift` (regardless of descriptor diff).
+    //   - Else fall back to descriptor diff (`healthy` vs `drift`).
+    const descriptorChanged = !descriptorsEquivalent(
       marketplace.descriptor,
       descriptor,
-    )
-      ? 'healthy'
-      : 'drift';
+    );
+    const state: MarketplaceState =
+      driftedPluginSlugs.length > 0 || descriptorChanged ? 'drift' : 'healthy';
 
-    // Step 6 — Persist the update.
+    // Step 7 — Persist the update.
     if (state === 'drift') {
+      const enrichedDescriptor: MarketplaceDescriptor = {
+        ...descriptor,
+        ...(driftedPluginSlugs.length > 0 ? { driftedPluginSlugs } : {}),
+      };
+
       await this.marketplaceRepository.updateState(marketplace.id, {
         state,
         lastValidatedAt,
-        descriptor,
+        descriptor: enrichedDescriptor,
         pluginCount: descriptor.plugins.length,
       });
       this.logger.info(
@@ -300,6 +372,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
           marketplaceId: marketplace.id,
           previousPluginCount: marketplace.pluginCount,
           newPluginCount: descriptor.plugins.length,
+          driftedPluginCount: driftedPluginSlugs.length,
         },
       );
     } else {

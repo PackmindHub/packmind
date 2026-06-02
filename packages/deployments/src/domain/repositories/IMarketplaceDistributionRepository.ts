@@ -66,6 +66,48 @@ export interface IMarketplaceDistributionRepository extends IRepository<Marketpl
   ): Promise<MarketplaceDistribution | null>;
 
   /**
+   * Return the most recent (non-soft-deleted) `success`-state distribution
+   * for a given `(package, marketplace)` pair — or `null` when none exists.
+   *
+   * Used by `MarkPluginForRemovalUseCase` when the caller targets a package
+   * by id (rather than passing the distribution id directly) and by the
+   * package-delete cascade listener to locate the latest live distribution
+   * to flip to `to_be_removed`.
+   */
+  findLatestSuccessfulByPackageAndMarketplace(
+    packageId: PackageId,
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution | null>;
+
+  /**
+   * Return every (non-soft-deleted) `success`-state distribution for a given
+   * package across all marketplaces. Used by the package-delete cascade
+   * listener to flip every active distribution to `to_be_removed`.
+   */
+  findActiveByPackageId(
+    packageId: PackageId,
+  ): Promise<MarketplaceDistribution[]>;
+
+  /**
+   * Return every (non-soft-deleted) `to_be_removed`-state distribution for a
+   * given marketplace. Used by the reconciliation job to drive the
+   * `to_be_removed → removed` terminal transition and to suppress drift
+   * detection for pending removals (AC10).
+   */
+  findPendingRemovalsByMarketplaceId(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution[]>;
+
+  /**
+   * Return every (non-soft-deleted) `success`-state distribution for a given
+   * marketplace. Used by the reconciliation job to detect drift — a success
+   * slug that vanished from the descriptor.
+   */
+  findSuccessfulByMarketplaceId(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution[]>;
+
+  /**
    * Apply a partial state update — typically called by the BullMQ job
    * to transition `in_progress` to `success` / `failure` / `no_changes`
    * and record `prUrl`, `gitCommit`, `error`, `failureReason`, and

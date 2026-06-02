@@ -34,6 +34,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { DeploymentsListener } from './application/listeners/DeploymentsListener';
+import { PackageDeletedDistributionsListener } from './application/listeners/PackageDeletedDistributionsListener';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from './application/services/MarketplaceDescriptorParserRegistry';
 import { AnthropicMarketplaceDescriptorParser } from './application/services/parsers/AnthropicMarketplaceDescriptorParser';
@@ -66,6 +67,7 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
   private readonly listener: DeploymentsListener;
+  private readonly packageDeletedDistributionsListener: PackageDeletedDistributionsListener;
 
   constructor(
     dataSource: DataSource,
@@ -133,6 +135,15 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getPackageRepository(),
       );
 
+      // Listener that cascades package deletions to live marketplace
+      // distributions. Initialized alongside the main DeploymentsListener.
+      this.packageDeletedDistributionsListener =
+        new PackageDeletedDistributionsListener({
+          marketplaceDistributionRepository:
+            this.marketplaceDistributionRepository,
+          packageService: this.services.getPackageService(),
+        });
+
       this.logger.info('DeploymentsHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct DeploymentsHexa', {
@@ -180,6 +191,7 @@ export class DeploymentsHexa extends BaseHexa<
 
       // Initialize listener with event emitter service
       this.listener.initialize(eventEmitterService);
+      this.packageDeletedDistributionsListener.initialize(eventEmitterService);
 
       this.logger.info('DeploymentsHexa initialized successfully');
     } catch (error) {
