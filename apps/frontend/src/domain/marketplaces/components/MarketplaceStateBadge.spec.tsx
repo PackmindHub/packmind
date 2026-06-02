@@ -37,4 +37,32 @@ describe('MarketplaceStateBadge', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Unreachable')).toBeInTheDocument();
   });
+
+  it('still renders the drift badge when drifted plugin slugs are provided', () => {
+    render(
+      <UIProvider>
+        <MarketplaceStateBadge
+          state="drift"
+          driftedPluginSlugs={['orphan-plugin', 'another-drift']}
+        />
+      </UIProvider>,
+    );
+
+    expect(
+      screen.getByTestId('marketplace-state-badge-drift'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Drift')).toBeInTheDocument();
+  });
+
+  it('renders the drift badge when drifted plugin slugs is empty', () => {
+    render(
+      <UIProvider>
+        <MarketplaceStateBadge state="drift" driftedPluginSlugs={[]} />
+      </UIProvider>,
+    );
+
+    expect(
+      screen.getByTestId('marketplace-state-badge-drift'),
+    ).toBeInTheDocument();
+  });
 });

@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
 import type { MarketplaceId, MarketplaceListItem } from '@packmind/types';
 import {
@@ -51,6 +52,24 @@ describe('MarketplaceRow', () => {
     expect(cells.repository).toBeDefined();
     expect(cells.state).toBeDefined();
     expect(cells.actions).toBeDefined();
+  });
+
+  it('renders the marketplace name as a link to the details route when orgSlug is set', () => {
+    const cells = MarketplaceRow({
+      marketplace: baseMarketplace,
+      onUnlink: jest.fn(),
+      isUnlinking: false,
+      orgSlug: 'acme',
+    });
+
+    render(
+      <UIProvider>
+        <MemoryRouter>{cells.name as React.ReactElement}</MemoryRouter>
+      </UIProvider>,
+    );
+
+    const link = screen.getByRole('link', { name: /Acme Playbook/ });
+    expect(link).toHaveAttribute('href', '/org/acme/marketplaces/mkt-1');
   });
 });
 

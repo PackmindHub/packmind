@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import {
+  MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY,
   PMPage,
   PMText,
   PMBox,
   PMVStack,
   PMAlert,
+  PMFeatureFlag,
   PMSpinner,
   PMHeading,
   PMHStack,
@@ -39,6 +41,7 @@ import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
 import { PackageDistributionList } from '../PackageDistributionList';
+import { PackageMarketplaceDistributions } from '../PackageMarketplaceDistributions';
 import { CopiableTextField } from '../../../../shared/components/inputs/CopiableTextField';
 import { useState } from 'react';
 
@@ -460,7 +463,19 @@ export const PackageDetails = ({
             triggerLabel: 'Distributions',
             content: (
               <PMBox pt={4}>
-                <PackageDistributionList packageId={id} />
+                <PMVStack align="stretch" gap={6}>
+                  <PackageDistributionList packageId={id} />
+                  <PMFeatureFlag
+                    featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
+                  >
+                    {organization?.id && (
+                      <PackageMarketplaceDistributions
+                        organizationId={organization.id}
+                        packageId={id}
+                      />
+                    )}
+                  </PMFeatureFlag>
+                </PMVStack>
               </PMBox>
             ),
           },

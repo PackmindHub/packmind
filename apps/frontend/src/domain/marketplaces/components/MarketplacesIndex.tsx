@@ -30,6 +30,11 @@ export interface MarketplacesIndexProps {
    * action hooks. Optional so consumers do not have to thread it through.
    */
   organizationId?: string;
+  /**
+   * Organization slug used to build links from the marketplace name cell to
+   * the marketplace details route. Optional so legacy call sites still work.
+   */
+  orgSlug?: string;
 }
 
 const COLUMNS: PMTableColumn[] = [
@@ -64,6 +69,7 @@ export const MarketplacesIndex = ({
   isLoading,
   unlinkingMarketplaceId,
   onUnlink,
+  orgSlug,
 }: Readonly<MarketplacesIndexProps>) => {
   const rows = useMemo<PMTableRow[]>(
     () =>
@@ -72,9 +78,10 @@ export const MarketplacesIndex = ({
           marketplace,
           onUnlink,
           isUnlinking: unlinkingMarketplaceId === marketplace.id,
+          orgSlug,
         }),
       ),
-    [marketplaces, onUnlink, unlinkingMarketplaceId],
+    [marketplaces, onUnlink, unlinkingMarketplaceId, orgSlug],
   );
 
   if (isLoading) {

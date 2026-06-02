@@ -116,6 +116,7 @@ export default function MarketplacesRouteModule() {
         unlinkingMarketplaceId={unlinkingId}
         onUnlink={handleUnlink}
         organizationId={orgId}
+        orgSlug={orgSlug}
       />
     </PMPage>
   );

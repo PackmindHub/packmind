@@ -11,3 +11,8 @@ export * from './PrivateLinkForm';
 export * from './PublicLinkForm';
 export * from './LinkMarketplacePanel';
 export * from './errorMapping';
+export * from './DistributionStatusBadge';
+export * from './RemovePluginButton';
+export * from './CancelRemovalButton';
+export * from './MarketplaceDistributionsTable';
+export * from './MarketplaceDetailsHeader';

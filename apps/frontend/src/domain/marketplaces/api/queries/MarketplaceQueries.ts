@@ -6,11 +6,18 @@ import {
 } from '@tanstack/react-query';
 import { pmToaster } from '@packmind/ui';
 import {
+  ListMarketplaceDistributionsResponse,
+  MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
   OrganizationId,
+  PackageId,
 } from '@packmind/types';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import {
+  GET_PACKAGE_BY_ID_KEY,
+  LIST_PACKAGE_DEPLOYMENTS_KEY,
+} from '../../../deployments/api/queryKeys';
 import {
   IMarketplaceGateway,
   LinkMarketplaceRequestBody,
@@ -22,6 +29,7 @@ const MARKETPLACES_SCOPE = 'marketplaces' as const;
 export enum MarketplaceQueryKey {
   LIST = 'list',
   VALIDATE_URL = 'validate-url',
+  DISTRIBUTIONS = 'distributions',
 }
 
 // Factory for marketplace query keys. Lives under the per-organization scope so
@@ -36,6 +44,17 @@ export const marketplaceQueryKeys = {
     [...marketplaceQueryKeys.all(), MarketplaceQueryKey.VALIDATE_URL] as const,
   validation: (organizationId: OrganizationId | string, url: string) =>
     [...marketplaceQueryKeys.validations(), organizationId, url] as const,
+  distributions: () =>
+    [...marketplaceQueryKeys.all(), MarketplaceQueryKey.DISTRIBUTIONS] as const,
+  distributionList: (
+    organizationId: OrganizationId | string,
+    marketplaceId: MarketplaceId | string,
+  ) =>
+    [
+      ...marketplaceQueryKeys.distributions(),
+      organizationId,
+      marketplaceId,
+    ] as const,
 };
 
 // Query-options factory exposed as marketplaceQueries.list(...) so route
@@ -57,7 +76,38 @@ export const marketplaceQueries = {
         >,
       enabled: !!orgId,
     }),
+  distributions: ({
+    orgId,
+    marketplaceId,
+    gateway = marketplaceGateway,
+  }: {
+    orgId: OrganizationId | string;
+    marketplaceId: MarketplaceId | string;
+    gateway?: IMarketplaceGateway;
+  }) =>
+    queryOptions({
+      queryKey: marketplaceQueryKeys.distributionList(orgId, marketplaceId),
+      queryFn: () =>
+        gateway.listDistributions(
+          orgId as OrganizationId,
+          marketplaceId as MarketplaceId,
+        ) as Promise<ListMarketplaceDistributionsResponse>,
+      enabled: !!orgId && !!marketplaceId,
+    }),
 };
+
+// Hook variant of marketplaceQueries.distributions. Mirrors the existing
+// TanStack Query patterns under apps/frontend/src/domain/{domain}/api/queries.
+export const useMarketplaceDistributions = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+) =>
+  useQuery(
+    marketplaceQueries.distributions({
+      orgId: organizationId,
+      marketplaceId,
+    }),
+  );
 
 // Hook variant of marketplaceQueries.list. Mirrors the existing TanStack
 // Query patterns under apps/frontend/src/domain/{domain}/api/queries.
@@ -146,3 +196,92 @@ function isLikelyValidMarketplaceUrl(url: string): boolean {
     return false;
   }
 }
+
+// Mutation hook: marks a plugin distribution for removal by distributionId.
+// Invalidates the distributions list on success so the UI swaps to the
+// `to_be_removed` row state.
+export const useMarkPluginForRemovalByDistribution = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (distributionId: MarketplaceDistributionId) =>
+      marketplaceGateway.markPluginForRemovalByDistribution(
+        organizationId as OrganizationId,
+        marketplaceId as MarketplaceId,
+        distributionId,
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: marketplaceQueryKeys.distributions(),
+      });
+    },
+    onError: (error) => {
+      console.error('Error marking plugin for removal:', error);
+    },
+  });
+};
+
+// Mutation hook: marks the latest successful distribution for a Packmind
+// package on the target marketplace for removal. Additionally invalidates the
+// package detail and deployments queries so the package details page reflects
+// the new pending-removal state.
+export const useMarkPluginForRemovalByPackage = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (packageId: PackageId) =>
+      marketplaceGateway.markPluginForRemovalByPackage(
+        organizationId as OrganizationId,
+        marketplaceId as MarketplaceId,
+        packageId,
+      ),
+    onSuccess: async (_response, packageId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.distributions(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...GET_PACKAGE_BY_ID_KEY, packageId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, packageId],
+        }),
+      ]);
+    },
+    onError: (error) => {
+      console.error('Error marking plugin for removal:', error);
+    },
+  });
+};
+
+// Mutation hook: cancels a pending plugin removal, reverting the distribution
+// back to `success`.
+export const useCancelPluginRemoval = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (distributionId: MarketplaceDistributionId) =>
+      marketplaceGateway.cancelPluginRemoval(
+        organizationId as OrganizationId,
+        marketplaceId as MarketplaceId,
+        distributionId,
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: marketplaceQueryKeys.distributions(),
+      });
+    },
+    onError: (error) => {
+      console.error('Error cancelling plugin removal:', error);
+    },
+  });
+};
