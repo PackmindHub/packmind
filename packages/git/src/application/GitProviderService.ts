@@ -129,7 +129,7 @@ export class GitProviderService {
       type: 'standard',
     };
 
-    const gitRepoInstance = this.gitRepoFactory.createGitRepo(
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
       syntheticGitRepo,
       gitProvider,
     );
