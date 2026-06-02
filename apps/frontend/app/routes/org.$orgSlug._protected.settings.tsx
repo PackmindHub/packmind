@@ -11,9 +11,6 @@ import {
   useGetMeQuery,
 } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  isFeatureFlagEnabled,
-  MARKETPLACES_FEATURE_KEY,
   PMFlex,
   PMGrid,
   PMHeading,
@@ -70,12 +67,6 @@ export default function SettingsIndexRouteModule() {
   const navigate = useNavigate();
   const { orgSlug } = useParams();
 
-  const canSeeMarketplaces = isFeatureFlagEnabled({
-    featureKeys: [MARKETPLACES_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: me?.user?.email,
-  });
-
   useEffect(() => {
     const hasAccessResponse = hasAccess(me);
     if (!hasAccessResponse.hasAccess) {
@@ -124,18 +115,6 @@ export default function SettingsIndexRouteModule() {
                 exact
                 data-testid={SettingsRouteDataTestIds.GitLink}
               />,
-
-              ...(canSeeMarketplaces
-                ? [
-                    <SidebarNavigationLink
-                      key="marketplaces"
-                      url={orgSlug ? routes.org.toMarketplaces(orgSlug) : '#'}
-                      label="Marketplaces"
-                      exact
-                      aria-label="Marketplaces"
-                    />,
-                  ]
-                : []),
 
               <SidebarNavigationLink
                 key="rendering"
