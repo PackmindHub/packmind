@@ -1,0 +1,108 @@
+# Local Docker Compose configuration
+# Uses locally-built images with dev-friendly defaults
+# Ports are offset by +10 from production to avoid conflicts
+
+# Common environment variables
+x-database-url: &database-url
+  DATABASE_URL: postgres://postgres:postgres@packmind-local-postgres:5432/packmind
+
+x-redis-config: &redis-config
+  REDIS_URI: redis://packmind-local-redis:6379
+
+services:
+  # Infrastructure services
+  postgres:
+    image: postgres:17.6-alpine3.21
+    container_name: packmind-local-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: packmind
+    ports:
+      - '5442:5432'
+    volumes:
+      - postgres-data-local:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: packmind-local-redis
+    ports:
+      - '6389:6379'
+    volumes:
+      - redis-data-local:/data
+    restart: unless-stopped
+
+  # Application services
+  api:
+    image: packmind-api-local
+    container_name: packmind-local-api
+    ports:
+      - '3010:3000'
+    environment:
+      <<: [*database-url, *redis-config]
+      ENCRYPTION_KEY: local-dev-encryption-key
+      API_JWT_SECRET_KEY: local-dev-api-jwt-secret
+      MCP_JWT_SECRET_KEY: local-dev-mcp-jwt-secret
+      COOKIE_SECURE: false
+    entrypoint: []
+    command:
+      - sh
+      - -c
+      - |
+        cd migrations && node packages/migrations/src/runMigrationsDocker.js && cd ..
+        exec node main.js
+    networks:
+      default:
+        aliases:
+          - packmind-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  mcp-server:
+    image: packmind-mcp-local
+    container_name: packmind-local-mcp
+    ports:
+      - '3011:3001'
+    environment:
+      <<: [*database-url, *redis-config]
+      ENCRYPTION_KEY: local-dev-encryption-key
+      MCP_JWT_SECRET_KEY: local-dev-mcp-jwt-secret
+      RATE_LIMIT_MAX_REQUESTS: 10000
+    networks:
+      default:
+        aliases:
+          - packmind-mcp
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    image: packmind-frontend-local
+    container_name: packmind-local-frontend
+    ports:
+      - '8091:80'
+    depends_on:
+      - api
+      - mcp-server
+    restart: unless-stopped
+
+volumes:
+  postgres-data-local:
+  redis-data-local:
+
+networks:
+  default:
+    name: packmind-local-network

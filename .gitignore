@@ -22,7 +22,6 @@ apps/mcp-server/.env
 graph.json
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-dockerfile/local
 dockerfile/helm-chart/playground-values/
 
 vite.config.*.timestamp*
