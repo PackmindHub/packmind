@@ -14,6 +14,11 @@ jest.mock('../../git/api/queries', () => ({
     },
     isLoading: false,
   }),
+  useGetAvailableRepositoriesQuery: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 jest.mock('../api/queries', () => ({
