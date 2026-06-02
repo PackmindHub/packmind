@@ -60,6 +60,7 @@ docker/nginx/ssl
 
 # Michel agent — local experimentation, not for the public repo
 sprites/
+screenshots/
 videos/
 .sprite
 .env.michel

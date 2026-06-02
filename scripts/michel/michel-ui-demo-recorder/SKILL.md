@@ -147,7 +147,7 @@ Reinject after every `location.reload()` — there is no `initScript` equivalent
 
 Every card adds dead time. For short demos like "create a standard" or "open a recipe", skip chapter cards entirely or use a single 1000ms opener.
 
-Default duration of 1500–3000ms reads well at normal playback speed.
+**Duration is raw recording time — multiply by your speedup factor to get on-screen time.** A `duration: 2000` card at 4× speedup shows for only 500 ms after ffmpeg — too fast to read. Formula: `duration = desired_screen_ms × speedup`. For a 2 s on-screen hold at 4×, set `duration: 8000`. At 2× use `4000`, at 3× use `6000`.
 
 ### Subtitle bar (continuous narration) — mandatory
 
