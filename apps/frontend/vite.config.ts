@@ -57,16 +57,26 @@ export default defineConfig(() => {
     server: {
       port: 4200,
       host: process.env.NX_WATCHER ? '0.0.0.0' : 'localhost',
-      allowedHosts: ['frontend'],
+      allowedHosts: ['frontend', '.ts.net'],
       proxy,
-      hmr: process.env.NX_WATCHER
+      // VITE_HMR_HOST: set to your tunnel hostname (e.g. *.ts.net) when serving
+      // dev through TLS-terminating reverse proxy — without it, the browser
+      // tries to open wss://<host>:4200 directly and the WebSocket never opens,
+      // leaving the bundle stale and hiding code fixes.
+      hmr: process.env.VITE_HMR_HOST
         ? {
-            // In Docker, the browser connects via localhost:4200 (port mapping)
-            // but the server binds to 0.0.0.0:4200 inside the container.
-            // Explicit clientPort ensures the HMR WebSocket connects correctly.
-            clientPort: 4200,
+            host: process.env.VITE_HMR_HOST,
+            protocol: 'wss',
+            clientPort: 443,
           }
-        : true,
+        : process.env.NX_WATCHER
+          ? {
+              // In Docker, the browser connects via localhost:4200 (port mapping)
+              // but the server binds to 0.0.0.0:4200 inside the container.
+              // Explicit clientPort ensures the HMR WebSocket connects correctly.
+              clientPort: 4200,
+            }
+          : true,
       watch: {
         usePolling: !!process.env.NX_WATCHER,
         interval: 1000,

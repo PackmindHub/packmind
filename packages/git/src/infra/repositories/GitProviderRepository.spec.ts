@@ -1,6 +1,7 @@
 import { GitProviderRepository } from './GitProviderRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
+import { OrganizationGitHubAppSchema } from '../schemas/OrganizationGitHubAppSchema';
 import { Repository } from 'typeorm';
 import {
   createTestDatasourceFixture,
@@ -8,7 +9,11 @@ import {
   stubLogger,
 } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { createGitProviderId, GitProvider } from '@packmind/types';
+import {
+  createGitProviderId,
+  createOrganizationGitHubAppId,
+  GitProvider,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
@@ -29,6 +34,7 @@ describe('GitProviderRepository', () => {
   const fixture = createTestDatasourceFixture([
     GitProviderSchema,
     GitRepoSchema,
+    OrganizationGitHubAppSchema,
     OrganizationSchema,
   ]);
 
@@ -83,6 +89,51 @@ describe('GitProviderRepository', () => {
         where: { id: id as any },
         withDeleted: true,
       }),
+  });
+
+  describe('when storing an app-auth provider with organizationGitHubAppId', () => {
+    let orgGitHubAppId: ReturnType<typeof createOrganizationGitHubAppId>;
+    let found: Awaited<ReturnType<typeof gitProviderRepository.findById>>;
+
+    beforeEach(async () => {
+      const orgAppRepo = fixture.datasource.getRepository(
+        OrganizationGitHubAppSchema,
+      );
+      orgGitHubAppId = createOrganizationGitHubAppId(uuidv4());
+      await orgAppRepo.save({
+        id: orgGitHubAppId,
+        organizationId: testOrganization.id,
+        appId: 12345,
+        appSlug: 'fixture-app',
+        appClientId: 'Iv1.fixture',
+        appClientSecret: 'cs',
+        appPrivateKey: 'pem',
+        appWebhookSecret: 'ws',
+      });
+
+      const provider = gitProviderFactory({
+        organizationId: testOrganization.id,
+        token: null,
+        authMethod: 'app',
+        appInstallationId: 9988,
+        organizationGitHubAppId: orgGitHubAppId,
+      });
+      await gitProviderRepository.add(provider);
+
+      found = await gitProviderRepository.findById(provider.id);
+    });
+
+    it('round-trips organizationGitHubAppId through add/findById', () => {
+      expect(found?.organizationGitHubAppId).toBe(orgGitHubAppId);
+    });
+
+    it('persists appInstallationId', () => {
+      expect(found?.appInstallationId).toBeDefined();
+    });
+
+    it('persists authMethod as app', () => {
+      expect(found?.authMethod).toBe('app');
+    });
   });
 
   describe('when storing and retrieving git provider with encryption', () => {

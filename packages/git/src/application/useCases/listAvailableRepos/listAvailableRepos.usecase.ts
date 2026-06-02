@@ -35,8 +35,10 @@ export class ListAvailableReposUseCase {
       throw new Error('Git provider not found');
     }
 
-    // Business rule: git provider must have a token configured
-    if (!gitProvider.token) {
+    // Business rule: token-auth providers must have a token configured.
+    // App-auth providers carry no token on the row — the installation token
+    // is minted on demand by GithubTokenResolverFactory downstream.
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
       throw new Error('Git provider token not configured');
     }
 

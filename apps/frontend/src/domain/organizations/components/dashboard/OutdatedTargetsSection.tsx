@@ -64,7 +64,7 @@ export const OutdatedTargetsSection: React.FC = () => {
   const providersWithToken = useMemo(() => {
     const set = new Set<GitProviderId>();
     gitProvidersResponse?.providers
-      .filter((provider) => provider.hasToken)
+      .filter((provider) => provider.hasAuth)
       .forEach((provider) => set.add(provider.id));
     return set;
   }, [gitProvidersResponse]);

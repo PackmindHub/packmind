@@ -88,6 +88,7 @@ export class GitUseCases {
 
   constructor(
     private readonly gitServices: GitServices,
+    private readonly edition: 'cloud' | 'oss' = 'oss',
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._addGitProvider = this.createAddGitProviderUseCase();
@@ -168,6 +169,7 @@ export class GitUseCases {
     return new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
+      this.edition,
     );
   }
 
@@ -200,6 +202,7 @@ export class GitUseCases {
     return new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
+      this.edition,
     );
   }
 

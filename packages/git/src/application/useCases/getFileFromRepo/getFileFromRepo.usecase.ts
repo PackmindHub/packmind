@@ -1,5 +1,6 @@
 import { GitRepo } from '@packmind/types';
 import { GitProvider } from '@packmind/types';
+import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
@@ -43,13 +44,8 @@ export class GetFileFromRepo {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create IGitRepo instance based on provider
-    const gitRepoInstance = this.createGitRepoInstance(gitRepo, provider);
+    // Create IGitRepo instance based on provider (token validation delegated to factory)
+    const gitRepoInstance = await this.createGitRepoInstance(gitRepo, provider);
 
     // Get file content from repository
     const fileData = await gitRepoInstance.getFileOnRepo(filePath, branch);
@@ -85,7 +81,10 @@ export class GetFileFromRepo {
     return fileData;
   }
 
-  private createGitRepoInstance(gitRepo: GitRepo, provider: GitProvider) {
+  private createGitRepoInstance(
+    gitRepo: GitRepo,
+    provider: GitProvider,
+  ): Promise<IGitRepo> {
     return this.gitRepoFactory.createGitRepo(gitRepo, provider);
   }
 }

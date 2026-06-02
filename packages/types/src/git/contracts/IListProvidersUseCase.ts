@@ -3,7 +3,8 @@ import { GitProvider } from '../GitProvider';
 import { OrganizationId } from '../../accounts/Organization';
 
 export type GitProviderWithoutToken = {
-  hasToken: boolean;
+  hasAuth: boolean;
+  authMethod: 'token' | 'app';
 } & Omit<GitProvider, 'token'>;
 
 export type ListProvidersCommand = PackmindCommand & {

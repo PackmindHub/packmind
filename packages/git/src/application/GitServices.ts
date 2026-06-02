@@ -4,6 +4,7 @@ import { GitCommitService } from './services/GitCommitService';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+import { IOrganizationGitHubAppRepository } from '../domain/repositories/IOrganizationGitHubAppRepository';
 
 /**
  * GitServices - Service aggregator for the Git application layer
@@ -50,5 +51,9 @@ export class GitServices {
 
   getGitProviderFactory(): IGitProviderFactory {
     return this.gitRepositories.getGitProviderFactory();
+  }
+
+  getOrganizationGitHubAppRepository(): IOrganizationGitHubAppRepository {
+    return this.gitRepositories.getOrganizationGitHubAppRepository();
   }
 }

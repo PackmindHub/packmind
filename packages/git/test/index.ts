@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 
 export * from './gitProviderFactory';
 export * from './gitRepoFactory';
+export * from './organizationGitHubAppFactory';
 import { gitCommitFactory } from './gitCommitFactory';
 
 import { GitCommit } from '@packmind/types';

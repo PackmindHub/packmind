@@ -1,9 +1,13 @@
 import {
+  GitProviderAuthMethod,
   GitProviderId,
   GitProviderVendor,
   GitRepoId,
   OrganizationId,
 } from '@packmind/types';
+
+// Re-export the shared type so other UI code can import it from this module.
+export type { GitProviderAuthMethod };
 
 // Available git provider types for UI
 export enum GitProviders {
@@ -16,9 +20,10 @@ export interface GitProviderUI {
   id: GitProviderId;
   source: GitProviderVendor;
   organizationId: OrganizationId;
-  hasToken: boolean;
+  hasAuth: boolean;
   url: string | null;
   repos?: GitRepoUI[];
+  authMethod?: GitProviderAuthMethod;
 }
 
 // Frontend-specific GitRepo interface for UI
@@ -34,8 +39,13 @@ export interface GitRepoUI {
 // Form data types for creating new providers
 export interface CreateGitProviderForm {
   source: GitProviderVendor;
-  token: string;
   url: string;
+  // For source === 'gitlab' or source === 'github' + authMethod === 'token'.
+  token: string;
+  // GitHub-only. Defaults to 'token' to preserve existing behaviour for GitLab.
+  authMethod?: GitProviderAuthMethod;
+  // Only meaningful when source === 'github' && authMethod === 'app'.
+  appInstallationId?: number;
 }
 
 // Form data types for adding repositories

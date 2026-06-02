@@ -250,7 +250,7 @@ export class TargetResolutionService {
     // Only check token providers for known vendors (github, gitlab)
     // Unknown vendors don't have API access to list available repos
     if (providerVendor !== 'unknown') {
-      const tokenProviders = vendorProviders.filter((p) => p.hasToken);
+      const tokenProviders = vendorProviders.filter((p) => p.hasAuth);
 
       // First pass: Check ALL token providers for existing repos and collect
       // providers that can access the repo. We must check all providers before
@@ -337,7 +337,7 @@ export class TargetResolutionService {
     // Find a tokenless provider that matches the expected URL
     let tokenlessProvider = vendorProviders.find(
       (p) =>
-        !p.hasToken &&
+        !p.hasAuth &&
         p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
     );
 
@@ -350,13 +350,14 @@ export class TargetResolutionService {
           source: GitProviderVendors[providerVendor],
           url: expectedProviderUrl,
           token: null,
+          authMethod: 'token' as const,
         },
         allowTokenlessProvider: true,
       });
       this.logger.info('Created tokenless provider', {
         providerId: newProvider.id,
       });
-      tokenlessProvider = { ...newProvider, hasToken: false };
+      tokenlessProvider = { ...newProvider, hasAuth: false };
     }
 
     // Check if repo exists under tokenless provider

@@ -43,6 +43,7 @@ import {
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
+import { resolvePackmindEdition } from '../shared/utils/edition';
 
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
@@ -65,6 +66,7 @@ export interface TokenResponse {
 }
 
 export interface GetMeResponse {
+  edition: 'cloud' | 'oss';
   user: {
     id: UserId;
     email: string;
@@ -273,8 +275,11 @@ export class AuthService {
   }
 
   async getMe(accessToken?: string): Promise<GetMeResponse> {
+    const edition = await resolvePackmindEdition();
+
     if (!accessToken) {
       return {
+        edition,
         message: 'No valid access token found',
         authenticated: false,
       } as GetMeResponse;
@@ -303,6 +308,7 @@ export class AuthService {
             userId: payload.user.userId,
           });
           return {
+            edition,
             message: 'User not found',
             authenticated: false,
           } as GetMeResponse;
@@ -336,6 +342,7 @@ export class AuthService {
         );
 
         return {
+          edition,
           user: {
             id: user.id,
             email: user.email,
@@ -365,6 +372,7 @@ export class AuthService {
           userId: payload.user.userId,
         });
         return {
+          edition,
           message: 'User not found',
           authenticated: false,
         } as GetMeResponse;
@@ -380,6 +388,7 @@ export class AuthService {
           organizationId: tokenOrganization.id,
         });
         return {
+          edition,
           message: 'User does not have access to the organization in token',
           authenticated: false,
         } as GetMeResponse;
@@ -394,12 +403,14 @@ export class AuthService {
           organizationId: organizationMembership.organizationId,
         });
         return {
+          edition,
           message: 'Organization not found',
           authenticated: false,
         } as GetMeResponse;
       }
 
       return {
+        edition,
         user: {
           id: user.id,
           email: user.email,
@@ -416,6 +427,7 @@ export class AuthService {
     } catch {
       this.logger.warn('Invalid or expired access token');
       return {
+        edition,
         message: 'Invalid or expired access token',
         authenticated: false,
       } as GetMeResponse;

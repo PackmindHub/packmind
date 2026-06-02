@@ -1,10 +1,19 @@
 import axios from 'axios';
 import { GithubProvider } from './GithubProvider';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+const stubResolver = (
+  kind: 'user' | 'installation' = 'user',
+): IGithubTokenResolver => ({
+  getToken: jest.fn().mockResolvedValue('fake-token'),
+  onUnauthorized: jest.fn().mockResolvedValue(undefined),
+  getKind: jest.fn().mockReturnValue(kind),
+});
 
 describe('GithubProvider', () => {
   let githubProvider: GithubProvider;
@@ -17,11 +26,15 @@ describe('GithubProvider', () => {
 
     mockAxiosInstance = {
       get: jest.fn(),
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
+      },
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
-    githubProvider = new GithubProvider('fake-token', mockLogger);
+    githubProvider = new GithubProvider(stubResolver(), mockLogger);
   });
 
   afterEach(() => {
@@ -312,6 +325,138 @@ describe('GithubProvider', () => {
           const result = await githubProvider.listAvailableRepositories();
 
           expect(result).toEqual([]);
+        });
+      });
+    });
+
+    describe('with installation token resolver', () => {
+      let installationProvider: GithubProvider;
+
+      beforeEach(() => {
+        installationProvider = new GithubProvider(
+          stubResolver('installation'),
+          mockLogger,
+        );
+      });
+
+      describe('when API call succeeds', () => {
+        let result: Awaited<
+          ReturnType<typeof installationProvider.listAvailableRepositories>
+        >;
+
+        beforeEach(async () => {
+          const mockResponse = {
+            data: {
+              total_count: 1,
+              repositories: [
+                {
+                  name: 'app-repo',
+                  owner: { login: 'app-owner' },
+                  description: 'App-installed repository',
+                  private: true,
+                  default_branch: 'main',
+                  language: 'TypeScript',
+                  stargazers_count: 7,
+                  permissions: {
+                    pull: true,
+                    push: true,
+                    admin: false,
+                  },
+                },
+              ],
+            },
+          };
+
+          mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+          result = await installationProvider.listAvailableRepositories();
+        });
+
+        it('calls /installation/repositories', () => {
+          expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+            '/installation/repositories',
+            {
+              params: {
+                per_page: 100,
+              },
+            },
+          );
+        });
+
+        it('unwraps the repositories envelope and returns formatted list', () => {
+          expect(result).toEqual([
+            {
+              name: 'app-repo',
+              owner: 'app-owner',
+              description: 'App-installed repository',
+              private: true,
+              defaultBranch: 'main',
+              language: 'TypeScript',
+              stars: 7,
+            },
+          ]);
+        });
+      });
+
+      describe('when repositories field is missing', () => {
+        it('returns empty array', async () => {
+          mockAxiosInstance.get.mockResolvedValue({ data: { total_count: 0 } });
+
+          const result = await installationProvider.listAvailableRepositories();
+
+          expect(result).toEqual([]);
+        });
+      });
+
+      describe('when repos have permissions.push false or absent', () => {
+        // For installation tokens, GitHub's per-repo `permissions` object does
+        // not reliably mirror the App's `contents:write` grant. The user-token
+        // filter would drop every repo; the installation path must keep them.
+        it('returns the repos without filtering by permissions.push', async () => {
+          mockAxiosInstance.get.mockResolvedValue({
+            data: {
+              total_count: 2,
+              repositories: [
+                {
+                  name: 'app-repo-no-perms',
+                  owner: { login: 'app-owner' },
+                  description: null,
+                  private: true,
+                  default_branch: 'main',
+                  language: null,
+                  stargazers_count: 0,
+                  // No permissions object at all.
+                },
+                {
+                  name: 'app-repo-push-false',
+                  owner: { login: 'app-owner' },
+                  description: null,
+                  private: false,
+                  default_branch: 'main',
+                  language: null,
+                  stargazers_count: 0,
+                  permissions: { pull: true, push: false, admin: false },
+                },
+              ],
+            },
+          });
+
+          const result = await installationProvider.listAvailableRepositories();
+
+          expect(result.map((r) => r.name)).toEqual([
+            'app-repo-no-perms',
+            'app-repo-push-false',
+          ]);
+        });
+      });
+
+      describe('when API call fails', () => {
+        it('throws error', async () => {
+          mockAxiosInstance.get.mockRejectedValue(new Error('Network error'));
+
+          await expect(
+            installationProvider.listAvailableRepositories(),
+          ).rejects.toThrow('Failed to fetch repositories from GitHub');
         });
       });
     });

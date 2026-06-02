@@ -2,8 +2,8 @@ import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
 import {
   CheckDirectoryExistenceResult,
-  GitProvider,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepoId,
   IListProvidersUseCase,
   ListProvidersResponse,
@@ -17,6 +17,7 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
+import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
 export class GitProviderGatewayApi
   extends PackmindGateway
@@ -48,19 +49,82 @@ export class GitProviderGatewayApi
     return provider as GitProviderUI;
   }
 
+  async getGithubAppInstallUrl(
+    organizationId: OrganizationId,
+  ): Promise<{ installUrl: string; state: string }> {
+    return await this._api.get<{ installUrl: string; state: string }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/install-url`,
+    );
+  }
+
+  async getGithubAppManifest(organizationId: OrganizationId): Promise<{
+    manifest: GitHubAppManifest;
+    state: string;
+    manifestPostUrl: string;
+  }> {
+    return await this._api.get<{
+      manifest: GitHubAppManifest;
+      state: string;
+      manifestPostUrl: string;
+    }>(`${this._endpoint}/${organizationId}/git/providers/github/app/manifest`);
+  }
+
+  async getGithubAppStatus(organizationId: OrganizationId): Promise<{
+    hasApp: boolean;
+    appSlug?: string;
+    revokedAt?: Date | null;
+  }> {
+    return await this._api.get<{
+      hasApp: boolean;
+      appSlug?: string;
+      revokedAt?: Date | null;
+    }>(`${this._endpoint}/${organizationId}/git/providers/github/app/status`);
+  }
+
+  async revokeGithubApp(organizationId: OrganizationId): Promise<void> {
+    await this._api.delete(
+      `${this._endpoint}/${organizationId}/git/providers/github/app`,
+    );
+  }
+
+  async submitGithubAppCallback(
+    organizationId: OrganizationId,
+    body: { installationId: number; state: string },
+  ): Promise<GitProviderWithoutToken> {
+    return await this._api.post<GitProviderWithoutToken>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/callback`,
+      body,
+    );
+  }
+
+  async submitGithubAppManifestCallback(
+    organizationId: OrganizationId,
+    body: { code: string; state: string },
+  ): Promise<{ installUrl: string }> {
+    return await this._api.post<{ installUrl: string }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/manifest-callback`,
+      body,
+    );
+  }
+
   async createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
   ): Promise<GitProviderUI> {
-    const gitProvider: Omit<GitProvider, 'id'> = {
+    const body = {
       source: data.source,
       organizationId,
       url: data.url,
-      token: data.token,
+      authMethod: data.authMethod ?? 'token',
+      ...(data.authMethod === 'app'
+        ? {
+            appInstallationId: data.appInstallationId,
+          }
+        : { token: data.token }),
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers`,
-      gitProvider,
+      body,
     );
   }
 
@@ -69,14 +133,19 @@ export class GitProviderGatewayApi
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI> {
-    const gitProvider: Partial<Omit<GitProvider, 'id'>> = {
+    const body = {
       source: data.source,
       url: data.url,
-      token: data.token,
+      authMethod: data.authMethod ?? 'token',
+      ...(data.authMethod === 'app'
+        ? {
+            appInstallationId: data.appInstallationId,
+          }
+        : { token: data.token }),
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers/${id}`,
-      gitProvider,
+      body,
     );
   }
 

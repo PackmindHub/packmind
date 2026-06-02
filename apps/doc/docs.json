@@ -81,6 +81,7 @@
         "pages": [
           "governance/distribution",
           "governance/git-repository-connection",
+          "governance/github-app-setup",
           "governance/overview"
         ]
       },
@@ -177,6 +178,10 @@
     {
       "source": "/git-repository-connection",
       "destination": "/governance/git-repository-connection"
+    },
+    {
+      "source": "/github-app-setup",
+      "destination": "/governance/github-app-setup"
     },
     {
       "source": "/overview",

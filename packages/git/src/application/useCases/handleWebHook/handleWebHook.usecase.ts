@@ -49,13 +49,8 @@ export class HandleWebHook implements IHandleWebHookUseCase {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create IGitRepo instance based on provider
-    const gitRepoInstance = this.createGitRepoInstance(gitRepo, provider);
+    // Create IGitRepo instance based on provider (token validation delegated to factory)
+    const gitRepoInstance = await this.createGitRepoInstance(gitRepo, provider);
 
     // Handle push hook and get matching files
     const matchingFiles = await gitRepoInstance.handlePushHook(
@@ -132,7 +127,7 @@ export class HandleWebHook implements IHandleWebHookUseCase {
   private createGitRepoInstance(
     repo: GitRepo,
     provider: GitProvider,
-  ): IGitRepo {
+  ): Promise<IGitRepo> {
     return this.gitRepoFactory.createGitRepo(repo, provider);
   }
 }
