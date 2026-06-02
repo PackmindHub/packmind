@@ -1,5 +1,8 @@
 import React from 'react';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  GITHUB_APP_FEATURE_KEY,
+  isFeatureFlagEnabled,
   PMDialog,
   PMButton,
   PMCloseButton,
@@ -13,6 +16,7 @@ import { GitProviderUI } from '../types/GitProviderTypes';
 import { WebHookConfig } from './WebHookConfig';
 import { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';
 import { GitProviderAdvancedPanel } from './ManageGitProvider/GitProviderAdvancedPanel';
+import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 
 interface ManageGitProviderDialogProps {
   organizationId: OrganizationId;
@@ -28,6 +32,18 @@ export const ManageGitProviderDialog: React.FC<
   const [displayedScreen, setDisplayedScreen] = React.useState<
     'connection' | 'webhook' | 'repositories' | 'advanced'
   >('connection');
+
+  const { data: me } = useGetMeQuery();
+  const userEmail = me?.authenticated ? me.user?.email : null;
+  const githubAppEnabled = isFeatureFlagEnabled({
+    featureKeys: [GITHUB_APP_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail,
+  });
+  const showAdvanced =
+    !!editingProvider &&
+    editingProvider.source === 'github' &&
+    githubAppEnabled;
 
   return (
     <PMDialog.Root
@@ -82,7 +98,7 @@ export const ManageGitProviderDialog: React.FC<
                   Repositories
                 </PMLink>
               )}
-              {editingProvider && (
+              {showAdvanced && (
                 <PMLink
                   onClick={() => setDisplayedScreen('advanced')}
                   variant={displayedScreen === 'advanced' ? 'active' : 'plain'}
@@ -129,18 +145,20 @@ export const ManageGitProviderDialog: React.FC<
                 </PMPageSection>
               )}
 
-              {displayedScreen === 'advanced' && editingProvider && (
-                <PMPageSection
-                  title="Advanced"
-                  headingLevel="h5"
-                  backgroundColor="primary"
-                >
-                  <GitProviderAdvancedPanel
-                    editingProvider={editingProvider}
-                    onRevoked={() => setOpen(false)}
-                  />
-                </PMPageSection>
-              )}
+              {displayedScreen === 'advanced' &&
+                editingProvider &&
+                showAdvanced && (
+                  <PMPageSection
+                    title="Advanced"
+                    headingLevel="h5"
+                    backgroundColor="primary"
+                  >
+                    <GitProviderAdvancedPanel
+                      editingProvider={editingProvider}
+                      onRevoked={() => setOpen(false)}
+                    />
+                  </PMPageSection>
+                )}
             </PMVStack>
           </PMDialog.Body>
           <PMDialog.Footer>
