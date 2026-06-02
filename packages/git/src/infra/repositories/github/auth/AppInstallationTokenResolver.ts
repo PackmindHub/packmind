@@ -21,8 +21,10 @@ const origin = 'AppInstallationTokenResolver';
  * downstream API call returns 401, `onUnauthorized()` is invoked by the
  * Axios response interceptor on `GithubProvider`/`GithubRepository`. We
  * (a) flush the in-memory cache so the next `getToken()` will re-mint
- * and re-exchange, and (b) invoke the optional `onRevoke` callback that
- * step 6 wires up to persist `revoked_at` on the provider row.
+ * and re-exchange, and (b) invoke the optional `onRevoke` callback —
+ * which `GithubTokenResolverFactory` wires by default (oss edition) to
+ * persist `revoked_at` on the `OrganizationGitHubApp` row, so subsequent
+ * `factory.build()` calls fail fast before minting another JWT.
  */
 export interface AppInstallationTokenResolverParams {
   providerId: GitProviderId;

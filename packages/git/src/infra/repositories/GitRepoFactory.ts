@@ -34,9 +34,7 @@ export class GitRepoFactory implements IGitRepoFactory {
 
     switch (provider.source) {
       case GitProviderVendors.github: {
-        const resolver = await this.tokenResolverFactory.build(provider, {
-          onRevoke: undefined, // step 6 will wire this
-        });
+        const resolver = await this.tokenResolverFactory.build(provider);
         return new GithubRepository(resolver, repositoryOptions, this.logger);
       }
 

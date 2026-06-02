@@ -25,9 +25,7 @@ export class GitProviderFactory implements IGitProviderFactory {
   async createGitProvider(provider: GitProvider): Promise<IGitProvider> {
     switch (provider.source) {
       case GitProviderVendors.github: {
-        const resolver = await this.tokenResolverFactory.build(provider, {
-          onRevoke: undefined, // step 6 will wire this
-        });
+        const resolver = await this.tokenResolverFactory.build(provider);
         return new GithubProvider(resolver, this.logger);
       }
 
