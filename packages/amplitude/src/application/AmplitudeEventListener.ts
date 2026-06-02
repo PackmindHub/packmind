@@ -40,6 +40,8 @@ import {
   PlaybookArtefactMovedEvent,
   PluginRenderedEvent,
   PluginDeletedEvent,
+  MarketplaceLinkedEvent,
+  MarketplaceUnlinkedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -135,6 +137,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
     this.subscribe(PluginRenderedEvent, this.onPluginRendered);
     this.subscribe(PluginDeletedEvent, this.onPluginDeleted);
+    this.subscribe(MarketplaceLinkedEvent, this.onMarketplaceLinked);
+    this.subscribe(MarketplaceUnlinkedEvent, this.onMarketplaceUnlinked);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -555,5 +559,28 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         marketplaceRepo: payload.marketplaceRepo,
       }),
     }));
+  };
+
+  private onMarketplaceLinked = async (
+    event: MarketplaceLinkedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'marketplace_linked', (payload) => ({
+      marketplaceId: payload.marketplaceId,
+      gitRepoId: payload.gitRepoId,
+      addedBy: payload.addedBy,
+    }));
+  };
+
+  private onMarketplaceUnlinked = async (
+    event: MarketplaceUnlinkedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'marketplace_unlinked',
+      (payload) => ({
+        marketplaceId: payload.marketplaceId,
+        gitRepoId: payload.gitRepoId,
+      }),
+    );
   };
 }
