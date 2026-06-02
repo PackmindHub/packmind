@@ -13,6 +13,8 @@
 #   4. Removes stale npm artifacts (package-lock.json + all node_modules)
 #   5. Installs dependencies with pnpm against the committed lockfile
 #   6. Regenerates the effective tsconfig (PACKMIND_EDITION=oss)
+#   7. Smoke-builds a couple of leaf packages so a broken migration surfaces
+#      here, not on the developer's next workday (skip with SKIP_BUILD_CHECK=1)
 #
 set -euo pipefail
 
@@ -80,6 +82,23 @@ fi
 # 5. Regenerate the effective tsconfig
 echo "==> Selecting tsconfig (PACKMIND_EDITION=${PACKMIND_EDITION:-oss})"
 PACKMIND_EDITION="${PACKMIND_EDITION:-oss}" node scripts/select-tsconfig.mjs
+
+# 6b. Build smoke check. Confirms node_modules + nx bins resolved and that the
+#     pnpm dependency layout (no shameful hoist) didn't break the toolchain.
+#     Builds two fast leaf libs rather than the whole graph — enough to catch
+#     a broken install without a multi-minute full build.
+if [ "${SKIP_BUILD_CHECK:-0}" = "1" ]; then
+  echo "==> Skipping build smoke check (SKIP_BUILD_CHECK=1)"
+else
+  echo "==> Build smoke check (nx build types logger)"
+  if ! PACKMIND_EDITION="${PACKMIND_EDITION:-oss}" ./node_modules/.bin/nx run-many \
+        -t build -p types logger --skip-nx-cache; then
+    echo "ERROR: smoke build failed. The pnpm install is likely broken " >&2
+    echo "       (missing/hoisted dependency). Fix before sharing." >&2
+    exit 1
+  fi
+  echo "    smoke build OK"
+fi
 
 echo ""
 echo "==> Done. Start the stack with:"
