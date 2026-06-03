@@ -1,7 +1,6 @@
 ---
-name: creating-end-user-documentation-for-packmind
-description: >
-  Create or update user-focused Packmind documentation in `apps/doc/` that explains features in clear task-oriented language without technical implementation details. Use this skill whenever the user asks to document a feature, write or update user guides, create end-user docs, explain how something works for users, or convert developer-focused docs to user-friendly guides — even if they don't say "documentation" explicitly. Trigger on any request to explain, guide, or describe Packmind features from a user perspective.
+name: 'creating-end-user-documentation-for-packmind'
+description: 'Create or update user-focused Packmind documentation in `apps/doc/` that explains features in clear task-oriented language without technical implementation details. Use this skill whenever the user asks to document a feature, write or update user guides, create end-user docs, explain how something works for users, or convert developer-focused docs to user-friendly guides — even if they don''t say "documentation" explicitly. Trigger on any request to explain, guide, or describe Packmind features from a user perspective.'
 ---
 
 Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
