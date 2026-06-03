@@ -34,6 +34,13 @@ jest.mock('../api/queries', () => ({
   }),
 }));
 
+jest.mock('../../accounts/hooks/useAuthContext', () => ({
+  useAuthContext: () => ({
+    user: { email: 'tester@packmind.com' },
+    organization: undefined,
+  }),
+}));
+
 function makeDistribution(
   overrides: Partial<MarketplaceDistributionListItem> = {},
 ): MarketplaceDistributionListItem {
@@ -120,6 +127,14 @@ describe('MarketplaceDistributionsTable', () => {
       screen.getByTestId(
         `distribution-status-badge-${DistributionStatus.removed}`,
       ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the Remove action for a published distribution when the feature flag is enabled', () => {
+    renderTable([makeDistribution({ status: DistributionStatus.success })]);
+
+    expect(
+      screen.getByRole('button', { name: /Remove My Package/i }),
     ).toBeInTheDocument();
   });
 

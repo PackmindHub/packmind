@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
   MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY,
   PMBox,
   PMEmptyState,
@@ -27,6 +28,7 @@ import {
 import { DistributionStatusBadge } from './DistributionStatusBadge';
 import { RemovePluginButton } from './RemovePluginButton';
 import { CancelRemovalButton } from './CancelRemovalButton';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 export interface MarketplaceDistributionsTableProps {
   organizationId: OrganizationId | string;
@@ -111,6 +113,7 @@ const DistributionsTableRows = ({
   marketplaceId,
   marketplaceName,
 }: DistributionsTableRowsProps) => {
+  const { user } = useAuthContext();
   const markMutation = useMarkPluginForRemovalByDistribution(
     organizationId,
     marketplaceId,
@@ -141,7 +144,11 @@ const DistributionsTableRows = ({
         ),
         status: <DistributionStatusBadge status={item.status} />,
         actions: (
-          <PMFeatureFlag featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}>
+          <PMFeatureFlag
+            featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
             <DistributionActionCell
               distribution={item}
               marketplaceName={marketplaceName}
@@ -227,7 +234,3 @@ function formatPublishedAt(value: Date | string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleDateString();
 }
-
-export const __testables__ = {
-  formatPublishedAt,
-};

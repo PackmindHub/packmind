@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import {
+  DEFAULT_FEATURE_DOMAIN_MAP,
   MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY,
   PMPage,
   PMText,
@@ -57,7 +58,7 @@ export const PackageDetails = ({
   spaceSlug,
 }: PackageDetailsProps) => {
   const navigate = useNavigate();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -467,6 +468,8 @@ export const PackageDetails = ({
                   <PackageDistributionList packageId={id} />
                   <PMFeatureFlag
                     featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
+                    featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+                    userEmail={user?.email}
                   >
                     {organization?.id && (
                       <PackageMarketplaceDistributions
