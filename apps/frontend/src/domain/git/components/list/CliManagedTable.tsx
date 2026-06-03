@@ -1,67 +1,83 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PMAlert, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
-import { GitProviderUI } from '../../types/GitProviderTypes';
+import { GitProviderUI, GitRepoUI } from '../../types/GitProviderTypes';
 import { VendorMark } from '../shared/VendorMark';
 
 interface CliManagedTableProps {
   entries: GitProviderUI[];
 }
 
+interface CliRepoRow {
+  key: string;
+  repo: GitRepoUI;
+  provider: GitProviderUI;
+}
+
 export const CliManagedTable: React.FC<CliManagedTableProps> = ({
   entries,
-}) => (
-  <PMBox>
-    <PMAlert.Root status="info" marginBottom={3}>
-      <PMAlert.Indicator />
-      <PMVStack gap={1} align="stretch" flex={1}>
-        <PMAlert.Title>
-          <PMText as="span" fontSize="sm" color="primary" fontWeight="medium">
-            Created automatically by{' '}
-            <PMBox
-              as="code"
-              display="inline"
-              fontSize="xs"
-              fontFamily="mono"
-              paddingX={1}
-              paddingY={0.5}
-              borderRadius="sm"
-              bg="background.tertiary"
-              color="text.primary"
-            >
-              packmind-cli
-            </PMBox>
-          </PMText>
-        </PMAlert.Title>
-        <PMText as="div" fontSize="xs" color="secondary">
-          These entries are recorded when a developer pulls Packmind context
-          into a repo from their machine. They are read-only here. To remove
-          one, ask the developer to revoke it from their local CLI session.
-        </PMText>
-      </PMVStack>
-    </PMAlert.Root>
+}) => {
+  const rows = useMemo<CliRepoRow[]>(
+    () =>
+      entries.flatMap((provider) =>
+        (provider.repos ?? []).map((repo) => ({
+          key: `${provider.id}:${repo.id}`,
+          repo,
+          provider,
+        })),
+      ),
+    [entries],
+  );
 
-    {entries.length === 0 ? (
-      <EmptyState />
-    ) : (
-      <PMBox
-        borderWidth="1px"
-        borderColor="border.tertiary"
-        borderRadius="md"
-        overflow="hidden"
-        bg="background.primary"
-      >
-        <TableHeader />
-        {entries.map((entry, idx) => (
-          <CliRow
-            key={entry.id}
-            entry={entry}
-            isLast={idx === entries.length - 1}
-          />
-        ))}
-      </PMBox>
-    )}
-  </PMBox>
-);
+  return (
+    <PMBox>
+      <PMAlert.Root status="info" marginBottom={3}>
+        <PMAlert.Indicator />
+        <PMVStack gap={1} align="stretch" flex={1}>
+          <PMAlert.Title>
+            <PMText as="span" fontSize="sm" color="primary" fontWeight="medium">
+              Created automatically by{' '}
+              <PMBox
+                as="code"
+                display="inline"
+                fontSize="xs"
+                fontFamily="mono"
+                paddingX={1}
+                paddingY={0.5}
+                borderRadius="sm"
+                bg="background.tertiary"
+                color="text.primary"
+              >
+                packmind-cli
+              </PMBox>
+            </PMText>
+          </PMAlert.Title>
+          <PMText as="div" fontSize="xs" color="secondary">
+            These entries are recorded when a developer pulls Packmind context
+            into a repo from their machine. They are read-only here. To remove
+            one, ask the developer to revoke it from their local CLI session.
+          </PMText>
+        </PMVStack>
+      </PMAlert.Root>
+
+      {rows.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <PMBox
+          borderWidth="1px"
+          borderColor="border.tertiary"
+          borderRadius="md"
+          overflow="hidden"
+          bg="background.primary"
+        >
+          <TableHeader />
+          {rows.map((row, idx) => (
+            <CliRow key={row.key} row={row} isLast={idx === rows.length - 1} />
+          ))}
+        </PMBox>
+      )}
+    </PMBox>
+  );
+};
 
 const TableHeader: React.FC = () => (
   <PMHStack
@@ -85,16 +101,13 @@ const TableHeader: React.FC = () => (
 );
 
 interface CliRowProps {
-  entry: GitProviderUI;
+  row: CliRepoRow;
   isLast: boolean;
 }
 
-const CliRow: React.FC<CliRowProps> = ({ entry, isLast }) => {
-  const firstRepo = entry.repos?.[0];
-  const repoPath = firstRepo
-    ? `${firstRepo.owner}/${firstRepo.repo}`
-    : (entry.url ?? '—');
-  const additional = (entry.repos?.length ?? 0) - 1;
+const CliRow: React.FC<CliRowProps> = ({ row, isLast }) => {
+  const { repo, provider } = row;
+  const repoPath = `${repo.owner}/${repo.repo}`;
 
   return (
     <PMHStack
@@ -106,26 +119,15 @@ const CliRow: React.FC<CliRowProps> = ({ entry, isLast }) => {
       align="center"
     >
       <PMBox width="160px">
-        <VendorMark vendor={entry.source} />
+        <VendorMark vendor={provider.source} />
       </PMBox>
       <PMBox flex={1} minW={0}>
         <PMText as="div" fontSize="sm" color="primary" fontWeight="medium">
           {repoPath}
-          {additional > 0 && (
-            <PMText
-              as="span"
-              fontSize="xs"
-              color="faded"
-              fontWeight="normal"
-              marginLeft={2}
-            >
-              +{additional} more
-            </PMText>
-          )}
         </PMText>
-        {entry.url && (
+        {provider.url && (
           <PMText as="div" fontSize="xs" color="faded">
-            {entry.url}
+            {provider.url}
           </PMText>
         )}
       </PMBox>

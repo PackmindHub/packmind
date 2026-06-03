@@ -55,11 +55,16 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   );
   const [openEditDialog, setOpenEditDialog] = useState(false);
 
-  const { userConfigured, cliManaged } = useMemo(() => {
+  const { userConfigured, cliManaged, cliManagedRepoCount } = useMemo(() => {
     const all = providers ?? [];
+    const cli = all.filter((p) => !p.hasAuth);
     return {
       userConfigured: all.filter((p) => p.hasAuth),
-      cliManaged: all.filter((p) => !p.hasAuth),
+      cliManaged: cli,
+      cliManagedRepoCount: cli.reduce(
+        (acc, p) => acc + (p.repos?.length ?? 0),
+        0,
+      ),
     };
   }, [providers]);
 
@@ -156,7 +161,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     {
       value: 'cli',
       triggerLabel: (
-        <TabLabel label="CLI-managed" count={cliManaged.length} muted />
+        <TabLabel label="CLI-managed" count={cliManagedRepoCount} muted />
       ),
       content: (
         <PMVStack align="stretch" gap={4} pt={4}>
