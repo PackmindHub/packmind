@@ -235,7 +235,11 @@ interface TabLabelProps {
 const TabLabel: React.FC<TabLabelProps> = ({ label, count, muted }) => (
   <PMHStack gap={2} align="center">
     <PMBox as="span">{label}</PMBox>
-    <PMBadge size="xs" variant="outline" colorPalette={muted ? 'gray' : 'blue'}>
+    <PMBadge
+      size="xs"
+      variant={muted ? 'subtle' : 'outline'}
+      colorPalette={muted ? 'gray' : 'blue'}
+    >
       {count}
     </PMBadge>
   </PMHStack>

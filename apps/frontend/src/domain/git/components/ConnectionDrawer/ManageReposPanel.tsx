@@ -84,11 +84,13 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
     return (
       <PMAlert.Root status="error">
         <PMAlert.Indicator />
-        <PMAlert.Title>Couldn't load repositories</PMAlert.Title>
-        <PMAlert.Description>
-          Check the connection's auth, then refresh. If the token expired, use
-          Re-authenticate from the status block.
-        </PMAlert.Description>
+        <PMAlert.Content>
+          <PMAlert.Title>Couldn't load repositories</PMAlert.Title>
+          <PMAlert.Description>
+            Check the connection's auth, then refresh. If the token expired, use
+            Re-authenticate from the status block.
+          </PMAlert.Description>
+        </PMAlert.Content>
       </PMAlert.Root>
     );
   }
