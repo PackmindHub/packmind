@@ -20,8 +20,8 @@ import {
 } from '../api/queries';
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { GIT_MESSAGES } from '../constants/messages';
-import { ManageGitProviderDialog } from './ManageGitProviderDialog';
 import { AddConnectionDrawer } from './AddConnection/AddConnectionDrawer';
+import { ConnectionDrawer } from './ConnectionDrawer/ConnectionDrawer';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { ConnectionsTable } from './list/ConnectionsTable';
 import { ConnectionsEmptyState } from './list/ConnectionsEmptyState';
@@ -54,7 +54,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   const [editingProvider, setEditingProvider] = useState<GitProviderUI | null>(
     null,
   );
-  const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openAddDrawer, setOpenAddDrawer] = useState(false);
 
   const { userConfigured, cliManaged, cliManagedRepoCount } = useMemo(() => {
@@ -74,11 +73,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     setEditingProvider(null);
     setOpenAddDrawer(true);
   }, []);
-
-  const handleEditDialogVisibility = (open: boolean) => {
-    setEditingProvider(null);
-    setOpenEditDialog(open);
-  };
 
   const confirmDeleteProvider = useCallback(async () => {
     if (!providerToDelete) return;
@@ -149,7 +143,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
               connections={userConfigured}
               onEdit={(connection) => {
                 setEditingProvider(connection);
-                setOpenEditDialog(true);
               }}
               onDelete={(connection) => {
                 if ((connection.repos?.length ?? 0) > 0) {
@@ -191,17 +184,14 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
 
       <PMTabs defaultValue="connections" tabs={tabs} />
 
-      <ManageGitProviderDialog
+      <ConnectionDrawer
         organizationId={organizationId}
-        editingProvider={editingProvider}
-        open={openEditDialog}
-        setOpen={handleEditDialogVisibility}
-        onSuccess={(provider) => {
-          if (editingProvider) {
-            setEditingProvider(null);
-          } else {
-            setEditingProvider(provider);
-          }
+        connection={editingProvider}
+        onClose={() => setEditingProvider(null)}
+        onDelete={(provider) => {
+          setEditingProvider(null);
+          setProviderToDelete(provider);
+          setDeleteDialogOpen(true);
         }}
       />
 

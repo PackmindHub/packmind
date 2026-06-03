@@ -86,6 +86,15 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
 
   return (
     <PMHStack
+      role="button"
+      tabIndex={0}
+      onClick={onEdit}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onEdit();
+        }
+      }}
       data-testid="git-connection-row"
       data-vendor={connection.source}
       data-url={connection.url ?? ''}
@@ -95,6 +104,7 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       paddingY={3}
       borderBottom={isLast ? undefined : '1px solid'}
       borderColor="border.tertiary"
+      cursor="pointer"
       _hover={{ bg: 'background.secondary' }}
       transition="background-color 120ms ease-out"
     >
@@ -147,6 +157,7 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
       <PMBox
         as="button"
         aria-label="More actions"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         bg="transparent"
         border="none"
         color="text.faded"
