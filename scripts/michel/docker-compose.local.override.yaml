@@ -1,0 +1,34 @@
+# Sprite sandbox override for the LOCAL production-like stack
+# (dockerfile/local/docker-compose.yaml, built and started by docker-local.sh).
+# Installed at runtime by scripts/install-michel-skills.sh into
+# dockerfile/local/docker-compose.override.yaml — NOT committed (gitignored).
+#
+# Two sandbox constraints this works around:
+#   1. docker exec (setns) is blocked, so exec-based healthchecks never pass —
+#      disable them and relax service_healthy deps to service_started.
+#   2. UID 1000 (the `node`/nginx user baked into the custom images) cannot
+#      attach to the bridge network ("bind-mount /proc/PID/ns/net: permission
+#      denied") — run the three custom-image services as root.
+services:
+  postgres:
+    healthcheck:
+      disable: true
+  redis:
+    healthcheck:
+      disable: true
+  api:
+    user: root
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+  mcp-server:
+    user: root
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+  frontend:
+    user: root
