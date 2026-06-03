@@ -63,7 +63,9 @@ docker/nginx/ssl
 .nx/self-healing
 
 # Michel agent — local experimentation, not for the public repo
-sprites/
+# Ignore the harness contents but version the worker entrypoint script.
+sprites/*
+!sprites/run-michel.sh
 screenshots/
 videos/
 .sprite
