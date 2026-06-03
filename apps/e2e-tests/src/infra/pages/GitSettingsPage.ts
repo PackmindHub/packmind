@@ -87,6 +87,51 @@ export class GitSettings
     }));
   }
 
+  async openFirstConnectionDrawer(): Promise<void> {
+    await this.page.getByRole('tab', { name: /Connections/ }).click();
+    const firstRow = this.page
+      .locator('[data-testid="git-connection-row"]')
+      .first();
+    await firstRow.waitFor({ state: 'visible' });
+    await firstRow.click();
+    await this.page
+      .locator('[data-testid="connection-drawer-status"]')
+      .waitFor({ state: 'visible' });
+  }
+
+  async waitForDrawerStatus(
+    state: 'connected' | 'disconnected' | 'checking',
+  ): Promise<void> {
+    await this.page
+      .locator(
+        `[data-testid="connection-drawer-status"][data-status="${state}"]`,
+      )
+      .waitFor({ state: 'visible' });
+  }
+
+  async getDrawerStatusDescription(): Promise<string | null> {
+    // The description sits inside the status block but is set apart from the
+    // status label by font size. Read all text under the block and pick the
+    // line that isn't the status label or one of the action buttons.
+    const block = this.page.locator('[data-testid="connection-drawer-status"]');
+    const lines = (await block.innerText())
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const ignore = new Set([
+      'Connected',
+      'Disconnected',
+      'Checking…',
+      'Status unknown',
+      'Re-authenticate',
+      'Revoke connection',
+      'Revoking…',
+      '·',
+    ]);
+    const description = lines.find((line) => !ignore.has(line));
+    return description ?? null;
+  }
+
   expectedUrl(): string | RegExp {
     return /\/settings\/git$/;
   }
