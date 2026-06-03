@@ -24,6 +24,7 @@ import {
   IStandardsPort,
   IStandardsPortName,
   Marketplace,
+  MarketplaceDistribution,
 } from '@packmind/types';
 import {
   GitRepoRepository,
@@ -37,7 +38,9 @@ import { DeploymentsServices } from './application/services/DeploymentsServices'
 import { MarketplaceDescriptorParserRegistry } from './application/services/MarketplaceDescriptorParserRegistry';
 import { AnthropicMarketplaceDescriptorParser } from './application/services/parsers/AnthropicMarketplaceDescriptorParser';
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
+import { MarketplaceDistributionRepository } from './infra/repositories/MarketplaceDistributionRepository';
 import { MarketplaceRepository } from './infra/repositories/MarketplaceRepository';
+import { MarketplaceDistributionSchema } from './infra/schemas/MarketplaceDistributionSchema';
 import { MarketplaceSchema } from './infra/schemas/MarketplaceSchema';
 
 const origin = 'DeploymentsHexa';
@@ -58,6 +61,7 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly repositories: DeploymentsRepositories;
   private readonly services: DeploymentsServices;
   private readonly marketplaceRepository: MarketplaceRepository;
+  private readonly marketplaceDistributionRepository: MarketplaceDistributionRepository;
   private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry;
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
@@ -86,6 +90,16 @@ export class DeploymentsHexa extends BaseHexa<
         ) as Repository<Marketplace>,
       );
 
+      // Persistence for marketplace publish attempts. Passed through to the
+      // adapter so the publish use case and its delayed job can read/write
+      // the marketplace distribution rows.
+      this.marketplaceDistributionRepository =
+        new MarketplaceDistributionRepository(
+          this.dataSource.getRepository(
+            MarketplaceDistributionSchema,
+          ) as Repository<MarketplaceDistribution>,
+        );
+
       // Vendor-agnostic parser registry. New marketplace vendors plug in by
       // appending to this array — link/unlink use cases do not branch on
       // vendor.
@@ -109,6 +123,7 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
         this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
         this.marketplaceDescriptorParserRegistry,
         this.gitRepoService,
       );

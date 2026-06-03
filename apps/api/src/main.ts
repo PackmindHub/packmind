@@ -1,6 +1,14 @@
 // This import MUST be first - before any other imports
 import './instrument';
 
+// Ensure class-validator and class-transformer are declared as runtime
+// dependencies for Nx generatePackageJson. @nestjs/common loads them
+// dynamically for DTO validation, so webpack cannot statically detect them;
+// npm --omit=dev then skips them as devOptional, breaking the Docker runtime
+// with "Cannot find module 'class-validator'".
+import 'class-validator';
+import 'class-transformer';
+
 /**
  * This is not a production server yet!
  * This is only a minimal backend to get started.

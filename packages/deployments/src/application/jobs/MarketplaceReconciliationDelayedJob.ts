@@ -234,6 +234,10 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     }
 
     if (!descriptorFile) {
+      // The repository was reachable but the descriptor file itself is
+      // missing — this is a broken contract on the marketplace side, not a
+      // transient network failure. Surface it as `bad_format` so admins can
+      // tell the two apart from the marketplace list.
       this.logger.warn(
         `[${this.origin}] ${MARKETPLACE_DESCRIPTOR_FILENAME} missing for marketplace ${marketplace.id}`,
         {
@@ -244,10 +248,10 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         },
       );
       await this.marketplaceRepository.updateState(marketplace.id, {
-        state: 'unreachable',
+        state: 'bad_format',
         lastValidatedAt,
       });
-      return { state: 'unreachable', lastValidatedAt };
+      return { state: 'bad_format', lastValidatedAt };
     }
 
     // Step 4 — Parse the descriptor.
@@ -255,6 +259,8 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     try {
       descriptor = this.parserRegistry.parse(descriptorFile.content);
     } catch (error) {
+      // The file was reachable but unparseable — same broken-contract bucket
+      // as a missing descriptor. Distinguishes from network/auth failures.
       this.logger.warn(
         `[${this.origin}] Failed to parse marketplace descriptor for ${marketplace.id}`,
         {
@@ -266,10 +272,10 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         },
       );
       await this.marketplaceRepository.updateState(marketplace.id, {
-        state: 'unreachable',
+        state: 'bad_format',
         lastValidatedAt,
       });
-      return { state: 'unreachable', lastValidatedAt };
+      return { state: 'bad_format', lastValidatedAt };
     }
 
     // Step 5 — Diff descriptor (ignoring `raw`).

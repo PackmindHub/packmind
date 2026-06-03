@@ -1,4 +1,12 @@
-import { NewGateway } from '@packmind/types';
+import {
+  MarketplaceDistribution,
+  MarketplaceDistributionId,
+  MarketplaceId,
+  NewGateway,
+  OrganizationId,
+  PackageId,
+  PublishPackageOnMarketplaceResponse,
+} from '@packmind/types';
 import {
   IGetPackageByIdUseCase,
   IListDeploymentsByPackage,
@@ -26,6 +34,26 @@ import {
   IGetDashboardNonLive,
 } from '@packmind/types';
 
+/**
+ * Arguments passed to `publishPackageOnMarketplace`. The marketplace and
+ * package live in different URL segments so we accept them as named fields
+ * rather than re-using the backend command shape.
+ */
+export type PublishPackageOnMarketplaceArgs = {
+  organizationId: OrganizationId;
+  marketplaceId: MarketplaceId;
+  packageId: PackageId;
+};
+
+/**
+ * Arguments passed to `findMarketplaceDistributionById`. Used by the status
+ * polling helper after the publish action returns its `in_progress` row.
+ */
+export type FindMarketplaceDistributionByIdArgs = {
+  organizationId: OrganizationId;
+  marketplaceDistributionId: MarketplaceDistributionId;
+};
+
 export interface IDeploymentsGateway {
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage>;
   listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe>;
@@ -51,4 +79,20 @@ export interface IDeploymentsGateway {
   getDashboardKpi: NewGateway<IGetDashboardKpi>;
   getDashboardNonLive: NewGateway<IGetDashboardNonLive>;
   listActiveDistributedPackagesBySpace: NewGateway<IListActiveDistributedPackagesBySpaceUseCase>;
+  /**
+   * Publishes a Packmind package as a managed plugin on a linked marketplace.
+   * Returns the freshly created `in_progress` row so the caller can poll for
+   * the final status. Errors surface as `PackmindError` (mapped to a
+   * `PublishFailureReason` by the mutation hook).
+   */
+  publishPackageOnMarketplace(
+    args: PublishPackageOnMarketplaceArgs,
+  ): Promise<PublishPackageOnMarketplaceResponse>;
+  /**
+   * Fetches a single `MarketplaceDistribution` row by id. Used by status
+   * polling once the publish job has been enqueued.
+   */
+  findMarketplaceDistributionById(
+    args: FindMarketplaceDistributionByIdArgs,
+  ): Promise<MarketplaceDistribution>;
 }

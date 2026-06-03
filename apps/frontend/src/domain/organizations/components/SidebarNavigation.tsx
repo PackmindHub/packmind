@@ -16,6 +16,9 @@ import {
   PMPortal,
   PMAvatar,
   PMVStack,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  isFeatureFlagEnabled,
+  MARKETPLACES_FEATURE_KEY,
 } from '@packmind/ui';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router';
 import {
@@ -33,6 +36,7 @@ import {
   LuPanelLeftOpen,
   LuSearch,
   LuSettings,
+  LuStore,
   LuWrench,
 } from 'react-icons/lu';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
@@ -231,6 +235,17 @@ export const SidebarNavigation: React.FunctionComponent<
 
   const orgSlug = organization.slug;
 
+  // Marketplaces are administered at the org level and still behind a feature
+  // flag, so the main-sidebar entry is shown only to admins whose email opts
+  // into the flag — matching the page's own admin guard.
+  const canSeeMarketplaces =
+    organization.role === 'admin' &&
+    isFeatureFlagEnabled({
+      featureKeys: [MARKETPLACES_FEATURE_KEY],
+      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+      userEmail: user?.email,
+    });
+
   const defaultSpace = spaces.find((space) => space.isDefaultSpace);
 
   if (!defaultSpace) {
@@ -417,6 +432,22 @@ export const SidebarNavigation: React.FunctionComponent<
         }
       >
         <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
+          {canSeeMarketplaces && (
+            <PMBox paddingBottom={2}>
+              <PMVerticalNavSection
+                navEntries={[
+                  <SidebarNavigationLink
+                    key="marketplaces"
+                    url={routes.org.toMarketplaces(orgSlug)}
+                    label="Marketplaces"
+                    icon={<LuStore />}
+                    aria-label="Marketplaces"
+                  />,
+                ]}
+              />
+            </PMBox>
+          )}
+
           {/* Spaces -- scrollable */}
           <PMBox
             display="flex"

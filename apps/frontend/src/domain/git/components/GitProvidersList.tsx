@@ -104,7 +104,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       ),
       url: provider.url,
       repositoryCount: provider.repos?.length || 0,
-      actions: provider.hasToken ? (
+      actions: provider.hasAuth ? (
         <PMEllipsisMenu
           actions={[
             {

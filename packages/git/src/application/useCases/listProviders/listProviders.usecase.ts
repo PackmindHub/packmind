@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  GitProviderWithoutToken,
   IAccountsPort,
   IListProvidersUseCase,
   ListProvidersCommand,
@@ -35,10 +36,25 @@ export class ListProvidersUseCase
         command.organization.id,
       );
 
-    const providersWithoutToken = providers.map(({ token, ...provider }) => ({
-      ...provider,
-      hasToken: token !== null && token !== undefined && token.length > 0,
-    }));
+    const providersWithoutToken: GitProviderWithoutToken[] = providers.map(
+      (provider) => {
+        const { token, ...rest } = provider;
+        const hasPatToken =
+          token !== null && token !== undefined && token.length > 0;
+        // TypeORM returns the `bigint` app_installation_id column as a string,
+        // so check presence instead of `typeof === 'number'`.
+        const hasActiveAppInstallation =
+          rest.authMethod === 'app' &&
+          rest.appInstallationId !== undefined &&
+          rest.appInstallationId !== null &&
+          !rest.revokedAt;
+        return {
+          ...rest,
+          hasAuth: hasPatToken || hasActiveAppInstallation,
+          authMethod: rest.authMethod,
+        };
+      },
+    );
 
     this.logger.info('Git providers fetched successfully', {
       organizationId: command.organizationId,

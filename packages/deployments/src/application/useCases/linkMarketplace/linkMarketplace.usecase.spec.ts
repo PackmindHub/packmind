@@ -70,12 +70,13 @@ describe('LinkMarketplaceUseCase', () => {
     source: 'github',
     organizationId,
     url: 'https://github.com',
-    hasToken: true,
+    hasAuth: true,
+    authMethod: 'token',
   };
 
   const providerWithoutToken: GitProviderWithoutToken = {
     ...providerWithToken,
-    hasToken: false,
+    hasAuth: false,
   };
 
   const descriptor: MarketplaceDescriptor = {
@@ -436,6 +437,19 @@ describe('LinkMarketplaceUseCase', () => {
 
         await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
           GitRepoAlreadyLinkedAsStandardError,
+        );
+      });
+    });
+
+    describe('provider scoping', () => {
+      it('scopes the collision check to the target provider', async () => {
+        await useCase.execute(baseCommand);
+
+        expect(mockGitRepoService.findGitRepoIgnoringType).toHaveBeenCalledWith(
+          organizationId,
+          baseCommand.owner,
+          baseCommand.repo,
+          { providerId: gitProviderId },
         );
       });
     });

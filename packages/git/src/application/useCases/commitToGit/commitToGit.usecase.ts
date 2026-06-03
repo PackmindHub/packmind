@@ -50,13 +50,8 @@ export class CommitToGit {
       throw new Error('Git provider not found');
     }
 
-    // Validate that provider token is configured
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create IGitRepo instance based on provider
-    const gitRepoInstance = this.createGitRepoInstance(repo, provider);
+    // Create IGitRepo instance based on provider (token validation delegated to factory)
+    const gitRepoInstance = await this.createGitRepoInstance(repo, provider);
 
     // Process files to handle section-based updates
     const processedFiles: CommitFile[] = [];
@@ -167,7 +162,7 @@ export class CommitToGit {
   private createGitRepoInstance(
     repo: GitRepo,
     provider: GitProvider,
-  ): IGitRepo {
+  ): Promise<IGitRepo> {
     return this.gitRepoFactory.createGitRepo(repo, provider);
   }
 }

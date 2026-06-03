@@ -7,12 +7,15 @@ import {
 import {
   createGitProviderId,
   createGitRepoId,
+  createMarketplaceDistributionId,
   createMarketplaceId,
   createOrganizationId,
+  createPackageId,
   createUserId,
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GitProviderTokenInvalidError,
   GitRepoAlreadyLinkedAsStandardError,
   IDeploymentPort,
   LinkMarketplaceResponse,
@@ -20,10 +23,13 @@ import {
   Marketplace,
   MarketplaceAlreadyLinkedError,
   MarketplaceDescriptor,
+  MarketplaceDescriptorBadFormatError,
   MarketplaceDescriptorNotFoundError,
   MarketplaceDescriptorParseError,
   MarketplaceNotFoundError,
+  MarketplacePluginNameConflictError,
   MarketplaceUrlNotReachableError,
+  PublishPackageOnMarketplaceResponse,
   UnknownMarketplaceDescriptorError,
   UnlinkMarketplaceResponse,
   ValidateMarketplaceUrlResponse,
@@ -35,6 +41,7 @@ import {
 import { stubLogger } from '@packmind/test-utils';
 import { MarketplacesController } from './marketplaces.controller';
 import { LinkMarketplaceBodyDto } from './dto/LinkMarketplaceBody.dto';
+import { PublishPackageOnMarketplaceBodyDto } from './dto/PublishPackageOnMarketplaceBody.dto';
 import { ValidateMarketplaceUrlQueryDto } from './dto/ValidateMarketplaceUrlQuery.dto';
 
 describe('MarketplacesController', () => {
@@ -99,6 +106,7 @@ describe('MarketplacesController', () => {
       unlinkMarketplace: jest.fn(),
       listMarketplaces: jest.fn(),
       validateMarketplaceUrl: jest.fn(),
+      publishPackageOnMarketplace: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new MarketplacesController(
@@ -214,17 +222,22 @@ describe('MarketplacesController', () => {
         ).rejects.toBeInstanceOf(BadRequestException);
       });
 
-      it('maps GitProviderNotFoundError to NotFoundException (404)', async () => {
+      it('maps GitProviderNotFoundError to NotFoundException (404) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderNotFoundError(gitProviderId),
         );
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toMatchObject({
+          constructor: NotFoundException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the provider id never reaches the user.
+          message: 'The selected Git provider could not be found.',
+        });
       });
 
-      it('maps GitProviderOrganizationMismatchError to ForbiddenException (403)', async () => {
+      it('maps GitProviderOrganizationMismatchError to ForbiddenException (403) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderOrganizationMismatchError(
             gitProviderId,
@@ -234,17 +247,27 @@ describe('MarketplacesController', () => {
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(ForbiddenException);
+        ).rejects.toMatchObject({
+          constructor: ForbiddenException,
+          message:
+            'The selected Git provider does not belong to your organization.',
+        });
       });
 
-      it('maps GitProviderMissingTokenError to BadRequestException (400)', async () => {
+      it('maps GitProviderMissingTokenError to BadRequestException (400) without leaking the provider UUID', async () => {
         mockDeploymentAdapter.linkMarketplace.mockRejectedValue(
           new GitProviderMissingTokenError(gitProviderId),
         );
 
         await expect(
           controller.linkMarketplace(organizationId, body, baseRequest),
-        ).rejects.toBeInstanceOf(BadRequestException);
+        ).rejects.toMatchObject({
+          constructor: BadRequestException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the provider id never reaches the user.
+          message:
+            'The selected Git provider has no access token configured. Connect it in your Git settings and try again.',
+        });
       });
 
       it('maps OrganizationAdminRequiredError to ForbiddenException (403) for non-admin link attempts', async () => {
@@ -301,7 +324,7 @@ describe('MarketplacesController', () => {
     });
 
     describe('error mapping', () => {
-      it('maps MarketplaceNotFoundError to NotFoundException (404)', async () => {
+      it('maps MarketplaceNotFoundError to NotFoundException (404) without leaking the marketplace UUID', async () => {
         mockDeploymentAdapter.unlinkMarketplace.mockRejectedValue(
           new MarketplaceNotFoundError(marketplaceId),
         );
@@ -312,7 +335,13 @@ describe('MarketplacesController', () => {
             marketplaceId,
             baseRequest,
           ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        ).rejects.toMatchObject({
+          constructor: NotFoundException,
+          // The fixed message carries no UUID — asserting it exactly proves
+          // the marketplace id never reaches the user.
+          message:
+            'The marketplace could not be found. It may have already been unlinked.',
+        });
       });
 
       it('maps OrganizationAdminRequiredError to ForbiddenException (403) for non-admin unlink attempts', async () => {
@@ -347,7 +376,17 @@ describe('MarketplacesController', () => {
   describe('GET /organizations/:orgId/marketplaces (listMarketplaces)', () => {
     describe('for any member', () => {
       const listResponse: ListMarketplacesResponse = [
-        { ...marketplace, addedByUserName: 'Test User' },
+        {
+          ...marketplace,
+          addedByUserName: 'Test User',
+          repository: {
+            owner: 'acme',
+            repo: 'plugins',
+            branch: 'main',
+            providerSource: 'github',
+            url: 'https://github.com/acme/plugins',
+          },
+        },
       ];
       let result: ListMarketplacesResponse;
 
@@ -478,6 +517,152 @@ describe('MarketplacesController', () => {
         await expect(
           controller.validateMarketplaceUrl(organizationId, query, baseRequest),
         ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+  });
+
+  describe('POST /organizations/:orgId/marketplaces/:marketplaceId/publish (publishPackageOnMarketplace)', () => {
+    const packageId = createPackageId('99999999-9999-9999-9999-999999999999');
+    const marketplaceDistributionId = createMarketplaceDistributionId(
+      '88888888-8888-8888-8888-888888888888',
+    );
+    const body: PublishPackageOnMarketplaceBodyDto = {
+      packageId: packageId as unknown as string,
+    };
+    const publishResponse: PublishPackageOnMarketplaceResponse = {
+      marketplaceDistributionId,
+      status: 'in_progress',
+      marketplaceId,
+      packageId,
+      pluginSlug: 'security',
+    };
+
+    describe('on successful publish', () => {
+      let result: PublishPackageOnMarketplaceResponse;
+
+      beforeEach(async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockResolvedValue(
+          publishResponse,
+        );
+
+        result = await controller.publishPackageOnMarketplace(
+          organizationId,
+          marketplaceId,
+          body,
+          baseRequest,
+        );
+      });
+
+      it('returns the in-progress publish response', () => {
+        expect(result).toEqual(publishResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(
+          mockDeploymentAdapter.publishPackageOnMarketplace,
+        ).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          marketplaceId,
+          packageId,
+          source: 'ui',
+        });
+      });
+    });
+
+    describe('error mapping', () => {
+      it('maps MarketplacePluginNameConflictError to ConflictException (409)', async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          new MarketplacePluginNameConflictError('security', 'ACME'),
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+
+      it('maps GitProviderTokenInvalidError to BadRequestException with the verbatim user-facing message', async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          new GitProviderTokenInvalidError(),
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toMatchObject({
+          constructor: BadRequestException,
+          message: GitProviderTokenInvalidError.USER_FACING_MESSAGE,
+        });
+      });
+
+      it('maps MarketplaceDescriptorBadFormatError to BadRequestException (400)', async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          new MarketplaceDescriptorBadFormatError('acme', 'plugins'),
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('maps MarketplaceNotFoundError to NotFoundException (404)', async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          new MarketplaceNotFoundError(marketplaceId),
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('maps MarketplaceDescriptorNotFoundError to BadRequestException (400)', async () => {
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          new MarketplaceDescriptorNotFoundError('acme', 'plugins'),
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+
+      it('rethrows unknown errors unchanged', async () => {
+        const original = new Error('boom');
+        mockDeploymentAdapter.publishPackageOnMarketplace.mockRejectedValue(
+          original,
+        );
+
+        await expect(
+          controller.publishPackageOnMarketplace(
+            organizationId,
+            marketplaceId,
+            body,
+            baseRequest,
+          ),
+        ).rejects.toBe(original);
       });
     });
   });

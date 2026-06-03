@@ -24,6 +24,7 @@ import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
 import { DeleteItem, FileModification } from '../../deployments/FileUpdates';
+import { OrganizationGitHubApp } from '../OrganizationGitHubApp';
 
 export const IGitPortName = 'IGitPort' as const;
 
@@ -83,6 +84,19 @@ export interface IGitPort {
     filePath: string,
     branch?: string,
   ): Promise<{ sha: string; content: string } | null>;
+
+  /**
+   * Ensure a branch exists on a git repository, creating it from a base branch
+   * if missing. No-op when the target branch already exists.
+   *
+   * Used by the marketplace-publish flow to bootstrap the rolling `packmind/sync`
+   * branch from the marketplace's default branch on the first publish.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch used when creating)
+   * @param branch - The target branch name to ensure exists
+   * @returns Promise resolving when the branch is guaranteed to exist
+   */
+  createBranchFromBase(repo: GitRepo, branch: string): Promise<void>;
 
   /**
    * Handle webhook payload for a git repository with file content
@@ -272,4 +286,39 @@ export interface IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string>;
+
+  /**
+   * Persist (upsert) an OrganizationGitHubApp record.
+   * If an active record already exists for the org it is revoked first,
+   * then the new record is inserted (within a transaction).
+   * Used exclusively by the OSS manifest-callback flow.
+   *
+   * @param app - The fully-populated OrganizationGitHubApp to persist
+   * @returns The persisted (decrypted) record
+   */
+  upsertOrganizationGitHubApp(
+    app: OrganizationGitHubApp,
+  ): Promise<OrganizationGitHubApp>;
+
+  /**
+   * Returns the active (non-revoked) OrganizationGitHubApp for the given org,
+   * or null if none exists.
+   *
+   * @param orgId - The organization ID
+   * @returns The active app record, or null
+   */
+  getActiveOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<OrganizationGitHubApp | null>;
+
+  /**
+   * Marks the active OrganizationGitHubApp for the given org as revoked.
+   * No-ops if no active record exists.
+   * Note: this does NOT cascade-delete existing GitProvider rows pointing at this org.
+   * Those providers will start failing at next token mint. Admin must re-register
+   * and users will need to re-install the new app.
+   *
+   * @param orgId - The organization ID
+   */
+  revokeOrganizationGitHubApp(orgId: OrganizationId): Promise<void>;
 }

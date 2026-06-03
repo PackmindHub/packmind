@@ -103,7 +103,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
 
     // Build a set of providerIds that have tokens
     const providersWithToken = new Set(
-      providers.filter((p) => p.hasToken).map((p) => p.id),
+      providers.filter((p) => p.hasAuth).map((p) => p.id),
     );
 
     // Filter targets to only those whose repository's provider has a token

@@ -6,6 +6,8 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
@@ -23,6 +25,7 @@ import {
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GitProviderTokenInvalidError,
   GitRepoAlreadyLinkedAsStandardError,
   IDeploymentPort,
   LinkMarketplaceCommand,
@@ -30,12 +33,17 @@ import {
   ListMarketplacesCommand,
   ListMarketplacesResponse,
   MarketplaceAlreadyLinkedError,
+  MarketplaceDescriptorBadFormatError,
   MarketplaceDescriptorNotFoundError,
   MarketplaceDescriptorParseError,
   MarketplaceId,
   MarketplaceNotFoundError,
+  MarketplacePluginNameConflictError,
   MarketplaceUrlNotReachableError,
   OrganizationId,
+  PackageId,
+  PublishPackageOnMarketplaceCommand,
+  PublishPackageOnMarketplaceResponse,
   UnknownMarketplaceDescriptorError,
   UnlinkMarketplaceCommand,
   UnlinkMarketplaceResponse,
@@ -45,9 +53,26 @@ import {
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
 import { LinkMarketplaceBodyDto } from './dto/LinkMarketplaceBody.dto';
+import { PublishPackageOnMarketplaceBodyDto } from './dto/PublishPackageOnMarketplaceBody.dto';
 import { ValidateMarketplaceUrlQueryDto } from './dto/ValidateMarketplaceUrlQuery.dto';
 
 const origin = 'OrganizationMarketplacesController';
+
+/**
+ * User-facing messages for errors whose underlying domain message embeds an
+ * internal identifier (a provider/marketplace UUID). The raw `error.message`
+ * is still logged for diagnostics, but the HTTP response must never leak a
+ * UUID to the end user.
+ */
+const USER_FACING_ERROR_MESSAGE = {
+  gitProviderNotFound: 'The selected Git provider could not be found.',
+  gitProviderOrganizationMismatch:
+    'The selected Git provider does not belong to your organization.',
+  gitProviderMissingToken:
+    'The selected Git provider has no access token configured. Connect it in your Git settings and try again.',
+  marketplaceNotFound:
+    'The marketplace could not be found. It may have already been unlinked.',
+} as const;
 
 /**
  * Mask the first 6 characters of a string identifier and replace the rest
@@ -287,6 +312,64 @@ export class MarketplacesController {
     }
   }
 
+  @Post(':marketplaceId/publish')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async publishPackageOnMarketplace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Body() body: PublishPackageOnMarketplaceBodyDto,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<PublishPackageOnMarketplaceResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Publishing package',
+      {
+        organizationId,
+        marketplaceId,
+        packageId: body.packageId,
+        author: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: PublishPackageOnMarketplaceCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        packageId: body.packageId as PackageId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.publishPackageOnMarketplace(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Publish enqueued',
+        {
+          organizationId,
+          marketplaceId,
+          marketplaceDistributionId: response.marketplaceDistributionId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/publish - Failed to publish package',
+        {
+          organizationId,
+          marketplaceId,
+          // Never echo the git token — only the failure category surfaces.
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
   /**
    * Maps typed domain errors thrown by the use cases to NestJS HTTP exceptions
    * with the contract messages the frontend relies on. Anything else falls
@@ -296,10 +379,16 @@ export class MarketplacesController {
     if (error instanceof MarketplaceAlreadyLinkedError) {
       return new ConflictException(error.message);
     }
+    if (error instanceof MarketplacePluginNameConflictError) {
+      return new ConflictException(error.message);
+    }
     if (error instanceof GitRepoAlreadyLinkedAsStandardError) {
       return new ConflictException(error.message);
     }
     if (error instanceof MarketplaceDescriptorNotFoundError) {
+      return new BadRequestException(error.message);
+    }
+    if (error instanceof MarketplaceDescriptorBadFormatError) {
       return new BadRequestException(error.message);
     }
     if (error instanceof UnknownMarketplaceDescriptorError) {
@@ -312,18 +401,29 @@ export class MarketplacesController {
       return new BadRequestException(error.message);
     }
     if (error instanceof MarketplaceNotFoundError) {
-      return new NotFoundException(error.message);
+      return new NotFoundException(
+        USER_FACING_ERROR_MESSAGE.marketplaceNotFound,
+      );
     }
     if (error instanceof OrganizationAdminRequiredError) {
       return new ForbiddenException(error.message);
     }
     if (error instanceof GitProviderNotFoundError) {
-      return new NotFoundException(error.message);
+      return new NotFoundException(
+        USER_FACING_ERROR_MESSAGE.gitProviderNotFound,
+      );
     }
     if (error instanceof GitProviderOrganizationMismatchError) {
-      return new ForbiddenException(error.message);
+      return new ForbiddenException(
+        USER_FACING_ERROR_MESSAGE.gitProviderOrganizationMismatch,
+      );
     }
     if (error instanceof GitProviderMissingTokenError) {
+      return new BadRequestException(
+        USER_FACING_ERROR_MESSAGE.gitProviderMissingToken,
+      );
+    }
+    if (error instanceof GitProviderTokenInvalidError) {
       return new BadRequestException(error.message);
     }
     return error;

@@ -29,6 +29,13 @@ const baseMarketplace: MarketplaceListItem = {
   updatedAt: new Date('2026-04-01T10:00:00.000Z'),
   deletedAt: null,
   addedByUserName: 'Jane Admin',
+  repository: {
+    owner: 'acme',
+    repo: 'plugins',
+    branch: 'main',
+    providerSource: 'github',
+    url: 'https://github.com/acme/plugins',
+  },
 };
 
 describe('MarketplaceRow', () => {
@@ -41,8 +48,52 @@ describe('MarketplaceRow', () => {
 
     expect(cells.id).toBe('mkt-1');
     expect(cells.name).toBeDefined();
+    expect(cells.repository).toBeDefined();
     expect(cells.state).toBeDefined();
     expect(cells.actions).toBeDefined();
+  });
+});
+
+describe('MarketplaceRow repository cell', () => {
+  const renderRepositoryCell = (marketplace: MarketplaceListItem) => {
+    const cells = MarketplaceRow({
+      marketplace,
+      onUnlink: jest.fn(),
+      isUnlinking: false,
+    });
+    render(<UIProvider>{cells.repository}</UIProvider>);
+  };
+
+  it('renders an external link to the repository web URL', () => {
+    renderRepositoryCell(baseMarketplace);
+
+    const link = screen.getByRole('link', {
+      name: 'Open acme/plugins on GitHub',
+    });
+    expect(link).toHaveAttribute('href', 'https://github.com/acme/plugins');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  it('renders the owner/repo as plain text when there is no URL', () => {
+    renderRepositoryCell({
+      ...baseMarketplace,
+      repository: {
+        owner: 'acme',
+        repo: 'plugins',
+        branch: 'main',
+        providerSource: 'unknown',
+        url: '',
+      },
+    });
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByText('acme/plugins')).toBeInTheDocument();
+  });
+
+  it('renders a dash when the backing repository is missing', () => {
+    renderRepositoryCell({ ...baseMarketplace, repository: null });
+
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 });
 
@@ -127,5 +178,21 @@ describe('vendorLabel', () => {
 
   it('returns the raw vendor when unknown', () => {
     expect(vendorLabel('future-vendor')).toBe('future-vendor');
+  });
+});
+
+describe('providerLabel', () => {
+  const { providerLabel } = __testables__;
+
+  it('maps github to "GitHub"', () => {
+    expect(providerLabel('github')).toBe('GitHub');
+  });
+
+  it('maps gitlab to "GitLab"', () => {
+    expect(providerLabel('gitlab')).toBe('GitLab');
+  });
+
+  it('falls back to "Unknown provider" for unrecognized sources', () => {
+    expect(providerLabel('unknown')).toBe('Unknown provider');
   });
 });

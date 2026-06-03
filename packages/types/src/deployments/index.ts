@@ -11,6 +11,7 @@ export * from './MarketplaceDescriptorFilename';
 export * from './Marketplace';
 export * from './MarketplaceListItem';
 export * from './DistributionStatus';
+export * from './PublishFailureReason';
 export * from './RenderMode';
 export * from './RenderModeConfigurationId';
 export * from './RenderModeConfiguration';
@@ -28,6 +29,8 @@ export * from './Distribution';
 export * from './DistributionOperation';
 export * from './DistributedPackageId';
 export * from './DistributedPackage';
+export * from './MarketplaceDistributionId';
+export * from './MarketplaceDistribution';
 
 // Contracts
 export * from './contracts';

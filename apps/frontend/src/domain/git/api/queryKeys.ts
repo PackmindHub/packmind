@@ -10,6 +10,7 @@ export enum GitQueryKeys {
   GET_AVAILABLE_REPOSITORIES = 'get-available-repositories',
   GET_AVAILABLE_TARGETS = 'get-available-targets',
   GET_WEBHOOKS = 'get-webhooks',
+  GET_GITHUB_APP_STATUS = 'get-github-app-status',
 }
 
 // Base query key arrays for reuse
@@ -53,4 +54,10 @@ export const GET_GIT_WEBHOOKS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   GIT_QUERY_SCOPE,
   GitQueryKeys.GET_WEBHOOKS,
+] as const;
+
+export const GET_GITHUB_APP_STATUS_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  GIT_QUERY_SCOPE,
+  GitQueryKeys.GET_GITHUB_APP_STATUS,
 ] as const;

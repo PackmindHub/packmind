@@ -126,6 +126,39 @@ export class TargetPathUpdateForbiddenError extends Error {
 }
 
 /**
+ * Error thrown when the provided git provider credential combination is invalid
+ * for the given auth method and edition.
+ */
+export class InvalidGitProviderCredentialsError extends Error {
+  constructor(public readonly reason: string) {
+    super(reason);
+    this.name = 'InvalidGitProviderCredentialsError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, InvalidGitProviderCredentialsError);
+    }
+  }
+}
+
+/**
+ * Error thrown when the OrganizationGitHubApp bound to a GitProvider has been
+ * revoked. Distribution and other GitHub-App-authenticated operations cannot
+ * proceed; the user must re-install via the currently active App.
+ */
+export class GitHubAppRevokedError extends Error {
+  constructor(public readonly providerId: string) {
+    super(
+      `The GitHub App bound to provider ${providerId} has been revoked. Re-install the current GitHub App to restore access.`,
+    );
+    this.name = 'GitHubAppRevokedError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitHubAppRevokedError);
+    }
+  }
+}
+
+/**
  * Error thrown when attempting to use a git remote URL with an unsupported provider
  */
 export class UnsupportedGitProviderError extends Error {

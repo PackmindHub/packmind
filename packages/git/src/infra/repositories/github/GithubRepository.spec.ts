@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
@@ -7,10 +8,15 @@ import { stubLogger } from '@packmind/test-utils';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+const stubResolver = (): IGithubTokenResolver => ({
+  getToken: jest.fn().mockResolvedValue('test-github-token'),
+  onUnauthorized: jest.fn().mockResolvedValue(undefined),
+  getKind: jest.fn().mockReturnValue('user'),
+});
+
 describe('GithubRepository', () => {
   let githubRepository: GithubRepository;
   let mockAxiosInstance: jest.Mocked<typeof axios>;
-  const githubToken = 'test-github-token';
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const options: GithubRepositoryOptions = {
@@ -52,12 +58,17 @@ describe('GithubRepository', () => {
   };
 
   beforeEach(() => {
-    mockAxiosInstance = {} as jest.Mocked<typeof axios>;
+    mockAxiosInstance = {
+      interceptors: {
+        request: { use: jest.fn() },
+        response: { use: jest.fn() },
+      },
+    } as unknown as jest.Mocked<typeof axios>;
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
     stubbedLogger = stubLogger();
     githubRepository = new GithubRepository(
-      githubToken,
+      stubResolver(),
       options,
       stubbedLogger,
     );
@@ -68,14 +79,23 @@ describe('GithubRepository', () => {
   });
 
   describe('constructor', () => {
-    it('creates an axios instance with the correct configuration', () => {
+    it('creates an axios instance with the correct base configuration', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://api.github.com',
         headers: {
-          Authorization: `token ${githubToken}`,
           'Content-Type': 'application/json',
           Accept: 'application/vnd.github.v3+json',
         },
+      });
+    });
+
+    describe('when registering interceptors for token injection', () => {
+      it('registers a request interceptor', () => {
+        expect(mockAxiosInstance.interceptors.request.use).toHaveBeenCalled();
+      });
+
+      it('registers a response interceptor', () => {
+        expect(mockAxiosInstance.interceptors.response.use).toHaveBeenCalled();
       });
     });
   });
@@ -301,7 +321,7 @@ describe('GithubRepository', () => {
       beforeEach(async () => {
         stubbedLogger = stubLogger();
         githubRepository = new GithubRepository(
-          githubToken,
+          stubResolver(),
           {
             ...options,
             branch: customBranch,
@@ -986,6 +1006,97 @@ describe('GithubRepository', () => {
               }),
             ],
           }),
+        );
+      });
+    });
+  });
+
+  describe('createBranchFromBase', () => {
+    const baseBranchSha = 'base-branch-sha-abc';
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: 'existing-sync-sha' } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new ref', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: baseBranchSha } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({ data: {} });
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base SHA', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/refs`,
+          {
+            ref: 'refs/heads/packmind/sync',
+            sha: baseBranchSha,
+          },
+        );
+      });
+    });
+
+    describe('when fetching the base branch ref fails', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.reject(new Error('Network down'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+      });
+
+      it('propagates an error mentioning the base branch', async () => {
+        await expect(
+          githubRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to fetch base branch 'main' on GitHub: Network down`,
         );
       });
     });

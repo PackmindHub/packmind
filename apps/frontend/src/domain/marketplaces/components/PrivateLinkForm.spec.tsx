@@ -6,10 +6,13 @@ import { UIProvider } from '@packmind/ui';
 import { PrivateLinkForm } from './PrivateLinkForm';
 
 const useGetGitProvidersQueryMock = jest.fn();
+const useGetAvailableRepositoriesQueryMock = jest.fn();
 const useLinkMarketplaceMock = jest.fn();
 
 jest.mock('../../git/api/queries', () => ({
   useGetGitProvidersQuery: () => useGetGitProvidersQueryMock(),
+  useGetAvailableRepositoriesQuery: (...args: unknown[]) =>
+    useGetAvailableRepositoriesQueryMock(...args),
 }));
 
 jest.mock('../api/queries', () => ({
@@ -54,11 +57,35 @@ describe('PrivateLinkForm', () => {
             source: 'github',
             url: 'https://github.com',
             organizationId: 'org-1',
-            hasToken: true,
+            hasAuth: true,
+            authMethod: 'token',
           },
         ],
       },
       isLoading: false,
+    });
+
+    useGetAvailableRepositoriesQueryMock.mockReturnValue({
+      data: [
+        {
+          owner: 'acme-eng',
+          name: 'marketplace',
+          fullName: 'acme-eng/marketplace',
+          private: true,
+          defaultBranch: 'main',
+          stars: 0,
+        },
+        {
+          owner: 'group1/subgroup2',
+          name: 'project3',
+          fullName: 'group1/subgroup2/project3',
+          private: true,
+          defaultBranch: 'develop',
+          stars: 0,
+        },
+      ],
+      isLoading: false,
+      isError: false,
     });
 
     useLinkMarketplaceMock.mockReturnValue({
@@ -112,8 +139,19 @@ describe('PrivateLinkForm', () => {
     expect(screen.queryByLabelText('Display name')).not.toBeInTheDocument();
   });
 
-  it('calls useLinkMarketplace.mutateAsync with the repo name as the display name on submit', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue({ name: 'marketplace' });
+  it('lists repositories from the selected provider instead of free-text inputs', () => {
+    renderForm();
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'gp-1' },
+    });
+
+    expect(screen.queryByLabelText('Repository owner')).not.toBeInTheDocument();
+    expect(screen.getByText('acme-eng/marketplace')).toBeInTheDocument();
+    expect(screen.getByText('group1/subgroup2/project3')).toBeInTheDocument();
+  });
+
+  it('submits the selected repo coordinates resolved by the provider', async () => {
+    const mutateAsync = jest.fn().mockResolvedValue({ name: 'project3' });
     useLinkMarketplaceMock.mockReturnValue({ mutateAsync, isPending: false });
 
     const onLinked = jest.fn();
@@ -122,15 +160,11 @@ describe('PrivateLinkForm', () => {
     fireEvent.change(screen.getByRole('combobox'), {
       target: { value: 'gp-1' },
     });
-    fireEvent.change(screen.getByLabelText('Repository owner'), {
-      target: { value: '  acme-eng  ' },
-    });
-    fireEvent.change(screen.getByLabelText('Repository name'), {
-      target: { value: '  marketplace  ' },
-    });
-    fireEvent.change(screen.getByLabelText('Branch'), {
-      target: { value: 'main' },
-    });
+    // A GitLab-style repo whose owner is a group/subgroup path — exactly the
+    // case the manual form got wrong.
+    fireEvent.click(
+      screen.getByTestId('marketplace-repo-option-group1/subgroup2/project3'),
+    );
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Link marketplace' }));
@@ -138,11 +172,21 @@ describe('PrivateLinkForm', () => {
 
     expect(mutateAsync).toHaveBeenCalledWith({
       gitProviderId: 'gp-1',
-      owner: 'acme-eng',
-      repo: 'marketplace',
-      branch: 'main',
-      name: 'marketplace',
+      owner: 'group1/subgroup2',
+      repo: 'project3',
+      branch: 'develop',
+      name: 'project3',
     });
     expect(onLinked).toHaveBeenCalled();
+  });
+
+  it('keeps the submit button disabled until a repository is selected', () => {
+    renderForm();
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'gp-1' },
+    });
+    expect(
+      screen.getByRole('button', { name: 'Link marketplace' }),
+    ).toBeDisabled();
   });
 });

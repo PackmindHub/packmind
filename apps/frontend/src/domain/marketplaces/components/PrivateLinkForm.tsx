@@ -6,16 +6,22 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  PMBox,
   PMButton,
-  PMFlex,
+  PMEmptyState,
   PMHStack,
   PMInput,
   PMNativeSelect,
+  PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
 import { GitProviderId, OrganizationId } from '@packmind/types';
-import { useGetGitProvidersQuery } from '../../git/api/queries';
+import {
+  useGetGitProvidersQuery,
+  useGetAvailableRepositoriesQuery,
+} from '../../git/api/queries';
+import type { AvailableRepository } from '../../git/types/GitProviderTypes';
 import { useLinkMarketplace } from '../api/queries';
 import { LinkMarketplaceRequestBody } from '../api/gateways';
 import { AgentsFieldset } from './AgentsFieldset';
@@ -30,29 +36,17 @@ export interface PrivateLinkFormProps {
   onCancel: () => void;
 }
 
-interface DraftState {
-  gitProviderId: string;
-  owner: string;
-  repo: string;
-  branch: string;
-}
-
-const EMPTY_DRAFT: DraftState = {
-  gitProviderId: '',
-  owner: '',
-  repo: '',
-  branch: 'main',
-};
-
 /**
- * Private path: pick a connected `GitProvider`, fill in the repo coordinates.
- * Empty providers branch deep-links to settings via `<GitNotConnectedNotice/>`.
+ * Private path: pick a connected `GitProvider`, then pick one of its
+ * repositories from the list the provider exposes. Empty providers branch
+ * deep-links to settings via `<GitNotConnectedNotice/>`.
  *
- * The marketplace display name is not a separate input — it is the repository
- * name, sent through as `name` on submit. Validation is intentionally
- * lightweight: provider, owner, repo, and branch must all be present. Deeper
- * validation (repo existence, marketplace.json present) is the backend's
- * responsibility and surfaces through `SubmitErrorBanner`.
+ * The admin no longer types owner/repo/branch by hand — the provider resolves
+ * those coordinates for us, which is what makes the flow correct for GitLab
+ * subgroups (`group/subgroup` owners) and removes a class of typo errors. The
+ * marketplace display name is the repository name. Deeper validation (the repo
+ * exposes a `marketplace.json`) is the backend's responsibility and surfaces
+ * through `SubmitErrorBanner`.
  */
 export const PrivateLinkForm = ({
   organizationId,
@@ -63,21 +57,32 @@ export const PrivateLinkForm = ({
   const providersQuery = useGetGitProvidersQuery();
   const linkMutation = useLinkMarketplace(organizationId);
 
-  const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT);
+  const [gitProviderId, setGitProviderId] = useState('');
+  const [selectedRepo, setSelectedRepo] = useState<AvailableRepository | null>(
+    null,
+  );
+  const [searchTerm, setSearchTerm] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const reposQuery = useGetAvailableRepositoriesQuery(
+    gitProviderId as GitProviderId,
+  );
 
   const providers = providersQuery.data?.providers ?? [];
 
-  const fieldsValid = useMemo(
-    () =>
-      Boolean(
-        draft.gitProviderId.trim() &&
-        draft.owner.trim() &&
-        draft.repo.trim() &&
-        draft.branch.trim(),
-      ),
-    [draft],
-  );
+  const filteredRepos = useMemo(() => {
+    const repos = reposQuery.data ?? [];
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return repos;
+    return repos.filter(
+      (repo) =>
+        repo.name.toLowerCase().includes(term) ||
+        repo.owner.toLowerCase().includes(term) ||
+        repo.fullName.toLowerCase().includes(term),
+    );
+  }, [reposQuery.data, searchTerm]);
+
+  const fieldsValid = Boolean(gitProviderId.trim() && selectedRepo);
 
   if (providersQuery.isLoading) {
     return (
@@ -89,31 +94,34 @@ export const PrivateLinkForm = ({
     return <GitNotConnectedNotice orgSlug={orgSlug} />;
   }
 
-  const handleField =
-    (key: keyof DraftState) =>
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      setDraft((current) => ({ ...current, [key]: event.target.value }));
-      setErrorMessage(null);
-    };
+  const handleProviderChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setGitProviderId(event.target.value);
+    setSelectedRepo(null);
+    setSearchTerm('');
+    setErrorMessage(null);
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!fieldsValid) return;
+    if (!fieldsValid || !selectedRepo) return;
 
-    const repo = draft.repo.trim();
     const body: LinkMarketplaceRequestBody = {
-      gitProviderId: draft.gitProviderId as GitProviderId,
-      owner: draft.owner.trim(),
-      repo,
-      branch: draft.branch.trim(),
+      gitProviderId: gitProviderId as GitProviderId,
+      owner: selectedRepo.owner,
+      repo: selectedRepo.name,
+      branch: selectedRepo.defaultBranch,
       // The marketplace display name is the repository name — there is no
       // separate name field.
-      name: repo,
+      name: selectedRepo.name,
     };
 
     try {
       await linkMutation.mutateAsync(body);
-      setDraft(EMPTY_DRAFT);
+      setGitProviderId('');
+      setSelectedRepo(null);
+      setSearchTerm('');
       onLinked();
     } catch (error) {
       setErrorMessage(getSubmitErrorMessage(error));
@@ -128,8 +136,8 @@ export const PrivateLinkForm = ({
         <Field label="Git provider">
           <PMNativeSelect
             name="gitProviderId"
-            value={draft.gitProviderId}
-            onChange={handleField('gitProviderId')}
+            value={gitProviderId}
+            onChange={handleProviderChange}
             items={[
               { value: '', label: 'Select a provider' },
               ...providers.map((provider) => ({
@@ -141,37 +149,25 @@ export const PrivateLinkForm = ({
           />
         </Field>
 
-        <PMHStack gap={3} align="start">
-          <PMFlex flex="1">
-            <Field label="Owner">
-              <PMInput
-                placeholder="acme-eng"
-                value={draft.owner}
-                onChange={handleField('owner')}
-                aria-label="Repository owner"
-              />
-            </Field>
-          </PMFlex>
-          <PMFlex flex="1">
-            <Field label="Repository">
-              <PMInput
-                placeholder="marketplace"
-                value={draft.repo}
-                onChange={handleField('repo')}
-                aria-label="Repository name"
-              />
-            </Field>
-          </PMFlex>
-        </PMHStack>
-
-        <Field label="Branch">
-          <PMInput
-            placeholder="main"
-            value={draft.branch}
-            onChange={handleField('branch')}
-            aria-label="Branch"
-          />
-        </Field>
+        {gitProviderId && (
+          <Field label="Repository">
+            <RepositoryPicker
+              isLoading={reposQuery.isLoading}
+              isError={reposQuery.isError}
+              repos={filteredRepos}
+              searchTerm={searchTerm}
+              onSearch={(value) => {
+                setSearchTerm(value);
+                setErrorMessage(null);
+              }}
+              selectedRepo={selectedRepo}
+              onSelect={(repo) => {
+                setSelectedRepo(repo);
+                setErrorMessage(null);
+              }}
+            />
+          </Field>
+        )}
 
         <AgentsFieldset vendor="anthropic" />
 
@@ -191,6 +187,95 @@ export const PrivateLinkForm = ({
         </PMHStack>
       </PMVStack>
     </form>
+  );
+};
+
+interface RepositoryPickerProps {
+  isLoading: boolean;
+  isError: boolean;
+  repos: AvailableRepository[];
+  searchTerm: string;
+  onSearch: (value: string) => void;
+  selectedRepo: AvailableRepository | null;
+  onSelect: (repo: AvailableRepository) => void;
+}
+
+const RepositoryPicker = ({
+  isLoading,
+  isError,
+  repos,
+  searchTerm,
+  onSearch,
+  selectedRepo,
+  onSelect,
+}: Readonly<RepositoryPickerProps>) => {
+  if (isLoading) {
+    return (
+      <PMHStack gap={2} color="secondary">
+        <PMSpinner size="sm" />
+        <PMText color="secondary">Loading repositories…</PMText>
+      </PMHStack>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PMText color="error">
+        Failed to load repositories. Check the provider connection and try
+        again.
+      </PMText>
+    );
+  }
+
+  return (
+    <PMVStack align="stretch" gap={2}>
+      <PMInput
+        placeholder="Search repositories…"
+        value={searchTerm}
+        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+          onSearch(event.target.value)
+        }
+        aria-label="Search repositories"
+        size="sm"
+      />
+      <PMBox maxHeight="240px" overflowY="auto">
+        {repos.length === 0 ? (
+          <PMEmptyState
+            title={
+              searchTerm
+                ? 'No repositories match your search.'
+                : 'No repositories available from this provider.'
+            }
+          />
+        ) : (
+          <PMVStack align="stretch" gap={2}>
+            {repos.map((repo) => {
+              const isSelected = selectedRepo?.fullName === repo.fullName;
+              return (
+                <PMBox
+                  key={repo.fullName}
+                  p={2}
+                  borderWidth="1px"
+                  borderColor={isSelected ? 'blue.500' : 'border.primary'}
+                  borderRadius="md"
+                  cursor="pointer"
+                  _hover={{ borderColor: 'blue.300' }}
+                  onClick={() => onSelect(repo)}
+                  data-testid={`marketplace-repo-option-${repo.fullName}`}
+                >
+                  <PMVStack align="start" gap={0}>
+                    <PMText variant="small-important">{repo.name}</PMText>
+                    <PMText variant="small" color="secondary">
+                      {repo.fullName}
+                    </PMText>
+                  </PMVStack>
+                </PMBox>
+              );
+            })}
+          </PMVStack>
+        )}
+      </PMBox>
+    </PMVStack>
   );
 };
 

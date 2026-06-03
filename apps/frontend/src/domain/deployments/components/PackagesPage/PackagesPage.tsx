@@ -50,8 +50,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   const deleteBatchMutation = useDeletePackagesBatchMutation();
 
   const { data: providersResponse } = useGetGitProvidersQuery();
-  const hasGitProviderWithToken =
-    providersResponse?.providers?.some((p) => p.hasToken) ?? false;
+  const hasGitProviderWithAuth =
+    providersResponse?.providers?.some((p) => p.hasAuth) ?? false;
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
@@ -192,7 +192,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     },
     batchActions: [
       ({ selectedIds }) => {
-        if (!hasGitProviderWithToken) return null;
+        if (!hasGitProviderWithAuth) return null;
         const selectedPackages = packages.filter((pkg) =>
           selectedIds.includes(pkg.id),
         );

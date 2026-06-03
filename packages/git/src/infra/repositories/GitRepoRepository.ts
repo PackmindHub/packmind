@@ -165,6 +165,7 @@ export class GitRepoRepository
     organizationId: OrganizationId,
     opts?: Pick<QueryOption, 'includeDeleted'> & {
       type?: GitRepoTypeFilter;
+      providerId?: GitProviderId;
     },
   ): Promise<GitRepo | null> {
     const type: GitRepoTypeFilter = opts?.type ?? 'standard';
@@ -174,6 +175,7 @@ export class GitRepoRepository
       repo,
       organizationId,
       type,
+      providerId: opts?.providerId,
     });
 
     try {
@@ -194,6 +196,12 @@ export class GitRepoRepository
         queryBuilder.andWhere('gitRepo.type = :type', { type });
       }
 
+      if (opts?.providerId) {
+        queryBuilder.andWhere('gitRepo.providerId = :providerId', {
+          providerId: opts.providerId,
+        });
+      }
+
       if (opts?.includeDeleted) {
         queryBuilder.withDeleted();
       }
@@ -205,6 +213,7 @@ export class GitRepoRepository
         repo,
         organizationId,
         type,
+        providerId: opts?.providerId,
         found: !!gitRepo,
       });
       return gitRepo;

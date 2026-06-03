@@ -43,5 +43,7 @@ export * from './ITrackPluginDeletedUseCase';
 export * from './IListActiveDistributedPackagesBySpace';
 export * from './ILinkMarketplaceUseCase';
 export * from './IUnlinkMarketplaceUseCase';
+export * from './IListMarketplaceDistributionsForPackageUseCase';
 export * from './IListMarketplacesUseCase';
+export * from './IPublishPackageOnMarketplaceUseCase';
 export * from './IValidateMarketplaceUrlUseCase';

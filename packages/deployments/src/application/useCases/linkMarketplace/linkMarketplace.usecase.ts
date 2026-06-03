@@ -123,7 +123,7 @@ export class LinkMarketplaceUseCase
         organization.id,
       );
     }
-    if (!gitProvider.hasToken) {
+    if (!gitProvider.hasAuth) {
       this.logger.error('Git provider has no token configured', {
         gitProviderId,
         organizationId: organization.id,
@@ -132,11 +132,14 @@ export class LinkMarketplaceUseCase
       throw new GitProviderMissingTokenError(gitProviderId);
     }
 
-    // 2. Cross-type collision check (standard ↔ marketplace).
+    // 2. Cross-type collision check (standard ↔ marketplace), scoped to the
+    //    target provider so the same owner/repo on a different provider in the
+    //    org (e.g. a GitHub vs GitLab `acme/plugins`) is not a false collision.
     const existingRepo = await this.gitRepoService.findGitRepoIgnoringType(
       organization.id,
       owner,
       repo,
+      { providerId: gitProviderId },
     );
     if (existingRepo) {
       if (existingRepo.type === 'standard') {

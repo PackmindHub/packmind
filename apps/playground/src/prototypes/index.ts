@@ -9,6 +9,7 @@ import PersonalHomePagePrototype from './personal-home-page/PersonalHomePageProt
 import SpacesManagementPrototype from './spaces-management/SpacesManagementPrototype';
 import MarketplacesPrototype from './marketplaces/MarketplacesPrototype';
 import MarketplaceDetailPrototype from './marketplace-detail/MarketplaceDetailPrototype';
+import GitConnectionsPrototype from './git-connections/GitConnectionsPrototype';
 
 export interface Prototype {
   name: string;
@@ -65,5 +66,11 @@ export const prototypes: Prototype[] = [
     description:
       'Detail page of a single marketplace: master/detail split between plugin list and selected-plugin content with owner space, version, mandatory flag, and bundled artifacts',
     component: MarketplaceDetailPrototype,
+  },
+  {
+    name: 'Git connections — redesign',
+    description:
+      'Settings/git redesign: connections vs CLI-managed tabs, display names, health + last push, duplicate-repo warnings, no webhooks',
+    component: GitConnectionsPrototype,
   },
 ];

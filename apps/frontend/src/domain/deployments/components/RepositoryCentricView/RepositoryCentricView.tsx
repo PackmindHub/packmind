@@ -119,7 +119,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   const providersWithToken = useMemo(() => {
     const set = new Set<string>();
     gitProvidersResponse?.providers
-      .filter((provider) => provider.hasToken)
+      .filter((provider) => provider.hasAuth)
       .forEach((provider) => set.add(provider.id));
     return set;
   }, [gitProvidersResponse]);

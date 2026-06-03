@@ -1,5 +1,5 @@
 import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
-import { SpaceId, RecipeId } from '@packmind/types';
+import { SpaceId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
@@ -46,9 +46,17 @@ import {
   GetDashboardNonLiveCommand,
   AddArtefactsToPackageCommand,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
+import {
+  MarketplaceDistribution,
+  OrganizationId,
+  PublishPackageOnMarketplaceResponse,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
-import { IDeploymentsGateway } from './IDeploymentsGateway';
+import {
+  FindMarketplaceDistributionByIdArgs,
+  IDeploymentsGateway,
+  PublishPackageOnMarketplaceArgs,
+} from './IDeploymentsGateway';
 
 export class DeploymentsGatewayApi
   extends PackmindGateway
@@ -321,4 +329,24 @@ export class DeploymentsGatewayApi
         `/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
       );
     };
+
+  publishPackageOnMarketplace = async ({
+    organizationId,
+    marketplaceId,
+    packageId,
+  }: PublishPackageOnMarketplaceArgs): Promise<PublishPackageOnMarketplaceResponse> => {
+    return this._api.post<PublishPackageOnMarketplaceResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/publish`,
+      { packageId },
+    );
+  };
+
+  findMarketplaceDistributionById = async ({
+    organizationId,
+    marketplaceDistributionId,
+  }: FindMarketplaceDistributionByIdArgs): Promise<MarketplaceDistribution> => {
+    return this._api.get<MarketplaceDistribution>(
+      `${this._endpoint}/${organizationId}/marketplace-distributions/${marketplaceDistributionId}`,
+    );
+  };
 }

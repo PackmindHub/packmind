@@ -33,6 +33,10 @@ import {
   PlaybookArtefactMovedEvent,
   PluginRenderedEvent,
   PluginDeletedEvent,
+  MarketplaceLinkedEvent,
+  MarketplaceUnlinkedEvent,
+  createMarketplaceId,
+  createGitRepoId,
   createPackageId,
   createUserId,
   createOrganizationId,
@@ -1144,6 +1148,59 @@ describe('AmplitudeEventListener', () => {
           },
         );
       });
+    });
+  });
+  describe('MarketplaceLinkedEvent', () => {
+    it('tracks marketplace_linked event with marketplace metadata', async () => {
+      const event = new MarketplaceLinkedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        marketplaceId: createMarketplaceId('mkt-789'),
+        gitRepoId: createGitRepoId('repo-101'),
+        addedBy: createUserId('user-123'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'marketplace_linked',
+        {
+          marketplaceId: 'mkt-789',
+          gitRepoId: 'repo-101',
+          addedBy: 'user-123',
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('MarketplaceUnlinkedEvent', () => {
+    it('tracks marketplace_unlinked event with marketplace metadata', async () => {
+      const event = new MarketplaceUnlinkedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        marketplaceId: createMarketplaceId('mkt-789'),
+        gitRepoId: createGitRepoId('repo-101'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'marketplace_unlinked',
+        {
+          marketplaceId: 'mkt-789',
+          gitRepoId: 'repo-101',
+          source: 'ui',
+        },
+      );
     });
   });
 });

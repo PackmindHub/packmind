@@ -1,4 +1,5 @@
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -17,7 +18,7 @@ export class GithubRepository implements IGitRepo {
   private readonly options: GithubRepositoryOptions;
 
   constructor(
-    private readonly token: string,
+    private readonly resolver: IGithubTokenResolver,
     options: GithubRepositoryOptions,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -38,11 +39,28 @@ export class GithubRepository implements IGitRepo {
     this.axiosInstance = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    // Inject token from resolver on every request
+    this.axiosInstance.interceptors.request.use(async (config) => {
+      const token = await resolver.getToken();
+      config.headers['Authorization'] = `token ${token}`;
+      return config;
+    });
+
+    // Fire onUnauthorized hook on 401 responses
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error?.response?.status === 401) {
+          await resolver.onUnauthorized();
+        }
+        return Promise.reject(error);
+      },
+    );
 
     this.logger.info('GithubRepository initialized successfully', {
       owner: this.options.owner,
@@ -339,6 +357,119 @@ export class GithubRepository implements IGitRepo {
       });
       throw new Error(`Failed to commit files to GitHub: ${errorMessage}`);
     }
+  }
+
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const { owner, repo } = this.options;
+    const baseBranch = this.options.branch || 'main';
+
+    this.logger.info('Ensuring branch exists on GitHub repository', {
+      owner,
+      repo,
+      baseBranch,
+      targetBranch,
+    });
+
+    // Step 1: Check if the target branch already exists. If GitHub returns
+    // 2xx, the branch is present and no work is needed.
+    try {
+      await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        owner,
+        repo,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitHub', {
+          owner,
+          repo,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitHub: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Fetch the base branch SHA so we know where to fork from.
+    let baseSha: string;
+    try {
+      const baseRefResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${baseBranch}`,
+      );
+      baseSha = baseRefResponse.data.object.sha;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to fetch base branch ref on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to fetch base branch '${baseBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+
+    // Step 3: Create the target branch ref pointing at the base SHA.
+    try {
+      await this.axiosInstance.post(`/repos/${owner}/${repo}/git/refs`, {
+        ref: `refs/heads/${targetBranch}`,
+        sha: baseSha,
+      });
+
+      this.logger.info('Created target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
   }
 
   isValidBranch(ref: string): boolean {

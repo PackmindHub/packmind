@@ -125,7 +125,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
           userFactory(),
         ]);
         mockGitPort.listProviders.mockResolvedValue({
-          providers: [{ id: 'provider-1', hasToken: true } as never],
+          providers: [{ id: 'provider-1', hasAuth: true } as never],
         });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([
           { id: 'repo-1' } as unknown as GitRepo,
@@ -187,7 +187,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
       it('returns only hasConnectedGitProvider as true', async () => {
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
         mockGitPort.listProviders.mockResolvedValue({
-          providers: [{ id: 'provider-1', hasToken: true } as never],
+          providers: [{ id: 'provider-1', hasAuth: true } as never],
         });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);

@@ -52,12 +52,15 @@ describe('CommitToGit', () => {
 
     mockGitRepoFactory = {
       createGitRepo: jest.fn().mockImplementation((gitRepo, provider) => {
+        if (provider.authMethod === 'token' && !provider.token) {
+          return Promise.reject(new Error('Git provider token not configured'));
+        }
         if (provider.source === 'UNSUPPORTED') {
-          throw new Error(
-            `Unsupported git provider source: ${provider.source}`,
+          return Promise.reject(
+            new Error(`Unsupported git provider source: ${provider.source}`),
           );
         }
-        return mockGithubRepository;
+        return Promise.resolve(mockGithubRepository);
       }),
     } as jest.Mocked<IGitRepoFactory>;
 
@@ -80,6 +83,7 @@ describe('CommitToGit', () => {
       organizationId: createOrganizationId('org-id'),
       url: null,
       token: 'github-token',
+      authMethod: 'token',
     };
 
     const mockGitRepo: GitRepo = {

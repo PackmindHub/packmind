@@ -5,3 +5,19 @@ export * from './application/useCases';
 export { GitRepoService } from './application/GitRepoService';
 export { GitRepoRepository } from './infra/repositories/GitRepoRepository';
 export { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
+export {
+  GithubTokenResolverFactory,
+  resolveEdition,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';
+export type {
+  PackmindEdition,
+  IConfigProvider,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';
+export {
+  InstallStateSigner,
+  InvalidInstallStateError,
+} from './infra/repositories/github/auth/InstallStateSigner';
+export type {
+  InstallStatePayload,
+  InstallStateKind,
+} from './infra/repositories/github/auth/InstallStateSigner';

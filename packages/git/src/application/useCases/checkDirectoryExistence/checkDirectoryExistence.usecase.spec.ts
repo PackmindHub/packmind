@@ -60,7 +60,12 @@ describe('CheckDirectoryExistenceUseCase', () => {
 
     // Mock IGitRepoFactory
     mockGitRepoFactory = {
-      createGitRepo: jest.fn().mockReturnValue(mockGitRepoInstance),
+      createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {
+        if (provider.authMethod === 'token' && !provider.token) {
+          return Promise.reject(new Error('Git provider token not configured'));
+        }
+        return Promise.resolve(mockGitRepoInstance);
+      }),
     } as jest.Mocked<IGitRepoFactory>;
 
     stubbedLogger = stubLogger();

@@ -31,7 +31,7 @@ type ParsedMarketplaceUrl = {
  * Given a publicly reachable Git URL, this use case:
  *  1. Parses the URL into `{ host, owner, repo, branch? }`.
  *  2. Resolves a tokenless `GitProvider` for the URL host (existing
- *     `allowTokenlessProvider` flag — providers with `hasToken=false` are
+ *     `allowTokenlessProvider` flag — providers with `hasAuth=false` are
  *     considered public-only).
  *  3. Fetches `marketplace.json` via `IGitPort.getFileFromRepo`.
  *  4. Parses the descriptor via the vendor-agnostic registry.
@@ -76,15 +76,15 @@ export class ValidateMarketplaceUrlUseCase
     }
 
     // 2. Locate a tokenless provider for the host. We rely on the public
-    //    listProviders surface (returns providers with their `hasToken`
-    //    flag); any provider with `hasToken=false` whose URL host matches is
+    //    listProviders surface (returns providers with their `hasAuth`
+    //    flag); any provider with `hasAuth=false` whose URL host matches is
     //    eligible for the public path.
     const providersResponse = await this.gitPort.listProviders({
       userId,
       organizationId: organization.id,
     });
     const tokenlessProvider = providersResponse.providers.find((provider) => {
-      if (provider.hasToken) {
+      if (provider.hasAuth) {
         return false;
       }
       if (!provider.url) {

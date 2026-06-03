@@ -21,7 +21,7 @@ interface RepositoryTargetCardProps {
   providerUrl: string;
   targets: TargetWithRepository[];
   gitRepoId: GitRepoId;
-  hasToken: boolean;
+  hasAuth: boolean;
 }
 
 export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
@@ -29,7 +29,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
   providerUrl,
   targets,
   gitRepoId,
-  hasToken,
+  hasAuth,
 }) => {
   const [selectedTargetId, setSelectedTargetId] = useState<
     string | undefined
@@ -78,7 +78,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
             </PMText>
           </PMVStack>
           <div>
-            {hasToken ? (
+            {hasAuth ? (
               <TargetManagementDialog
                 gitRepoId={gitRepoId}
                 repositoryName={repositoryName}
@@ -106,7 +106,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
         </PMHStack>
 
         {/* Dialog for target clicks when provider has no token (no visible trigger) */}
-        {!hasToken && (
+        {!hasAuth && (
           <TargetManagementDialog
             gitRepoId={gitRepoId}
             repositoryName={repositoryName}
@@ -145,7 +145,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
             <PMEmptyState
               title="No targets configured"
               description={
-                hasToken
+                hasAuth
                   ? "Click 'Manage Targets' to create your first deployment target"
                   : 'Run packmind-cli install to create targets for this repository'
               }
