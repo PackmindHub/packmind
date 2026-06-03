@@ -21,6 +21,7 @@ import {
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { GIT_MESSAGES } from '../constants/messages';
 import { ManageGitProviderDialog } from './ManageGitProviderDialog';
+import { AddConnectionDrawer } from './AddConnection/AddConnectionDrawer';
 import { extractErrorMessage } from '../utils/errorUtils';
 import { ConnectionsTable } from './list/ConnectionsTable';
 import { ConnectionsEmptyState } from './list/ConnectionsEmptyState';
@@ -54,6 +55,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     null,
   );
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openAddDrawer, setOpenAddDrawer] = useState(false);
 
   const { userConfigured, cliManaged, cliManagedRepoCount } = useMemo(() => {
     const all = providers ?? [];
@@ -70,7 +72,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
 
   const openCreateDialog = useCallback(() => {
     setEditingProvider(null);
-    setOpenEditDialog(true);
+    setOpenAddDrawer(true);
   }, []);
 
   const handleEditDialogVisibility = (open: boolean) => {
@@ -201,6 +203,13 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
             setEditingProvider(provider);
           }
         }}
+      />
+
+      <AddConnectionDrawer
+        organizationId={organizationId}
+        open={openAddDrawer}
+        onClose={() => setOpenAddDrawer(false)}
+        onSuccess={() => setOpenAddDrawer(false)}
       />
 
       <PMAlertDialog
