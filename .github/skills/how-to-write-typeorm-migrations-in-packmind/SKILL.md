@@ -1,3 +1,8 @@
+---
+name: 'how-to-write-typeorm-migrations-in-packmind'
+description: 'Write TypeORM migrations in the Packmind monorepo to manage and version database schema changes with consistent logging, reversible rollbacks, and shared helpers. Use this skill whenever creating or modifying database tables, columns, or foreign-key relationships — including any time schema changes need to be tracked, versioned, or rolled back. Invoke even if the user just says "add a column", "create a table", or "update the DB schema".'
+---
+
 Write TypeORM migrations in the Packmind monorepo to manage database schema changes effectively while ensuring proper logging and rollback capabilities.
 
 ## When to Use

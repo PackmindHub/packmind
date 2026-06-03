@@ -105,35 +105,6 @@
         }
       ]
     },
-    "user:command:creating-end-user-documentation-for-packmind": {
-      "name": "Creating End-User Documentation for Packmind",
-      "type": "command",
-      "id": "51fa2ad4-cb4d-4f27-a7d3-8aa55c91ff18",
-      "version": 2,
-      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
-      "packageIds": [
-        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/commands/creating-end-user-documentation-for-packmind.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/creating-end-user-documentation-for-packmind.md",
-          "agent": "cursor"
-        },
-        {
-          "path": ".github/prompts/creating-end-user-documentation-for-packmind.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".packmind/commands/creating-end-user-documentation-for-packmind.md",
-          "agent": "packmind"
-        }
-      ]
-    },
     "user:command:gateway-pattern-implementation-in-packmind-frontend": {
       "name": "Gateway Pattern Implementation in Packmind Frontend",
       "type": "command",
@@ -159,35 +130,6 @@
         },
         {
           "path": ".packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:command:how-to-write-typeorm-migrations-in-packmind": {
-      "name": "How to Write TypeORM Migrations in Packmind",
-      "type": "command",
-      "id": "52933de0-1479-44ba-82f0-ec203c97bdb9",
-      "version": 2,
-      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
-      "packageIds": [
-        "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/commands/how-to-write-typeorm-migrations-in-packmind.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".cursor/commands/how-to-write-typeorm-migrations-in-packmind.md",
-          "agent": "cursor"
-        },
-        {
-          "path": ".github/prompts/how-to-write-typeorm-migrations-in-packmind.prompt.md",
-          "agent": "copilot"
-        },
-        {
-          "path": ".packmind/commands/how-to-write-typeorm-migrations-in-packmind.md",
           "agent": "packmind"
         }
       ]
@@ -472,6 +414,39 @@
         }
       ]
     },
+    "user:skill:creating-end-user-documentation-for-packmind": {
+      "name": "creating-end-user-documentation-for-packmind",
+      "type": "skill",
+      "id": "e78ef0e8-29c7-4951-89c2-5a92b2a6cc05",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/creating-end-user-documentation-for-packmind/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/creating-end-user-documentation-for-packmind/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/creating-end-user-documentation-for-packmind/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/creating-end-user-documentation-for-packmind/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "user:skill:datadog-analysis": {
       "name": "datadog-analysis",
       "type": "skill",
@@ -606,7 +581,7 @@
       "name": "feature-flags-audit",
       "type": "skill",
       "id": "dd6d38fe-3685-4256-855b-9467c5cf1c67",
-      "version": 2,
+      "version": 3,
       "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
       "packageIds": [
         "c0b4f2b0-abda-4156-9d3b-5c3fac1efca8"
@@ -904,6 +879,39 @@
         },
         {
           "path": ".gitlab/duo/skills/hexagonal-architecture/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:how-to-write-typeorm-migrations-in-packmind": {
+      "name": "how-to-write-typeorm-migrations-in-packmind",
+      "type": "skill",
+      "id": "d7272161-fe1b-4079-814c-fb991e8db13d",
+      "version": 1,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
+      "packageIds": [
+        "405f9c33-c86f-40fb-a7f2-51890f6b1aea"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/how-to-write-typeorm-migrations-in-packmind/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/how-to-write-typeorm-migrations-in-packmind/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/how-to-write-typeorm-migrations-in-packmind/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/how-to-write-typeorm-migrations-in-packmind/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
