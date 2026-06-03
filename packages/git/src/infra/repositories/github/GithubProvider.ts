@@ -1,6 +1,10 @@
-import { IGitProvider } from '../../../domain/repositories/IGitProvider';
+import {
+  CheckAuthFailureReason,
+  CheckAuthResult,
+  IGitProvider,
+} from '../../../domain/repositories/IGitProvider';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 
@@ -144,6 +148,31 @@ export class GithubProvider implements IGitProvider {
     return response.data?.repositories;
   }
 
+  async checkAuth(): Promise<CheckAuthResult> {
+    // Probe a cheap endpoint that reflects the same auth path as real calls:
+    // - PAT: `/user` returns the authenticated user (no repos fetched).
+    // - Installation: `/installation/repositories?per_page=1` exercises the
+    //   installation token without paginating the full list.
+    const kind = this.resolver.getKind();
+    const probe =
+      kind === 'installation'
+        ? { url: '/installation/repositories', params: { per_page: 1 } }
+        : { url: '/user', params: undefined };
+
+    try {
+      await this.client.get(probe.url, { params: probe.params });
+      return { ok: true };
+    } catch (error) {
+      const reason = mapGithubAuthError(error);
+      this.logger.warn('GitHub auth check failed', {
+        kind,
+        reason,
+        status: isAxiosError(error) ? error.response?.status : undefined,
+      });
+      return { ok: false, reason };
+    }
+  }
+
   async checkBranchExists(
     owner: string,
     repo: string,
@@ -212,4 +241,19 @@ export class GithubProvider implements IGitProvider {
       );
     }
   }
+}
+
+function mapGithubAuthError(error: unknown): CheckAuthFailureReason {
+  if (!isAxiosError(error)) return 'network';
+  const status = error.response?.status;
+  if (status === 401) return 'unauthorized';
+  if (status === 429) return 'rate_limited';
+  if (status === 403) {
+    // GitHub returns 403 both for permission denials and for primary rate
+    // limit exhaustion; the latter is signalled by `x-ratelimit-remaining: 0`.
+    const remaining = error.response?.headers?.['x-ratelimit-remaining'];
+    if (remaining === '0' || remaining === 0) return 'rate_limited';
+    return 'forbidden';
+  }
+  return 'network';
 }

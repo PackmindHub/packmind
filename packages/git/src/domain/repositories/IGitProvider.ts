@@ -1,3 +1,13 @@
+export type CheckAuthFailureReason =
+  | 'unauthorized'
+  | 'forbidden'
+  | 'rate_limited'
+  | 'network';
+
+export type CheckAuthResult =
+  | { ok: true }
+  | { ok: false; reason: CheckAuthFailureReason };
+
 export interface IGitProvider {
   listAvailableRepositories: () => Promise<
     {
@@ -16,4 +26,6 @@ export interface IGitProvider {
     repo: string,
     branch: string,
   ) => Promise<boolean>;
+
+  checkAuth: () => Promise<CheckAuthResult>;
 }
