@@ -17,6 +17,7 @@ import { OrganizationId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useAddRepositoryMutation,
+  useCheckProviderAuthQuery,
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
   useRemoveRepositoryMutation,
@@ -561,13 +562,76 @@ const ViewMode: React.FC<ViewModeProps> = ({
   );
 };
 
+type StatusViewState =
+  | { kind: 'checking' }
+  | { kind: 'connected' }
+  | { kind: 'disconnected'; description: string }
+  | { kind: 'unknown'; description: string };
+
+const DISCONNECTED_DESCRIPTIONS: Record<
+  'unauthorized' | 'forbidden' | 'rate_limited' | 'network',
+  string
+> = {
+  unauthorized:
+    'Token rejected by the provider. Re-authenticate to restore access.',
+  forbidden:
+    'The provider denied access. Check the token scopes or the App installation.',
+  rate_limited: 'Provider rate limit reached. Retry shortly.',
+  network: "Couldn't reach the provider. Check your network and retry.",
+};
+
 const StatusBlock: React.FC<{
   connection: GitProviderUI;
   onReauth: () => void;
   onRevoke: (() => void) | null;
   isRevoking: boolean;
 }> = ({ connection, onReauth, onRevoke, isRevoking }) => {
-  const ok = connection.hasAuth;
+  const probe = useCheckProviderAuthQuery(connection.id, {
+    enabled: connection.hasAuth,
+  });
+
+  const view: StatusViewState = (() => {
+    if (!connection.hasAuth) {
+      return {
+        kind: 'disconnected',
+        description:
+          "Packmind can't reach this provider with the stored credentials.",
+      };
+    }
+    if (probe.isLoading || probe.isFetching) {
+      return { kind: 'checking' };
+    }
+    if (probe.data?.ok === true) {
+      return { kind: 'connected' };
+    }
+    if (probe.data?.ok === false) {
+      return {
+        kind: 'disconnected',
+        description: DISCONNECTED_DESCRIPTIONS[probe.data.reason],
+      };
+    }
+    return {
+      kind: 'unknown',
+      description: "Couldn't verify the connection right now.",
+    };
+  })();
+
+  const dotColor = {
+    checking: 'gray.400',
+    connected: 'green.500',
+    disconnected: 'red.500',
+    unknown: 'yellow.500',
+  }[view.kind];
+
+  const label = {
+    checking: 'Checking…',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    unknown: 'Status unknown',
+  }[view.kind];
+
+  const isFailing = view.kind === 'disconnected' || view.kind === 'unknown';
+
   return (
     <PMVStack gap={2} align="stretch">
       <PMText
@@ -585,22 +649,19 @@ const StatusBlock: React.FC<{
         borderRadius="md"
         padding={3}
         bg="background.secondary"
+        data-testid="connection-drawer-status"
+        data-status={view.kind}
       >
         <PMVStack gap={2} align="stretch">
           <PMHStack gap={2} align="center">
-            <PMBox
-              width="8px"
-              height="8px"
-              borderRadius="full"
-              bg={ok ? 'green.500' : 'red.500'}
-            />
+            <PMBox width="8px" height="8px" borderRadius="full" bg={dotColor} />
             <PMText fontSize="sm" color="primary" fontWeight="medium">
-              {ok ? 'Connected' : 'Disconnected'}
+              {label}
             </PMText>
           </PMHStack>
-          {!ok && (
+          {(view.kind === 'disconnected' || view.kind === 'unknown') && (
             <PMText fontSize="xs" color="secondary">
-              Packmind can't reach this provider with the stored credentials.
+              {view.description}
             </PMText>
           )}
           <PMHStack gap={3} align="center">
@@ -612,7 +673,7 @@ const StatusBlock: React.FC<{
               padding="0"
               cursor="pointer"
               fontSize="xs"
-              color={ok ? 'text.secondary' : 'text.primary'}
+              color={isFailing ? 'text.primary' : 'text.secondary'}
               fontWeight="medium"
               textDecoration="underline"
               textUnderlineOffset="2px"
