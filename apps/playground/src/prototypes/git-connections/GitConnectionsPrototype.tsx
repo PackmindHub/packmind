@@ -18,7 +18,12 @@ import { LoadingSkeleton } from './components/list/LoadingSkeleton';
 import { ConnectionDrawer } from './components/detail/ConnectionDrawer';
 import { AddConnectionDrawer } from './components/connect/AddConnectionDrawer';
 import { STUB_CLI_ENTRIES, STUB_CONNECTIONS } from './data';
-import type { Edition, Scenario, UserConnection } from './types';
+import type {
+  Edition,
+  RepoSelectionState,
+  Scenario,
+  UserConnection,
+} from './types';
 
 const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
   { label: 'Default (4 connections, mixed states)', value: 'default' },
@@ -113,6 +118,63 @@ export default function GitConnectionsPrototype() {
     setToast('Connection added.');
   }, []);
 
+  const handleApplyRepoChanges = useCallback(
+    (id: string, draft: RepoSelectionState) => {
+      setConnections((prev) =>
+        prev.map((c) => {
+          if (c.id !== id) return c;
+          const nextRepos = draft.trackedIds.map((repoId) => {
+            const existing = c.repos.find((r) => r.id === repoId);
+            const available = c.availableRepos.find((r) => r.id === repoId);
+            const path = existing?.path ?? available?.path ?? repoId;
+            const defaultBranch =
+              existing?.defaultBranch ?? available?.defaultBranch ?? 'main';
+            const branch =
+              draft.branchByRepoId[repoId] ?? existing?.branch ?? defaultBranch;
+            return {
+              id: repoId,
+              path,
+              branch,
+              defaultBranch,
+              duplicatedIn: existing?.duplicatedIn,
+            };
+          });
+          return { ...c, repos: nextRepos };
+        }),
+      );
+      const c = connections.find((x) => x.id === id);
+      const before = new Set(c?.repos.map((r) => r.id));
+      const after = new Set(draft.trackedIds);
+      const added = [...after].filter((r) => !before.has(r)).length;
+      const removed = [...before].filter((r) => !after.has(r)).length;
+      const parts: string[] = [];
+      if (added > 0) parts.push(`+${added}`);
+      if (removed > 0) parts.push(`−${removed}`);
+      setToast(
+        parts.length > 0
+          ? `Repositories updated (${parts.join(', ')}).`
+          : 'Repository tracking updated.',
+      );
+    },
+    [connections],
+  );
+
+  const handleReauthSuccess = useCallback((id: string) => {
+    setConnections((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: 'connected',
+              statusDetail: undefined,
+              lastCheckedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+    setToast('Connection re-authenticated.');
+  }, []);
+
   const existingInstances = useMemo(
     () => connections.map((c) => `https://${c.identifier.split('/')[0]}`),
     [connections],
@@ -205,6 +267,8 @@ export default function GitConnectionsPrototype() {
         allConnections={connections}
         onRename={handleRename}
         onRefresh={handleRefresh}
+        onApplyRepoChanges={handleApplyRepoChanges}
+        onReauthSuccess={handleReauthSuccess}
         refreshing={
           !!selectedConnection && refreshingId === selectedConnection.id
         }
