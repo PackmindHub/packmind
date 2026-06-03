@@ -34,3 +34,10 @@ if [ -f "${SRC}/docker-compose.local.override.yaml" ]; then
   cp "${SRC}/docker-compose.local.override.yaml" "${ROOT}/dockerfile/local/docker-compose.override.yaml"
   echo "✅ docker-compose.override.yaml installed at dockerfile/local/"
 fi
+
+# Place the MCP server config at the repo root so Claude Code picks it up.
+# The root .mcp.json is gitignored; this is the tracked source of truth.
+if [ -f "${SRC}/.mcp.json" ]; then
+  cp "${SRC}/.mcp.json" "${ROOT}/.mcp.json"
+  echo "✅ .mcp.json installed at repo root"
+fi

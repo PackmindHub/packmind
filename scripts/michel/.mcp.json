@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--caps=devtools",
+        "--output-dir=./videos",
+        "--headless",
+        "--no-sandbox"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--headless",
+        "--isolated",
+        "--chromeArg=--no-sandbox",
+        "--chromeArg=--disable-setuid-sandbox",
+        "--chromeArg=--disable-gpu",
+        "--chromeArg=--disable-dev-shm-usage"
+      ]
+    },
+    "packmind-user-docs": {
+      "type": "http",
+      "url": "https://docs.packmind.com/mcp"
+    }
+  }
+}
