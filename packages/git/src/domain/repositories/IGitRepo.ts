@@ -59,4 +59,18 @@ export interface IGitRepo {
    * @param targetBranch - The branch name to ensure exists
    */
   createBranchFromBase(targetBranch: string): Promise<void>;
+
+  /**
+   * Open a pull request from `head` to the repository's configured base
+   * branch, or return the matching open PR when one already exists
+   * (rolling-PR semantics).
+   *
+   * @param command - PR head / title / body
+   * @returns The PR URL, provider-side number, and whether it was created
+   */
+  openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }>;
 }

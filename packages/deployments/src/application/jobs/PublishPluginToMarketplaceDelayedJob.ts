@@ -317,12 +317,35 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         throw new PublishJobFailure('other', getErrorMessage(error));
       }
 
+      // Ensure the rolling "Packmind sync" PR exists on the marketplace
+      // repo (or amends the existing one). The commit already landed on
+      // `packmind/sync` above — failing to surface the PR is logged but does
+      // not roll back the publish.
+      let prUrl: string | undefined;
+      try {
+        const pr = await this.gitPort.openOrUpdatePullRequest(
+          marketplaceGitRepo,
+          {
+            head: MARKETPLACE_SYNC_BRANCH,
+            title: MARKETPLACE_SYNC_PR_TITLE,
+            body: 'Packmind-managed plugin sync. Successive publishes amend this PR.',
+          },
+        );
+        prUrl = pr.url;
+      } catch (error) {
+        this.logger.warn(
+          `[${this.origin}] Commit landed but failed to ensure rolling PR for distribution ${input.marketplaceDistributionId}`,
+          { error: getErrorMessage(error) },
+        );
+      }
+
       await this.marketplaceDistributionRepository.updateStatus(
         input.marketplaceDistributionId,
         {
           status: DistributionStatus.success,
           contentHash,
           gitCommit: gitCommit?.sha,
+          prUrl,
         },
       );
 
@@ -334,6 +357,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           marketplaceDistributionId: input.marketplaceDistributionId,
           marketplaceId: input.marketplaceId,
           packageId: input.packageId,
+          prUrl,
           wasNoop: false,
         }),
       );

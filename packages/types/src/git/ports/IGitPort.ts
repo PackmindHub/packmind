@@ -99,6 +99,27 @@ export interface IGitPort {
   createBranchFromBase(repo: GitRepo, branch: string): Promise<void>;
 
   /**
+   * Open a pull request on a git repository, or update an existing one when a PR
+   * with the same `head → base` already exists (rolling-PR semantics).
+   *
+   * Idempotent: if a PR matching `head → base` is already open, the existing one
+   * is returned untouched (no second PR is created). Used by the
+   * marketplace-publish flow to keep a single "Packmind sync" PR per marketplace.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch)
+   * @param command - PR head / title / body
+   * @returns Promise of the PR URL and number
+   */
+  openOrUpdatePullRequest(
+    repo: GitRepo,
+    command: {
+      head: string;
+      title: string;
+      body?: string;
+    },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }>;
+
+  /**
    * Handle webhook payload for a git repository with file content
    *
    * @param command - The webhook command

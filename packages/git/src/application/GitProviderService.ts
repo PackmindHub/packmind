@@ -137,6 +137,36 @@ export class GitProviderService {
     await gitRepoInstance.createBranchFromBase(targetBranch);
   }
 
+  async openOrUpdatePullRequest(
+    gitRepo: GitRepo,
+    command: {
+      head: string;
+      title: string;
+      body?: string;
+    },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    // Resolve provider + token, then build an IGitRepo bound to the BASE
+    // branch (the repo's configured `branch` field is the merge target).
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (!gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.openOrUpdatePullRequest(command);
+  }
+
   async listAvailableTargets(
     gitRepo: GitRepo,
     path?: string,

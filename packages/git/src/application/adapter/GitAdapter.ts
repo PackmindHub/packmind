@@ -397,6 +397,15 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       );
   }
 
+  public async openOrUpdatePullRequest(
+    repo: GitRepo,
+    command: { head: string; title: string; body?: string },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    return this.gitServices
+      .getGitProviderService()
+      .openOrUpdatePullRequest(repo, command);
+  }
+
   public async handleWebHook(
     command: HandleWebHookCommand,
   ): Promise<HandleWebHookResult> {
