@@ -5,12 +5,21 @@ export type ConnectionStatus = 'connected' | 'token_expired' | 'unreachable';
 export type ConnectionRepo = {
   id: string;
   path: string;
+  branch: string;
+  defaultBranch: string;
   duplicatedIn?: string[];
+};
+
+export type AvailableRepo = {
+  id: string;
+  path: string;
+  defaultBranch: string;
 };
 
 export type UserConnection = {
   id: string;
   vendor: Vendor;
+  authMethod: AuthMethod;
   displayName: string;
   identifier: string;
   status: ConnectionStatus;
@@ -20,6 +29,7 @@ export type UserConnection = {
   installedBy: string;
   installedAt: string;
   repos: ConnectionRepo[];
+  availableRepos: AvailableRepo[];
 };
 
 export type CliManagedEntry = {
@@ -50,6 +60,22 @@ export type AppRegistrationStatus = 'idle' | 'registering' | 'registered';
 export type AppInstallStatus = 'idle' | 'installing' | 'installed';
 
 export type AddConnectionSubmitStatus = 'idle' | 'submitting' | 'error';
+
+export type DrawerMode = 'view' | 'edit-repos' | 'reauth';
+
+export type RepoSelectionState = {
+  trackedIds: string[];
+  branchByRepoId: Record<string, string>;
+};
+
+export type ReauthStatus = 'idle' | 'validating' | 'success' | 'error';
+
+export type ReauthDraft = {
+  patValue: string;
+  status: ReauthStatus;
+  errorMessage: string | null;
+  appPopupOpen: boolean;
+};
 
 export type AddConnectionDraft = {
   vendor: Vendor;

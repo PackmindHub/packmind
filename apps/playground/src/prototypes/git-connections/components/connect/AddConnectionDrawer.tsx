@@ -213,6 +213,7 @@ export function AddConnectionDrawer({
       onSubmit({
         id: `cnx_${Math.random().toString(36).slice(2, 9)}`,
         vendor: draft.vendor,
+        authMethod: draft.authMethod,
         displayName: draft.displayName.trim(),
         identifier,
         status: 'connected',
@@ -221,6 +222,7 @@ export function AddConnectionDrawer({
         installedBy: 'You',
         installedAt: new Date().toISOString().slice(0, 10),
         repos: [],
+        availableRepos: [],
       });
     }, 900);
     timers.current.push(id);
