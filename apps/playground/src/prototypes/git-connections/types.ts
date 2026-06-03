@@ -40,3 +40,27 @@ export type Scenario =
   | 'name-collision';
 
 export type DrawerSection = 'overview' | 'repos';
+
+export type Edition = 'cloud' | 'oss';
+
+export type AuthMethod = 'app' | 'pat';
+
+export type AppRegistrationStatus = 'idle' | 'registering' | 'registered';
+
+export type AppInstallStatus = 'idle' | 'installing' | 'installed';
+
+export type AddConnectionSubmitStatus = 'idle' | 'submitting' | 'error';
+
+export type AddConnectionDraft = {
+  vendor: Vendor;
+  instanceUrl: string;
+  displayName: string;
+  authMethod: AuthMethod;
+  patValue: string;
+  patPermissionsAcknowledged: boolean;
+  appRegistration: AppRegistrationStatus;
+  appInstall: AppInstallStatus;
+  appConnectedIdentifier: string | null;
+  submit: AddConnectionSubmitStatus;
+  submitError: string | null;
+};
