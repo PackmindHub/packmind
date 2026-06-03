@@ -3,12 +3,15 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
   Request,
   ConflictException,
   BadRequestException,
+  NotImplementedException,
   UseGuards,
 } from '@nestjs/common';
 import { GitProvidersService } from './git-providers.service';
@@ -20,12 +23,15 @@ import {
   GitRepoAlreadyExistsError,
   GitRepoId,
   GitProviderHasRepositoriesError,
+  InvalidGitProviderCredentialsError,
   ListProvidersResponse,
   OrganizationId,
 } from '@packmind/types';
 import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
+import { resolvePackmindEdition } from '../../../shared/utils/edition';
+import { GitHubAppManifest } from './types/GitHubAppManifest';
 
 interface AddRepositoryDto {
   owner: string;
@@ -73,6 +79,9 @@ export class GitProvidersController {
         req.clientSource,
       );
     } catch (error) {
+      if (error instanceof InvalidGitProviderCredentialsError) {
+        throw new BadRequestException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -81,6 +90,226 @@ export class GitProvidersController {
           organizationId,
           error: errorMessage,
         },
+      );
+      throw error;
+    }
+  }
+
+  @Get('github/app/install-url')
+  async getGithubAppInstallUrl(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ installUrl: string; state: string }> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/github/app/install-url',
+      { organizationId },
+    );
+
+    try {
+      return await this.gitProvidersService.buildGithubAppInstallUrl({
+        organizationId,
+        userId: req.user.userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/github/app/install-url - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Get('github/app/manifest')
+  async getGithubAppManifest(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{
+    manifest: GitHubAppManifest;
+    state: string;
+    manifestPostUrl: string;
+  }> {
+    const edition = await resolvePackmindEdition();
+    if (edition !== 'oss') {
+      throw new NotImplementedException(
+        'GitHub App manifest flow is only available on OSS edition',
+      );
+    }
+
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/github/app/manifest',
+      { organizationId },
+    );
+
+    try {
+      return await this.gitProvidersService.buildGithubAppManifest({
+        orgId: organizationId,
+        userId: req.user.userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/github/app/manifest - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Post('github/app/manifest-callback')
+  async completeGithubAppManifest(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { code: string; state: string },
+  ): Promise<{ installUrl: string }> {
+    const edition = await resolvePackmindEdition();
+    if (edition !== 'oss') {
+      throw new NotImplementedException(
+        'GitHub App manifest flow is only available on OSS edition',
+      );
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/git/providers/github/app/manifest-callback',
+      {
+        organizationId,
+        hasCode: Boolean(body?.code),
+        hasState: Boolean(body?.state),
+      },
+    );
+
+    if (
+      !body ||
+      typeof body.code !== 'string' ||
+      body.code.length === 0 ||
+      typeof body.state !== 'string' ||
+      body.state.length === 0
+    ) {
+      throw new BadRequestException(
+        'Request body must include code (string) and state (string)',
+      );
+    }
+
+    try {
+      return await this.gitProvidersService.completeGithubAppManifest({
+        orgId: organizationId,
+        userId: req.user.userId,
+        code: body.code,
+        state: body.state,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/git/providers/github/app/manifest-callback - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Get('github/app/status')
+  async getGithubAppStatus(
+    @Param('orgId') organizationId: OrganizationId,
+  ): Promise<{ hasApp: boolean; appSlug?: string; revokedAt?: Date | null }> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/github/app/status',
+      { organizationId },
+    );
+
+    try {
+      return await this.gitProvidersService.getGithubAppStatus({
+        orgId: organizationId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/github/app/status - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Delete('github/app')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeGithubApp(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
+    const edition = await resolvePackmindEdition();
+    if (edition !== 'oss') {
+      throw new NotImplementedException(
+        'GitHub App revocation is only available on OSS edition',
+      );
+    }
+
+    this.logger.info('DELETE /organizations/:orgId/git/providers/github/app', {
+      organizationId,
+    });
+
+    try {
+      await this.gitProvidersService.revokeGithubApp({
+        orgId: organizationId,
+        userId: req.user.userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/git/providers/github/app - failed',
+        { organizationId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Post('github/app/callback')
+  async completeGithubAppInstall(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { installationId: number; state: string },
+  ): Promise<GitProvider> {
+    this.logger.info(
+      'POST /organizations/:orgId/git/providers/github/app/callback',
+      {
+        organizationId,
+        // Do NOT log the full state or installationId at info — installation
+        // IDs aren't strictly PII but they correlate to org/user pairs.
+        // Log only structural facts.
+        hasState: Boolean(body?.state),
+        hasInstallationId: Boolean(body?.installationId),
+      },
+    );
+
+    if (
+      !body ||
+      typeof body.state !== 'string' ||
+      body.state.length === 0 ||
+      typeof body.installationId !== 'number'
+    ) {
+      throw new BadRequestException(
+        'Request body must include state (string) and installationId (number)',
+      );
+    }
+
+    try {
+      return await this.gitProvidersService.completeGithubAppInstall({
+        organizationId,
+        userId: req.user.userId,
+        installationId: body.installationId,
+        state: body.state,
+        source: req.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/git/providers/github/app/callback - failed',
+        { organizationId, error: errorMessage },
       );
       throw error;
     }
@@ -248,6 +477,9 @@ export class GitProvidersController {
       );
       return updatedProvider;
     } catch (error) {
+      if (error instanceof InvalidGitProviderCredentialsError) {
+        throw new BadRequestException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(

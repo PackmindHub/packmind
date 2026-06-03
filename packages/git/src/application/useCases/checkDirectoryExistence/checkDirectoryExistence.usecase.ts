@@ -54,13 +54,8 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       throw new Error('Git provider not found for this repository');
     }
 
-    // Business rule: git provider must have a token configured
-    if (!gitProvider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    // Create git repository instance for technical operations
-    const gitRepoInstance = this.gitRepoFactory.createGitRepo(
+    // Create git repository instance for technical operations (token validation delegated to factory)
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
       gitRepo,
       gitProvider,
     );

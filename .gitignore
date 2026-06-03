@@ -22,7 +22,6 @@ apps/mcp-server/.env
 graph.json
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-dockerfile/local
 dockerfile/helm-chart/playground-values/
 
 vite.config.*.timestamp*
@@ -57,3 +56,11 @@ docker/nginx/ssl
 
 .nx/polygraph
 .nx/self-healing
+
+# Michel agent — local experimentation, not for the public repo
+sprites/
+screenshots/
+videos/
+.sprite
+.env.michel
+.claude/skills/michel-*/

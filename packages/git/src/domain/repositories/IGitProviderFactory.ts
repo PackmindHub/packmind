@@ -16,5 +16,5 @@ export interface IGitProviderFactory {
    * @returns IGitProvider instance configured for the specific provider
    * @throws Error if the provider source is unsupported or configuration is invalid
    */
-  createGitProvider(provider: GitProvider): IGitProvider;
+  createGitProvider(provider: GitProvider): Promise<IGitProvider>;
 }

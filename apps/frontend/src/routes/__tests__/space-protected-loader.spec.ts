@@ -75,6 +75,7 @@ const setFlashToastMock = setFlashToast as jest.Mock;
 const redirectMock = redirect as jest.MockedFunction<typeof redirect>;
 
 const me = {
+  edition: 'oss' as const,
   authenticated: true,
   user: { id: 'user-1', email: 'test@example.com' },
   organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },

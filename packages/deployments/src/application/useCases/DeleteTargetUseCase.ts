@@ -37,7 +37,7 @@ export class DeleteTargetUseCase implements IDeleteTargetUseCase {
       (p) => p.id === repo.providerId,
     );
 
-    if (provider && !provider.hasToken) {
+    if (provider && !provider.hasAuth) {
       throw new GitProviderMissingTokenError(repo.providerId);
     }
 

@@ -63,7 +63,7 @@ describe('ListProvidersUseCase', () => {
 
   describe('when providers exist', () => {
     describe('with token set', () => {
-      it('returns providers with hasToken true', async () => {
+      it('returns providers with hasAuth true', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: 'valid-token',
@@ -75,13 +75,13 @@ describe('ListProvidersUseCase', () => {
         const result = await useCase.execute({ organizationId, userId });
 
         expect(result.providers).toEqual([
-          {
+          expect.objectContaining({
             id: provider.id,
             source: provider.source,
             organizationId: provider.organizationId,
             url: provider.url,
-            hasToken: true,
-          },
+            hasAuth: true,
+          }),
         ]);
       });
 
@@ -101,7 +101,7 @@ describe('ListProvidersUseCase', () => {
     });
 
     describe('with token null', () => {
-      it('returns providers with hasToken false', async () => {
+      it('returns providers with hasAuth false', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: null,
@@ -112,12 +112,12 @@ describe('ListProvidersUseCase', () => {
 
         const result = await useCase.execute({ organizationId, userId });
 
-        expect(result.providers[0].hasToken).toBe(false);
+        expect(result.providers[0].hasAuth).toBe(false);
       });
     });
 
     describe('with token empty string', () => {
-      it('returns providers with hasToken false', async () => {
+      it('returns providers with hasAuth false', async () => {
         const provider = gitProviderFactory({
           organizationId,
           token: '',
@@ -128,7 +128,7 @@ describe('ListProvidersUseCase', () => {
 
         const result = await useCase.execute({ organizationId, userId });
 
-        expect(result.providers[0].hasToken).toBe(false);
+        expect(result.providers[0].hasAuth).toBe(false);
       });
     });
 
@@ -151,12 +151,120 @@ describe('ListProvidersUseCase', () => {
         result = await useCase.execute({ organizationId, userId });
       });
 
-      it('returns hasToken true for provider with token', () => {
-        expect(result.providers[0].hasToken).toBe(true);
+      it('returns hasAuth true for provider with token', () => {
+        expect(result.providers[0].hasAuth).toBe(true);
       });
 
-      it('returns hasToken false for provider without token', () => {
-        expect(result.providers[1].hasToken).toBe(false);
+      it('returns hasAuth false for provider without token', () => {
+        expect(result.providers[1].hasAuth).toBe(false);
+      });
+    });
+
+    describe('with authMethod=app', () => {
+      describe('when installationId is set and not revoked', () => {
+        it('returns hasAuth true', async () => {
+          const provider = gitProviderFactory({
+            organizationId,
+            token: null,
+            authMethod: 'app',
+            appInstallationId: 42,
+          });
+          mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+            [provider],
+          );
+
+          const result = await useCase.execute({ organizationId, userId });
+
+          expect(result.providers[0].hasAuth).toBe(true);
+        });
+      });
+
+      describe('when installationId is a string (TypeORM bigint shape)', () => {
+        it('returns hasAuth true', async () => {
+          const provider = gitProviderFactory({
+            organizationId,
+            token: null,
+            authMethod: 'app',
+            appInstallationId: '42' as unknown as number,
+          });
+          mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+            [provider],
+          );
+
+          const result = await useCase.execute({ organizationId, userId });
+
+          expect(result.providers[0].hasAuth).toBe(true);
+        });
+      });
+
+      describe('when the app installation has been revoked', () => {
+        it('returns hasAuth false', async () => {
+          const provider = gitProviderFactory({
+            organizationId,
+            token: null,
+            authMethod: 'app',
+            appInstallationId: 42,
+            revokedAt: new Date('2026-05-01T00:00:00Z'),
+          });
+          mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+            [provider],
+          );
+
+          const result = await useCase.execute({ organizationId, userId });
+
+          expect(result.providers[0].hasAuth).toBe(false);
+        });
+      });
+
+      describe('when installationId is missing', () => {
+        it('returns hasAuth false', async () => {
+          const provider = gitProviderFactory({
+            organizationId,
+            token: null,
+            authMethod: 'app',
+            appInstallationId: undefined,
+          });
+          mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+            [provider],
+          );
+
+          const result = await useCase.execute({ organizationId, userId });
+
+          expect(result.providers[0].hasAuth).toBe(false);
+        });
+      });
+    });
+  });
+
+  describe('authMethod projection', () => {
+    describe('includes authMethod in the projected result for each provider', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const tokenProvider = gitProviderFactory({
+          organizationId,
+          token: 'valid-token',
+          authMethod: 'token',
+        });
+        const appProvider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [tokenProvider, appProvider],
+        );
+
+        result = await useCase.execute({ organizationId, userId });
+      });
+
+      it('projects authMethod token for the token provider', () => {
+        expect(result.providers[0].authMethod).toBe('token');
+      });
+
+      it('projects authMethod app for the app provider', () => {
+        expect(result.providers[1].authMethod).toBe('app');
       });
     });
   });

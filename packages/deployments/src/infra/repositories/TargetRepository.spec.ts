@@ -6,7 +6,11 @@ import {
 import { Repository } from 'typeorm';
 import { TargetRepository } from './TargetRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
-import { GitRepoSchema, GitProviderSchema } from '@packmind/git';
+import {
+  GitRepoSchema,
+  GitProviderSchema,
+  OrganizationGitHubAppSchema,
+} from '@packmind/git';
 import { OrganizationSchema } from '@packmind/accounts';
 import {
   Organization,
@@ -23,6 +27,7 @@ import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 describe('TargetRepository', () => {
   const fixture = createTestDatasourceFixture([
     OrganizationSchema,
+    OrganizationGitHubAppSchema,
     GitProviderSchema,
     GitRepoSchema,
     TargetSchema,

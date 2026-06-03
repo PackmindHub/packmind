@@ -24,6 +24,7 @@ describe('GetFileFromRepo', () => {
     id: 'provider-123',
     source: GitProviderVendors.github,
     token: 'test-token',
+    authMethod: 'token',
   } as unknown as GitProvider;
 
   beforeEach(() => {
@@ -40,7 +41,12 @@ describe('GetFileFromRepo', () => {
     } as jest.Mocked<IGitRepo>;
 
     gitRepoFactory = {
-      createGitRepo: jest.fn().mockReturnValue(mockGitRepoInstance),
+      createGitRepo: jest.fn().mockImplementation((_gitRepo, provider) => {
+        if (provider.authMethod === 'token' && !provider.token) {
+          return Promise.reject(new Error('Git provider token not configured'));
+        }
+        return Promise.resolve(mockGitRepoInstance);
+      }),
     } as jest.Mocked<IGitRepoFactory>;
 
     useCase = new GetFileFromRepo(

@@ -55,8 +55,8 @@ export class AddTargetUseCase implements IAddTargetUseCase {
       (p) => p.id === repo.providerId,
     );
 
-    // Business rule: git provider must have a token configured (unless explicitly allowed)
-    if (provider && !provider.hasToken && !allowTokenlessProvider) {
+    // Business rule: git provider must have working auth configured (unless explicitly allowed)
+    if (provider && !provider.hasAuth && !allowTokenlessProvider) {
       throw new GitProviderMissingTokenError(repo.providerId);
     }
 
