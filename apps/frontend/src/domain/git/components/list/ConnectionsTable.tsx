@@ -85,6 +85,10 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
 
   return (
     <PMHStack
+      data-testid="git-connection-row"
+      data-vendor={connection.source}
+      data-url={connection.url ?? ''}
+      data-repo-count={repoCount}
       gap={3}
       paddingX={4}
       paddingY={3}

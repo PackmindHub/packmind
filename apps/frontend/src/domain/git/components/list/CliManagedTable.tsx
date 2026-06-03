@@ -111,6 +111,11 @@ const CliRow: React.FC<CliRowProps> = ({ row, isLast }) => {
 
   return (
     <PMHStack
+      data-testid="cli-managed-row"
+      data-provider-id={provider.id}
+      data-vendor={provider.source}
+      data-url={provider.url ?? ''}
+      data-repo-path={repoPath}
       gap={3}
       paddingX={4}
       paddingY={3}
