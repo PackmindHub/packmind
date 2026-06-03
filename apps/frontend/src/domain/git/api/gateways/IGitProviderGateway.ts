@@ -1,5 +1,6 @@
 import {
   CheckDirectoryExistenceResult,
+  CheckProviderAuthResponse,
   GitProviderId,
   GitProviderWithoutToken,
   GitRepoId,
@@ -78,6 +79,12 @@ export interface IGitProviderGateway {
     providerId: GitProviderId,
     repoId: GitRepoId,
   ): Promise<void>;
+
+  // Auth probe
+  checkProviderAuth(
+    organizationId: OrganizationId,
+    providerId: GitProviderId,
+  ): Promise<CheckProviderAuthResponse>;
 
   // Branch operations
   checkBranchExists(

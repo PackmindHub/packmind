@@ -10,6 +10,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AddGitProviderCommand,
+  CheckProviderAuthResponse,
   ClientSource,
   GitProvider,
   GitProviderId,
@@ -509,6 +510,18 @@ export class GitProvidersService {
     }[]
   > {
     return this.gitAdapter.listAvailableRepos(gitProviderId);
+  }
+
+  async checkProviderAuth(
+    organizationId: OrganizationId,
+    gitProviderId: GitProviderId,
+    userId: UserId,
+  ): Promise<CheckProviderAuthResponse> {
+    return this.gitAdapter.checkProviderAuth({
+      organizationId,
+      gitProviderId,
+      userId,
+    });
   }
 
   async checkBranchExists(

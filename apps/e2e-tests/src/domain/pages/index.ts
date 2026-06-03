@@ -90,6 +90,11 @@ export interface IGitSettingsPage extends IPackmindAppPage {
   listGitProviders(): Promise<
     { provider: string; repositoriesCount: number; tokenLess: boolean }[]
   >;
+  openFirstConnectionDrawer(): Promise<void>;
+  waitForDrawerStatus(
+    state: 'connected' | 'disconnected' | 'checking',
+  ): Promise<void>;
+  getDrawerStatusDescription(): Promise<string | null>;
 }
 
 export interface ICliSetupPage extends IPackmindAppPage {

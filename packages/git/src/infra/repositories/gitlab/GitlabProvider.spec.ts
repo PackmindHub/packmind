@@ -21,6 +21,12 @@ describe('GitlabProvider', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
+    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
+      (payload) =>
+        typeof payload === 'object' &&
+        payload !== null &&
+        (payload as { isAxiosError?: boolean }).isAxiosError === true,
+    );
     gitlabProvider = new GitlabProvider('test-token', '', mockLogger);
   });
 
@@ -388,6 +394,68 @@ describe('GitlabProvider', () => {
       ).rejects.toThrow(
         'Failed to check if branch exists for owner/repo/main: 500',
       );
+    });
+  });
+
+  describe('checkAuth', () => {
+    const buildAxiosError = (status: number) => {
+      const err = new Error(
+        `Request failed with status code ${status}`,
+      ) as Error & {
+        isAxiosError: true;
+        response: { status: number; headers: Record<string, string> };
+      };
+      err.isAxiosError = true;
+      err.response = { status, headers: {} };
+      return err;
+    };
+
+    it('probes /user', async () => {
+      mockAxiosInstance.get.mockResolvedValue({ data: { id: 1 } });
+
+      await gitlabProvider.checkAuth();
+
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user');
+    });
+
+    it('returns ok on 200', async () => {
+      mockAxiosInstance.get.mockResolvedValue({ data: { id: 1 } });
+
+      const result = await gitlabProvider.checkAuth();
+
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('maps 401 to unauthorized', async () => {
+      mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
+
+      const result = await gitlabProvider.checkAuth();
+
+      expect(result).toEqual({ ok: false, reason: 'unauthorized' });
+    });
+
+    it('maps 403 to forbidden', async () => {
+      mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+      const result = await gitlabProvider.checkAuth();
+
+      expect(result).toEqual({ ok: false, reason: 'forbidden' });
+    });
+
+    it('maps 429 to rate_limited', async () => {
+      mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+      const result = await gitlabProvider.checkAuth();
+
+      expect(result).toEqual({ ok: false, reason: 'rate_limited' });
+    });
+
+    it('maps non-axios errors to network', async () => {
+      mockAxiosInstance.get.mockRejectedValue(new Error('boom'));
+
+      const result = await gitlabProvider.checkAuth();
+
+      expect(result).toEqual({ ok: false, reason: 'network' });
     });
   });
 });

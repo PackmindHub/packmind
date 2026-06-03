@@ -55,11 +55,13 @@ describe('GitProviderService', () => {
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
     mockGitlabProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
     mockGitProviderFactory = {

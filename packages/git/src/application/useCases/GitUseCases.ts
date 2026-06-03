@@ -2,6 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  CheckProviderAuthCommand,
+  CheckProviderAuthResponse,
   GetAvailableRemoteDirectoriesCommand,
   GitCommit,
   GitProvider,
@@ -34,6 +36,7 @@ import {
 import { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
 import { CheckBranchExistsUseCase } from './checkBranchExists/checkBranchExists.usecase';
 import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
+import { CheckProviderAuthUseCase } from './checkProviderAuth/checkProviderAuth.usecase';
 import { CommitToGit } from './commitToGit/commitToGit.usecase';
 import { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
 import { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
@@ -73,6 +76,7 @@ export class GitUseCases {
   private readonly _findGitRepoByOwnerAndRepo: FindGitRepoByOwnerAndRepoUseCase;
   private readonly _listRepos: ListReposUseCase;
   private readonly _listProviders: ListProvidersUseCase;
+  private _checkProviderAuth!: CheckProviderAuthUseCase;
   private readonly _getOrganizationRepositories: GetOrganizationRepositoriesUseCase;
   private readonly _getRepositoryById: GetRepositoryByIdUseCase;
   private _updateGitProvider: UpdateGitProviderUseCase;
@@ -129,6 +133,10 @@ export class GitUseCases {
       gitServices.getGitRepoService(),
     );
     this._listProviders = new ListProvidersUseCase(
+      this.accountsAdapter,
+      gitServices.getGitProviderService(),
+    );
+    this._checkProviderAuth = new CheckProviderAuthUseCase(
       this.accountsAdapter,
       gitServices.getGitProviderService(),
     );
@@ -249,6 +257,12 @@ export class GitUseCases {
       organizationId: String(organizationId),
       providerId,
     });
+  }
+
+  public async checkProviderAuth(
+    command: CheckProviderAuthCommand,
+  ): Promise<CheckProviderAuthResponse> {
+    return this._checkProviderAuth.execute(command);
   }
 
   public listAvailableRepos(gitProviderId: GitProviderId): Promise<

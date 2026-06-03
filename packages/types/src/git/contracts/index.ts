@@ -1,6 +1,7 @@
 export * from './IAddGitProviderUseCase';
 export * from './IAddGitRepoUseCase';
 export * from './ICheckDirectoryExistenceUseCase';
+export * from './ICheckProviderAuthUseCase';
 export * from './IFetchFileContentUseCase';
 export * from './IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
 export * from './IGetAvailableTargets';
