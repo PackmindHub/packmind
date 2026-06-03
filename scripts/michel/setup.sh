@@ -35,4 +35,12 @@ else
   echo "No scripts/install-michel-skills.sh — skipping skill install."
 fi
 
+# 4. Patch git hooks so they survive the memory-constrained worker (pre-push
+#    nx parallelism 6 → 2, disable the packmind-cli precommit lint for now).
+if [ -f scripts/michel/patch-hooks.sh ]; then
+  bash scripts/michel/patch-hooks.sh
+else
+  echo "No scripts/michel/patch-hooks.sh — skipping hook patch."
+fi
+
 echo "✅ Michel setup complete."
