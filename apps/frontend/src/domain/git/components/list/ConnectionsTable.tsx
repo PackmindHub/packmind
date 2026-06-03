@@ -6,6 +6,7 @@ import {
   PMMenu,
   PMPortal,
   PMText,
+  PMTooltip,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuTrash2 } from 'react-icons/lu';
 import { GitProviderUI } from '../../types/GitProviderTypes';
@@ -117,7 +118,11 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       </PMText>
 
       <PMHStack width="60px" gap={1} justify="flex-end">
-        <RowActionsMenu onEdit={onEdit} onDelete={onDelete} />
+        <RowActionsMenu
+          onEdit={onEdit}
+          onDelete={onDelete}
+          deleteDisabled={repoCount > 0}
+        />
       </PMHStack>
     </PMHStack>
   );
@@ -126,11 +131,16 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
 interface RowActionsMenuProps {
   onEdit: () => void;
   onDelete: () => void;
+  deleteDisabled: boolean;
 }
+
+const DELETE_DISABLED_TOOLTIP =
+  'Detach all repositories from this connection before deleting it.';
 
 const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
   onEdit,
   onDelete,
+  deleteDisabled,
 }) => (
   <PMMenu.Root positioning={{ placement: 'bottom-end' }}>
     <PMMenu.Trigger asChild>
@@ -164,16 +174,58 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
               Edit
             </PMText>
           </PMMenu.Item>
-          <PMMenu.Item value="delete" cursor="pointer" onClick={onDelete}>
-            <PMIcon fontSize="sm" marginRight={2} color="red.500">
-              <LuTrash2 />
-            </PMIcon>
-            <PMText fontSize="sm" color="error">
-              Delete connection
-            </PMText>
-          </PMMenu.Item>
+          <DeleteMenuItem onDelete={onDelete} deleteDisabled={deleteDisabled} />
         </PMMenu.Content>
       </PMMenu.Positioner>
     </PMPortal>
   </PMMenu.Root>
 );
+
+interface DeleteMenuItemProps {
+  onDelete: () => void;
+  deleteDisabled: boolean;
+}
+
+const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
+  onDelete,
+  deleteDisabled,
+}) => {
+  const item = (
+    <PMMenu.Item
+      value="delete"
+      cursor={deleteDisabled ? 'not-allowed' : 'pointer'}
+      disabled={deleteDisabled}
+      data-testid="delete-connection-menu-item"
+      data-disabled={deleteDisabled ? 'true' : undefined}
+      onClick={(event) => {
+        if (deleteDisabled) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        onDelete();
+      }}
+    >
+      <PMIcon
+        fontSize="sm"
+        marginRight={2}
+        color={deleteDisabled ? 'text.faded' : 'red.500'}
+      >
+        <LuTrash2 />
+      </PMIcon>
+      <PMText fontSize="sm" color={deleteDisabled ? 'faded' : 'error'}>
+        Delete connection
+      </PMText>
+    </PMMenu.Item>
+  );
+
+  if (!deleteDisabled) {
+    return item;
+  }
+
+  return (
+    <PMTooltip label={DELETE_DISABLED_TOOLTIP} placement="left">
+      <PMBox width="full">{item}</PMBox>
+    </PMTooltip>
+  );
+};

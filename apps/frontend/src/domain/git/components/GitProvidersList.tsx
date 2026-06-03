@@ -150,6 +150,9 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
                 setOpenEditDialog(true);
               }}
               onDelete={(connection) => {
+                if ((connection.repos?.length ?? 0) > 0) {
+                  return;
+                }
                 setProviderToDelete(connection);
                 setDeleteDialogOpen(true);
               }}
