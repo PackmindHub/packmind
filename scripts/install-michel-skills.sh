@@ -26,3 +26,11 @@ if [ -f "${SRC}/docker-compose.override.yml" ]; then
   cp "${SRC}/docker-compose.override.yml" "${ROOT}/docker-compose.override.yml"
   echo "✅ docker-compose.override.yml installed at repo root"
 fi
+
+# Same for the LOCAL production-like stack (dockerfile/local/docker-compose.yaml,
+# started by docker-local.sh). docker-local.sh uses an explicit `-f`, which
+# disables auto-detection — it includes this override itself when present.
+if [ -f "${SRC}/docker-compose.local.override.yaml" ]; then
+  cp "${SRC}/docker-compose.local.override.yaml" "${ROOT}/dockerfile/local/docker-compose.override.yaml"
+  echo "✅ docker-compose.override.yaml installed at dockerfile/local/"
+fi

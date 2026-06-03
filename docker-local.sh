@@ -8,6 +8,17 @@ set -e  # Exit on any error
 
 COMPOSE_FILE="dockerfile/local/docker-compose.yaml"
 
+# An explicit `-f` disables Compose's auto-detection of override files, so include
+# the override ourselves when it exists (installed at runtime by
+# scripts/install-michel-skills.sh for the sprite sandbox). No-op for normal local
+# dev where the override is absent.
+COMPOSE_OVERRIDE="dockerfile/local/docker-compose.override.yaml"
+COMPOSE_ARGS=(-f "$COMPOSE_FILE")
+if [ -f "$COMPOSE_OVERRIDE" ]; then
+  COMPOSE_ARGS+=(-f "$COMPOSE_OVERRIDE")
+  echo "ℹ️  Using compose override: $COMPOSE_OVERRIDE"
+fi
+
 # ========================================================================
 # STEP 1: BUILD NX APPS
 # ========================================================================
@@ -58,11 +69,11 @@ echo "✅ All Docker images built successfully!"
 
 # Stop any existing local containers
 echo "🛑 Stopping existing local containers..."
-docker compose -f "$COMPOSE_FILE" down || true
+docker compose "${COMPOSE_ARGS[@]}" down || true
 
 # Start the local stack
 echo "🚀 Starting local stack..."
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose "${COMPOSE_ARGS[@]}" up -d
 
 echo "🎉 Local stack is running!"
 echo ""

@@ -38,6 +38,10 @@ dockerfile/prod/secrets
 tsconfig.base.effective.json
 packages/linter/js-playground-local
 
+# Runtime-installed sprite sandbox compose overrides (scripts/install-michel-skills.sh)
+docker-compose.override.yml
+dockerfile/local/docker-compose.override.yaml
+
 DECISIONS.md
 LEARNINGS.md
 test-results/
