@@ -72,6 +72,7 @@ describe('MarkPluginForRemovalUseCase', () => {
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+  let mockRemovalJob: { addJob: jest.Mock };
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let useCase: MarkPluginForRemovalUseCase;
 
@@ -98,6 +99,10 @@ describe('MarkPluginForRemovalUseCase', () => {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
+    mockRemovalJob = {
+      addJob: jest.fn().mockResolvedValue('job-id'),
+    };
+
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(adminUser),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
@@ -108,6 +113,7 @@ describe('MarkPluginForRemovalUseCase', () => {
       mockMarketplaceDistributionRepository,
       mockPackageService,
       mockEventEmitterService,
+      mockRemovalJob as never,
       mockAccountsPort,
       stubLogger(),
     );
@@ -170,6 +176,15 @@ describe('MarkPluginForRemovalUseCase', () => {
     it('emits the package slug fetched from the package service', () => {
       const emitted = mockEventEmitterService.emit.mock.calls[0][0];
       expect(emitted.payload.packageSlug).toBe('my-package');
+    });
+
+    it('enqueues the removal job for the distribution', () => {
+      expect(mockRemovalJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          marketplaceDistributionId: distributionId,
+          marketplaceId,
+        }),
+      );
     });
   });
 

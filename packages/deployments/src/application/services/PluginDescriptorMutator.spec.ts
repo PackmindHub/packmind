@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   applyPluginDescriptorMutation,
   buildPluginLockEntry,
+  removePluginDescriptorEntry,
 } from './PluginDescriptorMutator';
 
 describe('applyPluginDescriptorMutation', () => {
@@ -212,6 +213,101 @@ describe('applyPluginDescriptorMutation', () => {
         lockEntry,
       });
       expect(JSON.stringify(descriptorWithLock.packmindLock)).toBe(before);
+    });
+  });
+});
+
+describe('removePluginDescriptorEntry', () => {
+  const userId = createUserId(uuidv4());
+
+  const lockEntry: MarketplaceDescriptorPackmindLockEntry = {
+    version: '0.1.0',
+    contentHash: 'hash-1',
+    lastPublishedAt: '2026-06-01T10:00:00.000Z',
+    lastPublishedBy: userId,
+  };
+
+  const descriptorWithSecurity: MarketplaceDescriptor = {
+    vendor: 'anthropic',
+    name: 'sample-marketplace',
+    version: '1.0.0',
+    plugins: [
+      {
+        slug: 'existing-unmanaged',
+        name: 'Existing Unmanaged',
+        version: '2.0.0',
+      },
+      { slug: 'security', name: 'Security', version: '0.1.0' },
+    ],
+    packmindLock: {
+      schemaVersion: 1,
+      plugins: { security: lockEntry },
+    },
+    raw: { name: 'sample-marketplace' },
+  };
+
+  describe('when the slug is managed', () => {
+    let result: MarketplaceDescriptor;
+
+    beforeEach(() => {
+      result = removePluginDescriptorEntry(descriptorWithSecurity, 'security');
+    });
+
+    it('drops the matching entry from descriptor.plugins[]', () => {
+      expect(result.plugins.some((p) => p.slug === 'security')).toBe(false);
+    });
+
+    it('keeps unmanaged plugin entries', () => {
+      expect(result.plugins.some((p) => p.slug === 'existing-unmanaged')).toBe(
+        true,
+      );
+    });
+
+    it('drops the matching entry from packmindLock.plugins', () => {
+      expect(result.packmindLock?.plugins['security']).toBeUndefined();
+    });
+  });
+
+  describe('when other managed plugins remain in the lock', () => {
+    it('preserves the other lock entries', () => {
+      const descriptor: MarketplaceDescriptor = {
+        ...descriptorWithSecurity,
+        packmindLock: {
+          schemaVersion: 1,
+          plugins: { security: lockEntry, other: lockEntry },
+        },
+      };
+      const result = removePluginDescriptorEntry(descriptor, 'security');
+      expect(result.packmindLock?.plugins['other']).toEqual(lockEntry);
+    });
+  });
+
+  describe('when the slug is already absent', () => {
+    it('returns the same set of plugins (idempotent)', () => {
+      const result = removePluginDescriptorEntry(
+        descriptorWithSecurity,
+        'never-published',
+      );
+      expect(result.plugins).toHaveLength(2);
+    });
+  });
+
+  describe('when the descriptor has no packmindLock', () => {
+    it('leaves packmindLock undefined', () => {
+      const descriptor: MarketplaceDescriptor = {
+        ...descriptorWithSecurity,
+        packmindLock: undefined,
+      };
+      const result = removePluginDescriptorEntry(descriptor, 'security');
+      expect(result.packmindLock).toBeUndefined();
+    });
+  });
+
+  describe('immutability', () => {
+    it('does not mutate the input descriptor plugins', () => {
+      const snapshot = [...descriptorWithSecurity.plugins];
+      removePluginDescriptorEntry(descriptorWithSecurity, 'security');
+      expect(descriptorWithSecurity.plugins).toEqual(snapshot);
     });
   });
 });

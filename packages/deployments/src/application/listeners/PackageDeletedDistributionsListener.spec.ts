@@ -45,6 +45,7 @@ describe('PackageDeletedDistributionsListener', () => {
   let eventService: PackmindEventEmitterService;
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockPackageService: jest.Mocked<PackageService>;
+  let mockRemovalJob: { addJob: jest.Mock };
   let listener: PackageDeletedDistributionsListener;
   let mockDataSource: DataSource;
   let emitSpy: jest.SpyInstance;
@@ -68,9 +69,14 @@ describe('PackageDeletedDistributionsListener', () => {
         .mockResolvedValue({ id: packageId, slug: 'my-package' } as Package),
     } as unknown as jest.Mocked<PackageService>;
 
+    mockRemovalJob = {
+      addJob: jest.fn().mockResolvedValue('job-id'),
+    };
+
     listener = new PackageDeletedDistributionsListener({
       marketplaceDistributionRepository: mockMarketplaceDistributionRepository,
       packageService: mockPackageService,
+      removePluginFromMarketplaceJob: mockRemovalJob as never,
     });
     listener.initialize(eventService);
 
@@ -111,6 +117,15 @@ describe('PackageDeletedDistributionsListener', () => {
       ).toHaveBeenCalledWith(distribution.id, {
         status: DistributionStatus.to_be_removed,
       });
+    });
+
+    it('enqueues the removal job for the cascaded distribution', () => {
+      expect(mockRemovalJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          marketplaceDistributionId: distribution.id,
+          marketplaceId: marketplaceA,
+        }),
+      );
     });
 
     describe('cascade event', () => {

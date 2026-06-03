@@ -20,6 +20,7 @@ import {
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { PackageService } from '../../services/PackageService';
+import { RemovePluginFromMarketplaceDelayedJob } from '../../jobs/RemovePluginFromMarketplaceDelayedJob';
 
 const origin = 'MarkPluginForRemovalUseCase';
 
@@ -45,7 +46,9 @@ const origin = 'MarkPluginForRemovalUseCase';
  *  4. `updateStatus(id, { status: to_be_removed })`.
  *  5. Emit `MarketplacePluginRemovalInitiatedEvent` with
  *     `trigger='from_marketplace'`.
- *  6. Return the mutated distribution row.
+ *  6. Enqueue `RemovePluginFromMarketplaceDelayedJob` so the deletion is
+ *     committed onto the rolling `packmind/sync` PR (symmetric to publish).
+ *  7. Return the mutated distribution row.
  */
 export class MarkPluginForRemovalUseCase
   extends AbstractAdminUseCase<
@@ -59,6 +62,7 @@ export class MarkPluginForRemovalUseCase
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly packageService: PackageService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly removalJob: RemovePluginFromMarketplaceDelayedJob,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -159,6 +163,30 @@ export class MarkPluginForRemovalUseCase
         trigger: 'from_marketplace',
       }),
     );
+
+    // Enqueue the Git side effect: commit the plugin deletion onto the rolling
+    // `packmind/sync` PR (symmetric to publish). The distribution stays
+    // `to_be_removed`; the reconciliation job owns the terminal `removed`
+    // transition once the PR merges. A failed enqueue must not fail the
+    // request — reconciliation and a manual CLI deletion remain as fallbacks.
+    try {
+      await this.removalJob.addJob({
+        marketplaceDistributionId: distribution.id,
+        marketplaceId,
+        packageId: distribution.packageId,
+        organizationId: organization.id,
+        userId: createUserId(userId),
+      });
+    } catch (error) {
+      this.logger.error(
+        'Failed to enqueue marketplace plugin removal job; distribution stays to_be_removed',
+        {
+          distributionId: distribution.id,
+          marketplaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
 
     this.logger.info('Marketplace plugin distribution marked for removal', {
       distributionId: distribution.id,

@@ -4,7 +4,7 @@
 
 - Enable rendering packmind artifacts in `~/.claude` #332
 - Org-level marketplace governance — admins can link/unlink Git repositories as Packmind-governed marketplaces and members can browse enrolled marketplaces. Includes periodic health reconciliation (`healthy | drift | unreachable`).
-- Retire a published plugin from a marketplace through a PR-governed flow — org admins can mark a distribution for removal, cancel a pending removal, and watch reconciliation transition it to a terminal `removed` state once the deletion PR is merged (gated behind the `marketplace-plugin-removal` feature flag).
+- Retire a published plugin from a marketplace through a PR-governed flow — marking a distribution for removal automatically commits the plugin deletion onto the rolling `packmind/sync` PR (symmetric to publishing), reconciliation transitions it to a terminal `removed` state once that PR is merged, and admins can cancel a pending removal (gated behind the `marketplace-plugin-removal` feature flag). The same auto-deletion runs when a Packmind package with live distributions is deleted.
 - Drift detection for marketplaces — when a published plugin disappears from the marketplace descriptor without going through the retirement flow, the marketplace details view surfaces a "Drift detected" indicator listing the affected plugin slugs.
 - Package deletion cascade for marketplace distributions — deleting a Packmind package automatically marks every live marketplace distribution of that package as "to be removed" across all affected marketplaces.
 

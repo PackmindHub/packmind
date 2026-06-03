@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { PackageService } from '../services/PackageService';
+import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 
 const origin = 'PackageDeletedDistributionsListener';
 
@@ -18,6 +19,7 @@ const origin = 'PackageDeletedDistributionsListener';
 export type PackageDeletedDistributionsAdapter = {
   marketplaceDistributionRepository: IMarketplaceDistributionRepository;
   packageService: PackageService;
+  removePluginFromMarketplaceJob: RemovePluginFromMarketplaceDelayedJob;
 };
 
 /**
@@ -29,9 +31,11 @@ export type PackageDeletedDistributionsAdapter = {
  *  - For each deleted package, looks up every `success`-state distribution
  *    via `findActiveByPackageId` (the `success` filter skips already
  *    `to_be_removed` rows so the listener is idempotent on retries).
- *  - Transitions each one to `to_be_removed` and emits
+ *  - Transitions each one to `to_be_removed`, emits
  *    `MarketplacePluginRemovalInitiatedEvent` with
- *    `trigger='from_packmind_package'`.
+ *    `trigger='from_packmind_package'`, and enqueues
+ *    `RemovePluginFromMarketplaceDelayedJob` so the deletion is committed onto
+ *    the rolling `packmind/sync` PR (symmetric to the manual removal flow).
  */
 export class PackageDeletedDistributionsListener extends PackmindListener<PackageDeletedDistributionsAdapter> {
   constructor(
@@ -128,6 +132,28 @@ export class PackageDeletedDistributionsListener extends PackmindListener<Packag
           trigger: 'from_packmind_package',
         }),
       );
+
+      // Enqueue the Git side effect (commit the deletion to `packmind/sync`).
+      // Best-effort: a failed enqueue must not abort the cascade — the
+      // distribution stays `to_be_removed` for reconciliation/manual fallback.
+      try {
+        await this.adapter.removePluginFromMarketplaceJob.addJob({
+          marketplaceDistributionId: distribution.id,
+          marketplaceId: distribution.marketplaceId,
+          packageId: distribution.packageId,
+          organizationId,
+          userId,
+        });
+      } catch (error) {
+        this.logger.error(
+          'Failed to enqueue marketplace plugin removal job during cascade',
+          {
+            distributionId: distribution.id,
+            marketplaceId: distribution.marketplaceId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
 
       this.logger.info(
         'Marketplace plugin distribution cascaded to to_be_removed',

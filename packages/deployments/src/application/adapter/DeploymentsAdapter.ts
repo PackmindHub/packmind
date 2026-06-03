@@ -124,6 +124,8 @@ import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRe
 import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { PublishPluginToMarketplaceJobFactory } from '../../infra/jobs/PublishPluginToMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceJobFactory } from '../../infra/jobs/RemovePluginFromMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { TargetResolutionService } from '../services/TargetResolutionService';
@@ -662,6 +664,7 @@ export class DeploymentsAdapter
       this.marketplaceDistributionRepository,
       this.deploymentsServices.getPackageService(),
       ports.eventEmitterService,
+      this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob,
       this.accountsPort,
     );
 
@@ -755,13 +758,54 @@ export class DeploymentsAdapter
       );
     }
 
+    // Marketplace plugin removal queue — the inverse of the publish queue.
+    // Also single-concurrency: deletion commits onto `packmind/sync` must be
+    // serialized with publishes. No renderer is needed (we delete the
+    // plugin's files rather than render them).
+    const removePluginFromMarketplaceFactory =
+      new RemovePluginFromMarketplaceJobFactory(
+        this.marketplaceDistributionRepository,
+        this.marketplaceRepository,
+        this.gitRepoService,
+        this.gitPort!,
+        this.marketplaceDescriptorParserRegistry,
+      );
+    jobsService.registerJobQueue(
+      removePluginFromMarketplaceFactory.getQueueName(),
+      removePluginFromMarketplaceFactory,
+    );
+    await removePluginFromMarketplaceFactory.createQueue();
+
+    if (!removePluginFromMarketplaceFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for remove plugin from marketplace',
+      );
+    }
+
     this.logger.debug('Deployments delayed jobs built successfully');
     return {
       publishArtifactsDelayedJob: jobFactory.delayedJob,
       marketplaceReconciliationDelayedJob: reconciliationFactory.delayedJob,
       publishPluginToMarketplaceDelayedJob:
         publishPluginToMarketplaceFactory.delayedJob,
+      removePluginFromMarketplaceDelayedJob:
+        removePluginFromMarketplaceFactory.delayedJob,
     };
+  }
+
+  /**
+   * Exposes the marketplace plugin removal job so the cross-cutting
+   * `PackageDeletedDistributionsListener` (constructed in `DeploymentsHexa`)
+   * can enqueue deletions for the package-deletion cascade. Available only
+   * after `initialize()` has built the delayed jobs.
+   */
+  public getRemovePluginFromMarketplaceJob(): RemovePluginFromMarketplaceDelayedJob {
+    if (!this.deploymentsDelayedJobs) {
+      throw new Error(
+        'DeploymentsAdapter: delayed jobs not initialized — call initialize() first',
+      );
+    }
+    return this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob;
   }
 
   /**

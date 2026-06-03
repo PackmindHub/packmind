@@ -67,7 +67,9 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
   private readonly listener: DeploymentsListener;
-  private readonly packageDeletedDistributionsListener: PackageDeletedDistributionsListener;
+  // Built during initialize() — needs the removal delayed job, which only
+  // exists once the adapter has built its delayed jobs.
+  private packageDeletedDistributionsListener!: PackageDeletedDistributionsListener;
 
   constructor(
     dataSource: DataSource,
@@ -135,14 +137,9 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getPackageRepository(),
       );
 
-      // Listener that cascades package deletions to live marketplace
-      // distributions. Initialized alongside the main DeploymentsListener.
-      this.packageDeletedDistributionsListener =
-        new PackageDeletedDistributionsListener({
-          marketplaceDistributionRepository:
-            this.marketplaceDistributionRepository,
-          packageService: this.services.getPackageService(),
-        });
+      // The package-deletion cascade listener is built in initialize(): it
+      // needs the removal delayed job, which the adapter only creates once its
+      // delayed jobs are wired.
 
       this.logger.info('DeploymentsHexa construction completed');
     } catch (error) {
@@ -191,6 +188,17 @@ export class DeploymentsHexa extends BaseHexa<
 
       // Initialize listener with event emitter service
       this.listener.initialize(eventEmitterService);
+
+      // Build + initialize the cascade listener now that the adapter's delayed
+      // jobs (incl. the removal job) exist.
+      this.packageDeletedDistributionsListener =
+        new PackageDeletedDistributionsListener({
+          marketplaceDistributionRepository:
+            this.marketplaceDistributionRepository,
+          packageService: this.services.getPackageService(),
+          removePluginFromMarketplaceJob:
+            this.adapter.getRemovePluginFromMarketplaceJob(),
+        });
       this.packageDeletedDistributionsListener.initialize(eventEmitterService);
 
       this.logger.info('DeploymentsHexa initialized successfully');
