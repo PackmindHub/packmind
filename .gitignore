@@ -48,6 +48,7 @@ test-results/
 .env
 compose.env
 .mcp.json
+!scripts/michel/.mcp.json
 apps/mcp-server/key.pem
 
 # Git worktrees
