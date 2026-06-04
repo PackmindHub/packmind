@@ -110,6 +110,7 @@ describe('AuthService - getMe method', () => {
               name: 'Test Organization',
               slug: 'test-organization',
               role: 'admin',
+              githubAppMode: 'on-prem',
             },
           });
         });

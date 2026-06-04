@@ -5,6 +5,7 @@ import { CreateGitProviderForm } from '../../types/GitProviderTypes';
 import { GitProviderId } from '@packmind/types';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import {
+  CHECK_PROVIDER_AUTH_KEY,
   GET_GIT_PROVIDERS_KEY,
   GET_GIT_PROVIDER_BY_ID_KEY,
   GET_GITHUB_APP_STATUS_KEY,
@@ -15,6 +16,35 @@ import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { routes } from '../../../../shared/utils/routes';
+
+// Live probe of a provider's stored credentials. Used by the connection
+// drawer to surface a "Disconnected" status without waiting for the user to
+// open Manage repos and hit the bigger /available-repos call.
+export const useCheckProviderAuthQuery = (
+  providerId: GitProviderId | undefined,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...CHECK_PROVIDER_AUTH_KEY, organization?.id, providerId],
+    queryFn: () => {
+      if (!organization?.id || !providerId) {
+        throw new Error(
+          'Organization and provider IDs are required to probe auth',
+        );
+      }
+      return gitProviderGateway.checkProviderAuth(organization.id, providerId);
+    },
+    enabled: enabled && !!organization?.id && !!providerId,
+    // We want fresh truth each time the drawer is opened, not a stale "ok"
+    // from a previous session that may have outlived the token.
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+};
 
 // Git Provider Queries
 export const useGetGitProvidersQuery = () => {
@@ -209,7 +239,10 @@ export const useSubmitGithubAppManifestCallbackMutation = () => {
 export const useGetGithubAppStatusQuery = () => {
   const { organization } = useAuthContext();
   const { data: me } = useGetMeQuery();
-  const edition = me?.edition ?? 'oss';
+  const githubAppMode =
+    me?.authenticated && me.organization
+      ? me.organization.githubAppMode
+      : 'on-prem';
 
   return useQuery({
     queryKey: [...GET_GITHUB_APP_STATUS_KEY, organization?.id],
@@ -221,7 +254,7 @@ export const useGetGithubAppStatusQuery = () => {
       }
       return gitProviderGateway.getGithubAppStatus(organization.id);
     },
-    enabled: !!organization?.id && edition === 'oss',
+    enabled: !!organization?.id && githubAppMode === 'on-prem',
   });
 };
 

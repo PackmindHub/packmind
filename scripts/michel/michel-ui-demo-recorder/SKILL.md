@@ -226,6 +226,8 @@ mkdir -p screenshots
 
 Use `browser_take_screenshot(filePath=..., fullPage=true)` for full-page PNGs at moments worth capturing as stills. Number them (`01-initial.png`, `02-typing.png`, ...) so they sort correctly. Save them under `screenshots/` inside the project.
 
+**Wait for real content before the first screenshot.** The Packmind frontend is an SPA — on first paint it shows only a loading spinner, so a screenshot taken right after `browser_navigate` captures the spinner, not the page. Always `browser_wait_for(text=<a label the loaded page renders>)` (e.g. the sign-in heading) before capturing, exactly as for the video steps above.
+
 If the project doesn't have ffmpeg/ImageMagick installed and you also want a GIF or MP4 from a sequence of stills (for an environment that can't play WebM), use a Python venv with `Pillow` (GIF) or `imageio-ffmpeg` (MP4) — both ship a usable binary so brew install isn't needed.
 
 ## Stopping and packaging

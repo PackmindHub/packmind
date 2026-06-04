@@ -5,10 +5,10 @@ export * from './application/useCases';
 export { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
 export {
   GithubTokenResolverFactory,
-  resolveEdition,
+  resolveGithubAppMode,
 } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 export type {
-  PackmindEdition,
+  GithubAppMode,
   IConfigProvider,
 } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 export {

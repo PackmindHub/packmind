@@ -2,7 +2,7 @@
 // Mock the heavy import chains that load broken packages at test time.
 
 jest.mock('../../../shared/utils/edition', () => ({
-  resolvePackmindEdition: jest.fn(),
+  resolveGithubAppMode: jest.fn(),
 }));
 
 // @packmind/accounts loads broken use case hierarchies at test time.
@@ -46,17 +46,28 @@ jest.mock('@packmind/node-utils', () => ({
   AuthenticatedRequest: {},
 }));
 
-import { BadRequestException, NotImplementedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import {
+  GitProviderDisplayNameAlreadyUsedError,
+  GitProviderDisplayNameNotEditableError,
+  createGitProviderId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { GitProvidersController } from './git-providers.controller';
 import { GitProvidersService } from './git-providers.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { resolvePackmindEdition } = require('../../../shared/utils/edition') as {
-  resolvePackmindEdition: jest.Mock;
+const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
+  resolveGithubAppMode: jest.Mock;
 };
 
 describe('GitProvidersController', () => {
@@ -64,6 +75,8 @@ describe('GitProvidersController', () => {
   let mockService: jest.Mocked<
     Pick<
       GitProvidersService,
+      | 'addGitProvider'
+      | 'updateGitProvider'
       | 'buildGithubAppInstallUrl'
       | 'completeGithubAppInstall'
       | 'buildGithubAppManifest'
@@ -83,6 +96,8 @@ describe('GitProvidersController', () => {
 
   beforeEach(() => {
     mockService = {
+      addGitProvider: jest.fn(),
+      updateGitProvider: jest.fn(),
       buildGithubAppInstallUrl: jest.fn(),
       completeGithubAppInstall: jest.fn(),
       buildGithubAppManifest: jest.fn(),
@@ -102,9 +117,9 @@ describe('GitProvidersController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('getGithubAppInstallUrl', () => {
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       it('calls the service and returns its result', async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
 
         const expected = {
           installUrl:
@@ -122,7 +137,7 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       const expected = {
         installUrl:
           'https://github.com/apps/my-oss-app/installations/new?state=abc',
@@ -131,7 +146,7 @@ describe('GitProvidersController', () => {
       let result: Awaited<ReturnType<typeof controller.getGithubAppInstallUrl>>;
 
       beforeEach(async () => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
         mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
 
         result = await controller.getGithubAppInstallUrl(orgId, mockRequest);
@@ -283,9 +298,9 @@ describe('GitProvidersController', () => {
       manifestPostUrl: 'https://github.com/settings/apps/new',
     };
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
         mockService.buildGithubAppManifest.mockResolvedValue(manifestResponse);
       });
 
@@ -308,9 +323,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {
@@ -332,9 +347,9 @@ describe('GitProvidersController', () => {
   describe('completeGithubAppManifest', () => {
     const validBody = { code: 'gh-code-123', state: 'MANIFEST_STATE' };
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('on happy path', () => {
@@ -420,9 +435,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {
@@ -447,7 +462,7 @@ describe('GitProvidersController', () => {
       let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
       beforeEach(async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
         mockService.getGithubAppStatus.mockResolvedValue(expected);
 
         result = await controller.getGithubAppStatus(orgId);
@@ -464,7 +479,7 @@ describe('GitProvidersController', () => {
 
     describe('on oss edition', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('when app exists', () => {
@@ -512,7 +527,7 @@ describe('GitProvidersController', () => {
   describe('revokeGithubApp', () => {
     describe('on oss edition', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       it('calls service and returns void', async () => {
@@ -539,9 +554,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {
@@ -556,6 +571,58 @@ describe('GitProvidersController', () => {
           .catch(() => undefined);
 
         expect(mockService.revokeGithubApp).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('addGitProvider', () => {
+    const body = {
+      source: 'github' as const,
+      url: 'https://github.com',
+      token: 'tok',
+      authMethod: 'token' as const,
+      displayName: 'Production',
+      organizationId: orgId,
+    };
+
+    describe('when the display name collides with an existing provider', () => {
+      it('translates the domain error into a 409 Conflict', async () => {
+        mockService.addGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameAlreadyUsedError('Production', orgId),
+        );
+
+        await expect(
+          controller.addGitProvider(orgId, mockRequest, body),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+    });
+  });
+
+  describe('updateGitProvider', () => {
+    const providerId = createGitProviderId('prov-1');
+    const body = { displayName: 'Marketplace' };
+
+    describe('when the display name collides with another provider', () => {
+      it('translates the domain error into a 409 Conflict', async () => {
+        mockService.updateGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameAlreadyUsedError('Marketplace', orgId),
+        );
+
+        await expect(
+          controller.updateGitProvider(orgId, mockRequest, providerId, body),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+    });
+
+    describe('when editing a CLI-managed provider', () => {
+      it('translates the domain error into a 403 Forbidden', async () => {
+        mockService.updateGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameNotEditableError(providerId),
+        );
+
+        await expect(
+          controller.updateGitProvider(orgId, mockRequest, providerId, body),
+        ).rejects.toBeInstanceOf(ForbiddenException);
       });
     });
   });

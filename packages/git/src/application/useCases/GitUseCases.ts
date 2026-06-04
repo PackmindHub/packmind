@@ -2,6 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  CheckProviderAuthCommand,
+  CheckProviderAuthResponse,
   GetAvailableRemoteDirectoriesCommand,
   GitCommit,
   GitProvider,
@@ -27,6 +29,7 @@ import {
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { GitServices } from '../GitServices';
+import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import {
   AddGitProviderCommand,
   AddGitProviderUseCase,
@@ -34,6 +37,7 @@ import {
 import { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
 import { CheckBranchExistsUseCase } from './checkBranchExists/checkBranchExists.usecase';
 import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
+import { CheckProviderAuthUseCase } from './checkProviderAuth/checkProviderAuth.usecase';
 import { CommitToGit } from './commitToGit/commitToGit.usecase';
 import { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
 import { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
@@ -73,6 +77,7 @@ export class GitUseCases {
   private readonly _findGitRepoByOwnerAndRepo: FindGitRepoByOwnerAndRepoUseCase;
   private readonly _listRepos: ListReposUseCase;
   private readonly _listProviders: ListProvidersUseCase;
+  private _checkProviderAuth!: CheckProviderAuthUseCase;
   private readonly _getOrganizationRepositories: GetOrganizationRepositoriesUseCase;
   private readonly _getRepositoryById: GetRepositoryByIdUseCase;
   private _updateGitProvider: UpdateGitProviderUseCase;
@@ -88,7 +93,7 @@ export class GitUseCases {
 
   constructor(
     private readonly gitServices: GitServices,
-    private readonly edition: 'cloud' | 'oss' = 'oss',
+    private readonly mode: GithubAppMode = 'on-prem',
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._addGitProvider = this.createAddGitProviderUseCase();
@@ -132,6 +137,10 @@ export class GitUseCases {
       this.accountsAdapter,
       gitServices.getGitProviderService(),
     );
+    this._checkProviderAuth = new CheckProviderAuthUseCase(
+      this.accountsAdapter,
+      gitServices.getGitProviderService(),
+    );
     this._getOrganizationRepositories = new GetOrganizationRepositoriesUseCase(
       gitServices.getGitRepoService(),
     );
@@ -169,7 +178,7 @@ export class GitUseCases {
     return new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.edition,
+      this.mode,
     );
   }
 
@@ -202,7 +211,7 @@ export class GitUseCases {
     return new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.edition,
+      this.mode,
     );
   }
 
@@ -249,6 +258,12 @@ export class GitUseCases {
       organizationId: String(organizationId),
       providerId,
     });
+  }
+
+  public async checkProviderAuth(
+    command: CheckProviderAuthCommand,
+  ): Promise<CheckProviderAuthResponse> {
+    return this._checkProviderAuth.execute(command);
   }
 
   public listAvailableRepos(gitProviderId: GitProviderId): Promise<

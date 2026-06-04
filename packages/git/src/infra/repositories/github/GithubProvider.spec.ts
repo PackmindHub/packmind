@@ -33,6 +33,12 @@ describe('GithubProvider', () => {
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
+    (mockedAxios.isAxiosError as unknown as jest.Mock).mockImplementation(
+      (payload) =>
+        typeof payload === 'object' &&
+        payload !== null &&
+        (payload as { isAxiosError?: boolean }).isAxiosError === true,
+    );
 
     githubProvider = new GithubProvider(stubResolver(), mockLogger);
   });
@@ -458,6 +464,135 @@ describe('GithubProvider', () => {
             installationProvider.listAvailableRepositories(),
           ).rejects.toThrow('Failed to fetch repositories from GitHub');
         });
+      });
+    });
+  });
+
+  describe('checkAuth', () => {
+    const buildAxiosError = (
+      status: number,
+      headers: Record<string, string | number> = {},
+    ) => {
+      const err = new Error(
+        `Request failed with status code ${status}`,
+      ) as Error & {
+        isAxiosError: true;
+        response: { status: number; headers: Record<string, string | number> };
+      };
+      err.isAxiosError = true;
+      err.response = { status, headers };
+      return err;
+    };
+
+    describe('with PAT resolver', () => {
+      it('probes /user', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: { login: 'me' } });
+
+        await githubProvider.checkAuth();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user', {
+          params: undefined,
+        });
+      });
+
+      it('returns ok on 200', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: { login: 'me' } });
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: true });
+      });
+
+      it('maps 401 to unauthorized', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'unauthorized' });
+      });
+
+      it('maps 403 with x-ratelimit-remaining: 0 to rate_limited', async () => {
+        mockAxiosInstance.get.mockRejectedValue(
+          buildAxiosError(403, { 'x-ratelimit-remaining': '0' }),
+        );
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'rate_limited' });
+      });
+
+      it('maps plain 403 to forbidden', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(403));
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'forbidden' });
+      });
+
+      it('maps 429 to rate_limited', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(429));
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'rate_limited' });
+      });
+
+      it('maps non-axios errors to network', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('boom'));
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'network' });
+      });
+
+      it('maps unexpected statuses to network', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(500));
+
+        const result = await githubProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'network' });
+      });
+    });
+
+    describe('with installation resolver', () => {
+      let installationProvider: GithubProvider;
+
+      beforeEach(() => {
+        installationProvider = new GithubProvider(
+          stubResolver('installation'),
+          mockLogger,
+        );
+      });
+
+      it('probes /installation/repositories with per_page=1', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: { total_count: 0, repositories: [] },
+        });
+
+        await installationProvider.checkAuth();
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          '/installation/repositories',
+          { params: { per_page: 1 } },
+        );
+      });
+
+      it('returns ok on 200', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: { total_count: 0, repositories: [] },
+        });
+
+        const result = await installationProvider.checkAuth();
+
+        expect(result).toEqual({ ok: true });
+      });
+
+      it('maps 401 to unauthorized', async () => {
+        mockAxiosInstance.get.mockRejectedValue(buildAxiosError(401));
+
+        const result = await installationProvider.checkAuth();
+
+        expect(result).toEqual({ ok: false, reason: 'unauthorized' });
       });
     });
   });

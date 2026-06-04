@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProvider,
+  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
@@ -9,7 +10,13 @@ import {
   PackmindCommand,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
+import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
+import {
+  ensureDisplayNameAvailable,
+  normalizeDisplayName,
+} from '../shared/validateDisplayName';
+import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'UpdateGitProviderUseCase';
 
@@ -25,7 +32,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
-    private readonly edition: 'cloud' | 'oss' = 'oss',
+    private readonly mode: GithubAppMode = 'on-prem',
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -64,6 +71,16 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
       throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
 
+    // displayName edits are forbidden on CLI-managed providers; guard before
+    // credential validation so the surfaced error reflects the actual constraint
+    // rather than a downstream "token required" check.
+    if (
+      gitProvider.displayName !== undefined &&
+      !providerHasAuth(existingProvider)
+    ) {
+      throw new GitProviderDisplayNameNotEditableError(id);
+    }
+
     const nextAuthMethod =
       gitProvider.authMethod ?? existingProvider.authMethod;
     const isSwitchingMethod =
@@ -90,8 +107,34 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
             null,
         };
 
-    validateProviderCredentials(credentialView, this.edition);
+    validateProviderCredentials(credentialView, this.mode);
 
-    return this.gitProviderService.updateGitProvider(id, gitProvider);
+    const patch: Partial<Omit<GitProvider, 'id'>> = { ...gitProvider };
+
+    if (gitProvider.displayName !== undefined) {
+      const normalizedDisplayName = normalizeDisplayName(
+        gitProvider.displayName,
+      );
+
+      if (
+        normalizedDisplayName !== existingProvider.displayName &&
+        normalizedDisplayName.length > 0
+      ) {
+        const siblings =
+          await this.gitProviderService.findGitProvidersByOrganizationId(
+            existingProvider.organizationId,
+          );
+        ensureDisplayNameAvailable(
+          normalizedDisplayName,
+          existingProvider.organizationId,
+          siblings,
+          id,
+        );
+      }
+
+      patch.displayName = normalizedDisplayName;
+    }
+
+    return this.gitProviderService.updateGitProvider(id, patch);
   }
 }

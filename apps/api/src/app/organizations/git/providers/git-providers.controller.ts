@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -18,6 +19,8 @@ import { GitProvidersService } from './git-providers.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitProvider,
+  GitProviderDisplayNameAlreadyUsedError,
+  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitRepo,
   GitRepoAlreadyExistsError,
@@ -30,7 +33,7 @@ import {
 import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { resolvePackmindEdition } from '../../../shared/utils/edition';
+import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 
 interface AddRepositoryDto {
@@ -82,6 +85,9 @@ export class GitProvidersController {
       if (error instanceof InvalidGitProviderCredentialsError) {
         throw new BadRequestException(error.message);
       }
+      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
+        throw new ConflictException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -130,10 +136,10 @@ export class GitProvidersController {
     state: string;
     manifestPostUrl: string;
   }> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App manifest flow is only available on OSS edition',
+        'GitHub App manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -164,10 +170,10 @@ export class GitProvidersController {
     @Request() req: AuthenticatedRequest,
     @Body() body: { code: string; state: string },
   ): Promise<{ installUrl: string }> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App manifest flow is only available on OSS edition',
+        'GitHub App manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -240,10 +246,10 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
   ): Promise<void> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App revocation is only available on OSS edition',
+        'GitHub App revocation is not available when a shared GitHub App is configured',
       );
     }
 
@@ -399,6 +405,37 @@ export class GitProvidersController {
     }
   }
 
+  @Get(':id/check-auth')
+  async checkProviderAuth(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') gitProviderId: GitProviderId,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/check-auth - Probing provider auth',
+      { organizationId, gitProviderId, userId },
+    );
+
+    try {
+      return await this.gitProvidersService.checkProviderAuth(
+        organizationId,
+        gitProviderId,
+        userId,
+      );
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/:id/check-auth - Error probing provider auth',
+        {
+          organizationId,
+          gitProviderId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   @Get(':id/repos/:owner/:repo/branches/:branch/exists')
   async checkBranchExists(
     @Param('orgId') organizationId: OrganizationId,
@@ -479,6 +516,12 @@ export class GitProvidersController {
     } catch (error) {
       if (error instanceof InvalidGitProviderCredentialsError) {
         throw new BadRequestException(error.message);
+      }
+      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
+        throw new ConflictException(error.message);
+      }
+      if (error instanceof GitProviderDisplayNameNotEditableError) {
+        throw new ForbiddenException(error.message);
       }
       const errorMessage =
         error instanceof Error ? error.message : String(error);

@@ -1,5 +1,9 @@
-import { IGitProvider } from '../../../domain/repositories/IGitProvider';
-import axios, { AxiosInstance } from 'axios';
+import {
+  CheckAuthFailureReason,
+  CheckAuthResult,
+  IGitProvider,
+} from '../../../domain/repositories/IGitProvider';
+import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
@@ -182,6 +186,20 @@ export class GitlabProvider implements IGitProvider {
     }
   }
 
+  async checkAuth(): Promise<CheckAuthResult> {
+    try {
+      await this.client.get('/user');
+      return { ok: true };
+    } catch (error) {
+      const reason = mapGitlabAuthError(error);
+      this.logger.warn('GitLab auth check failed', {
+        reason,
+        status: isAxiosError(error) ? error.response?.status : undefined,
+      });
+      return { ok: false, reason };
+    }
+  }
+
   async checkBranchExists(
     owner: string,
     repo: string,
@@ -256,4 +274,13 @@ export class GitlabProvider implements IGitProvider {
       );
     }
   }
+}
+
+function mapGitlabAuthError(error: unknown): CheckAuthFailureReason {
+  if (!isAxiosError(error)) return 'network';
+  const status = error.response?.status;
+  if (status === 401) return 'unauthorized';
+  if (status === 429) return 'rate_limited';
+  if (status === 403) return 'forbidden';
+  return 'network';
 }

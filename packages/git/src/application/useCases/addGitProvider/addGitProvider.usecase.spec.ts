@@ -1,6 +1,7 @@
 import { AddGitProviderUseCase } from './addGitProvider.usecase';
 import { GitProviderService } from '../../GitProviderService';
 import {
+  GitProviderDisplayNameAlreadyUsedError,
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
@@ -43,6 +44,7 @@ describe('AddGitProviderUseCase', () => {
   beforeEach(() => {
     mockGitProviderService = {
       addGitProvider: jest.fn(),
+      findGitProvidersByOrganizationId: jest.fn().mockResolvedValue([]),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -55,6 +57,7 @@ describe('AddGitProviderUseCase', () => {
     useCase = new AddGitProviderUseCase(
       mockGitProviderService,
       accountsAdapter,
+      'on-prem',
       stubLogger(),
     );
   });
@@ -93,6 +96,7 @@ describe('AddGitProviderUseCase', () => {
     it('calls addGitProvider with correct parameters', () => {
       expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith({
         ...input.gitProvider,
+        displayName: '',
         organizationId: input.organizationId,
       });
     });
@@ -167,18 +171,18 @@ describe('AddGitProviderUseCase', () => {
   });
 
   describe('authMethod validation', () => {
-    const makeUseCase = (edition: 'cloud' | 'oss') =>
+    const makeUseCase = (mode: 'shared' | 'on-prem') =>
       new AddGitProviderUseCase(
         mockGitProviderService,
         accountsAdapter,
-        edition,
+        mode,
         stubLogger(),
       );
 
     describe('token auth method', () => {
       describe('when token is present', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: 'my-token',
@@ -205,7 +209,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when token is missing and allowTokenlessProvider is false', () => {
         it('throws BadRequestException', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -228,10 +232,10 @@ describe('AddGitProviderUseCase', () => {
       '00000000-0000-0000-0000-000000000aaa',
     );
 
-    describe('app auth method on Cloud edition', () => {
-      describe('when only appInstallationId is provided (Cloud does not require organizationGitHubAppId)', () => {
+    describe('app auth method on shared mode', () => {
+      describe('when only appInstallationId is provided (shared mode does not require organizationGitHubAppId)', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('cloud');
+          const uc = makeUseCase('shared');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: null,
@@ -258,9 +262,9 @@ describe('AddGitProviderUseCase', () => {
         });
       });
 
-      describe('when appInstallationId is missing on Cloud', () => {
+      describe('when appInstallationId is missing on shared mode', () => {
         it('throws', async () => {
-          const uc = makeUseCase('cloud');
+          const uc = makeUseCase('shared');
 
           await expect(
             uc.execute({
@@ -278,10 +282,10 @@ describe('AddGitProviderUseCase', () => {
       });
     });
 
-    describe('app auth method on OSS edition', () => {
+    describe('app auth method on on-prem mode', () => {
       describe('when appInstallationId and organizationGitHubAppId are provided', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: null,
@@ -312,7 +316,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when appInstallationId is missing', () => {
         it('throws', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -330,9 +334,9 @@ describe('AddGitProviderUseCase', () => {
         });
       });
 
-      describe('when organizationGitHubAppId is missing on OSS', () => {
+      describe('when organizationGitHubAppId is missing on on-prem mode', () => {
         it('throws', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -354,7 +358,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when token is set with app authMethod', () => {
         it('throws BadRequestException', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -475,6 +479,133 @@ describe('AddGitProviderUseCase', () => {
 
       it('does not call addGitProvider', () => {
         expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('displayName validation', () => {
+    const baseInput = {
+      gitProvider: {
+        source: GitProviderVendors.github,
+        url: 'https://github.com',
+        token: 'test-token',
+        authMethod: 'token' as const,
+      },
+      organizationId,
+      userId: memberUser.id,
+    };
+
+    describe('when displayName is omitted', () => {
+      it('persists empty displayName', async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+
+        await useCase.execute(baseInput);
+
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: '' }),
+        );
+      });
+    });
+
+    describe('when displayName is provided with surrounding whitespace', () => {
+      it('persists the trimmed value', async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+
+        await useCase.execute({
+          ...baseInput,
+          gitProvider: { ...baseInput.gitProvider, displayName: '  Prod  ' },
+        });
+
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: 'Prod' }),
+        );
+      });
+    });
+
+    describe('when displayName is whitespace-only', () => {
+      beforeEach(async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+
+        await useCase.execute({
+          ...baseInput,
+          gitProvider: { ...baseInput.gitProvider, displayName: '   ' },
+        });
+      });
+
+      it('persists empty displayName', () => {
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: '' }),
+        );
+      });
+
+      it('does not check uniqueness against other providers', () => {
+        expect(
+          mockGitProviderService.findGitProvidersByOrganizationId,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when displayName exceeds 64 characters', () => {
+      it('persists the value truncated to 64 characters', async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+        const longName = 'a'.repeat(100);
+
+        await useCase.execute({
+          ...baseInput,
+          gitProvider: { ...baseInput.gitProvider, displayName: longName },
+        });
+
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: 'a'.repeat(64) }),
+        );
+      });
+    });
+
+    describe('when another provider in the org already uses the same name (case-insensitive)', () => {
+      it('throws GitProviderDisplayNameAlreadyUsedError', async () => {
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [
+            gitProviderFactory({
+              organizationId,
+              displayName: 'Production',
+            }),
+          ],
+        );
+
+        await expect(
+          useCase.execute({
+            ...baseInput,
+            gitProvider: {
+              ...baseInput.gitProvider,
+              displayName: 'production',
+            },
+          }),
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameAlreadyUsedError);
+      });
+    });
+
+    describe('when another provider in the org has an empty displayName', () => {
+      it('allows creating another provider with an empty displayName', async () => {
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [gitProviderFactory({ organizationId, displayName: '' })],
+        );
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+
+        await useCase.execute(baseInput);
+
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: '' }),
+        );
       });
     });
   });

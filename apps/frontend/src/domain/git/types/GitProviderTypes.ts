@@ -1,4 +1,5 @@
 import {
+  GitProvider,
   GitProviderAuthMethod,
   GitProviderId,
   GitProviderVendor,
@@ -15,16 +16,16 @@ export enum GitProviders {
   GITLAB = 'gitlab',
 }
 
-// Frontend-specific GitProvider interface for UI
-export interface GitProviderUI {
-  id: GitProviderId;
-  source: GitProviderVendor;
-  organizationId: OrganizationId;
+// Frontend-specific GitProvider type for UI. Drops the server-only `token`
+// (the backend never ships it down) and overrides `repos` with the UI variant.
+export type GitProviderUI = Omit<
+  GitProvider,
+  'token' | 'repos' | 'authMethod' | 'organization'
+> & {
   hasAuth: boolean;
-  url: string | null;
   repos?: GitRepoUI[];
   authMethod?: GitProviderAuthMethod;
-}
+};
 
 // Frontend-specific GitRepo interface for UI
 export interface GitRepoUI {
@@ -46,6 +47,8 @@ export interface CreateGitProviderForm {
   authMethod?: GitProviderAuthMethod;
   // Only meaningful when source === 'github' && authMethod === 'app'.
   appInstallationId?: number;
+  // Optional human-readable label, max 64 chars; empty string means unnamed.
+  displayName?: string;
 }
 
 // Form data types for adding repositories

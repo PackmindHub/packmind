@@ -351,6 +351,7 @@ export class TargetResolutionService {
           url: expectedProviderUrl,
           token: null,
           authMethod: 'token' as const,
+          displayName: '',
         },
         allowTokenlessProvider: true,
       });

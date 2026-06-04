@@ -59,6 +59,7 @@ const githubProvider: GitProviderUI = {
   organizationId: 'org-1' as OrganizationId,
   hasAuth: true,
   url: 'https://github.com',
+  displayName: '',
 };
 
 const gitlabProvider: GitProviderUI = {

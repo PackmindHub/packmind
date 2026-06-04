@@ -49,6 +49,7 @@ const buildConnectedAppProvider = (
   hasAuth: true,
   url: 'https://github.com',
   authMethod: 'app',
+  displayName: '',
   ...overrides,
 });
 
@@ -536,6 +537,13 @@ describe('GitHubAppConnection', () => {
           displayName: null,
           memberships: [],
         },
+        organization: {
+          id: mockOrganizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+          githubAppMode: 'on-prem',
+        },
       },
     } as ReturnType<typeof useGetMeQuery>);
 
@@ -567,6 +575,13 @@ describe('GitHubAppConnection', () => {
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
+          },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'shared',
           },
         },
       } as ReturnType<typeof useGetMeQuery>);
@@ -612,6 +627,13 @@ describe('GitHubAppConnection', () => {
             displayName: null,
             memberships: [],
           },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'on-prem',
+          },
         },
       } as ReturnType<typeof useGetMeQuery>);
 
@@ -652,6 +674,13 @@ describe('GitHubAppConnection', () => {
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
+          },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'on-prem',
           },
         },
       } as ReturnType<typeof useGetMeQuery>);
@@ -725,6 +754,13 @@ describe('GitHubAppConnection', () => {
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
+          },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'on-prem',
           },
         },
       } as ReturnType<typeof useGetMeQuery>);
@@ -841,6 +877,13 @@ describe('GitHubAppConnection', () => {
             email: 'user@packmind.com',
             displayName: null,
             memberships: [],
+          },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'on-prem',
           },
         },
       } as ReturnType<typeof useGetMeQuery>);

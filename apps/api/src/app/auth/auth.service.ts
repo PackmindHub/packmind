@@ -43,7 +43,11 @@ import {
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
-import { resolvePackmindEdition } from '../shared/utils/edition';
+import {
+  GithubAppMode,
+  resolveGithubAppMode,
+  resolvePackmindEdition,
+} from '../shared/utils/edition';
 
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
@@ -77,6 +81,7 @@ export interface GetMeResponse {
     name: string;
     slug: string;
     role: UserOrganizationRole;
+    githubAppMode: GithubAppMode;
   };
   organizations?: Array<{
     organization: {
@@ -275,7 +280,10 @@ export class AuthService {
   }
 
   async getMe(accessToken?: string): Promise<GetMeResponse> {
-    const edition = await resolvePackmindEdition();
+    const [edition, githubAppMode] = await Promise.all([
+      resolvePackmindEdition(),
+      resolveGithubAppMode(),
+    ]);
 
     if (!accessToken) {
       return {
@@ -421,6 +429,7 @@ export class AuthService {
           name: org.name,
           slug: org.slug,
           role: organizationMembership.role,
+          githubAppMode,
         },
         authenticated: true,
       };

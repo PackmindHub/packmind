@@ -1,6 +1,7 @@
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
   GitProviderId,
@@ -73,6 +74,21 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.listAvailableRepositories(); // Always filters for write-only repositories
+  }
+
+  async checkProviderAuth(
+    gitProviderId: GitProviderId,
+  ): Promise<CheckAuthResult> {
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    const providerInstance =
+      await this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.checkAuth();
   }
 
   async checkBranchExists(

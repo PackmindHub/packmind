@@ -129,7 +129,7 @@ export class AddGitHubAppSchema1780404152009 implements MigrationInterface {
 
       // No CHECK constraint on (auth_method = 'app' => org_github_app_id IS
       // NOT NULL): cloud edition uses a shared env-configured App and has no
-      // per-org OrganizationGitHubApp row, so cloud app-auth providers leave
+      // on-prem OrganizationGitHubApp row, so cloud app-auth providers leave
       // this column NULL. The OSS edition enforces non-null via
       // `validateProviderCredentials` at the application layer.
 

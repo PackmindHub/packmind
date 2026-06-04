@@ -21,7 +21,10 @@ import { FetchFileContentCallback } from './application/jobs/FetchFileContentDel
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
-import { GithubTokenResolverFactory } from './infra/repositories/github/auth/GithubTokenResolverFactory';
+import {
+  GithubAppMode,
+  GithubTokenResolverFactory,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';
 
 const origin = 'GitHexa';
 
@@ -82,14 +85,14 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('Initializing GitHexa (adapter retrieval phase)');
 
     try {
-      // Resolve edition once at bootstrap so use cases get the correct value
-      const rawEdition = await Configuration.getConfig('PACKMIND_EDITION');
-      const edition: 'cloud' | 'oss' =
-        rawEdition === 'proprietary' || rawEdition === 'cloud'
-          ? 'cloud'
-          : 'oss';
+      // Resolve GitHub App hosting mode at bootstrap so use cases get the
+      // correct value. Mode is inferred from GITHUB_APP_SLUG presence: when
+      // set, a single shared App is configured via env; when unset, each org
+      // registers its own App via the manifest flow (on-prem).
+      const slug = await Configuration.getConfig('GITHUB_APP_SLUG');
+      const mode: GithubAppMode = slug ? 'shared' : 'on-prem';
 
-      this.adapter.setEdition(edition);
+      this.adapter.setMode(mode);
 
       // Get all required ports and services
       const ports = {

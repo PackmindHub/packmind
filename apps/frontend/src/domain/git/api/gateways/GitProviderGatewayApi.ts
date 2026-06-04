@@ -2,6 +2,7 @@ import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
 import {
   CheckDirectoryExistenceResult,
+  CheckProviderAuthResponse,
   GitProviderId,
   GitProviderWithoutToken,
   GitRepoId,
@@ -116,6 +117,7 @@ export class GitProviderGatewayApi
       organizationId,
       url: data.url,
       authMethod: data.authMethod ?? 'token',
+      displayName: data.displayName ?? '',
       ...(data.authMethod === 'app'
         ? {
             appInstallationId: data.appInstallationId,
@@ -137,6 +139,9 @@ export class GitProviderGatewayApi
       source: data.source,
       url: data.url,
       authMethod: data.authMethod ?? 'token',
+      ...(data.displayName !== undefined
+        ? { displayName: data.displayName }
+        : {}),
       ...(data.authMethod === 'app'
         ? {
             appInstallationId: data.appInstallationId,
@@ -220,6 +225,15 @@ export class GitProviderGatewayApi
   ): Promise<void> {
     return this._api.delete<void>(
       `${this._endpoint}/${organizationId}/git/providers/${providerId}/repositories/${repoId}`,
+    );
+  }
+
+  async checkProviderAuth(
+    organizationId: OrganizationId,
+    providerId: GitProviderId,
+  ): Promise<CheckProviderAuthResponse> {
+    return this._api.get<CheckProviderAuthResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${providerId}/check-auth`,
     );
   }
 

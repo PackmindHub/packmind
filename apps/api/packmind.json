@@ -1,5 +1,5 @@
 {
   "packages": {
-    "@backend/nestjs": "*"
+    "@backend/backend-nestjs-standards": "*"
   }
 }

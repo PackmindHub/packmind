@@ -1,0 +1,53 @@
+# Sprite sandbox override: docker exec (setns) is blocked — disable all
+# exec-based healthchecks and relax service_healthy deps to service_started.
+services:
+  nx-daemon:
+    healthcheck:
+      disable: true
+  postgres:
+    healthcheck:
+      disable: true
+  redis:
+    healthcheck:
+      disable: true
+  frontend:
+    healthcheck:
+      disable: true
+  backend:
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      install-dependencies:
+        condition: service_completed_successfully
+      run-migrations:
+        condition: service_completed_successfully
+  mcp-server:
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      install-dependencies:
+        condition: service_completed_successfully
+      run-migrations:
+        condition: service_completed_successfully
+  nginx:
+    healthcheck:
+      disable: true
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+  run-migrations:
+    depends_on:
+      postgres:
+        condition: service_started
+      install-dependencies:
+        condition: service_completed_successfully
