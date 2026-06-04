@@ -26,6 +26,12 @@ import {
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { VendorMark } from '../shared/VendorMark';
+import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
+import {
+  ConnectionStatusView,
+  deriveConnectionStatus,
+  toStatusBucket,
+} from '../shared/connectionStatus';
 import { ManageReposPanel } from './ManageReposPanel';
 import { ReauthPanel } from './ReauthPanel';
 import { ApplyProgress, DrawerMode, ReauthDraft, RepoSelection } from './types';
@@ -562,24 +568,6 @@ const ViewMode: React.FC<ViewModeProps> = ({
   );
 };
 
-type StatusViewState =
-  | { kind: 'checking' }
-  | { kind: 'connected' }
-  | { kind: 'disconnected'; description: string }
-  | { kind: 'unknown'; description: string };
-
-const DISCONNECTED_DESCRIPTIONS: Record<
-  'unauthorized' | 'forbidden' | 'rate_limited' | 'network',
-  string
-> = {
-  unauthorized:
-    'Token rejected by the provider. Re-authenticate to restore access.',
-  forbidden:
-    'The provider denied access. Check the token scopes or the App installation.',
-  rate_limited: 'Provider rate limit reached. Retry shortly.',
-  network: "Couldn't reach the provider. Check your network and retry.",
-};
-
 const StatusBlock: React.FC<{
   connection: GitProviderUI;
   onReauth: () => void;
@@ -590,50 +578,19 @@ const StatusBlock: React.FC<{
     enabled: connection.hasAuth,
   });
 
-  const view: StatusViewState = (() => {
-    if (!connection.hasAuth) {
-      return {
-        kind: 'disconnected',
-        description:
-          "Packmind can't reach this provider with the stored credentials.",
-      };
-    }
-    if (probe.isLoading || probe.isFetching) {
-      return { kind: 'checking' };
-    }
-    if (probe.data?.ok === true) {
-      return { kind: 'connected' };
-    }
-    if (probe.data?.ok === false) {
-      return {
-        kind: 'disconnected',
-        description: DISCONNECTED_DESCRIPTIONS[probe.data.reason],
-      };
-    }
-    return {
-      kind: 'unknown',
-      description: "Couldn't verify the connection right now.",
-    };
-  })();
-
-  const dotColor = {
-    checking: 'gray.400',
-    connected: 'green.500',
-    disconnected: 'red.500',
-    unknown: 'yellow.500',
-  }[view.kind];
-
-  const label = {
-    checking: 'Checking…',
-    connected: 'Connected',
-    disconnected: 'Disconnected',
-    unknown: 'Status unknown',
-  }[view.kind];
-
-  const isFailing = view.kind === 'disconnected' || view.kind === 'unknown';
+  const view: ConnectionStatusView = deriveConnectionStatus(probe, {
+    hasAuth: connection.hasAuth,
+  });
+  const isFailing = view.kind !== 'connected' && view.kind !== 'checking';
+  const bucket = toStatusBucket(view);
 
   return (
-    <PMVStack gap={2} align="stretch">
+    <PMVStack
+      gap={2}
+      align="stretch"
+      data-testid="connection-drawer-status"
+      data-status={bucket}
+    >
       <PMText
         fontSize="xs"
         color="faded"
@@ -643,27 +600,10 @@ const StatusBlock: React.FC<{
       >
         Status
       </PMText>
-      <PMBox
-        borderWidth="1px"
-        borderColor="border.tertiary"
-        borderRadius="md"
-        padding={3}
-        bg="background.secondary"
-        data-testid="connection-drawer-status"
-        data-status={view.kind}
-      >
-        <PMVStack gap={2} align="stretch">
-          <PMHStack gap={2} align="center">
-            <PMBox width="8px" height="8px" borderRadius="full" bg={dotColor} />
-            <PMText fontSize="sm" color="primary" fontWeight="medium">
-              {label}
-            </PMText>
-          </PMHStack>
-          {(view.kind === 'disconnected' || view.kind === 'unknown') && (
-            <PMText fontSize="xs" color="secondary">
-              {view.description}
-            </PMText>
-          )}
+      <ConnectionStatusPill
+        view={view}
+        variant="block"
+        actions={
           <PMHStack gap={3} align="center">
             <PMBox
               as="button"
@@ -709,8 +649,8 @@ const StatusBlock: React.FC<{
               </>
             )}
           </PMHStack>
-        </PMVStack>
-      </PMBox>
+        }
+      />
     </PMVStack>
   );
 };
