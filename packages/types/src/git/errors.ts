@@ -159,6 +159,44 @@ export class GitHubAppRevokedError extends Error {
 }
 
 /**
+ * Error thrown when a non-empty display name collides (case-insensitively) with
+ * another git provider in the same organization.
+ */
+export class GitProviderDisplayNameAlreadyUsedError extends Error {
+  constructor(
+    public readonly displayName: string,
+    public readonly organizationId: string,
+  ) {
+    super(
+      `A connection with display name '${displayName}' already exists in this organization`,
+    );
+    this.name = 'GitProviderDisplayNameAlreadyUsedError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitProviderDisplayNameAlreadyUsedError);
+    }
+  }
+}
+
+/**
+ * Error thrown when attempting to edit the display name of a CLI-managed git
+ * provider (one created automatically by `packmind-cli` and not configurable
+ * from the UI).
+ */
+export class GitProviderDisplayNameNotEditableError extends Error {
+  constructor(public readonly gitProviderId: string) {
+    super(
+      `Display name is not editable on CLI-managed git provider '${gitProviderId}'`,
+    );
+    this.name = 'GitProviderDisplayNameNotEditableError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitProviderDisplayNameNotEditableError);
+    }
+  }
+}
+
+/**
  * Error thrown when attempting to use a git remote URL with an unsupported provider
  */
 export class UnsupportedGitProviderError extends Error {

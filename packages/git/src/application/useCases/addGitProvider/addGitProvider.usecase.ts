@@ -8,6 +8,10 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
+import {
+  ensureDisplayNameAvailable,
+  normalizeDisplayName,
+} from '../shared/validateDisplayName';
 
 // Re-export for backward compatibility
 export { AddGitProviderCommand };
@@ -51,8 +55,23 @@ export class AddGitProviderUseCase
       throw new Error('Git provider source is required');
     }
 
+    const normalizedDisplayName = normalizeDisplayName(gitProvider.displayName);
+
+    if (normalizedDisplayName.length > 0) {
+      const existingProviders =
+        await this.gitProviderService.findGitProvidersByOrganizationId(
+          organization.id,
+        );
+      ensureDisplayNameAvailable(
+        normalizedDisplayName,
+        organization.id,
+        existingProviders,
+      );
+    }
+
     const gitProviderWithOrg = {
       ...gitProvider,
+      displayName: normalizedDisplayName,
       organizationId: organization.id,
     };
 
