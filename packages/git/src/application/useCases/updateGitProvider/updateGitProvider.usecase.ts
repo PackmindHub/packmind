@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProvider,
+  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
@@ -10,6 +11,11 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
+import {
+  ensureDisplayNameAvailable,
+  normalizeDisplayName,
+} from '../shared/validateDisplayName';
+import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'UpdateGitProviderUseCase';
 
@@ -64,6 +70,16 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
       throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
 
+    // displayName edits are forbidden on CLI-managed providers; guard before
+    // credential validation so the surfaced error reflects the actual constraint
+    // rather than a downstream "token required" check.
+    if (
+      gitProvider.displayName !== undefined &&
+      !providerHasAuth(existingProvider)
+    ) {
+      throw new GitProviderDisplayNameNotEditableError(id);
+    }
+
     const nextAuthMethod =
       gitProvider.authMethod ?? existingProvider.authMethod;
     const isSwitchingMethod =
@@ -92,6 +108,32 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
 
     validateProviderCredentials(credentialView, this.edition);
 
-    return this.gitProviderService.updateGitProvider(id, gitProvider);
+    const patch: Partial<Omit<GitProvider, 'id'>> = { ...gitProvider };
+
+    if (gitProvider.displayName !== undefined) {
+      const normalizedDisplayName = normalizeDisplayName(
+        gitProvider.displayName,
+      );
+
+      if (
+        normalizedDisplayName !== existingProvider.displayName &&
+        normalizedDisplayName.length > 0
+      ) {
+        const siblings =
+          await this.gitProviderService.findGitProvidersByOrganizationId(
+            existingProvider.organizationId,
+          );
+        ensureDisplayNameAvailable(
+          normalizedDisplayName,
+          existingProvider.organizationId,
+          siblings,
+          id,
+        );
+      }
+
+      patch.displayName = normalizedDisplayName;
+    }
+
+    return this.gitProviderService.updateGitProvider(id, patch);
   }
 }

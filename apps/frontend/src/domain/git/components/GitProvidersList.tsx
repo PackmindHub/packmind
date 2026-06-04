@@ -13,7 +13,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuPlus } from 'react-icons/lu';
-import { OrganizationId } from '@packmind/types';
+import { GitProviderId, OrganizationId } from '@packmind/types';
 import {
   useDeleteGitProviderMutation,
   useGetGitProvidersQuery,
@@ -51,9 +51,8 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     message: string;
   } | null>(null);
 
-  const [editingProvider, setEditingProvider] = useState<GitProviderUI | null>(
-    null,
-  );
+  const [editingProviderId, setEditingProviderId] =
+    useState<GitProviderId | null>(null);
   const [openAddDrawer, setOpenAddDrawer] = useState(false);
 
   const { userConfigured, cliManaged, cliManagedRepoCount } = useMemo(() => {
@@ -69,8 +68,15 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     };
   }, [providers]);
 
+  // Derive the drawer's connection from the live providers list so updates
+  // (e.g. renames via the mutation) flow back into the open drawer.
+  const editingProvider = useMemo(
+    () => userConfigured.find((p) => p.id === editingProviderId) ?? null,
+    [userConfigured, editingProviderId],
+  );
+
   const openCreateDialog = useCallback(() => {
-    setEditingProvider(null);
+    setEditingProviderId(null);
     setOpenAddDrawer(true);
   }, []);
 
@@ -142,7 +148,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
             <ConnectionsTable
               connections={userConfigured}
               onEdit={(connection) => {
-                setEditingProvider(connection);
+                setEditingProviderId(connection.id);
               }}
               onDelete={(connection) => {
                 if ((connection.repos?.length ?? 0) > 0) {
@@ -187,9 +193,9 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       <ConnectionDrawer
         organizationId={organizationId}
         connection={editingProvider}
-        onClose={() => setEditingProvider(null)}
+        onClose={() => setEditingProviderId(null)}
         onDelete={(provider) => {
-          setEditingProvider(null);
+          setEditingProviderId(null);
           setProviderToDelete(provider);
           setDeleteDialogOpen(true);
         }}

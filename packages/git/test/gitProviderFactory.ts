@@ -17,6 +17,7 @@ export const gitProviderFactory: Factory<GitProvider> = (
     url: 'https://api.github.com',
     token: 'test-token',
     authMethod: 'token',
+    displayName: '',
     ...gitProvider,
   };
 };
@@ -31,6 +32,7 @@ export const gitlabProviderFactory: Factory<GitProvider> = (
     url: 'https://gitlab.com',
     token: 'glpat-test-token',
     authMethod: 'token',
+    displayName: '',
     ...gitProvider,
   };
 };

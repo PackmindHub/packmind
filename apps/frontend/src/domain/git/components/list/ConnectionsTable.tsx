@@ -7,8 +7,10 @@ import {
   PMPortal,
   PMText,
   PMTooltip,
+  PMVStack,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+import { GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
 import { VendorMark } from '../shared/VendorMark';
@@ -97,6 +99,8 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
   });
   const view = deriveConnectionStatus(probe, { hasAuth: connection.hasAuth });
   const bucket = toStatusBucket(view);
+  const hasDisplayName = connection.displayName.trim().length > 0;
+  const placeholder = vendorPlaceholder(connection.source);
 
   return (
     <PMHStack
@@ -125,11 +129,23 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
     >
       <PMHStack gap={3} flex={1.6} minW={0} align="center">
         <VendorMark vendor={connection.source} size="md" showLabel={false} />
-        <PMBox minW={0} flex={1}>
-          <PMText fontSize="sm" fontWeight="semibold" color="primary" truncate>
-            {connection.url ?? '—'}
+        <PMVStack gap={0.5} align="stretch" minW={0} flex={1}>
+          <PMText
+            as="p"
+            fontSize="sm"
+            fontWeight={hasDisplayName ? 'semibold' : 'normal'}
+            color={hasDisplayName ? 'primary' : 'faded'}
+            fontStyle={hasDisplayName ? 'normal' : 'italic'}
+            truncate
+          >
+            {hasDisplayName ? connection.displayName : placeholder}
           </PMText>
-        </PMBox>
+          {connection.url && (
+            <PMText as="p" fontSize="xs" color="faded" truncate>
+              {connection.url}
+            </PMText>
+          )}
+        </PMVStack>
       </PMHStack>
 
       <PMBox width="160px">
@@ -315,3 +331,9 @@ const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
     </PMTooltip>
   );
 };
+
+function vendorPlaceholder(vendor: GitProviderVendor): string {
+  if (vendor === 'github') return 'Unnamed GitHub connection';
+  if (vendor === 'gitlab') return 'Unnamed GitLab connection';
+  return 'Unnamed connection';
+}

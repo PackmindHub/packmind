@@ -49,6 +49,7 @@ const buildConnectedAppProvider = (
   hasAuth: true,
   url: 'https://github.com',
   authMethod: 'app',
+  displayName: '',
   ...overrides,
 });
 

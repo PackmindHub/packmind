@@ -1,5 +1,7 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  GitProviderDisplayNameAlreadyUsedError,
+  GitProviderDisplayNameNotEditableError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   GitProviderVendors,
@@ -52,6 +54,7 @@ describe('UpdateGitProviderUseCase', () => {
     mockGitProviderService = {
       findGitProviderById: jest.fn(),
       updateGitProvider: jest.fn(),
+      findGitProvidersByOrganizationId: jest.fn().mockResolvedValue([]),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -241,6 +244,199 @@ describe('UpdateGitProviderUseCase', () => {
             organizationId: String(organizationId),
           }),
         ).rejects.toBeInstanceOf(GitProviderOrganizationMismatchError);
+      });
+    });
+  });
+
+  describe('displayName updates', () => {
+    describe('when renaming a token-auth provider to a unique value', () => {
+      it('persists the trimmed displayName', async () => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'token',
+          authMethod: 'token',
+          displayName: 'Old',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue({
+          ...existingProvider,
+          displayName: 'Marketplace (prod)',
+        });
+
+        await useCase.execute({
+          id: existingProvider.id,
+          gitProvider: { displayName: '  Marketplace (prod)  ' },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+
+        expect(mockGitProviderService.updateGitProvider).toHaveBeenCalledWith(
+          existingProvider.id,
+          expect.objectContaining({ displayName: 'Marketplace (prod)' }),
+        );
+      });
+    });
+
+    describe('when renaming to a value already used by another provider in the org', () => {
+      it('throws GitProviderDisplayNameAlreadyUsedError', async () => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'token',
+          authMethod: 'token',
+          displayName: 'Sandbox',
+        });
+        const sibling = gitProviderFactory({
+          organizationId,
+          token: 'token',
+          authMethod: 'token',
+          displayName: 'Production',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [existingProvider, sibling],
+        );
+
+        await expect(
+          useCase.execute({
+            id: existingProvider.id,
+            gitProvider: { displayName: 'production' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameAlreadyUsedError);
+      });
+    });
+
+    describe('when the new value matches the current value (case-insensitive)', () => {
+      it('does not raise and persists the normalized value', async () => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'token',
+          authMethod: 'token',
+          displayName: 'Production',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [existingProvider],
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue({
+          ...existingProvider,
+          displayName: 'PRODUCTION',
+        });
+
+        await useCase.execute({
+          id: existingProvider.id,
+          gitProvider: { displayName: 'PRODUCTION' },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+
+        expect(mockGitProviderService.updateGitProvider).toHaveBeenCalledWith(
+          existingProvider.id,
+          expect.objectContaining({ displayName: 'PRODUCTION' }),
+        );
+      });
+    });
+
+    describe('when clearing the displayName to an empty string', () => {
+      const existingProvider = gitProviderFactory({
+        organizationId,
+        token: 'token',
+        authMethod: 'token',
+        displayName: 'Production',
+      });
+
+      beforeEach(async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue({
+          ...existingProvider,
+          displayName: '',
+        });
+
+        await useCase.execute({
+          id: existingProvider.id,
+          gitProvider: { displayName: '   ' },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+      });
+
+      it('persists empty displayName', () => {
+        expect(mockGitProviderService.updateGitProvider).toHaveBeenCalledWith(
+          existingProvider.id,
+          expect.objectContaining({ displayName: '' }),
+        );
+      });
+
+      it('does not check uniqueness against other providers', () => {
+        expect(
+          mockGitProviderService.findGitProvidersByOrganizationId,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when targeting a CLI-managed provider (no token, no app installation)', () => {
+      it('throws GitProviderDisplayNameNotEditableError', async () => {
+        const cliProvider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'token',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          cliProvider,
+        );
+
+        await expect(
+          useCase.execute({
+            id: cliProvider.id,
+            gitProvider: { displayName: 'Renamed' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(GitProviderDisplayNameNotEditableError);
+      });
+    });
+
+    describe('when targeting a provider with an active GitHub App installation', () => {
+      it('allows renaming', async () => {
+        const orgGitHubAppId = createOrganizationGitHubAppId(
+          '00000000-0000-0000-0000-000000000aaa',
+        );
+        const appProvider = gitProviderFactory({
+          organizationId,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 42,
+          organizationGitHubAppId: orgGitHubAppId,
+          displayName: 'Old',
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          appProvider,
+        );
+        mockGitProviderService.updateGitProvider.mockResolvedValue({
+          ...appProvider,
+          displayName: 'Marketplace',
+        });
+
+        await useCase.execute({
+          id: appProvider.id,
+          gitProvider: { displayName: 'Marketplace' },
+          userId: String(adminUser.id),
+          organizationId: String(organizationId),
+        });
+
+        expect(mockGitProviderService.updateGitProvider).toHaveBeenCalledWith(
+          appProvider.id,
+          expect.objectContaining({ displayName: 'Marketplace' }),
+        );
       });
     });
   });

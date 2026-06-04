@@ -13,17 +13,19 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { LuArrowLeft, LuGitBranch, LuPencil, LuTrash2 } from 'react-icons/lu';
-import { OrganizationId } from '@packmind/types';
+import { GitProviderVendor, OrganizationId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useAddRepositoryMutation,
   useCheckProviderAuthQuery,
+  useGetGitProvidersQuery,
   useGetRepositoriesByProviderQuery,
   useRemoveRepositoryMutation,
   useRevokeGithubAppMutation,
   useUpdateGitProviderMutation,
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
+import { DisplayNameEditor } from './DisplayNameEditor';
 import { VendorMark } from '../shared/VendorMark';
 import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
 import {
@@ -61,6 +63,12 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
   onClose,
   onDelete,
 }) => {
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+
+  useEffect(() => {
+    if (!connection) setEditingDisplayName(false);
+  }, [connection]);
+
   return (
     <PMDrawer.Root
       open={!!connection}
@@ -69,6 +77,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
       }}
       placement="end"
       size="md"
+      closeOnEscape={!editingDisplayName}
     >
       <PMPortal>
         <PMDrawer.Backdrop />
@@ -80,6 +89,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
                 connection={connection}
                 onDelete={onDelete}
                 onClose={onClose}
+                onEditingDisplayNameChange={setEditingDisplayName}
               />
             )}
             <PMDrawer.CloseTrigger asChild>
@@ -97,6 +107,7 @@ interface DrawerBodyProps {
   connection: GitProviderUI;
   onDelete: (provider: GitProviderUI) => void;
   onClose: () => void;
+  onEditingDisplayNameChange: (editing: boolean) => void;
 }
 
 const DrawerBody: React.FC<DrawerBodyProps> = ({
@@ -104,6 +115,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   connection,
   onDelete,
   onClose,
+  onEditingDisplayNameChange,
 }) => {
   const [mode, setMode] = useState<DrawerMode>('view');
   const trackedQuery = useGetRepositoriesByProviderQuery(connection.id);
@@ -330,6 +342,31 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
     ),
   ).size;
   const applying = progress?.phase === 'running';
+  const placeholder = vendorPlaceholder(connection.source);
+  const headerTitle = connection.displayName.trim() || placeholder;
+
+  const providersQuery = useGetGitProvidersQuery();
+  const otherNames = useMemo(
+    () =>
+      (providersQuery.data?.providers ?? [])
+        .filter((p) => p.id !== connection.id)
+        .map((p) => p.displayName),
+    [providersQuery.data, connection.id],
+  );
+
+  const submitDisplayName = useCallback(
+    async (next: string) => {
+      await updateMutation.mutateAsync({
+        id: connection.id,
+        data: { displayName: next },
+      });
+      pmToaster.create({
+        type: 'success',
+        title: 'Connection renamed',
+      });
+    },
+    [connection.id, updateMutation],
+  );
 
   return (
     <>
@@ -337,11 +374,17 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
         <PMHStack gap={3} align="center">
           <VendorMark vendor={connection.source} size="md" showLabel={false} />
           <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-            <PMHeading level="h4" truncate>
-              {connection.url ?? 'Untitled connection'}
+            <PMHeading
+              level="h4"
+              truncate
+              fontStyle={connection.displayName.trim() ? 'normal' : 'italic'}
+              color={connection.displayName.trim() ? 'primary' : 'faded'}
+            >
+              {headerTitle}
             </PMHeading>
-            <PMText fontSize="xs" color="faded">
-              {usesApp ? 'GitHub App' : 'Personal access token'}
+            <PMText fontSize="xs" color="faded" truncate>
+              {connection.url ??
+                (usesApp ? 'GitHub App' : 'Personal access token')}
             </PMText>
           </PMVStack>
         </PMHStack>
@@ -353,6 +396,10 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
             <ViewMode
               connection={connection}
               repoCount={repoCount}
+              placeholder={placeholder}
+              otherNames={otherNames}
+              onSaveDisplayName={submitDisplayName}
+              onEditingDisplayNameChange={onEditingDisplayNameChange}
               onManageRepos={() => setMode('edit-repos')}
               onReauth={() => setMode('reauth')}
               onRevoke={usesApp ? revokeApp : null}
@@ -496,6 +543,10 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
 interface ViewModeProps {
   connection: GitProviderUI;
   repoCount: number;
+  placeholder: string;
+  otherNames: string[];
+  onSaveDisplayName: (next: string) => Promise<void>;
+  onEditingDisplayNameChange: (editing: boolean) => void;
   onManageRepos: () => void;
   onReauth: () => void;
   onRevoke: (() => void) | null;
@@ -505,6 +556,10 @@ interface ViewModeProps {
 const ViewMode: React.FC<ViewModeProps> = ({
   connection,
   repoCount,
+  placeholder,
+  otherNames,
+  onSaveDisplayName,
+  onEditingDisplayNameChange,
   onManageRepos,
   onReauth,
   onRevoke,
@@ -512,6 +567,14 @@ const ViewMode: React.FC<ViewModeProps> = ({
 }) => {
   return (
     <>
+      <DisplayNameEditor
+        value={connection.displayName}
+        placeholder={placeholder}
+        otherNames={otherNames}
+        onSave={onSaveDisplayName}
+        onEditingChange={onEditingDisplayNameChange}
+      />
+
       <StatusBlock
         connection={connection}
         onReauth={onReauth}
@@ -740,4 +803,10 @@ function diffSummary(adds: number, removes: number): string {
   if (adds > 0) parts.push(`${adds} added`);
   if (removes > 0) parts.push(`${removes} removed`);
   return parts.join(', ');
+}
+
+function vendorPlaceholder(vendor: GitProviderVendor): string {
+  if (vendor === 'github') return 'Unnamed GitHub connection';
+  if (vendor === 'gitlab') return 'Unnamed GitLab connection';
+  return 'Unnamed connection';
 }

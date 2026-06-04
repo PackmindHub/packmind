@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -18,6 +19,8 @@ import { GitProvidersService } from './git-providers.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitProvider,
+  GitProviderDisplayNameAlreadyUsedError,
+  GitProviderDisplayNameNotEditableError,
   GitProviderId,
   GitRepo,
   GitRepoAlreadyExistsError,
@@ -81,6 +84,9 @@ export class GitProvidersController {
     } catch (error) {
       if (error instanceof InvalidGitProviderCredentialsError) {
         throw new BadRequestException(error.message);
+      }
+      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
+        throw new ConflictException(error.message);
       }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -510,6 +516,12 @@ export class GitProvidersController {
     } catch (error) {
       if (error instanceof InvalidGitProviderCredentialsError) {
         throw new BadRequestException(error.message);
+      }
+      if (error instanceof GitProviderDisplayNameAlreadyUsedError) {
+        throw new ConflictException(error.message);
+      }
+      if (error instanceof GitProviderDisplayNameNotEditableError) {
+        throw new ForbiddenException(error.message);
       }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
