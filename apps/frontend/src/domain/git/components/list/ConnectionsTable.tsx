@@ -89,7 +89,9 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const repoCount = connection.repos?.length ?? 0;
+  const repoCount = new Set(
+    (connection.repos ?? []).map((r) => `${r.owner}/${r.repo}`),
+  ).size;
   const probe = useCheckProviderAuthQuery(connection.id, {
     enabled: connection.hasAuth,
   });

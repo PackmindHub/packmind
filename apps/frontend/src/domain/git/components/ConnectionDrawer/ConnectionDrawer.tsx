@@ -324,7 +324,11 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
 
   const usesApp =
     connection.source === 'github' && connection.authMethod === 'app';
-  const repoCount = trackedQuery.data?.length ?? connection.repos?.length ?? 0;
+  const repoCount = new Set(
+    (trackedQuery.data ?? connection.repos ?? []).map(
+      (r) => `${r.owner}/${r.repo}`,
+    ),
+  ).size;
   const applying = progress?.phase === 'running';
 
   return (
