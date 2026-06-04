@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractSpaceAdminUseCase,
+  MemberContext,
   PackmindEventEmitterService,
   SpaceAdminContext,
 } from '@packmind/node-utils';
@@ -30,6 +31,15 @@ export class AddMembersToSpaceUseCase extends AbstractSpaceAdminUseCase<
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
+  }
+
+  protected override async executeForMembers(
+    command: AddMembersToSpaceCommand & MemberContext,
+  ): Promise<AddMembersToSpaceResponse> {
+    if (command.membership.role === 'admin') {
+      return this.executeForSpaceAdmins(command);
+    }
+    return super.executeForMembers(command);
   }
 
   protected async executeForSpaceAdmins(

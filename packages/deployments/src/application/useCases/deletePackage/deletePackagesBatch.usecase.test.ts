@@ -1,6 +1,7 @@
 import { DeletePackagesBatchUsecase } from './deletePackagesBatch.usecase';
 import { PackageService } from '../../services/PackageService';
 import { stubLogger } from '@packmind/test-utils';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { packageFactory } from '../../../../test/packageFactory';
 import {
   createPackageId,
@@ -8,11 +9,13 @@ import {
   createUserId,
   createOrganizationId,
   DeletePackagesBatchCommand,
+  PackagesDeletedEvent,
 } from '@packmind/types';
 
 describe('DeletePackagesBatchUsecase', () => {
   let usecase: DeletePackagesBatchUsecase;
   let mockPackageService: jest.Mocked<PackageService>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     mockPackageService = {
@@ -24,7 +27,15 @@ describe('DeletePackagesBatchUsecase', () => {
       deletePackages: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    usecase = new DeletePackagesBatchUsecase(mockPackageService, stubLogger());
+    mockEventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
+    usecase = new DeletePackagesBatchUsecase(
+      mockPackageService,
+      mockEventEmitterService,
+      stubLogger(),
+    );
   });
 
   afterEach(() => {
@@ -82,6 +93,18 @@ describe('DeletePackagesBatchUsecase', () => {
           [packageId1, packageId2, packageId3],
           userId,
         );
+      });
+
+      it('emits a PackagesDeletedEvent with the deleted package ids', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+        const emitted = mockEventEmitterService.emit.mock.calls[0][0];
+        expect(emitted).toBeInstanceOf(PackagesDeletedEvent);
+        expect(emitted.payload).toMatchObject({
+          packageIds: [packageId1, packageId2, packageId3],
+          spaceId,
+          userId,
+          organizationId,
+        });
       });
     });
 
@@ -273,6 +296,13 @@ describe('DeletePackagesBatchUsecase', () => {
           [packageId1, packageId2],
           userId,
         );
+      });
+
+      it('does not emit PackagesDeletedEvent', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

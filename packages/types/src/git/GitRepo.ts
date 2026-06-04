@@ -1,5 +1,6 @@
 import { GitRepoId } from './GitRepoId';
 import { GitProviderId } from './GitProvider';
+import { GitRepoType } from './GitRepoType';
 
 export type GitRepo = {
   id: GitRepoId;
@@ -7,4 +8,5 @@ export type GitRepo = {
   repo: string;
   branch: string;
   providerId: GitProviderId;
+  type: GitRepoType;
 };

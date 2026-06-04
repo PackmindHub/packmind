@@ -1,4 +1,4 @@
-import { OrganizationId, Space, SpaceId, SpaceType } from '@packmind/types';
+import { OrganizationId, Space, SpaceId } from '@packmind/types';
 
 export interface ISpaceRepository {
   add(space: Space): Promise<Space>;
@@ -8,9 +8,15 @@ export interface ISpaceRepository {
     organizationId: OrganizationId,
   ): Promise<Space | null>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Space[]>;
+  findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }>;
   list(): Promise<Space[]>;
   updateFields(
     id: SpaceId,
-    fields: { name?: string; slug?: string; type?: SpaceType },
+    fields: Partial<Pick<Space, 'name' | 'slug' | 'type' | 'color'>>,
   ): Promise<Space>;
+  deleteById(id: SpaceId, deletedBy?: string): Promise<void>;
 }

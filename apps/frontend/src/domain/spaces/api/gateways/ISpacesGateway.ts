@@ -1,4 +1,8 @@
-import { ListUserSpacesResponse, Space } from '@packmind/types';
+import {
+  ListOrganizationSpacesForManagementResponse,
+  ListUserSpacesResponse,
+  Space,
+} from '@packmind/types';
 import {
   SpaceMemberEntry,
   SpaceMemberRole,
@@ -10,6 +14,10 @@ import {
 
 export interface ISpacesGateway {
   getUserSpaces(orgId: string): Promise<ListUserSpacesResponse>;
+  listOrganizationSpacesForManagement(
+    orgId: string,
+    page: number,
+  ): Promise<ListOrganizationSpacesForManagementResponse>;
   getSpaceBySlug(slug: string, orgId: string): Promise<Space>;
   listSpaceMembers(
     orgId: string,

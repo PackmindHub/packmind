@@ -359,6 +359,251 @@ export class GithubRepository implements IGitRepo {
     }
   }
 
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const { owner, repo } = this.options;
+    const baseBranch = this.options.branch || 'main';
+
+    this.logger.info('Ensuring branch exists on GitHub repository', {
+      owner,
+      repo,
+      baseBranch,
+      targetBranch,
+    });
+
+    // Step 1: Check if the target branch already exists. If GitHub returns
+    // 2xx, the branch is present and no work is needed.
+    try {
+      await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        owner,
+        repo,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitHub', {
+          owner,
+          repo,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitHub: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Fetch the base branch SHA so we know where to fork from.
+    let baseSha: string;
+    try {
+      const baseRefResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${baseBranch}`,
+      );
+      baseSha = baseRefResponse.data.object.sha;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to fetch base branch ref on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to fetch base branch '${baseBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+
+    // Step 3: Create the target branch ref pointing at the base SHA.
+    try {
+      await this.axiosInstance.post(`/repos/${owner}/${repo}/git/refs`, {
+        ref: `refs/heads/${targetBranch}`,
+        sha: baseSha,
+      });
+
+      this.logger.info('Created target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+  }
+
+  async openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    const { owner, repo } = this.options;
+    const baseBranch = this.options.branch || 'main';
+    const { head, title, body } = command;
+
+    this.logger.info('Ensuring rolling pull request on GitHub repository', {
+      owner,
+      repo,
+      head,
+      base: baseBranch,
+    });
+
+    // Step 1: Look up any existing open PR matching head -> base.
+    const existing = await this.findOpenPullRequest(head, baseBranch);
+    if (existing) {
+      this.logger.debug('Existing open pull request found, skipping creation', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        number: existing.number,
+      });
+      return { url: existing.url, number: existing.number, wasCreated: false };
+    }
+
+    // Step 2: Create a new PR. GitHub may race a concurrent creator and
+    // respond with a 422 "A pull request already exists" — in that case we
+    // re-run the lookup and surface the existing PR.
+    try {
+      const createResponse = await this.axiosInstance.post(
+        `/repos/${owner}/${repo}/pulls`,
+        {
+          title,
+          head,
+          base: baseBranch,
+          body,
+        },
+      );
+
+      this.logger.info('Created pull request on GitHub', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        number: createResponse.data.number,
+      });
+
+      return {
+        url: createResponse.data.html_url,
+        number: createResponse.data.number,
+        wasCreated: true,
+      };
+    } catch (error) {
+      if (this.isPullRequestAlreadyExistsError(error)) {
+        this.logger.debug(
+          'GitHub reported PR already exists, re-running lookup',
+          { owner, repo, head, base: baseBranch },
+        );
+        const racedExisting = await this.findOpenPullRequest(head, baseBranch);
+        if (racedExisting) {
+          return {
+            url: racedExisting.url,
+            number: racedExisting.number,
+            wasCreated: false,
+          };
+        }
+        // Fallthrough: fall back to a generic error if the post-race lookup
+        // still finds nothing (extremely unlikely, but defensive).
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to open pull request on GitHub', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to open pull request on GitHub for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+  }
+
+  private async findOpenPullRequest(
+    head: string,
+    base: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const { owner, repo } = this.options;
+    const response = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/pulls`,
+      {
+        params: {
+          head: `${owner}:${head}`,
+          base,
+          state: 'open',
+        },
+      },
+    );
+
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const first = response.data[0];
+      return { url: first.html_url, number: first.number };
+    }
+    return null;
+  }
+
+  private isPullRequestAlreadyExistsError(error: unknown): boolean {
+    if (this.extractHttpStatus(error) !== 422) {
+      return false;
+    }
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'data' in error.response
+    ) {
+      const data = (error.response as { data: unknown }).data;
+      const serialized =
+        typeof data === 'string' ? data : JSON.stringify(data ?? '');
+      return /pull request already exists/i.test(serialized);
+    }
+    return false;
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
+  }
+
   isValidBranch(ref: string): boolean {
     // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
     const branchName = ref.replace('refs/heads/', '');
