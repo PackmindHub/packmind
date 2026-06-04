@@ -22,6 +22,7 @@ export interface ManageReposPanelProps {
   selection: RepoSelection;
   onSelectionChange: (next: RepoSelection) => void;
   progress: ApplyProgress | null;
+  onRequestReauth: () => void;
 }
 
 export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
@@ -29,36 +30,57 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   selection,
   onSelectionChange,
   progress,
+  onRequestReauth,
 }) => {
   const tracked = useGetRepositoriesByProviderQuery(provider.id);
   const available = useGetAvailableRepositoriesQuery(provider.id);
   const [filter, setFilter] = useState('');
 
   const isLoading = tracked.isLoading || available.isLoading;
-  const isError = tracked.isError || available.isError;
+  // Degraded mode: the provider can't enumerate repos (e.g. revoked token), but
+  // our DB still knows what's tracked — so let users remove tracked repos even
+  // though they can't add new ones.
+  const degraded = !available.isLoading && available.isError;
+
+  type Row = {
+    key: string;
+    label: string;
+    sublabel: string;
+    defaultBranch: string;
+  };
 
   const { trackedRows, untrackedRows, totalAvailable } = useMemo(() => {
     const q = filter.trim().toLowerCase();
     const trackedKeys = new Set(selection.trackedKeys);
-    const rows: Array<{
-      key: string;
-      label: string;
-      sublabel: string;
-      defaultBranch: string;
-    }> = (available.data ?? []).map((r) => ({
-      key: r.fullName,
-      label: r.name,
-      sublabel: r.fullName,
-      defaultBranch: r.defaultBranch,
-    }));
-    const matches = (row: { label: string; sublabel: string }) =>
+    const byKey = new Map<string, Row>();
+    for (const r of available.data ?? []) {
+      byKey.set(r.fullName, {
+        key: r.fullName,
+        label: r.name,
+        sublabel: r.fullName,
+        defaultBranch: r.defaultBranch,
+      });
+    }
+    // Seed missing tracked repos so the user can still remove them when the
+    // provider is unreachable or no longer exposes them.
+    for (const r of tracked.data ?? []) {
+      const key = `${r.owner}/${r.repo}`;
+      if (byKey.has(key)) continue;
+      byKey.set(key, {
+        key,
+        label: r.repo,
+        sublabel: key,
+        defaultBranch: r.branch,
+      });
+    }
+    const matches = (row: Row) =>
       !q ||
       row.label.toLowerCase().includes(q) ||
       row.sublabel.toLowerCase().includes(q);
 
-    const tIds: typeof rows = [];
-    const uIds: typeof rows = [];
-    for (const row of rows) {
+    const tIds: Row[] = [];
+    const uIds: Row[] = [];
+    for (const row of byKey.values()) {
       if (!matches(row)) continue;
       if (trackedKeys.has(row.key)) tIds.push(row);
       else uIds.push(row);
@@ -66,9 +88,9 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
     return {
       trackedRows: tIds,
       untrackedRows: uIds,
-      totalAvailable: rows.length,
+      totalAvailable: available.data?.length ?? 0,
     };
-  }, [available.data, filter, selection.trackedKeys]);
+  }, [available.data, tracked.data, filter, selection.trackedKeys]);
 
   if (isLoading) {
     return (
@@ -80,7 +102,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
     );
   }
 
-  if (isError) {
+  if (tracked.isError) {
     return (
       <PMAlert.Root status="error">
         <PMAlert.Indicator />
@@ -118,11 +140,46 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   };
 
   return (
-    <PMVStack gap={3} align="stretch">
+    <PMVStack gap={3} align="stretch" flex={1} minH={0}>
       <SectionHeader
         trackedCount={selection.trackedKeys.length}
         totalAvailable={totalAvailable}
+        unknownTotal={degraded}
       />
+
+      {degraded && (
+        <PMAlert.Root status="warning">
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Title>Connection can't list repositories</PMAlert.Title>
+            <PMAlert.Description>
+              <PMVStack gap={2} align="start">
+                <PMText fontSize="sm" color="secondary">
+                  Tracked repositories can still be removed. Re-authenticate to
+                  add new ones.
+                </PMText>
+                <PMBox
+                  as="button"
+                  onClick={onRequestReauth}
+                  bg="transparent"
+                  border="none"
+                  padding="0"
+                  cursor="pointer"
+                  fontSize="xs"
+                  color="text.primary"
+                  fontWeight="medium"
+                  textDecoration="underline"
+                  textUnderlineOffset="2px"
+                  _hover={{ color: 'branding.primary' }}
+                  data-testid="manage-repos-reauth"
+                >
+                  Re-authenticate
+                </PMBox>
+              </PMVStack>
+            </PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
+      )}
 
       <PMBox position="relative">
         <PMBox
@@ -152,13 +209,14 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         borderWidth="1px"
         borderColor="border.tertiary"
         borderRadius="md"
-        overflow="hidden"
         bg="background.secondary"
-        maxHeight="380px"
+        flex={1}
+        minH={0}
+        overflowX="hidden"
         overflowY="auto"
         data-testid="manage-repos-list"
       >
-        {trackedRows.length === 0 && untrackedRows.length === 0 ? (
+        {!degraded && trackedRows.length === 0 && untrackedRows.length === 0 ? (
           <PMBox paddingX={4} paddingY={6} textAlign="center">
             <PMText color="secondary">No repositories match "{filter}".</PMText>
           </PMBox>
@@ -179,25 +237,38 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
                 sublabel={row.sublabel}
                 branch={selection.branchByKey[row.key] ?? row.defaultBranch}
                 checked
+                canEditBranch={!degraded}
                 onToggle={() => toggle(row.key, row.defaultBranch)}
                 onBranchChange={(next) => setBranch(row.key, next)}
               />
             ))}
-            {untrackedRows.length > 0 && (
+            {degraded && (
+              <>
+                <GroupHeader label="Available" count={0} />
+                <PMBox paddingX={4} paddingY={6} textAlign="center">
+                  <PMText fontSize="sm" color="secondary">
+                    Re-authenticate to discover new repositories.
+                  </PMText>
+                </PMBox>
+              </>
+            )}
+            {!degraded && untrackedRows.length > 0 && (
               <GroupHeader label="Available" count={untrackedRows.length} />
             )}
-            {untrackedRows.map((row) => (
-              <RepoRow
-                key={row.key}
-                rowKey={row.key}
-                label={row.label}
-                sublabel={row.sublabel}
-                branch={row.defaultBranch}
-                checked={false}
-                onToggle={() => toggle(row.key, row.defaultBranch)}
-                onBranchChange={() => undefined}
-              />
-            ))}
+            {!degraded &&
+              untrackedRows.map((row) => (
+                <RepoRow
+                  key={row.key}
+                  rowKey={row.key}
+                  label={row.label}
+                  sublabel={row.sublabel}
+                  branch={row.defaultBranch}
+                  checked={false}
+                  canEditBranch={true}
+                  onToggle={() => toggle(row.key, row.defaultBranch)}
+                  onBranchChange={() => undefined}
+                />
+              ))}
           </>
         )}
       </PMBox>
@@ -210,7 +281,8 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
 const SectionHeader: React.FC<{
   trackedCount: number;
   totalAvailable: number;
-}> = ({ trackedCount, totalAvailable }) => (
+  unknownTotal?: boolean;
+}> = ({ trackedCount, totalAvailable, unknownTotal }) => (
   <PMHStack justify="space-between" align="baseline">
     <PMText
       fontSize="xs"
@@ -222,7 +294,7 @@ const SectionHeader: React.FC<{
       Manage repositories
     </PMText>
     <PMText fontSize="xs" color="faded">
-      {trackedCount}/{totalAvailable} tracked
+      {trackedCount}/{unknownTotal ? '—' : totalAvailable} tracked
     </PMText>
   </PMHStack>
 );
@@ -262,6 +334,7 @@ interface RepoRowProps {
   sublabel: string;
   branch: string;
   checked: boolean;
+  canEditBranch: boolean;
   onToggle: () => void;
   onBranchChange: (next: string) => void;
 }
@@ -272,6 +345,7 @@ const RepoRow: React.FC<RepoRowProps> = ({
   sublabel,
   branch,
   checked,
+  canEditBranch,
   onToggle,
   onBranchChange,
 }) => {
@@ -359,7 +433,11 @@ const RepoRow: React.FC<RepoRowProps> = ({
                 <PMIcon fontSize="2xs" color="text.faded">
                   <LuGitBranch />
                 </PMIcon>
-                {editingBranch ? (
+                {!canEditBranch ? (
+                  <PMText fontSize="xs" color="faded">
+                    {branch}
+                  </PMText>
+                ) : editingBranch ? (
                   <PMInput
                     size="xs"
                     width="160px"
