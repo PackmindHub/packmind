@@ -379,6 +379,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               selection={selection}
               onSelectionChange={setSelection}
               progress={progress}
+              onRequestReauth={() => setMode('reauth')}
             />
           )}
 
