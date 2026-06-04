@@ -8,6 +8,7 @@ import {
   MarkPluginForRemovalResponse,
   OrganizationId,
   PackageId,
+  SyncMarketplaceNowResponse,
   ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -112,6 +113,16 @@ export class MarketplaceGatewayApi
   ): Promise<CancelPluginRemovalResponse> {
     return this._api.delete<CancelPluginRemovalResponse>(
       `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions/${distributionId}/removal`,
+    );
+  }
+
+  async syncMarketplaceNow(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+  ): Promise<SyncMarketplaceNowResponse> {
+    return this._api.post<SyncMarketplaceNowResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/reconcile`,
+      {},
     );
   }
 }

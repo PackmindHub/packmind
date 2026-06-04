@@ -1,12 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type {
   MarketplaceId,
   MarketplaceListItem,
   MarketplaceState,
+  OrganizationId,
 } from '@packmind/types';
 import { MarketplaceDetailsHeader } from './MarketplaceDetailsHeader';
+
+const orgId = 'org-1' as OrganizationId;
 
 function makeMarketplace(
   overrides: Partial<MarketplaceListItem> = {},
@@ -37,12 +41,21 @@ function makeMarketplace(
 }
 
 describe('MarketplaceDetailsHeader', () => {
-  const renderHeader = (marketplace: MarketplaceListItem) =>
-    render(
-      <UIProvider>
-        <MarketplaceDetailsHeader marketplace={marketplace} />
-      </UIProvider>,
+  const renderHeader = (marketplace: MarketplaceListItem) => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <UIProvider>
+          <MarketplaceDetailsHeader
+            organizationId={orgId}
+            marketplace={marketplace}
+          />
+        </UIProvider>
+      </QueryClientProvider>,
     );
+  };
 
   it('shows the marketplace name, vendor and state badge', () => {
     renderHeader(makeMarketplace({ state: 'healthy' }));
@@ -52,6 +65,11 @@ describe('MarketplaceDetailsHeader', () => {
     expect(
       screen.getByTestId('marketplace-state-badge-healthy'),
     ).toBeInTheDocument();
+  });
+
+  it('renders the Sync now action', () => {
+    renderHeader(makeMarketplace({ state: 'healthy' }));
+    expect(screen.getByTestId('marketplace-sync-now')).toBeInTheDocument();
   });
 
   it('hides the drift panel when the marketplace is healthy', () => {
