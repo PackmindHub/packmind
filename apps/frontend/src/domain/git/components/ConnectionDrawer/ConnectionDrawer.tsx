@@ -63,6 +63,12 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
   onClose,
   onDelete,
 }) => {
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+
+  useEffect(() => {
+    if (!connection) setEditingDisplayName(false);
+  }, [connection]);
+
   return (
     <PMDrawer.Root
       open={!!connection}
@@ -71,6 +77,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
       }}
       placement="end"
       size="md"
+      closeOnEscape={!editingDisplayName}
     >
       <PMPortal>
         <PMDrawer.Backdrop />
@@ -82,6 +89,7 @@ export const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({
                 connection={connection}
                 onDelete={onDelete}
                 onClose={onClose}
+                onEditingDisplayNameChange={setEditingDisplayName}
               />
             )}
             <PMDrawer.CloseTrigger asChild>
@@ -99,6 +107,7 @@ interface DrawerBodyProps {
   connection: GitProviderUI;
   onDelete: (provider: GitProviderUI) => void;
   onClose: () => void;
+  onEditingDisplayNameChange: (editing: boolean) => void;
 }
 
 const DrawerBody: React.FC<DrawerBodyProps> = ({
@@ -106,6 +115,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   connection,
   onDelete,
   onClose,
+  onEditingDisplayNameChange,
 }) => {
   const [mode, setMode] = useState<DrawerMode>('view');
   const trackedQuery = useGetRepositoriesByProviderQuery(connection.id);
@@ -389,6 +399,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               placeholder={placeholder}
               otherNames={otherNames}
               onSaveDisplayName={submitDisplayName}
+              onEditingDisplayNameChange={onEditingDisplayNameChange}
               onManageRepos={() => setMode('edit-repos')}
               onReauth={() => setMode('reauth')}
               onRevoke={usesApp ? revokeApp : null}
@@ -535,6 +546,7 @@ interface ViewModeProps {
   placeholder: string;
   otherNames: string[];
   onSaveDisplayName: (next: string) => Promise<void>;
+  onEditingDisplayNameChange: (editing: boolean) => void;
   onManageRepos: () => void;
   onReauth: () => void;
   onRevoke: (() => void) | null;
@@ -547,6 +559,7 @@ const ViewMode: React.FC<ViewModeProps> = ({
   placeholder,
   otherNames,
   onSaveDisplayName,
+  onEditingDisplayNameChange,
   onManageRepos,
   onReauth,
   onRevoke,
@@ -559,6 +572,7 @@ const ViewMode: React.FC<ViewModeProps> = ({
         placeholder={placeholder}
         otherNames={otherNames}
         onSave={onSaveDisplayName}
+        onEditingChange={onEditingDisplayNameChange}
       />
 
       <StatusBlock

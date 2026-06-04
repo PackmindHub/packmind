@@ -17,6 +17,7 @@ type DisplayNameEditorProps = {
   placeholder: string;
   otherNames: string[];
   onSave: (next: string) => Promise<void>;
+  onEditingChange?: (editing: boolean) => void;
 };
 
 export function DisplayNameEditor({
@@ -24,19 +25,26 @@ export function DisplayNameEditor({
   placeholder,
   otherNames,
   onSave,
+  onEditingChange,
 }: Readonly<DisplayNameEditorProps>) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditingState] = useState(false);
   const [draft, setDraft] = useState(value);
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const setEditing = (next: boolean) => {
+    setEditingState(next);
+    onEditingChange?.(next);
+  };
+
   useEffect(() => {
     setDraft(value);
     setTouched(false);
-    setEditing(false);
+    setEditingState(false);
+    onEditingChange?.(false);
     setServerError(null);
-  }, [value]);
+  }, [value, onEditingChange]);
 
   const trimmed = draft.trim();
   const lowered = trimmed.toLowerCase();
@@ -125,6 +133,24 @@ export function DisplayNameEditor({
     }
   };
 
+  const handleCancel = () => {
+    setDraft(value);
+    setTouched(false);
+    setServerError(null);
+    setEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (saving) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      void handleSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
   return (
     <PMVStack gap={2} align="stretch">
       <PMHStack justify="space-between" align="baseline">
@@ -155,6 +181,7 @@ export function DisplayNameEditor({
             setTouched(true);
             setServerError(null);
           }}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label="Connection display name"
           aria-invalid={!!error}
@@ -168,28 +195,23 @@ export function DisplayNameEditor({
           disabled={!canSave}
           loading={saving}
           onClick={handleSave}
+          aria-label="Save display name"
           data-testid="display-name-save"
         >
           <PMIcon fontSize="sm">
             <LuCheck />
           </PMIcon>
-          Save
         </PMButton>
         <PMButton
           variant="tertiary"
           size="sm"
           disabled={saving}
-          onClick={() => {
-            setDraft(value);
-            setTouched(false);
-            setServerError(null);
-            setEditing(false);
-          }}
+          onClick={handleCancel}
+          aria-label="Cancel display name edit"
         >
           <PMIcon fontSize="sm">
             <LuX />
           </PMIcon>
-          Cancel
         </PMButton>
       </PMHStack>
       {error ? (

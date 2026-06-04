@@ -7,6 +7,7 @@ import {
   PMPortal,
   PMText,
   PMTooltip,
+  PMVStack,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 import { GitProviderVendor } from '@packmind/types';
@@ -128,8 +129,9 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
     >
       <PMHStack gap={3} flex={1.6} minW={0} align="center">
         <VendorMark vendor={connection.source} size="md" showLabel={false} />
-        <PMBox minW={0} flex={1}>
+        <PMVStack gap={0.5} align="stretch" minW={0} flex={1}>
           <PMText
+            as="p"
             fontSize="sm"
             fontWeight={hasDisplayName ? 'semibold' : 'normal'}
             color={hasDisplayName ? 'primary' : 'faded'}
@@ -139,11 +141,11 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
             {hasDisplayName ? connection.displayName : placeholder}
           </PMText>
           {connection.url && (
-            <PMText fontSize="xs" color="faded" truncate>
+            <PMText as="p" fontSize="xs" color="faded" truncate>
               {connection.url}
             </PMText>
           )}
-        </PMBox>
+        </PMVStack>
       </PMHStack>
 
       <PMBox width="160px">
