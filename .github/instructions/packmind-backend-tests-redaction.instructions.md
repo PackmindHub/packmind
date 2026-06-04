@@ -1,13 +1,14 @@
 ---
 applyTo: '**/*.spec.ts'
 ---
-## Standard: Backend Tests Redaction
+# Standard: Backend Tests Redaction
 
-Enforce backend test conventions for .spec.ts files in the Packmind monorepo using Jest with TypeScript/Node.js by favoring behavioral assertions over implementation checks, organizing context in describe('when…') blocks with verb-first it names, preferring expect(...).toEqual for deep array equality and one expect per test, using afterEach(() => jest.clearAllMocks()) and afterEach(() => datasource.destroy()) to prevent inter-test pollution and clean the test database (TypeORM DataSource or equivalent), and using stubLogger() for typed PackmindLogger stubs to ensure readable, reliable, maintainable unit, integration and service tests when writing or refactoring backend tests :
+Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
 * Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
 * Avoid testing that a method is a function; instead invoke the method and assert its observable behavior
 * Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling
-* Avoid using "when" in it() test descriptions; move contextual clauses into describe('when…') blocks and keep it() descriptions focused on expected behavior
+* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
+* Never write dummy tests without logic (like expect.true.toBe(true))
 * Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
 * Use afterEach to call datasource.destroy() to clean up the test database whenever you initialize it in beforeEach
 * Use afterEach(() => jest.clearAllMocks()) instead of beforeEach(() => jest.clearAllMocks()) to clear mocks after each test and prevent inter-test pollution

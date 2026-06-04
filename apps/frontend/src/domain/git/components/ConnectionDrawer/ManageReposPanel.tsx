@@ -9,13 +9,13 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuCheck, LuGitBranch, LuPencil, LuSearch } from 'react-icons/lu';
+import { LuCheck, LuGitBranch, LuPlus, LuSearch } from 'react-icons/lu';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
-import { ApplyProgress, RepoSelection } from './types';
+import { ApplyProgress, RepoSelection, RepoTuple, tupleKey } from './types';
 
 export interface ManageReposPanelProps {
   provider: GitProviderUI;
@@ -24,6 +24,24 @@ export interface ManageReposPanelProps {
   progress: ApplyProgress | null;
   onRequestReauth: () => void;
 }
+
+type TrackedGroup = {
+  key: string;
+  owner: string;
+  repo: string;
+  fullName: string;
+  defaultBranch: string;
+  trackedBranches: string[];
+  knownFromProvider: boolean;
+};
+
+type UntrackedRepo = {
+  key: string;
+  owner: string;
+  repo: string;
+  fullName: string;
+  defaultBranch: string;
+};
 
 export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   provider,
@@ -37,65 +55,82 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   const [filter, setFilter] = useState('');
 
   const isLoading = tracked.isLoading || available.isLoading;
-  // Degraded mode: the provider can't enumerate repos (e.g. revoked token), but
-  // our DB still knows what's tracked — so let users remove tracked repos even
-  // though they can't add new ones.
   const degraded = !available.isLoading && available.isError;
 
-  type Row = {
-    key: string;
-    label: string;
-    sublabel: string;
-    defaultBranch: string;
-  };
+  const { trackedGroups, untrackedRepos, repoCount, totalRepos } =
+    useMemo(() => {
+      const q = filter.trim().toLowerCase();
 
-  const { trackedRows, untrackedRows, totalAvailable } = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    const trackedKeys = new Set(selection.trackedKeys);
-    const byKey = new Map<string, Row>();
-    for (const r of available.data ?? []) {
-      byKey.set(r.fullName, {
-        key: r.fullName,
-        label: r.name,
-        sublabel: r.fullName,
-        defaultBranch: r.defaultBranch,
-      });
-    }
-    // Seed missing tracked repos so the user can still remove them when the
-    // provider is unreachable or no longer exposes them.
-    for (const r of tracked.data ?? []) {
-      const key = `${r.owner}/${r.repo}`;
-      if (byKey.has(key)) continue;
-      byKey.set(key, {
-        key,
-        label: r.repo,
-        sublabel: key,
-        defaultBranch: r.branch,
-      });
-    }
-    const matches = (row: Row) =>
-      !q ||
-      row.label.toLowerCase().includes(q) ||
-      row.sublabel.toLowerCase().includes(q);
+      const groupMap = new Map<string, TrackedGroup>();
+      const branchSets = new Map<string, Set<string>>();
+      for (const t of selection.tuples) {
+        const key = `${t.owner}/${t.repo}`;
+        let group = groupMap.get(key);
+        if (!group) {
+          group = {
+            key,
+            owner: t.owner,
+            repo: t.repo,
+            fullName: key,
+            defaultBranch: t.branch,
+            trackedBranches: [],
+            knownFromProvider: false,
+          };
+          groupMap.set(key, group);
+          branchSets.set(key, new Set());
+        }
+        branchSets.get(key)?.add(t.branch);
+        group.trackedBranches.push(t.branch);
+      }
 
-    const tIds: Row[] = [];
-    const uIds: Row[] = [];
-    for (const row of byKey.values()) {
-      if (!matches(row)) continue;
-      if (trackedKeys.has(row.key)) tIds.push(row);
-      else uIds.push(row);
-    }
-    return {
-      trackedRows: tIds,
-      untrackedRows: uIds,
-      totalAvailable: available.data?.length ?? 0,
-    };
-  }, [available.data, tracked.data, filter, selection.trackedKeys]);
+      for (const r of available.data ?? []) {
+        const group = groupMap.get(r.fullName);
+        if (group) {
+          group.defaultBranch = r.defaultBranch;
+          group.knownFromProvider = true;
+        }
+      }
+
+      for (const g of groupMap.values()) {
+        g.trackedBranches.sort((a, b) => a.localeCompare(b));
+      }
+
+      const untrackedMap = new Map<string, UntrackedRepo>();
+      for (const r of available.data ?? []) {
+        if (groupMap.has(r.fullName)) continue;
+        untrackedMap.set(r.fullName, {
+          key: r.fullName,
+          owner: r.owner,
+          repo: r.name,
+          fullName: r.fullName,
+          defaultBranch: r.defaultBranch,
+        });
+      }
+
+      const totalRepos = groupMap.size + untrackedMap.size;
+      const repoCount = groupMap.size;
+
+      const matchesGroup = (g: TrackedGroup) =>
+        !q ||
+        g.fullName.toLowerCase().includes(q) ||
+        g.trackedBranches.some((b) => b.toLowerCase().includes(q));
+      const matchesRepo = (r: UntrackedRepo) =>
+        !q || r.fullName.toLowerCase().includes(q);
+
+      const trackedGroups = Array.from(groupMap.values())
+        .filter(matchesGroup)
+        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+      const untrackedRepos = Array.from(untrackedMap.values())
+        .filter(matchesRepo)
+        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+      return { trackedGroups, untrackedRepos, repoCount, totalRepos };
+    }, [available.data, selection.tuples, filter]);
 
   if (isLoading) {
     return (
       <PMVStack gap={3} align="stretch">
-        <SectionHeader trackedCount={0} totalAvailable={0} />
+        <Header trackedCount={0} repoCount={0} totalRepos={0} />
         <PMSkeleton h={8} w="full" rounded="md" />
         <PMSkeleton h={24} w="full" rounded="md" />
       </PMVStack>
@@ -117,33 +152,25 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
     );
   }
 
-  const toggle = (key: string, defaultBranch: string) => {
-    const tracked = new Set(selection.trackedKeys);
-    const branches = { ...selection.branchByKey };
-    if (tracked.has(key)) {
-      tracked.delete(key);
-    } else {
-      tracked.add(key);
-      branches[key] = branches[key] ?? defaultBranch;
-    }
-    onSelectionChange({
-      trackedKeys: Array.from(tracked),
-      branchByKey: branches,
-    });
+  const addTuple = (t: RepoTuple) => {
+    const target = tupleKey(t);
+    if (selection.tuples.some((x) => tupleKey(x) === target)) return;
+    onSelectionChange({ tuples: [...selection.tuples, t] });
   };
 
-  const setBranch = (key: string, branch: string) => {
+  const removeTuple = (t: RepoTuple) => {
+    const target = tupleKey(t);
     onSelectionChange({
-      ...selection,
-      branchByKey: { ...selection.branchByKey, [key]: branch },
+      tuples: selection.tuples.filter((x) => tupleKey(x) !== target),
     });
   };
 
   return (
     <PMVStack gap={3} align="stretch" flex={1} minH={0}>
-      <SectionHeader
-        trackedCount={selection.trackedKeys.length}
-        totalAvailable={totalAvailable}
+      <Header
+        trackedCount={selection.tuples.length}
+        repoCount={repoCount}
+        totalRepos={totalRepos}
         unknownTotal={degraded}
       />
 
@@ -155,8 +182,8 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
             <PMAlert.Description>
               <PMVStack gap={2} align="start">
                 <PMText fontSize="sm" color="secondary">
-                  Tracked repositories can still be removed. Re-authenticate to
-                  add new ones.
+                  Tracked branches can still be removed. Re-authenticate to add
+                  new ones.
                 </PMText>
                 <PMBox
                   as="button"
@@ -195,7 +222,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         </PMBox>
         <PMInput
           size="sm"
-          placeholder="Filter by name or path…"
+          placeholder="Filter by repo or branch…"
           value={filter}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFilter(e.target.value)
@@ -216,59 +243,50 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         overflowY="auto"
         data-testid="manage-repos-list"
       >
-        {!degraded && trackedRows.length === 0 && untrackedRows.length === 0 ? (
+        {trackedGroups.length === 0 && untrackedRepos.length === 0 ? (
           <PMBox paddingX={4} paddingY={6} textAlign="center">
-            <PMText color="secondary">No repositories match "{filter}".</PMText>
+            <PMText color="secondary">
+              {filter
+                ? `No repositories match "${filter}".`
+                : degraded
+                  ? 'No tracked branches.'
+                  : 'No repositories.'}
+            </PMText>
           </PMBox>
         ) : (
           <>
-            {trackedRows.length > 0 && (
-              <GroupHeader
-                label="Tracked"
-                count={trackedRows.length}
-                emphasis
-              />
+            {trackedGroups.length > 0 && (
+              <SectionLabel label="Tracked" count={trackedGroups.length} />
             )}
-            {trackedRows.map((row) => (
-              <RepoRow
-                key={row.key}
-                rowKey={row.key}
-                label={row.label}
-                sublabel={row.sublabel}
-                branch={selection.branchByKey[row.key] ?? row.defaultBranch}
-                checked
-                canEditBranch={!degraded}
-                onToggle={() => toggle(row.key, row.defaultBranch)}
-                onBranchChange={(next) => setBranch(row.key, next)}
+            {trackedGroups.map((group) => (
+              <TrackedRepoSection
+                key={group.key}
+                group={group}
+                canAdd={!degraded || group.knownFromProvider}
+                onAdd={(branch) =>
+                  addTuple({ owner: group.owner, repo: group.repo, branch })
+                }
+                onRemove={(branch) =>
+                  removeTuple({ owner: group.owner, repo: group.repo, branch })
+                }
               />
             ))}
-            {degraded && (
-              <>
-                <GroupHeader label="Available" count={0} />
-                <PMBox paddingX={4} paddingY={6} textAlign="center">
-                  <PMText fontSize="sm" color="secondary">
-                    Re-authenticate to discover new repositories.
-                  </PMText>
-                </PMBox>
-              </>
+            {untrackedRepos.length > 0 && (
+              <SectionLabel label="Available" count={untrackedRepos.length} />
             )}
-            {!degraded && untrackedRows.length > 0 && (
-              <GroupHeader label="Available" count={untrackedRows.length} />
-            )}
-            {!degraded &&
-              untrackedRows.map((row) => (
-                <RepoRow
-                  key={row.key}
-                  rowKey={row.key}
-                  label={row.label}
-                  sublabel={row.sublabel}
-                  branch={row.defaultBranch}
-                  checked={false}
-                  canEditBranch={true}
-                  onToggle={() => toggle(row.key, row.defaultBranch)}
-                  onBranchChange={() => undefined}
-                />
-              ))}
+            {untrackedRepos.map((repo) => (
+              <UntrackedRepoRow
+                key={repo.key}
+                repo={repo}
+                onAdd={() =>
+                  addTuple({
+                    owner: repo.owner,
+                    repo: repo.repo,
+                    branch: repo.defaultBranch,
+                  })
+                }
+              />
+            ))}
           </>
         )}
       </PMBox>
@@ -278,11 +296,12 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   );
 };
 
-const SectionHeader: React.FC<{
+const Header: React.FC<{
   trackedCount: number;
-  totalAvailable: number;
+  repoCount: number;
+  totalRepos: number;
   unknownTotal?: boolean;
-}> = ({ trackedCount, totalAvailable, unknownTotal }) => (
+}> = ({ trackedCount, repoCount, totalRepos, unknownTotal }) => (
   <PMHStack justify="space-between" align="baseline">
     <PMText
       fontSize="xs"
@@ -294,16 +313,16 @@ const SectionHeader: React.FC<{
       Manage repositories
     </PMText>
     <PMText fontSize="xs" color="faded">
-      {trackedCount}/{unknownTotal ? '—' : totalAvailable} tracked
+      {trackedCount} branches · {repoCount} / {unknownTotal ? '—' : totalRepos}{' '}
+      repos
     </PMText>
   </PMHStack>
 );
 
-const GroupHeader: React.FC<{
-  label: string;
-  count: number;
-  emphasis?: boolean;
-}> = ({ label, count, emphasis }) => (
+const SectionLabel: React.FC<{ label: string; count: number }> = ({
+  label,
+  count,
+}) => (
   <PMBox
     paddingX={3}
     paddingY={1.5}
@@ -314,7 +333,7 @@ const GroupHeader: React.FC<{
     <PMHStack gap={2} align="baseline">
       <PMText
         fontSize="2xs"
-        color={emphasis ? 'primary' : 'faded'}
+        color="faded"
         textTransform="uppercase"
         letterSpacing="wider"
         fontWeight="semibold"
@@ -328,172 +347,237 @@ const GroupHeader: React.FC<{
   </PMBox>
 );
 
-interface RepoRowProps {
-  rowKey: string;
-  label: string;
-  sublabel: string;
-  branch: string;
-  checked: boolean;
-  canEditBranch: boolean;
-  onToggle: () => void;
-  onBranchChange: (next: string) => void;
-}
+const UntrackedRepoRow: React.FC<{
+  repo: UntrackedRepo;
+  onAdd: () => void;
+}> = ({ repo, onAdd }) => (
+  <PMBox
+    role="checkbox"
+    aria-checked="false"
+    tabIndex={0}
+    data-testid="manage-repos-row"
+    data-repo-key={repo.fullName}
+    onClick={onAdd}
+    onKeyDown={(e: React.KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        onAdd();
+      }
+    }}
+    paddingX={3}
+    paddingY={2.5}
+    borderBottom="1px solid"
+    borderColor="border.tertiary"
+    cursor="pointer"
+    transition="background 120ms ease-out"
+    _hover={{ bg: 'background.tertiary' }}
+  >
+    <PMHStack gap={3} align="center">
+      <PMBox
+        aria-hidden
+        width="14px"
+        height="14px"
+        borderRadius="sm"
+        borderWidth="1px"
+        borderColor="border.secondary"
+        bg="transparent"
+        flexShrink={0}
+      />
+      <PMVStack gap={0.5} align="start" flex={1} minW={0}>
+        <PMText fontSize="sm" color="secondary" truncate>
+          {repo.fullName}
+        </PMText>
+        <PMHStack gap={1} align="center">
+          <PMIcon fontSize="2xs" color="text.faded">
+            <LuGitBranch />
+          </PMIcon>
+          <PMText fontSize="xs" color="faded">
+            {repo.defaultBranch}
+          </PMText>
+        </PMHStack>
+      </PMVStack>
+    </PMHStack>
+  </PMBox>
+);
 
-const RepoRow: React.FC<RepoRowProps> = ({
-  rowKey,
-  label,
-  sublabel,
-  branch,
-  checked,
-  canEditBranch,
-  onToggle,
-  onBranchChange,
-}) => {
-  const [editingBranch, setEditingBranch] = useState(false);
-  const [draft, setDraft] = useState(branch);
+const TrackedRepoSection: React.FC<{
+  group: TrackedGroup;
+  canAdd: boolean;
+  onAdd: (branch: string) => void;
+  onRemove: (branch: string) => void;
+}> = ({ group, canAdd, onAdd, onRemove }) => {
+  const [adding, setAdding] = useState(false);
+  const initialDraft = group.trackedBranches.includes(group.defaultBranch)
+    ? ''
+    : group.defaultBranch;
+  const [draft, setDraft] = useState(initialDraft);
 
-  const startEdit = () => {
-    setDraft(branch);
-    setEditingBranch(true);
+  const startAdd = () => {
+    setDraft(
+      group.trackedBranches.includes(group.defaultBranch)
+        ? ''
+        : group.defaultBranch,
+    );
+    setAdding(true);
   };
-  const commit = () => {
+  const commitAdd = () => {
     const next = draft.trim();
-    if (next && next !== branch) onBranchChange(next);
-    setEditingBranch(false);
+    if (next && !group.trackedBranches.includes(next)) onAdd(next);
+    setAdding(false);
+    setDraft('');
   };
-  const cancel = () => {
-    setEditingBranch(false);
+  const cancelAdd = () => {
+    setAdding(false);
+    setDraft('');
   };
+
+  const hasTracked = group.trackedBranches.length > 0;
 
   return (
     <PMBox
-      role="checkbox"
-      aria-checked={checked}
-      tabIndex={0}
-      data-testid="manage-repos-row"
-      data-repo-key={rowKey}
-      data-checked={checked}
-      onClick={editingBranch ? undefined : onToggle}
-      onKeyDown={(e: React.KeyboardEvent) => {
-        if (editingBranch) return;
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      paddingX={3}
-      paddingY={2.5}
       borderBottom="1px solid"
       borderColor="border.tertiary"
-      bg={checked ? 'background.tertiary' : 'transparent'}
-      _hover={{
-        bg: checked ? 'background.tertiary' : 'background.secondary',
-      }}
-      cursor={editingBranch ? 'default' : 'pointer'}
-      transition="background 120ms ease-out"
+      data-testid="manage-repos-group"
+      data-repo-key={group.fullName}
     >
-      <PMHStack gap={3} align="center">
-        <PMBox
-          aria-hidden
-          width="16px"
-          height="16px"
-          borderRadius="sm"
-          borderWidth="1px"
-          borderColor={checked ? 'branding.primary' : 'border.secondary'}
-          bg={checked ? 'branding.primary' : 'transparent'}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          flexShrink={0}
-        >
-          {checked && (
-            <PMIcon fontSize="2xs" color="background.primary">
-              <LuCheck />
-            </PMIcon>
-          )}
-        </PMBox>
-        <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-          <PMText
-            fontSize="sm"
-            color={checked ? 'primary' : 'secondary'}
-            fontWeight={checked ? 'medium' : 'normal'}
-            truncate
+      <PMHStack
+        justify="space-between"
+        align="center"
+        paddingX={3}
+        paddingY={2}
+        bg="background.tertiary"
+        borderBottom={hasTracked || adding ? '1px solid' : undefined}
+        borderColor="border.tertiary"
+      >
+        <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
+          {group.fullName}
+        </PMText>
+        {canAdd && !adding && (
+          <PMBox
+            as="button"
+            onClick={startAdd}
+            display="inline-flex"
+            alignItems="center"
+            gap={1}
+            bg="transparent"
+            border="none"
+            padding="0"
+            cursor="pointer"
+            color="text.secondary"
+            _hover={{ color: 'branding.primary' }}
+            data-testid="manage-repos-add-branch"
           >
-            {label}
-          </PMText>
-          <PMHStack gap={1.5} align="center">
-            <PMText fontSize="xs" color="faded" truncate>
-              {sublabel}
+            <PMIcon fontSize="2xs">
+              <LuPlus />
+            </PMIcon>
+            <PMText fontSize="xs" color="secondary" fontWeight="medium">
+              branch
             </PMText>
-            {checked && (
-              <>
-                <PMText fontSize="xs" color="faded">
-                  ·
-                </PMText>
-                <PMIcon fontSize="2xs" color="text.faded">
-                  <LuGitBranch />
-                </PMIcon>
-                {!canEditBranch ? (
-                  <PMText fontSize="xs" color="faded">
-                    {branch}
-                  </PMText>
-                ) : editingBranch ? (
-                  <PMInput
-                    size="xs"
-                    width="160px"
-                    value={draft}
-                    autoFocus
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setDraft(e.target.value)
-                    }
-                    onBlur={commit}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                      e.stopPropagation();
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        commit();
-                      } else if (e.key === 'Escape') {
-                        e.preventDefault();
-                        cancel();
-                      }
-                    }}
-                    data-testid="manage-repos-branch-input"
-                  />
-                ) : (
-                  <PMBox
-                    as="button"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      startEdit();
-                    }}
-                    display="inline-flex"
-                    alignItems="center"
-                    gap={1}
-                    bg="transparent"
-                    border="none"
-                    padding="0"
-                    cursor="pointer"
-                    color="text.faded"
-                    _hover={{ color: 'text.primary' }}
-                    data-testid="manage-repos-branch-edit"
-                  >
-                    <PMText fontSize="xs" color="faded">
-                      {branch}
-                    </PMText>
-                    <PMIcon fontSize="2xs">
-                      <LuPencil />
-                    </PMIcon>
-                  </PMBox>
-                )}
-              </>
-            )}
-          </PMHStack>
-        </PMVStack>
+          </PMBox>
+        )}
       </PMHStack>
+
+      {adding && (
+        <PMBox
+          paddingX={3}
+          paddingY={2}
+          borderBottom={hasTracked ? '1px solid' : undefined}
+          borderColor="border.tertiary"
+          bg="background.secondary"
+        >
+          <PMInput
+            size="xs"
+            autoFocus
+            placeholder={group.defaultBranch}
+            value={draft}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setDraft(e.target.value)
+            }
+            onBlur={commitAdd}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                commitAdd();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelAdd();
+              }
+            }}
+            data-testid="manage-repos-branch-input"
+          />
+        </PMBox>
+      )}
+
+      {!hasTracked && !adding && (
+        <PMBox paddingX={3} paddingY={2}>
+          <PMText fontSize="xs" color="faded">
+            No branches tracked.
+          </PMText>
+        </PMBox>
+      )}
+
+      {group.trackedBranches.map((branch) => (
+        <BranchRow
+          key={branch}
+          branch={branch}
+          onRemove={() => onRemove(branch)}
+        />
+      ))}
     </PMBox>
   );
 };
+
+const BranchRow: React.FC<{
+  branch: string;
+  onRemove: () => void;
+}> = ({ branch, onRemove }) => (
+  <PMBox
+    role="checkbox"
+    aria-checked="true"
+    tabIndex={0}
+    data-testid="manage-repos-row"
+    data-branch={branch}
+    onClick={onRemove}
+    onKeyDown={(e: React.KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        onRemove();
+      }
+    }}
+    paddingX={3}
+    paddingY={2}
+    paddingLeft={6}
+    cursor="pointer"
+    transition="background 120ms ease-out"
+    _hover={{ bg: 'background.tertiary' }}
+  >
+    <PMHStack gap={3} align="center">
+      <PMBox
+        aria-hidden
+        width="14px"
+        height="14px"
+        borderRadius="sm"
+        borderWidth="1px"
+        borderColor="branding.primary"
+        bg="branding.primary"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={0}
+      >
+        <PMIcon fontSize="2xs" color="background.primary">
+          <LuCheck />
+        </PMIcon>
+      </PMBox>
+      <PMIcon fontSize="2xs" color="text.faded">
+        <LuGitBranch />
+      </PMIcon>
+      <PMText fontSize="sm" color="primary" truncate>
+        {branch}
+      </PMText>
+    </PMHStack>
+  </PMBox>
+);
 
 const ProgressIndicator: React.FC<{ progress: ApplyProgress }> = ({
   progress,
