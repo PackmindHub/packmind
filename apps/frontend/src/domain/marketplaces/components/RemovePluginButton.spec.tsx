@@ -30,7 +30,7 @@ describe('RemovePluginButton', () => {
     ).toBeInTheDocument();
   });
 
-  it('opens the confirmation modal on click and references the CLI follow-up', async () => {
+  it('opens the confirmation modal on click and explains the deletion PR is opened automatically', async () => {
     renderButton();
     await act(async () => {
       fireEvent.click(
@@ -41,7 +41,7 @@ describe('RemovePluginButton', () => {
     });
 
     expect(
-      await screen.findByText(/packmind-cli plugins delete my-plugin/),
+      await screen.findByText(/Packmind opens the deletion PR/),
     ).toBeInTheDocument();
   });
 
