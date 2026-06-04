@@ -535,7 +535,7 @@ const ViewMode: React.FC<ViewModeProps> = ({
         isRevoking={isRevoking}
       />
 
-      <PMVStack gap={2} align="stretch">
+      <PMVStack gap={2} align="stretch" flex={1} minH={0}>
         <PMHStack justify="space-between" align="baseline">
           <PMText
             fontSize="xs"
@@ -672,6 +672,11 @@ const RepositoriesPreview: React.FC<{
         paddingX={5}
         paddingY={6}
         textAlign="center"
+        flex={1}
+        minH={0}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
       >
         <PMText fontSize="sm" color="secondary">
           No repositories tracked. Click Manage to pick from your{' '}
@@ -686,9 +691,10 @@ const RepositoriesPreview: React.FC<{
       borderWidth="1px"
       borderColor="border.tertiary"
       borderRadius="md"
-      overflow="hidden"
       bg="background.secondary"
-      maxHeight="220px"
+      flex={1}
+      minH={0}
+      overflowX="hidden"
       overflowY="auto"
     >
       {rows.map((repo, idx) => (
