@@ -95,6 +95,9 @@ export interface IGitSettingsPage extends IPackmindAppPage {
     state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
   ): Promise<void>;
   getDrawerStatusDescription(): Promise<string | null>;
+  waitForFirstRowStatus(
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
+  ): Promise<void>;
 }
 
 export interface ICliSetupPage extends IPackmindAppPage {

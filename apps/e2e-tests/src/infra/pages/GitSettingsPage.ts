@@ -87,6 +87,16 @@ export class GitSettings
     }));
   }
 
+  async waitForFirstRowStatus(
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
+  ): Promise<void> {
+    await this.page.getByRole('tab', { name: /Connections/ }).click();
+    await this.page
+      .locator(`[data-testid="git-connection-row"][data-status="${state}"]`)
+      .first()
+      .waitFor({ state: 'visible' });
+  }
+
   async openFirstConnectionDrawer(): Promise<void> {
     await this.page.getByRole('tab', { name: /Connections/ }).click();
     const firstRow = this.page
@@ -120,6 +130,7 @@ export class GitSettings
       .filter(Boolean);
     const ignore = new Set([
       'Status',
+      'STATUS',
       'Connected',
       'Token expired',
       'Unreachable',
