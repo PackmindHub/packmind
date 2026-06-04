@@ -2,6 +2,8 @@
   "packages": {
     "@frontend/playground": "*",
     "@testing/cli-e2e": "*",
-    "@testing/unit-tests": "*"
+    "@testing/unit-tests": "*",
+    "@global/packmind-standards": "*",
+    "@backend/backend-standards": "*"
   }
 }

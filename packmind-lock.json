@@ -1,7 +1,9 @@
 {
   "lockfileVersion": 2,
   "packageSlugs": [
+    "@backend/backend-standards",
     "@frontend/playground",
+    "@global/packmind-standards",
     "@testing/cli-e2e",
     "@testing/unit-tests"
   ],
@@ -170,6 +172,93 @@
         },
         {
           "path": ".packmind/standards/backend-tests-redaction.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:changelog": {
+      "name": "Changelog",
+      "type": "standard",
+      "id": "68528136-4310-4910-848c-89c9fce93739",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "4c075497-1d6d-452a-833f-4a56f5df8489"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-changelog.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-changelog.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-changelog.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/changelog.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:compliance-logging-personal-information": {
+      "name": "Compliance - Logging Personal Information",
+      "type": "standard",
+      "id": "d984a9be-3e6d-4c22-a9e0-ad693f2a57a9",
+      "version": 3,
+      "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
+      "packageIds": [
+        "8d40875e-a8e8-4e6a-af9a-a920ec719b04"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-compliance-logging-personal-information.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-compliance-logging-personal-information.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-compliance-logging-personal-information.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/compliance-logging-personal-information.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:typescript-good-practices": {
+      "name": "Typescript good practices",
+      "type": "standard",
+      "id": "e26dc800-20ca-4378-beb7-aa1c773864e3",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "4c075497-1d6d-452a-833f-4a56f5df8489"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-typescript-good-practices.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-typescript-good-practices.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-typescript-good-practices.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/typescript-good-practices.md",
           "agent": "packmind"
         }
       ]
