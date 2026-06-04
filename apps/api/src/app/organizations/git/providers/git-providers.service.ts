@@ -385,6 +385,7 @@ export class GitProvidersService {
         organizationGitHubAppId,
         url: null,
         token: null,
+        displayName: '',
       },
       allowTokenlessProvider: true,
       source: command.source,
