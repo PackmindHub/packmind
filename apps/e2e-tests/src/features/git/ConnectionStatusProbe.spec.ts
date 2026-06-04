@@ -2,12 +2,12 @@ import { expect } from '@playwright/test';
 import { testWithUserSignedUp } from '../../fixtures/packmindTest';
 
 // The connection drawer should call the check-auth probe on open and reflect
-// its result (Disconnected when unauthorized) without forcing the user to
+// its result (Token expired when unauthorized) without forcing the user to
 // open Manage repos. We stub the Packmind API responses so the test is
 // deterministic and doesn't depend on a real GitHub credential.
 testWithUserSignedUp.describe('Connection status probe', () => {
   testWithUserSignedUp(
-    'surfaces a revoked PAT as Disconnected in the drawer status block',
+    'surfaces a revoked PAT as Token expired in the drawer status block',
     async ({ page, dashboardPage }) => {
       const fakeProvider = {
         id: 'prov-e2e-revoked',
@@ -70,7 +70,7 @@ testWithUserSignedUp.describe('Connection status probe', () => {
       const gitSettingsPage = await settingsPage.openGitSettings();
 
       await gitSettingsPage.openFirstConnectionDrawer();
-      await gitSettingsPage.waitForDrawerStatus('disconnected');
+      await gitSettingsPage.waitForDrawerStatus('token_expired');
 
       const description = await gitSettingsPage.getDrawerStatusDescription();
       // eslint-disable-next-line playwright/no-standalone-expect
