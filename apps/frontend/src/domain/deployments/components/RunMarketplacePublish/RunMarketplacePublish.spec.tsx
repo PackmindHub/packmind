@@ -176,6 +176,23 @@ describe('RunMarketplacePublish', () => {
     expect(screen.getByText('Acme Playbook')).toBeInTheDocument();
   });
 
+  it('does not enter an infinite render loop while closed (regression)', () => {
+    // Use the REAL mutation hook so `publishMutation` gets a fresh object
+    // identity on every render — the production condition. The shared stub
+    // (`setMutation`) returns a stable object, so it never reproduced the
+    // render → reset() → render loop that the `[open, publishMutation]`
+    // dependency caused. Depending on the stable `reset` callback fixes it.
+    const { useMarketplacePublishMutation: realPublishMutation } =
+      jest.requireActual('../../api/queries/useMarketplacePublishMutation');
+    mockedUseMarketplacePublishMutation.mockImplementation(() =>
+      realPublishMutation(),
+    );
+
+    // Closed modal triggers the reset effect on mount; the buggy version
+    // recurses until React throws "Maximum update depth exceeded".
+    expect(() => renderModal({ open: false })).not.toThrow();
+  });
+
   it('shows the empty state when no marketplaces are linked', async () => {
     mockedUseMarketplaces.mockReturnValue({
       data: [],

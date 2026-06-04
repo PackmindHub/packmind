@@ -80,6 +80,11 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
     isError: marketplacesHasError,
   } = useMarketplaces(organization?.id ?? '');
   const publishMutation = useMarketplacePublishMutation();
+  // `publishMutation` is a fresh object on every render, but its `reset`
+  // callback is stable. Depend on the function, not the wrapper object —
+  // otherwise the effect below re-runs every render and its `reset()` call
+  // re-renders us into an infinite loop ("Maximum update depth exceeded").
+  const { reset: resetPublishMutation } = publishMutation;
 
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState<
     MarketplaceId | undefined
@@ -90,9 +95,9 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
   useEffect(() => {
     if (!open) {
       setSelectedMarketplaceId(undefined);
-      publishMutation.reset();
+      resetPublishMutation();
     }
-  }, [open, publishMutation]);
+  }, [open, resetPublishMutation]);
 
   // Auto-pick the only marketplace if there is exactly one, mirroring
   // RunDistribution's "auto-select single target" affordance.
