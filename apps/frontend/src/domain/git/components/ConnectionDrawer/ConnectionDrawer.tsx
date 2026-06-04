@@ -360,8 +360,8 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
         </PMHStack>
       </PMDrawer.Header>
 
-      <PMDrawer.Body padding={5}>
-        <PMVStack gap={6} align="stretch">
+      <PMDrawer.Body padding={5} display="flex" flexDirection="column">
+        <PMVStack gap={6} align="stretch" flex={1} minH={0}>
           {mode === 'view' && (
             <ViewMode
               connection={connection}

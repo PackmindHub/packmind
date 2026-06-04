@@ -118,7 +118,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   };
 
   return (
-    <PMVStack gap={3} align="stretch">
+    <PMVStack gap={3} align="stretch" flex={1} minH={0}>
       <SectionHeader
         trackedCount={selection.trackedKeys.length}
         totalAvailable={totalAvailable}
@@ -152,9 +152,10 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         borderWidth="1px"
         borderColor="border.tertiary"
         borderRadius="md"
-        overflow="hidden"
         bg="background.secondary"
-        maxHeight="380px"
+        flex={1}
+        minH={0}
+        overflowX="hidden"
         overflowY="auto"
         data-testid="manage-repos-list"
       >
