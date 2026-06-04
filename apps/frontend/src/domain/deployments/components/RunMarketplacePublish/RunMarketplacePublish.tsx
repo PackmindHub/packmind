@@ -62,11 +62,14 @@ const FAILURE_TOAST_MESSAGES: Record<PublishFailureReason, string> = {
  * Modal exposing the "Publish to a marketplace" channel of the Distribute
  * menu.
  *
- * Currently scoped to a single package per click; the menu only routes here
- * with at least one package selected, but the surrounding `DeployPackageButton`
- * supports bulk selection. We surface that ambiguity inline (only the first
- * package is published) rather than failing silently — the bulk publish flow
- * is out of scope for GH-580.
+ * Multi-package publishes are supported: when N packages are selected the
+ * modal fans out N parallel publish calls to the same marketplace. The
+ * backend serializes the per-package rolling-PR commits via the
+ * single-worker BullMQ queue, so the frontend just has to aggregate the
+ * outcomes for the toasts.
+ *
+ * Fan-out across multiple marketplaces is still out of scope: the modal
+ * publishes to exactly one marketplace per click.
  */
 export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
   open,
@@ -89,6 +92,11 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
   const [selectedMarketplaceId, setSelectedMarketplaceId] = useState<
     MarketplaceId | undefined
   >();
+  // Local in-flight flag. We can't lean on `publishMutation.isPending` for a
+  // batch because each `mutateAsync` resets the hook's state, so the flag
+  // would oscillate during a multi-publish fan-out. This stays true across
+  // the entire `Promise.allSettled` window.
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset selection whenever the modal opens / closes so a previously
   // selected marketplace doesn't linger across consecutive publishes.
@@ -107,41 +115,129 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
     }
   }, [marketplaces]);
 
-  const packageToPublish = selectedPackages[0];
+  const selectedMarketplace = marketplaces.find(
+    (mkt) => mkt.id === selectedMarketplaceId,
+  );
+  const packageCount = selectedPackages.length;
 
   const handleSubmit = async () => {
-    if (!organization?.id || !selectedMarketplaceId || !packageToPublish) {
+    if (
+      !organization?.id ||
+      !selectedMarketplaceId ||
+      selectedPackages.length === 0
+    ) {
       return;
     }
 
+    const marketplaceName = selectedMarketplace?.name ?? 'the marketplace';
+    setIsSubmitting(true);
     try {
-      const response = await publishMutation.mutateAsync({
-        organizationId: organization.id,
-        marketplaceId: selectedMarketplaceId,
-        packageId: packageToPublish.id,
-      });
-      pmToaster.success({
-        title: 'Publish started',
-        description: `Packmind is publishing “${packageToPublish.name}” as “${response.pluginSlug}”. You’ll see the pull request on the marketplace repository shortly.`,
+      const results = await Promise.allSettled(
+        selectedPackages.map((pkg) =>
+          publishMutation.mutateAsync({
+            organizationId: organization.id,
+            marketplaceId: selectedMarketplaceId,
+            packageId: pkg.id,
+          }),
+        ),
+      );
+
+      const fulfilled = results
+        .map((res, idx) => ({ res, pkg: selectedPackages[idx] }))
+        .filter(
+          (
+            entry,
+          ): entry is {
+            res: PromiseFulfilledResult<
+              Awaited<ReturnType<typeof publishMutation.mutateAsync>>
+            >;
+            pkg: Package;
+          } => entry.res.status === 'fulfilled',
+        );
+      const rejected = results
+        .map((res, idx) => ({ res, pkg: selectedPackages[idx] }))
+        .filter(
+          (
+            entry,
+          ): entry is {
+            res: PromiseRejectedResult;
+            pkg: Package;
+          } => entry.res.status === 'rejected',
+        );
+
+      if (packageCount === 1) {
+        // Preserve the original single-package UX verbatim.
+        const onlyPkg = selectedPackages[0];
+        if (fulfilled.length === 1) {
+          const response = fulfilled[0].res.value;
+          pmToaster.success({
+            title: 'Publish started',
+            description: `Packmind is publishing “${onlyPkg.name}” as “${response.pluginSlug}”. You’ll see the pull request on the marketplace repository shortly.`,
+          });
+          onOpenChange(false);
+        } else {
+          const error = rejected[0].res.reason;
+          const reason = mapPublishError(error);
+          const fallbackDescription = isPackmindError(error)
+            ? error.serverError.data.message
+            : 'Please try again — if the problem persists, contact an organization admin.';
+          pmToaster.error({
+            title: 'Publish failed',
+            description: FAILURE_TOAST_MESSAGES[reason] ?? fallbackDescription,
+          });
+        }
+        return;
+      }
+
+      // Multi-package aggregation.
+      if (rejected.length === 0) {
+        pmToaster.success({
+          title: 'Publishing started',
+          description: `Packmind is publishing ${packageCount} packages to ${marketplaceName}. You’ll see the pull request on the marketplace repository shortly.`,
+        });
+        onOpenChange(false);
+        return;
+      }
+
+      if (fulfilled.length === 0) {
+        const dominantReason = pickDominantReason(
+          rejected.map((entry) => mapPublishError(entry.res.reason)),
+        );
+        pmToaster.error({
+          title: 'Publish failed',
+          description: `No packages could be published. Most common reason: ${FAILURE_TOAST_MESSAGES[dominantReason]}`,
+        });
+        return;
+      }
+
+      // Mixed outcome: some publishes started, some failed.
+      const failingNames = rejected
+        .map((entry) => `“${entry.pkg.name}”`)
+        .join(', ');
+      pmToaster.warning({
+        title: 'Some publishes failed',
+        description: `${fulfilled.length} of ${packageCount} packages are being published to ${marketplaceName}. ${rejected.length} failed: ${failingNames}.`,
       });
       onOpenChange(false);
-    } catch (error) {
-      const reason = mapPublishError(error);
-      const fallbackDescription = isPackmindError(error)
-        ? error.serverError.data.message
-        : 'Please try again — if the problem persists, contact an organization admin.';
-      pmToaster.error({
-        title: 'Publish failed',
-        description: FAILURE_TOAST_MESSAGES[reason] ?? fallbackDescription,
-      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const canSubmit =
-    !!packageToPublish &&
+    selectedPackages.length > 0 &&
     !!selectedMarketplaceId &&
     !marketplacesLoading &&
-    !publishMutation.isPending;
+    !isSubmitting;
+
+  const submitLabel = (() => {
+    if (isSubmitting) {
+      return packageCount > 1
+        ? `Publishing ${packageCount} packages…`
+        : SUBMIT_PENDING_LABEL;
+    }
+    return packageCount > 1 ? `Publish ${packageCount} packages` : SUBMIT_LABEL;
+  })();
 
   return (
     <PMDialog.Root
@@ -169,16 +265,6 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
                 <PMText variant="small" color="secondary">
                   {MODAL_SUBTITLE}
                 </PMText>
-
-                {selectedPackages.length > 1 && (
-                  <PMAlert.Root status="info">
-                    <PMAlert.Indicator />
-                    <PMAlert.Title>
-                      Only “{packageToPublish?.name}” will be published. Pick
-                      one package at a time when publishing to a marketplace.
-                    </PMAlert.Title>
-                  </PMAlert.Root>
-                )}
 
                 {marketplacesLoading && (
                   <PMHStack gap={2}>
@@ -231,7 +317,7 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
                 variant="tertiary"
                 size="sm"
                 onClick={() => onOpenChange(false)}
-                disabled={publishMutation.isPending}
+                disabled={isSubmitting}
               >
                 Cancel
               </PMButton>
@@ -240,11 +326,9 @@ export const RunMarketplacePublish: React.FC<RunMarketplacePublishProps> = ({
                 size="sm"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                loading={publishMutation.isPending}
+                loading={isSubmitting}
               >
-                {publishMutation.isPending
-                  ? SUBMIT_PENDING_LABEL
-                  : SUBMIT_LABEL}
+                {submitLabel}
               </PMButton>
             </PMDialog.Footer>
           </PMDialog.Content>
@@ -273,3 +357,29 @@ const MarketplaceRadioOption: React.FC<{
     </PMRadioGroup.ItemText>
   </PMRadioGroup.Item>
 );
+
+/**
+ * Picks the most frequent failure reason across rejected publishes, with
+ * `'other'` as the tie-breaking fallback. Used for the all-failed multi
+ * publish toast so the user sees the dominant cause first.
+ */
+const pickDominantReason = (
+  reasons: PublishFailureReason[],
+): PublishFailureReason => {
+  if (reasons.length === 0) {
+    return 'other';
+  }
+  const counts = new Map<PublishFailureReason, number>();
+  for (const reason of reasons) {
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+  let dominant: PublishFailureReason = reasons[0];
+  let dominantCount = 0;
+  for (const [reason, count] of counts) {
+    if (count > dominantCount) {
+      dominant = reason;
+      dominantCount = count;
+    }
+  }
+  return dominant;
+};
