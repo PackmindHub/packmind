@@ -51,6 +51,7 @@ import {
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { PackageService } from '../services/PackageService';
+import { resolveMarketplaceReadBranch } from '../services/resolveMarketplaceReadBranch';
 
 const logOrigin = 'PublishPluginToMarketplaceDelayedJob';
 
@@ -217,10 +218,20 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       }
 
+      // Read descriptor + lock from the rolling `packmind/sync` branch when
+      // it already exists, so successive publishes accumulate plugin entries
+      // on top of the previous publish's unmerged state. Falls back to the
+      // marketplace's default branch on the first publish ever and on
+      // post-merge republishes (where the merged entries now live on main).
+      const readBranch = await resolveMarketplaceReadBranch(
+        this.gitPort,
+        marketplaceGitRepo,
+      );
+
       const descriptorFile = await fetchMarketplaceDescriptorFile(
         this.gitPort,
         marketplaceGitRepo,
-        marketplaceGitRepo.branch,
+        readBranch,
       );
       if (!descriptorFile) {
         throw new PublishJobFailure(
@@ -239,17 +250,17 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       }
 
-      // Read the standalone packmind-lock.json from the default branch — a
-      // missing file is the first-publish path and returns an empty lock.
-      // A malformed lock is the same failure category as a malformed
-      // descriptor: the marketplace is unhealthy and the publish cannot
-      // proceed.
+      // Read the standalone packmind-lock.json from the same branch as the
+      // descriptor — a missing file is the first-publish path and returns an
+      // empty lock. A malformed lock is the same failure category as a
+      // malformed descriptor: the marketplace is unhealthy and the publish
+      // cannot proceed.
       let lock: PackmindMarketplaceLock;
       try {
         lock = await fetchPackmindMarketplaceLock(
           this.gitPort,
           marketplaceGitRepo,
-          marketplaceGitRepo.branch,
+          readBranch,
         );
       } catch (error) {
         throw new PublishJobFailure(

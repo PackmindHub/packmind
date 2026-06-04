@@ -1,5 +1,6 @@
 export * from './DeploymentsServices';
 export * from './fetchMarketplaceDescriptorFile';
+export * from './resolveMarketplaceReadBranch';
 export * from './MarketplaceDescriptorParserRegistry';
 export * from './parsers';
 export * from './PackageService';

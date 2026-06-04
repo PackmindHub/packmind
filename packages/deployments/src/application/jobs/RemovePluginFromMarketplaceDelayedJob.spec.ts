@@ -131,6 +131,9 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
         }
         return { sha: 'sha-1', content: '{}' };
       }),
+      // By default the rolling sync branch already exists from a prior
+      // publish so the removal reads from it.
+      checkBranchExists: jest.fn().mockResolvedValue(true),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest
         .fn()
@@ -213,6 +216,29 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the rolling sync branch does not yet exist', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(false);
+      await job.runJob('job-no-sync', input, new AbortController());
+    });
+
+    it('reads the descriptor from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('reads the packmind-lock.json from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        gitRepo.branch,
+      );
     });
   });
 

@@ -164,6 +164,10 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         }
         return { sha: 'sha-1', content: '{}' };
       }),
+      // First-publish ever: the rolling sync branch doesn't exist yet, so
+      // the job reads descriptor + lock from the marketplace's default
+      // branch and the resolver returns that branch.
+      checkBranchExists: jest.fn().mockResolvedValue(false),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest.fn().mockResolvedValue({
         url: 'https://github.com/acme/plugins/pull/1',
@@ -391,6 +395,69 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
           'https://github.com/acme/plugins/pull/1',
         );
       });
+    });
+  });
+
+  describe('when the rolling sync branch does not yet exist', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(false);
+      await job.runJob('job-no-sync', input, new AbortController());
+    });
+
+    it('reads the descriptor from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('reads the packmind-lock.json from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('probes the rolling sync branch before fetching the descriptor', () => {
+      const checkOrder =
+        mockGitPort.checkBranchExists.mock.invocationCallOrder[0];
+      const fetchOrder =
+        mockGitPort.getFileFromRepo.mock.invocationCallOrder[0];
+      expect(checkOrder).toBeLessThan(fetchOrder);
+    });
+
+    it('creates the sync branch only after reading descriptor + lock', () => {
+      const fetchOrder = Math.max(
+        ...mockGitPort.getFileFromRepo.mock.invocationCallOrder,
+      );
+      const branchOrder =
+        mockGitPort.createBranchFromBase.mock.invocationCallOrder[0];
+      expect(fetchOrder).toBeLessThan(branchOrder);
+    });
+  });
+
+  describe('when the rolling sync branch already exists', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(true);
+      await job.runJob('job-sync-exists', input, new AbortController());
+    });
+
+    it('reads the descriptor from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        MARKETPLACE_SYNC_BRANCH,
+      );
+    });
+
+    it('reads the packmind-lock.json from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        MARKETPLACE_SYNC_BRANCH,
+      );
     });
   });
 

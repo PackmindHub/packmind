@@ -34,6 +34,20 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
   let pkg: Package;
   let commitToGitSpy: jest.SpyInstance;
   let openOrUpdatePullRequestSpy: jest.SpyInstance;
+  let checkBranchExistsSpy: jest.SpyInstance;
+  let getFileFromRepoSpy: jest.SpyInstance;
+  /**
+   * Tracks the descriptor content "on disk" so the second publish reads the
+   * accumulated state from the rolling sync branch, mirroring how a real Git
+   * host serves the latest commit on that branch.
+   */
+  let currentDescriptorContent: string;
+  /**
+   * Tracks the standalone packmind-lock.json content "on disk" so each
+   * subsequent publish sees the previous publish's lock entries. Starts as
+   * `null` so the first publish exercises the empty-lock first-publish path.
+   */
+  let currentLockContent: string | null;
 
   beforeAll(() => fixture.initialize());
 
@@ -50,19 +64,38 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
 
     gitPort = testApp.gitHexa.getAdapter();
 
-    // Descriptor served on the marketplace repo. The standalone
-    // packmind-lock.json file is reported missing so each publish in this
-    // spec exercises the empty-lock first-publish path.
-    jest
+    currentDescriptorContent = ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON;
+    currentLockContent = null;
+
+    // Serve descriptor + lock from the in-memory "repo" state so the second
+    // publish sees the first publish's accumulated entries, matching how the
+    // upstream Git host returns the latest commit on the rolling sync
+    // branch.
+    getFileFromRepoSpy = jest
       .spyOn(gitPort, 'getFileFromRepo')
       .mockImplementation(async (_repo, path) => {
         if (path === 'packmind-lock.json') {
-          return null;
+          return currentLockContent === null
+            ? null
+            : { sha: 'mock-lock-sha', content: currentLockContent };
         }
         return {
           sha: 'mock-sha',
-          content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+          content: currentDescriptorContent,
         };
+      });
+
+    // First publish: rolling sync branch doesn't exist yet; second publish:
+    // first publish created it so the resolver returns the rolling branch.
+    // The flag flips after the first commit lands on `packmind/sync`.
+    let rollingBranchExists = false;
+    checkBranchExistsSpy = jest
+      .spyOn(gitPort, 'checkBranchExists')
+      .mockImplementation(async (_providerId, _owner, _repo, branch) => {
+        if (branch === 'packmind/sync') {
+          return rollingBranchExists;
+        }
+        return false;
       });
 
     // Stub the reconciliation job so a successful link does not try to
@@ -87,10 +120,20 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
       .mockResolvedValue('mock-reconciliation-job-id');
 
     // Git side effects executed by the publish job — captured rather than
-    // performed.
+    // performed. The in-memory descriptor + lock are updated so the next
+    // publish reads the accumulated state, and the rolling-branch flag is
+    // flipped on so `checkBranchExists` reports it as present from then on.
     commitToGitSpy = jest
       .spyOn(gitPort, 'commitToGit')
-      .mockImplementation(async () => {
+      .mockImplementation(async (_repo, files) => {
+        for (const file of files as Array<{ path: string; content: string }>) {
+          if (file.path === '.claude-plugin/marketplace.json') {
+            currentDescriptorContent = file.content;
+          } else if (file.path === 'packmind-lock.json') {
+            currentLockContent = file.content;
+          }
+        }
+        rollingBranchExists = true;
         return {
           sha: `commit-sha-${commitToGitSpy.mock.calls.length}`,
         } as GitCommit;
@@ -302,6 +345,27 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
           url: 'https://github.com/anthropic/marketplace.git',
           path: 'plugins/security',
         });
+      });
+    });
+
+    describe('branch resolution', () => {
+      it('probes the rolling sync branch presence on both publishes', () => {
+        const probedBranches = checkBranchExistsSpy.mock.calls.map(
+          (call) => call[3] as string,
+        );
+        expect(probedBranches.every((b) => b === 'packmind/sync')).toBe(true);
+      });
+
+      it('reads the descriptor + lock from the rolling sync branch after the first publish has landed', () => {
+        const branchesUsedToFetchAfterFirstCommit =
+          getFileFromRepoSpy.mock.calls
+            .filter(
+              (call) =>
+                call[1] === '.claude-plugin/marketplace.json' ||
+                call[1] === 'packmind-lock.json',
+            )
+            .map((call) => call[2] as string);
+        expect(branchesUsedToFetchAfterFirstCommit).toContain('packmind/sync');
       });
     });
   });

@@ -144,6 +144,22 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
       wasCreated: true,
     });
 
+    // First publish: rolling sync branch absent. Second publish: present
+    // because the first commit landed on it. Flag flips inside the
+    // `commitToGit` mock above (via tracking by `currentLockContent`
+    // becoming non-null is equivalent here, but using an explicit flag is
+    // clearer).
+    jest
+      .spyOn(gitPort, 'checkBranchExists')
+      .mockImplementation(async (_providerId, _owner, _repo, branch) => {
+        if (branch === 'packmind/sync') {
+          // The rolling sync branch becomes "present" once the first commit
+          // has landed and updated either the descriptor or the lock.
+          return currentLockContent !== null;
+        }
+        return false;
+      });
+
     marketplace = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),
       gitProviderId: gitProvider.id,

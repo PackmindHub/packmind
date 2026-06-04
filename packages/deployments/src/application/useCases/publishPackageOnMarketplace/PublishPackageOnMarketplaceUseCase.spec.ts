@@ -181,6 +181,10 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
         }
         return { sha: 'sha-1', content: '{}' };
       }),
+      // First-publish ever: the rolling sync branch doesn't exist yet, so
+      // the use case reads descriptor + lock from the marketplace's default
+      // branch.
+      checkBranchExists: jest.fn().mockResolvedValue(false),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockGitRepoService = {
@@ -486,6 +490,52 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
 
     it('proceeds with the publish (republish path)', () => {
       expect(result.status).toBe('in_progress');
+    });
+  });
+
+  describe('when the rolling sync branch does not yet exist', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(false);
+      await useCase.execute(baseCommand);
+    });
+
+    it('reads the descriptor from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('reads the packmind-lock.json from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        gitRepo.branch,
+      );
+    });
+  });
+
+  describe('when the rolling sync branch already exists', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(true);
+      await useCase.execute(baseCommand);
+    });
+
+    it('reads the descriptor from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        'packmind/sync',
+      );
+    });
+
+    it('reads the packmind-lock.json from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        'packmind/sync',
+      );
     });
   });
 

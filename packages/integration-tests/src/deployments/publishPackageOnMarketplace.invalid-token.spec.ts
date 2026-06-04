@@ -92,6 +92,10 @@ describe('publishPackageOnMarketplace — expired token preflight', () => {
     commitToGitSpy = jest.spyOn(gitPort, 'commitToGit');
     openOrUpdatePullRequestSpy = jest.spyOn(gitPort, 'openOrUpdatePullRequest');
     jest.spyOn(gitPort, 'createBranchFromBase').mockResolvedValue(undefined);
+    // The invalid-token path rejects at preflight before any branch probe
+    // would meaningfully matter; default the stub so unrelated paths stay
+    // deterministic.
+    jest.spyOn(gitPort, 'checkBranchExists').mockResolvedValue(false);
 
     marketplace = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),

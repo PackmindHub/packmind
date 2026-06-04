@@ -88,6 +88,11 @@ describe('publishPackageOnMarketplace — name collision with unmanaged plugin',
     commitToGitSpy = jest.spyOn(gitPort, 'commitToGit');
     openOrUpdatePullRequestSpy = jest.spyOn(gitPort, 'openOrUpdatePullRequest');
     jest.spyOn(gitPort, 'createBranchFromBase').mockResolvedValue(undefined);
+    // Name-conflict path rejects on the descriptor preflight; default the
+    // branch probe to "absent" so the descriptor read targets the default
+    // branch (matches this spec's expectation of an unmanaged collision on
+    // the marketplace's main).
+    jest.spyOn(gitPort, 'checkBranchExists').mockResolvedValue(false);
 
     marketplace = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),

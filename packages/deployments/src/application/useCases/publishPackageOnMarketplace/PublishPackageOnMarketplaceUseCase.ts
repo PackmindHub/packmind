@@ -39,6 +39,7 @@ import { PackageService } from '../../services/PackageService';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 import { fetchMarketplaceDescriptorFile } from '../../services/fetchMarketplaceDescriptorFile';
 import { fetchPackmindMarketplaceLock } from '../../services/packmindMarketplaceLock';
+import { resolveMarketplaceReadBranch } from '../../services/resolveMarketplaceReadBranch';
 import { PublishPluginToMarketplaceDelayedJob } from '../../jobs/PublishPluginToMarketplaceDelayedJob';
 
 const origin = 'PublishPackageOnMarketplaceUseCase';
@@ -134,10 +135,21 @@ export class PublishPackageOnMarketplaceUseCase
       organizationId: organization.id,
     });
 
-    // 4. Fetch the descriptor and parse it.
+    // 4. Resolve which branch to read descriptor + lock from. When the
+    //    rolling `packmind/sync` branch already exists from an earlier
+    //    publish, that branch is the canonical Packmind-managed state and
+    //    must be the source for the name-collision preflight; otherwise we
+    //    fall back to the marketplace's default branch.
+    const readBranch = await resolveMarketplaceReadBranch(
+      this.gitPort,
+      marketplaceGitRepo,
+    );
+
+    // 4a. Fetch the descriptor and parse it.
     const descriptor = await this.loadDescriptor({
       marketplace,
       marketplaceGitRepo,
+      readBranch,
     });
 
     // 4b. Fetch the standalone Packmind lock file. A missing file is the
@@ -146,6 +158,7 @@ export class PublishPackageOnMarketplaceUseCase
     const lock = await this.loadLock({
       marketplace,
       marketplaceGitRepo,
+      readBranch,
     });
 
     // 5. Reject name collisions against unmanaged plugin entries.
@@ -269,8 +282,9 @@ export class PublishPackageOnMarketplaceUseCase
   private async loadDescriptor(params: {
     marketplace: Marketplace;
     marketplaceGitRepo: GitRepo;
+    readBranch: string;
   }): Promise<MarketplaceDescriptor> {
-    const { marketplace, marketplaceGitRepo } = params;
+    const { marketplace, marketplaceGitRepo, readBranch } = params;
     let descriptorFile: Awaited<
       ReturnType<typeof fetchMarketplaceDescriptorFile>
     >;
@@ -278,7 +292,7 @@ export class PublishPackageOnMarketplaceUseCase
       descriptorFile = await fetchMarketplaceDescriptorFile(
         this.gitPort,
         marketplaceGitRepo,
-        marketplaceGitRepo.branch,
+        readBranch,
       );
     } catch (error) {
       await this.markBadFormat(marketplace.id);
@@ -312,13 +326,14 @@ export class PublishPackageOnMarketplaceUseCase
   private async loadLock(params: {
     marketplace: Marketplace;
     marketplaceGitRepo: GitRepo;
+    readBranch: string;
   }): Promise<PackmindMarketplaceLock> {
-    const { marketplace, marketplaceGitRepo } = params;
+    const { marketplace, marketplaceGitRepo, readBranch } = params;
     try {
       return await fetchPackmindMarketplaceLock(
         this.gitPort,
         marketplaceGitRepo,
-        marketplaceGitRepo.branch,
+        readBranch,
       );
     } catch (error) {
       await this.markBadFormat(marketplace.id);

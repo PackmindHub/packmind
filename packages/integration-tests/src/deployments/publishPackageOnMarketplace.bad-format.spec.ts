@@ -91,6 +91,11 @@ describe('publishPackageOnMarketplace — descriptor missing maps to bad_format'
     commitToGitSpy = jest.spyOn(gitPort, 'commitToGit');
     openOrUpdatePullRequestSpy = jest.spyOn(gitPort, 'openOrUpdatePullRequest');
     jest.spyOn(gitPort, 'createBranchFromBase').mockResolvedValue(undefined);
+    // Bad-format test path never reaches the publish job — `checkBranchExists`
+    // is still called by the use case preflight. Default to "absent" so the
+    // descriptor probe targets the default branch (matching the original
+    // intent of this spec).
+    jest.spyOn(gitPort, 'checkBranchExists').mockResolvedValue(false);
 
     marketplace = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),

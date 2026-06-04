@@ -130,6 +130,12 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
       wasCreated: true,
     });
 
+    // The rolling sync branch presence has no impact on this no-op scenario
+    // — the descriptor mock returns the same content on any branch. Default
+    // to "absent" so both publishes read from the marketplace default
+    // branch.
+    jest.spyOn(gitPort, 'checkBranchExists').mockResolvedValue(false);
+
     marketplace = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),
       gitProviderId: gitProvider.id,
