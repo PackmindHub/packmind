@@ -74,10 +74,20 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
 
     gitPort = testApp.gitHexa.getAdapter();
 
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
-    });
+    // Descriptor served on the marketplace repo. The standalone
+    // packmind-lock.json is reported missing so the first publish
+    // exercises the empty-lock first-publish path.
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return {
+          sha: 'mock-sha',
+          content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+        };
+      });
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {

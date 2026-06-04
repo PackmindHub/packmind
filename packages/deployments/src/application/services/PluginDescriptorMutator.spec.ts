@@ -1,18 +1,10 @@
-import {
-  MarketplaceDescriptor,
-  MarketplaceDescriptorPackmindLockEntry,
-  createUserId,
-} from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
+import { MarketplaceDescriptor } from '@packmind/types';
 import {
   applyPluginDescriptorMutation,
-  buildPluginLockEntry,
   removePluginDescriptorEntry,
 } from './PluginDescriptorMutator';
 
 describe('applyPluginDescriptorMutation', () => {
-  const userId = createUserId(uuidv4());
-
   const baseDescriptor: MarketplaceDescriptor = {
     vendor: 'anthropic',
     name: 'sample-marketplace',
@@ -37,14 +29,9 @@ describe('applyPluginDescriptorMutation', () => {
     },
   };
 
-  const lockEntry: MarketplaceDescriptorPackmindLockEntry = {
-    version: '0.1.0',
-    contentHash: 'hash-1',
-    lastPublishedAt: '2026-06-01T10:00:00.000Z',
-    lastPublishedBy: userId,
-  };
+  afterEach(() => jest.clearAllMocks());
 
-  describe('first publish (lock absent)', () => {
+  describe('when the plugin slug is new (first publish)', () => {
     let result: MarketplaceDescriptor;
 
     beforeEach(() => {
@@ -52,7 +39,6 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
-        lockEntry,
       });
     });
 
@@ -71,43 +57,24 @@ describe('applyPluginDescriptorMutation', () => {
         version: '0.1.0',
       });
     });
-
-    it('initializes the packmindLock with schemaVersion 1', () => {
-      expect(result.packmindLock?.schemaVersion).toBe(1);
-    });
-
-    it('writes the lock entry under the plugin slug', () => {
-      expect(result.packmindLock?.plugins['security']).toEqual(lockEntry);
-    });
   });
 
-  describe('republish (lock present)', () => {
+  describe('when the plugin slug already exists (republish)', () => {
     let result: MarketplaceDescriptor;
-    const previousLockEntry: MarketplaceDescriptorPackmindLockEntry = {
-      version: '0.1.0',
-      contentHash: 'old-hash',
-      lastPublishedAt: '2026-05-30T10:00:00.000Z',
-      lastPublishedBy: userId,
-    };
 
     beforeEach(() => {
-      const descriptorWithLock: MarketplaceDescriptor = {
+      const descriptorWithEntry: MarketplaceDescriptor = {
         ...baseDescriptor,
         plugins: [
           ...baseDescriptor.plugins,
           { slug: 'security', name: 'Security old', version: '0.1.0' },
         ],
-        packmindLock: {
-          schemaVersion: 1,
-          plugins: { security: previousLockEntry },
-        },
       };
 
-      result = applyPluginDescriptorMutation(descriptorWithLock, {
+      result = applyPluginDescriptorMutation(descriptorWithEntry, {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.2.0',
-        lockEntry,
       });
     });
 
@@ -123,13 +90,9 @@ describe('applyPluginDescriptorMutation', () => {
         version: '0.2.0',
       });
     });
-
-    it('overwrites the lock entry with the latest values', () => {
-      expect(result.packmindLock?.plugins['security']).toEqual(lockEntry);
-    });
   });
 
-  describe('preserves unmanaged entries', () => {
+  describe('when an unmanaged plugin is already present under a different slug', () => {
     let result: MarketplaceDescriptor;
 
     beforeEach(() => {
@@ -137,7 +100,6 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
-        lockEntry,
       });
     });
 
@@ -151,12 +113,6 @@ describe('applyPluginDescriptorMutation', () => {
         version: '2.0.0',
       });
     });
-
-    it('does not register the unmanaged plugin into packmindLock', () => {
-      expect(
-        result.packmindLock?.plugins['existing-unmanaged'],
-      ).toBeUndefined();
-    });
   });
 
   describe('idempotency', () => {
@@ -169,13 +125,11 @@ describe('applyPluginDescriptorMutation', () => {
           pluginSlug: 'security',
           pluginName: 'Security',
           pluginVersion: '0.1.0',
-          lockEntry,
         });
         second = applyPluginDescriptorMutation(first, {
           pluginSlug: 'security',
           pluginName: 'Security',
           pluginVersion: '0.1.0',
-          lockEntry,
         });
       });
 
@@ -185,48 +139,20 @@ describe('applyPluginDescriptorMutation', () => {
     });
   });
 
-  describe('does not mutate the input descriptor', () => {
-    it('leaves the input plugins array unchanged', () => {
-      const inputPluginsSnapshot = [...baseDescriptor.plugins];
+  describe('immutability', () => {
+    it('does not mutate the input plugins array', () => {
+      const snapshot = [...baseDescriptor.plugins];
       applyPluginDescriptorMutation(baseDescriptor, {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
-        lockEntry,
       });
-      expect(baseDescriptor.plugins).toEqual(inputPluginsSnapshot);
-    });
-
-    it('leaves the input packmindLock unchanged', () => {
-      const descriptorWithLock: MarketplaceDescriptor = {
-        ...baseDescriptor,
-        packmindLock: {
-          schemaVersion: 1,
-          plugins: { other: lockEntry },
-        },
-      };
-      const before = JSON.stringify(descriptorWithLock.packmindLock);
-      applyPluginDescriptorMutation(descriptorWithLock, {
-        pluginSlug: 'security',
-        pluginName: 'Security',
-        pluginVersion: '0.1.0',
-        lockEntry,
-      });
-      expect(JSON.stringify(descriptorWithLock.packmindLock)).toBe(before);
+      expect(baseDescriptor.plugins).toEqual(snapshot);
     });
   });
 });
 
 describe('removePluginDescriptorEntry', () => {
-  const userId = createUserId(uuidv4());
-
-  const lockEntry: MarketplaceDescriptorPackmindLockEntry = {
-    version: '0.1.0',
-    contentHash: 'hash-1',
-    lastPublishedAt: '2026-06-01T10:00:00.000Z',
-    lastPublishedBy: userId,
-  };
-
   const descriptorWithSecurity: MarketplaceDescriptor = {
     vendor: 'anthropic',
     name: 'sample-marketplace',
@@ -239,14 +165,12 @@ describe('removePluginDescriptorEntry', () => {
       },
       { slug: 'security', name: 'Security', version: '0.1.0' },
     ],
-    packmindLock: {
-      schemaVersion: 1,
-      plugins: { security: lockEntry },
-    },
     raw: { name: 'sample-marketplace' },
   };
 
-  describe('when the slug is managed', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  describe('when the slug is present', () => {
     let result: MarketplaceDescriptor;
 
     beforeEach(() => {
@@ -262,24 +186,6 @@ describe('removePluginDescriptorEntry', () => {
         true,
       );
     });
-
-    it('drops the matching entry from packmindLock.plugins', () => {
-      expect(result.packmindLock?.plugins['security']).toBeUndefined();
-    });
-  });
-
-  describe('when other managed plugins remain in the lock', () => {
-    it('preserves the other lock entries', () => {
-      const descriptor: MarketplaceDescriptor = {
-        ...descriptorWithSecurity,
-        packmindLock: {
-          schemaVersion: 1,
-          plugins: { security: lockEntry, other: lockEntry },
-        },
-      };
-      const result = removePluginDescriptorEntry(descriptor, 'security');
-      expect(result.packmindLock?.plugins['other']).toEqual(lockEntry);
-    });
   });
 
   describe('when the slug is already absent', () => {
@@ -292,53 +198,11 @@ describe('removePluginDescriptorEntry', () => {
     });
   });
 
-  describe('when the descriptor has no packmindLock', () => {
-    it('leaves packmindLock undefined', () => {
-      const descriptor: MarketplaceDescriptor = {
-        ...descriptorWithSecurity,
-        packmindLock: undefined,
-      };
-      const result = removePluginDescriptorEntry(descriptor, 'security');
-      expect(result.packmindLock).toBeUndefined();
-    });
-  });
-
   describe('immutability', () => {
     it('does not mutate the input descriptor plugins', () => {
       const snapshot = [...descriptorWithSecurity.plugins];
       removePluginDescriptorEntry(descriptorWithSecurity, 'security');
       expect(descriptorWithSecurity.plugins).toEqual(snapshot);
     });
-  });
-});
-
-describe('buildPluginLockEntry', () => {
-  const userId = createUserId(uuidv4());
-  const publishedAt = new Date('2026-06-02T12:00:00.000Z');
-  let entry: MarketplaceDescriptorPackmindLockEntry;
-
-  beforeEach(() => {
-    entry = buildPluginLockEntry({
-      pluginVersion: '0.1.0',
-      contentHash: 'abc123',
-      lastPublishedAt: publishedAt,
-      lastPublishedBy: userId,
-    });
-  });
-
-  it('serializes lastPublishedAt as an ISO 8601 string', () => {
-    expect(entry.lastPublishedAt).toBe('2026-06-02T12:00:00.000Z');
-  });
-
-  it('captures the plugin version', () => {
-    expect(entry.version).toBe('0.1.0');
-  });
-
-  it('captures the content hash', () => {
-    expect(entry.contentHash).toBe('abc123');
-  });
-
-  it('captures the publishing user id', () => {
-    expect(entry.lastPublishedBy).toBe(userId);
   });
 });

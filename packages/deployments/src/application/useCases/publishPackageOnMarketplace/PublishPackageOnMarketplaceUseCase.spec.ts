@@ -173,9 +173,14 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
       listProviders: jest
         .fn()
         .mockResolvedValue({ providers: [providerWithToken] }),
-      getFileFromRepo: jest
-        .fn()
-        .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      // Default mock: descriptor file present (raw JSON ignored by the
+      // parser mock), packmind-lock.json absent (first-publish path).
+      getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return { sha: 'sha-1', content: '{}' };
+      }),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockGitRepoService = {
@@ -456,23 +461,60 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
       mockParserRegistry.parse.mockReturnValue({
         ...parsedDescriptor,
         plugins: [{ slug: 'security', name: 'Security' }],
-        packmindLock: {
-          schemaVersion: 1,
-          plugins: {
-            security: {
-              version: '0.1.0',
-              contentHash: 'h',
-              lastPublishedAt: '2026-06-01T00:00:00.000Z',
-              lastPublishedBy: userId as UserId,
-            },
-          },
-        },
+      });
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return {
+            sha: 'lock-sha',
+            content: JSON.stringify({
+              schemaVersion: 1,
+              plugins: {
+                security: {
+                  version: '0.1.0',
+                  contentHash: 'h',
+                  lastPublishedAt: '2026-06-01T00:00:00.000Z',
+                  lastPublishedBy: userId as UserId,
+                },
+              },
+            }),
+          };
+        }
+        return { sha: 'sha-1', content: '{}' };
       });
       result = await useCase.execute(baseCommand);
     });
 
     it('proceeds with the publish (republish path)', () => {
       expect(result.status).toBe('in_progress');
+    });
+  });
+
+  describe('when the packmind-lock.json file is unparseable', () => {
+    beforeEach(() => {
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return { sha: 'lock-sha', content: 'not-valid-json' };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      });
+    });
+
+    it('throws MarketplaceDescriptorBadFormatError', async () => {
+      await expect(useCase.execute(baseCommand)).rejects.toBeInstanceOf(
+        MarketplaceDescriptorBadFormatError,
+      );
+    });
+
+    it('transitions the marketplace state to bad_format', async () => {
+      try {
+        await useCase.execute(baseCommand);
+      } catch {
+        // expected
+      }
+      expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+        marketplaceId,
+        expect.objectContaining({ state: 'bad_format' }),
+      );
     });
   });
 });

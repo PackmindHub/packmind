@@ -52,10 +52,19 @@ describe('publishPackageOnMarketplace — name collision with unmanaged plugin',
 
     gitPort = testApp.gitHexa.getAdapter();
 
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: COLLIDING_MARKETPLACE_DESCRIPTOR_JSON,
-    });
+    // Descriptor exposes a colliding unmanaged plugin; the standalone
+    // packmind-lock.json is absent so the slug stays unmanaged.
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return {
+          sha: 'mock-sha',
+          content: COLLIDING_MARKETPLACE_DESCRIPTOR_JSON,
+        };
+      });
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {

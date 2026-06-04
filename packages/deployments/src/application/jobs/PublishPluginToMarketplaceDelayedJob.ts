@@ -20,6 +20,7 @@ import {
   MarketplaceDistributionId,
   MarketplaceId,
   Package,
+  PackmindMarketplaceLock,
   PluginPublishedEvent,
   PluginPublishFailedEvent,
   PublishFailureReason,
@@ -28,10 +29,13 @@ import {
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { applyPluginDescriptorMutation } from '../services/PluginDescriptorMutator';
+import { applyPackmindMarketplaceLockMutation } from '../services/applyPackmindMarketplaceLockMutation';
 import {
-  applyPluginDescriptorMutation,
-  buildPluginLockEntry,
-} from '../services/PluginDescriptorMutator';
+  fetchPackmindMarketplaceLock,
+  PACKMIND_MARKETPLACE_LOCK_PATH,
+  serializePackmindMarketplaceLock,
+} from '../services/packmindMarketplaceLock';
 import {
   buildPluginContentHash,
   PluginContentEntry,
@@ -231,14 +235,35 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       }
 
+      // Read the standalone packmind-lock.json from the default branch — a
+      // missing file is the first-publish path and returns an empty lock.
+      // A malformed lock is the same failure category as a malformed
+      // descriptor: the marketplace is unhealthy and the publish cannot
+      // proceed.
+      let lock: PackmindMarketplaceLock;
+      try {
+        lock = await fetchPackmindMarketplaceLock(
+          this.gitPort,
+          marketplaceGitRepo,
+          marketplaceGitRepo.branch,
+        );
+      } catch (error) {
+        throw new PublishJobFailure(
+          'descriptor_missing',
+          `packmind-lock.json is unparseable on ${marketplaceGitRepo.owner}/${marketplaceGitRepo.repo}: ${getErrorMessage(error)}`,
+        );
+      }
+
       const pluginSlug = pkg.slug;
       this.assertNoUnmanagedNameCollision({
         pluginSlug,
         descriptor,
+        lock,
         marketplaceName: marketplace.name,
       });
 
-      const lockEntry = buildPluginLockEntry({
+      const nextLock = applyPackmindMarketplaceLockMutation(lock, {
+        pluginSlug,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
         contentHash,
         lastPublishedAt: new Date(),
@@ -249,20 +274,21 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         pluginSlug,
         pluginName: rendered.pluginName,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
-        lockEntry,
       });
-
-      const descriptorFileUpdate: FileModification = {
-        path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
-        content: this.serializeDescriptor(nextDescriptor),
-      };
 
       const fileModifications: FileModification[] = [
         ...pluginEntries.map<FileModification>((entry) => ({
           path: entry.path,
           content: entry.content,
         })),
-        descriptorFileUpdate,
+        {
+          path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
+          content: this.serializeDescriptor(nextDescriptor),
+        },
+        {
+          path: PACKMIND_MARKETPLACE_LOCK_PATH,
+          content: serializePackmindMarketplaceLock(nextLock),
+        },
       ];
 
       // The rolling PR is owned by the upstream Git host — the worker pushes
@@ -450,21 +476,21 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
     if (descriptor.version !== undefined) {
       merged['version'] = descriptor.version;
     }
-    if (descriptor.packmindLock !== undefined) {
-      merged['packmindLock'] = descriptor.packmindLock;
-    }
+    // Strip the legacy embedded packmindLock so orphan fields from existing
+    // repos disappear on the next publish — the lock now lives at the repo
+    // root as a standalone packmind-lock.json file.
+    delete merged['packmindLock'];
     return JSON.stringify(merged, null, 2);
   }
 
   private assertNoUnmanagedNameCollision(params: {
     pluginSlug: string;
     descriptor: MarketplaceDescriptor;
+    lock: PackmindMarketplaceLock;
     marketplaceName: string;
   }): void {
-    const { pluginSlug, descriptor, marketplaceName } = params;
-    const managedSlugs = new Set<string>(
-      Object.keys(descriptor.packmindLock?.plugins ?? {}),
-    );
+    const { pluginSlug, descriptor, lock, marketplaceName } = params;
+    const managedSlugs = new Set<string>(Object.keys(lock.plugins));
     const colliding = descriptor.plugins.find(
       (p) => p.slug === pluginSlug && !managedSlugs.has(p.slug),
     );

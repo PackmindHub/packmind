@@ -55,12 +55,18 @@ describe('publishPackageOnMarketplace — descriptor missing maps to bad_format'
 
     // Serve a valid descriptor during link-time, then flip the stub to
     // return null inside the publish test so the descriptor is missing only
-    // at publish time.
+    // at publish time. The standalone packmind-lock.json is reported
+    // missing so first-publish wiring stays consistent.
     getFileFromRepoSpy = jest
       .spyOn(gitPort, 'getFileFromRepo')
-      .mockResolvedValue({
-        sha: 'mock-sha',
-        content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+      .mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return {
+          sha: 'mock-sha',
+          content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+        };
       });
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();

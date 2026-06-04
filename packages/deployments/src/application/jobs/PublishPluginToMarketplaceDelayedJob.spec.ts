@@ -155,9 +155,14 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
 
     mockGitPort = {
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
-      getFileFromRepo: jest
-        .fn()
-        .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      // By default the descriptor is served as a minimal valid JSON and the
+      // packmind-lock.json file is reported as missing — first-publish path.
+      getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return { sha: 'sha-1', content: '{}' };
+      }),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest.fn().mockResolvedValue({
         url: 'https://github.com/acme/plugins/pull/1',
@@ -208,6 +213,60 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         ]),
         MARKETPLACE_SYNC_PR_TITLE,
       );
+    });
+
+    it('includes the packmind-lock.json file at the repo root in the commit', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      expect(lockFile).toBeDefined();
+    });
+
+    it('writes the lock entry with the expected version and contentHash', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      const lock = JSON.parse(lockFile?.content ?? '{}');
+      expect(lock.plugins.security).toMatchObject({
+        version: '0.1.0',
+        contentHash: expect.any(String),
+        lastPublishedBy: userId,
+        lastPublishedAt: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
+        ),
+      });
+    });
+
+    it('writes a lock containing exactly one plugin slug on first publish', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      const lock = JSON.parse(lockFile?.content ?? '{}');
+      expect(Object.keys(lock.plugins)).toEqual(['security']);
+    });
+
+    it('does not embed packmindLock inside the descriptor commit', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const descriptorCommit = committedFiles.find(
+        (f) => f.path === '.claude-plugin/marketplace.json',
+      );
+      const parsed = JSON.parse(descriptorCommit?.content ?? '{}');
+      expect(parsed.packmindLock).toBeUndefined();
     });
 
     it('ensures the rolling-PR branch exists before committing', () => {
@@ -483,6 +542,30 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         expect.objectContaining({
           status: DistributionStatus.failure,
           failureReason: 'other',
+        }),
+      );
+    });
+  });
+
+  describe('when packmind-lock.json is malformed', () => {
+    beforeEach(async () => {
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return { sha: 'sha-lock', content: 'not-valid-json' };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      });
+      await job.runJob('job-lock-malformed', input, new AbortController());
+    });
+
+    it('records failure with failureReason=descriptor_missing', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          status: DistributionStatus.failure,
+          failureReason: 'descriptor_missing',
         }),
       );
     });

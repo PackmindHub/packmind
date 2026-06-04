@@ -16,12 +16,19 @@ import {
   Marketplace,
   MarketplaceDescriptor,
   MarketplaceDistribution,
+  PackmindMarketplaceLock,
   RemovePluginFromMarketplaceJobInput,
   RemovePluginFromMarketplaceJobOutput,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { removePluginDescriptorEntry } from '../services/PluginDescriptorMutator';
+import { removePackmindMarketplaceLockEntry } from '../services/applyPackmindMarketplaceLockMutation';
+import {
+  fetchPackmindMarketplaceLock,
+  PACKMIND_MARKETPLACE_LOCK_PATH,
+  serializePackmindMarketplaceLock,
+} from '../services/packmindMarketplaceLock';
 import {
   MARKETPLACE_SYNC_BRANCH,
   MARKETPLACE_SYNC_PR_TITLE,
@@ -146,12 +153,34 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
       descriptorFile.content,
     );
 
-    const nextDescriptor = removePluginDescriptorEntry(descriptor, pluginSlug);
+    // Read the standalone packmind-lock.json from the same branch so the
+    // removal mirrors the descriptor read. A missing lock yields the empty
+    // shape, which is fine — the descriptor entry is dropped either way.
+    const lock: PackmindMarketplaceLock = await fetchPackmindMarketplaceLock(
+      this.gitPort,
+      marketplaceGitRepo,
+      MARKETPLACE_SYNC_BRANCH,
+    ).catch(() =>
+      fetchPackmindMarketplaceLock(
+        this.gitPort,
+        marketplaceGitRepo,
+        marketplaceGitRepo.branch,
+      ),
+    );
 
-    const descriptorFileUpdate: FileModification = {
-      path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
-      content: this.serializeDescriptor(nextDescriptor),
-    };
+    const nextDescriptor = removePluginDescriptorEntry(descriptor, pluginSlug);
+    const nextLock = removePackmindMarketplaceLockEntry(lock, pluginSlug);
+
+    const fileUpdates: FileModification[] = [
+      {
+        path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
+        content: this.serializeDescriptor(nextDescriptor),
+      },
+      {
+        path: PACKMIND_MARKETPLACE_LOCK_PATH,
+        content: serializePackmindMarketplaceLock(nextLock),
+      },
+    ];
 
     // The plugin's rendered files live under `plugins/<slug>/` — mirrors the
     // `pluginRoot` the publish renderer writes to. Remove the whole directory.
@@ -165,7 +194,7 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     try {
       await this.gitPort.commitToGit(
         { ...marketplaceGitRepo, branch: MARKETPLACE_SYNC_BRANCH },
-        [descriptorFileUpdate],
+        fileUpdates,
         MARKETPLACE_SYNC_PR_TITLE,
         deleteFiles,
       );
@@ -246,11 +275,10 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     if (descriptor.version !== undefined) {
       merged['version'] = descriptor.version;
     }
-    if (descriptor.packmindLock !== undefined) {
-      merged['packmindLock'] = descriptor.packmindLock;
-    } else {
-      delete merged['packmindLock'];
-    }
+    // Strip the legacy embedded packmindLock so orphan fields from existing
+    // repos disappear on the next mutation — the lock now lives at the repo
+    // root as a standalone packmind-lock.json file.
+    delete merged['packmindLock'];
     return JSON.stringify(merged, null, 2);
   }
 

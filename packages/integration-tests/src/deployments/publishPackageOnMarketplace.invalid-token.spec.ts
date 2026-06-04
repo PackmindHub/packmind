@@ -49,11 +49,21 @@ describe('publishPackageOnMarketplace — expired token preflight', () => {
     gitPort = testApp.gitHexa.getAdapter();
 
     // Serve a valid descriptor at link time so the linkMarketplace flow can
-    // succeed and seed the marketplace + git repo rows.
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
-    });
+    // succeed and seed the marketplace + git repo rows. The standalone
+    // packmind-lock.json is absent — irrelevant here because the publish
+    // never reaches the lock fetch (token preflight fails first), but
+    // keeping the mock realistic.
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return {
+          sha: 'mock-sha',
+          content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+        };
+      });
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {

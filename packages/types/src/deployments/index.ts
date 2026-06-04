@@ -8,6 +8,7 @@ export * from './MarketplaceState';
 export * from './PluginRef';
 export * from './MarketplaceDescriptor';
 export * from './MarketplaceDescriptorFilename';
+export * from './PackmindMarketplaceLock';
 export * from './Marketplace';
 export * from './MarketplaceListItem';
 export * from './DistributionStatus';

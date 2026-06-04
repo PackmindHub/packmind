@@ -25,6 +25,7 @@ import {
   MarketplaceNotFoundError,
   MarketplacePluginNameConflictError,
   OrganizationId,
+  PackmindMarketplaceLock,
   PluginPublishAttemptedEvent,
   PluginRef,
   PublishPackageOnMarketplaceCommand,
@@ -37,6 +38,7 @@ import { IMarketplaceDistributionRepository } from '../../../domain/repositories
 import { PackageService } from '../../services/PackageService';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
 import { fetchMarketplaceDescriptorFile } from '../../services/fetchMarketplaceDescriptorFile';
+import { fetchPackmindMarketplaceLock } from '../../services/packmindMarketplaceLock';
 import { PublishPluginToMarketplaceDelayedJob } from '../../jobs/PublishPluginToMarketplaceDelayedJob';
 
 const origin = 'PublishPackageOnMarketplaceUseCase';
@@ -138,12 +140,21 @@ export class PublishPackageOnMarketplaceUseCase
       marketplaceGitRepo,
     });
 
+    // 4b. Fetch the standalone Packmind lock file. A missing file is the
+    //     normal first-publish path (empty lock); a malformed file means
+    //     the marketplace is unhealthy and is treated as bad_format.
+    const lock = await this.loadLock({
+      marketplace,
+      marketplaceGitRepo,
+    });
+
     // 5. Reject name collisions against unmanaged plugin entries.
     const pluginSlug = pkg.slug;
     this.assertNoUnmanagedNameCollision({
       pluginSlug,
       marketplace,
       descriptor,
+      lock,
     });
 
     // 6. Compute the "first publish" flag for analytics.
@@ -298,6 +309,29 @@ export class PublishPackageOnMarketplaceUseCase
     }
   }
 
+  private async loadLock(params: {
+    marketplace: Marketplace;
+    marketplaceGitRepo: GitRepo;
+  }): Promise<PackmindMarketplaceLock> {
+    const { marketplace, marketplaceGitRepo } = params;
+    try {
+      return await fetchPackmindMarketplaceLock(
+        this.gitPort,
+        marketplaceGitRepo,
+        marketplaceGitRepo.branch,
+      );
+    } catch (error) {
+      await this.markBadFormat(marketplace.id);
+      throw new MarketplaceDescriptorBadFormatError(
+        marketplaceGitRepo.owner,
+        marketplaceGitRepo.repo,
+        `packmind-lock.json is unparseable on ${marketplaceGitRepo.owner}/${marketplaceGitRepo.repo}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
   private async markBadFormat(marketplaceId: Marketplace['id']): Promise<void> {
     try {
       await this.marketplaceRepository.updateState(marketplaceId, {
@@ -319,11 +353,10 @@ export class PublishPackageOnMarketplaceUseCase
     pluginSlug: string;
     marketplace: Marketplace;
     descriptor: MarketplaceDescriptor;
+    lock: PackmindMarketplaceLock;
   }): void {
-    const { pluginSlug, marketplace, descriptor } = params;
-    const managedSlugs = new Set<string>(
-      Object.keys(descriptor.packmindLock?.plugins ?? {}),
-    );
+    const { pluginSlug, marketplace, descriptor, lock } = params;
+    const managedSlugs = new Set<string>(Object.keys(lock.plugins));
     const collidingUnmanaged = descriptor.plugins.find(
       (p: PluginRef) => p.slug === pluginSlug && !managedSlugs.has(p.slug),
     );

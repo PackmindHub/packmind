@@ -50,12 +50,20 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
 
     gitPort = testApp.gitHexa.getAdapter();
 
-    // Descriptor served on the marketplace repo. Returned for both link
-    // probes and subsequent re-fetches in the publish job.
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
-    });
+    // Descriptor served on the marketplace repo. The standalone
+    // packmind-lock.json file is reported missing so each publish in this
+    // spec exercises the empty-lock first-publish path.
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return {
+          sha: 'mock-sha',
+          content: ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON,
+        };
+      });
 
     // Stub the reconciliation job so a successful link does not try to
     // contact a real queue (link-time concern only).

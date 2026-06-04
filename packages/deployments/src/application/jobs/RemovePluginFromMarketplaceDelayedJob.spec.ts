@@ -82,17 +82,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     vendor: 'anthropic',
     name: 'ACME Marketplace',
     plugins: [{ slug: 'security', name: 'Security' }],
-    packmindLock: {
-      schemaVersion: 1,
-      plugins: {
-        security: {
-          version: '0.1.0',
-          contentHash: 'hash',
-          lastPublishedAt: '2026-06-01T10:00:00.000Z',
-          lastPublishedBy: userId,
-        },
-      },
-    },
     raw: { name: 'ACME Marketplace', plugins: [{ slug: 'security' }] },
   };
 
@@ -123,9 +112,25 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
 
     mockGitPort = {
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
-      getFileFromRepo: jest
-        .fn()
-        .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return {
+            sha: 'lock-sha',
+            content: JSON.stringify({
+              schemaVersion: 1,
+              plugins: {
+                security: {
+                  version: '0.1.0',
+                  contentHash: 'hash',
+                  lastPublishedAt: '2026-06-01T10:00:00.000Z',
+                  lastPublishedBy: userId,
+                },
+              },
+            }),
+          };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      }),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest
         .fn()

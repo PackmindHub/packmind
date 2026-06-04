@@ -29,6 +29,7 @@ const INITIAL_DESCRIPTOR_JSON = JSON.stringify({
 
 const ROLLING_PR_URL = 'https://github.com/anthropic/marketplace/pull/11';
 const DESCRIPTOR_PATH = '.claude-plugin/marketplace.json';
+const PACKMIND_LOCK_PATH = 'packmind-lock.json';
 
 describe('publishPackageOnMarketplace — two concurrent publishers', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
@@ -48,6 +49,13 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
    * behaviour and exercising the rolling-PR merge semantics.
    */
   let currentDescriptorContent: string;
+  /**
+   * Tracks the standalone packmind-lock.json content "on disk" so each
+   * subsequent publish reads the previously committed lock state. Starts
+   * `null` so the first publish exercises the empty-lock first-publish
+   * path.
+   */
+  let currentLockContent: string | null;
 
   beforeAll(() => fixture.initialize());
 
@@ -65,15 +73,25 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
     gitPort = testApp.gitHexa.getAdapter();
 
     currentDescriptorContent = INITIAL_DESCRIPTOR_JSON;
+    currentLockContent = null;
 
-    // Serve whatever descriptor is currently "on disk". The publish job
-    // overwrites this content after each successful commit so the next
-    // publish reads the latest state — same convergence as a real upstream
-    // repo.
-    jest.spyOn(gitPort, 'getFileFromRepo').mockImplementation(async () => ({
-      sha: `sha-${Math.random()}`,
-      content: currentDescriptorContent,
-    }));
+    // Serve the descriptor or the lock file depending on the requested
+    // path. The publish job overwrites these contents after each
+    // successful commit so the next publish reads the latest state —
+    // same convergence as a real upstream repo.
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) => {
+        if (path === PACKMIND_LOCK_PATH) {
+          return currentLockContent === null
+            ? null
+            : { sha: `lock-sha-${Math.random()}`, content: currentLockContent };
+        }
+        return {
+          sha: `sha-${Math.random()}`,
+          content: currentDescriptorContent,
+        };
+      });
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {
@@ -94,8 +112,8 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
       .spyOn(adapterAny._linkMarketplaceUseCase.reconciliationJob, 'addJob')
       .mockResolvedValue('mock-reconciliation-job-id');
 
-    // Capture committed files and update the in-memory descriptor so the
-    // next publish reads the converged state.
+    // Capture committed files and update the in-memory descriptor + lock
+    // so the next publish reads the converged state.
     commitToGitSpy = jest
       .spyOn(gitPort, 'commitToGit')
       .mockImplementation(
@@ -108,6 +126,10 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
           );
           if (descriptorUpdate) {
             currentDescriptorContent = descriptorUpdate.content;
+          }
+          const lockUpdate = files.find((f) => f.path === PACKMIND_LOCK_PATH);
+          if (lockUpdate) {
+            currentLockContent = lockUpdate.content;
           }
           return {
             sha: `commit-sha-${commitToGitSpy.mock.calls.length}`,
@@ -215,10 +237,10 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
     let secondRow: MarketplaceDistribution | null;
     let finalDescriptor: {
       plugins: Array<{ slug: string; name: string }>;
-      packmindLock?: {
-        schemaVersion: number;
-        plugins: Record<string, unknown>;
-      };
+    };
+    let finalLock: {
+      schemaVersion: number;
+      plugins: Record<string, unknown>;
     };
 
     beforeEach(async () => {
@@ -255,6 +277,7 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
       finalDescriptor = JSON.parse(
         currentDescriptorContent,
       ) as typeof finalDescriptor;
+      finalLock = JSON.parse(currentLockContent ?? '{}') as typeof finalLock;
     });
 
     it('records status=success on the first publish row', () => {
@@ -290,16 +313,23 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
         expect(slugs).toEqual(['observability', 'security']);
       });
 
-      // Note: the parser does not currently re-read `packmindLock` from the
-      // descriptor JSON, so the second publish writes back a lock that only
-      // contains its own slug. The committed descriptor still preserves
-      // both plugin entries (see assertion above) — the lock map being
-      // collapsed to the latest slug is a known pre-existing gap in the
-      // Anthropic parser; the publish job behaviour itself is correct.
-      it('records a packmindLock entry for the last successful publish', () => {
+      it('does not embed a legacy packmindLock field in the descriptor', () => {
         expect(
-          Object.keys(finalDescriptor.packmindLock?.plugins ?? {}),
-        ).toContain('observability');
+          (finalDescriptor as Record<string, unknown>)['packmindLock'],
+        ).toBeUndefined();
+      });
+    });
+
+    describe('the resulting standalone packmind-lock.json', () => {
+      it('contains both plugin slugs after the second publish', () => {
+        expect(Object.keys(finalLock.plugins).sort()).toEqual([
+          'observability',
+          'security',
+        ]);
+      });
+
+      it('uses schemaVersion 1', () => {
+        expect(finalLock.schemaVersion).toBe(1);
       });
     });
   });
