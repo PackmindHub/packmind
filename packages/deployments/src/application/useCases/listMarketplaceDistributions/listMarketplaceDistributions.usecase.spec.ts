@@ -59,6 +59,17 @@ describe('ListMarketplaceDistributionsUseCase', () => {
     source: 'app',
   } as unknown as MarketplaceDistribution;
 
+  const removedDistribution = {
+    id: createMarketplaceDistributionId(uuidv4()),
+    organizationId,
+    marketplaceId,
+    packageId,
+    pluginSlug: 'retired-plugin',
+    authorId: userId,
+    status: DistributionStatus.removed,
+    source: 'app',
+  } as unknown as MarketplaceDistribution;
+
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockPackageService: jest.Mocked<PackageService>;
@@ -135,6 +146,27 @@ describe('ListMarketplaceDistributionsUseCase', () => {
 
     it('preserves the distribution status', () => {
       expect(result[0].status).toBe(DistributionStatus.success);
+    });
+  });
+
+  describe('when a distribution has been removed', () => {
+    let result: Awaited<
+      ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+    >;
+
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+        [distributionA, removedDistribution],
+      );
+      result = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+      });
+    });
+
+    it('excludes the removed distribution from the list', () => {
+      expect(result.map((item) => item.id)).toEqual([distributionA.id]);
     });
   });
 
