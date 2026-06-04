@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-06-04T15:03:02.421Z",
   "artifacts": {
     "user:standard:front-end-ui-and-design-systems": {
       "name": "Front-end UI and Design Systems",
@@ -42,5 +43,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.0-next"
+  "cliVersion": "0.30.0"
 }
