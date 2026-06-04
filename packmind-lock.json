@@ -4,6 +4,7 @@
     "@backend/backend-standards",
     "@frontend/playground",
     "@global/packmind-standards",
+    "@global/proprietary-standards",
     "@testing/cli-e2e",
     "@testing/unit-tests"
   ],
@@ -230,6 +231,35 @@
         },
         {
           "path": ".packmind/standards/compliance-logging-personal-information.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:packmind-proprietary": {
+      "name": "Packmind Proprietary",
+      "type": "standard",
+      "id": "6837ab47-2c56-49a0-aea4-e3c33b985393",
+      "version": 3,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "cfdeadaf-30be-44c4-91a7-3131b68a6d92"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-packmind-proprietary.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-packmind-proprietary.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-packmind-proprietary.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/packmind-proprietary.md",
           "agent": "packmind"
         }
       ]
