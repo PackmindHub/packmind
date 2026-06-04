@@ -50,6 +50,8 @@ import {
   ListMarketplaceDistributionsResponse,
   MarkPluginForRemovalCommand,
   MarkPluginForRemovalResponse,
+  SyncMarketplaceNowCommand,
+  SyncMarketplaceNowResponse,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -722,6 +724,19 @@ export interface IDeploymentPort {
   cancelPluginRemoval(
     command: CancelPluginRemovalCommand,
   ): Promise<CancelPluginRemovalResponse>;
+
+  /**
+   * Runs an immediate, on-demand reconciliation of a single marketplace and
+   * returns the resulting state. Member-scoped stop-gap so an org member can
+   * refresh marketplace state (drift + `to_be_removed → removed` transitions)
+   * without waiting for the next scheduled reconciliation sweep.
+   *
+   * @param command - Command carrying the marketplace id and auth context
+   * @returns Promise resolving to the new state and validation timestamp
+   */
+  syncMarketplaceNow(
+    command: SyncMarketplaceNowCommand,
+  ): Promise<SyncMarketplaceNowResponse>;
 
   /**
    * Lists all marketplace distributions for a given marketplace owned by the

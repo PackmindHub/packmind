@@ -47,6 +47,8 @@ import {
   MarketplaceUrlNotReachableError,
   MarkPluginForRemovalCommand,
   MarkPluginForRemovalResponse,
+  SyncMarketplaceNowCommand,
+  SyncMarketplaceNowResponse,
   OrganizationId,
   PackageId,
   PluginDistributionInvalidStateError,
@@ -628,6 +630,58 @@ export class MarketplacesController {
           organizationId,
           marketplaceId,
           distributionId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Post(':marketplaceId/reconcile')
+  async syncMarketplaceNow(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SyncMarketplaceNowResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/marketplaces/:marketplaceId/reconcile - Manual marketplace reconciliation requested',
+      {
+        organizationId,
+        marketplaceId,
+        addedBy: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: SyncMarketplaceNowCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        source: request.clientSource,
+      };
+
+      const response = await this.deploymentAdapter.syncMarketplaceNow(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/reconcile - Reconciliation completed',
+        {
+          organizationId,
+          marketplaceId,
+          state: response.state,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/reconcile - Failed to reconcile marketplace',
+        {
+          organizationId,
+          marketplaceId,
           error: errorMessage,
         },
       );
