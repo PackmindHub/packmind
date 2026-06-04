@@ -80,8 +80,14 @@ export class AddGitRepoUseCase
       );
     }
 
-    // Business rule: git provider must have a token configured (unless explicitly allowed)
-    if (!gitProvider.token && !allowTokenlessProvider) {
+    // Business rule: token-auth providers must have a token configured (unless
+    // explicitly allowed). App-auth providers carry no token on the row — the
+    // installation token is minted on demand by GithubTokenResolverFactory.
+    if (
+      gitProvider.authMethod !== 'app' &&
+      !gitProvider.token &&
+      !allowTokenlessProvider
+    ) {
       this.logger.error('Git provider has no token configured', {
         gitProviderId,
         organizationId: organization.id,

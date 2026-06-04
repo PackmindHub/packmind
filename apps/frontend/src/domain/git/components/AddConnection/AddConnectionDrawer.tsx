@@ -67,7 +67,10 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
 }) => {
   const { data: me } = useGetMeQuery();
   const userEmail = me?.authenticated ? me.user?.email : null;
-  const edition: 'cloud' | 'oss' = me?.edition ?? 'oss';
+  const githubAppMode: 'on-prem' | 'shared' =
+    me?.authenticated && me.organization
+      ? me.organization.githubAppMode
+      : 'on-prem';
   const githubAppEnabled = isFeatureFlagEnabled({
     featureKeys: [GITHUB_APP_FEATURE_KEY],
     featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
@@ -283,7 +286,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
                   {showAppPath && showAppBlock && (
                     <GitHubAppAuthBlock
                       organizationId={organizationId}
-                      edition={edition}
+                      githubAppMode={githubAppMode}
                       onInstalled={handleAppInstalled}
                     />
                   )}

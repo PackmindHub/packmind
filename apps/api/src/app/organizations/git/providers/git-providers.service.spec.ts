@@ -34,7 +34,7 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 jest.mock('../../../shared/utils/edition', () => ({
-  resolvePackmindEdition: jest.fn(),
+  resolveGithubAppMode: jest.fn(),
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -58,8 +58,8 @@ import { InvalidInstallStateError } from '@packmind/git';
 import axios from 'axios';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { resolvePackmindEdition } = require('../../../shared/utils/edition') as {
-  resolvePackmindEdition: jest.Mock;
+const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
+  resolveGithubAppMode: jest.Mock;
 };
 
 // The GIT_ADAPTER_TOKEN string value — mirrors GIT_ADAPTER_TOKEN in HexaRegistryModule
@@ -138,9 +138,9 @@ describe('GitProvidersService', () => {
     const orgId = createOrganizationId('org-123');
     const userId = createUserId('user-456');
 
-    describe('cloud edition', () => {
+    describe('shared mode', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       describe('when slug is configured', () => {
@@ -190,7 +190,7 @@ describe('GitProvidersService', () => {
       });
     });
 
-    describe('oss edition', () => {
+    describe('on-prem mode', () => {
       const activeApp: OrganizationGitHubApp = {
         id: createOrganizationGitHubAppId('app-1'),
         organizationId: orgId,
@@ -204,7 +204,7 @@ describe('GitProvidersService', () => {
       };
 
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('when an active app record exists', () => {
@@ -292,7 +292,7 @@ describe('GitProvidersService', () => {
     beforeEach(() => {
       // OSS is the canonical app-install path; cloud uses a shared App and
       // doesn't bind the install to an OrganizationGitHubApp row.
-      resolvePackmindEdition.mockResolvedValue('oss');
+      resolveGithubAppMode.mockResolvedValue('on-prem');
       (
         mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
       ).mockResolvedValue(activeApp);
@@ -687,7 +687,7 @@ describe('GitProvidersService', () => {
     const appWebUrl = 'https://app.example.com';
 
     beforeEach(() => {
-      resolvePackmindEdition.mockResolvedValue('oss');
+      resolveGithubAppMode.mockResolvedValue('on-prem');
       Configuration.getConfig.mockResolvedValue(appWebUrl);
       mockAccountsAdapter.getOrganizationById.mockResolvedValue({
         id: orgId,
@@ -696,7 +696,7 @@ describe('GitProvidersService', () => {
       });
     });
 
-    it('returns manifest, state, and manifestPostUrl on oss edition', async () => {
+    it('returns manifest, state, and manifestPostUrl on on-prem mode', async () => {
       const result = await service.buildGithubAppManifest({ orgId, userId });
 
       expect(result).toEqual({
@@ -730,15 +730,15 @@ describe('GitProvidersService', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       it('throws BadRequestException', async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
 
         await expect(
           service.buildGithubAppManifest({ orgId, userId }),
         ).rejects.toThrow(
           new BadRequestException(
-            'Manifest flow is only available on OSS edition',
+            'Manifest flow is not available when a shared GitHub App is configured',
           ),
         );
       });
@@ -789,7 +789,7 @@ describe('GitProvidersService', () => {
     const mockedAxios = axios as jest.Mocked<typeof axios>;
 
     beforeEach(() => {
-      resolvePackmindEdition.mockResolvedValue('oss');
+      resolveGithubAppMode.mockResolvedValue('on-prem');
       mockSigner.verify.mockReturnValue(validManifestPayload);
       mockSigner.sign.mockReturnValue('INSTALL_STATE');
       mockedAxios.post = jest.fn().mockResolvedValue({
@@ -926,9 +926,9 @@ describe('GitProvidersService', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       it('throws BadRequestException', async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
 
         await expect(
           service.completeGithubAppManifest({
@@ -939,7 +939,7 @@ describe('GitProvidersService', () => {
           }),
         ).rejects.toThrow(
           new BadRequestException(
-            'Manifest flow is only available on OSS edition',
+            'Manifest flow is not available when a shared GitHub App is configured',
           ),
         );
       });
@@ -961,11 +961,11 @@ describe('GitProvidersService', () => {
       revokedAt: null,
     };
 
-    describe('on cloud edition', () => {
+    describe('on shared mode', () => {
       let result: Awaited<ReturnType<typeof service.getGithubAppStatus>>;
 
       beforeEach(async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
 
         result = await service.getGithubAppStatus({ orgId });
       });
@@ -981,9 +981,9 @@ describe('GitProvidersService', () => {
       });
     });
 
-    describe('on oss edition', () => {
+    describe('on on-prem mode', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('when active record exists', () => {
@@ -1053,9 +1053,9 @@ describe('GitProvidersService', () => {
       revokedAt: null,
     };
 
-    describe('on oss edition', () => {
+    describe('on on-prem mode', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('when active record exists', () => {
@@ -1092,9 +1092,9 @@ describe('GitProvidersService', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws BadRequestException', async () => {
@@ -1102,7 +1102,7 @@ describe('GitProvidersService', () => {
           service.revokeGithubApp({ orgId, userId }),
         ).rejects.toThrow(
           new BadRequestException(
-            'GitHub App revocation is only available on OSS edition',
+            'GitHub App revocation is not available when a shared GitHub App is configured',
           ),
         );
       });

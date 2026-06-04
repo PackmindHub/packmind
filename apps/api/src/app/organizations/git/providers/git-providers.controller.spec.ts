@@ -2,7 +2,7 @@
 // Mock the heavy import chains that load broken packages at test time.
 
 jest.mock('../../../shared/utils/edition', () => ({
-  resolvePackmindEdition: jest.fn(),
+  resolveGithubAppMode: jest.fn(),
 }));
 
 // @packmind/accounts loads broken use case hierarchies at test time.
@@ -66,8 +66,8 @@ import { GitProvidersController } from './git-providers.controller';
 import { GitProvidersService } from './git-providers.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { resolvePackmindEdition } = require('../../../shared/utils/edition') as {
-  resolvePackmindEdition: jest.Mock;
+const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
+  resolveGithubAppMode: jest.Mock;
 };
 
 describe('GitProvidersController', () => {
@@ -117,9 +117,9 @@ describe('GitProvidersController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('getGithubAppInstallUrl', () => {
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       it('calls the service and returns its result', async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
 
         const expected = {
           installUrl:
@@ -137,7 +137,7 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       const expected = {
         installUrl:
           'https://github.com/apps/my-oss-app/installations/new?state=abc',
@@ -146,7 +146,7 @@ describe('GitProvidersController', () => {
       let result: Awaited<ReturnType<typeof controller.getGithubAppInstallUrl>>;
 
       beforeEach(async () => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
         mockService.buildGithubAppInstallUrl.mockResolvedValue(expected);
 
         result = await controller.getGithubAppInstallUrl(orgId, mockRequest);
@@ -298,9 +298,9 @@ describe('GitProvidersController', () => {
       manifestPostUrl: 'https://github.com/settings/apps/new',
     };
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
         mockService.buildGithubAppManifest.mockResolvedValue(manifestResponse);
       });
 
@@ -323,9 +323,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {
@@ -347,9 +347,9 @@ describe('GitProvidersController', () => {
   describe('completeGithubAppManifest', () => {
     const validBody = { code: 'gh-code-123', state: 'MANIFEST_STATE' };
 
-    describe('when edition is oss', () => {
+    describe('when mode is on-prem', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('on happy path', () => {
@@ -435,9 +435,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {
@@ -462,7 +462,7 @@ describe('GitProvidersController', () => {
       let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
       beforeEach(async () => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
         mockService.getGithubAppStatus.mockResolvedValue(expected);
 
         result = await controller.getGithubAppStatus(orgId);
@@ -479,7 +479,7 @@ describe('GitProvidersController', () => {
 
     describe('on oss edition', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       describe('when app exists', () => {
@@ -527,7 +527,7 @@ describe('GitProvidersController', () => {
   describe('revokeGithubApp', () => {
     describe('on oss edition', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('oss');
+        resolveGithubAppMode.mockResolvedValue('on-prem');
       });
 
       it('calls service and returns void', async () => {
@@ -554,9 +554,9 @@ describe('GitProvidersController', () => {
       });
     });
 
-    describe('when edition is cloud', () => {
+    describe('when mode is shared', () => {
       beforeEach(() => {
-        resolvePackmindEdition.mockResolvedValue('cloud');
+        resolveGithubAppMode.mockResolvedValue('shared');
       });
 
       it('throws NotImplementedException', async () => {

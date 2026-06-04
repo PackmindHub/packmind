@@ -30,7 +30,11 @@ export interface SignOutResponse {
   message: string;
 }
 
-type EditionFlag = { edition: 'cloud' | 'oss' };
+export type GithubAppMode = 'on-prem' | 'shared';
+
+type EditionFlag = {
+  edition: 'cloud' | 'oss';
+};
 
 export type MeResponse =
   | (EditionFlag & {
@@ -54,6 +58,7 @@ export type MeResponse =
         name: string;
         slug: string;
         role: UserOrganizationRole;
+        githubAppMode: GithubAppMode;
       };
       organizations?: Array<{
         organization: {

@@ -154,6 +154,13 @@ describe('GitProviderConnection', () => {
           displayName: null,
           memberships: [],
         },
+        organization: {
+          id: mockOrganizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+          githubAppMode: 'on-prem',
+        },
       },
     } as ReturnType<typeof useGetMeQuery>);
   });
@@ -250,6 +257,13 @@ describe('GitProviderConnection', () => {
             displayName: null,
             memberships: [],
           },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'shared',
+          },
         },
       } as ReturnType<typeof useGetMeQuery>);
     });
@@ -287,6 +301,13 @@ describe('GitProviderConnection', () => {
             email: 'user@externaldomain.com',
             displayName: null,
             memberships: [],
+          },
+          organization: {
+            id: mockOrganizationId,
+            name: 'Test Org',
+            slug: 'test-org',
+            role: 'admin',
+            githubAppMode: 'shared',
           },
         },
       } as ReturnType<typeof useGetMeQuery>);

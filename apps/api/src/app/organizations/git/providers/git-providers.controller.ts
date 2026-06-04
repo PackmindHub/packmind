@@ -33,7 +33,7 @@ import {
 import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
-import { resolvePackmindEdition } from '../../../shared/utils/edition';
+import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 
 interface AddRepositoryDto {
@@ -136,10 +136,10 @@ export class GitProvidersController {
     state: string;
     manifestPostUrl: string;
   }> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App manifest flow is only available on OSS edition',
+        'GitHub App manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -170,10 +170,10 @@ export class GitProvidersController {
     @Request() req: AuthenticatedRequest,
     @Body() body: { code: string; state: string },
   ): Promise<{ installUrl: string }> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App manifest flow is only available on OSS edition',
+        'GitHub App manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -246,10 +246,10 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
   ): Promise<void> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new NotImplementedException(
-        'GitHub App revocation is only available on OSS edition',
+        'GitHub App revocation is not available when a shared GitHub App is configured',
       );
     }
 

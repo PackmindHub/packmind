@@ -57,6 +57,7 @@ describe('AddGitProviderUseCase', () => {
     useCase = new AddGitProviderUseCase(
       mockGitProviderService,
       accountsAdapter,
+      'on-prem',
       stubLogger(),
     );
   });
@@ -170,18 +171,18 @@ describe('AddGitProviderUseCase', () => {
   });
 
   describe('authMethod validation', () => {
-    const makeUseCase = (edition: 'cloud' | 'oss') =>
+    const makeUseCase = (mode: 'shared' | 'on-prem') =>
       new AddGitProviderUseCase(
         mockGitProviderService,
         accountsAdapter,
-        edition,
+        mode,
         stubLogger(),
       );
 
     describe('token auth method', () => {
       describe('when token is present', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: 'my-token',
@@ -208,7 +209,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when token is missing and allowTokenlessProvider is false', () => {
         it('throws BadRequestException', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -231,10 +232,10 @@ describe('AddGitProviderUseCase', () => {
       '00000000-0000-0000-0000-000000000aaa',
     );
 
-    describe('app auth method on Cloud edition', () => {
-      describe('when only appInstallationId is provided (Cloud does not require organizationGitHubAppId)', () => {
+    describe('app auth method on shared mode', () => {
+      describe('when only appInstallationId is provided (shared mode does not require organizationGitHubAppId)', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('cloud');
+          const uc = makeUseCase('shared');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: null,
@@ -261,9 +262,9 @@ describe('AddGitProviderUseCase', () => {
         });
       });
 
-      describe('when appInstallationId is missing on Cloud', () => {
+      describe('when appInstallationId is missing on shared mode', () => {
         it('throws', async () => {
-          const uc = makeUseCase('cloud');
+          const uc = makeUseCase('shared');
 
           await expect(
             uc.execute({
@@ -281,10 +282,10 @@ describe('AddGitProviderUseCase', () => {
       });
     });
 
-    describe('app auth method on OSS edition', () => {
+    describe('app auth method on on-prem mode', () => {
       describe('when appInstallationId and organizationGitHubAppId are provided', () => {
         it('succeeds', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
           const expectedResult = gitProviderFactory({
             organizationId,
             token: null,
@@ -315,7 +316,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when appInstallationId is missing', () => {
         it('throws', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -333,9 +334,9 @@ describe('AddGitProviderUseCase', () => {
         });
       });
 
-      describe('when organizationGitHubAppId is missing on OSS', () => {
+      describe('when organizationGitHubAppId is missing on on-prem mode', () => {
         it('throws', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
@@ -357,7 +358,7 @@ describe('AddGitProviderUseCase', () => {
 
       describe('when token is set with app authMethod', () => {
         it('throws BadRequestException', async () => {
-          const uc = makeUseCase('oss');
+          const uc = makeUseCase('on-prem');
 
           await expect(
             uc.execute({
