@@ -12,6 +12,7 @@ const fakeProvider = {
   url: 'https://github.com',
   hasAuth: true,
   authMethod: 'token',
+  displayName: '',
 };
 
 async function stubRevokedPatProvider(page: Page): Promise<void> {
