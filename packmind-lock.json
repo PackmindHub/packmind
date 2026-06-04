@@ -18,7 +18,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-03T03:07:05.506Z",
+  "installedAt": "2026-06-04T03:06:48.056Z",
   "artifacts": {
     "user:command:create-handoff": {
       "name": "Create handoff",
