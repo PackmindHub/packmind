@@ -1,8 +1,20 @@
-import { MarketplaceDescriptor } from '@packmind/types';
+import { MarketplaceDescriptor, PluginSource } from '@packmind/types';
 import {
   applyPluginDescriptorMutation,
   removePluginDescriptorEntry,
 } from './PluginDescriptorMutator';
+
+const sampleSource: PluginSource = {
+  source: 'git-subdir',
+  url: 'https://github.com/test-org/test-marketplace.git',
+  path: 'plugins/security',
+};
+
+const otherSource: PluginSource = {
+  source: 'git-subdir',
+  url: 'https://github.com/test-org/test-marketplace.git',
+  path: 'plugins/existing-unmanaged',
+};
 
 describe('applyPluginDescriptorMutation', () => {
   const baseDescriptor: MarketplaceDescriptor = {
@@ -14,6 +26,7 @@ describe('applyPluginDescriptorMutation', () => {
         slug: 'existing-unmanaged',
         name: 'Existing Unmanaged',
         version: '2.0.0',
+        source: otherSource,
       },
     ],
     raw: {
@@ -39,6 +52,7 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
+        pluginSource: sampleSource,
       });
     });
 
@@ -55,7 +69,12 @@ describe('applyPluginDescriptorMutation', () => {
         slug: 'security',
         name: 'Security',
         version: '0.1.0',
+        source: sampleSource,
       });
+    });
+
+    it('attaches the supplied source block on the new entry', () => {
+      expect(result.plugins[1].source).toEqual(sampleSource);
     });
   });
 
@@ -67,7 +86,12 @@ describe('applyPluginDescriptorMutation', () => {
         ...baseDescriptor,
         plugins: [
           ...baseDescriptor.plugins,
-          { slug: 'security', name: 'Security old', version: '0.1.0' },
+          {
+            slug: 'security',
+            name: 'Security old',
+            version: '0.1.0',
+            source: sampleSource,
+          },
         ],
       };
 
@@ -75,6 +99,7 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.2.0',
+        pluginSource: sampleSource,
       });
     });
 
@@ -88,6 +113,7 @@ describe('applyPluginDescriptorMutation', () => {
         slug: 'security',
         name: 'Security',
         version: '0.2.0',
+        source: sampleSource,
       });
     });
   });
@@ -100,6 +126,7 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
+        pluginSource: sampleSource,
       });
     });
 
@@ -111,7 +138,15 @@ describe('applyPluginDescriptorMutation', () => {
         slug: 'existing-unmanaged',
         name: 'Existing Unmanaged',
         version: '2.0.0',
+        source: otherSource,
       });
+    });
+
+    it('preserves the existing source block on the other entry', () => {
+      const unmanaged = result.plugins.find(
+        (p) => p.slug === 'existing-unmanaged',
+      );
+      expect(unmanaged?.source).toEqual(otherSource);
     });
   });
 
@@ -125,11 +160,13 @@ describe('applyPluginDescriptorMutation', () => {
           pluginSlug: 'security',
           pluginName: 'Security',
           pluginVersion: '0.1.0',
+          pluginSource: sampleSource,
         });
         second = applyPluginDescriptorMutation(first, {
           pluginSlug: 'security',
           pluginName: 'Security',
           pluginVersion: '0.1.0',
+          pluginSource: sampleSource,
         });
       });
 
@@ -146,6 +183,7 @@ describe('applyPluginDescriptorMutation', () => {
         pluginSlug: 'security',
         pluginName: 'Security',
         pluginVersion: '0.1.0',
+        pluginSource: sampleSource,
       });
       expect(baseDescriptor.plugins).toEqual(snapshot);
     });

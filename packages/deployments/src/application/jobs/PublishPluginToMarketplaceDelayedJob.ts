@@ -12,6 +12,9 @@ import {
   DistributionStatus,
   FileModification,
   GitCommit,
+  GitProviderVendor,
+  GitProviderVendors,
+  GitRepo,
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   Marketplace,
@@ -23,6 +26,7 @@ import {
   PackmindMarketplaceLock,
   PluginPublishedEvent,
   PluginPublishFailedEvent,
+  PluginSource,
   PublishFailureReason,
   PublishPluginToMarketplaceJobInput,
   PublishPluginToMarketplaceJobOutput,
@@ -270,10 +274,21 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         lastPublishedBy: distribution.authorId,
       });
 
+      const providerVendor = await this.resolveProviderVendor(
+        marketplaceGitRepo,
+        input,
+      );
+      const pluginSource: PluginSource = {
+        source: 'git-subdir',
+        url: buildMarketplaceCloneUrl(marketplaceGitRepo, providerVendor),
+        path: `plugins/${pluginSlug}`,
+      };
+
       const nextDescriptor = applyPluginDescriptorMutation(descriptor, {
         pluginSlug,
         pluginName: rendered.pluginName,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
+        pluginSource,
       });
 
       const fileModifications: FileModification[] = [
@@ -483,6 +498,33 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
     return JSON.stringify(merged, null, 2);
   }
 
+  /**
+   * Look up the marketplace git repo's provider vendor so the plugin source
+   * URL uses the right hostname. Falls back to `unknown` (which yields an
+   * empty URL) if the provider cannot be resolved — preferable to throwing
+   * because the publish is otherwise complete and a missing URL only breaks
+   * downstream install-ability, not the upstream git operations.
+   */
+  private async resolveProviderVendor(
+    gitRepo: GitRepo,
+    input: PublishPluginToMarketplaceJobInput,
+  ): Promise<GitProviderVendor> {
+    try {
+      const { providers } = await this.gitPort.listProviders({
+        userId: input.userId,
+        organizationId: input.organizationId,
+      });
+      const provider = providers.find((p) => p.id === gitRepo.providerId);
+      return provider?.source ?? GitProviderVendors.unknown;
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to resolve provider vendor for marketplace repo ${gitRepo.owner}/${gitRepo.repo}; falling back to unknown`,
+        { error: getErrorMessage(error) },
+      );
+      return GitProviderVendors.unknown;
+    }
+  }
+
   private assertNoUnmanagedNameCollision(params: {
     pluginSlug: string;
     descriptor: MarketplaceDescriptor;
@@ -576,6 +618,36 @@ class PublishJobFailure extends Error {
   ) {
     super(description);
     this.name = 'PublishJobFailure';
+  }
+}
+
+/**
+ * Build the HTTPS git clone URL for a marketplace repository so the
+ * plugin entries written by the publish flow are install-able by
+ * marketplace consumers (e.g. Claude Code's `git-subdir` plugin source).
+ *
+ * Mirrors the cloud-host convention used by
+ * `listMarketplaces.usecase`'s `buildRepositoryWebUrl` helper, but appends
+ * the `.git` suffix that `git clone` accepts. GitLab `owner` may itself be
+ * a `group/subgroup` path — that is fine, the slashes carry through into a
+ * valid URL.
+ *
+ * For an `unknown` provider vendor (or any unexpected value) the helper
+ * returns an empty string so the upstream commit still lands; the
+ * marketplace publish is the source-of-truth for the `source` block and a
+ * later republish on a known-vendor provider corrects the entry.
+ */
+function buildMarketplaceCloneUrl(
+  gitRepo: GitRepo,
+  providerVendor: GitProviderVendor,
+): string {
+  switch (providerVendor) {
+    case GitProviderVendors.github:
+      return `https://github.com/${gitRepo.owner}/${gitRepo.repo}.git`;
+    case GitProviderVendors.gitlab:
+      return `https://gitlab.com/${gitRepo.owner}/${gitRepo.repo}.git`;
+    default:
+      return '';
   }
 }
 

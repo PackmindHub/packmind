@@ -1,4 +1,8 @@
-import { MarketplaceDescriptor, PluginRef } from '@packmind/types';
+import {
+  MarketplaceDescriptor,
+  PluginRef,
+  PluginSource,
+} from '@packmind/types';
 
 /**
  * Plugin metadata supplied by the publish job when it asks the mutator to
@@ -12,6 +16,12 @@ export type PluginDescriptorMutationInput = {
   pluginName: string;
   /** Optional plugin version surfaced on `PluginRef.version`. */
   pluginVersion?: string;
+  /**
+   * Source coordinates Claude Code (and other marketplace consumers) need to
+   * actually install the plugin. The publish job builds this from the
+   * marketplace's backing Git repo + the plugin slug.
+   */
+  pluginSource: PluginSource;
 };
 
 /**
@@ -37,12 +47,13 @@ export function applyPluginDescriptorMutation(
   descriptor: MarketplaceDescriptor,
   mutation: PluginDescriptorMutationInput,
 ): MarketplaceDescriptor {
-  const { pluginSlug, pluginName, pluginVersion } = mutation;
+  const { pluginSlug, pluginName, pluginVersion, pluginSource } = mutation;
 
   const refreshedPlugins = upsertPluginRef(descriptor.plugins, {
     slug: pluginSlug,
     name: pluginName,
     ...(pluginVersion !== undefined ? { version: pluginVersion } : {}),
+    source: pluginSource,
   });
 
   return {

@@ -13,6 +13,7 @@ import {
   createUserId,
   DistributionStatus,
   GitCommit,
+  GitProviderVendors,
   GitRepo,
   IGitPort,
   MarketplaceDescriptor,
@@ -169,6 +170,18 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         number: 1,
         wasCreated: true,
       }),
+      listProviders: jest.fn().mockResolvedValue({
+        providers: [
+          {
+            id: gitProviderId,
+            source: GitProviderVendors.github,
+            organizationId,
+            url: 'https://api.github.com',
+            authMethod: 'token',
+            hasAuth: true,
+          },
+        ],
+      }),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
@@ -269,6 +282,44 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       expect(parsed.packmindLock).toBeUndefined();
     });
 
+    describe('the plugin entry written into the descriptor', () => {
+      let pluginEntry: {
+        slug?: string;
+        name?: string;
+        version?: string;
+        source?: { source?: string; url?: string; path?: string };
+      };
+
+      beforeEach(() => {
+        const committedFiles = mockGitPort.commitToGit.mock
+          .calls[0][1] as Array<{
+          path: string;
+          content: string;
+        }>;
+        const descriptorCommit = committedFiles.find(
+          (f) => f.path === '.claude-plugin/marketplace.json',
+        );
+        const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+          plugins: Array<typeof pluginEntry>;
+        };
+        pluginEntry = parsed.plugins.find((p) => p.slug === 'security') ?? {};
+      });
+
+      it('carries a git-subdir source block', () => {
+        expect(pluginEntry.source?.source).toBe('git-subdir');
+      });
+
+      it('points the source url at the marketplace HTTPS clone URL', () => {
+        expect(pluginEntry.source?.url).toBe(
+          'https://github.com/acme/plugins.git',
+        );
+      });
+
+      it('targets the plugins/{slug} subdirectory in the source path', () => {
+        expect(pluginEntry.source?.path).toBe('plugins/security');
+      });
+    });
+
     it('ensures the rolling-PR branch exists before committing', () => {
       expect(mockGitPort.createBranchFromBase).toHaveBeenCalledWith(
         gitRepo,
@@ -339,6 +390,76 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         expect(emitted.payload.prUrl).toBe(
           'https://github.com/acme/plugins/pull/1',
         );
+      });
+    });
+  });
+
+  describe('on republish over an existing managed plugin entry', () => {
+    beforeEach(async () => {
+      // Simulate the descriptor already containing the managed plugin from a
+      // previous publish — the mutator must rewrite (not duplicate) the entry
+      // and keep the source block populated.
+      mockParserRegistry.parse.mockReturnValue({
+        ...descriptor,
+        plugins: [
+          {
+            slug: 'security',
+            name: 'Security',
+            version: '0.0.1',
+            source: {
+              source: 'git-subdir',
+              url: 'https://github.com/acme/plugins.git',
+              path: 'plugins/security',
+            },
+          },
+        ],
+      });
+
+      // Simulate the standalone packmind-lock.json having the slug listed
+      // under `plugins` so the collision check classifies the entry as
+      // Packmind-managed (and therefore not a name conflict).
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return {
+            sha: 'lock-sha',
+            content: JSON.stringify({
+              schemaVersion: 1,
+              plugins: {
+                security: {
+                  version: '0.0.1',
+                  contentHash: 'old-hash',
+                  lastPublishedAt: new Date().toISOString(),
+                  lastPublishedBy: userId,
+                },
+              },
+            }),
+          };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      });
+
+      await job.runJob('job-republish', input, new AbortController());
+    });
+
+    it('still writes a complete git-subdir source block on the entry', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const descriptorCommit = committedFiles.find(
+        (f) => f.path === '.claude-plugin/marketplace.json',
+      );
+      const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+        plugins: Array<{
+          slug: string;
+          source?: { source?: string; url?: string; path?: string };
+        }>;
+      };
+      const entry = parsed.plugins.find((p) => p.slug === 'security');
+      expect(entry?.source).toEqual({
+        source: 'git-subdir',
+        url: 'https://github.com/acme/plugins.git',
+        path: 'plugins/security',
       });
     });
   });

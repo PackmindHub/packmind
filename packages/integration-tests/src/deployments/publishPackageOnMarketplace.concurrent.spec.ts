@@ -318,6 +318,40 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
           (finalDescriptor as Record<string, unknown>)['packmindLock'],
         ).toBeUndefined();
       });
+
+      describe('the per-plugin source blocks', () => {
+        let pluginsBySlug: Record<
+          string,
+          { source?: { source?: string; url?: string; path?: string } }
+        >;
+
+        beforeEach(() => {
+          const pluginsWithSource = finalDescriptor.plugins as Array<
+            (typeof finalDescriptor.plugins)[number] & {
+              source?: { source?: string; url?: string; path?: string };
+            }
+          >;
+          pluginsBySlug = Object.fromEntries(
+            pluginsWithSource.map((plugin) => [plugin.slug, plugin]),
+          );
+        });
+
+        it('writes a git-subdir source on the security entry', () => {
+          expect(pluginsBySlug['security'].source).toEqual({
+            source: 'git-subdir',
+            url: 'https://github.com/anthropic/marketplace.git',
+            path: 'plugins/security',
+          });
+        });
+
+        it('writes a git-subdir source on the observability entry', () => {
+          expect(pluginsBySlug['observability'].source).toEqual({
+            source: 'git-subdir',
+            url: 'https://github.com/anthropic/marketplace.git',
+            path: 'plugins/observability',
+          });
+        });
+      });
     });
 
     describe('the resulting standalone packmind-lock.json', () => {

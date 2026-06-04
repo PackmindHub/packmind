@@ -234,6 +234,35 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
       expect(secondRow?.contentHash).toBe(firstRow?.contentHash);
     });
 
+    describe('the descriptor committed by the first publish', () => {
+      let pluginEntry: {
+        slug?: string;
+        source?: { source?: string; url?: string; path?: string };
+      };
+
+      beforeEach(() => {
+        const committedFiles = commitToGitSpy.mock.calls[0][1] as Array<{
+          path: string;
+          content: string;
+        }>;
+        const descriptorCommit = committedFiles.find(
+          (f) => f.path === '.claude-plugin/marketplace.json',
+        );
+        const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+          plugins: Array<typeof pluginEntry>;
+        };
+        pluginEntry = parsed.plugins.find((p) => p.slug === 'security') ?? {};
+      });
+
+      it('attaches a git-subdir source block on the plugin entry', () => {
+        expect(pluginEntry.source).toEqual({
+          source: 'git-subdir',
+          url: 'https://github.com/anthropic/marketplace.git',
+          path: 'plugins/security',
+        });
+      });
+    });
+
     describe('PluginPublishedEvent for the no-op publish', () => {
       let noopEvent: PluginPublishedEvent | undefined;
 

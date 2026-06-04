@@ -246,5 +246,63 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
     it('stores the same rolling PR URL on the second distribution row', () => {
       expect(secondRow?.prUrl).toBe(ROLLING_PR_URL);
     });
+
+    describe('the source block on the committed descriptor', () => {
+      let firstPluginEntry: {
+        slug?: string;
+        source?: { source?: string; url?: string; path?: string };
+      };
+      let secondPluginEntry: {
+        slug?: string;
+        source?: { source?: string; url?: string; path?: string };
+      };
+
+      beforeEach(() => {
+        const firstCallFiles = commitToGitSpy.mock.calls[0][1] as Array<{
+          path: string;
+          content: string;
+        }>;
+        const secondCallFiles = commitToGitSpy.mock.calls[1][1] as Array<{
+          path: string;
+          content: string;
+        }>;
+        const firstDescriptorFile = firstCallFiles.find(
+          (f) => f.path === '.claude-plugin/marketplace.json',
+        );
+        const secondDescriptorFile = secondCallFiles.find(
+          (f) => f.path === '.claude-plugin/marketplace.json',
+        );
+        const firstParsed = JSON.parse(
+          firstDescriptorFile?.content ?? '{}',
+        ) as {
+          plugins: Array<typeof firstPluginEntry>;
+        };
+        const secondParsed = JSON.parse(
+          secondDescriptorFile?.content ?? '{}',
+        ) as {
+          plugins: Array<typeof secondPluginEntry>;
+        };
+        firstPluginEntry =
+          firstParsed.plugins.find((p) => p.slug === 'security') ?? {};
+        secondPluginEntry =
+          secondParsed.plugins.find((p) => p.slug === 'security') ?? {};
+      });
+
+      it('writes a git-subdir source on the first publish entry', () => {
+        expect(firstPluginEntry.source).toEqual({
+          source: 'git-subdir',
+          url: 'https://github.com/anthropic/marketplace.git',
+          path: 'plugins/security',
+        });
+      });
+
+      it('writes a git-subdir source on the second publish entry', () => {
+        expect(secondPluginEntry.source).toEqual({
+          source: 'git-subdir',
+          url: 'https://github.com/anthropic/marketplace.git',
+          path: 'plugins/security',
+        });
+      });
+    });
   });
 });
