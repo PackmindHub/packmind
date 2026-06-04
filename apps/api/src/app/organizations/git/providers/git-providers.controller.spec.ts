@@ -46,10 +46,21 @@ jest.mock('@packmind/node-utils', () => ({
   AuthenticatedRequest: {},
 }));
 
-import { BadRequestException, NotImplementedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import {
+  GitProviderDisplayNameAlreadyUsedError,
+  GitProviderDisplayNameNotEditableError,
+  createGitProviderId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { GitProvidersController } from './git-providers.controller';
 import { GitProvidersService } from './git-providers.service';
@@ -64,6 +75,8 @@ describe('GitProvidersController', () => {
   let mockService: jest.Mocked<
     Pick<
       GitProvidersService,
+      | 'addGitProvider'
+      | 'updateGitProvider'
       | 'buildGithubAppInstallUrl'
       | 'completeGithubAppInstall'
       | 'buildGithubAppManifest'
@@ -83,6 +96,8 @@ describe('GitProvidersController', () => {
 
   beforeEach(() => {
     mockService = {
+      addGitProvider: jest.fn(),
+      updateGitProvider: jest.fn(),
       buildGithubAppInstallUrl: jest.fn(),
       completeGithubAppInstall: jest.fn(),
       buildGithubAppManifest: jest.fn(),
@@ -556,6 +571,58 @@ describe('GitProvidersController', () => {
           .catch(() => undefined);
 
         expect(mockService.revokeGithubApp).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('addGitProvider', () => {
+    const body = {
+      source: 'github' as const,
+      url: 'https://github.com',
+      token: 'tok',
+      authMethod: 'token' as const,
+      displayName: 'Production',
+      organizationId: orgId,
+    };
+
+    describe('when the display name collides with an existing provider', () => {
+      it('translates the domain error into a 409 Conflict', async () => {
+        mockService.addGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameAlreadyUsedError('Production', orgId),
+        );
+
+        await expect(
+          controller.addGitProvider(orgId, mockRequest, body),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+    });
+  });
+
+  describe('updateGitProvider', () => {
+    const providerId = createGitProviderId('prov-1');
+    const body = { displayName: 'Marketplace' };
+
+    describe('when the display name collides with another provider', () => {
+      it('translates the domain error into a 409 Conflict', async () => {
+        mockService.updateGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameAlreadyUsedError('Marketplace', orgId),
+        );
+
+        await expect(
+          controller.updateGitProvider(orgId, mockRequest, providerId, body),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+    });
+
+    describe('when editing a CLI-managed provider', () => {
+      it('translates the domain error into a 403 Forbidden', async () => {
+        mockService.updateGitProvider.mockRejectedValue(
+          new GitProviderDisplayNameNotEditableError(providerId),
+        );
+
+        await expect(
+          controller.updateGitProvider(orgId, mockRequest, providerId, body),
+        ).rejects.toBeInstanceOf(ForbiddenException);
       });
     });
   });
