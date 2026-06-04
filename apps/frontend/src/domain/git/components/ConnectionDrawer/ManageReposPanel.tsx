@@ -15,7 +15,7 @@ import {
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
-import { ApplyProgress, RepoSelection } from './types';
+import { ApplyProgress, RepoSelection, RepoTuple, tupleKey } from './types';
 
 export interface ManageReposPanelProps {
   provider: GitProviderUI;
@@ -24,6 +24,19 @@ export interface ManageReposPanelProps {
   progress: ApplyProgress | null;
   onRequestReauth: () => void;
 }
+
+type TrackedRow = {
+  key: string;
+  tuple: RepoTuple;
+};
+
+type UntrackedRow = {
+  key: string;
+  owner: string;
+  name: string;
+  fullName: string;
+  defaultBranch: string;
+};
 
 export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
   provider,
@@ -38,59 +51,52 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
 
   const isLoading = tracked.isLoading || available.isLoading;
   // Degraded mode: the provider can't enumerate repos (e.g. revoked token), but
-  // our DB still knows what's tracked — so let users remove tracked repos even
+  // our DB still knows what's tracked — so let users remove tracked tuples even
   // though they can't add new ones.
   const degraded = !available.isLoading && available.isError;
 
-  type Row = {
-    key: string;
-    label: string;
-    sublabel: string;
-    defaultBranch: string;
-  };
-
   const { trackedRows, untrackedRows, totalAvailable } = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    const trackedKeys = new Set(selection.trackedKeys);
-    const byKey = new Map<string, Row>();
-    for (const r of available.data ?? []) {
-      byKey.set(r.fullName, {
-        key: r.fullName,
-        label: r.name,
-        sublabel: r.fullName,
-        defaultBranch: r.defaultBranch,
-      });
-    }
-    // Seed missing tracked repos so the user can still remove them when the
-    // provider is unreachable or no longer exposes them.
-    for (const r of tracked.data ?? []) {
-      const key = `${r.owner}/${r.repo}`;
-      if (byKey.has(key)) continue;
-      byKey.set(key, {
-        key,
-        label: r.repo,
-        sublabel: key,
-        defaultBranch: r.branch,
-      });
-    }
-    const matches = (row: Row) =>
+    const matchesTuple = (t: RepoTuple) =>
       !q ||
-      row.label.toLowerCase().includes(q) ||
-      row.sublabel.toLowerCase().includes(q);
+      `${t.owner}/${t.repo}`.toLowerCase().includes(q) ||
+      t.branch.toLowerCase().includes(q);
+    const matchesRepo = (owner: string, repo: string) =>
+      !q || `${owner}/${repo}`.toLowerCase().includes(q);
 
-    const tIds: Row[] = [];
-    const uIds: Row[] = [];
-    for (const row of byKey.values()) {
-      if (!matches(row)) continue;
-      if (trackedKeys.has(row.key)) tIds.push(row);
-      else uIds.push(row);
-    }
+    const sortedTuples = [...selection.tuples].sort((a, b) => {
+      const aRepo = `${a.owner}/${a.repo}`;
+      const bRepo = `${b.owner}/${b.repo}`;
+      if (aRepo !== bRepo) return aRepo.localeCompare(bRepo);
+      return a.branch.localeCompare(b.branch);
+    });
+
+    const tracked: TrackedRow[] = sortedTuples
+      .filter(matchesTuple)
+      .map((t) => ({ key: tupleKey(t), tuple: t }));
+
+    const trackedRepoKeys = new Set(
+      selection.tuples.map((t) => `${t.owner}/${t.repo}`),
+    );
+
+    const untracked: UntrackedRow[] = (available.data ?? [])
+      .filter((r) => !trackedRepoKeys.has(r.fullName))
+      .filter((r) => matchesRepo(r.owner, r.name))
+      .map((r) => ({
+        key: r.fullName,
+        owner: r.owner,
+        name: r.name,
+        fullName: r.fullName,
+        defaultBranch: r.defaultBranch,
+      }))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+
     return {
-      trackedRows: tIds,
-      untrackedRows: uIds,
+      trackedRows: tracked,
+      untrackedRows: untracked,
       totalAvailable: available.data?.length ?? 0,
     };
-  }, [available.data, tracked.data, filter, selection.trackedKeys]);
+  }, [available.data, selection.tuples, filter]);
 
   if (isLoading) {
     return (
@@ -117,32 +123,35 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
     );
   }
 
-  const toggle = (key: string, defaultBranch: string) => {
-    const tracked = new Set(selection.trackedKeys);
-    const branches = { ...selection.branchByKey };
-    if (tracked.has(key)) {
-      tracked.delete(key);
-    } else {
-      tracked.add(key);
-      branches[key] = branches[key] ?? defaultBranch;
-    }
+  const removeTuple = (t: RepoTuple) => {
+    const target = tupleKey(t);
     onSelectionChange({
-      trackedKeys: Array.from(tracked),
-      branchByKey: branches,
+      tuples: selection.tuples.filter((x) => tupleKey(x) !== target),
     });
   };
 
-  const setBranch = (key: string, branch: string) => {
-    onSelectionChange({
-      ...selection,
-      branchByKey: { ...selection.branchByKey, [key]: branch },
-    });
+  const addTuple = (t: RepoTuple) => {
+    const target = tupleKey(t);
+    if (selection.tuples.some((x) => tupleKey(x) === target)) return;
+    onSelectionChange({ tuples: [...selection.tuples, t] });
+  };
+
+  const renameBranch = (t: RepoTuple, nextBranch: string) => {
+    const nextTuple: RepoTuple = { ...t, branch: nextBranch };
+    const nextKey = tupleKey(nextTuple);
+    const oldKey = tupleKey(t);
+    if (nextKey === oldKey) return;
+    // Drop the renamed-into duplicate if it already exists (last write wins).
+    const next = selection.tuples
+      .filter((x) => tupleKey(x) !== nextKey)
+      .map((x) => (tupleKey(x) === oldKey ? nextTuple : x));
+    onSelectionChange({ tuples: next });
   };
 
   return (
     <PMVStack gap={3} align="stretch" flex={1} minH={0}>
       <SectionHeader
-        trackedCount={selection.trackedKeys.length}
+        trackedCount={selection.tuples.length}
         totalAvailable={totalAvailable}
         unknownTotal={degraded}
       />
@@ -195,7 +204,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         </PMBox>
         <PMInput
           size="sm"
-          placeholder="Filter by name or path…"
+          placeholder="Filter by name, path, or branch…"
           value={filter}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFilter(e.target.value)
@@ -230,16 +239,12 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
               />
             )}
             {trackedRows.map((row) => (
-              <RepoRow
+              <TrackedRepoRow
                 key={row.key}
-                rowKey={row.key}
-                label={row.label}
-                sublabel={row.sublabel}
-                branch={selection.branchByKey[row.key] ?? row.defaultBranch}
-                checked
+                tuple={row.tuple}
                 canEditBranch={!degraded}
-                onToggle={() => toggle(row.key, row.defaultBranch)}
-                onBranchChange={(next) => setBranch(row.key, next)}
+                onRemove={() => removeTuple(row.tuple)}
+                onRenameBranch={(next) => renameBranch(row.tuple, next)}
               />
             ))}
             {degraded && (
@@ -257,16 +262,18 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
             )}
             {!degraded &&
               untrackedRows.map((row) => (
-                <RepoRow
+                <UntrackedRepoRow
                   key={row.key}
-                  rowKey={row.key}
-                  label={row.label}
-                  sublabel={row.sublabel}
-                  branch={row.defaultBranch}
-                  checked={false}
-                  canEditBranch={true}
-                  onToggle={() => toggle(row.key, row.defaultBranch)}
-                  onBranchChange={() => undefined}
+                  fullName={row.fullName}
+                  name={row.name}
+                  defaultBranch={row.defaultBranch}
+                  onAdd={() =>
+                    addTuple({
+                      owner: row.owner,
+                      repo: row.name,
+                      branch: row.defaultBranch,
+                    })
+                  }
                 />
               ))}
           </>
@@ -294,7 +301,8 @@ const SectionHeader: React.FC<{
       Manage repositories
     </PMText>
     <PMText fontSize="xs" color="faded">
-      {trackedCount}/{unknownTotal ? '—' : totalAvailable} tracked
+      {trackedCount} tracked
+      {!unknownTotal && totalAvailable > 0 ? ` / ${totalAvailable} repos` : ''}
     </PMText>
   </PMHStack>
 );
@@ -328,67 +336,52 @@ const GroupHeader: React.FC<{
   </PMBox>
 );
 
-interface RepoRowProps {
-  rowKey: string;
-  label: string;
-  sublabel: string;
-  branch: string;
-  checked: boolean;
+const TrackedRepoRow: React.FC<{
+  tuple: RepoTuple;
   canEditBranch: boolean;
-  onToggle: () => void;
-  onBranchChange: (next: string) => void;
-}
-
-const RepoRow: React.FC<RepoRowProps> = ({
-  rowKey,
-  label,
-  sublabel,
-  branch,
-  checked,
-  canEditBranch,
-  onToggle,
-  onBranchChange,
-}) => {
+  onRemove: () => void;
+  onRenameBranch: (next: string) => void;
+}> = ({ tuple, canEditBranch, onRemove, onRenameBranch }) => {
   const [editingBranch, setEditingBranch] = useState(false);
-  const [draft, setDraft] = useState(branch);
+  const [draft, setDraft] = useState(tuple.branch);
 
   const startEdit = () => {
-    setDraft(branch);
+    setDraft(tuple.branch);
     setEditingBranch(true);
   };
   const commit = () => {
     const next = draft.trim();
-    if (next && next !== branch) onBranchChange(next);
+    if (next && next !== tuple.branch) onRenameBranch(next);
     setEditingBranch(false);
   };
   const cancel = () => {
     setEditingBranch(false);
   };
 
+  const fullName = `${tuple.owner}/${tuple.repo}`;
+
   return (
     <PMBox
       role="checkbox"
-      aria-checked={checked}
+      aria-checked="true"
       tabIndex={0}
       data-testid="manage-repos-row"
-      data-repo-key={rowKey}
-      data-checked={checked}
-      onClick={editingBranch ? undefined : onToggle}
+      data-repo-key={tupleKey(tuple)}
+      data-checked="true"
+      onClick={editingBranch ? undefined : onRemove}
       onKeyDown={(e: React.KeyboardEvent) => {
         if (editingBranch) return;
         if (e.key === ' ' || e.key === 'Enter') {
           e.preventDefault();
-          onToggle();
+          onRemove();
         }
       }}
       paddingX={3}
       paddingY={2.5}
       borderBottom="1px solid"
       borderColor="border.tertiary"
-      bg={checked ? 'background.tertiary' : 'transparent'}
-      _hover={{
-        bg: checked ? 'background.tertiary' : 'background.secondary',
-      }}
+      bg="background.tertiary"
+      _hover={{ bg: 'background.tertiary' }}
       cursor={editingBranch ? 'default' : 'pointer'}
       transition="background 120ms ease-out"
     >
@@ -399,95 +392,146 @@ const RepoRow: React.FC<RepoRowProps> = ({
           height="16px"
           borderRadius="sm"
           borderWidth="1px"
-          borderColor={checked ? 'branding.primary' : 'border.secondary'}
-          bg={checked ? 'branding.primary' : 'transparent'}
+          borderColor="branding.primary"
+          bg="branding.primary"
           display="flex"
           alignItems="center"
           justifyContent="center"
           flexShrink={0}
         >
-          {checked && (
-            <PMIcon fontSize="2xs" color="background.primary">
-              <LuCheck />
-            </PMIcon>
-          )}
+          <PMIcon fontSize="2xs" color="background.primary">
+            <LuCheck />
+          </PMIcon>
         </PMBox>
         <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-          <PMText
-            fontSize="sm"
-            color={checked ? 'primary' : 'secondary'}
-            fontWeight={checked ? 'medium' : 'normal'}
-            truncate
-          >
-            {label}
-          </PMText>
-          <PMHStack gap={1.5} align="center">
-            <PMText fontSize="xs" color="faded" truncate>
-              {sublabel}
+          <PMHStack gap={2} align="center" minW={0}>
+            <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
+              {tuple.repo}
             </PMText>
-            {checked && (
-              <>
-                <PMText fontSize="xs" color="faded">
-                  ·
+            <PMIcon fontSize="2xs" color="text.faded">
+              <LuGitBranch />
+            </PMIcon>
+            {!canEditBranch ? (
+              <PMText fontSize="xs" color="secondary">
+                {tuple.branch}
+              </PMText>
+            ) : editingBranch ? (
+              <PMInput
+                size="xs"
+                width="160px"
+                value={draft}
+                autoFocus
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setDraft(e.target.value)
+                }
+                onBlur={commit}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commit();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancel();
+                  }
+                }}
+                data-testid="manage-repos-branch-input"
+              />
+            ) : (
+              <PMBox
+                as="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  startEdit();
+                }}
+                display="inline-flex"
+                alignItems="center"
+                gap={1}
+                bg="transparent"
+                border="none"
+                padding="0"
+                cursor="pointer"
+                color="text.secondary"
+                _hover={{ color: 'text.primary' }}
+                data-testid="manage-repos-branch-edit"
+              >
+                <PMText fontSize="xs" color="secondary">
+                  {tuple.branch}
                 </PMText>
-                <PMIcon fontSize="2xs" color="text.faded">
-                  <LuGitBranch />
+                <PMIcon fontSize="2xs">
+                  <LuPencil />
                 </PMIcon>
-                {!canEditBranch ? (
-                  <PMText fontSize="xs" color="faded">
-                    {branch}
-                  </PMText>
-                ) : editingBranch ? (
-                  <PMInput
-                    size="xs"
-                    width="160px"
-                    value={draft}
-                    autoFocus
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setDraft(e.target.value)
-                    }
-                    onBlur={commit}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                      e.stopPropagation();
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        commit();
-                      } else if (e.key === 'Escape') {
-                        e.preventDefault();
-                        cancel();
-                      }
-                    }}
-                    data-testid="manage-repos-branch-input"
-                  />
-                ) : (
-                  <PMBox
-                    as="button"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      startEdit();
-                    }}
-                    display="inline-flex"
-                    alignItems="center"
-                    gap={1}
-                    bg="transparent"
-                    border="none"
-                    padding="0"
-                    cursor="pointer"
-                    color="text.faded"
-                    _hover={{ color: 'text.primary' }}
-                    data-testid="manage-repos-branch-edit"
-                  >
-                    <PMText fontSize="xs" color="faded">
-                      {branch}
-                    </PMText>
-                    <PMIcon fontSize="2xs">
-                      <LuPencil />
-                    </PMIcon>
-                  </PMBox>
-                )}
-              </>
+              </PMBox>
             )}
+          </PMHStack>
+          <PMText fontSize="xs" color="faded" truncate>
+            {fullName}
+          </PMText>
+        </PMVStack>
+      </PMHStack>
+    </PMBox>
+  );
+};
+
+const UntrackedRepoRow: React.FC<{
+  fullName: string;
+  name: string;
+  defaultBranch: string;
+  onAdd: () => void;
+}> = ({ fullName, name, defaultBranch, onAdd }) => {
+  return (
+    <PMBox
+      role="checkbox"
+      aria-checked="false"
+      tabIndex={0}
+      data-testid="manage-repos-row"
+      data-repo-key={fullName}
+      data-checked="false"
+      onClick={onAdd}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          onAdd();
+        }
+      }}
+      paddingX={3}
+      paddingY={2.5}
+      borderBottom="1px solid"
+      borderColor="border.tertiary"
+      bg="transparent"
+      _hover={{ bg: 'background.secondary' }}
+      cursor="pointer"
+      transition="background 120ms ease-out"
+    >
+      <PMHStack gap={3} align="center">
+        <PMBox
+          aria-hidden
+          width="16px"
+          height="16px"
+          borderRadius="sm"
+          borderWidth="1px"
+          borderColor="border.secondary"
+          bg="transparent"
+          flexShrink={0}
+        />
+        <PMVStack gap={0.5} align="start" flex={1} minW={0}>
+          <PMText fontSize="sm" color="secondary" truncate>
+            {name}
+          </PMText>
+          <PMHStack gap={1.5} align="center" minW={0}>
+            <PMText fontSize="xs" color="faded" truncate>
+              {fullName}
+            </PMText>
+            <PMText fontSize="xs" color="faded">
+              ·
+            </PMText>
+            <PMIcon fontSize="2xs" color="text.faded">
+              <LuGitBranch />
+            </PMIcon>
+            <PMText fontSize="xs" color="faded">
+              {defaultBranch}
+            </PMText>
           </PMHStack>
         </PMVStack>
       </PMHStack>
