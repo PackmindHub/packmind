@@ -42,11 +42,11 @@ describe('UpdateGitProviderUseCase', () => {
     slug: 'test-org',
   };
 
-  const makeUseCase = (edition: 'cloud' | 'oss' = 'oss') =>
+  const makeUseCase = (mode: 'shared' | 'on-prem' = 'on-prem') =>
     new UpdateGitProviderUseCase(
       mockGitProviderService,
       accountsAdapter,
-      edition,
+      mode,
       stubLogger(),
     );
 
@@ -64,7 +64,7 @@ describe('UpdateGitProviderUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    useCase = makeUseCase('oss');
+    useCase = makeUseCase('on-prem');
   });
 
   afterEach(() => {
@@ -130,7 +130,7 @@ describe('UpdateGitProviderUseCase', () => {
 
     describe('when appInstallationId and organizationGitHubAppId are provided when switching', () => {
       it('succeeds', async () => {
-        const uc = makeUseCase('oss');
+        const uc = makeUseCase('on-prem');
         const orgGitHubAppId = createOrganizationGitHubAppId(
           '00000000-0000-0000-0000-000000000aaa',
         );
@@ -173,7 +173,7 @@ describe('UpdateGitProviderUseCase', () => {
   describe('updating an app-method provider', () => {
     describe('when replacing appInstallationId', () => {
       it('succeeds', async () => {
-        const uc = makeUseCase('oss');
+        const uc = makeUseCase('on-prem');
         const orgGitHubAppId = createOrganizationGitHubAppId(
           '00000000-0000-0000-0000-000000000aaa',
         );

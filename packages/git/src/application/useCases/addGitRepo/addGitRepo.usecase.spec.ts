@@ -56,6 +56,7 @@ describe('AddGitRepoUseCase', () => {
     const adminUser: User = {
       id: userId,
       email: 'admin@example.com',
+      displayName: 'admin',
       passwordHash: null,
       active: true,
       memberships: [
@@ -65,6 +66,7 @@ describe('AddGitRepoUseCase', () => {
           role: 'admin',
         },
       ],
+      trial: false,
     };
 
     const organization: Organization = {
@@ -489,6 +491,49 @@ describe('AddGitRepoUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         GitProviderMissingTokenError,
       );
+    });
+
+    it('accepts GitHub App provider without a stored token', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      // App-auth providers carry no token — the installation token is minted
+      // on demand by GithubTokenResolverFactory downstream.
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: null,
+        authMethod: 'app',
+        appInstallationId: 12345,
+      };
+
+      const expectedResult: GitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        providerId: gitProviderId,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+      mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        null,
+      );
+      mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual(expectedResult);
     });
 
     it('throws error for duplicate repository with same owner/repo/branch in organization', async () => {

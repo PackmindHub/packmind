@@ -29,6 +29,7 @@ import {
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { GitServices } from '../GitServices';
+import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import {
   AddGitProviderCommand,
   AddGitProviderUseCase,
@@ -92,7 +93,7 @@ export class GitUseCases {
 
   constructor(
     private readonly gitServices: GitServices,
-    private readonly edition: 'cloud' | 'oss' = 'oss',
+    private readonly mode: GithubAppMode = 'on-prem',
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._addGitProvider = this.createAddGitProviderUseCase();
@@ -177,7 +178,7 @@ export class GitUseCases {
     return new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.edition,
+      this.mode,
     );
   }
 
@@ -210,7 +211,7 @@ export class GitUseCases {
     return new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.edition,
+      this.mode,
     );
   }
 

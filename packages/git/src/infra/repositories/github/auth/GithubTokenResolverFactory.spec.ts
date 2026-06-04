@@ -1,7 +1,7 @@
 import {
   GithubTokenResolverFactory,
   IConfigProvider,
-  resolveEdition,
+  resolveGithubAppMode,
 } from './GithubTokenResolverFactory';
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
@@ -78,7 +78,7 @@ describe('GithubTokenResolverFactory', () => {
       beforeEach(async () => {
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'cloud',
+          'shared',
         );
         const provider = makeProvider({
           authMethod: 'token',
@@ -101,7 +101,7 @@ describe('GithubTokenResolverFactory', () => {
       it('throws', async () => {
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'cloud',
+          'shared',
         );
         const provider = makeProvider({ authMethod: 'token', token: null });
 
@@ -112,14 +112,14 @@ describe('GithubTokenResolverFactory', () => {
     });
   });
 
-  describe('authMethod = "app", edition = "cloud"', () => {
+  describe('authMethod = "app", mode = "shared"', () => {
     it('reads GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY from config and returns AppInstallationTokenResolver', async () => {
       const config = new StubConfig({
         GITHUB_APP_ID: '123456',
         GITHUB_APP_PRIVATE_KEY:
           '-----BEGIN RSA PRIVATE KEY-----\nMOCK\n-----END RSA PRIVATE KEY-----',
       });
-      const factory = new GithubTokenResolverFactory(config, 'cloud');
+      const factory = new GithubTokenResolverFactory(config, 'shared');
       const provider = makeProvider({
         authMethod: 'app',
         appInstallationId: 987654,
@@ -135,7 +135,7 @@ describe('GithubTokenResolverFactory', () => {
         const config = new StubConfig({
           GITHUB_APP_PRIVATE_KEY: 'pem',
         });
-        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const factory = new GithubTokenResolverFactory(config, 'shared');
         const provider = makeProvider({
           authMethod: 'app',
           appInstallationId: 987654,
@@ -152,7 +152,7 @@ describe('GithubTokenResolverFactory', () => {
         const config = new StubConfig({
           GITHUB_APP_ID: '123456',
         });
-        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const factory = new GithubTokenResolverFactory(config, 'shared');
         const provider = makeProvider({
           authMethod: 'app',
           appInstallationId: 987654,
@@ -170,7 +170,7 @@ describe('GithubTokenResolverFactory', () => {
           GITHUB_APP_ID: '123456',
           GITHUB_APP_PRIVATE_KEY: 'pem',
         });
-        const factory = new GithubTokenResolverFactory(config, 'cloud');
+        const factory = new GithubTokenResolverFactory(config, 'shared');
         const provider = makeProvider({
           authMethod: 'app',
           appInstallationId: undefined,
@@ -183,13 +183,13 @@ describe('GithubTokenResolverFactory', () => {
     });
   });
 
-  describe('authMethod = "app", edition = "oss"', () => {
+  describe('authMethod = "app", mode = "on-prem"', () => {
     it('looks up OrganizationGitHubApp by the provider FK and returns AppInstallationTokenResolver', async () => {
       const orgApp = makeOrgApp();
       const repo = new StubOrgGitHubAppRepository(null, orgApp);
       const factory = new GithubTokenResolverFactory(
         new StubConfig({}),
-        'oss',
+        'on-prem',
         undefined,
         repo as unknown as IOrganizationGitHubAppRepository,
       );
@@ -212,7 +212,7 @@ describe('GithubTokenResolverFactory', () => {
         const repo = new StubOrgGitHubAppRepository(null, orgApp);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'oss',
+          'on-prem',
           undefined,
           repo as unknown as IOrganizationGitHubAppRepository,
         );
@@ -233,7 +233,7 @@ describe('GithubTokenResolverFactory', () => {
         const repo = new StubOrgGitHubAppRepository(null, null);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'oss',
+          'on-prem',
           undefined,
           repo as unknown as IOrganizationGitHubAppRepository,
         );
@@ -255,7 +255,7 @@ describe('GithubTokenResolverFactory', () => {
         const repo = new StubOrgGitHubAppRepository(null, orgApp);
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'oss',
+          'on-prem',
           undefined,
           repo as unknown as IOrganizationGitHubAppRepository,
         );
@@ -275,7 +275,7 @@ describe('GithubTokenResolverFactory', () => {
       it('throws', async () => {
         const factory = new GithubTokenResolverFactory(
           new StubConfig({}),
-          'oss',
+          'on-prem',
           undefined,
           null,
         );
@@ -286,30 +286,72 @@ describe('GithubTokenResolverFactory', () => {
         });
 
         await expect(factory.build(provider)).rejects.toThrow(
-          /orgGitHubAppRepository is required for oss edition/,
+          /orgGitHubAppRepository is required for on-prem mode/,
         );
       });
     });
   });
 
-  describe('resolveEdition', () => {
-    describe('when PACKMIND_EDITION=oss', () => {
-      it('returns "oss"', () => {
-        expect(resolveEdition({ PACKMIND_EDITION: 'oss' })).toBe('oss');
+  describe('mode inferred from GITHUB_APP_SLUG when no override is provided', () => {
+    describe('when GITHUB_APP_SLUG is set', () => {
+      it('uses shared mode and reads env-configured GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY', async () => {
+        const config = new StubConfig({
+          GITHUB_APP_SLUG: 'packmind-cloud',
+          GITHUB_APP_ID: '123456',
+          GITHUB_APP_PRIVATE_KEY:
+            '-----BEGIN RSA PRIVATE KEY-----\nMOCK\n-----END RSA PRIVATE KEY-----',
+        });
+        const factory = new GithubTokenResolverFactory(config);
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 987654,
+        });
+
+        const resolver = await factory.build(provider);
+
+        expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
       });
     });
 
-    describe('when PACKMIND_EDITION=proprietary', () => {
-      it('returns "cloud"', () => {
-        expect(resolveEdition({ PACKMIND_EDITION: 'proprietary' })).toBe(
-          'cloud',
+    describe('when GITHUB_APP_SLUG is not set', () => {
+      it('uses on-prem mode and reads OrganizationGitHubApp via FK', async () => {
+        const orgApp = makeOrgApp();
+        const repo = new StubOrgGitHubAppRepository(null, orgApp);
+        const factory = new GithubTokenResolverFactory(
+          new StubConfig({}),
+          undefined,
+          undefined,
+          repo as unknown as IOrganizationGitHubAppRepository,
         );
+        const provider = makeProvider({
+          authMethod: 'app',
+          appInstallationId: 111222,
+          organizationGitHubAppId: orgApp.id,
+        });
+
+        const resolver = await factory.build(provider);
+
+        expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
+      });
+    });
+  });
+
+  describe('resolveGithubAppMode', () => {
+    describe('when GITHUB_APP_SLUG is set', () => {
+      it('returns "shared"', async () => {
+        await expect(
+          resolveGithubAppMode(
+            new StubConfig({ GITHUB_APP_SLUG: 'packmind-cloud' }),
+          ),
+        ).resolves.toBe('shared');
       });
     });
 
-    describe('when PACKMIND_EDITION is unset', () => {
-      it('returns "cloud"', () => {
-        expect(resolveEdition({})).toBe('cloud');
+    describe('when GITHUB_APP_SLUG is not set', () => {
+      it('returns "on-prem"', async () => {
+        await expect(resolveGithubAppMode(new StubConfig({}))).resolves.toBe(
+          'on-prem',
+        );
       });
     });
   });

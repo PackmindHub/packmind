@@ -10,6 +10,7 @@ import {
   PackmindCommand,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
+import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 import {
   ensureDisplayNameAvailable,
@@ -31,7 +32,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
-    private readonly edition: 'cloud' | 'oss' = 'oss',
+    private readonly mode: GithubAppMode = 'on-prem',
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -106,7 +107,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
             null,
         };
 
-    validateProviderCredentials(credentialView, this.edition);
+    validateProviderCredentials(credentialView, this.mode);
 
     const patch: Partial<Omit<GitProvider, 'id'>> = { ...gitProvider };
 

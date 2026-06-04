@@ -235,7 +235,10 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
   editingProvider,
 }) => {
   const { data: me } = useGetMeQuery();
-  const edition: 'cloud' | 'oss' = me?.edition ?? 'oss';
+  const githubAppMode: 'on-prem' | 'shared' =
+    me?.authenticated && me.organization
+      ? me.organization.githubAppMode
+      : 'on-prem';
 
   const {
     data: appStatus,
@@ -244,7 +247,7 @@ export const GitHubAppConnection: React.FC<GitHubAppConnectionProps> = ({
     refetch: refetchStatus,
   } = useGetGithubAppStatusQuery();
 
-  if (edition === 'cloud') {
+  if (githubAppMode === 'shared') {
     return (
       <GitHubAppInstallSlot
         organizationId={organizationId}

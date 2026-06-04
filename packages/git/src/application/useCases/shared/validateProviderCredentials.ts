@@ -1,4 +1,5 @@
 import { InvalidGitProviderCredentialsError } from '@packmind/types';
+import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
 
 export type CredentialView = {
   authMethod: 'token' | 'app';
@@ -17,7 +18,7 @@ function isPresent(value: string | number | null | undefined): boolean {
 
 export function validateProviderCredentials(
   view: CredentialView,
-  edition: 'cloud' | 'oss',
+  mode: GithubAppMode,
   { allowTokenless = false }: { allowTokenless?: boolean } = {},
 ): void {
   if (view.authMethod !== 'token' && view.authMethod !== 'app') {
@@ -59,11 +60,11 @@ export function validateProviderCredentials(
     );
   }
 
-  // OSS binds each app-auth provider to a specific stored OrganizationGitHubApp
-  // so re-running the manifest doesn't silently rebind installations to a new
-  // App (which would 404 at JWT exchange). Cloud uses a shared env-configured
-  // App and has no per-org App row.
-  if (edition === 'oss' && isMissing(view.organizationGitHubAppId)) {
+  // Per-org mode binds each app-auth provider to a specific stored
+  // OrganizationGitHubApp so re-running the manifest doesn't silently rebind
+  // installations to a new App (which would 404 at JWT exchange). Shared mode
+  // uses an env-configured App and has no on-prem App row.
+  if (mode === 'on-prem' && isMissing(view.organizationGitHubAppId)) {
     throw new InvalidGitProviderCredentialsError(
       'organizationGitHubAppId is required when authMethod is "app"',
     );

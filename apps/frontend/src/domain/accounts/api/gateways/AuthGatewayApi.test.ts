@@ -116,6 +116,7 @@ describe('AuthGatewayApi', () => {
           name: 'Test Org',
           slug: 'test-org',
           role: 'admin',
+          githubAppMode: 'on-prem' as const,
         },
       };
       let result: Awaited<ReturnType<typeof gateway.getMe>>;
