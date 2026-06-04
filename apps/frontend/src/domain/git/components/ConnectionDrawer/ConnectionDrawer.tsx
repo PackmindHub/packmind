@@ -12,7 +12,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuArrowLeft, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuArrowLeft, LuGitBranch, LuPencil, LuTrash2 } from 'react-icons/lu';
 import { OrganizationId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
@@ -642,6 +642,25 @@ const RepositoriesPreview: React.FC<{
   const tracked = useGetRepositoriesByProviderQuery(connection.id);
   const rows = tracked.data ?? [];
 
+  const groups = useMemo(() => {
+    const map = new Map<string, { fullName: string; branches: string[] }>();
+    for (const r of rows) {
+      const key = `${r.owner}/${r.repo}`;
+      let group = map.get(key);
+      if (!group) {
+        group = { fullName: key, branches: [] };
+        map.set(key, group);
+      }
+      group.branches.push(r.branch);
+    }
+    for (const g of map.values()) {
+      g.branches.sort((a, b) => a.localeCompare(b));
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      a.fullName.localeCompare(b.fullName),
+    );
+  }, [rows]);
+
   if (repoCount === 0) {
     return (
       <PMBox
@@ -677,25 +696,36 @@ const RepositoriesPreview: React.FC<{
       overflowX="hidden"
       overflowY="auto"
     >
-      {rows.map((repo, idx) => (
-        <PMHStack
-          key={repo.id}
-          gap={3}
-          align="center"
-          paddingX={3}
-          paddingY={2.5}
-          borderBottom={idx === rows.length - 1 ? undefined : '1px solid'}
+      {groups.map((group, idx) => (
+        <PMBox
+          key={group.fullName}
+          borderBottom={idx === groups.length - 1 ? undefined : '1px solid'}
           borderColor="border.tertiary"
         >
-          <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-            <PMText fontSize="sm" color="primary" truncate>
-              {repo.repo}
+          <PMBox
+            paddingX={3}
+            paddingY={2}
+            bg="background.tertiary"
+            borderBottom="1px solid"
+            borderColor="border.tertiary"
+          >
+            <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
+              {group.fullName}
             </PMText>
-            <PMText fontSize="xs" color="faded" truncate>
-              {repo.owner}/{repo.repo} · {repo.branch}
-            </PMText>
-          </PMVStack>
-        </PMHStack>
+          </PMBox>
+          {group.branches.map((branch) => (
+            <PMBox key={branch} paddingX={3} paddingY={1.5} paddingLeft={6}>
+              <PMHStack gap={2} align="center" minW={0}>
+                <PMIcon fontSize="2xs" color="text.faded">
+                  <LuGitBranch />
+                </PMIcon>
+                <PMText fontSize="sm" color="secondary" truncate>
+                  {branch}
+                </PMText>
+              </PMHStack>
+            </PMBox>
+          ))}
+        </PMBox>
       ))}
     </PMBox>
   );
