@@ -1,14 +1,6 @@
-<!-- start: Packmind standards -->
-# Packmind Standards
-
-Before starting your work, make sure to review the coding standards relevant to your current task.
-
-Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
-
-All rules and guidelines defined in these standards are mandatory and must be followed consistently.
-
-Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
-
+---
+applyTo: '**/*.spec.ts'
+---
 # Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
@@ -26,4 +18,3 @@ Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names
 * Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 
 Full standard is available here for further request: [Backend Tests Redaction](../../.packmind/standards/backend-tests-redaction.md)
-<!-- end: Packmind standards -->
