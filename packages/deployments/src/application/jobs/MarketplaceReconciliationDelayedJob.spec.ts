@@ -5,17 +5,22 @@ import { GitRepoService } from '@packmind/git';
 import {
   createGitProviderId,
   createGitRepoId,
+  createMarketplaceDistributionId,
   createMarketplaceId,
   createOrganizationId,
+  createPackageId,
   createUserId,
+  DistributionStatus,
   GitRepo,
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   Marketplace,
   MarketplaceDescriptor,
+  MarketplaceDistribution,
   MarketplaceReconciliationJobInput,
   MarketplaceReconciliationJobOutput,
 } from '@packmind/types';
+import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { MarketplaceReconciliationDelayedJob } from './MarketplaceReconciliationDelayedJob';
@@ -64,6 +69,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
   const input: MarketplaceReconciliationJobInput = { marketplaceId };
 
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
+  let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
@@ -95,6 +101,12 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       hardDeleteById: jest.fn(),
     } as unknown as jest.Mocked<IMarketplaceRepository>;
 
+    mockMarketplaceDistributionRepository = {
+      findSuccessfulByMarketplaceId: jest.fn().mockResolvedValue([]),
+      findPendingRemovalsByMarketplaceId: jest.fn().mockResolvedValue([]),
+      updateStatus: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
+
     mockGitRepoService = {
       findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
     } as unknown as jest.Mocked<GitRepoService>;
@@ -122,6 +134,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
     job = new MarketplaceReconciliationDelayedJob(
       queueFactory,
       mockMarketplaceRepository,
+      mockMarketplaceDistributionRepository,
       mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
@@ -237,7 +250,14 @@ describe('MarketplaceReconciliationDelayedJob', () => {
 
     it('patches the new descriptor', () => {
       const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
-      expect(patch.descriptor).toBe(driftedDescriptor);
+      // The job spreads the descriptor with optional driftedPluginSlugs,
+      // so deep-equal rather than reference-equal.
+      expect(patch.descriptor).toMatchObject({
+        vendor: driftedDescriptor.vendor,
+        name: driftedDescriptor.name,
+        version: driftedDescriptor.version,
+        plugins: driftedDescriptor.plugins,
+      });
     });
 
     it('patches the new plugin count', () => {
@@ -398,6 +418,193 @@ describe('MarketplaceReconciliationDelayedJob', () => {
 
     it('does not update state', () => {
       expect(mockMarketplaceRepository.updateState).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('distribution cross-check', () => {
+    const distributionPackageId = createPackageId(uuidv4());
+
+    const buildSuccessDistribution = (slug: string): MarketplaceDistribution =>
+      ({
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId: distributionPackageId,
+        pluginSlug: slug,
+        authorId: userId,
+        status: DistributionStatus.success,
+        source: 'app',
+      }) as unknown as MarketplaceDistribution;
+
+    const buildPendingRemovalDistribution = (
+      slug: string,
+    ): MarketplaceDistribution =>
+      ({
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId: distributionPackageId,
+        pluginSlug: slug,
+        authorId: userId,
+        status: DistributionStatus.to_be_removed,
+        source: 'app',
+      }) as unknown as MarketplaceDistribution;
+
+    describe('to_be_removed → removed terminal transition', () => {
+      const pending = buildPendingRemovalDistribution('p1');
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        // Descriptor no longer carries the slug.
+        const descriptorWithoutP1: MarketplaceDescriptor = {
+          ...baseDescriptor,
+          plugins: [{ slug: 'p2', name: 'Plugin 2' }],
+        };
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: JSON.stringify(descriptorWithoutP1.raw),
+        });
+        mockParserRegistry.parse.mockReturnValue(descriptorWithoutP1);
+        mockMarketplaceDistributionRepository.findPendingRemovalsByMarketplaceId.mockResolvedValue(
+          [pending],
+        );
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [],
+        );
+
+        result = await job.runJob('job-x1', input, new AbortController());
+      });
+
+      it('flips the distribution to removed', () => {
+        expect(
+          mockMarketplaceDistributionRepository.updateStatus,
+        ).toHaveBeenCalledWith(pending.id, {
+          status: DistributionStatus.removed,
+        });
+      });
+
+      it('does not stamp driftedPluginSlugs on this signal alone', () => {
+        // descriptor differs (p1/p2 → p2) so descriptor diff yields drift —
+        // but driftedPluginSlugs must be empty for this case.
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.descriptor?.driftedPluginSlugs).toBeUndefined();
+      });
+
+      it('still reports drift due to descriptor diff', () => {
+        expect(result.state).toBe('drift');
+      });
+    });
+
+    describe('drift detection on missing slug without a paired to_be_removed (AC9)', () => {
+      const live = buildSuccessDistribution('p1');
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        // Descriptor is missing p1 but otherwise structurally similar.
+        const driftDescriptor: MarketplaceDescriptor = {
+          ...baseDescriptor,
+          plugins: [{ slug: 'p2', name: 'Plugin 2' }],
+        };
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: JSON.stringify(driftDescriptor.raw),
+        });
+        mockParserRegistry.parse.mockReturnValue(driftDescriptor);
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [live],
+        );
+        mockMarketplaceDistributionRepository.findPendingRemovalsByMarketplaceId.mockResolvedValue(
+          [],
+        );
+
+        result = await job.runJob('job-x2', input, new AbortController());
+      });
+
+      it('marks the marketplace as drift', () => {
+        expect(result.state).toBe('drift');
+      });
+
+      it('persists driftedPluginSlugs containing the missing slug', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.descriptor?.driftedPluginSlugs).toEqual(['p1']);
+      });
+    });
+
+    describe('drift suppression when a to_be_removed exists for the slug (AC10)', () => {
+      const live = buildSuccessDistribution('p1');
+      const pending = buildPendingRemovalDistribution('p1');
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        const descriptorWithoutP1: MarketplaceDescriptor = {
+          ...baseDescriptor,
+          plugins: [{ slug: 'p2', name: 'Plugin 2' }],
+        };
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: JSON.stringify(descriptorWithoutP1.raw),
+        });
+        mockParserRegistry.parse.mockReturnValue(descriptorWithoutP1);
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [live],
+        );
+        mockMarketplaceDistributionRepository.findPendingRemovalsByMarketplaceId.mockResolvedValue(
+          [pending],
+        );
+
+        result = await job.runJob('job-x3', input, new AbortController());
+      });
+
+      it('does not include p1 in driftedPluginSlugs', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.descriptor?.driftedPluginSlugs).toBeUndefined();
+      });
+
+      it('still transitions the pending row to removed (terminal)', () => {
+        expect(
+          mockMarketplaceDistributionRepository.updateStatus,
+        ).toHaveBeenCalledWith(pending.id, {
+          status: DistributionStatus.removed,
+        });
+      });
+
+      it('reports drift via descriptor diff path (not slug drift)', () => {
+        expect(result.state).toBe('drift'); // descriptor differs
+      });
+    });
+
+    describe('healthy retained when descriptor matches and all distributions accounted for', () => {
+      const live = buildSuccessDistribution('p1');
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: JSON.stringify(baseDescriptor.raw),
+        });
+        mockParserRegistry.parse.mockReturnValue({
+          ...baseDescriptor,
+          raw: { reformatted: true },
+        });
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [live],
+        );
+        mockMarketplaceDistributionRepository.findPendingRemovalsByMarketplaceId.mockResolvedValue(
+          [],
+        );
+
+        result = await job.runJob('job-x4', input, new AbortController());
+      });
+
+      it('persists state="healthy"', () => {
+        expect(result.state).toBe('healthy');
+      });
+
+      it('does not write any distribution status update', () => {
+        expect(
+          mockMarketplaceDistributionRepository.updateStatus,
+        ).not.toHaveBeenCalled();
+      });
     });
   });
 

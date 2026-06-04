@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   PMButton,
   PMConfirmationModal,
@@ -13,6 +14,11 @@ export interface MarketplaceRowProps {
   marketplace: MarketplaceListItem;
   onUnlink: (marketplaceId: MarketplaceId) => void;
   isUnlinking: boolean;
+  /**
+   * Organization slug used to build the link to the marketplace details
+   * sub-route. When omitted, the marketplace name renders as plain text.
+   */
+  orgSlug?: string;
 }
 
 /**
@@ -32,10 +38,11 @@ export function MarketplaceRow({
   marketplace,
   onUnlink,
   isUnlinking,
+  orgSlug,
 }: Readonly<MarketplaceRowProps>): Record<string, React.ReactNode> {
   return {
     id: marketplace.id,
-    name: <MarketplaceNameCell marketplace={marketplace} />,
+    name: <MarketplaceNameCell marketplace={marketplace} orgSlug={orgSlug} />,
     repository: <MarketplaceRepositoryCell marketplace={marketplace} />,
     vendor: <PMText variant="small">{vendorLabel(marketplace.vendor)}</PMText>,
     state: <MarketplaceStateBadge state={marketplace.state} />,
@@ -66,17 +73,32 @@ export function MarketplaceRow({
 
 const MarketplaceNameCell = ({
   marketplace,
-}: Readonly<{ marketplace: MarketplaceListItem }>) => (
-  <PMVStack gap={0} align="start">
-    <PMText variant="body-important">{marketplace.name}</PMText>
-    {marketplace.descriptor?.name &&
-      marketplace.descriptor.name !== marketplace.name && (
-        <PMText variant="small" color="faded">
-          {marketplace.descriptor.name}
-        </PMText>
+  orgSlug,
+}: Readonly<{ marketplace: MarketplaceListItem; orgSlug?: string }>) => {
+  const detailsHref = orgSlug
+    ? `/org/${orgSlug}/marketplaces/${marketplace.id}`
+    : undefined;
+
+  return (
+    <PMVStack gap={0} align="start">
+      {detailsHref ? (
+        <PMLink asChild>
+          <Link to={detailsHref}>
+            <PMText variant="body-important">{marketplace.name}</PMText>
+          </Link>
+        </PMLink>
+      ) : (
+        <PMText variant="body-important">{marketplace.name}</PMText>
       )}
-  </PMVStack>
-);
+      {marketplace.descriptor?.name &&
+        marketplace.descriptor.name !== marketplace.name && (
+          <PMText variant="small" color="faded">
+            {marketplace.descriptor.name}
+          </PMText>
+        )}
+    </PMVStack>
+  );
+};
 
 /**
  * Shows the backing repository as `owner/repo`, linking out to the provider's

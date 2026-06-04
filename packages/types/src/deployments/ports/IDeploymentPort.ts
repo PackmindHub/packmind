@@ -41,9 +41,15 @@ import {
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
   FindMarketplaceDistributionByIdCommand,
+  CancelPluginRemovalCommand,
+  CancelPluginRemovalResponse,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListActiveDistributedPackagesBySpaceCommand,
+  ListMarketplaceDistributionsCommand,
+  ListMarketplaceDistributionsResponse,
+  MarkPluginForRemovalCommand,
+  MarkPluginForRemovalResponse,
   ListActiveDistributedPackagesBySpaceResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -687,4 +693,46 @@ export interface IDeploymentPort {
   findMarketplaceDistributionById(
     command: FindMarketplaceDistributionByIdCommand,
   ): Promise<MarketplaceDistribution | null>;
+
+  /**
+   * Marks a published marketplace plugin distribution as `to_be_removed`.
+   *
+   * Admin-only. Resolves the target distribution by `distributionId` or by
+   * `packageId` (latest `success`-state distribution for the
+   * `(package, marketplace)` pair). Emits
+   * `MarketplacePluginRemovalInitiatedEvent` with `trigger='from_marketplace'`.
+   *
+   * @param command - Command containing the marketplace id and either
+   *                  `distributionId` or `packageId` (discriminated union)
+   * @returns Promise resolving to the mutated distribution row
+   */
+  markPluginForRemoval(
+    command: MarkPluginForRemovalCommand,
+  ): Promise<MarkPluginForRemovalResponse>;
+
+  /**
+   * Cancels a previously initiated plugin removal, reverting the target
+   * distribution from `to_be_removed` back to `success`.
+   *
+   * Admin-only. No domain event is emitted.
+   *
+   * @param command - Command containing the marketplace id and distribution id
+   * @returns Promise resolving to the mutated distribution row
+   */
+  cancelPluginRemoval(
+    command: CancelPluginRemovalCommand,
+  ): Promise<CancelPluginRemovalResponse>;
+
+  /**
+   * Lists all marketplace distributions for a given marketplace owned by the
+   * caller's organization, enriched with package name and author display name.
+   *
+   * Open to any organization member.
+   *
+   * @param command - Command carrying the marketplace id and auth context
+   * @returns Promise of presentation DTOs (`MarketplaceDistributionListItem[]`)
+   */
+  listMarketplaceDistributions(
+    command: ListMarketplaceDistributionsCommand,
+  ): Promise<ListMarketplaceDistributionsResponse>;
 }

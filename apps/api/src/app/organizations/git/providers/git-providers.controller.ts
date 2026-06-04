@@ -399,6 +399,37 @@ export class GitProvidersController {
     }
   }
 
+  @Get(':id/check-auth')
+  async checkProviderAuth(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') gitProviderId: GitProviderId,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    this.logger.info(
+      'GET /organizations/:orgId/git/providers/:id/check-auth - Probing provider auth',
+      { organizationId, gitProviderId, userId },
+    );
+
+    try {
+      return await this.gitProvidersService.checkProviderAuth(
+        organizationId,
+        gitProviderId,
+        userId,
+      );
+    } catch (error) {
+      this.logger.error(
+        'GET /organizations/:orgId/git/providers/:id/check-auth - Error probing provider auth',
+        {
+          organizationId,
+          gitProviderId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   @Get(':id/repos/:owner/:repo/branches/:branch/exists')
   async checkBranchExists(
     @Param('orgId') organizationId: OrganizationId,

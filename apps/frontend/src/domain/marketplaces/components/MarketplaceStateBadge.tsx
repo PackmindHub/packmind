@@ -1,4 +1,4 @@
-import { PMBadge, PMTooltip } from '@packmind/ui';
+import { PMBadge, PMText, PMTooltip, PMVStack } from '@packmind/ui';
 import type { MarketplaceState } from '@packmind/types';
 
 /**
@@ -10,6 +10,13 @@ import type { MarketplaceState } from '@packmind/types';
  */
 export interface MarketplaceStateBadgeProps {
   state: MarketplaceState;
+  /**
+   * When the marketplace is in `drift`, the slugs whose distribution shows
+   * `success` on Packmind but whose entry is missing from the marketplace
+   * descriptor. Surfaced inside the tooltip so the user can scan offending
+   * plugins without leaving the list view.
+   */
+  driftedPluginSlugs?: string[];
 }
 
 type StatePresentation = {
@@ -46,11 +53,40 @@ const STATE_PRESENTATION: Record<MarketplaceState, StatePresentation> = {
 
 export const MarketplaceStateBadge = ({
   state,
+  driftedPluginSlugs,
 }: Readonly<MarketplaceStateBadgeProps>) => {
   const presentation = STATE_PRESENTATION[state];
 
+  const showDriftList =
+    state === 'drift' &&
+    Array.isArray(driftedPluginSlugs) &&
+    driftedPluginSlugs.length > 0;
+
+  const tooltipLabel = showDriftList ? (
+    <PMVStack align="start" gap={1}>
+      <PMText variant="small">{presentation.tooltip}</PMText>
+      <PMText variant="small" fontWeight="medium">
+        Drifted plugins:
+      </PMText>
+      <PMVStack align="start" gap={0}>
+        {driftedPluginSlugs!.map((slug) => (
+          <PMText
+            key={slug}
+            variant="small"
+            fontFamily="mono"
+            data-testid={`marketplace-state-badge-drift-slug-${slug}`}
+          >
+            {slug}
+          </PMText>
+        ))}
+      </PMVStack>
+    </PMVStack>
+  ) : (
+    presentation.tooltip
+  );
+
   return (
-    <PMTooltip label={presentation.tooltip}>
+    <PMTooltip label={tooltipLabel}>
       <PMBadge
         size="sm"
         colorPalette={presentation.colorPalette}

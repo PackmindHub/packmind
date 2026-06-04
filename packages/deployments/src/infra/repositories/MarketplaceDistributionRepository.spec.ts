@@ -551,6 +551,322 @@ describe('MarketplaceDistributionRepository', () => {
     });
   });
 
+  describe('findLatestSuccessfulByPackageAndMarketplace', () => {
+    describe('when both success and non-success rows exist', () => {
+      let latest: MarketplaceDistribution;
+      let older: MarketplaceDistribution;
+      let result: MarketplaceDistribution | null;
+
+      beforeEach(async () => {
+        // First, an in-progress row that must be ignored.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+          }),
+        );
+        // Then a success-state row.
+        older = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+        // Wait so createdAt orderings are distinct.
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        latest = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+
+        result = await repository.findLatestSuccessfulByPackageAndMarketplace(
+          pkg.id,
+          marketplace.id,
+        );
+      });
+
+      it('returns the most recent success-state row for the pair', () => {
+        expect(result?.id).toEqual(latest.id);
+      });
+
+      it('does not return any earlier success-state row', () => {
+        expect(result?.id).not.toEqual(older.id);
+      });
+    });
+
+    describe('when no success-state distribution exists', () => {
+      it('returns null even if other statuses exist', async () => {
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.failure,
+          }),
+        );
+
+        const result =
+          await repository.findLatestSuccessfulByPackageAndMarketplace(
+            pkg.id,
+            marketplace.id,
+          );
+
+        expect(result).toBeNull();
+      });
+    });
+
+    it('excludes soft-deleted distributions', async () => {
+      const distribution = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.success,
+        }),
+      );
+      await repository.deleteById(distribution.id);
+
+      const result =
+        await repository.findLatestSuccessfulByPackageAndMarketplace(
+          pkg.id,
+          marketplace.id,
+        );
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findActiveByPackageId', () => {
+    it('returns only success-state distributions for the package', async () => {
+      const liveA = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.success,
+        }),
+      );
+      const liveB = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: otherMarketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.success,
+        }),
+      );
+      // Non-success row — must be excluded.
+      await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.to_be_removed,
+        }),
+      );
+
+      const result = await repository.findActiveByPackageId(pkg.id);
+
+      expect(result.map((row) => row.id).sort()).toEqual(
+        [liveA.id, liveB.id].sort(),
+      );
+    });
+
+    describe('when no success-state distribution exists', () => {
+      it('returns an empty array', async () => {
+        const result = await repository.findActiveByPackageId(pkg.id);
+        expect(result).toEqual([]);
+      });
+    });
+
+    it('excludes soft-deleted distributions', async () => {
+      const distribution = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.success,
+        }),
+      );
+      await repository.deleteById(distribution.id);
+
+      const result = await repository.findActiveByPackageId(pkg.id);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('findPendingRemovalsByMarketplaceId', () => {
+    describe('with mixed status and marketplace rows', () => {
+      let pending: MarketplaceDistribution;
+      let result: MarketplaceDistribution[];
+
+      beforeEach(async () => {
+        pending = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.to_be_removed,
+          }),
+        );
+        // Other status — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+        // Pending on a different marketplace — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: otherMarketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.to_be_removed,
+          }),
+        );
+
+        result = await repository.findPendingRemovalsByMarketplaceId(
+          marketplace.id,
+        );
+      });
+
+      it('returns exactly one row', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('returns the pending row for the requested marketplace', () => {
+        expect(result[0].id).toEqual(pending.id);
+      });
+    });
+
+    describe('when no pending removal exists', () => {
+      it('returns an empty array', async () => {
+        const result = await repository.findPendingRemovalsByMarketplaceId(
+          marketplace.id,
+        );
+        expect(result).toEqual([]);
+      });
+    });
+
+    it('excludes soft-deleted distributions', async () => {
+      const distribution = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.to_be_removed,
+        }),
+      );
+      await repository.deleteById(distribution.id);
+
+      const result = await repository.findPendingRemovalsByMarketplaceId(
+        marketplace.id,
+      );
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('findSuccessfulByMarketplaceId', () => {
+    describe('with mixed status and marketplace rows', () => {
+      let success: MarketplaceDistribution;
+      let result: MarketplaceDistribution[];
+
+      beforeEach(async () => {
+        success = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+        // Non-success — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.to_be_removed,
+          }),
+        );
+        // Success on a different marketplace — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: otherMarketplace.id,
+            packageId: otherPackage.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+
+        result = await repository.findSuccessfulByMarketplaceId(marketplace.id);
+      });
+
+      it('returns exactly one row', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('returns the success row for the requested marketplace', () => {
+        expect(result[0].id).toEqual(success.id);
+      });
+    });
+
+    describe('when no success-state distribution exists', () => {
+      it('returns an empty array', async () => {
+        const result = await repository.findSuccessfulByMarketplaceId(
+          marketplace.id,
+        );
+        expect(result).toEqual([]);
+      });
+    });
+
+    it('excludes soft-deleted distributions', async () => {
+      const distribution = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.success,
+        }),
+      );
+      await repository.deleteById(distribution.id);
+
+      const result = await repository.findSuccessfulByMarketplaceId(
+        marketplace.id,
+      );
+
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('updateStatus', () => {
     describe('when status is set to success with side-channel fields', () => {
       let refreshed: MarketplaceDistribution | null;
@@ -684,6 +1000,65 @@ describe('MarketplaceDistributionRepository', () => {
             status: DistributionStatus.failure,
           }),
         ).rejects.toThrow();
+      });
+    });
+
+    describe('removal lifecycle transitions', () => {
+      it('transitions success → to_be_removed', async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+
+        await repository.updateStatus(distribution.id, {
+          status: DistributionStatus.to_be_removed,
+        });
+
+        const refreshed = await repository.findById(distribution.id);
+        expect(refreshed?.status).toBe(DistributionStatus.to_be_removed);
+      });
+
+      it('transitions to_be_removed → success (cancellation)', async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.to_be_removed,
+          }),
+        );
+
+        await repository.updateStatus(distribution.id, {
+          status: DistributionStatus.success,
+        });
+
+        const refreshed = await repository.findById(distribution.id);
+        expect(refreshed?.status).toBe(DistributionStatus.success);
+      });
+
+      it('transitions to_be_removed → removed (terminal)', async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.to_be_removed,
+          }),
+        );
+
+        await repository.updateStatus(distribution.id, {
+          status: DistributionStatus.removed,
+        });
+
+        const refreshed = await repository.findById(distribution.id);
+        expect(refreshed?.status).toBe(DistributionStatus.removed);
       });
     });
   });

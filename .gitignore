@@ -38,12 +38,17 @@ dockerfile/prod/secrets
 tsconfig.base.effective.json
 packages/linter/js-playground-local
 
+# Runtime-installed sprite sandbox compose overrides (scripts/install-michel-skills.sh)
+docker-compose.override.yml
+dockerfile/local/docker-compose.override.yaml
+
 DECISIONS.md
 LEARNINGS.md
 test-results/
 .env
 compose.env
 .mcp.json
+!scripts/michel/.mcp.json
 apps/mcp-server/key.pem
 
 # Git worktrees
@@ -58,7 +63,9 @@ docker/nginx/ssl
 .nx/self-healing
 
 # Michel agent — local experimentation, not for the public repo
-sprites/
+# Ignore the harness contents but version the worker entrypoint script.
+sprites/*
+!sprites/run-michel.sh
 screenshots/
 videos/
 .sprite

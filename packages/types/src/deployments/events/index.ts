@@ -7,4 +7,6 @@ export * from './PluginPublishedEvent';
 export * from './PluginPublishFailedEvent';
 export * from './PluginRenderedEvent';
 export * from './MarketplaceLinkedEvent';
+export * from './MarketplacePluginRemovalInitiatedEvent';
 export * from './MarketplaceUnlinkedEvent';
+export * from './PackagesDeletedEvent';

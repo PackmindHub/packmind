@@ -47,3 +47,6 @@ export * from './IListMarketplaceDistributionsForPackageUseCase';
 export * from './IListMarketplacesUseCase';
 export * from './IPublishPackageOnMarketplaceUseCase';
 export * from './IValidateMarketplaceUrlUseCase';
+export * from './IMarkPluginForRemovalUseCase';
+export * from './ICancelPluginRemovalUseCase';
+export * from './IListMarketplaceDistributionsUseCase';

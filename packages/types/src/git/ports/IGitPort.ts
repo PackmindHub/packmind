@@ -6,6 +6,8 @@ import {
   AddGitRepoCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  CheckProviderAuthCommand,
+  CheckProviderAuthResponse,
   ExternalRepository,
   FetchFileContentInput,
   FetchFileContentOutput,
@@ -99,6 +101,27 @@ export interface IGitPort {
   createBranchFromBase(repo: GitRepo, branch: string): Promise<void>;
 
   /**
+   * Open a pull request on a git repository, or update an existing one when a PR
+   * with the same `head → base` already exists (rolling-PR semantics).
+   *
+   * Idempotent: if a PR matching `head → base` is already open, the existing one
+   * is returned untouched (no second PR is created). Used by the
+   * marketplace-publish flow to keep a single "Packmind sync" PR per marketplace.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch)
+   * @param command - PR head / title / body
+   * @returns Promise of the PR URL and number
+   */
+  openOrUpdatePullRequest(
+    repo: GitRepo,
+    command: {
+      head: string;
+      title: string;
+      body?: string;
+    },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }>;
+
+  /**
    * Handle webhook payload for a git repository with file content
    *
    * @param command - The webhook command
@@ -189,6 +212,19 @@ export interface IGitPort {
     repo: string,
     branch: string,
   ): Promise<boolean>;
+
+  /**
+   * Probe a git provider's stored credentials against the upstream API to
+   * determine whether they still work. Used by the connection drawer to
+   * surface a live status instead of relying on whether credentials are
+   * merely present in the database.
+   *
+   * @param command - Command containing the gitProviderId and member context
+   * @returns Promise resolving to `{ ok: true }` or `{ ok: false, reason }`
+   */
+  checkProviderAuth(
+    command: CheckProviderAuthCommand,
+  ): Promise<CheckProviderAuthResponse>;
 
   /**
    * Update a git provider

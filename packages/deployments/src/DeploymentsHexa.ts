@@ -34,6 +34,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { DeploymentsListener } from './application/listeners/DeploymentsListener';
+import { PackageDeletedDistributionsListener } from './application/listeners/PackageDeletedDistributionsListener';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from './application/services/MarketplaceDescriptorParserRegistry';
 import { AnthropicMarketplaceDescriptorParser } from './application/services/parsers/AnthropicMarketplaceDescriptorParser';
@@ -66,6 +67,9 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
   private readonly listener: DeploymentsListener;
+  // Built during initialize() — needs the removal delayed job, which only
+  // exists once the adapter has built its delayed jobs.
+  private packageDeletedDistributionsListener!: PackageDeletedDistributionsListener;
 
   constructor(
     dataSource: DataSource,
@@ -133,6 +137,10 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getPackageRepository(),
       );
 
+      // The package-deletion cascade listener is built in initialize(): it
+      // needs the removal delayed job, which the adapter only creates once its
+      // delayed jobs are wired.
+
       this.logger.info('DeploymentsHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct DeploymentsHexa', {
@@ -180,6 +188,18 @@ export class DeploymentsHexa extends BaseHexa<
 
       // Initialize listener with event emitter service
       this.listener.initialize(eventEmitterService);
+
+      // Build + initialize the cascade listener now that the adapter's delayed
+      // jobs (incl. the removal job) exist.
+      this.packageDeletedDistributionsListener =
+        new PackageDeletedDistributionsListener({
+          marketplaceDistributionRepository:
+            this.marketplaceDistributionRepository,
+          packageService: this.services.getPackageService(),
+          removePluginFromMarketplaceJob:
+            this.adapter.getRemovePluginFromMarketplaceJob(),
+        });
+      this.packageDeletedDistributionsListener.initialize(eventEmitterService);
 
       this.logger.info('DeploymentsHexa initialized successfully');
     } catch (error) {

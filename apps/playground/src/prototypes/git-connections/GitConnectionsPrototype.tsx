@@ -16,8 +16,14 @@ import { CliManagedTable } from './components/list/CliManagedTable';
 import { ConnectionsEmptyState } from './components/list/ConnectionsEmptyState';
 import { LoadingSkeleton } from './components/list/LoadingSkeleton';
 import { ConnectionDrawer } from './components/detail/ConnectionDrawer';
+import { AddConnectionDrawer } from './components/connect/AddConnectionDrawer';
 import { STUB_CLI_ENTRIES, STUB_CONNECTIONS } from './data';
-import type { Scenario, UserConnection } from './types';
+import type {
+  Edition,
+  RepoSelectionState,
+  Scenario,
+  UserConnection,
+} from './types';
 
 const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
   { label: 'Default (4 connections, mixed states)', value: 'default' },
@@ -33,14 +39,21 @@ const SCENARIO_ITEMS: Array<{ label: string; value: Scenario }> = [
 
 type Tab = 'connections' | 'cli';
 
+const EDITION_ITEMS: Array<{ label: string; value: Edition }> = [
+  { label: 'Cloud', value: 'cloud' },
+  { label: 'OSS', value: 'oss' },
+];
+
 export default function GitConnectionsPrototype() {
   const [scenario, setScenario] = useState<Scenario>('default');
+  const [edition, setEdition] = useState<Edition>('cloud');
   const [tab, setTab] = useState<Tab>('connections');
   const [connections, setConnections] =
     useState<UserConnection[]>(STUB_CONNECTIONS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     if (scenario === 'empty' || scenario === 'loading') {
@@ -99,6 +112,74 @@ export default function GitConnectionsPrototype() {
     [connections],
   );
 
+  const handleAddSubmit = useCallback((next: UserConnection) => {
+    setConnections((prev) => [next, ...prev]);
+    setAddOpen(false);
+    setToast('Connection added.');
+  }, []);
+
+  const handleApplyRepoChanges = useCallback(
+    (id: string, draft: RepoSelectionState) => {
+      setConnections((prev) =>
+        prev.map((c) => {
+          if (c.id !== id) return c;
+          const nextRepos = draft.trackedIds.map((repoId) => {
+            const existing = c.repos.find((r) => r.id === repoId);
+            const available = c.availableRepos.find((r) => r.id === repoId);
+            const path = existing?.path ?? available?.path ?? repoId;
+            const defaultBranch =
+              existing?.defaultBranch ?? available?.defaultBranch ?? 'main';
+            const branch =
+              draft.branchByRepoId[repoId] ?? existing?.branch ?? defaultBranch;
+            return {
+              id: repoId,
+              path,
+              branch,
+              defaultBranch,
+              duplicatedIn: existing?.duplicatedIn,
+            };
+          });
+          return { ...c, repos: nextRepos };
+        }),
+      );
+      const c = connections.find((x) => x.id === id);
+      const before = new Set(c?.repos.map((r) => r.id));
+      const after = new Set(draft.trackedIds);
+      const added = [...after].filter((r) => !before.has(r)).length;
+      const removed = [...before].filter((r) => !after.has(r)).length;
+      const parts: string[] = [];
+      if (added > 0) parts.push(`+${added}`);
+      if (removed > 0) parts.push(`−${removed}`);
+      setToast(
+        parts.length > 0
+          ? `Repositories updated (${parts.join(', ')}).`
+          : 'Repository tracking updated.',
+      );
+    },
+    [connections],
+  );
+
+  const handleReauthSuccess = useCallback((id: string) => {
+    setConnections((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: 'connected',
+              statusDetail: undefined,
+              lastCheckedAt: new Date().toISOString(),
+            }
+          : c,
+      ),
+    );
+    setToast('Connection re-authenticated.');
+  }, []);
+
+  const existingInstances = useMemo(
+    () => connections.map((c) => `https://${c.identifier.split('/')[0]}`),
+    [connections],
+  );
+
   return (
     <PMPage
       title="Git connections"
@@ -106,6 +187,18 @@ export default function GitConnectionsPrototype() {
       isFullWidth
       actions={
         <PMHStack gap={3} align="center">
+          <PMHStack gap={2} align="center">
+            <PMText fontSize="xs" color="faded">
+              Edition
+            </PMText>
+            <PMNativeSelect
+              items={EDITION_ITEMS}
+              value={edition}
+              onChange={(e) => setEdition(e.target.value as Edition)}
+              size="sm"
+              width="110px"
+            />
+          </PMHStack>
           <PMHStack gap={2} align="center">
             <PMText fontSize="xs" color="faded">
               Scenario
@@ -121,7 +214,11 @@ export default function GitConnectionsPrototype() {
               width="320px"
             />
           </PMHStack>
-          <PMButton variant="primary" size="sm">
+          <PMButton
+            variant="primary"
+            size="sm"
+            onClick={() => setAddOpen(true)}
+          >
             <PMIcon fontSize="sm">
               <LuPlus />
             </PMIcon>
@@ -143,9 +240,7 @@ export default function GitConnectionsPrototype() {
           <>
             {scenario === 'loading' && <LoadingSkeleton />}
             {scenario !== 'loading' && connections.length === 0 && (
-              <ConnectionsEmptyState
-                onAddConnection={() => setToast('Add-connection flow opens.')}
-              />
+              <ConnectionsEmptyState onAddConnection={() => setAddOpen(true)} />
             )}
             {scenario !== 'loading' && connections.length > 0 && (
               <ConnectionsTable
@@ -172,9 +267,19 @@ export default function GitConnectionsPrototype() {
         allConnections={connections}
         onRename={handleRename}
         onRefresh={handleRefresh}
+        onApplyRepoChanges={handleApplyRepoChanges}
+        onReauthSuccess={handleReauthSuccess}
         refreshing={
           !!selectedConnection && refreshingId === selectedConnection.id
         }
+      />
+
+      <AddConnectionDrawer
+        open={addOpen}
+        edition={edition}
+        existingInstances={existingInstances}
+        onClose={() => setAddOpen(false)}
+        onSubmit={handleAddSubmit}
       />
 
       <Toast message={toast} />

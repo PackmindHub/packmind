@@ -1102,6 +1102,127 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('openOrUpdatePullRequest', () => {
+    const command = {
+      head: 'packmind/sync',
+      title: 'Packmind sync',
+      body: 'rolling PR body',
+    };
+
+    describe('when an open pull request already exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 12,
+              html_url: 'https://github.com/test-owner/test-repo/pull/12',
+            },
+          ],
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('returns the existing pull request URL', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/12',
+        );
+      });
+
+      it('does not POST a new pull request', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no open pull request exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({
+          data: {
+            number: 21,
+            html_url: 'https://github.com/test-owner/test-repo/pull/21',
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('POSTs a new pull request with the expected payload', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/pulls`,
+          {
+            title: 'Packmind sync',
+            head: 'packmind/sync',
+            base: 'main',
+            body: 'rolling PR body',
+          },
+        );
+      });
+
+      it('reports wasCreated=true', () => {
+        expect(result.wasCreated).toBe(true);
+      });
+    });
+
+    describe('when GitHub responds 422 "pull request already exists" on create', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        const lookupResponses: Array<{ data: unknown[] }> = [
+          { data: [] },
+          {
+            data: [
+              {
+                number: 99,
+                html_url: 'https://github.com/test-owner/test-repo/pull/99',
+              },
+            ],
+          },
+        ];
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(lookupResponses.shift() ?? { data: [] }),
+          );
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: {
+            status: 422,
+            data: { message: 'A pull request already exists for foo:bar' },
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('falls back to the existing pull request', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/99',
+        );
+      });
+    });
+
+    describe('when GitHub responds with a non-422 error on create', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: { status: 500, data: { message: 'Server error' } },
+          message: 'Server error',
+        });
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          githubRepository.openOrUpdatePullRequest(command),
+        ).rejects.toThrow(/Failed to open pull request on GitHub/);
+      });
+    });
+  });
+
   describe('isValidBranch', () => {
     it('returns true for main branch', () => {
       const result = githubRepository.isValidBranch('refs/heads/main');

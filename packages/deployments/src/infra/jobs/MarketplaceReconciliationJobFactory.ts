@@ -3,6 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { IGitPort, MarketplaceReconciliationJobInput } from '@packmind/types';
 import { GitRepoService } from '@packmind/git';
 import { MarketplaceReconciliationDelayedJob } from '../../application/jobs/MarketplaceReconciliationDelayedJob';
+import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceDescriptorParserRegistry } from '../../application/services/MarketplaceDescriptorParserRegistry';
 
@@ -20,6 +21,7 @@ export class MarketplaceReconciliationJobFactory implements IJobFactory<Marketpl
 
   constructor(
     private readonly marketplaceRepository: IMarketplaceRepository,
+    private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
@@ -32,6 +34,7 @@ export class MarketplaceReconciliationJobFactory implements IJobFactory<Marketpl
     this._delayedJob = new MarketplaceReconciliationDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
       this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
       this.gitRepoService,
       this.gitPort,
       this.parserRegistry,

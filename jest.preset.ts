@@ -1,60 +1,12 @@
-export const nxPreset = {
-  // This is one of the patterns that jest finds by default https://jestjs.io/docs/configuration#testmatch-arraystring
-  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
-  resolver: '@nx/jest/plugins/resolver',
-  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
-  coverageReporters: ['html'],
-  // setupFiles runs BEFORE modules are loaded - critical for preventing Winston memory leak
-  setupFiles: ['<rootDir>/../../jest.env-setup.ts'],
-  setupFilesAfterEnv: ['<rootDir>/../../jest.setup.ts'],
-  transform: {
-    '^.+\\.(ts|js|html)$': [
-      'ts-jest',
-      {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
-        isolatedModules: true, // Faster compilation, less memory
-      },
-    ],
-  },
-  testEnvironment: 'jsdom',
-  /**
-   * manually set the exports names to load in common js, to mimic the behaviors of jest 27
-   * before jest didn't fully support package exports and would load in common js code (typically via main field). now jest 28+ will load in the browser esm code, but jest esm support is not fully supported.
-   * In this case we will tell jest to load in the common js code regardless of environment.
-   *
-   * this can be removed via just overriding this setting in it's usage
-   *
-   * @example
-   * module.exports = {
-   *   ...nxPreset,
-   *   testEnvironmentOptions: {},
-   * }
-   */
-  testEnvironmentOptions: {
-    customExportConditions: ['node', 'require', 'default'],
-  },
-  testTimeout: 20000, // 20 seconds
-  passWithNoTests: true, // Allow packages without tests to pass
-
-  // Memory optimizations
-  maxWorkers: 3, // Limit parallel workers to reduce memory pressure
-  workerIdleMemoryLimit: '512MB', // Kill workers using more than 512MB when idle
-
-  // Force worker cleanup to prevent JSDOM hanging issues
-  // Even with proper test cleanup, JSDOM can leave open handles (especially with XHR/network mocks)
-  // This forces Jest to exit cleanly after all tests complete
-  forceExit: true,
-
-  // Clear mocks and cache between tests
-  clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
-
-  // Debug flags - enable with JEST_DEBUG=true for memory leak detection
-  // Disabled by default as they add 10-20% overhead
-  detectLeaks: process.env.JEST_DEBUG === 'true',
-  detectOpenHandles: process.env.JEST_DEBUG === 'true',
-
-  // Force garbage collection between test files (requires --expose-gc flag)
-  // This is handled in the test script
-};
+// Thin re-export of the canonical preset in `jest.preset.js`, so the many
+// jest.config.ts files that reference `../../jest.preset.ts` get the exact same
+// config.
+//
+// IMPORTANT: Jest loads a `preset` by require()-ing the file as plain CommonJS —
+// it does NOT transpile TypeScript here. So despite the `.ts` extension this file
+// must contain plain CJS. The previous `export const nxPreset = { ... }` was TS/ESM
+// syntax, which threw "Unexpected token 'export'"; Jest swallowed it and fell back
+// to its defaults, so testTimeout/setupFiles/etc. declared here never applied and
+// every spec ran with the 5s default timeout.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+module.exports = require('./jest.preset.js');

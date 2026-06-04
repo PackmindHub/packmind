@@ -64,6 +64,55 @@ export function applyPluginDescriptorMutation(
   };
 }
 
+/**
+ * Pure descriptor mutator used by the marketplace removal pipeline — the
+ * inverse of {@link applyPluginDescriptorMutation}.
+ *
+ * Given a parsed `MarketplaceDescriptor` and a plugin slug, returns a
+ * brand-new descriptor with:
+ *   1. the matching entry dropped from `descriptor.plugins[]`, and
+ *   2. the matching entry dropped from `descriptor.packmindLock.plugins`.
+ *
+ * Idempotent — removing a slug that is already absent returns a structurally
+ * equivalent descriptor. Unmanaged plugin entries and the rest of the lock
+ * are left untouched. Does **not** mutate the input descriptor in place.
+ */
+export function removePluginDescriptorEntry(
+  descriptor: MarketplaceDescriptor,
+  pluginSlug: string,
+): MarketplaceDescriptor {
+  const refreshedPlugins = descriptor.plugins.filter(
+    (p) => p.slug !== pluginSlug,
+  );
+
+  const refreshedLock = removePackmindLockEntry(
+    descriptor.packmindLock,
+    pluginSlug,
+  );
+
+  return {
+    ...descriptor,
+    plugins: refreshedPlugins,
+    ...(refreshedLock ? { packmindLock: refreshedLock } : {}),
+  };
+}
+
+function removePackmindLockEntry(
+  current: MarketplaceDescriptorPackmindLock | undefined,
+  pluginSlug: string,
+): MarketplaceDescriptorPackmindLock | undefined {
+  if (!current) {
+    return undefined;
+  }
+  const plugins = Object.fromEntries(
+    Object.entries(current.plugins).filter(([slug]) => slug !== pluginSlug),
+  );
+  return {
+    schemaVersion: 1,
+    plugins,
+  };
+}
+
 function upsertPluginRef(current: PluginRef[], next: PluginRef): PluginRef[] {
   const existingIndex = current.findIndex((p) => p.slug === next.slug);
   if (existingIndex === -1) {

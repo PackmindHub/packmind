@@ -612,6 +612,106 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
+  async openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    const baseBranch = this.options.branch || 'main';
+    const { head, title, body } = command;
+
+    this.logger.info('Ensuring rolling merge request on GitLab repository', {
+      projectPath: this.projectPath,
+      head,
+      base: baseBranch,
+    });
+
+    // Step 1: Look up any open MR matching source -> target.
+    try {
+      const lookupResponse = await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          params: {
+            source_branch: head,
+            target_branch: baseBranch,
+            state: 'opened',
+          },
+        },
+      );
+
+      if (
+        Array.isArray(lookupResponse.data) &&
+        lookupResponse.data.length > 0
+      ) {
+        const first = lookupResponse.data[0];
+        this.logger.debug(
+          'Existing open merge request found, skipping creation',
+          {
+            projectPath: this.projectPath,
+            head,
+            base: baseBranch,
+            iid: first.iid,
+          },
+        );
+        return {
+          url: first.web_url,
+          number: first.iid,
+          wasCreated: false,
+        };
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to look up merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to look up merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+
+    // Step 2: Create a new MR.
+    try {
+      const createResponse = await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          source_branch: head,
+          target_branch: baseBranch,
+          title,
+          description: body,
+        },
+      );
+
+      this.logger.info('Created merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        iid: createResponse.data.iid,
+      });
+
+      return {
+        url: createResponse.data.web_url,
+        number: createResponse.data.iid,
+        wasCreated: true,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to open merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+  }
+
   private extractHttpStatus(error: unknown): number | undefined {
     if (
       error &&

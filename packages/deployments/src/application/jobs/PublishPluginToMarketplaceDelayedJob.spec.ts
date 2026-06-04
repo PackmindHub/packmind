@@ -159,6 +159,11 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         .fn()
         .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
+      openOrUpdatePullRequest: jest.fn().mockResolvedValue({
+        url: 'https://github.com/acme/plugins/pull/1',
+        number: 1,
+        wasCreated: true,
+      }),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
@@ -233,6 +238,28 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       );
     });
 
+    it('opens the rolling pull request after the commit lands', () => {
+      expect(mockGitPort.openOrUpdatePullRequest).toHaveBeenCalledWith(
+        gitRepo,
+        expect.objectContaining({
+          head: MARKETPLACE_SYNC_BRANCH,
+          title: MARKETPLACE_SYNC_PR_TITLE,
+          body: expect.any(String),
+        }),
+      );
+    });
+
+    it('persists the PR URL on the success distribution row', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          prUrl: 'https://github.com/acme/plugins/pull/1',
+        }),
+      );
+    });
+
     describe('PluginPublishedEvent emission', () => {
       let emitted: PluginPublishedEvent;
 
@@ -248,6 +275,72 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       it('marks the published event with wasNoop=false', () => {
         expect(emitted.payload.wasNoop).toBe(false);
       });
+
+      it('carries the rolling PR URL on the event payload', () => {
+        expect(emitted.payload.prUrl).toBe(
+          'https://github.com/acme/plugins/pull/1',
+        );
+      });
+    });
+  });
+
+  describe('when openOrUpdatePullRequest returns an existing PR (wasCreated=false)', () => {
+    beforeEach(async () => {
+      mockGitPort.openOrUpdatePullRequest.mockResolvedValue({
+        url: 'https://github.com/acme/plugins/pull/42',
+        number: 42,
+        wasCreated: false,
+      });
+
+      await job.runJob('job-existing-pr', input, new AbortController());
+    });
+
+    it('persists the existing PR URL on the success distribution row', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          status: DistributionStatus.success,
+          prUrl: 'https://github.com/acme/plugins/pull/42',
+        }),
+      );
+    });
+  });
+
+  describe('when openOrUpdatePullRequest fails after a successful commit', () => {
+    beforeEach(async () => {
+      mockGitPort.openOrUpdatePullRequest.mockRejectedValue(
+        new Error('GitHub 503'),
+      );
+
+      await job.runJob('job-pr-failure', input, new AbortController());
+    });
+
+    it('still records a success status', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          status: DistributionStatus.success,
+        }),
+      );
+    });
+
+    it('persists an undefined prUrl on the row', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({ prUrl: undefined }),
+      );
+    });
+
+    it('emits a PluginPublishedEvent (not a failure event)', () => {
+      const emitted = mockEventEmitter.emit.mock
+        .calls[0][0] as PluginPublishedEvent;
+      expect(emitted).toBeInstanceOf(PluginPublishedEvent);
     });
   });
 

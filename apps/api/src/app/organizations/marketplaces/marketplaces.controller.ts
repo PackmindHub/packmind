@@ -21,6 +21,8 @@ import {
   OrganizationAdminRequiredError,
 } from '@packmind/node-utils';
 import {
+  CancelPluginRemovalCommand,
+  CancelPluginRemovalResponse,
   GitProviderId,
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
@@ -30,18 +32,25 @@ import {
   IDeploymentPort,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
+  ListMarketplaceDistributionsCommand,
+  ListMarketplaceDistributionsResponse,
   ListMarketplacesCommand,
   ListMarketplacesResponse,
   MarketplaceAlreadyLinkedError,
   MarketplaceDescriptorBadFormatError,
   MarketplaceDescriptorNotFoundError,
   MarketplaceDescriptorParseError,
+  MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceNotFoundError,
   MarketplacePluginNameConflictError,
   MarketplaceUrlNotReachableError,
+  MarkPluginForRemovalCommand,
+  MarkPluginForRemovalResponse,
   OrganizationId,
   PackageId,
+  PluginDistributionInvalidStateError,
+  PluginDistributionNotFoundError,
   PublishPackageOnMarketplaceCommand,
   PublishPackageOnMarketplaceResponse,
   UnknownMarketplaceDescriptorError,
@@ -73,6 +82,39 @@ const USER_FACING_ERROR_MESSAGE = {
   marketplaceNotFound:
     'The marketplace could not be found. It may have already been unlinked.',
 } as const;
+
+/**
+ * Build a user-facing message for `PluginDistributionNotFoundError` whose
+ * underlying message embeds raw UUIDs (distributionId, packageId,
+ * marketplaceId). UUIDs are masked to their first 6 characters per
+ * `standard-compliance-logging-personal-information.md`.
+ */
+function pluginDistributionNotFoundMessage(
+  error: PluginDistributionNotFoundError,
+): string {
+  if ('distributionId' in error.identifier) {
+    return `The marketplace plugin distribution "${maskIdentifier(
+      error.identifier.distributionId,
+    )}" could not be found. It may have already been removed.`;
+  }
+  return `No active marketplace plugin distribution was found for package "${maskIdentifier(
+    error.identifier.packageId,
+  )}" on marketplace "${maskIdentifier(error.identifier.marketplaceId)}".`;
+}
+
+/**
+ * Build a user-facing message for `PluginDistributionInvalidStateError` so the
+ * distribution UUID does not leak to the HTTP client.
+ */
+function pluginDistributionInvalidStateMessage(
+  error: PluginDistributionInvalidStateError,
+): string {
+  return `The marketplace plugin distribution "${maskIdentifier(
+    error.distributionId,
+  )}" is in status "${error.from}" but the operation requires one of [${error.expected.join(
+    ', ',
+  )}].`;
+}
 
 /**
  * Mask the first 6 characters of a string identifier and replace the rest
@@ -370,6 +412,229 @@ export class MarketplacesController {
     }
   }
 
+  @Get(':marketplaceId/distributions')
+  async listMarketplaceDistributions(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListMarketplaceDistributionsResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions - Listing distributions',
+      {
+        organizationId,
+        marketplaceId,
+      },
+    );
+
+    try {
+      const command: ListMarketplaceDistributionsCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.listMarketplaceDistributions(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions - Distributions listed successfully',
+        {
+          organizationId,
+          marketplaceId,
+          count: response.length,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions - Failed to list distributions',
+        {
+          organizationId,
+          marketplaceId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Post(':marketplaceId/distributions/:distributionId/removal')
+  async markPluginForRemovalByDistribution(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Param('distributionId') distributionId: MarketplaceDistributionId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<MarkPluginForRemovalResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Marking plugin for removal by distribution',
+      {
+        organizationId,
+        marketplaceId,
+        distributionId,
+        addedBy: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: MarkPluginForRemovalCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.markPluginForRemoval(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Plugin marked for removal',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Failed to mark plugin for removal',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Post(':marketplaceId/packages/:packageId/removal')
+  async markPluginForRemovalByPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<MarkPluginForRemovalResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/marketplaces/:marketplaceId/packages/:packageId/removal - Marking plugin for removal by package',
+      {
+        organizationId,
+        marketplaceId,
+        packageId,
+        addedBy: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: MarkPluginForRemovalCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        packageId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.markPluginForRemoval(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/packages/:packageId/removal - Plugin marked for removal',
+        {
+          organizationId,
+          marketplaceId,
+          packageId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/marketplaces/:marketplaceId/packages/:packageId/removal - Failed to mark plugin for removal',
+        {
+          organizationId,
+          marketplaceId,
+          packageId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Delete(':marketplaceId/distributions/:distributionId/removal')
+  async cancelPluginRemoval(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Param('distributionId') distributionId: MarketplaceDistributionId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CancelPluginRemovalResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Cancelling plugin removal',
+      {
+        organizationId,
+        marketplaceId,
+        distributionId,
+        addedBy: maskIdentifier(userId),
+      },
+    );
+
+    try {
+      const command: CancelPluginRemovalCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.cancelPluginRemoval(command);
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Plugin removal cancelled',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Failed to cancel plugin removal',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
   /**
    * Maps typed domain errors thrown by the use cases to NestJS HTTP exceptions
    * with the contract messages the frontend relies on. Anything else falls
@@ -403,6 +668,14 @@ export class MarketplacesController {
     if (error instanceof MarketplaceNotFoundError) {
       return new NotFoundException(
         USER_FACING_ERROR_MESSAGE.marketplaceNotFound,
+      );
+    }
+    if (error instanceof PluginDistributionNotFoundError) {
+      return new NotFoundException(pluginDistributionNotFoundMessage(error));
+    }
+    if (error instanceof PluginDistributionInvalidStateError) {
+      return new ConflictException(
+        pluginDistributionInvalidStateMessage(error),
       );
     }
     if (error instanceof OrganizationAdminRequiredError) {

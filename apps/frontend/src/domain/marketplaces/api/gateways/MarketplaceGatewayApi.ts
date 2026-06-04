@@ -1,8 +1,13 @@
 import {
+  CancelPluginRemovalResponse,
   LinkMarketplaceResponse,
+  ListMarketplaceDistributionsResponse,
+  MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
+  MarkPluginForRemovalResponse,
   OrganizationId,
+  PackageId,
   ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -66,6 +71,47 @@ export class MarketplaceGatewayApi
     return this._api.get<ValidateMarketplaceUrlResponse>(
       `${this._endpoint}/${organizationId}/marketplaces/validate-url`,
       { params: { url } },
+    );
+  }
+
+  async listDistributions(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+  ): Promise<ListMarketplaceDistributionsResponse> {
+    return this._api.get<ListMarketplaceDistributionsResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions`,
+    );
+  }
+
+  async markPluginForRemovalByDistribution(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+    distributionId: MarketplaceDistributionId,
+  ): Promise<MarkPluginForRemovalResponse> {
+    return this._api.post<MarkPluginForRemovalResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions/${distributionId}/removal`,
+      {},
+    );
+  }
+
+  async markPluginForRemovalByPackage(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+    packageId: PackageId,
+  ): Promise<MarkPluginForRemovalResponse> {
+    return this._api.post<MarkPluginForRemovalResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/packages/${packageId}/removal`,
+      {},
+    );
+  }
+
+  async cancelPluginRemoval(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+    distributionId: MarketplaceDistributionId,
+  ): Promise<CancelPluginRemovalResponse> {
+    return this._api.delete<CancelPluginRemovalResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions/${distributionId}/removal`,
     );
   }
 }

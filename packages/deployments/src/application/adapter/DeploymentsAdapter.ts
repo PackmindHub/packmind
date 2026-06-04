@@ -7,6 +7,12 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  CancelPluginRemovalCommand,
+  CancelPluginRemovalResponse,
+  ListMarketplaceDistributionsCommand,
+  ListMarketplaceDistributionsResponse,
+  MarkPluginForRemovalCommand,
+  MarkPluginForRemovalResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -118,6 +124,8 @@ import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRe
 import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { PublishPluginToMarketplaceJobFactory } from '../../infra/jobs/PublishPluginToMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceJobFactory } from '../../infra/jobs/RemovePluginFromMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { TargetResolutionService } from '../services/TargetResolutionService';
@@ -133,9 +141,12 @@ import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDef
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
+import { CancelPluginRemovalUseCase } from '../useCases/cancelPluginRemoval';
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
 import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
+import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
 import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
+import { MarkPluginForRemovalUseCase } from '../useCases/markPluginForRemoval';
 import { PublishPackageOnMarketplaceUseCase } from '../useCases/publishPackageOnMarketplace';
 import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
 import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
@@ -229,6 +240,9 @@ export class DeploymentsAdapter
   private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
   private _publishPackageOnMarketplaceUseCase!: PublishPackageOnMarketplaceUseCase;
   private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
+  private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
+  private _cancelPluginRemovalUseCase!: CancelPluginRemovalUseCase;
+  private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -538,6 +552,7 @@ export class DeploymentsAdapter
 
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
       this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
     );
 
     this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
@@ -641,6 +656,31 @@ export class DeploymentsAdapter
         this.spacesPort,
         this.accountsPort,
       );
+
+    // Plugin removal use cases (gated behind marketplace-plugin-removal flag
+    // on the frontend; backend remains symmetric to link/unlink).
+    this._markPluginForRemovalUseCase = new MarkPluginForRemovalUseCase(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
+      this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob,
+      this.accountsPort,
+    );
+
+    this._cancelPluginRemovalUseCase = new CancelPluginRemovalUseCase(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.accountsPort,
+    );
+
+    this._listMarketplaceDistributionsUseCase =
+      new ListMarketplaceDistributionsUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.accountsPort,
+      );
   }
 
   /**
@@ -672,6 +712,7 @@ export class DeploymentsAdapter
     // so the queue is initialized alongside the rest of the worker pool.
     const reconciliationFactory = new MarketplaceReconciliationJobFactory(
       this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
       this.gitRepoService,
       this.gitPort!,
       this.marketplaceDescriptorParserRegistry,
@@ -717,13 +758,54 @@ export class DeploymentsAdapter
       );
     }
 
+    // Marketplace plugin removal queue — the inverse of the publish queue.
+    // Also single-concurrency: deletion commits onto `packmind/sync` must be
+    // serialized with publishes. No renderer is needed (we delete the
+    // plugin's files rather than render them).
+    const removePluginFromMarketplaceFactory =
+      new RemovePluginFromMarketplaceJobFactory(
+        this.marketplaceDistributionRepository,
+        this.marketplaceRepository,
+        this.gitRepoService,
+        this.gitPort!,
+        this.marketplaceDescriptorParserRegistry,
+      );
+    jobsService.registerJobQueue(
+      removePluginFromMarketplaceFactory.getQueueName(),
+      removePluginFromMarketplaceFactory,
+    );
+    await removePluginFromMarketplaceFactory.createQueue();
+
+    if (!removePluginFromMarketplaceFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for remove plugin from marketplace',
+      );
+    }
+
     this.logger.debug('Deployments delayed jobs built successfully');
     return {
       publishArtifactsDelayedJob: jobFactory.delayedJob,
       marketplaceReconciliationDelayedJob: reconciliationFactory.delayedJob,
       publishPluginToMarketplaceDelayedJob:
         publishPluginToMarketplaceFactory.delayedJob,
+      removePluginFromMarketplaceDelayedJob:
+        removePluginFromMarketplaceFactory.delayedJob,
     };
+  }
+
+  /**
+   * Exposes the marketplace plugin removal job so the cross-cutting
+   * `PackageDeletedDistributionsListener` (constructed in `DeploymentsHexa`)
+   * can enqueue deletions for the package-deletion cascade. Available only
+   * after `initialize()` has built the delayed jobs.
+   */
+  public getRemovePluginFromMarketplaceJob(): RemovePluginFromMarketplaceDelayedJob {
+    if (!this.deploymentsDelayedJobs) {
+      throw new Error(
+        'DeploymentsAdapter: delayed jobs not initialized — call initialize() first',
+      );
+    }
+    return this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob;
   }
 
   /**
@@ -1078,5 +1160,23 @@ export class DeploymentsAdapter
       return null;
     }
     return row;
+  }
+
+  async markPluginForRemoval(
+    command: MarkPluginForRemovalCommand,
+  ): Promise<MarkPluginForRemovalResponse> {
+    return this._markPluginForRemovalUseCase.execute(command);
+  }
+
+  async cancelPluginRemoval(
+    command: CancelPluginRemovalCommand,
+  ): Promise<CancelPluginRemovalResponse> {
+    return this._cancelPluginRemovalUseCase.execute(command);
+  }
+
+  async listMarketplaceDistributions(
+    command: ListMarketplaceDistributionsCommand,
+  ): Promise<ListMarketplaceDistributionsResponse> {
+    return this._listMarketplaceDistributionsUseCase.execute(command);
   }
 }

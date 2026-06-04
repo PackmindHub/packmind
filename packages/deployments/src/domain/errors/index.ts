@@ -10,3 +10,5 @@ export { MarketplaceNotFoundError } from './MarketplaceNotFoundError';
 export { MarketplacePluginNameConflictError } from './MarketplacePluginNameConflictError';
 export { MarketplaceUrlNotReachableError } from './MarketplaceUrlNotReachableError';
 export { GitProviderTokenInvalidError } from './GitProviderTokenInvalidError';
+export { PluginDistributionNotFoundError } from './PluginDistributionNotFoundError';
+export { PluginDistributionInvalidStateError } from './PluginDistributionInvalidStateError';

@@ -1604,6 +1604,89 @@ describe('GitlabRepository', () => {
     });
   });
 
+  describe('openOrUpdatePullRequest', () => {
+    const encodedProjectPath = encodeURIComponent('testowner/testrepo');
+    const command = {
+      head: 'packmind/sync',
+      title: 'Packmind sync',
+      body: 'rolling MR body',
+    };
+
+    describe('when an open merge request already exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: [
+            {
+              iid: 7,
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+            },
+          ],
+        });
+
+        result = await gitlabRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('returns the existing merge request URL', () => {
+        expect(result.url).toBe(
+          'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+        );
+      });
+
+      it('does not POST a new merge request', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no open merge request exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            iid: 9,
+            web_url: 'https://gitlab.com/testowner/testrepo/-/merge_requests/9',
+          },
+        });
+
+        result = await gitlabRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('POSTs a new merge request with the expected payload', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/merge_requests`,
+          {
+            source_branch: 'packmind/sync',
+            target_branch: 'main',
+            title: 'Packmind sync',
+            description: 'rolling MR body',
+          },
+        );
+      });
+
+      it('reports wasCreated=true', () => {
+        expect(result.wasCreated).toBe(true);
+      });
+    });
+
+    describe('when the lookup fails with a non-404 error', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('GitLab 503'));
+      });
+
+      it('propagates the error without attempting to create the merge request', async () => {
+        await expect(
+          gitlabRepository.openOrUpdatePullRequest(command),
+        ).rejects.toThrow(
+          `Failed to look up merge request on GitLab for 'packmind/sync' -> 'main': GitLab 503`,
+        );
+      });
+    });
+  });
+
   describe('isValidBranch', () => {
     it('returns true for main branch', () => {
       expect(gitlabRepository.isValidBranch('refs/heads/main')).toBe(true);
