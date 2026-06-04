@@ -724,8 +724,8 @@ const RepositoriesPreview: React.FC<{
 
 function diffSummary(adds: number, removes: number, updates: number): string {
   const parts: string[] = [];
-  if (adds > 0) parts.push(`+${adds} added`);
-  if (removes > 0) parts.push(`−${removes} removed`);
-  if (updates > 0) parts.push(`~${updates} updated`);
+  if (adds > 0) parts.push(`${adds} added`);
+  if (removes > 0) parts.push(`${removes} removed`);
+  if (updates > 0) parts.push(`${updates} updated`);
   return parts.join(', ');
 }
