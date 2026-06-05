@@ -68,7 +68,12 @@ export const PrivateLinkForm = ({
     gitProviderId as GitProviderId,
   );
 
-  const providers = providersQuery.data?.providers ?? [];
+  // Only user-configured providers (PAT token or active GitHub App
+  // installation) can list repositories. CLI-created providers are
+  // URL-tracking-only and hold no credentials, so they are filtered out.
+  const providers = (providersQuery.data?.providers ?? []).filter(
+    (provider) => provider.hasAuth,
+  );
 
   const filteredRepos = useMemo(() => {
     const repos = reposQuery.data ?? [];
