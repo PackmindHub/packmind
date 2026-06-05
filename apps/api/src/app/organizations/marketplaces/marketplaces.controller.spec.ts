@@ -394,6 +394,7 @@ describe('MarketplacesController', () => {
           ...marketplace,
           addedByUserName: 'Test User',
           repository: {
+            gitProviderId,
             owner: 'acme',
             repo: 'plugins',
             branch: 'main',

@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import type { MarketplaceId, MarketplaceListItem } from '@packmind/types';
+import {
+  createGitProviderId,
+  type MarketplaceId,
+  type MarketplaceListItem,
+} from '@packmind/types';
 import { MarketplacesIndex } from './MarketplacesIndex';
 
 const buildMarketplace = (
@@ -28,6 +32,7 @@ const buildMarketplace = (
   deletedAt: null,
   addedByUserName: 'Jane Admin',
   repository: {
+    gitProviderId: createGitProviderId('provider-1'),
     owner: 'acme',
     repo: 'plugins',
     branch: 'main',
