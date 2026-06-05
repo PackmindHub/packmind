@@ -9,7 +9,13 @@ jest.mock('../../git/api/queries', () => ({
   useGetGitProvidersQuery: () => ({
     data: {
       providers: [
-        { id: 'provider-1', source: 'github', url: 'https://github.com' },
+        {
+          id: 'provider-1',
+          source: 'github',
+          url: 'https://github.com',
+          hasAuth: true,
+          displayName: '',
+        },
       ],
     },
     isLoading: false,
