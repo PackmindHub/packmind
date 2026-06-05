@@ -124,7 +124,24 @@ export abstract class AbstractPackmindAppPage
   }
 
   async navigateToDashboard(): Promise<IDashboardPage> {
-    await this.page.getByRole('link', { name: 'Dashboard' }).first().click();
+    // The Dashboard link lives under a space's nav section. On org-only
+    // routes (settings/setup/profile) no space is active, so the link is
+    // not rendered in the sidebar — open the default space drawer first
+    // to reveal it.
+    const dashboardLink = this.page.getByRole('link', { name: 'Dashboard' });
+
+    if (!(await dashboardLink.first().isVisible())) {
+      await this.page
+        .getByTestId(SidebarNavigationDataTestId.DefaultSpaceRow)
+        .click();
+      const openDrawer = this.page.locator(
+        '[role="dialog"][data-state="open"]',
+      );
+      await openDrawer.waitFor({ state: 'visible' });
+      await openDrawer.getByRole('link', { name: 'Dashboard' }).click();
+    } else {
+      await dashboardLink.first().click();
+    }
 
     return this.pageFactory.getDashboardPage();
   }
