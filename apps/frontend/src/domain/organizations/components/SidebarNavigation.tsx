@@ -519,6 +519,7 @@ export const SidebarNavigation: React.FunctionComponent<
                     setActiveSpacePanel(defaultSpace.id);
                   }
                 }}
+                dataTestId={SidebarNavigationDataTestId.DefaultSpaceRow}
               />
 
               {spaces && (
