@@ -15,6 +15,7 @@ import {
   GitProvider,
   GitProviderId,
   GitRepo,
+  GitRepoAlreadyExistsError,
   GitRepoId,
   IGitPort,
   ListProvidersCommand,
@@ -376,6 +377,24 @@ export class GitProvidersService {
       );
     }
 
+    const existing = await this.gitAdapter.findGitProviderByAppInstallation(
+      command.organizationId,
+      command.installationId,
+    );
+
+    if (existing) {
+      this.logger.info(
+        'Reusing existing GitHub App provider for installation',
+        {
+          providerId: existing.id,
+          organizationId: command.organizationId,
+          installationId: command.installationId,
+        },
+      );
+      await this.materializeReposForAppInstallation(existing, command);
+      return existing;
+    }
+
     const addCommand: AddGitProviderCommand = {
       userId: String(command.userId),
       organizationId: String(command.organizationId),
@@ -444,16 +463,25 @@ export class GitProvidersService {
         });
         materialized += 1;
       } catch (error) {
-        this.logger.warn(
-          'Failed to materialize repo after GitHub App install',
-          {
+        if (error instanceof GitRepoAlreadyExistsError) {
+          this.logger.debug('Repo already materialized, skipping', {
             providerId: provider.id,
             organizationId: command.organizationId,
             owner: availableRepo.owner,
             repo: availableRepo.name,
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
+          });
+        } else {
+          this.logger.warn(
+            'Failed to materialize repo after GitHub App install',
+            {
+              providerId: provider.id,
+              organizationId: command.organizationId,
+              owner: availableRepo.owner,
+              repo: availableRepo.name,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+        }
       }
     }
 
