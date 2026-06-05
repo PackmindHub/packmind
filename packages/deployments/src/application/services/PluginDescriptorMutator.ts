@@ -16,6 +16,8 @@ export type PluginDescriptorMutationInput = {
   pluginName: string;
   /** Optional plugin version surfaced on `PluginRef.version`. */
   pluginVersion?: string;
+  /** Optional description displayed by marketplace consumers. */
+  pluginDescription?: string;
   /**
    * Source coordinates Claude Code (and other marketplace consumers) need to
    * actually install the plugin. The publish job builds this from the
@@ -47,12 +49,21 @@ export function applyPluginDescriptorMutation(
   descriptor: MarketplaceDescriptor,
   mutation: PluginDescriptorMutationInput,
 ): MarketplaceDescriptor {
-  const { pluginSlug, pluginName, pluginVersion, pluginSource } = mutation;
+  const {
+    pluginSlug,
+    pluginName,
+    pluginVersion,
+    pluginDescription,
+    pluginSource,
+  } = mutation;
 
   const refreshedPlugins = upsertPluginRef(descriptor.plugins, {
     slug: pluginSlug,
     name: pluginName,
     ...(pluginVersion !== undefined ? { version: pluginVersion } : {}),
+    ...(pluginDescription !== undefined
+      ? { description: pluginDescription }
+      : {}),
     source: pluginSource,
   });
 

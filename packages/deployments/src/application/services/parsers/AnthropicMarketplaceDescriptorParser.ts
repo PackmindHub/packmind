@@ -93,6 +93,9 @@ export class AnthropicMarketplaceDescriptorParser implements IMarketplaceDescrip
       if (plugin.version !== undefined) {
         ref.version = plugin.version;
       }
+      if (plugin.description !== undefined) {
+        ref.description = plugin.description;
+      }
       if (plugin.source !== undefined) {
         const pluginSource: PluginSource = {
           source: plugin.source.source,

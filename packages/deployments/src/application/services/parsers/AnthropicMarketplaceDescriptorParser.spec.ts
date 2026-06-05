@@ -176,6 +176,32 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
         });
       });
 
+      describe('when a plugin entry declares a description', () => {
+        it('reads the description back into the normalized PluginRef', () => {
+          const raw = {
+            name: 'demo',
+            plugins: [{ name: 'plugin-a', description: 'Does things' }],
+          };
+
+          const result = parser.parse(raw);
+
+          expect(result.plugins[0].description).toBe('Does things');
+        });
+      });
+
+      describe('when a plugin entry has no description', () => {
+        it('leaves description undefined in the normalized PluginRef', () => {
+          const raw = {
+            name: 'demo',
+            plugins: [{ name: 'plugin-a' }],
+          };
+
+          const result = parser.parse(raw);
+
+          expect(result.plugins[0].description).toBeUndefined();
+        });
+      });
+
       describe('when a plugin entry has no source block (legacy)', () => {
         it('parses it with source undefined', () => {
           const raw = {

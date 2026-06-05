@@ -299,6 +299,9 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         pluginSlug,
         pluginName: rendered.pluginName,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
+        ...(rendered.pluginDescription !== undefined
+          ? { pluginDescription: rendered.pluginDescription }
+          : {}),
         pluginSource,
       });
 
