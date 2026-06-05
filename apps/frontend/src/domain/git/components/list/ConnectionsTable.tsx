@@ -10,7 +10,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
-import { GitProviderVendor } from '@packmind/types';
+import { GitProviderId, GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
 import { VendorMark } from '../shared/VendorMark';
@@ -22,12 +22,14 @@ import {
 
 interface ConnectionsTableProps {
   connections: GitProviderUI[];
+  marketplaceCountByProviderId: Map<GitProviderId, number>;
   onEdit: (connection: GitProviderUI) => void;
   onDelete: (connection: GitProviderUI) => void;
 }
 
 export const ConnectionsTable: React.FC<ConnectionsTableProps> = ({
   connections,
+  marketplaceCountByProviderId,
   onEdit,
   onDelete,
 }) => {
@@ -44,6 +46,9 @@ export const ConnectionsTable: React.FC<ConnectionsTableProps> = ({
         <ConnectionRow
           key={connection.id}
           connection={connection}
+          marketplaceCount={
+            marketplaceCountByProviderId.get(connection.id) ?? 0
+          }
           isLast={idx === connections.length - 1}
           onEdit={() => onEdit(connection)}
           onDelete={() => onDelete(connection)}
@@ -71,8 +76,11 @@ const TableHeader: React.FC = () => (
       Connection
     </PMBox>
     <PMBox width="160px">Status</PMBox>
-    <PMBox width="70px" textAlign="right">
+    <PMBox width="60px" textAlign="right">
       Repos
+    </PMBox>
+    <PMBox width="110px" textAlign="right">
+      Marketplaces
     </PMBox>
     <PMBox width="90px" />
   </PMHStack>
@@ -80,6 +88,7 @@ const TableHeader: React.FC = () => (
 
 interface ConnectionRowProps {
   connection: GitProviderUI;
+  marketplaceCount: number;
   isLast: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -87,6 +96,7 @@ interface ConnectionRowProps {
 
 const ConnectionRow: React.FC<ConnectionRowProps> = ({
   connection,
+  marketplaceCount,
   isLast,
   onEdit,
   onDelete,
@@ -118,6 +128,7 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       data-url={connection.url ?? ''}
       data-repo-count={repoCount}
       data-status={bucket}
+      data-marketplace-count={marketplaceCount}
       gap={3}
       paddingX={4}
       paddingY={3}
@@ -153,13 +164,23 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       </PMBox>
 
       <PMText
-        width="70px"
+        width="60px"
         fontSize="sm"
-        color="secondary"
+        color={repoCount > 0 ? 'secondary' : 'faded'}
         textAlign="right"
         fontVariantNumeric="tabular-nums"
       >
         {repoCount}
+      </PMText>
+
+      <PMText
+        width="110px"
+        fontSize="sm"
+        color={marketplaceCount > 0 ? 'secondary' : 'faded'}
+        textAlign="right"
+        fontVariantNumeric="tabular-nums"
+      >
+        {marketplaceCount}
       </PMText>
 
       <PMHStack width="90px" gap={1} justify="flex-end">

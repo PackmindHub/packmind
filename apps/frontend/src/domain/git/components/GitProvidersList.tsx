@@ -18,6 +18,7 @@ import {
   useDeleteGitProviderMutation,
   useGetGitProvidersQuery,
 } from '../api/queries';
+import { useMarketplaces } from '../../marketplaces/api/queries';
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { GIT_MESSAGES } from '../constants/messages';
 import { AddConnectionDrawer } from './AddConnection/AddConnectionDrawer';
@@ -42,6 +43,19 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   } = useGetGitProvidersQuery();
   const providers = providersResponse?.providers;
   const deleteProviderMutation = useDeleteGitProviderMutation();
+
+  // Marketplaces are fetched here (instead of in the table) so the count can
+  // be reused by the deletion-blocking rule and the drawer.
+  const { data: marketplaces } = useMarketplaces(organizationId);
+  const marketplaceCountByProviderId = useMemo(() => {
+    const map = new Map<GitProviderId, number>();
+    for (const marketplace of marketplaces ?? []) {
+      const providerId = marketplace.repository?.gitProviderId;
+      if (!providerId) continue;
+      map.set(providerId, (map.get(providerId) ?? 0) + 1);
+    }
+    return map;
+  }, [marketplaces]);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] =
@@ -147,6 +161,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
           ) : (
             <ConnectionsTable
               connections={userConfigured}
+              marketplaceCountByProviderId={marketplaceCountByProviderId}
               onEdit={(connection) => {
                 setEditingProviderId(connection.id);
               }}
