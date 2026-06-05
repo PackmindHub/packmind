@@ -31,6 +31,8 @@ jest.mock('../../../shared/HexaInjection', () => {
 
 jest.mock('@packmind/node-utils', () => ({
   Configuration: { getConfig: jest.fn() },
+  removeTrailingSlash: (url: string) =>
+    url.endsWith('/') ? url.slice(0, -1) : url,
 }));
 
 jest.mock('../../../shared/utils/edition', () => ({
@@ -855,6 +857,42 @@ describe('GitProvidersService', () => {
         await expect(
           service.buildGithubAppManifest({ orgId, userId }),
         ).rejects.toThrow(new BadRequestException('Organization not found'));
+      });
+    });
+
+    describe('when APP_WEB_URL has a trailing slash', () => {
+      beforeEach(() => {
+        Configuration.getConfig.mockResolvedValue(`${appWebUrl}/`);
+      });
+
+      it('strips the trailing slash from the manifest url', async () => {
+        const result = await service.buildGithubAppManifest({ orgId, userId });
+
+        expect(result.manifest.url).toBe(appWebUrl);
+      });
+
+      it('strips the trailing slash from the redirect_url', async () => {
+        const result = await service.buildGithubAppManifest({ orgId, userId });
+
+        expect(result.manifest.redirect_url).toBe(
+          `${appWebUrl}/integrations/github-app/manifest-callback`,
+        );
+      });
+
+      it('strips the trailing slash from the setup_url', async () => {
+        const result = await service.buildGithubAppManifest({ orgId, userId });
+
+        expect(result.manifest.setup_url).toBe(
+          `${appWebUrl}/integrations/github-app/install-callback`,
+        );
+      });
+
+      it('strips the trailing slash from the hook_attributes url', async () => {
+        const result = await service.buildGithubAppManifest({ orgId, userId });
+
+        expect(result.manifest.hook_attributes.url).toBe(
+          `${appWebUrl}/api/v0/hooks/github-app`,
+        );
       });
     });
   });
