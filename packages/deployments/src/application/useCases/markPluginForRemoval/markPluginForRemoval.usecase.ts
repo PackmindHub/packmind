@@ -25,7 +25,7 @@ import { RemovePluginFromMarketplaceDelayedJob } from '../../jobs/RemovePluginFr
 const origin = 'MarkPluginForRemovalUseCase';
 
 /**
- * Marks a published marketplace plugin distribution as `to_be_removed`.
+ * Requests removal of a published marketplace plugin distribution.
  *
  * Admin-only. Resolves the target distribution either directly by
  * `distributionId` or by `packageId` (latest `success`-state distribution for
@@ -33,6 +33,12 @@ const origin = 'MarkPluginForRemovalUseCase';
  * `MarketplacePluginRemovalInitiatedEvent` with `trigger='from_marketplace'`
  * so the Amplitude listener and downstream consumers can observe the manual
  * trigger.
+ *
+ * The status is intentionally left at `success` here. The
+ * `RemovePluginFromMarketplaceDelayedJob` flips it to `to_be_removed` only once
+ * the deletion lands on the rolling `packmind/sync` branch, so the status
+ * tracks the sync branch rather than the bare request. The reconciliation job
+ * owns the terminal `removed` transition once the deletion PR merges.
  *
  * Flow:
  *  1. Resolve the marketplace by `(organizationId, marketplaceId)`. Miss →
@@ -43,12 +49,12 @@ const origin = 'MarkPluginForRemovalUseCase';
  *     `PluginDistributionNotFoundError`.
  *  3. Validate the current status is `success`. Other state →
  *     `PluginDistributionInvalidStateError`.
- *  4. `updateStatus(id, { status: to_be_removed })`.
- *  5. Emit `MarketplacePluginRemovalInitiatedEvent` with
+ *  4. Emit `MarketplacePluginRemovalInitiatedEvent` with
  *     `trigger='from_marketplace'`.
- *  6. Enqueue `RemovePluginFromMarketplaceDelayedJob` so the deletion is
- *     committed onto the rolling `packmind/sync` PR (symmetric to publish).
- *  7. Return the mutated distribution row.
+ *  5. Enqueue `RemovePluginFromMarketplaceDelayedJob` so the deletion is
+ *     committed onto the rolling `packmind/sync` PR (symmetric to publish); the
+ *     job flips the status to `to_be_removed` once the commit lands.
+ *  6. Return the distribution row (still `success`).
  */
 export class MarkPluginForRemovalUseCase
   extends AbstractAdminUseCase<
@@ -138,15 +144,6 @@ export class MarkPluginForRemovalUseCase
       );
     }
 
-    await this.marketplaceDistributionRepository.updateStatus(distribution.id, {
-      status: DistributionStatus.to_be_removed,
-    });
-
-    const updated: MarketplaceDistribution = {
-      ...distribution,
-      status: DistributionStatus.to_be_removed,
-    };
-
     const pkg = await this.packageService.findById(distribution.packageId);
     const packageSlug = pkg?.slug ?? '';
 
@@ -165,10 +162,12 @@ export class MarkPluginForRemovalUseCase
     );
 
     // Enqueue the Git side effect: commit the plugin deletion onto the rolling
-    // `packmind/sync` PR (symmetric to publish). The distribution stays
-    // `to_be_removed`; the reconciliation job owns the terminal `removed`
-    // transition once the PR merges. A failed enqueue must not fail the
-    // request — reconciliation and a manual CLI deletion remain as fallbacks.
+    // `packmind/sync` PR (symmetric to publish). The status stays `success`
+    // here on purpose — the job flips it to `to_be_removed` only once the
+    // deletion lands on the sync branch, and the reconciliation job owns the
+    // terminal `removed` transition once the PR merges. A failed enqueue must
+    // not fail the request — reconciliation and a manual CLI deletion remain as
+    // fallbacks.
     try {
       await this.removalJob.addJob({
         marketplaceDistributionId: distribution.id,
@@ -188,14 +187,13 @@ export class MarkPluginForRemovalUseCase
       );
     }
 
-    this.logger.info('Marketplace plugin distribution marked for removal', {
+    this.logger.info('Marketplace plugin removal requested', {
       distributionId: distribution.id,
       marketplaceId,
-      fromStatus: DistributionStatus.success,
-      toStatus: DistributionStatus.to_be_removed,
+      status: distribution.status,
     });
 
-    return { distribution: updated };
+    return { distribution };
   }
 
   private async resolveDistribution(

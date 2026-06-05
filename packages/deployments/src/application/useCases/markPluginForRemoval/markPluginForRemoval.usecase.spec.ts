@@ -151,12 +151,20 @@ describe('MarkPluginForRemovalUseCase', () => {
       ).not.toHaveBeenCalled();
     });
 
-    it('writes the new status', () => {
+    it('does not flip the status (the removal job owns the flip after the sync commit)', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
-      ).toHaveBeenCalledWith(distributionId, {
-        status: DistributionStatus.to_be_removed,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('returns the distribution still in success state', async () => {
+      const { distribution } = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
       });
+      expect(distribution.status).toBe(DistributionStatus.success);
     });
 
     it('emits one event', () => {
@@ -210,12 +218,10 @@ describe('MarkPluginForRemovalUseCase', () => {
       ).not.toHaveBeenCalled();
     });
 
-    it('writes the new status', () => {
+    it('does not flip the status (the removal job owns the flip after the sync commit)', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
-      ).toHaveBeenCalledWith(distributionId, {
-        status: DistributionStatus.to_be_removed,
-      });
+      ).not.toHaveBeenCalled();
     });
 
     it('emits with trigger="from_marketplace"', () => {
