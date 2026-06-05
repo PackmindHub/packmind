@@ -78,12 +78,14 @@ type CompleteGithubAppManifestResponse = {
 
 type GetGithubAppStatusCommand = {
   orgId: OrganizationId;
+  userId: UserId;
 };
 
 type GetGithubAppStatusResponse = {
   hasApp: boolean;
   appSlug?: string;
   revokedAt?: Date | null;
+  linkedProviderCount: number;
 };
 
 type RevokeGithubAppCommand = {
@@ -612,17 +614,37 @@ export class GitProvidersService {
 
     // Shared mode uses an env-configured GitHub App — no on-prem record exists.
     if (mode === 'shared') {
-      return { hasApp: true };
+      return { hasApp: true, linkedProviderCount: 0 };
     }
 
     const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
       command.orgId,
     );
 
+    if (!record) {
+      return {
+        hasApp: false,
+        revokedAt: null,
+        linkedProviderCount: 0,
+      };
+    }
+
+    const { providers } = await this.gitAdapter.listProviders({
+      organizationId: command.orgId,
+      userId: command.userId,
+    });
+
+    const linkedProviderCount = providers.filter(
+      (p) =>
+        p.authMethod === 'app' &&
+        String(p.organizationGitHubAppId) === String(record.id),
+    ).length;
+
     return {
-      hasApp: !!record,
-      appSlug: record?.appSlug,
-      revokedAt: record?.revokedAt ?? null,
+      hasApp: true,
+      appSlug: record.appSlug,
+      revokedAt: record.revokedAt ?? null,
+      linkedProviderCount,
     };
   }
 
@@ -642,6 +664,23 @@ export class GitProvidersService {
     if (!record) {
       throw new NotFoundException(
         'No active GitHub App found for this organization',
+      );
+    }
+
+    const { providers } = await this.gitAdapter.listProviders({
+      organizationId: command.orgId,
+      userId: command.userId,
+    });
+
+    const count = providers.filter(
+      (p) =>
+        p.authMethod === 'app' &&
+        String(p.organizationGitHubAppId) === String(record.id),
+    ).length;
+
+    if (count > 0) {
+      throw new BadRequestException(
+        `Cannot revoke the GitHub App: ${count} connection(s) still use it. Delete those connections first.`,
       );
     }
 

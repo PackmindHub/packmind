@@ -219,7 +219,13 @@ export class GitProvidersController {
   @Get('github/app/status')
   async getGithubAppStatus(
     @Param('orgId') organizationId: OrganizationId,
-  ): Promise<{ hasApp: boolean; appSlug?: string; revokedAt?: Date | null }> {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{
+    hasApp: boolean;
+    appSlug?: string;
+    revokedAt?: Date | null;
+    linkedProviderCount: number;
+  }> {
     this.logger.info(
       'GET /organizations/:orgId/git/providers/github/app/status',
       { organizationId },
@@ -228,6 +234,7 @@ export class GitProvidersController {
     try {
       return await this.gitProvidersService.getGithubAppStatus({
         orgId: organizationId,
+        userId: req.user.userId,
       });
     } catch (error) {
       const errorMessage =
