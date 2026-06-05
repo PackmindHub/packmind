@@ -24,11 +24,14 @@ export class SpaceSettingsPage
 
     // Ark UI's PMCombobox.Item does not propagate ItemText to the option's
     // accessible name, so `getByRole('option', { name })` never matches.
-    // Match by visible text inside the role=option element instead.
+    // Match the role=option element by visible text via a CSS locator,
+    // which is not filtered by Playwright's accessibility heuristics.
+    // Use a longer timeout because the orgUsers query refetches on dialog
+    // mount after page reload and can take several seconds on slower envs.
     const option = this.page
-      .getByRole('option')
+      .locator('[role="option"]')
       .filter({ hasText: displayName });
-    await expect(option).toBeVisible();
+    await expect(option).toBeVisible({ timeout: 15000 });
     await option.click();
   }
 
