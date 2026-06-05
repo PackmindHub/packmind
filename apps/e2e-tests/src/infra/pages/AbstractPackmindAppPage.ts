@@ -37,9 +37,28 @@ export abstract class AbstractPackmindAppPage
   }
 
   async openPackages(): Promise<IPackagesPage> {
-    await this.page
-      .getByTestId(SidebarNavigationDataTestId.PackagesLink)
-      .click();
+    // The Packages link lives under a space's nav section. On org-only
+    // routes (settings/setup/profile) no space is active, so the link is
+    // not rendered in the sidebar — open the default space drawer first
+    // to reveal it.
+    const packagesLink = this.page.getByTestId(
+      SidebarNavigationDataTestId.PackagesLink,
+    );
+
+    if (!(await packagesLink.first().isVisible())) {
+      await this.page
+        .getByTestId(SidebarNavigationDataTestId.DefaultSpaceRow)
+        .click();
+      const openDrawer = this.page.locator(
+        '[role="dialog"][data-state="open"]',
+      );
+      await openDrawer.waitFor({ state: 'visible' });
+      await openDrawer
+        .getByTestId(SidebarNavigationDataTestId.PackagesLink)
+        .click();
+    } else {
+      await packagesLink.click();
+    }
 
     return this.pageFactory.getPackagesPage();
   }
