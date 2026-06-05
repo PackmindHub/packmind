@@ -27,7 +27,7 @@ import {
   createOrganizationGitHubAppId,
 } from '@packmind/types';
 import { InjectGitAdapter } from '../../../shared/HexaInjection';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
@@ -186,10 +186,11 @@ export class GitProvidersService {
       );
     }
 
-    const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
-    if (!appWebUrl) {
+    const configuredAppWebUrl = await Configuration.getConfig('APP_WEB_URL');
+    if (!configuredAppWebUrl) {
       throw new BadRequestException('APP_WEB_URL is not configured');
     }
+    const appWebUrl = removeTrailingSlash(configuredAppWebUrl);
 
     const organization = await this.accountsHexa
       .getAdapter()
