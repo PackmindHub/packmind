@@ -11,11 +11,13 @@ import {
   DeleteItem,
   DeleteItemType,
   FileModification,
+  GitRepo,
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   Marketplace,
   MarketplaceDescriptor,
   MarketplaceDistribution,
+  MarketplaceDistributionId,
   PackmindMarketplaceLock,
   RemovePluginFromMarketplaceJobInput,
   RemovePluginFromMarketplaceJobOutput,
@@ -202,6 +204,16 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
           `[${this.origin}] Plugin "${pluginSlug}" already absent from the sync branch; nothing to commit`,
           { marketplaceDistributionId: input.marketplaceDistributionId },
         );
+        // No new commit this run, but the deletion may already live on
+        // `packmind/sync` from a prior run whose PR-open step transiently
+        // failed. Still ensure the rolling PR so an orphaned branch
+        // self-heals instead of waiting for a manual PR. Opening a PR with
+        // no commits ahead of base is a no-op (the host rejects it) and is
+        // swallowed inside the helper.
+        await this.ensureRollingPullRequest(
+          marketplaceGitRepo,
+          input.marketplaceDistributionId,
+        );
         return;
       }
       throw error;
@@ -211,18 +223,10 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     // existing one). Mirrors the publish job. A PR-call failure after a
     // successful commit is logged but not rolled back: the deletion already
     // landed on `packmind/sync`.
-    try {
-      await this.gitPort.openOrUpdatePullRequest(marketplaceGitRepo, {
-        head: MARKETPLACE_SYNC_BRANCH,
-        title: MARKETPLACE_SYNC_PR_TITLE,
-        body: 'Packmind-managed plugin sync. Successive publishes amend this PR.',
-      });
-    } catch (error) {
-      this.logger.warn(
-        `[${this.origin}] Commit landed but failed to ensure rolling PR for distribution ${input.marketplaceDistributionId}`,
-        { error: getErrorMessage(error) },
-      );
-    }
+    await this.ensureRollingPullRequest(
+      marketplaceGitRepo,
+      input.marketplaceDistributionId,
+    );
 
     this.logger.info(
       `[${this.origin}] Committed removal of plugin "${pluginSlug}" to ${MARKETPLACE_SYNC_BRANCH}`,
@@ -231,6 +235,32 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
         marketplaceId: input.marketplaceId,
       },
     );
+  }
+
+  /**
+   * Ensure the rolling "Packmind sync" PR exists for the marketplace repo.
+   * Idempotent — amends the existing PR if one is open. A failure here is
+   * logged but never rolled back or rethrown: the commit (if any) already
+   * landed on `packmind/sync`, and surfacing the PR is best-effort. Crucially
+   * this is reachable on the `NO_CHANGES_DETECTED` path too, so a branch left
+   * without a PR by a prior failed run self-heals on the next attempt.
+   */
+  private async ensureRollingPullRequest(
+    marketplaceGitRepo: GitRepo,
+    marketplaceDistributionId: MarketplaceDistributionId,
+  ): Promise<void> {
+    try {
+      await this.gitPort.openOrUpdatePullRequest(marketplaceGitRepo, {
+        head: MARKETPLACE_SYNC_BRANCH,
+        title: MARKETPLACE_SYNC_PR_TITLE,
+        body: 'Packmind-managed plugin sync. Successive publishes amend this PR.',
+      });
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to ensure rolling PR for distribution ${marketplaceDistributionId}`,
+        { error: getErrorMessage(error) },
+      );
+    }
   }
 
   private async loadContext(

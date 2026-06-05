@@ -254,6 +254,29 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
         job.runJob('job-1', input, new AbortController()),
       ).resolves.toBeUndefined();
     });
+
+    it('still ensures the rolling PR so a branch orphaned by a prior failed run self-heals', async () => {
+      await job.runJob('job-1', input, new AbortController());
+
+      expect(mockGitPort.openOrUpdatePullRequest).toHaveBeenCalledWith(
+        gitRepo,
+        expect.objectContaining({ head: MARKETPLACE_SYNC_BRANCH }),
+      );
+    });
+  });
+
+  describe('when ensuring the rolling PR fails', () => {
+    beforeEach(() => {
+      mockGitPort.openOrUpdatePullRequest = jest
+        .fn()
+        .mockRejectedValue(new Error('GitHub 502'));
+    });
+
+    it('does not throw (the commit already landed on the sync branch)', async () => {
+      await expect(
+        job.runJob('job-1', input, new AbortController()),
+      ).resolves.toBeUndefined();
+    });
   });
 
   describe('when the git commit fails for another reason', () => {
