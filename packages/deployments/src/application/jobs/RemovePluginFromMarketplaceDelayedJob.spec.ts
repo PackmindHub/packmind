@@ -52,7 +52,9 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     packageId,
     pluginSlug: 'security',
     authorId: userId,
-    status: DistributionStatus.to_be_removed,
+    // The propose flow no longer pre-flips the status: the job receives a
+    // still-`success` row and owns the flip once the sync commit lands.
+    status: DistributionStatus.success,
   });
 
   const marketplace = marketplaceFactory({
@@ -212,7 +214,34 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       );
     });
 
-    it('leaves the distribution status untouched (reconciliation owns terminal removed)', () => {
+    it('flips the distribution to to_be_removed once the sync commit landed', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(marketplaceDistributionId, {
+        status: DistributionStatus.to_be_removed,
+      });
+    });
+
+    it('flips the status only after committing to the sync branch', () => {
+      const commitCallOrder =
+        mockGitPort.commitToGit.mock.invocationCallOrder[0];
+      const statusCallOrder =
+        mockMarketplaceDistributionRepository.updateStatus.mock
+          .invocationCallOrder[0];
+      expect(commitCallOrder).toBeLessThan(statusCallOrder);
+    });
+  });
+
+  describe('when the distribution is not in success state', () => {
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...distribution,
+        status: DistributionStatus.removed,
+      });
+      await job.runJob('job-removed', input, new AbortController());
+    });
+
+    it('does not regress the status (leaves a terminal/pending row untouched)', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).not.toHaveBeenCalled();
@@ -263,6 +292,16 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
         expect.objectContaining({ head: MARKETPLACE_SYNC_BRANCH }),
       );
     });
+
+    it('still flips the status (the deletion already lives on the sync branch)', async () => {
+      await job.runJob('job-1', input, new AbortController());
+
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(marketplaceDistributionId, {
+        status: DistributionStatus.to_be_removed,
+      });
+    });
   });
 
   describe('when ensuring the rolling PR fails', () => {
@@ -288,6 +327,16 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       await expect(
         job.runJob('job-1', input, new AbortController()),
       ).rejects.toThrow('boom');
+    });
+
+    it('leaves the status untouched', async () => {
+      await job
+        .runJob('job-1', input, new AbortController())
+        .catch(() => undefined);
+
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
     });
   });
 

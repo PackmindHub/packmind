@@ -10,6 +10,7 @@ import { GitRepoService } from '@packmind/git';
 import {
   DeleteItem,
   DeleteItemType,
+  DistributionStatus,
   FileModification,
   GitRepo,
   IGitPort,
@@ -56,11 +57,15 @@ const logOrigin = 'RemovePluginFromMarketplaceDelayedJob';
  *  4. Push the updated descriptor + a directory delete for the plugin's files
  *     onto `packmind/sync` via `IGitPort.commitToGit`. `NO_CHANGES_DETECTED`
  *     (plugin already gone) is treated as a no-op.
+ *  5. Once the deletion is on `packmind/sync`, flip the distribution
+ *     `success → to_be_removed`. The status therefore tracks the sync branch:
+ *     it only flips after the deletion PR genuinely exists, never on the bare
+ *     request. The flip is guarded to `success` rows so it never regresses a
+ *     cascade-preflipped row or a terminal `removed` row.
  *
- * The distribution row stays in `to_be_removed`: the terminal `removed`
- * transition is owned by `MarketplaceReconciliationDelayedJob` once the
- * deletion PR merges and the slug disappears from the default-branch
- * descriptor. This job only updates the open PR.
+ * The terminal `removed` transition stays owned by
+ * `MarketplaceReconciliationDelayedJob`, which fires once the deletion PR
+ * merges and the slug disappears from the default-branch descriptor.
  *
  * BullMQ concurrency is intentionally constrained to a single worker — Git
  * operations on the rolling PR must be serialized.
@@ -92,7 +97,7 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
 
   async onFail(jobId: string): Promise<void> {
     this.logger.error(
-      `[${this.origin}] Job ${jobId} failed — distribution remains 'to_be_removed' for retry/reconciliation`,
+      `[${this.origin}] Job ${jobId} failed — distribution keeps its current status (stays 'success' until the sync commit lands) for retry/reconciliation`,
     );
   }
 
@@ -204,12 +209,15 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
           `[${this.origin}] Plugin "${pluginSlug}" already absent from the sync branch; nothing to commit`,
           { marketplaceDistributionId: input.marketplaceDistributionId },
         );
-        // No new commit this run, but the deletion may already live on
-        // `packmind/sync` from a prior run whose PR-open step transiently
-        // failed. Still ensure the rolling PR so an orphaned branch
-        // self-heals instead of waiting for a manual PR. Opening a PR with
-        // no commits ahead of base is a no-op (the host rejects it) and is
-        // swallowed inside the helper.
+        // No new commit this run, but the deletion already lives on
+        // `packmind/sync` (a prior run committed it, or it was never there).
+        // The sync branch reflects the removal either way, so flip the status
+        // just like the committing path does.
+        await this.transitionToToBeRemoved(distribution);
+        // Still ensure the rolling PR so a branch orphaned by a prior run
+        // whose PR-open step transiently failed self-heals instead of waiting
+        // for a manual PR. Opening a PR with no commits ahead of base is a
+        // no-op (the host rejects it) and is swallowed inside the helper.
         await this.ensureRollingPullRequest(
           marketplaceGitRepo,
           input.marketplaceDistributionId,
@@ -218,6 +226,11 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
       }
       throw error;
     }
+
+    // The deletion is now on `packmind/sync` — flip the status so it tracks
+    // the sync branch. A DB failure here rethrows so the job retries (the next
+    // run hits NO_CHANGES_DETECTED and re-attempts the flip).
+    await this.transitionToToBeRemoved(distribution);
 
     // Ensure the rolling "Packmind sync" PR exists (idempotent — amends the
     // existing one). Mirrors the publish job. A PR-call failure after a
@@ -261,6 +274,31 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
         { error: getErrorMessage(error) },
       );
     }
+  }
+
+  /**
+   * Flip `success → to_be_removed` once the deletion lives on `packmind/sync`.
+   * Guarded to `success` rows: a `to_be_removed` row (cascade pre-flip or a
+   * prior run) is already correct, and a terminal `removed` row must never be
+   * regressed. Rethrows on DB failure so the job retries.
+   */
+  private async transitionToToBeRemoved(
+    distribution: MarketplaceDistribution,
+  ): Promise<void> {
+    if (distribution.status !== DistributionStatus.success) {
+      return;
+    }
+    await this.marketplaceDistributionRepository.updateStatus(distribution.id, {
+      status: DistributionStatus.to_be_removed,
+    });
+    this.logger.info(
+      `[${this.origin}] Distribution flipped to to_be_removed after the sync-branch commit`,
+      {
+        marketplaceDistributionId: distribution.id,
+        fromStatus: DistributionStatus.success,
+        toStatus: DistributionStatus.to_be_removed,
+      },
+    );
   }
 
   private async loadContext(
