@@ -5,6 +5,7 @@ import {
   IQueue,
   PackmindEventEmitterService,
   QueueListeners,
+  SSEEventPublisher,
   WorkerListeners,
 } from '@packmind/node-utils';
 import { GitRepoService } from '@packmind/git';
@@ -148,8 +149,17 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       },
     );
 
+    // Hoist marketplace/package out of the try so the failure SSE notification
+    // can still surface human-readable names when loadContext succeeded before
+    // a later step threw.
+    let marketplace: Marketplace | undefined;
+    let pkg: Package | undefined;
+
     try {
-      const { distribution, marketplace, pkg } = await this.loadContext(input);
+      const context = await this.loadContext(input);
+      marketplace = context.marketplace;
+      pkg = context.pkg;
+      const { distribution } = context;
 
       const rendered = await this.renderer({
         marketplace,
@@ -202,6 +212,12 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
             wasNoop: true,
           }),
         );
+        await this.publishCompletedNotification({
+          input,
+          marketplace,
+          pkg,
+          status: 'no_changes',
+        });
         return;
       }
 
@@ -378,6 +394,13 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
               wasNoop: true,
             }),
           );
+          await this.publishCompletedNotification({
+            input,
+            marketplace,
+            pkg,
+            status: 'no_changes',
+            prUrl: healedPrUrl,
+          });
           return;
         }
         throw new PublishJobFailure('other', getErrorMessage(error));
@@ -414,6 +437,13 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           wasNoop: false,
         }),
       );
+      await this.publishCompletedNotification({
+        input,
+        marketplace,
+        pkg,
+        status: 'success',
+        prUrl,
+      });
     } catch (error) {
       const failureReason: PublishFailureReason =
         error instanceof PublishJobFailure ? error.reason : 'other';
@@ -449,6 +479,49 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           packageId: input.packageId,
           failureReason,
         }),
+      );
+      await this.publishCompletedNotification({
+        input,
+        marketplace,
+        pkg,
+        status: 'failure',
+        failureReason,
+      });
+    }
+  }
+
+  /**
+   * Best-effort SSE notification to the user who triggered the publish so the
+   * frontend can surface a terminal-state toast (with the rolling PR URL when
+   * available). Never throws — a failure here must not derail the job's
+   * terminal status which has already been persisted.
+   */
+  private async publishCompletedNotification(params: {
+    input: PublishPluginToMarketplaceJobInput;
+    marketplace: Marketplace | undefined;
+    pkg: Package | undefined;
+    status: 'success' | 'no_changes' | 'failure';
+    prUrl?: string;
+    failureReason?: PublishFailureReason;
+  }): Promise<void> {
+    const { input, marketplace, pkg, status, prUrl, failureReason } = params;
+    try {
+      await SSEEventPublisher.publishMarketplacePublishCompletedEvent({
+        marketplaceDistributionId: input.marketplaceDistributionId,
+        marketplaceId: input.marketplaceId,
+        packageId: input.packageId,
+        pluginSlug: pkg?.slug ?? '',
+        packageName: pkg?.name ?? '',
+        marketplaceName: marketplace?.name ?? '',
+        status,
+        userId: input.userId,
+        prUrl,
+        failureReason,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to publish SSE completion notification for distribution ${input.marketplaceDistributionId}`,
+        { error: getErrorMessage(error) },
       );
     }
   }
