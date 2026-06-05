@@ -1040,6 +1040,7 @@ describe('GitProvidersService', () => {
 
   describe('getGithubAppStatus', () => {
     const orgId = createOrganizationId('org-123');
+    const userId = createUserId('user-456');
 
     const activeApp: OrganizationGitHubApp = {
       id: createOrganizationGitHubAppId('app-1'),
@@ -1059,11 +1060,11 @@ describe('GitProvidersService', () => {
       beforeEach(async () => {
         resolveGithubAppMode.mockResolvedValue('shared');
 
-        result = await service.getGithubAppStatus({ orgId });
+        result = await service.getGithubAppStatus({ orgId, userId });
       });
 
-      it('returns hasApp true without appSlug', () => {
-        expect(result).toEqual({ hasApp: true });
+      it('returns hasApp true with zero linked providers', () => {
+        expect(result).toEqual({ hasApp: true, linkedProviderCount: 0 });
       });
 
       it('does not call getActiveOrganizationGitHubApp', () => {
@@ -1079,33 +1080,83 @@ describe('GitProvidersService', () => {
       });
 
       describe('when active record exists', () => {
-        it('returns hasApp true with appSlug', async () => {
+        describe('and no providers are linked', () => {
+          it('returns hasApp true with appSlug and zero count', async () => {
+            (
+              mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
+            ).mockResolvedValue(activeApp);
+            (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+              providers: [],
+            });
+
+            const result = await service.getGithubAppStatus({ orgId, userId });
+
+            expect(result).toEqual({
+              hasApp: true,
+              appSlug: 'my-packmind-app',
+              revokedAt: null,
+              linkedProviderCount: 0,
+            });
+          });
+        });
+
+        it('counts app-auth providers linked to the active record', async () => {
           (
             mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
           ).mockResolvedValue(activeApp);
-
-          const result = await service.getGithubAppStatus({ orgId });
-
-          expect(result).toEqual({
-            hasApp: true,
-            appSlug: 'my-packmind-app',
-            revokedAt: null,
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [
+              {
+                id: 'prov-linked',
+                source: 'github',
+                authMethod: 'app',
+                organizationId: orgId,
+                url: null,
+                token: null,
+                displayName: '',
+                organizationGitHubAppId: activeApp.id,
+              },
+              {
+                id: 'prov-linked-2',
+                source: 'github',
+                authMethod: 'app',
+                organizationId: orgId,
+                url: null,
+                token: null,
+                displayName: '',
+                organizationGitHubAppId: activeApp.id,
+              },
+              {
+                id: 'prov-token',
+                source: 'github',
+                authMethod: 'token',
+                organizationId: orgId,
+                url: null,
+                token: 'ghp_abc',
+                displayName: '',
+                organizationGitHubAppId: null,
+              },
+            ],
           });
+
+          const result = await service.getGithubAppStatus({ orgId, userId });
+
+          expect(result.linkedProviderCount).toBe(2);
         });
       });
 
       describe('when no active record exists', () => {
-        it('returns hasApp false', async () => {
+        it('returns hasApp false with zero count', async () => {
           (
             mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
           ).mockResolvedValue(null);
 
-          const result = await service.getGithubAppStatus({ orgId });
+          const result = await service.getGithubAppStatus({ orgId, userId });
 
           expect(result).toEqual({
             hasApp: false,
-            appSlug: undefined,
             revokedAt: null,
+            linkedProviderCount: 0,
           });
         });
       });
@@ -1116,13 +1167,17 @@ describe('GitProvidersService', () => {
           (
             mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
           ).mockResolvedValue({ ...activeApp, revokedAt });
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [],
+          });
 
-          const result = await service.getGithubAppStatus({ orgId });
+          const result = await service.getGithubAppStatus({ orgId, userId });
 
           expect(result).toEqual({
             hasApp: true,
             appSlug: 'my-packmind-app',
             revokedAt,
+            linkedProviderCount: 0,
           });
         });
       });
@@ -1151,19 +1206,132 @@ describe('GitProvidersService', () => {
       });
 
       describe('when active record exists', () => {
-        it('calls revokeOrganizationGitHubApp', async () => {
+        beforeEach(() => {
           (
             mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
           ).mockResolvedValue(activeApp);
           (
             mockGitAdapter.revokeOrganizationGitHubApp as jest.Mock
           ).mockResolvedValue(undefined);
+        });
 
-          await service.revokeGithubApp({ orgId, userId });
+        describe('when no linked providers remain', () => {
+          describe('and the provider list is empty', () => {
+            it('calls revokeOrganizationGitHubApp with the org id', async () => {
+              (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+                providers: [],
+              });
 
-          expect(
-            mockGitAdapter.revokeOrganizationGitHubApp,
-          ).toHaveBeenCalledWith(orgId);
+              await service.revokeGithubApp({ orgId, userId });
+
+              expect(
+                mockGitAdapter.revokeOrganizationGitHubApp,
+              ).toHaveBeenCalledWith(orgId);
+            });
+          });
+
+          describe('and providers use token auth method', () => {
+            it('calls revokeOrganizationGitHubApp', async () => {
+              (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+                providers: [
+                  {
+                    id: 'prov-token',
+                    source: 'github',
+                    authMethod: 'token',
+                    organizationId: orgId,
+                    url: null,
+                    token: 'ghp_abc',
+                    displayName: '',
+                    organizationGitHubAppId: null,
+                  },
+                ],
+              });
+
+              await service.revokeGithubApp({ orgId, userId });
+
+              expect(
+                mockGitAdapter.revokeOrganizationGitHubApp,
+              ).toHaveBeenCalledWith(orgId);
+            });
+          });
+
+          describe('and app-auth providers reference a different app id', () => {
+            it('calls revokeOrganizationGitHubApp', async () => {
+              (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+                providers: [
+                  {
+                    id: 'prov-other-app',
+                    source: 'github',
+                    authMethod: 'app',
+                    organizationId: orgId,
+                    url: null,
+                    token: null,
+                    displayName: '',
+                    organizationGitHubAppId:
+                      createOrganizationGitHubAppId('app-other'),
+                  },
+                ],
+              });
+
+              await service.revokeGithubApp({ orgId, userId });
+
+              expect(
+                mockGitAdapter.revokeOrganizationGitHubApp,
+              ).toHaveBeenCalledWith(orgId);
+            });
+          });
+        });
+
+        describe('when linked providers still use the app', () => {
+          it('throws BadRequestException mentioning the count', async () => {
+            (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+              providers: [
+                {
+                  id: 'prov-linked',
+                  source: 'github',
+                  authMethod: 'app',
+                  organizationId: orgId,
+                  url: null,
+                  token: null,
+                  displayName: '',
+                  organizationGitHubAppId: activeApp.id,
+                },
+              ],
+            });
+
+            await expect(
+              service.revokeGithubApp({ orgId, userId }),
+            ).rejects.toThrow(
+              new BadRequestException(
+                'Cannot revoke the GitHub App: 1 connection(s) still use it. Delete those connections first.',
+              ),
+            );
+          });
+
+          it('does not call revokeOrganizationGitHubApp', async () => {
+            (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+              providers: [
+                {
+                  id: 'prov-linked',
+                  source: 'github',
+                  authMethod: 'app',
+                  organizationId: orgId,
+                  url: null,
+                  token: null,
+                  displayName: '',
+                  organizationGitHubAppId: activeApp.id,
+                },
+              ],
+            });
+
+            await service
+              .revokeGithubApp({ orgId, userId })
+              .catch(() => undefined);
+
+            expect(
+              mockGitAdapter.revokeOrganizationGitHubApp,
+            ).not.toHaveBeenCalled();
+          });
         });
       });
 

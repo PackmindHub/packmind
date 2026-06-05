@@ -74,11 +74,13 @@ export class GitProviderGatewayApi
     hasApp: boolean;
     appSlug?: string;
     revokedAt?: Date | null;
+    linkedProviderCount: number;
   }> {
     return await this._api.get<{
       hasApp: boolean;
       appSlug?: string;
       revokedAt?: Date | null;
+      linkedProviderCount: number;
     }>(`${this._endpoint}/${organizationId}/git/providers/github/app/status`);
   }
 
