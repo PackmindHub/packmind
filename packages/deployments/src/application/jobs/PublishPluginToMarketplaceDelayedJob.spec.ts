@@ -692,6 +692,13 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         .calls[0][0] as PluginPublishedEvent;
       expect(emitted.payload.wasNoop).toBe(true);
     });
+
+    it('still ensures the rolling PR so a branch orphaned by a prior failed publish self-heals', () => {
+      expect(mockGitPort.openOrUpdatePullRequest).toHaveBeenCalledWith(
+        gitRepo,
+        expect.objectContaining({ head: MARKETPLACE_SYNC_BRANCH }),
+      );
+    });
   });
 
   describe('when an unmanaged name collision is detected at job time', () => {

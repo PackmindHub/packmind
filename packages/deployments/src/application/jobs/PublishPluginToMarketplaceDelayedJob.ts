@@ -346,11 +346,22 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       } catch (error) {
         if (error instanceof Error && error.message === 'NO_CHANGES_DETECTED') {
+          // No new commit this run, but a prior publish may have landed a
+          // commit on `packmind/sync` whose PR-open step transiently failed,
+          // leaving the branch without a PR. Still ensure the rolling PR so
+          // that orphaned branch self-heals instead of waiting for a manual
+          // PR. Opening a PR with no commits ahead of base is a host-side
+          // no-op and is swallowed inside the helper.
+          const healedPrUrl = await this.ensureRollingPullRequest(
+            marketplaceGitRepo,
+            input.marketplaceDistributionId,
+          );
           await this.marketplaceDistributionRepository.updateStatus(
             input.marketplaceDistributionId,
             {
               status: DistributionStatus.no_changes,
               contentHash,
+              prUrl: healedPrUrl,
             },
           );
           this.eventEmitterService.emit(
@@ -373,23 +384,10 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       // repo (or amends the existing one). The commit already landed on
       // `packmind/sync` above — failing to surface the PR is logged but does
       // not roll back the publish.
-      let prUrl: string | undefined;
-      try {
-        const pr = await this.gitPort.openOrUpdatePullRequest(
-          marketplaceGitRepo,
-          {
-            head: MARKETPLACE_SYNC_BRANCH,
-            title: MARKETPLACE_SYNC_PR_TITLE,
-            body: 'Packmind-managed plugin sync. Successive publishes amend this PR.',
-          },
-        );
-        prUrl = pr.url;
-      } catch (error) {
-        this.logger.warn(
-          `[${this.origin}] Commit landed but failed to ensure rolling PR for distribution ${input.marketplaceDistributionId}`,
-          { error: getErrorMessage(error) },
-        );
-      }
+      const prUrl = await this.ensureRollingPullRequest(
+        marketplaceGitRepo,
+        input.marketplaceDistributionId,
+      );
 
       await this.marketplaceDistributionRepository.updateStatus(
         input.marketplaceDistributionId,
@@ -449,6 +447,37 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           failureReason,
         }),
       );
+    }
+  }
+
+  /**
+   * Ensure the rolling "Packmind sync" PR exists for the marketplace repo and
+   * return its URL. Idempotent — amends the existing PR if one is open. A
+   * failure here is logged but never rethrown: the commit (if any) already
+   * landed on `packmind/sync`, and surfacing the PR is best-effort. Crucially
+   * this is reachable on the `NO_CHANGES_DETECTED` path too, so a branch left
+   * without a PR by a prior failed publish self-heals on the next attempt.
+   */
+  private async ensureRollingPullRequest(
+    marketplaceGitRepo: GitRepo,
+    marketplaceDistributionId: MarketplaceDistributionId,
+  ): Promise<string | undefined> {
+    try {
+      const pr = await this.gitPort.openOrUpdatePullRequest(
+        marketplaceGitRepo,
+        {
+          head: MARKETPLACE_SYNC_BRANCH,
+          title: MARKETPLACE_SYNC_PR_TITLE,
+          body: 'Packmind-managed plugin sync. Successive publishes amend this PR.',
+        },
+      );
+      return pr.url;
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to ensure rolling PR for distribution ${marketplaceDistributionId}`,
+        { error: getErrorMessage(error) },
+      );
+      return undefined;
     }
   }
 
