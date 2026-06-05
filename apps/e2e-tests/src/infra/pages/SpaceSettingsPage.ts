@@ -22,10 +22,12 @@ export class SpaceSettingsPage
     await comboboxInput.click();
     await comboboxInput.fill(displayName);
 
-    const option = this.page.getByRole('option', {
-      name: displayName,
-      exact: true,
-    });
+    // Ark UI's PMCombobox.Item does not propagate ItemText to the option's
+    // accessible name, so `getByRole('option', { name })` never matches.
+    // Match by visible text inside the role=option element instead.
+    const option = this.page
+      .getByRole('option')
+      .filter({ hasText: displayName });
     await expect(option).toBeVisible();
     await option.click();
   }
