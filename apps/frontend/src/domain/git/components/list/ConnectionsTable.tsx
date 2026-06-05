@@ -7,10 +7,18 @@ import {
   PMPortal,
   PMText,
   PMTooltip,
+  PMVStack,
 } from '@packmind/ui';
-import { LuEllipsis, LuPenLine, LuTrash2 } from 'react-icons/lu';
+import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+import { GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
+import { useCheckProviderAuthQuery } from '../../api/queries';
 import { VendorMark } from '../shared/VendorMark';
+import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
+import {
+  deriveConnectionStatus,
+  toStatusBucket,
+} from '../shared/connectionStatus';
 
 interface ConnectionsTableProps {
   connections: GitProviderUI[];
@@ -62,10 +70,11 @@ const TableHeader: React.FC = () => (
     <PMBox flex={1.6} minW={0}>
       Connection
     </PMBox>
+    <PMBox width="160px">Status</PMBox>
     <PMBox width="70px" textAlign="right">
       Repos
     </PMBox>
-    <PMBox width="60px" />
+    <PMBox width="90px" />
   </PMHStack>
 );
 
@@ -82,7 +91,16 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const repoCount = connection.repos?.length ?? 0;
+  const repoCount = new Set(
+    (connection.repos ?? []).map((r) => `${r.owner}/${r.repo}`),
+  ).size;
+  const probe = useCheckProviderAuthQuery(connection.id, {
+    enabled: connection.hasAuth,
+  });
+  const view = deriveConnectionStatus(probe, { hasAuth: connection.hasAuth });
+  const bucket = toStatusBucket(view);
+  const hasDisplayName = connection.displayName.trim().length > 0;
+  const placeholder = vendorPlaceholder(connection.source);
 
   return (
     <PMHStack
@@ -99,6 +117,7 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       data-vendor={connection.source}
       data-url={connection.url ?? ''}
       data-repo-count={repoCount}
+      data-status={bucket}
       gap={3}
       paddingX={4}
       paddingY={3}
@@ -110,12 +129,28 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
     >
       <PMHStack gap={3} flex={1.6} minW={0} align="center">
         <VendorMark vendor={connection.source} size="md" showLabel={false} />
-        <PMBox minW={0} flex={1}>
-          <PMText fontSize="sm" fontWeight="semibold" color="primary" truncate>
-            {connection.url ?? '—'}
+        <PMVStack gap={0.5} align="stretch" minW={0} flex={1}>
+          <PMText
+            as="p"
+            fontSize="sm"
+            fontWeight={hasDisplayName ? 'semibold' : 'normal'}
+            color={hasDisplayName ? 'primary' : 'faded'}
+            fontStyle={hasDisplayName ? 'normal' : 'italic'}
+            truncate
+          >
+            {hasDisplayName ? connection.displayName : placeholder}
           </PMText>
-        </PMBox>
+          {connection.url && (
+            <PMText as="p" fontSize="xs" color="faded" truncate>
+              {connection.url}
+            </PMText>
+          )}
+        </PMVStack>
       </PMHStack>
+
+      <PMBox width="160px">
+        <ConnectionStatusPill view={view} variant="inline" />
+      </PMBox>
 
       <PMText
         width="70px"
@@ -127,7 +162,13 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         {repoCount}
       </PMText>
 
-      <PMHStack width="60px" gap={1} justify="flex-end">
+      <PMHStack width="90px" gap={1} justify="flex-end">
+        <RefreshStatusButton
+          isFetching={probe.isFetching}
+          onClick={() => {
+            void probe.refetch();
+          }}
+        />
         <RowActionsMenu
           onEdit={onEdit}
           onDelete={onDelete}
@@ -137,6 +178,56 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
     </PMHStack>
   );
 };
+
+interface RefreshStatusButtonProps {
+  isFetching: boolean;
+  onClick: () => void;
+}
+
+const RefreshStatusButton: React.FC<RefreshStatusButtonProps> = ({
+  isFetching,
+  onClick,
+}) => (
+  <PMTooltip label={isFetching ? 'Checking…' : 'Refresh status'}>
+    <PMBox
+      as="button"
+      aria-label={isFetching ? 'Checking…' : 'Refresh status'}
+      data-testid="connection-row-refresh"
+      onClick={(e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!isFetching) onClick();
+      }}
+      bg="transparent"
+      border="none"
+      color="text.faded"
+      cursor={isFetching ? 'wait' : 'pointer'}
+      padding={1}
+      borderRadius="sm"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      opacity={isFetching ? 0.6 : 1}
+      _hover={
+        isFetching
+          ? undefined
+          : { color: 'text.primary', bg: 'background.tertiary' }
+      }
+    >
+      <PMIcon
+        fontSize="sm"
+        animation={isFetching ? 'spin 800ms linear infinite' : undefined}
+        css={{
+          '@keyframes spin': {
+            from: { transform: 'rotate(0deg)' },
+            to: { transform: 'rotate(360deg)' },
+          },
+        }}
+      >
+        <LuRefreshCw />
+      </PMIcon>
+    </PMBox>
+  </PMTooltip>
+);
 
 interface RowActionsMenuProps {
   onEdit: () => void;
@@ -240,3 +331,9 @@ const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
     </PMTooltip>
   );
 };
+
+function vendorPlaceholder(vendor: GitProviderVendor): string {
+  if (vendor === 'github') return 'Unnamed GitHub connection';
+  if (vendor === 'gitlab') return 'Unnamed GitLab connection';
+  return 'Unnamed connection';
+}

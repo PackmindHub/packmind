@@ -38,6 +38,7 @@ import {
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
+import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
@@ -66,7 +67,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private accountsPort: IAccountsPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
   private gitDelayedJobs: IGitDelayedJobs | null = null;
-  private edition: 'cloud' | 'oss' = 'oss';
+  private mode: GithubAppMode = 'on-prem';
 
   // Use cases - all initialized in initialize()
   private _addGitProvider!: AddGitProviderUseCase;
@@ -98,22 +99,22 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   }
 
   /**
-   * Set the edition for use in credential validation.
+   * Set the GitHub App hosting mode for use in credential validation.
    * Must be called before use cases that validate credentials are invoked.
    */
-  public setEdition(edition: 'cloud' | 'oss'): void {
-    this.edition = edition;
-    // Recreate affected use cases with the new edition
+  public setMode(mode: GithubAppMode): void {
+    this.mode = mode;
+    // Recreate affected use cases with the new mode
     if (this.accountsPort) {
       this._addGitProvider = new AddGitProviderUseCase(
         this.gitServices.getGitProviderService(),
         this.accountsPort,
-        this.edition,
+        this.mode,
       );
       this._updateGitProvider = new UpdateGitProviderUseCase(
         this.gitServices.getGitProviderService(),
         this.accountsPort,
-        this.edition,
+        this.mode,
       );
     }
   }
@@ -148,7 +149,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._addGitProvider = new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
-      this.edition,
+      this.mode,
     );
 
     this._addGitRepo = new AddGitRepoUseCase(
@@ -173,7 +174,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._updateGitProvider = new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
-      this.edition,
+      this.mode,
     );
 
     // Use cases that don't depend on external ports

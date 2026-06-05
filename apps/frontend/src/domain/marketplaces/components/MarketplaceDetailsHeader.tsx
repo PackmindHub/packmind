@@ -1,29 +1,38 @@
 import {
   PMAlert,
   PMBox,
+  PMButton,
   PMHStack,
   PMHeading,
+  PMIcon,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { MarketplaceListItem } from '@packmind/types';
+import type { MarketplaceListItem, OrganizationId } from '@packmind/types';
+import { LuRefreshCw } from 'react-icons/lu';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
+import { useSyncMarketplaceNow } from '../api/queries';
 
 export interface MarketplaceDetailsHeaderProps {
+  organizationId: OrganizationId | string;
   marketplace: MarketplaceListItem;
 }
 
 /**
  * Header block for the marketplace details route. Shows the marketplace name,
- * its vendor, and the current `MarketplaceState` badge. When the marketplace is
- * in drift, an inline panel lists the offending plugin slugs (per AC11).
+ * its vendor, the current `MarketplaceState` badge, and a "Sync now" action
+ * that triggers an immediate reconciliation (so a merged deletion PR is
+ * reflected without waiting for the next scheduled sweep). When the marketplace
+ * is in drift, an inline panel lists the offending plugin slugs (per AC11).
  */
 export const MarketplaceDetailsHeader = ({
+  organizationId,
   marketplace,
 }: Readonly<MarketplaceDetailsHeaderProps>) => {
   const driftedSlugs = marketplace.descriptor?.driftedPluginSlugs ?? [];
   const showDriftPanel =
     marketplace.state === 'drift' && driftedSlugs.length > 0;
+  const syncMarketplace = useSyncMarketplaceNow(organizationId, marketplace.id);
 
   return (
     <PMVStack align="stretch" gap={3}>
@@ -34,10 +43,22 @@ export const MarketplaceDetailsHeader = ({
             {vendorLabel(marketplace.vendor)}
           </PMText>
         </PMVStack>
-        <MarketplaceStateBadge
-          state={marketplace.state}
-          driftedPluginSlugs={driftedSlugs}
-        />
+        <PMHStack align="center" gap={3}>
+          <MarketplaceStateBadge
+            state={marketplace.state}
+            driftedPluginSlugs={driftedSlugs}
+          />
+          <PMButton
+            variant="secondary"
+            size="sm"
+            loading={syncMarketplace.isPending}
+            onClick={() => syncMarketplace.mutate()}
+            data-testid="marketplace-sync-now"
+          >
+            <PMIcon as={LuRefreshCw} aria-hidden="true" />
+            Sync now
+          </PMButton>
+        </PMHStack>
       </PMHStack>
       {showDriftPanel && (
         <PMAlert.Root status="warning" data-testid="marketplace-drift-panel">

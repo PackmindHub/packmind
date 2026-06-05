@@ -19,11 +19,11 @@ import {
 } from '../../api/queries/GitProviderQueries';
 import { GET_GIT_PROVIDERS_KEY } from '../../api/queryKeys';
 
-type Edition = 'cloud' | 'oss';
+type GithubAppMode = 'on-prem' | 'shared';
 
 type GitHubAppAuthBlockProps = {
   organizationId: OrganizationId;
-  edition: Edition;
+  githubAppMode: GithubAppMode;
   onInstalled: () => void;
 };
 
@@ -35,7 +35,7 @@ type AppInstalledMessage = {
 
 export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   organizationId,
-  edition,
+  githubAppMode,
   onInstalled,
 }) => {
   const queryClient = useQueryClient();
@@ -104,7 +104,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   };
 
   const needsRegistration =
-    edition === 'oss' && statusQuery.data?.hasApp === false;
+    githubAppMode === 'on-prem' && statusQuery.data?.hasApp === false;
   const installError = popupError ?? installUrlMutation.error?.message ?? null;
   const manifestError = manifestMutation.error?.message ?? null;
 
@@ -133,14 +133,14 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
         teams use this.
       </PMText>
 
-      {edition === 'oss' && statusQuery.isLoading && (
+      {githubAppMode === 'on-prem' && statusQuery.isLoading && (
         <PMVStack align="stretch" gap={2}>
           <PMSkeleton h={9} w="full" rounded="md" />
           <PMSkeleton h={3} w="60%" rounded="sm" />
         </PMVStack>
       )}
 
-      {edition === 'oss' && statusQuery.isError && (
+      {githubAppMode === 'on-prem' && statusQuery.isError && (
         <PMAlert.Root status="error">
           <PMAlert.Indicator />
           <PMAlert.Content>
@@ -151,7 +151,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
         </PMAlert.Root>
       )}
 
-      {edition === 'oss' && statusQuery.data && (
+      {githubAppMode === 'on-prem' && statusQuery.data && (
         <EditionStepIndicator
           registered={statusQuery.data.hasApp === true}
           installing={installUrlMutation.isPending}

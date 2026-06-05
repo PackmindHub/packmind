@@ -82,17 +82,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     vendor: 'anthropic',
     name: 'ACME Marketplace',
     plugins: [{ slug: 'security', name: 'Security' }],
-    packmindLock: {
-      schemaVersion: 1,
-      plugins: {
-        security: {
-          version: '0.1.0',
-          contentHash: 'hash',
-          lastPublishedAt: '2026-06-01T10:00:00.000Z',
-          lastPublishedBy: userId,
-        },
-      },
-    },
     raw: { name: 'ACME Marketplace', plugins: [{ slug: 'security' }] },
   };
 
@@ -123,9 +112,28 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
 
     mockGitPort = {
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
-      getFileFromRepo: jest
-        .fn()
-        .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return {
+            sha: 'lock-sha',
+            content: JSON.stringify({
+              schemaVersion: 1,
+              plugins: {
+                security: {
+                  version: '0.1.0',
+                  contentHash: 'hash',
+                  lastPublishedAt: '2026-06-01T10:00:00.000Z',
+                  lastPublishedBy: userId,
+                },
+              },
+            }),
+          };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      }),
+      // By default the rolling sync branch already exists from a prior
+      // publish so the removal reads from it.
+      checkBranchExists: jest.fn().mockResolvedValue(true),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest
         .fn()
@@ -208,6 +216,29 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the rolling sync branch does not yet exist', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(false);
+      await job.runJob('job-no-sync', input, new AbortController());
+    });
+
+    it('reads the descriptor from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('reads the packmind-lock.json from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        gitRepo.branch,
+      );
     });
   });
 

@@ -40,6 +40,33 @@ interface StubRemovalAdapter {
   ): void;
 }
 
+/**
+ * Polls `predicate` until it returns true or the timeout elapses.
+ *
+ * The package-delete cascade is dispatched fire-and-forget: the use case emits
+ * `PackagesDeletedEvent` via a synchronous event emit whose async handler then
+ * settles on its own microtask chain. A deterministic test must therefore wait
+ * on the observable outcome, not a guessed sleep duration.
+ */
+async function waitFor(
+  predicate: () => Promise<boolean> | boolean,
+  {
+    timeoutMs = 2000,
+    intervalMs = 10,
+  }: { timeoutMs?: number; intervalMs?: number } = {},
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (await predicate()) {
+      return;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`waitFor: condition not met within ${timeoutMs}ms`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
 class StubRemovalListener extends PackmindListener<StubRemovalAdapter> {
   protected registerHandlers(): void {
     this.subscribe(
@@ -108,6 +135,9 @@ describe('Marketplace plugin removal: package-delete cascade', () => {
           cancelRecurring: () => Promise<void>;
         };
       };
+      getRemovePluginFromMarketplaceJob: () => {
+        addJob: () => Promise<string>;
+      };
     };
     jest
       .spyOn(
@@ -124,6 +154,16 @@ describe('Marketplace plugin removal: package-delete cascade', () => {
         'cancelRecurring',
       )
       .mockResolvedValue(undefined);
+
+    // Stub the Git side-effect job the cascade enqueues per flipped
+    // distribution. Under the integration-test harness `addJob` runs the job
+    // inline (SyncJob), which would fire real, unmocked git operations
+    // mid-cascade — slow, non-deterministic, and prone to leaking past
+    // teardown. This test only asserts the DB transition + event emission, so
+    // stub it to a no-op (mirrors the reconciliation-job stub above).
+    jest
+      .spyOn(adapterAny.getRemovePluginFromMarketplaceJob(), 'addJob')
+      .mockResolvedValue('mock-removal-job-id');
 
     const linkA = await testApp.deploymentsHexa.getAdapter().linkMarketplace({
       ...dataFactory.packmindCommand(),
@@ -204,12 +244,25 @@ describe('Marketplace plugin removal: package-delete cascade', () => {
       packageIds: [pkg.id],
     });
 
-    // Give the asynchronous cascade listener time to settle. The
-    // listener subscribes via PackmindEventEmitterService.emit, which
-    // is synchronous in this codebase, but the handler itself is
-    // async (multiple awaits) so we drain microtasks via a longer
-    // yield.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Wait for the fire-and-forget cascade to settle on its observable
+    // outcome — both seeded distributions flipped to `to_be_removed` and one
+    // removal event emitted per distribution — rather than guessing a sleep
+    // duration. The iteration order of the two distributions is not
+    // deterministic, so a fixed sleep would race whichever row settles last.
+    const cascadeDistRepo = fixture.datasource.getRepository(
+      MarketplaceDistributionSchema,
+    );
+    await waitFor(async () => {
+      const [rowA, rowB] = await Promise.all([
+        cascadeDistRepo.findOne({ where: { id: distributionRowA.id } }),
+        cascadeDistRepo.findOne({ where: { id: distributionRowB.id } }),
+      ]);
+      return (
+        rowA?.status === DistributionStatus.to_be_removed &&
+        rowB?.status === DistributionStatus.to_be_removed &&
+        stubAdapter.onMarketplacePluginRemovalInitiated.mock.calls.length === 2
+      );
+    });
   });
 
   afterEach(async () => {

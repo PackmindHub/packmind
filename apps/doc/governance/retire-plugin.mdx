@@ -15,8 +15,9 @@ When a published plugin becomes deprecated or no longer fits your marketplace, y
 Retiring a plugin mirrors how you published it:
 
 1. You mark the plugin for removal from the Packmind app.
-2. You open a deletion pull request in the marketplace repository using the Packmind CLI.
-3. Once the pull request is merged, Packmind confirms the removal and updates the plugin status to **Removed**.
+2. Packmind automatically opens (or amends) the deletion pull request in the marketplace repository on your behalf — the same governed flow used to publish.
+3. You review and merge that pull request.
+4. Once the pull request is merged, Packmind confirms the removal and updates the plugin status to **Removed**.
 
 While the deletion pull request is in flight, the plugin appears as **To be removed** in the marketplace details view, so the whole team can see what's pending.
 
@@ -28,26 +29,22 @@ While the deletion pull request is in flight, the plugin appears as **To be remo
 4. Click the **Remove** action on that row.
 5. Confirm the removal in the dialog.
 
-The plugin status changes to **To be removed**. A tooltip on the badge reminds you of the next step.
+The plugin status changes to **To be removed**, and Packmind immediately opens the deletion pull request on the marketplace repository.
 
 <Note>
   Only organization administrators can mark a plugin for removal or cancel a
   pending removal.
 </Note>
 
-## Open the deletion pull request
+## Review and merge the deletion pull request
 
-After marking a plugin for removal, you finish the retirement locally in your marketplace clone:
+Marking a plugin for removal automatically opens (or amends) the **Packmind sync** pull request on the marketplace repository — the same rolling pull request Packmind uses to publish. The pull request removes the plugin's entry from the marketplace descriptor and deletes its rendered files. You don't need to run any CLI command.
 
-1. Open a terminal in your local clone of the marketplace repository.
-2. Run the Packmind CLI to remove the plugin files:
+To finish the retirement:
 
-   ```bash
-   packmind-cli plugins delete <plugin-slug>
-   ```
-
-3. Commit the changes and open a pull request against the marketplace's default branch.
-4. Ask reviewers to merge the pull request as usual.
+1. Open the **Packmind sync** pull request in the marketplace repository.
+2. Review the removal alongside any other pending Packmind changes.
+3. Merge the pull request against the marketplace's default branch.
 
 Once the pull request is merged, the next marketplace reconciliation run detects that the plugin is gone from the marketplace descriptor and transitions the distribution to **Removed**.
 
@@ -60,13 +57,13 @@ If the deletion pull request is abandoned or you change your mind, you can rever
 3. Click **Cancel removal** on the row.
 4. Confirm the action.
 
-The plugin returns to its previous **Published** state. If you had already started the deletion pull request locally, close it (or discard the local changes) so the marketplace stays consistent with Packmind's intent.
+The plugin returns to its previous **Published** state in Packmind. If the deletion pull request had already been opened, make sure the plugin's removal is not merged — or re-publish the plugin afterwards to restore it on the marketplace.
 
 ## Retire a plugin when deleting its Packmind package
 
-When you delete a Packmind package that is already published to one or more marketplaces, Packmind automatically marks every live distribution of that package as **To be removed** across all affected marketplaces. You don't need to visit each marketplace one by one.
+When you delete a Packmind package that is already published to one or more marketplaces, Packmind automatically marks every live distribution of that package as **To be removed** across all affected marketplaces and opens the deletion pull request on each one. You don't need to visit each marketplace one by one.
 
-You still need to finish each retirement by opening the deletion pull request in every affected marketplace, as described above.
+You still need to finish each retirement by reviewing and merging the deletion pull request in every affected marketplace, as described above.
 
 ## Drift detection
 
@@ -91,4 +88,4 @@ A plugin that is currently in **To be removed** state never triggers drift — P
 
 - [Distribute artifacts](/governance/distribution) — publish packages to repositories and marketplaces
 - [Git repository connection](/governance/git-repository-connection) — connect the marketplace repository to Packmind
-- [Packmind CLI](/tools/cli) — reference for the `packmind-cli plugins delete` command
+- [Packmind CLI](/tools/cli) — reference for the `packmind-cli plugins delete` command, which removes a rendered plugin from a local workspace clone

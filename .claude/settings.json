@@ -2,5 +2,20 @@
   "statusLine": {
     "type": "command",
     "command": "python3 .claude/statusline.py"
+  },
+  "extraKnownMarketplaces": {
+    "packmind-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "PackmindHub/packmind-marketplace"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "backend@packmind-marketplace": true,
+    "cli@packmind-marketplace": true,
+    "frontend@packmind-marketplace": true,
+    "packmind@packmind-marketplace": true
   }
 }

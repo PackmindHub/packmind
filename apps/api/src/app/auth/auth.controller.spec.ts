@@ -832,7 +832,7 @@ describe('AuthController', () => {
   describe('GET /auth/me - edition flag', () => {
     const mockRequest = {
       cookies: { auth_token: 'valid-token' },
-    } as Request;
+    } as unknown as Request;
     const mockResponseWithStatus = {
       status: jest.fn().mockReturnThis(),
     } as unknown as Response;
@@ -852,6 +852,7 @@ describe('AuthController', () => {
             name: 'Test Org',
             slug: 'test-org',
             role: 'admin' as const,
+            githubAppMode: 'shared' as const,
           },
           authenticated: true,
         });

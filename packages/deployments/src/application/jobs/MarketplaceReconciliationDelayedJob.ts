@@ -161,6 +161,24 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     );
   }
 
+  /**
+   * Run a reconciliation sweep synchronously, outside the BullMQ worker, and
+   * return the resulting state. Backs the member-triggered "Sync now" action so
+   * the caller gets the fresh marketplace state in-band instead of waiting for
+   * the next cron tick. Reuses the exact `runJob` logic — no duplication. The
+   * abort controller is unused by `runJob`; a fresh one keeps the signature
+   * satisfied.
+   */
+  async reconcileNow(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceReconciliationJobOutput> {
+    return this.runJob(
+      `manual-reconcile-${marketplaceId}`,
+      { marketplaceId },
+      new AbortController(),
+    );
+  }
+
   async runJob(
     jobId: string,
     input: MarketplaceReconciliationJobInput,

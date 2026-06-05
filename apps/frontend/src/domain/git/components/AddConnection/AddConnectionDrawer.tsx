@@ -35,6 +35,8 @@ import { extractErrorMessage } from '../../utils/errorUtils';
 import { GitHubAppAuthBlock } from './GitHubAppAuthBlock';
 import { PatAuthBlock, SupportedVendor } from './PatAuthBlock';
 
+const DISPLAY_NAME_MAX_LENGTH = 64;
+
 type AddConnectionDrawerProps = {
   organizationId: OrganizationId;
   open: boolean;
@@ -65,7 +67,10 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
 }) => {
   const { data: me } = useGetMeQuery();
   const userEmail = me?.authenticated ? me.user?.email : null;
-  const edition: 'cloud' | 'oss' = me?.edition ?? 'oss';
+  const githubAppMode: 'on-prem' | 'shared' =
+    me?.authenticated && me.organization
+      ? me.organization.githubAppMode
+      : 'on-prem';
   const githubAppEnabled = isFeatureFlagEnabled({
     featureKeys: [GITHUB_APP_FEATURE_KEY],
     featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
@@ -78,6 +83,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
   );
   const [authMethod, setAuthMethod] = useState<'app' | 'pat'>('app');
   const [patValue, setPatValue] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [patDisclosureOpen, setPatDisclosureOpen] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [patError, setPatError] = useState<string | null>(null);
@@ -92,6 +98,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
     setInstanceUrl(VENDOR_DEFAULTS.github.url);
     setAuthMethod('app');
     setPatValue('');
+    setDisplayName('');
     setPatDisclosureOpen(false);
     setUrlError(null);
     setPatError(null);
@@ -171,6 +178,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
         source: vendor,
         token: patValue.trim(),
         url: instanceUrl.trim(),
+        displayName: displayName.trim(),
       };
       const provider = await createMutation.mutateAsync({ data });
       onSuccess?.(provider);
@@ -188,6 +196,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
     patValue,
     vendor,
     instanceUrl,
+    displayName,
     createMutation,
     onSuccess,
     onClose,
@@ -245,6 +254,12 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
                   onBlur={validateUrl}
                 />
 
+                <DisplayNameSection
+                  vendor={vendor}
+                  value={displayName}
+                  onChange={setDisplayName}
+                />
+
                 <SectionDivider />
 
                 <PMVStack gap={3} align="stretch">
@@ -271,7 +286,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
                   {showAppPath && showAppBlock && (
                     <GitHubAppAuthBlock
                       organizationId={organizationId}
-                      edition={edition}
+                      githubAppMode={githubAppMode}
                       onInstalled={handleAppInstalled}
                     />
                   )}
@@ -415,6 +430,41 @@ const UrlSection: React.FC<UrlSectionProps> = ({
         ) : (
           <PMField.HelperText>{helper}</PMField.HelperText>
         )}
+      </PMField.Root>
+    </PMVStack>
+  );
+};
+
+type DisplayNameSectionProps = {
+  vendor: SupportedVendor;
+  value: string;
+  onChange: (next: string) => void;
+};
+
+const DisplayNameSection: React.FC<DisplayNameSectionProps> = ({
+  vendor,
+  value,
+  onChange,
+}) => {
+  const vendorLabel = VENDOR_DEFAULTS[vendor].label;
+  return (
+    <PMVStack gap={2} align="stretch">
+      <SectionLabel>Display name</SectionLabel>
+      <PMField.Root>
+        <PMInput
+          size="sm"
+          value={value}
+          placeholder={`e.g. Production ${vendorLabel}`}
+          onChange={(e) =>
+            onChange(e.target.value.slice(0, DISPLAY_NAME_MAX_LENGTH))
+          }
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
+        />
+        <PMField.HelperText>
+          {`Optional. Leave blank and we'll call it "Unnamed ${vendorLabel} connection".`}
+        </PMField.HelperText>
       </PMField.Root>
     </PMVStack>
   );

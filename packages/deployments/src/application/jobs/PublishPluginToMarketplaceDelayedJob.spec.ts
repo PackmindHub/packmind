@@ -13,6 +13,7 @@ import {
   createUserId,
   DistributionStatus,
   GitCommit,
+  GitProviderVendors,
   GitRepo,
   IGitPort,
   MarketplaceDescriptor,
@@ -155,14 +156,35 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
 
     mockGitPort = {
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
-      getFileFromRepo: jest
-        .fn()
-        .mockResolvedValue({ sha: 'sha-1', content: '{}' }),
+      // By default the descriptor is served as a minimal valid JSON and the
+      // packmind-lock.json file is reported as missing — first-publish path.
+      getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return null;
+        }
+        return { sha: 'sha-1', content: '{}' };
+      }),
+      // First-publish ever: the rolling sync branch doesn't exist yet, so
+      // the job reads descriptor + lock from the marketplace's default
+      // branch and the resolver returns that branch.
+      checkBranchExists: jest.fn().mockResolvedValue(false),
       createBranchFromBase: jest.fn().mockResolvedValue(undefined),
       openOrUpdatePullRequest: jest.fn().mockResolvedValue({
         url: 'https://github.com/acme/plugins/pull/1',
         number: 1,
         wasCreated: true,
+      }),
+      listProviders: jest.fn().mockResolvedValue({
+        providers: [
+          {
+            id: gitProviderId,
+            source: GitProviderVendors.github,
+            organizationId,
+            url: 'https://api.github.com',
+            authMethod: 'token',
+            hasAuth: true,
+          },
+        ],
       }),
     } as unknown as jest.Mocked<IGitPort>;
 
@@ -208,6 +230,98 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         ]),
         MARKETPLACE_SYNC_PR_TITLE,
       );
+    });
+
+    it('includes the packmind-lock.json file at the repo root in the commit', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      expect(lockFile).toBeDefined();
+    });
+
+    it('writes the lock entry with the expected version and contentHash', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      const lock = JSON.parse(lockFile?.content ?? '{}');
+      expect(lock.plugins.security).toMatchObject({
+        version: '0.1.0',
+        contentHash: expect.any(String),
+        lastPublishedBy: userId,
+        lastPublishedAt: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
+        ),
+      });
+    });
+
+    it('writes a lock containing exactly one plugin slug on first publish', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const lockFile = committedFiles.find(
+        (f) => f.path === 'packmind-lock.json',
+      );
+      const lock = JSON.parse(lockFile?.content ?? '{}');
+      expect(Object.keys(lock.plugins)).toEqual(['security']);
+    });
+
+    it('does not embed packmindLock inside the descriptor commit', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const descriptorCommit = committedFiles.find(
+        (f) => f.path === '.claude-plugin/marketplace.json',
+      );
+      const parsed = JSON.parse(descriptorCommit?.content ?? '{}');
+      expect(parsed.packmindLock).toBeUndefined();
+    });
+
+    describe('the plugin entry written into the descriptor', () => {
+      let pluginEntry: {
+        slug?: string;
+        name?: string;
+        version?: string;
+        source?: { source?: string; url?: string; path?: string };
+      };
+
+      beforeEach(() => {
+        const committedFiles = mockGitPort.commitToGit.mock
+          .calls[0][1] as Array<{
+          path: string;
+          content: string;
+        }>;
+        const descriptorCommit = committedFiles.find(
+          (f) => f.path === '.claude-plugin/marketplace.json',
+        );
+        const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+          plugins: Array<typeof pluginEntry>;
+        };
+        pluginEntry = parsed.plugins.find((p) => p.slug === 'security') ?? {};
+      });
+
+      it('carries a git-subdir source block', () => {
+        expect(pluginEntry.source?.source).toBe('git-subdir');
+      });
+
+      it('points the source url at the marketplace HTTPS clone URL', () => {
+        expect(pluginEntry.source?.url).toBe(
+          'https://github.com/acme/plugins.git',
+        );
+      });
+
+      it('targets the plugins/{slug} subdirectory in the source path', () => {
+        expect(pluginEntry.source?.path).toBe('plugins/security');
+      });
     });
 
     it('ensures the rolling-PR branch exists before committing', () => {
@@ -280,6 +394,139 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         expect(emitted.payload.prUrl).toBe(
           'https://github.com/acme/plugins/pull/1',
         );
+      });
+    });
+  });
+
+  describe('when the rolling sync branch does not yet exist', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(false);
+      await job.runJob('job-no-sync', input, new AbortController());
+    });
+
+    it('reads the descriptor from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('reads the packmind-lock.json from the marketplace default branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        gitRepo.branch,
+      );
+    });
+
+    it('probes the rolling sync branch before fetching the descriptor', () => {
+      const checkOrder =
+        mockGitPort.checkBranchExists.mock.invocationCallOrder[0];
+      const fetchOrder =
+        mockGitPort.getFileFromRepo.mock.invocationCallOrder[0];
+      expect(checkOrder).toBeLessThan(fetchOrder);
+    });
+
+    it('creates the sync branch only after reading descriptor + lock', () => {
+      const fetchOrder = Math.max(
+        ...mockGitPort.getFileFromRepo.mock.invocationCallOrder,
+      );
+      const branchOrder =
+        mockGitPort.createBranchFromBase.mock.invocationCallOrder[0];
+      expect(fetchOrder).toBeLessThan(branchOrder);
+    });
+  });
+
+  describe('when the rolling sync branch already exists', () => {
+    beforeEach(async () => {
+      mockGitPort.checkBranchExists.mockResolvedValue(true);
+      await job.runJob('job-sync-exists', input, new AbortController());
+    });
+
+    it('reads the descriptor from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        '.claude-plugin/marketplace.json',
+        MARKETPLACE_SYNC_BRANCH,
+      );
+    });
+
+    it('reads the packmind-lock.json from the rolling sync branch', () => {
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
+        gitRepo,
+        'packmind-lock.json',
+        MARKETPLACE_SYNC_BRANCH,
+      );
+    });
+  });
+
+  describe('on republish over an existing managed plugin entry', () => {
+    beforeEach(async () => {
+      // Simulate the descriptor already containing the managed plugin from a
+      // previous publish — the mutator must rewrite (not duplicate) the entry
+      // and keep the source block populated.
+      mockParserRegistry.parse.mockReturnValue({
+        ...descriptor,
+        plugins: [
+          {
+            slug: 'security',
+            name: 'Security',
+            version: '0.0.1',
+            source: {
+              source: 'git-subdir',
+              url: 'https://github.com/acme/plugins.git',
+              path: 'plugins/security',
+            },
+          },
+        ],
+      });
+
+      // Simulate the standalone packmind-lock.json having the slug listed
+      // under `plugins` so the collision check classifies the entry as
+      // Packmind-managed (and therefore not a name conflict).
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return {
+            sha: 'lock-sha',
+            content: JSON.stringify({
+              schemaVersion: 1,
+              plugins: {
+                security: {
+                  version: '0.0.1',
+                  contentHash: 'old-hash',
+                  lastPublishedAt: new Date().toISOString(),
+                  lastPublishedBy: userId,
+                },
+              },
+            }),
+          };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      });
+
+      await job.runJob('job-republish', input, new AbortController());
+    });
+
+    it('still writes a complete git-subdir source block on the entry', () => {
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const descriptorCommit = committedFiles.find(
+        (f) => f.path === '.claude-plugin/marketplace.json',
+      );
+      const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+        plugins: Array<{
+          slug: string;
+          source?: { source?: string; url?: string; path?: string };
+        }>;
+      };
+      const entry = parsed.plugins.find((p) => p.slug === 'security');
+      expect(entry?.source).toEqual({
+        source: 'git-subdir',
+        url: 'https://github.com/acme/plugins.git',
+        path: 'plugins/security',
       });
     });
   });
@@ -483,6 +730,30 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         expect.objectContaining({
           status: DistributionStatus.failure,
           failureReason: 'other',
+        }),
+      );
+    });
+  });
+
+  describe('when packmind-lock.json is malformed', () => {
+    beforeEach(async () => {
+      mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) => {
+        if (path === 'packmind-lock.json') {
+          return { sha: 'sha-lock', content: 'not-valid-json' };
+        }
+        return { sha: 'sha-1', content: '{}' };
+      });
+      await job.runJob('job-lock-malformed', input, new AbortController());
+    });
+
+    it('records failure with failureReason=descriptor_missing', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          status: DistributionStatus.failure,
+          failureReason: 'descriptor_missing',
         }),
       );
     });

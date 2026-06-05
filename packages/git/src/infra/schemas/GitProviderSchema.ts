@@ -46,6 +46,12 @@ export const GitProviderSchema = new EntitySchema<
       length: 16,
       default: 'token',
     },
+    displayName: {
+      name: 'display_name',
+      type: 'varchar',
+      length: 64,
+      default: '',
+    },
     appInstallationId: {
       name: 'app_installation_id',
       type: 'bigint',

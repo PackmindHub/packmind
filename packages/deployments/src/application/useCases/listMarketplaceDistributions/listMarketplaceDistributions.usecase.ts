@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  DistributionStatus,
   IAccountsPort,
   IListMarketplaceDistributionsUseCase,
   ListMarketplaceDistributionsCommand,
@@ -28,7 +29,10 @@ const origin = 'ListMarketplaceDistributionsUseCase';
  * Flow:
  *  1. Validate the marketplace belongs to the caller's organization.
  *     Miss → `MarketplaceNotFoundError`.
- *  2. Load every (non-soft-deleted) distribution targeting the marketplace.
+ *  2. Load every (non-soft-deleted) distribution targeting the marketplace,
+ *     excluding terminal `removed` rows — once a plugin's deletion has landed
+ *     in the repo it is no longer "on" the marketplace, so it drops out of the
+ *     list.
  *  3. Hydrate `packageName` per row via `PackageService.findById`. Calls are
  *     de-duplicated per `packageId`.
  *  4. Hydrate `authorName` per row via `IAccountsPort.getUserById`. Calls are
@@ -69,10 +73,17 @@ export class ListMarketplaceDistributionsUseCase
       throw new MarketplaceNotFoundError(marketplaceId);
     }
 
-    const distributions =
+    // Exclude terminal `removed` rows: a plugin whose deletion has landed in
+    // the repo is no longer part of the marketplace and must not appear in the
+    // list (it lingers as `to_be_removed` only until reconciliation confirms
+    // the merge).
+    const distributions = (
       await this.marketplaceDistributionRepository.findByMarketplaceId(
         marketplaceId,
-      );
+      )
+    ).filter(
+      (distribution) => distribution.status !== DistributionStatus.removed,
+    );
     if (distributions.length === 0) {
       return [];
     }

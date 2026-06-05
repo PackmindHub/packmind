@@ -72,7 +72,12 @@ export default function MarketplaceDetailsRouteModule() {
       subtitle="Manage the plugin distributions published to this marketplace."
     >
       <PMVStack align="stretch" gap={6}>
-        {marketplace && <MarketplaceDetailsHeader marketplace={marketplace} />}
+        {marketplace && (
+          <MarketplaceDetailsHeader
+            organizationId={orgId}
+            marketplace={marketplace}
+          />
+        )}
         <PMBox>
           <MarketplaceDistributionsTable
             organizationId={orgId}

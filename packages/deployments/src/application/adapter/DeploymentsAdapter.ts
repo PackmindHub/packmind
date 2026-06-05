@@ -13,6 +13,8 @@ import {
   ListMarketplaceDistributionsResponse,
   MarkPluginForRemovalCommand,
   MarkPluginForRemovalResponse,
+  SyncMarketplaceNowCommand,
+  SyncMarketplaceNowResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -147,6 +149,7 @@ import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listM
 import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
 import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
 import { MarkPluginForRemovalUseCase } from '../useCases/markPluginForRemoval';
+import { SyncMarketplaceNowUseCase } from '../useCases/syncMarketplaceNow';
 import { PublishPackageOnMarketplaceUseCase } from '../useCases/publishPackageOnMarketplace';
 import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
 import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
@@ -242,6 +245,7 @@ export class DeploymentsAdapter
   private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
   private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
   private _cancelPluginRemovalUseCase!: CancelPluginRemovalUseCase;
+  private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
   private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
 
   constructor(
@@ -671,6 +675,14 @@ export class DeploymentsAdapter
     this._cancelPluginRemovalUseCase = new CancelPluginRemovalUseCase(
       this.marketplaceRepository,
       this.marketplaceDistributionRepository,
+      this.accountsPort,
+    );
+
+    // On-demand "Sync now" reconciliation (member-scoped). Reuses the
+    // reconciliation job so a manual refresh runs the same sweep as the cron.
+    this._syncMarketplaceNowUseCase = new SyncMarketplaceNowUseCase(
+      this.marketplaceRepository,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
       this.accountsPort,
     );
 
@@ -1172,6 +1184,12 @@ export class DeploymentsAdapter
     command: CancelPluginRemovalCommand,
   ): Promise<CancelPluginRemovalResponse> {
     return this._cancelPluginRemovalUseCase.execute(command);
+  }
+
+  async syncMarketplaceNow(
+    command: SyncMarketplaceNowCommand,
+  ): Promise<SyncMarketplaceNowResponse> {
+    return this._syncMarketplaceNowUseCase.execute(command);
   }
 
   async listMarketplaceDistributions(

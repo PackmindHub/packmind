@@ -1,5 +1,5 @@
 {
   "packages": {
-    "@backend/hexagonal-architecture": "*"
+    "@backend/backend-hexagonal-architecture-standards": "*"
   }
 }

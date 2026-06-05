@@ -12,6 +12,9 @@ import {
   DistributionStatus,
   FileModification,
   GitCommit,
+  GitProviderVendor,
+  GitProviderVendors,
+  GitRepo,
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   Marketplace,
@@ -20,18 +23,23 @@ import {
   MarketplaceDistributionId,
   MarketplaceId,
   Package,
+  PackmindMarketplaceLock,
   PluginPublishedEvent,
   PluginPublishFailedEvent,
+  PluginSource,
   PublishFailureReason,
   PublishPluginToMarketplaceJobInput,
   PublishPluginToMarketplaceJobOutput,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { applyPluginDescriptorMutation } from '../services/PluginDescriptorMutator';
+import { applyPackmindMarketplaceLockMutation } from '../services/applyPackmindMarketplaceLockMutation';
 import {
-  applyPluginDescriptorMutation,
-  buildPluginLockEntry,
-} from '../services/PluginDescriptorMutator';
+  fetchPackmindMarketplaceLock,
+  PACKMIND_MARKETPLACE_LOCK_PATH,
+  serializePackmindMarketplaceLock,
+} from '../services/packmindMarketplaceLock';
 import {
   buildPluginContentHash,
   PluginContentEntry,
@@ -43,6 +51,7 @@ import {
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { PackageService } from '../services/PackageService';
+import { resolveMarketplaceReadBranch } from '../services/resolveMarketplaceReadBranch';
 
 const logOrigin = 'PublishPluginToMarketplaceDelayedJob';
 
@@ -209,10 +218,20 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       }
 
+      // Read descriptor + lock from the rolling `packmind/sync` branch when
+      // it already exists, so successive publishes accumulate plugin entries
+      // on top of the previous publish's unmerged state. Falls back to the
+      // marketplace's default branch on the first publish ever and on
+      // post-merge republishes (where the merged entries now live on main).
+      const readBranch = await resolveMarketplaceReadBranch(
+        this.gitPort,
+        marketplaceGitRepo,
+      );
+
       const descriptorFile = await fetchMarketplaceDescriptorFile(
         this.gitPort,
         marketplaceGitRepo,
-        marketplaceGitRepo.branch,
+        readBranch,
       );
       if (!descriptorFile) {
         throw new PublishJobFailure(
@@ -231,38 +250,71 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         );
       }
 
+      // Read the standalone packmind-lock.json from the same branch as the
+      // descriptor — a missing file is the first-publish path and returns an
+      // empty lock. A malformed lock is the same failure category as a
+      // malformed descriptor: the marketplace is unhealthy and the publish
+      // cannot proceed.
+      let lock: PackmindMarketplaceLock;
+      try {
+        lock = await fetchPackmindMarketplaceLock(
+          this.gitPort,
+          marketplaceGitRepo,
+          readBranch,
+        );
+      } catch (error) {
+        throw new PublishJobFailure(
+          'descriptor_missing',
+          `packmind-lock.json is unparseable on ${marketplaceGitRepo.owner}/${marketplaceGitRepo.repo}: ${getErrorMessage(error)}`,
+        );
+      }
+
       const pluginSlug = pkg.slug;
       this.assertNoUnmanagedNameCollision({
         pluginSlug,
         descriptor,
+        lock,
         marketplaceName: marketplace.name,
       });
 
-      const lockEntry = buildPluginLockEntry({
+      const nextLock = applyPackmindMarketplaceLockMutation(lock, {
+        pluginSlug,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
         contentHash,
         lastPublishedAt: new Date(),
         lastPublishedBy: distribution.authorId,
       });
 
+      const providerVendor = await this.resolveProviderVendor(
+        marketplaceGitRepo,
+        input,
+      );
+      const pluginSource: PluginSource = {
+        source: 'git-subdir',
+        url: buildMarketplaceCloneUrl(marketplaceGitRepo, providerVendor),
+        path: `plugins/${pluginSlug}`,
+      };
+
       const nextDescriptor = applyPluginDescriptorMutation(descriptor, {
         pluginSlug,
         pluginName: rendered.pluginName,
         pluginVersion: rendered.pluginVersion || PLUGIN_VERSION_FALLBACK,
-        lockEntry,
+        pluginSource,
       });
-
-      const descriptorFileUpdate: FileModification = {
-        path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
-        content: this.serializeDescriptor(nextDescriptor),
-      };
 
       const fileModifications: FileModification[] = [
         ...pluginEntries.map<FileModification>((entry) => ({
           path: entry.path,
           content: entry.content,
         })),
-        descriptorFileUpdate,
+        {
+          path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
+          content: this.serializeDescriptor(nextDescriptor),
+        },
+        {
+          path: PACKMIND_MARKETPLACE_LOCK_PATH,
+          content: serializePackmindMarketplaceLock(nextLock),
+        },
       ];
 
       // The rolling PR is owned by the upstream Git host — the worker pushes
@@ -450,21 +502,48 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
     if (descriptor.version !== undefined) {
       merged['version'] = descriptor.version;
     }
-    if (descriptor.packmindLock !== undefined) {
-      merged['packmindLock'] = descriptor.packmindLock;
-    }
+    // Strip the legacy embedded packmindLock so orphan fields from existing
+    // repos disappear on the next publish — the lock now lives at the repo
+    // root as a standalone packmind-lock.json file.
+    delete merged['packmindLock'];
     return JSON.stringify(merged, null, 2);
+  }
+
+  /**
+   * Look up the marketplace git repo's provider vendor so the plugin source
+   * URL uses the right hostname. Falls back to `unknown` (which yields an
+   * empty URL) if the provider cannot be resolved — preferable to throwing
+   * because the publish is otherwise complete and a missing URL only breaks
+   * downstream install-ability, not the upstream git operations.
+   */
+  private async resolveProviderVendor(
+    gitRepo: GitRepo,
+    input: PublishPluginToMarketplaceJobInput,
+  ): Promise<GitProviderVendor> {
+    try {
+      const { providers } = await this.gitPort.listProviders({
+        userId: input.userId,
+        organizationId: input.organizationId,
+      });
+      const provider = providers.find((p) => p.id === gitRepo.providerId);
+      return provider?.source ?? GitProviderVendors.unknown;
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to resolve provider vendor for marketplace repo ${gitRepo.owner}/${gitRepo.repo}; falling back to unknown`,
+        { error: getErrorMessage(error) },
+      );
+      return GitProviderVendors.unknown;
+    }
   }
 
   private assertNoUnmanagedNameCollision(params: {
     pluginSlug: string;
     descriptor: MarketplaceDescriptor;
+    lock: PackmindMarketplaceLock;
     marketplaceName: string;
   }): void {
-    const { pluginSlug, descriptor, marketplaceName } = params;
-    const managedSlugs = new Set<string>(
-      Object.keys(descriptor.packmindLock?.plugins ?? {}),
-    );
+    const { pluginSlug, descriptor, lock, marketplaceName } = params;
+    const managedSlugs = new Set<string>(Object.keys(lock.plugins));
     const colliding = descriptor.plugins.find(
       (p) => p.slug === pluginSlug && !managedSlugs.has(p.slug),
     );
@@ -550,6 +629,36 @@ class PublishJobFailure extends Error {
   ) {
     super(description);
     this.name = 'PublishJobFailure';
+  }
+}
+
+/**
+ * Build the HTTPS git clone URL for a marketplace repository so the
+ * plugin entries written by the publish flow are install-able by
+ * marketplace consumers (e.g. Claude Code's `git-subdir` plugin source).
+ *
+ * Mirrors the cloud-host convention used by
+ * `listMarketplaces.usecase`'s `buildRepositoryWebUrl` helper, but appends
+ * the `.git` suffix that `git clone` accepts. GitLab `owner` may itself be
+ * a `group/subgroup` path — that is fine, the slashes carry through into a
+ * valid URL.
+ *
+ * For an `unknown` provider vendor (or any unexpected value) the helper
+ * returns an empty string so the upstream commit still lands; the
+ * marketplace publish is the source-of-truth for the `source` block and a
+ * later republish on a known-vendor provider corrects the entry.
+ */
+function buildMarketplaceCloneUrl(
+  gitRepo: GitRepo,
+  providerVendor: GitProviderVendor,
+): string {
+  switch (providerVendor) {
+    case GitProviderVendors.github:
+      return `https://github.com/${gitRepo.owner}/${gitRepo.repo}.git`;
+    case GitProviderVendors.gitlab:
+      return `https://gitlab.com/${gitRepo.owner}/${gitRepo.repo}.git`;
+    default:
+      return '';
   }
 }
 

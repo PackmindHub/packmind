@@ -87,6 +87,16 @@ export class GitSettings
     }));
   }
 
+  async waitForFirstRowStatus(
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
+  ): Promise<void> {
+    await this.page.getByRole('tab', { name: /Connections/ }).click();
+    await this.page
+      .locator(`[data-testid="git-connection-row"][data-status="${state}"]`)
+      .first()
+      .waitFor({ state: 'visible' });
+  }
+
   async openFirstConnectionDrawer(): Promise<void> {
     await this.page.getByRole('tab', { name: /Connections/ }).click();
     const firstRow = this.page
@@ -100,7 +110,7 @@ export class GitSettings
   }
 
   async waitForDrawerStatus(
-    state: 'connected' | 'disconnected' | 'checking',
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
   ): Promise<void> {
     await this.page
       .locator(
@@ -112,15 +122,18 @@ export class GitSettings
   async getDrawerStatusDescription(): Promise<string | null> {
     // The description sits inside the status block but is set apart from the
     // status label by font size. Read all text under the block and pick the
-    // line that isn't the status label or one of the action buttons.
+    // line that isn't a label or one of the action buttons.
     const block = this.page.locator('[data-testid="connection-drawer-status"]');
     const lines = (await block.innerText())
       .split('\n')
       .map((l) => l.trim())
       .filter(Boolean);
     const ignore = new Set([
+      'Status',
+      'STATUS',
       'Connected',
-      'Disconnected',
+      'Token expired',
+      'Unreachable',
       'Checking…',
       'Status unknown',
       'Re-authenticate',

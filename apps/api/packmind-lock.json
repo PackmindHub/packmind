@@ -1,7 +1,7 @@
 {
   "lockfileVersion": 2,
   "packageSlugs": [
-    "@backend/nestjs"
+    "@backend/backend-nestjs-standards"
   ],
   "agents": [
     "agents_md",
@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-06-05T03:05:26.393Z",
   "artifacts": {
     "user:standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",
@@ -19,7 +20,7 @@
       "version": 3,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
-        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
+        "af29c979-9dfa-4204-b8e2-e140cd477e13"
       ],
       "source": "user",
       "files": [
@@ -48,7 +49,7 @@
       "version": 1,
       "spaceId": "5eb1119c-7a81-4cf1-b7e5-3d9b94d6b98d",
       "packageIds": [
-        "bf4c3daa-7f74-4f70-be02-4a55dd6eb89b"
+        "af29c979-9dfa-4204-b8e2-e140cd477e13"
       ],
       "source": "user",
       "files": [

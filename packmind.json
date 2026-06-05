@@ -1,12 +1,10 @@
 {
   "packages": {
-    "@global/generic": "*",
-    "@backend/generic": "*",
     "@frontend/playground": "*",
     "@testing/cli-e2e": "*",
-    "@frontend/generic": "*",
-    "@cli/generic": "*",
     "@testing/unit-tests": "*",
-    "@global/proprietary": "*"
+    "@global/packmind-standards": "*",
+    "@backend/backend-standards": "*",
+    "@global/proprietary-standards": "*"
   }
 }

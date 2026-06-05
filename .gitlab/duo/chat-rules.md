@@ -9,6 +9,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+# Standard: Amplitude analytics usage
+
+Define Amplitude analytics event and property naming conventions (snake_case events ending with a verb, lowerCamelCase properties) for cloud-only, EU-hosted, non-PII tracking across CLI, MCP, and web app interfaces to standardize behavior insights collection. :
+* Event name ends with the verb (e.g 'standard_created', 'user_signed_up')
+* Property name should be in lower camel case
+* Tracked event name should be snake cased
+
+Full standard is available here for further request: [Amplitude analytics usage](../../.packmind/standards/amplitude-analytics-usage.md)
+
 # Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :

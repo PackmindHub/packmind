@@ -11,9 +11,9 @@ export interface RemovePluginButtonProps {
 
 /**
  * Action button + confirmation modal to mark a marketplace plugin distribution
- * as `to_be_removed`. The modal body explains that removal in Packmind is the
- * first step: the user still needs to run `packmind-cli plugins delete <slug>`
- * locally to open the deletion PR on the marketplace repo.
+ * as `to_be_removed`. The modal body explains that marking for removal
+ * automatically opens (or amends) the Packmind sync deletion PR on the
+ * marketplace repo — the user's remaining step is to review and merge it.
  *
  * Mirrors the unlink-marketplace affordance in `MarketplaceRow.tsx`.
  */
@@ -55,7 +55,7 @@ export const RemovePluginButton = ({
             {`Mark "${subjectLabel}"${marketplaceLabel} for removal? Existing installs will stay in place until the deletion PR is merged.`}
           </PMText>
           <PMText variant="small" color="secondary">
-            {`Next step: run packmind-cli plugins delete ${pluginSlug} locally to open the deletion PR on the marketplace repository.`}
+            {`Packmind opens the deletion PR on the marketplace repository automatically. Next step: review and merge that pull request to complete the removal.`}
           </PMText>
         </PMVStack>
       }

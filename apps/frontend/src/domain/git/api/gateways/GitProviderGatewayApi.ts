@@ -117,6 +117,7 @@ export class GitProviderGatewayApi
       organizationId,
       url: data.url,
       authMethod: data.authMethod ?? 'token',
+      displayName: data.displayName ?? '',
       ...(data.authMethod === 'app'
         ? {
             appInstallationId: data.appInstallationId,
@@ -138,6 +139,9 @@ export class GitProviderGatewayApi
       source: data.source,
       url: data.url,
       authMethod: data.authMethod ?? 'token',
+      ...(data.displayName !== undefined
+        ? { displayName: data.displayName }
+        : {}),
       ...(data.authMethod === 'app'
         ? {
             appInstallationId: data.appInstallationId,

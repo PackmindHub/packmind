@@ -201,6 +201,13 @@ export class DeploymentsHexa extends BaseHexa<
         });
       this.packageDeletedDistributionsListener.initialize(eventEmitterService);
 
+      // Start the workers for every queue this domain registered through the
+      // adapter (publish-artifacts, marketplace-reconciliation, publish-plugin,
+      // remove-plugin). Without this, queues that have no synchronous trigger
+      // — notably the cron-driven reconciliation queue — never get a worker
+      // and their scheduled jobs sit in Redis with no consumer.
+      await jobsService.initJobQueues();
+
       this.logger.info('DeploymentsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize DeploymentsHexa', {

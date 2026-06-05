@@ -3,6 +3,7 @@ import {
   IMarketplaceDescriptorParser,
   MarketplaceDescriptor,
   PluginRef,
+  PluginSource,
 } from '@packmind/types';
 import { MarketplaceDescriptorParseError } from '../../../domain/errors';
 
@@ -10,15 +11,26 @@ import { MarketplaceDescriptorParseError } from '../../../domain/errors';
  * Zod schema describing the minimum Anthropic marketplace descriptor shape.
  *
  * The descriptor is intentionally permissive — fields beyond the required
- * `name` + `plugins[]` (e.g. `metadata`, `owner`, plugin `source` info) are
- * preserved unparsed on `MarketplaceDescriptor.raw` so the reconciliation job
- * can deep-diff against future fetches.
+ * `name` + `plugins[]` (e.g. `metadata`, `owner`) are preserved unparsed on
+ * `MarketplaceDescriptor.raw` so the reconciliation job can deep-diff against
+ * future fetches. The `source` block is parsed when present so the
+ * normalized `PluginRef.source` round-trips through the mutator on
+ * subsequent publishes.
  */
+const anthropicPluginSourceSchema = z
+  .object({
+    source: z.literal('git-subdir'),
+    url: z.string().min(1, 'plugin.source.url is required'),
+    path: z.string().min(1, 'plugin.source.path is required'),
+  })
+  .passthrough();
+
 const anthropicPluginSchema = z
   .object({
     name: z.string().min(1, 'plugin.name is required'),
     version: z.string().optional(),
     description: z.string().optional(),
+    source: anthropicPluginSourceSchema.optional(),
   })
   .passthrough();
 
@@ -80,6 +92,14 @@ export class AnthropicMarketplaceDescriptorParser implements IMarketplaceDescrip
       };
       if (plugin.version !== undefined) {
         ref.version = plugin.version;
+      }
+      if (plugin.source !== undefined) {
+        const pluginSource: PluginSource = {
+          source: plugin.source.source,
+          url: plugin.source.url,
+          path: plugin.source.path,
+        };
+        ref.source = pluginSource;
       }
       return ref;
     });

@@ -16,18 +16,26 @@ import {
   Marketplace,
   MarketplaceDescriptor,
   MarketplaceDistribution,
+  PackmindMarketplaceLock,
   RemovePluginFromMarketplaceJobInput,
   RemovePluginFromMarketplaceJobOutput,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { removePluginDescriptorEntry } from '../services/PluginDescriptorMutator';
+import { removePackmindMarketplaceLockEntry } from '../services/applyPackmindMarketplaceLockMutation';
+import {
+  fetchPackmindMarketplaceLock,
+  PACKMIND_MARKETPLACE_LOCK_PATH,
+  serializePackmindMarketplaceLock,
+} from '../services/packmindMarketplaceLock';
 import {
   MARKETPLACE_SYNC_BRANCH,
   MARKETPLACE_SYNC_PR_TITLE,
 } from '../services/marketplaceSyncPullRequest';
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { resolveMarketplaceReadBranch } from '../services/resolveMarketplaceReadBranch';
 
 const logOrigin = 'RemovePluginFromMarketplaceDelayedJob';
 
@@ -115,27 +123,23 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
       );
     }
 
-    // Ensure the rolling-PR branch exists before reading from it. First op
-    // creates it from the marketplace's default branch; later ones no-op.
-    await this.gitPort.createBranchFromBase(
+    // Resolve which branch the descriptor + lock should be read from. When
+    // the rolling `packmind/sync` branch already exists from a prior
+    // publish/remove, that branch carries the accumulated unmerged state and
+    // is the canonical source. Falls back to the default branch on the very
+    // first sync-branch operation (the branch will be created from the
+    // default branch right before the commit lands) and on post-merge
+    // operations where the rolling branch has been deleted.
+    const readBranch = await resolveMarketplaceReadBranch(
+      this.gitPort,
       marketplaceGitRepo,
-      MARKETPLACE_SYNC_BRANCH,
     );
 
-    // Read the descriptor from the sync branch so the removal stacks on the
-    // accumulated PR state; fall back to the default branch if the sync read
-    // comes back empty.
-    const descriptorFile =
-      (await fetchMarketplaceDescriptorFile(
-        this.gitPort,
-        marketplaceGitRepo,
-        MARKETPLACE_SYNC_BRANCH,
-      )) ??
-      (await fetchMarketplaceDescriptorFile(
-        this.gitPort,
-        marketplaceGitRepo,
-        marketplaceGitRepo.branch,
-      ));
+    const descriptorFile = await fetchMarketplaceDescriptorFile(
+      this.gitPort,
+      marketplaceGitRepo,
+      readBranch,
+    );
     if (!descriptorFile) {
       throw new Error(
         `[${this.origin}] Marketplace descriptor missing on ${marketplaceGitRepo.owner}/${marketplaceGitRepo.repo}`,
@@ -146,12 +150,35 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
       descriptorFile.content,
     );
 
-    const nextDescriptor = removePluginDescriptorEntry(descriptor, pluginSlug);
+    // Read the standalone packmind-lock.json from the same branch as the
+    // descriptor. A missing lock yields the empty shape, which is fine — the
+    // descriptor entry is dropped either way.
+    const lock: PackmindMarketplaceLock = await fetchPackmindMarketplaceLock(
+      this.gitPort,
+      marketplaceGitRepo,
+      readBranch,
+    );
 
-    const descriptorFileUpdate: FileModification = {
-      path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
-      content: this.serializeDescriptor(nextDescriptor),
-    };
+    // Ensure the rolling-PR branch exists before committing to it. First op
+    // creates it from the marketplace's default branch; later ones no-op.
+    await this.gitPort.createBranchFromBase(
+      marketplaceGitRepo,
+      MARKETPLACE_SYNC_BRANCH,
+    );
+
+    const nextDescriptor = removePluginDescriptorEntry(descriptor, pluginSlug);
+    const nextLock = removePackmindMarketplaceLockEntry(lock, pluginSlug);
+
+    const fileUpdates: FileModification[] = [
+      {
+        path: descriptorFile.path ?? MARKETPLACE_DESCRIPTOR_FILENAME,
+        content: this.serializeDescriptor(nextDescriptor),
+      },
+      {
+        path: PACKMIND_MARKETPLACE_LOCK_PATH,
+        content: serializePackmindMarketplaceLock(nextLock),
+      },
+    ];
 
     // The plugin's rendered files live under `plugins/<slug>/` — mirrors the
     // `pluginRoot` the publish renderer writes to. Remove the whole directory.
@@ -165,7 +192,7 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     try {
       await this.gitPort.commitToGit(
         { ...marketplaceGitRepo, branch: MARKETPLACE_SYNC_BRANCH },
-        [descriptorFileUpdate],
+        fileUpdates,
         MARKETPLACE_SYNC_PR_TITLE,
         deleteFiles,
       );
@@ -246,11 +273,10 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     if (descriptor.version !== undefined) {
       merged['version'] = descriptor.version;
     }
-    if (descriptor.packmindLock !== undefined) {
-      merged['packmindLock'] = descriptor.packmindLock;
-    } else {
-      delete merged['packmindLock'];
-    }
+    // Strip the legacy embedded packmindLock so orphan fields from existing
+    // repos disappear on the next mutation — the lock now lives at the repo
+    // root as a standalone packmind-lock.json file.
+    delete merged['packmindLock'];
     return JSON.stringify(merged, null, 2);
   }
 

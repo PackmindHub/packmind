@@ -32,6 +32,7 @@ export type GitProvider = {
   url: string | null;
   token: string | null;
   authMethod: GitProviderAuthMethod;
+  displayName: string;
   appInstallationId?: number;
   // Required at the DB layer when authMethod === 'app' (enforced by a CHECK
   // constraint). Optional in TypeScript so token-auth providers can omit it.

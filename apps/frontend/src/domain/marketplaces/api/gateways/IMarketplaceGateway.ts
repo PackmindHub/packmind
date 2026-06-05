@@ -8,6 +8,7 @@ import {
   MarkPluginForRemovalResponse,
   OrganizationId,
   PackageId,
+  SyncMarketplaceNowResponse,
   ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
 
@@ -101,4 +102,14 @@ export interface IMarketplaceGateway {
     marketplaceId: MarketplaceId,
     distributionId: MarketplaceDistributionId,
   ): Promise<CancelPluginRemovalResponse>;
+
+  /**
+   * Triggers an immediate, on-demand reconciliation of the marketplace and
+   * returns its freshly computed state. Lets a member refresh marketplace
+   * state without waiting for the next scheduled reconciliation sweep.
+   */
+  syncMarketplaceNow(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+  ): Promise<SyncMarketplaceNowResponse>;
 }

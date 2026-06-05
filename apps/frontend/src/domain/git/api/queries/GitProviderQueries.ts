@@ -239,7 +239,10 @@ export const useSubmitGithubAppManifestCallbackMutation = () => {
 export const useGetGithubAppStatusQuery = () => {
   const { organization } = useAuthContext();
   const { data: me } = useGetMeQuery();
-  const edition = me?.edition ?? 'oss';
+  const githubAppMode =
+    me?.authenticated && me.organization
+      ? me.organization.githubAppMode
+      : 'on-prem';
 
   return useQuery({
     queryKey: [...GET_GITHUB_APP_STATUS_KEY, organization?.id],
@@ -251,7 +254,7 @@ export const useGetGithubAppStatusQuery = () => {
       }
       return gitProviderGateway.getGithubAppStatus(organization.id);
     },
-    enabled: !!organization?.id && edition === 'oss',
+    enabled: !!organization?.id && githubAppMode === 'on-prem',
   });
 };
 

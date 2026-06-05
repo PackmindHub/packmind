@@ -10,6 +10,7 @@ import {
   MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
+  MarketplaceState,
   OrganizationId,
   PackageId,
 } from '@packmind/types';
@@ -285,3 +286,59 @@ export const useCancelPluginRemoval = (
     },
   });
 };
+
+// Mutation hook: triggers an immediate marketplace reconciliation ("Sync now").
+// Refreshes both the marketplace list (state badge + drift panel) and the
+// distributions list (so merged deletions flip `to_be_removed` → `removed`
+// without waiting for the next scheduled sweep).
+export const useSyncMarketplaceNow = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () =>
+      marketplaceGateway.syncMarketplaceNow(
+        organizationId as OrganizationId,
+        marketplaceId as MarketplaceId,
+      ),
+    onSuccess: async (response) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.list(organizationId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.distributions(),
+        }),
+      ]);
+      pmToaster.success({
+        title: 'Marketplace synced',
+        description: syncStateDescription(response.state),
+      });
+    },
+    onError: (error) => {
+      console.error('Error syncing marketplace:', error);
+      pmToaster.error({
+        title: 'Sync failed',
+        description: 'Could not reconcile the marketplace. Please try again.',
+      });
+    },
+  });
+};
+
+// Human-readable summary of a reconciliation outcome for the "Sync now" toast.
+function syncStateDescription(state: MarketplaceState): string {
+  switch (state) {
+    case 'healthy':
+      return 'Everything is up to date.';
+    case 'drift':
+      return 'Drift detected — check the flagged plugins below.';
+    case 'unreachable':
+      return 'The marketplace repository could not be reached.';
+    case 'bad_format':
+      return 'The marketplace descriptor is missing or invalid.';
+    default:
+      return 'Marketplace state refreshed.';
+  }
+}

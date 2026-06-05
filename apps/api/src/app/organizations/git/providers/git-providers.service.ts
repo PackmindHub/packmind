@@ -29,7 +29,7 @@ import { InjectGitAdapter } from '../../../shared/HexaInjection';
 import { Configuration } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
-import { resolvePackmindEdition } from '../../../shared/utils/edition';
+import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 import axios from 'axios';
 
@@ -126,12 +126,12 @@ export class GitProvidersService {
   async buildGithubAppInstallUrl(
     command: BuildGithubAppInstallUrlCommand,
   ): Promise<BuildGithubAppInstallUrlResponse> {
-    const edition = await resolvePackmindEdition();
+    const mode = await resolveGithubAppMode();
 
     let slug: string;
     let organizationGitHubAppId: string | undefined;
 
-    if (edition === 'oss') {
+    if (mode === 'on-prem') {
       const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
         command.organizationId,
       );
@@ -145,15 +145,16 @@ export class GitProvidersService {
     } else {
       const configuredSlug = await Configuration.getConfig('GITHUB_APP_SLUG');
       if (!configuredSlug) {
+        // Should be unreachable: 'shared' mode is only entered when the slug
+        // is present. Guarded for safety against config races.
         throw new InternalServerErrorException(
           'GITHUB_APP_SLUG is not configured',
         );
       }
       slug = configuredSlug;
-      // Cloud edition uses a shared App with credentials in env. The install
-      // is still bound to the org-side OrganizationGitHubApp row in OSS only.
-      // On cloud we leave organizationGitHubAppId unset; the resolver path on
-      // cloud doesn't read it.
+      // Shared mode uses an App with credentials in env. The install is bound
+      // to the org-side OrganizationGitHubApp row only in on-prem mode; in
+      // shared mode the resolver path doesn't read organizationGitHubAppId.
     }
 
     const state = this.signer.sign({
@@ -175,10 +176,10 @@ export class GitProvidersService {
   async buildGithubAppManifest(
     command: BuildGithubAppManifestCommand,
   ): Promise<BuildGithubAppManifestResponse> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new BadRequestException(
-        'Manifest flow is only available on OSS edition',
+        'Manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -227,10 +228,10 @@ export class GitProvidersService {
   async completeGithubAppManifest(
     command: CompleteGithubAppManifestCommand,
   ): Promise<CompleteGithubAppManifestResponse> {
-    const edition = await resolvePackmindEdition();
-    if (edition !== 'oss') {
+    const mode = await resolveGithubAppMode();
+    if (mode !== 'on-prem') {
       throw new BadRequestException(
-        'Manifest flow is only available on OSS edition',
+        'Manifest flow is not available when a shared GitHub App is configured',
       );
     }
 
@@ -350,13 +351,13 @@ export class GitProvidersService {
       );
     }
 
-    const edition = await resolvePackmindEdition();
+    const mode = await resolveGithubAppMode();
     let organizationGitHubAppId: OrganizationGitHubAppId | null = null;
 
-    if (edition === 'oss') {
-      // OSS binds every app-auth provider to a specific stored App so that
-      // re-running the manifest flow doesn't silently rebind old installations
-      // to a newer App (which would 404 at the next JWT exchange).
+    if (mode === 'on-prem') {
+      // Per-org mode binds every app-auth provider to a specific stored App so
+      // that re-running the manifest flow doesn't silently rebind old
+      // installations to a newer App (which would 404 at the next JWT exchange).
       if (!payload.organizationGitHubAppId) {
         throw new BadRequestException('Invalid or expired state token');
       }
@@ -385,6 +386,7 @@ export class GitProvidersService {
         organizationGitHubAppId,
         url: null,
         token: null,
+        displayName: '',
       },
       allowTokenlessProvider: true,
       source: command.source,
@@ -578,10 +580,10 @@ export class GitProvidersService {
   async getGithubAppStatus(
     command: GetGithubAppStatusCommand,
   ): Promise<GetGithubAppStatusResponse> {
-    const edition = await resolvePackmindEdition();
+    const mode = await resolveGithubAppMode();
 
-    // Cloud uses an env-configured shared GitHub App — no per-org record exists.
-    if (edition !== 'oss') {
+    // Shared mode uses an env-configured GitHub App — no on-prem record exists.
+    if (mode === 'shared') {
       return { hasApp: true };
     }
 
@@ -597,11 +599,11 @@ export class GitProvidersService {
   }
 
   async revokeGithubApp(command: RevokeGithubAppCommand): Promise<void> {
-    const edition = await resolvePackmindEdition();
+    const mode = await resolveGithubAppMode();
 
-    if (edition !== 'oss') {
+    if (mode !== 'on-prem') {
       throw new BadRequestException(
-        'GitHub App revocation is only available on OSS edition',
+        'GitHub App revocation is not available when a shared GitHub App is configured',
       );
     }
 

@@ -92,9 +92,12 @@ export interface IGitSettingsPage extends IPackmindAppPage {
   >;
   openFirstConnectionDrawer(): Promise<void>;
   waitForDrawerStatus(
-    state: 'connected' | 'disconnected' | 'checking',
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
   ): Promise<void>;
   getDrawerStatusDescription(): Promise<string | null>;
+  waitForFirstRowStatus(
+    state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
+  ): Promise<void>;
 }
 
 export interface ICliSetupPage extends IPackmindAppPage {

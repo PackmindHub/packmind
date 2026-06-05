@@ -132,7 +132,7 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    if (!gitProvider.token) {
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
       throw new Error('Git provider token not configured');
     }
 
@@ -171,7 +171,7 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    if (!gitProvider.token) {
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
       throw new Error('Git provider token not configured');
     }
 

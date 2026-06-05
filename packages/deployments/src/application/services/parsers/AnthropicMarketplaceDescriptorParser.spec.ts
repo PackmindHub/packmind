@@ -143,6 +143,51 @@ describe('AnthropicMarketplaceDescriptorParser', () => {
           expect(result.version).toBeUndefined();
         });
       });
+
+      describe('when a plugin entry declares a source block', () => {
+        const raw = {
+          name: 'demo',
+          plugins: [
+            {
+              name: 'plugin-a',
+              version: '0.1.0',
+              source: {
+                source: 'git-subdir',
+                url: 'https://github.com/test-org/test-marketplace.git',
+                path: 'plugins/plugin-a',
+              },
+            },
+          ],
+        };
+
+        it('reads the source block back into the normalized PluginRef', () => {
+          const result = parser.parse(raw);
+
+          expect(result.plugins[0]).toEqual({
+            slug: 'plugin-a',
+            name: 'plugin-a',
+            version: '0.1.0',
+            source: {
+              source: 'git-subdir',
+              url: 'https://github.com/test-org/test-marketplace.git',
+              path: 'plugins/plugin-a',
+            },
+          });
+        });
+      });
+
+      describe('when a plugin entry has no source block (legacy)', () => {
+        it('parses it with source undefined', () => {
+          const raw = {
+            name: 'demo',
+            plugins: [{ name: 'plugin-a', version: '0.1.0' }],
+          };
+
+          const result = parser.parse(raw);
+
+          expect(result.plugins[0].source).toBeUndefined();
+        });
+      });
     });
 
     describe('when a required field is missing', () => {

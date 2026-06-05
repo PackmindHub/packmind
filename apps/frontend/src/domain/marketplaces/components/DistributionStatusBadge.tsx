@@ -56,7 +56,7 @@ const STATUS_PRESENTATION: Record<DistributionStatus, StatusPresentation> = {
     label: 'To be removed',
     colorPalette: 'orange',
     tooltip:
-      'Marked for removal. Run packmind-cli plugins delete to open the deletion PR.',
+      'Marked for removal. Packmind opened the deletion PR on the marketplace repo — merge it to complete removal.',
     icon: LuClock,
   },
   [DistributionStatus.removed]: {
