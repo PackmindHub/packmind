@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 import { ISpaceSettingsPage } from '../../domain/pages';
 
@@ -20,11 +22,11 @@ export class SpaceSettingsPage
     await comboboxInput.click();
     await comboboxInput.fill(displayName);
 
-    const option = this.page
-      .locator('[data-part="item-text"]')
-      .filter({ hasText: displayName })
-      .first();
-    await option.waitFor({ state: 'visible' });
+    const option = this.page.getByRole('option', {
+      name: displayName,
+      exact: true,
+    });
+    await expect(option).toBeVisible();
     await option.click();
   }
 
@@ -72,10 +74,18 @@ export class SpaceSettingsPage
   }
 
   async clickSaveIdentity(): Promise<void> {
-    await this.page
+    const saveButton = this.page
       .getByRole('button', { name: /Save changes/i })
-      .first()
-      .click();
+      .first();
+    const saveResponse = this.page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PATCH' &&
+        response.url().includes('/spaces-management/'),
+    );
+
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    await saveResponse;
   }
 
   async waitForIdentityUpdateSuccess(): Promise<void> {
@@ -85,10 +95,13 @@ export class SpaceSettingsPage
   }
 
   async waitForIdentityUpdateError(): Promise<string> {
+    const nameInput = this.page.getByLabel('Name');
+    await expect(nameInput).toHaveAttribute('aria-invalid', 'true');
+
     const errorText = this.page.getByText(
       'Another space with a similar name already exists.',
     );
-    await errorText.waitFor({ state: 'visible', timeout: 20000 });
+    await expect(errorText).toBeVisible({ timeout: 20000 });
     return errorText.innerText();
   }
 
