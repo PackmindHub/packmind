@@ -114,6 +114,21 @@ export interface IGitPort {
   addGitProvider(command: AddGitProviderCommand): Promise<GitProvider>;
 
   /**
+   * Find an existing GitHub App provider for a given organization and
+   * installation id. Used by the install-callback flow to make a re-run
+   * idempotent: if a provider already exists for the same installation we
+   * reuse it instead of inserting a duplicate row.
+   *
+   * @param organizationId - The organization ID
+   * @param appInstallationId - The GitHub App installation ID
+   * @returns Promise of the matching provider, or null if none exists
+   */
+  findGitProviderByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null>;
+
+  /**
    * Add a new git repository to a provider
    *
    * @param command - Command containing repository details and user/organization context

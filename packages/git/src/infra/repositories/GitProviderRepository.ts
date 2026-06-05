@@ -171,6 +171,46 @@ export class GitProviderRepository
     }
   }
 
+  async findByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null> {
+    this.logger.info('Finding git provider by app installation', {
+      organizationId,
+      appInstallationId,
+    });
+
+    try {
+      const result = await this.repository.findOne({
+        where: { organizationId, appInstallationId, authMethod: 'app' },
+        relations: ['repos'],
+      });
+
+      if (!result) {
+        this.logger.info('No git provider found for app installation', {
+          organizationId,
+          appInstallationId,
+        });
+        return null;
+      }
+
+      const decryptedResult = await this.decryptGitProvider(result);
+      this.logger.info('Git provider found for app installation', {
+        organizationId,
+        appInstallationId,
+        providerId: decryptedResult.id,
+      });
+      return decryptedResult;
+    } catch (error) {
+      this.logger.error('Failed to find git provider by app installation', {
+        organizationId,
+        appInstallationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async list(organizationId?: OrganizationId): Promise<GitProvider[]> {
     this.logger.info('Listing git providers', { organizationId });
 

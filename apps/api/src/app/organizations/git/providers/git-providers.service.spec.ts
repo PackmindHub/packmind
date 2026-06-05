@@ -85,6 +85,7 @@ describe('GitProvidersService', () => {
   beforeEach(async () => {
     mockGitAdapter = {
       addGitProvider: jest.fn(),
+      findGitProviderByAppInstallation: jest.fn(),
       addGitRepo: jest.fn(),
       listProviders: jest.fn(),
       getOrganizationRepositories: jest.fn(),
@@ -297,6 +298,9 @@ describe('GitProvidersService', () => {
         mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
       ).mockResolvedValue(activeApp);
       (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([]);
+      (
+        mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
+      ).mockResolvedValue(null);
     });
 
     it('calls gitAdapter.addGitProvider with correct app-method command including the OrganizationGitHubApp id', async () => {
@@ -550,6 +554,94 @@ describe('GitProvidersService', () => {
 
         it('still returns the provider', () => {
           expect(result).toEqual(mockProvider);
+        });
+      });
+    });
+
+    describe('when a provider already exists for the installation', () => {
+      const existingProvider = {
+        id: 'prov-existing',
+        source: 'github',
+        authMethod: 'app',
+        appInstallationId: 12345,
+        organizationId: orgId,
+        organizationGitHubAppId: orgGitHubAppId,
+        url: null,
+        token: null,
+        displayName: '',
+      };
+
+      beforeEach(() => {
+        mockSigner.verify.mockReturnValue(validPayload);
+        (
+          mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
+        ).mockResolvedValue(existingProvider);
+      });
+
+      describe('when the installation has no new repos', () => {
+        beforeEach(async () => {
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+            [],
+          );
+
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'ui',
+          });
+        });
+
+        it('does not create a new provider', () => {
+          expect(mockGitAdapter.addGitProvider).not.toHaveBeenCalled();
+        });
+      });
+
+      it('returns the existing provider', async () => {
+        const result = await service.completeGithubAppInstall({
+          organizationId: orgId,
+          userId,
+          installationId: 12345,
+          state: 'STUB_STATE',
+          source: 'ui',
+        });
+
+        expect(result).toEqual(existingProvider);
+      });
+
+      describe('when the installation exposes repos', () => {
+        beforeEach(async () => {
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
+            {
+              name: 'repo-a',
+              owner: 'acme',
+              private: false,
+              defaultBranch: 'main',
+              stars: 0,
+            },
+            {
+              name: 'repo-b',
+              owner: 'acme',
+              private: true,
+              defaultBranch: 'develop',
+              stars: 5,
+            },
+          ]);
+
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'ui',
+          });
+        });
+
+        it('materializes repos against the existing provider id', () => {
+          expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
+            expect.objectContaining({ gitProviderId: 'prov-existing' }),
+          );
         });
       });
     });
