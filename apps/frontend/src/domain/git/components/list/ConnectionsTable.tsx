@@ -193,7 +193,11 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         <RowActionsMenu
           onEdit={onEdit}
           onDelete={onDelete}
-          deleteDisabled={repoCount > 0}
+          deleteDisabled={repoCount > 0 || marketplaceCount > 0}
+          deleteDisabledReason={deleteDisabledReason(
+            repoCount,
+            marketplaceCount,
+          )}
         />
       </PMHStack>
     </PMHStack>
@@ -254,15 +258,14 @@ interface RowActionsMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   deleteDisabled: boolean;
+  deleteDisabledReason: string;
 }
-
-const DELETE_DISABLED_TOOLTIP =
-  'Detach all repositories from this connection before deleting it.';
 
 const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
   onEdit,
   onDelete,
   deleteDisabled,
+  deleteDisabledReason,
 }) => (
   <PMMenu.Root positioning={{ placement: 'bottom-end' }}>
     <PMMenu.Trigger asChild>
@@ -297,7 +300,11 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
               Edit
             </PMText>
           </PMMenu.Item>
-          <DeleteMenuItem onDelete={onDelete} deleteDisabled={deleteDisabled} />
+          <DeleteMenuItem
+            onDelete={onDelete}
+            deleteDisabled={deleteDisabled}
+            deleteDisabledReason={deleteDisabledReason}
+          />
         </PMMenu.Content>
       </PMMenu.Positioner>
     </PMPortal>
@@ -307,11 +314,13 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
 interface DeleteMenuItemProps {
   onDelete: () => void;
   deleteDisabled: boolean;
+  deleteDisabledReason: string;
 }
 
 const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
   onDelete,
   deleteDisabled,
+  deleteDisabledReason,
 }) => {
   const item = (
     <PMMenu.Item
@@ -347,11 +356,27 @@ const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
   }
 
   return (
-    <PMTooltip label={DELETE_DISABLED_TOOLTIP} placement="left">
+    <PMTooltip label={deleteDisabledReason} placement="left">
       <PMBox width="full">{item}</PMBox>
     </PMTooltip>
   );
 };
+
+function deleteDisabledReason(
+  repoCount: number,
+  marketplaceCount: number,
+): string {
+  if (repoCount > 0 && marketplaceCount > 0) {
+    return 'Detach all repositories and unlink marketplaces (managed in Marketplaces) from this connection before deleting it.';
+  }
+  if (repoCount > 0) {
+    return 'Detach all repositories from this connection before deleting it.';
+  }
+  if (marketplaceCount > 0) {
+    return 'Unlink marketplaces (managed in Marketplaces) from this connection before deleting it.';
+  }
+  return '';
+}
 
 function vendorPlaceholder(vendor: GitProviderVendor): string {
   if (vendor === 'github') return 'Unnamed GitHub connection';

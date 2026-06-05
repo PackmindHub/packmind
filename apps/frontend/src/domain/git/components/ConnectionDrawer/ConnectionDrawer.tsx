@@ -363,6 +363,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
       (r) => `${r.owner}/${r.repo}`,
     ),
   ).size;
+  const marketplaceCount = marketplacesForConnection.length;
   const applying = progress?.phase === 'running';
   const placeholder = vendorPlaceholder(connection.source);
   const headerTitle = connection.displayName.trim() || placeholder;
@@ -465,7 +466,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onDelete(connection)}
-              disabled={repoCount > 0}
+              disabled={repoCount > 0 || marketplaceCount > 0}
               data-testid="connection-drawer-delete"
             >
               <PMIcon fontSize="sm" color="red.500">
@@ -475,9 +476,9 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
                 Delete connection
               </PMText>
             </PMButton>
-            {repoCount > 0 && (
+            {deleteBlockedReason(repoCount, marketplaceCount) && (
               <PMText fontSize="xs" color="faded">
-                Remove tracked repos first to delete.
+                {deleteBlockedReason(repoCount, marketplaceCount)}
               </PMText>
             )}
           </PMHStack>
@@ -907,6 +908,22 @@ const MarketplacesPreview: React.FC<{
     </PMVStack>
   );
 };
+
+function deleteBlockedReason(
+  repoCount: number,
+  marketplaceCount: number,
+): string {
+  if (repoCount > 0 && marketplaceCount > 0) {
+    return 'Detach repos and unlink marketplaces first to delete.';
+  }
+  if (repoCount > 0) {
+    return 'Remove tracked repos first to delete.';
+  }
+  if (marketplaceCount > 0) {
+    return 'Unlink marketplaces (managed in Marketplaces) first to delete.';
+  }
+  return '';
+}
 
 function marketplaceCoordinates(marketplace: MarketplaceListItem): string {
   const repository = marketplace.repository;

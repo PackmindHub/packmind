@@ -169,6 +169,11 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
                 if ((connection.repos?.length ?? 0) > 0) {
                   return;
                 }
+                if (
+                  (marketplaceCountByProviderId.get(connection.id) ?? 0) > 0
+                ) {
+                  return;
+                }
                 setProviderToDelete(connection);
                 setDeleteDialogOpen(true);
               }}
