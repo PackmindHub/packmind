@@ -55,7 +55,7 @@ export class ListProvidersUseCase
           // The Deployments-aware enrichment happens at the API service
           // layer where both ports are available; this use case stays in
           // its Git-only domain boundary.
-          lastDeploymentAt: null,
+          lastDistributionAt: null,
         };
       },
     );

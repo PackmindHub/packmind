@@ -23,8 +23,8 @@ import {
   GetContentByVersionsResponse,
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
-  GetLastDeploymentDateByProvidersCommand,
-  GetLastDeploymentDateByProvidersResponse,
+  GetLastDistributionDateByProvidersCommand,
+  GetLastDistributionDateByProvidersResponse,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
   GetPackageByIdCommand,
@@ -580,14 +580,14 @@ export interface IDeploymentPort {
   /**
    * For each requested Git provider, return the createdAt of the most recent
    * successful distribution that targeted any repo under that provider.
-   * Used by the Git connections list view to show "last deployment" per
+   * Used by the Git connections list view to show "last distribution" per
    * connection. Providers with no successful distribution are absent from
    * the returned map.
    *
    * @param command - Command containing the provider IDs to look up
    * @returns Promise of map keyed by GitProviderId → ISO timestamp string
    */
-  getLastDeploymentDateByProviders(
-    command: GetLastDeploymentDateByProvidersCommand,
-  ): Promise<GetLastDeploymentDateByProvidersResponse>;
+  getLastDistributionDateByProviders(
+    command: GetLastDistributionDateByProvidersCommand,
+  ): Promise<GetLastDistributionDateByProvidersResponse>;
 }

@@ -1,21 +1,21 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  GetLastDeploymentDateByProvidersCommand,
-  GetLastDeploymentDateByProvidersResponse,
+  GetLastDistributionDateByProvidersCommand,
+  GetLastDistributionDateByProvidersResponse,
   IAccountsPort,
-  IGetLastDeploymentDateByProvidersUseCase,
+  IGetLastDistributionDateByProvidersUseCase,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
-const origin = 'GetLastDeploymentDateByProvidersUseCase';
+const origin = 'GetLastDistributionDateByProvidersUseCase';
 
-export class GetLastDeploymentDateByProvidersUseCase
+export class GetLastDistributionDateByProvidersUseCase
   extends AbstractMemberUseCase<
-    GetLastDeploymentDateByProvidersCommand,
-    GetLastDeploymentDateByProvidersResponse
+    GetLastDistributionDateByProvidersCommand,
+    GetLastDistributionDateByProvidersResponse
   >
-  implements IGetLastDeploymentDateByProvidersUseCase
+  implements IGetLastDistributionDateByProvidersUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
@@ -26,8 +26,8 @@ export class GetLastDeploymentDateByProvidersUseCase
   }
 
   protected async executeForMembers(
-    command: GetLastDeploymentDateByProvidersCommand & MemberContext,
-  ): Promise<GetLastDeploymentDateByProvidersResponse> {
+    command: GetLastDistributionDateByProvidersCommand & MemberContext,
+  ): Promise<GetLastDistributionDateByProvidersResponse> {
     const datesByProviderId: Record<string, string> = {};
 
     if (command.providerIds.length === 0) {

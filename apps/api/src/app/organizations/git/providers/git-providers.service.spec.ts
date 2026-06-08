@@ -92,7 +92,7 @@ describe('GitProvidersService', () => {
 
   beforeEach(async () => {
     mockDeploymentAdapter = {
-      getLastDeploymentDateByProviders: jest
+      getLastDistributionDateByProviders: jest
         .fn()
         .mockResolvedValue({ datesByProviderId: {} }),
     };

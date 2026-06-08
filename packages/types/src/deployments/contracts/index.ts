@@ -41,4 +41,4 @@ export * from './IInstallPackagesUseCase';
 export * from './IRenderPackageAsPluginUseCase';
 export * from './ITrackPluginDeletedUseCase';
 export * from './IListActiveDistributedPackagesBySpace';
-export * from './IGetLastDeploymentDateByProvidersUseCase';
+export * from './IGetLastDistributionDateByProvidersUseCase';

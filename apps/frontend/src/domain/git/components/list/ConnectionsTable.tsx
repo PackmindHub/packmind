@@ -75,7 +75,7 @@ const TableHeader: React.FC = () => (
     <PMBox width="70px" textAlign="right">
       Repos
     </PMBox>
-    <PMBox width="140px">Last deployment</PMBox>
+    <PMBox width="140px">Last distribution</PMBox>
     <PMBox width="90px" />
   </PMHStack>
 );
@@ -165,7 +165,9 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       </PMText>
 
       <PMBox width="140px">
-        <LastDeploymentCell lastDeploymentAt={connection.lastDeploymentAt} />
+        <LastDistributionCell
+          lastDistributionAt={connection.lastDistributionAt}
+        />
       </PMBox>
 
       <PMHStack width="90px" gap={1} justify="flex-end">
@@ -185,21 +187,21 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
   );
 };
 
-interface LastDeploymentCellProps {
-  lastDeploymentAt: string | null;
+interface LastDistributionCellProps {
+  lastDistributionAt: string | null;
 }
 
-const LastDeploymentCell: React.FC<LastDeploymentCellProps> = ({
-  lastDeploymentAt,
+const LastDistributionCell: React.FC<LastDistributionCellProps> = ({
+  lastDistributionAt,
 }) => {
-  if (!lastDeploymentAt) {
+  if (!lastDistributionAt) {
     return (
       <PMText fontSize="sm" color="faded" fontStyle="italic">
         Never used
       </PMText>
     );
   }
-  const date = new Date(lastDeploymentAt);
+  const date = new Date(lastDistributionAt);
   return (
     <PMTooltip label={format(date, 'yyyy-MM-dd h:mm a')} placement="top">
       <PMText fontSize="sm" color="secondary">

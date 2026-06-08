@@ -34,8 +34,8 @@ import {
   GetDashboardNonLiveCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
-  GetLastDeploymentDateByProvidersCommand,
-  GetLastDeploymentDateByProvidersResponse,
+  GetLastDistributionDateByProvidersCommand,
+  GetLastDistributionDateByProvidersResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
@@ -134,7 +134,7 @@ import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPacka
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
-import { GetLastDeploymentDateByProvidersUseCase } from '../useCases/GetLastDeploymentDateByProvidersUseCase';
+import { GetLastDistributionDateByProvidersUseCase } from '../useCases/GetLastDistributionDateByProvidersUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
@@ -200,7 +200,7 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
-  private _getLastDeploymentDateByProvidersUseCase!: GetLastDeploymentDateByProvidersUseCase;
+  private _getLastDistributionDateByProvidersUseCase!: GetLastDistributionDateByProvidersUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -541,8 +541,8 @@ export class DeploymentsAdapter
         targetResolutionService,
       );
 
-    this._getLastDeploymentDateByProvidersUseCase =
-      new GetLastDeploymentDateByProvidersUseCase(
+    this._getLastDistributionDateByProvidersUseCase =
+      new GetLastDistributionDateByProvidersUseCase(
         this.accountsPort,
         this.distributionRepository,
       );
@@ -847,9 +847,9 @@ export class DeploymentsAdapter
     return this._listActiveDistributedPackagesBySpaceUseCase;
   }
 
-  getLastDeploymentDateByProviders(
-    command: GetLastDeploymentDateByProvidersCommand,
-  ): Promise<GetLastDeploymentDateByProvidersResponse> {
-    return this._getLastDeploymentDateByProvidersUseCase.execute(command);
+  getLastDistributionDateByProviders(
+    command: GetLastDistributionDateByProvidersCommand,
+  ): Promise<GetLastDistributionDateByProvidersResponse> {
+    return this._getLastDistributionDateByProvidersUseCase.execute(command);
   }
 }

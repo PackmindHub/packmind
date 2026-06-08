@@ -537,7 +537,7 @@ export class GitProvidersService {
     }
 
     const { datesByProviderId } =
-      await this.deploymentAdapter.getLastDeploymentDateByProviders({
+      await this.deploymentAdapter.getLastDistributionDateByProviders({
         userId: command.userId,
         organizationId: command.organizationId,
         providerIds: providers.map((p) => p.id),
@@ -546,7 +546,7 @@ export class GitProvidersService {
     return {
       providers: providers.map((provider) => ({
         ...provider,
-        lastDeploymentAt: datesByProviderId[provider.id] ?? null,
+        lastDistributionAt: datesByProviderId[provider.id] ?? null,
       })),
     };
   }

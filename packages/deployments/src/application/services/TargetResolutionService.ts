@@ -361,7 +361,7 @@ export class TargetResolutionService {
       tokenlessProvider = {
         ...newProvider,
         hasAuth: false,
-        lastDeploymentAt: null,
+        lastDistributionAt: null,
       };
     }
 
