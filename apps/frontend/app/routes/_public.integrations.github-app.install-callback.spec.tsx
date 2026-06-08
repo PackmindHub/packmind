@@ -87,8 +87,6 @@ describe('GithubAppCallbackRouteModule', () => {
     typeof useSearchParams
   >;
 
-  const originalOpener = window.opener;
-
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
@@ -112,24 +110,11 @@ describe('GithubAppCallbackRouteModule', () => {
       }),
       jest.fn(),
     ]);
-
-    Object.defineProperty(window, 'opener', {
-      value: { postMessage: jest.fn() },
-      writable: true,
-      configurable: true,
-    });
-
-    jest.spyOn(window, 'close').mockImplementation(jest.fn());
   });
 
   afterEach(() => {
     jest.useRealTimers();
     jest.restoreAllMocks();
-    Object.defineProperty(window, 'opener', {
-      value: originalOpener,
-      writable: true,
-      configurable: true,
-    });
   });
 
   describe('when authenticated user has valid installation_id and state in URL params', () => {
@@ -167,23 +152,6 @@ describe('GithubAppCallbackRouteModule', () => {
       expect(
         screen.getByText(/installation already exists/i),
       ).toBeInTheDocument();
-    });
-
-    it('does not close the popup on error', () => {
-      mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
-        createMockMutation({
-          isError: true,
-          error: new Error('Bad request'),
-        }) as unknown as ReturnType<typeof useSubmitGithubAppCallbackMutation>,
-      );
-
-      renderWithProviders(<GithubAppCallbackRouteModule />);
-
-      act(() => {
-        jest.advanceTimersByTime(200);
-      });
-
-      expect(window.close).not.toHaveBeenCalled();
     });
 
     it('calls the mutation again when clicking Retry', async () => {

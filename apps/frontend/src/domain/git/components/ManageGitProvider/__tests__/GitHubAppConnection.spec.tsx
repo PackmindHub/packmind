@@ -1,11 +1,7 @@
 import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
@@ -20,7 +16,6 @@ import {
   useGetGithubAppStatusQuery,
   useGetGithubAppManifestMutation,
 } from '../../../api/queries/GitProviderQueries';
-import { GET_GIT_PROVIDERS_KEY } from '../../../api/queryKeys';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 
 jest.mock('../../../api/queries/GitProviderQueries', () => ({
@@ -31,11 +26,6 @@ jest.mock('../../../api/queries/GitProviderQueries', () => ({
 
 jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
   useGetMeQuery: jest.fn(),
-}));
-
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQueryClient: jest.fn(),
 }));
 
 const mockOrganizationId = 'org-1' as OrganizationId;
@@ -112,17 +102,13 @@ describe('GitHubAppInstallSlot', () => {
       typeof useGithubAppInstallUrlMutation
     >;
 
-  const mockUseQueryClient = useQueryClient as jest.MockedFunction<
-    typeof useQueryClient
-  >;
-
-  const mockInvalidateQueries = jest.fn();
-  const mockWindowOpen = jest.fn();
   const mockLocalStorage = {
     setItem: jest.fn(),
     getItem: jest.fn(),
     removeItem: jest.fn(),
   };
+
+  const mockLocationAssign = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -133,13 +119,11 @@ describe('GitHubAppInstallSlot', () => {
       >,
     );
 
-    mockUseQueryClient.mockReturnValue({
-      invalidateQueries: mockInvalidateQueries,
-    } as unknown as ReturnType<typeof useQueryClient>);
-
-    jest
-      .spyOn(window, 'open')
-      .mockImplementation(mockWindowOpen.mockReturnValue({} as Window));
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign: mockLocationAssign },
+      writable: true,
+      configurable: true,
+    });
 
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
@@ -162,13 +146,13 @@ describe('GitHubAppInstallSlot', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the helper text about popup', () => {
+    it('renders the helper text about GitHub navigation', () => {
       renderWithProviders(
         <GitHubAppInstallSlot organizationId={mockOrganizationId} />,
       );
 
       expect(
-        screen.getByText(/this will open a github install popup/i),
+        screen.getByText(/this will take you to github/i),
       ).toBeInTheDocument();
     });
   });
@@ -198,7 +182,7 @@ describe('GitHubAppInstallSlot', () => {
       expect(mockMutateAsync).toHaveBeenCalled();
     });
 
-    it('opens a popup with the returned install URL and correct target and dimensions', async () => {
+    it('navigates to the install URL via window.location.assign', async () => {
       const user = userEvent.setup();
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
@@ -221,26 +205,21 @@ describe('GitHubAppInstallSlot', () => {
         screen.getByRole('button', { name: /install packmind on github/i }),
       );
 
-      expect(mockWindowOpen).toHaveBeenCalledWith(
-        installUrl,
-        'packmind-gh-app',
-        'width=900,height=750',
-      );
+      expect(mockLocationAssign).toHaveBeenCalledTimes(1);
+      expect(mockLocationAssign).toHaveBeenCalledWith(installUrl);
     });
 
-    it('shows popup blocked error when window.open returns null', async () => {
+    it('shows an error when the install URL mutation fails', async () => {
       const user = userEvent.setup();
-      mockWindowOpen.mockReturnValue(null);
-      jest.spyOn(window, 'open').mockReturnValue(null);
-
-      const mockMutateAsync = jest.fn().mockResolvedValue({
-        installUrl: 'https://github.com/apps/packmind/installations/new',
-        state: 'abc',
-      });
+      const mockMutateAsync = jest
+        .fn()
+        .mockRejectedValue(new Error('Network error'));
 
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
+          isError: true,
+          error: new Error('Network error'),
         }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
       );
 
@@ -253,114 +232,8 @@ describe('GitHubAppInstallSlot', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/popup blocked/i)).toBeInTheDocument();
+        expect(screen.getByText(/network error/i)).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('when receiving a message event', () => {
-    it('invalidates GET_GIT_PROVIDERS_KEY query when receiving a valid same-origin message', async () => {
-      const mockOnClose = jest.fn();
-      renderWithProviders(
-        <GitHubAppInstallSlot
-          organizationId={mockOrganizationId}
-          onClose={mockOnClose}
-        />,
-      );
-
-      await act(async () => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            origin: window.location.origin,
-            data: {
-              type: 'packmind:github-app-installed',
-              providerId: 'prov-new',
-              orgId: mockOrganizationId,
-            },
-          }),
-        );
-      });
-
-      expect(mockInvalidateQueries).toHaveBeenCalledWith({
-        queryKey: GET_GIT_PROVIDERS_KEY,
-      });
-    });
-
-    it('calls onClose when receiving a valid same-origin message', async () => {
-      const mockOnClose = jest.fn();
-      renderWithProviders(
-        <GitHubAppInstallSlot
-          organizationId={mockOrganizationId}
-          onClose={mockOnClose}
-        />,
-      );
-
-      await act(async () => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            origin: window.location.origin,
-            data: {
-              type: 'packmind:github-app-installed',
-              providerId: 'prov-new',
-              orgId: mockOrganizationId,
-            },
-          }),
-        );
-      });
-
-      expect(mockOnClose).toHaveBeenCalled();
-    });
-
-    it('ignores a message event with a different origin', async () => {
-      const mockOnClose = jest.fn();
-      renderWithProviders(
-        <GitHubAppInstallSlot
-          organizationId={mockOrganizationId}
-          onClose={mockOnClose}
-        />,
-      );
-
-      await act(async () => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            origin: 'https://evil.example.com',
-            data: {
-              type: 'packmind:github-app-installed',
-              providerId: 'prov-new',
-              orgId: mockOrganizationId,
-            },
-          }),
-        );
-      });
-
-      expect(mockInvalidateQueries).not.toHaveBeenCalled();
-      expect(mockOnClose).not.toHaveBeenCalled();
-    });
-
-    it('ignores a message event with a mismatched orgId', async () => {
-      const mockOnClose = jest.fn();
-      renderWithProviders(
-        <GitHubAppInstallSlot
-          organizationId={mockOrganizationId}
-          onClose={mockOnClose}
-        />,
-      );
-
-      await act(async () => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            origin: window.location.origin,
-            data: {
-              type: 'packmind:github-app-installed',
-              providerId: 'prov-new',
-              orgId: 'org-different',
-            },
-          }),
-        );
-      });
-
-      expect(mockInvalidateQueries).not.toHaveBeenCalled();
-      expect(mockOnClose).not.toHaveBeenCalled();
     });
   });
 
@@ -454,31 +327,6 @@ describe('GitHubAppInstallSlot', () => {
       ).toBeInTheDocument();
     });
   });
-
-  describe('when component unmounts', () => {
-    it('removes the message listener so dispatched messages no longer trigger invalidation', async () => {
-      const { unmount } = renderWithProviders(
-        <GitHubAppInstallSlot organizationId={mockOrganizationId} />,
-      );
-
-      unmount();
-
-      await act(async () => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            origin: window.location.origin,
-            data: {
-              type: 'packmind:github-app-installed',
-              providerId: 'prov-new',
-              orgId: mockOrganizationId,
-            },
-          }),
-        );
-      });
-
-      expect(mockInvalidateQueries).not.toHaveBeenCalled();
-    });
-  });
 });
 
 describe('GitHubAppConnection', () => {
@@ -497,15 +345,14 @@ describe('GitHubAppConnection', () => {
   const mockUseGetMeQuery = useGetMeQuery as jest.MockedFunction<
     typeof useGetMeQuery
   >;
-  const mockUseQueryClient = useQueryClient as jest.MockedFunction<
-    typeof useQueryClient
-  >;
 
   const mockLocalStorage = {
     setItem: jest.fn(),
     getItem: jest.fn(),
     removeItem: jest.fn(),
   };
+
+  const mockLocationAssign = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -548,11 +395,11 @@ describe('GitHubAppConnection', () => {
       },
     } as ReturnType<typeof useGetMeQuery>);
 
-    mockUseQueryClient.mockReturnValue({
-      invalidateQueries: jest.fn(),
-    } as unknown as ReturnType<typeof useQueryClient>);
-
-    jest.spyOn(window, 'open').mockReturnValue({} as Window);
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, assign: mockLocationAssign },
+      writable: true,
+      configurable: true,
+    });
 
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
@@ -814,7 +661,6 @@ describe('GitHubAppConnection', () => {
         }) as ReturnType<typeof useGetGithubAppManifestMutation>,
       );
 
-      // Prevent actual form submission
       jest
         .spyOn(HTMLFormElement.prototype, 'submit')
         .mockImplementation(() => undefined);
