@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  GitProviderWithoutToken,
+  GitProviderListItem,
   IAccountsPort,
   IListProvidersUseCase,
   ListProvidersCommand,
@@ -36,7 +36,7 @@ export class ListProvidersUseCase
         command.organization.id,
       );
 
-    const providersWithoutToken: GitProviderWithoutToken[] = providers.map(
+    const providerListItems: GitProviderListItem[] = providers.map(
       (provider) => {
         const { token, ...rest } = provider;
         const hasPatToken =
@@ -56,15 +56,19 @@ export class ListProvidersUseCase
           repos: (rest.repos ?? []).filter((repo) => repo.type === 'standard'),
           hasAuth: hasPatToken || hasActiveAppInstallation,
           authMethod: rest.authMethod,
+          // The Deployments-aware enrichment happens at the API service
+          // layer where both ports are available; this use case stays in
+          // its Git-only domain boundary.
+          lastDistributionAt: null,
         };
       },
     );
 
     this.logger.info('Git providers fetched successfully', {
       organizationId: command.organizationId,
-      providerCount: providersWithoutToken.length,
+      providerCount: providerListItems.length,
     });
 
-    return { providers: providersWithoutToken };
+    return { providers: providerListItems };
   }
 }

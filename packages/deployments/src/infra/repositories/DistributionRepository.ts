@@ -5,6 +5,7 @@ import {
   DistributionId,
   DistributionStatus,
   GitCommit,
+  GitProviderId,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -1753,6 +1754,71 @@ export class DistributionRepository implements IDistributionRepository {
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
+  }
+
+  async findLastSuccessfulDistributionDateByProviderIds(
+    organizationId: OrganizationId,
+    providerIds: GitProviderId[],
+  ): Promise<Map<GitProviderId, string>> {
+    this.logger.info(
+      'Finding last successful distribution date by provider IDs',
+      {
+        organizationId,
+        providerCount: providerIds.length,
+      },
+    );
+
+    if (providerIds.length === 0) {
+      return new Map();
+    }
+
+    try {
+      type Row = { providerId: GitProviderId; lastDeployedAt: string };
+
+      const rows = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoin('distribution.target', 'target')
+        .innerJoin('target.gitRepo', 'gitRepo')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('gitRepo.providerId IN (:...providerIds)', {
+          providerIds: providerIds as string[],
+        })
+        .groupBy('gitRepo.providerId')
+        .select('gitRepo.provider_id', 'providerId')
+        .addSelect('MAX(distribution.createdAt)', 'lastDeployedAt')
+        .getRawMany<Row>();
+
+      const result = new Map<GitProviderId, string>();
+      for (const row of rows) {
+        result.set(row.providerId, toIsoString(row.lastDeployedAt));
+      }
+
+      this.logger.info(
+        'Last successful distribution date by provider IDs found',
+        {
+          organizationId,
+          providerCount: providerIds.length,
+          withDeploymentCount: result.size,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find last successful distribution date by provider IDs',
+        {
+          organizationId,
+          providerCount: providerIds.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw error;
     }
   }

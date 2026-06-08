@@ -328,14 +328,6 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
     }
   }, [connection.id, reauthDraft.patValue, updateMutation]);
 
-  const handleAppInstallSuccess = useCallback(() => {
-    pmToaster.create({
-      type: 'success',
-      title: 'GitHub App re-installed',
-    });
-    setMode('view');
-  }, []);
-
   const revokeApp = useCallback(async () => {
     try {
       await revokeMutation.mutateAsync();
@@ -448,7 +440,6 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               draft={reauthDraft}
               onDraftChange={setReauthDraft}
               onSubmitPat={submitPatReauth}
-              onAppInstallSuccess={handleAppInstallSuccess}
             />
           )}
         </PMVStack>

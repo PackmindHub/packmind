@@ -22,7 +22,6 @@ export interface ReauthPanelProps {
   draft: ReauthDraft;
   onDraftChange: (next: ReauthDraft) => void;
   onSubmitPat: () => void;
-  onAppInstallSuccess: () => void;
 }
 
 export const ReauthPanel: React.FC<ReauthPanelProps> = ({
@@ -31,7 +30,6 @@ export const ReauthPanel: React.FC<ReauthPanelProps> = ({
   draft,
   onDraftChange,
   onSubmitPat,
-  onAppInstallSuccess,
 }) => {
   const usesApp = provider.source === 'github' && provider.authMethod === 'app';
 
@@ -53,11 +51,7 @@ export const ReauthPanel: React.FC<ReauthPanelProps> = ({
       </PMHStack>
 
       {usesApp ? (
-        <AppReauth
-          provider={provider}
-          organizationId={organizationId}
-          onSuccess={onAppInstallSuccess}
-        />
+        <AppReauth provider={provider} organizationId={organizationId} />
       ) : (
         <PatReauth
           provider={provider}
@@ -190,14 +184,9 @@ const PatReauth: React.FC<PatReauthProps> = ({
 interface AppReauthProps {
   provider: GitProviderUI;
   organizationId: OrganizationId;
-  onSuccess: () => void;
 }
 
-const AppReauth: React.FC<AppReauthProps> = ({
-  provider,
-  organizationId,
-  onSuccess,
-}) => {
+const AppReauth: React.FC<AppReauthProps> = ({ provider, organizationId }) => {
   return (
     <PMVStack gap={3} align="stretch">
       <PMBox
@@ -212,8 +201,7 @@ const AppReauth: React.FC<AppReauthProps> = ({
             Re-install the Packmind GitHub App
           </PMText>
           <PMText fontSize="xs" color="secondary">
-            Opens GitHub in a popup so you can confirm or re-grant the install
-            on{' '}
+            Takes you to GitHub so you can confirm or re-grant the install on{' '}
             <PMText as="span" fontWeight="medium" color="primary">
               {provider.url}
             </PMText>
@@ -223,7 +211,6 @@ const AppReauth: React.FC<AppReauthProps> = ({
           <GitHubAppInstallSlot
             organizationId={organizationId}
             editingProvider={provider}
-            onClose={onSuccess}
           />
         </PMVStack>
       </PMBox>

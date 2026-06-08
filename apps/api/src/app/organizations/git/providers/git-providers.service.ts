@@ -17,6 +17,7 @@ import {
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
+  IDeploymentPort,
   IGitPort,
   ListProvidersCommand,
   ListProvidersResponse,
@@ -26,7 +27,10 @@ import {
   UserId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
-import { InjectGitAdapter } from '../../../shared/HexaInjection';
+import {
+  InjectDeploymentAdapter,
+  InjectGitAdapter,
+} from '../../../shared/HexaInjection';
 import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
@@ -97,6 +101,8 @@ type RevokeGithubAppCommand = {
 export class GitProvidersService {
   constructor(
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
     private readonly accountsHexa: AccountsHexa,
     @Inject(INSTALL_STATE_SIGNER)
     private readonly signer: InstallStateSigner,
@@ -524,7 +530,25 @@ export class GitProvidersService {
   async listProviders(
     command: ListProvidersCommand,
   ): Promise<ListProvidersResponse> {
-    return this.gitAdapter.listProviders(command);
+    const { providers } = await this.gitAdapter.listProviders(command);
+
+    if (providers.length === 0) {
+      return { providers: [] };
+    }
+
+    const { datesByProviderId } =
+      await this.deploymentAdapter.getLastDistributionDateByProviders({
+        userId: command.userId,
+        organizationId: command.organizationId,
+        providerIds: providers.map((p) => p.id),
+      });
+
+    return {
+      providers: providers.map((provider) => ({
+        ...provider,
+        lastDistributionAt: datesByProviderId[provider.id] ?? null,
+      })),
+    };
   }
 
   async getRepositories(organizationId: OrganizationId): Promise<GitRepo[]> {

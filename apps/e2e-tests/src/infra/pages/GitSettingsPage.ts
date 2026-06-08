@@ -55,36 +55,31 @@ export class GitSettings
     await this.page.getByRole('tab', { name: /CLI-managed/ }).click();
 
     const rows = this.page.locator('[data-testid="cli-managed-row"]');
-    const emptyState = this.page.getByText('No CLI-managed entries yet.');
+    const emptyState = this.page.getByText('No CLI sessions yet.');
     await Promise.race([
       rows.first().waitFor({ state: 'attached', timeout: 5000 }),
       emptyState.waitFor({ state: 'attached', timeout: 5000 }),
     ]).catch(() => undefined);
 
     const count = await rows.count();
-    const grouped = new Map<string, { provider: string; count: number }>();
+    const result: GitProviderEntry[] = [];
 
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const providerId = (await row.getAttribute('data-provider-id')) ?? '';
       const vendor = (await row.getAttribute('data-vendor')) ?? '';
+      const repoCount = parseInt(
+        (await row.getAttribute('data-repo-count')) ?? '0',
+        10,
+      );
 
-      const existing = grouped.get(providerId);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        grouped.set(providerId, {
-          provider: vendor.toLowerCase(),
-          count: 1,
-        });
-      }
+      result.push({
+        provider: vendor.toLowerCase(),
+        repositoriesCount: repoCount,
+        tokenLess: true,
+      });
     }
 
-    return Array.from(grouped.values()).map(({ provider, count }) => ({
-      provider,
-      repositoriesCount: count,
-      tokenLess: true,
-    }));
+    return result;
   }
 
   async waitForFirstRowStatus(

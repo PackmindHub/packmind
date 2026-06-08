@@ -202,10 +202,6 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
     onClose,
   ]);
 
-  const handleAppInstalled = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
   const inPatMode = !showAppPath || authMethod === 'pat';
   const canSubmitPat = useMemo(() => {
     if (!inPatMode) return false;
@@ -287,7 +283,6 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
                     <GitHubAppAuthBlock
                       organizationId={organizationId}
                       githubAppMode={githubAppMode}
-                      onInstalled={handleAppInstalled}
                     />
                   )}
 

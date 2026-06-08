@@ -42,6 +42,8 @@ import {
   GetDashboardNonLiveCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
+  GetLastDistributionDateByProvidersCommand,
+  GetLastDistributionDateByProvidersResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
@@ -173,6 +175,7 @@ import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPacka
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
+import { GetLastDistributionDateByProvidersUseCase } from '../useCases/GetLastDistributionDateByProvidersUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
@@ -238,6 +241,7 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
+  private _getLastDistributionDateByProvidersUseCase!: GetLastDistributionDateByProvidersUseCase;
   private _linkMarketplaceUseCase!: LinkMarketplaceUseCase;
   private _unlinkMarketplaceUseCase!: UnlinkMarketplaceUseCase;
   private _listMarketplacesUseCase!: ListMarketplacesUseCase;
@@ -592,6 +596,12 @@ export class DeploymentsAdapter
         this.distributedPackageRepository,
         this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
+      );
+
+    this._getLastDistributionDateByProvidersUseCase =
+      new GetLastDistributionDateByProvidersUseCase(
+        this.accountsPort,
+        this.distributionRepository,
       );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
@@ -1127,6 +1137,12 @@ export class DeploymentsAdapter
 
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
     return this._listActiveDistributedPackagesBySpaceUseCase;
+  }
+
+  getLastDistributionDateByProviders(
+    command: GetLastDistributionDateByProvidersCommand,
+  ): Promise<GetLastDistributionDateByProvidersResponse> {
+    return this._getLastDistributionDateByProvidersUseCase.execute(command);
   }
 
   async linkMarketplace(

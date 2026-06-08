@@ -1,30 +1,31 @@
-import React, { useMemo } from 'react';
-import { PMAlert, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
-import { GitProviderUI, GitRepoUI } from '../../types/GitProviderTypes';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  PMAlert,
+  PMBox,
+  PMHStack,
+  PMIcon,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
+import { LuChevronRight } from 'react-icons/lu';
+import { GitProviderUI } from '../../types/GitProviderTypes';
 import { VendorMark } from '../shared/VendorMark';
 
 interface CliManagedTableProps {
   entries: GitProviderUI[];
 }
 
-interface CliRepoRow {
-  key: string;
-  repo: GitRepoUI;
-  provider: GitProviderUI;
-}
-
 export const CliManagedTable: React.FC<CliManagedTableProps> = ({
   entries,
 }) => {
-  const rows = useMemo<CliRepoRow[]>(
+  const providers = useMemo(
     () =>
-      entries.flatMap((provider) =>
-        (provider.repos ?? []).map((repo) => ({
-          key: `${provider.id}:${repo.id}`,
-          repo,
-          provider,
-        })),
-      ),
+      entries.map((provider) => ({
+        provider,
+        repoCount: new Set(
+          (provider.repos ?? []).map((r) => `${r.owner}/${r.repo}`),
+        ).size,
+      })),
     [entries],
   );
 
@@ -59,7 +60,7 @@ export const CliManagedTable: React.FC<CliManagedTableProps> = ({
         </PMVStack>
       </PMAlert.Root>
 
-      {rows.length === 0 ? (
+      {providers.length === 0 ? (
         <EmptyState />
       ) : (
         <PMBox
@@ -70,8 +71,13 @@ export const CliManagedTable: React.FC<CliManagedTableProps> = ({
           bg="background.primary"
         >
           <TableHeader />
-          {rows.map((row, idx) => (
-            <CliRow key={row.key} row={row} isLast={idx === rows.length - 1} />
+          {providers.map(({ provider, repoCount }, idx) => (
+            <ProviderRow
+              key={provider.id}
+              provider={provider}
+              repoCount={repoCount}
+              isLast={idx === providers.length - 1}
+            />
           ))}
         </PMBox>
       )}
@@ -93,52 +99,163 @@ const TableHeader: React.FC = () => (
     letterSpacing="wider"
     fontWeight="semibold"
   >
-    <PMBox width="160px">Vendor</PMBox>
-    <PMBox flex={1} minW={0}>
-      Repository
+    <PMBox flex={1.6} minW={0}>
+      Connection
     </PMBox>
+    <PMBox width="160px">Status</PMBox>
+    <PMBox width="70px" textAlign="right">
+      Repos
+    </PMBox>
+    <PMBox width="140px" />
+    <PMBox width="90px" />
   </PMHStack>
 );
 
-interface CliRowProps {
-  row: CliRepoRow;
+interface ProviderRowProps {
+  provider: GitProviderUI;
+  repoCount: number;
   isLast: boolean;
 }
 
-const CliRow: React.FC<CliRowProps> = ({ row, isLast }) => {
-  const { repo, provider } = row;
-  const repoPath = `${repo.owner}/${repo.repo}`;
+const ProviderRow: React.FC<ProviderRowProps> = ({
+  provider,
+  repoCount,
+  isLast,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const repoPaths = useMemo(
+    () =>
+      Array.from(
+        new Set((provider.repos ?? []).map((r) => `${r.owner}/${r.repo}`)),
+      ).sort((a, b) => a.localeCompare(b)),
+    [provider.repos],
+  );
+  const canExpand = repoPaths.length > 0;
+
+  const toggle = useCallback(() => {
+    if (canExpand) setExpanded((v) => !v);
+  }, [canExpand]);
+
+  const urlLabel = provider.url ?? vendorFallbackLabel(provider.source);
 
   return (
-    <PMHStack
-      data-testid="cli-managed-row"
-      data-provider-id={provider.id}
-      data-vendor={provider.source}
-      data-url={provider.url ?? ''}
-      data-repo-path={repoPath}
-      gap={3}
-      paddingX={4}
-      paddingY={3}
+    <PMBox
       borderBottom={isLast ? undefined : '1px solid'}
       borderColor="border.tertiary"
-      align="center"
     >
-      <PMBox width="160px">
-        <VendorMark vendor={provider.source} />
-      </PMBox>
-      <PMBox flex={1} minW={0}>
-        <PMText as="div" fontSize="sm" color="primary" fontWeight="medium">
-          {repoPath}
-        </PMText>
-        {provider.url && (
-          <PMText as="div" fontSize="xs" color="faded">
-            {provider.url}
+      <PMHStack
+        role={canExpand ? 'button' : undefined}
+        tabIndex={canExpand ? 0 : undefined}
+        aria-expanded={canExpand ? expanded : undefined}
+        onClick={toggle}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          if (!canExpand) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        }}
+        data-testid="cli-managed-row"
+        data-vendor={provider.source}
+        data-url={provider.url ?? ''}
+        data-repo-count={repoCount}
+        data-expanded={expanded ? 'true' : 'false'}
+        gap={3}
+        paddingX={4}
+        paddingY={3}
+        cursor={canExpand ? 'pointer' : 'default'}
+        _hover={canExpand ? { bg: 'background.secondary' } : undefined}
+        transition="background-color 120ms ease-out"
+      >
+        <PMHStack gap={2} flex={1.6} minW={0} align="center">
+          <PMBox
+            color={canExpand ? 'text.faded' : 'transparent'}
+            display="flex"
+            alignItems="center"
+            transform={expanded ? 'rotate(90deg)' : 'rotate(0deg)'}
+            transition="transform 150ms ease-out"
+          >
+            <PMIcon fontSize="sm">
+              <LuChevronRight />
+            </PMIcon>
+          </PMBox>
+          <VendorMark vendor={provider.source} size="md" showLabel={false} />
+          <PMText
+            as="p"
+            fontSize="sm"
+            color="primary"
+            fontWeight="medium"
+            truncate
+          >
+            {urlLabel}
           </PMText>
-        )}
-      </PMBox>
-    </PMHStack>
+        </PMHStack>
+
+        <PMBox width="160px">
+          <CliTag />
+        </PMBox>
+
+        <PMText
+          width="70px"
+          fontSize="sm"
+          color="secondary"
+          textAlign="right"
+          fontVariantNumeric="tabular-nums"
+        >
+          {repoCount}
+        </PMText>
+
+        <PMBox width="140px" />
+        <PMBox width="90px" />
+      </PMHStack>
+
+      {expanded && canExpand && (
+        <PMVStack
+          align="stretch"
+          gap={0}
+          bg="background.secondary"
+          borderTop="1px solid"
+          borderColor="border.tertiary"
+        >
+          {repoPaths.map((path) => (
+            <PMHStack
+              key={path}
+              data-testid="cli-managed-repo-row"
+              data-repo-path={path}
+              gap={3}
+              paddingY={2}
+              paddingLeft="3.25rem"
+              paddingRight={4}
+            >
+              <PMText fontSize="sm" color="secondary" truncate>
+                {path}
+              </PMText>
+            </PMHStack>
+          ))}
+        </PMVStack>
+      )}
+    </PMBox>
   );
 };
+
+const CliTag: React.FC = () => (
+  <PMBox
+    as="span"
+    display="inline-flex"
+    alignItems="center"
+    bg="background.tertiary"
+    color="text.secondary"
+    fontSize="xs"
+    fontWeight="medium"
+    letterSpacing="wider"
+    textTransform="uppercase"
+    paddingX={2}
+    paddingY={0.5}
+    borderRadius="sm"
+  >
+    CLI
+  </PMBox>
+);
 
 const EmptyState: React.FC = () => (
   <PMBox
@@ -150,7 +267,7 @@ const EmptyState: React.FC = () => (
     textAlign="center"
   >
     <PMText fontSize="sm" color="secondary">
-      No CLI-managed entries yet.
+      No CLI sessions yet.
     </PMText>
     <PMText fontSize="xs" color="faded" marginTop={1}>
       They appear here the first time someone runs{' '}
@@ -171,3 +288,9 @@ const EmptyState: React.FC = () => (
     </PMText>
   </PMBox>
 );
+
+function vendorFallbackLabel(vendor: string): string {
+  if (vendor === 'github') return 'github.com';
+  if (vendor === 'gitlab') return 'gitlab.com';
+  return vendor;
+}

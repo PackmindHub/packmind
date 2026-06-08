@@ -50,6 +50,7 @@ describe('DistributionRepository', () => {
       orderBy: jest.fn().mockReturnThis(),
       addOrderBy: jest.fn().mockReturnThis(),
       distinctOn: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
       getMany: jest.fn(),
@@ -1997,6 +1998,89 @@ describe('DistributionRepository', () => {
           await repository.findActivePackageOperationsBySpace(spaceId);
 
         expect(result).toEqual([]);
+      });
+    });
+  });
+
+  describe('findLastSuccessfulDistributionDateByProviderIds', () => {
+    const providerA = 'provider-a' as never;
+    const providerB = 'provider-b' as never;
+
+    describe('when no provider IDs are supplied', () => {
+      let result: Map<unknown, string>;
+
+      beforeEach(async () => {
+        result =
+          await repository.findLastSuccessfulDistributionDateByProviderIds(
+            organizationId,
+            [],
+          );
+      });
+
+      it('returns an empty map', () => {
+        expect(result.size).toBe(0);
+      });
+
+      it('does not issue a query', () => {
+        expect(mockTypeOrmRepository.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when rows are returned', () => {
+      let result: Map<unknown, string>;
+
+      beforeEach(async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+          {
+            providerId: providerA,
+            lastDeployedAt: new Date('2026-05-01T10:00:00.000Z'),
+          },
+          {
+            providerId: providerB,
+            lastDeployedAt: '2026-04-15T08:30:00.000Z',
+          },
+        ]);
+
+        result =
+          await repository.findLastSuccessfulDistributionDateByProviderIds(
+            organizationId,
+            [providerA, providerB],
+          );
+      });
+
+      it('maps Date values to ISO strings', () => {
+        expect(result.get(providerA)).toBe('2026-05-01T10:00:00.000Z');
+      });
+
+      it('passes through pre-formatted string timestamps unchanged', () => {
+        expect(result.get(providerB)).toBe('2026-04-15T08:30:00.000Z');
+      });
+
+      it('filters by successful status', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          'distribution.status = :status',
+          { status: DistributionStatus.success },
+        );
+      });
+
+      it('groups by git provider', () => {
+        expect(
+          (mockQueryBuilder as unknown as { groupBy: jest.Mock }).groupBy,
+        ).toHaveBeenCalledWith('gitRepo.providerId');
+      });
+    });
+
+    describe('when a provider has no matching distribution', () => {
+      it('omits the provider from the map', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+
+        const result =
+          await repository.findLastSuccessfulDistributionDateByProviderIds(
+            organizationId,
+            [providerA],
+          );
+
+        expect(result.has(providerA)).toBe(false);
       });
     });
   });

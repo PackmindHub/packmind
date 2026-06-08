@@ -10,6 +10,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { GitProviderId, GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
@@ -79,6 +80,7 @@ const TableHeader: React.FC = () => (
     <PMBox width="60px" textAlign="right">
       Repos
     </PMBox>
+    <PMBox width="140px">Last distribution</PMBox>
     <PMBox width="110px" textAlign="right">
       Marketplaces
     </PMBox>
@@ -173,6 +175,12 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         {repoCount}
       </PMText>
 
+      <PMBox width="140px">
+        <LastDistributionCell
+          lastDistributionAt={connection.lastDistributionAt}
+        />
+      </PMBox>
+
       <PMText
         width="110px"
         fontSize="sm"
@@ -201,6 +209,30 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         />
       </PMHStack>
     </PMHStack>
+  );
+};
+
+interface LastDistributionCellProps {
+  lastDistributionAt: string | null;
+}
+
+const LastDistributionCell: React.FC<LastDistributionCellProps> = ({
+  lastDistributionAt,
+}) => {
+  if (!lastDistributionAt) {
+    return (
+      <PMText fontSize="sm" color="faded" fontStyle="italic">
+        Never used
+      </PMText>
+    );
+  }
+  const date = new Date(lastDistributionAt);
+  return (
+    <PMTooltip label={format(date, 'yyyy-MM-dd h:mm a')} placement="top">
+      <PMText fontSize="sm" color="secondary">
+        {formatDistanceToNowStrict(date, { addSuffix: true })}
+      </PMText>
+    </PMTooltip>
   );
 };
 

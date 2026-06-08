@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { Dialog, Portal } from '@chakra-ui/react';
 import {
   PMAlert,
@@ -22,20 +21,12 @@ import {
   useRevokeGithubAppMutation,
 } from '../../api/queries/GitProviderQueries';
 import { extractErrorMessage } from '../../utils/errorUtils';
-import { GET_GIT_PROVIDERS_KEY } from '../../api/queryKeys';
 
 type GithubAppMode = 'on-prem' | 'shared';
 
 type GitHubAppAuthBlockProps = {
   organizationId: OrganizationId;
   githubAppMode: GithubAppMode;
-  onInstalled: () => void;
-};
-
-type AppInstalledMessage = {
-  type: 'packmind:github-app-installed';
-  providerId: string;
-  orgId: string;
 };
 
 const appNameFromSlug = (slug: string): string =>
@@ -46,15 +37,11 @@ const appNameFromSlug = (slug: string): string =>
     .join(' ');
 
 export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
-  organizationId,
   githubAppMode,
-  onInstalled,
 }) => {
-  const queryClient = useQueryClient();
   const installUrlMutation = useGithubAppInstallUrlMutation();
   const manifestMutation = useGetGithubAppManifestMutation();
   const revokeMutation = useRevokeGithubAppMutation();
-  const [popupError, setPopupError] = useState<string | null>(null);
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
   const [revokeConfirmationInput, setRevokeConfirmationInput] = useState('');
 
@@ -92,40 +79,10 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
     }
   };
 
-  const handleMessage = useCallback(
-    async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      const data = event.data as AppInstalledMessage;
-      if (
-        data?.type !== 'packmind:github-app-installed' ||
-        data?.orgId !== organizationId
-      )
-        return;
-      await queryClient.invalidateQueries({ queryKey: GET_GIT_PROVIDERS_KEY });
-      onInstalled();
-    },
-    [organizationId, queryClient, onInstalled],
-  );
-
-  useEffect(() => {
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [handleMessage]);
-
   const handleInstallClick = async () => {
-    setPopupError(null);
     try {
       const { installUrl } = await installUrlMutation.mutateAsync();
-      const popup = window.open(
-        installUrl,
-        'packmind-gh-app',
-        'width=900,height=750',
-      );
-      if (!popup) {
-        setPopupError(
-          'Popup blocked. Please allow popups for this site and retry.',
-        );
-      }
+      window.location.assign(installUrl);
     } catch {
       // installUrlMutation.error surfaces below.
     }
@@ -152,7 +109,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
 
   const needsRegistration =
     githubAppMode === 'on-prem' && statusQuery.data?.hasApp === false;
-  const installError = popupError ?? installUrlMutation.error?.message ?? null;
+  const installError = installUrlMutation.error?.message ?? null;
   const manifestError = manifestMutation.error?.message ?? null;
 
   return (
@@ -257,9 +214,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
                 Install Packmind on GitHub
               </PMButton>
               <PMText fontSize="xs" color="faded">
-                {installUrlMutation.isPending
-                  ? 'Waiting for confirmation from GitHub.'
-                  : 'Opens a GitHub popup. Pick the orgs and repos to grant access.'}
+                Opens GitHub so you can pick the orgs and repos to grant access.
               </PMText>
               {githubAppMode === 'on-prem' && (
                 <PMBox

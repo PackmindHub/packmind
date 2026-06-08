@@ -69,16 +69,11 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     useState<GitProviderId | null>(null);
   const [openAddDrawer, setOpenAddDrawer] = useState(false);
 
-  const { userConfigured, cliManaged, cliManagedRepoCount } = useMemo(() => {
+  const { userConfigured, cliManaged } = useMemo(() => {
     const all = providers ?? [];
-    const cli = all.filter((p) => !p.hasAuth);
     return {
       userConfigured: all.filter((p) => p.hasAuth),
-      cliManaged: cli,
-      cliManagedRepoCount: cli.reduce(
-        (acc, p) => acc + (p.repos?.length ?? 0),
-        0,
-      ),
+      cliManaged: all.filter((p) => !p.hasAuth),
     };
   }, [providers]);
 
@@ -185,7 +180,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     {
       value: 'cli',
       triggerLabel: (
-        <TabLabel label="CLI-managed" count={cliManagedRepoCount} muted />
+        <TabLabel label="CLI-managed" count={cliManaged.length} muted />
       ),
       content: (
         <PMVStack align="stretch" gap={4} pt={4}>

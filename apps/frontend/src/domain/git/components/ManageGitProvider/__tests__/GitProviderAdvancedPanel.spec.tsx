@@ -60,6 +60,7 @@ const githubProvider: GitProviderUI = {
   hasAuth: true,
   url: 'https://github.com',
   displayName: '',
+  lastDistributionAt: null,
 };
 
 const gitlabProvider: GitProviderUI = {

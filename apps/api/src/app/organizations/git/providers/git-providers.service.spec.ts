@@ -26,7 +26,10 @@ jest.mock('@packmind/accounts', () => ({
 jest.mock('../../../shared/HexaInjection', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Inject } = require('@nestjs/common');
-  return { InjectGitAdapter: () => Inject('GIT_ADAPTER') };
+  return {
+    InjectGitAdapter: () => Inject('GIT_ADAPTER'),
+    InjectDeploymentAdapter: () => Inject('DEPLOYMENT_ADAPTER'),
+  };
 });
 
 jest.mock('@packmind/node-utils', () => ({
@@ -52,6 +55,7 @@ import {
   createOrganizationGitHubAppId,
   createOrganizationId,
   createUserId,
+  IDeploymentPort,
   IGitPort,
   OrganizationGitHubApp,
 } from '@packmind/types';
@@ -67,6 +71,7 @@ const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
 // The GIT_ADAPTER_TOKEN string value — mirrors GIT_ADAPTER_TOKEN in HexaRegistryModule
 // but defined here to avoid the broken import chain.
 const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
+const DEPLOYMENT_ADAPTER_TOKEN = 'DEPLOYMENT_ADAPTER';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Configuration } = require('@packmind/node-utils') as {
@@ -81,10 +86,17 @@ const { AccountsHexa } = require('@packmind/accounts') as {
 describe('GitProvidersService', () => {
   let service: GitProvidersService;
   let mockGitAdapter: Partial<IGitPort>;
+  let mockDeploymentAdapter: Partial<IDeploymentPort>;
   let mockSigner: { sign: jest.Mock; verify: jest.Mock };
   let mockAccountsAdapter: { getOrganizationById: jest.Mock };
 
   beforeEach(async () => {
+    mockDeploymentAdapter = {
+      getLastDistributionDateByProviders: jest
+        .fn()
+        .mockResolvedValue({ datesByProviderId: {} }),
+    };
+
     mockGitAdapter = {
       addGitProvider: jest.fn(),
       findGitProviderByAppInstallation: jest.fn(),
@@ -116,6 +128,10 @@ describe('GitProvidersService', () => {
         {
           provide: GIT_ADAPTER_TOKEN,
           useValue: mockGitAdapter,
+        },
+        {
+          provide: DEPLOYMENT_ADAPTER_TOKEN,
+          useValue: mockDeploymentAdapter,
         },
         {
           provide: AccountsHexa,
