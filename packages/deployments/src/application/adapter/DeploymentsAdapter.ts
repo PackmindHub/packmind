@@ -147,6 +147,7 @@ import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipFor
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { CancelPluginRemovalUseCase } from '../useCases/cancelPluginRemoval';
+import { FindMarketplaceDistributionByIdUseCase } from '../useCases/findMarketplaceDistributionById';
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
 import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
 import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
@@ -248,6 +249,7 @@ export class DeploymentsAdapter
   private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
   private _publishPackageOnMarketplaceUseCase!: PublishPackageOnMarketplaceUseCase;
   private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
+  private _findMarketplaceDistributionByIdUseCase!: FindMarketplaceDistributionByIdUseCase;
   private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
   private _cancelPluginRemovalUseCase!: CancelPluginRemovalUseCase;
   private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
@@ -669,6 +671,12 @@ export class DeploymentsAdapter
         this.marketplaceDistributionRepository,
         this.deploymentsServices.getPackageService(),
         this.spacesPort,
+        this.accountsPort,
+      );
+
+    this._findMarketplaceDistributionByIdUseCase =
+      new FindMarketplaceDistributionByIdUseCase(
+        this.marketplaceDistributionRepository,
         this.accountsPort,
       );
 
@@ -1184,13 +1192,7 @@ export class DeploymentsAdapter
   async findMarketplaceDistributionById(
     command: FindMarketplaceDistributionByIdCommand,
   ): Promise<FindMarketplaceDistributionByIdResponse> {
-    const row = await this.marketplaceDistributionRepository.findById(
-      command.marketplaceDistributionId,
-    );
-    if (!row || row.organizationId !== command.organizationId) {
-      return { marketplaceDistribution: null };
-    }
-    return { marketplaceDistribution: row };
+    return this._findMarketplaceDistributionByIdUseCase.execute(command);
   }
 
   async markPluginForRemoval(
