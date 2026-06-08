@@ -12,6 +12,7 @@ import {
   Request,
   ConflictException,
   BadRequestException,
+  BadGatewayException,
   NotImplementedException,
   UseGuards,
 } from '@nestjs/common';
@@ -408,7 +409,11 @@ export class GitProvidersController {
           error: error instanceof Error ? error.message : String(error),
         },
       );
-      throw error;
+      throw new BadGatewayException(
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch available repositories',
+      );
     }
   }
 
