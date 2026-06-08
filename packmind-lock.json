@@ -16,7 +16,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-08T03:06:28.622Z",
+  "installedAt": "2026-06-08T08:00:17.125Z",
   "artifacts": {
     "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
