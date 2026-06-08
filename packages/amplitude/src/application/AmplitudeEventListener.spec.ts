@@ -1228,9 +1228,8 @@ describe('AmplitudeEventListener', () => {
         'org-456',
         'marketplace_plugin_removal_initiated',
         {
-          marketplace_id: 'mkt-789',
-          plugin_slug: 'my-plugin',
-          actor_id: 'user-123',
+          marketplaceId: 'mkt-789',
+          pluginSlug: 'my-plugin',
           trigger: 'from_marketplace',
           source: 'ui',
         },
@@ -1259,9 +1258,8 @@ describe('AmplitudeEventListener', () => {
           'org-456',
           'marketplace_plugin_removal_initiated',
           {
-            marketplace_id: 'mkt-789',
-            plugin_slug: 'other-plugin',
-            actor_id: 'user-123',
+            marketplaceId: 'mkt-789',
+            pluginSlug: 'other-plugin',
             trigger: 'from_packmind_package',
             source: 'ui',
           },

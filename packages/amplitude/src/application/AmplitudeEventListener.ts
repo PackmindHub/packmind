@@ -647,9 +647,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       event,
       'marketplace_plugin_removal_initiated',
       (payload) => ({
-        marketplace_id: payload.marketplaceId,
-        plugin_slug: payload.pluginSlug,
-        actor_id: payload.userId,
+        marketplaceId: payload.marketplaceId,
+        pluginSlug: payload.pluginSlug,
         trigger: payload.trigger,
       }),
     );
