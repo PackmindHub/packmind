@@ -34,6 +34,8 @@ import {
   GetDashboardNonLiveCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
+  GetLastDeploymentDateByProvidersCommand,
+  GetLastDeploymentDateByProvidersResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
@@ -132,6 +134,7 @@ import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPacka
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
+import { GetLastDeploymentDateByProvidersUseCase } from '../useCases/GetLastDeploymentDateByProvidersUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
@@ -197,6 +200,7 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
+  private _getLastDeploymentDateByProvidersUseCase!: GetLastDeploymentDateByProvidersUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -537,6 +541,12 @@ export class DeploymentsAdapter
         targetResolutionService,
       );
 
+    this._getLastDeploymentDateByProvidersUseCase =
+      new GetLastDeploymentDateByProvidersUseCase(
+        this.accountsPort,
+        this.distributionRepository,
+      );
+
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
       this.deploymentsServices.getPackageService(),
       this.deploymentsServices.getTargetService(),
@@ -835,5 +845,11 @@ export class DeploymentsAdapter
 
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
     return this._listActiveDistributedPackagesBySpaceUseCase;
+  }
+
+  getLastDeploymentDateByProviders(
+    command: GetLastDeploymentDateByProvidersCommand,
+  ): Promise<GetLastDeploymentDateByProvidersResponse> {
+    return this._getLastDeploymentDateByProvidersUseCase.execute(command);
   }
 }

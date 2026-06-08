@@ -358,7 +358,11 @@ export class TargetResolutionService {
       this.logger.info('Created tokenless provider', {
         providerId: newProvider.id,
       });
-      tokenlessProvider = { ...newProvider, hasAuth: false };
+      tokenlessProvider = {
+        ...newProvider,
+        hasAuth: false,
+        lastDeploymentAt: null,
+      };
     }
 
     // Check if repo exists under tokenless provider

@@ -3,6 +3,7 @@ import {
   DistributionId,
   DistributionStatus,
   GitCommit,
+  GitProviderId,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -197,6 +198,17 @@ export interface IDistributionRepository {
   findActivePackageOperationsBySpace(
     spaceId: SpaceId,
   ): Promise<ActivePackageOperationRow[]>;
+
+  /**
+   * For each given Git provider, return the createdAt of the most recent
+   * successful distribution whose target resolves (via git_repo.provider_id)
+   * to that provider. Providers with no successful distribution are absent
+   * from the returned map — callers treat absence as "never deployed".
+   */
+  findLastSuccessfulDistributionDateByProviderIds(
+    organizationId: OrganizationId,
+    providerIds: GitProviderId[],
+  ): Promise<Map<GitProviderId, string>>;
 }
 
 export type ActivePackageOperationRow = {

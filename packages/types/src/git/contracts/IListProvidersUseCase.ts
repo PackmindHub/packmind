@@ -7,12 +7,24 @@ export type GitProviderWithoutToken = {
   authMethod: 'token' | 'app';
 } & Omit<GitProvider, 'token'>;
 
+/**
+ * Presentation DTO for the Git connections list view. Enriches the
+ * tokenless provider with `lastDeploymentAt` — the ISO timestamp of the
+ * most recent successful distribution that targeted any repo under this
+ * provider, or null if none. The git domain's ListProvidersUseCase
+ * returns this with `lastDeploymentAt: null`; the API service enriches
+ * it by calling the deployments port before responding.
+ */
+export type GitProviderListItem = GitProviderWithoutToken & {
+  lastDeploymentAt: string | null;
+};
+
 export type ListProvidersCommand = PackmindCommand & {
   organizationId: OrganizationId;
 };
 
 export type ListProvidersResponse = {
-  providers: GitProviderWithoutToken[];
+  providers: GitProviderListItem[];
 };
 
 export type IListProvidersUseCase = IUseCase<
