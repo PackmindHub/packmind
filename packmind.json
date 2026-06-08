@@ -5,6 +5,7 @@
     "@testing/unit-tests": "*",
     "@global/packmind-standards": "*",
     "@backend/backend-standards": "*",
-    "@global/proprietary-standards": "*"
+    "@global/proprietary-standards": "*",
+    "@global/packmind-proprietary": "*"
   }
 }

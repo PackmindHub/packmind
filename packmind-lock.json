@@ -3,6 +3,7 @@
   "packageSlugs": [
     "@backend/backend-standards",
     "@frontend/playground",
+    "@global/packmind-proprietary",
     "@global/packmind-standards",
     "@global/proprietary-standards",
     "@testing/cli-e2e",
@@ -16,8 +17,41 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-08T08:01:42.858Z",
+  "installedAt": "2026-06-08T08:08:02.502Z",
   "artifacts": {
+    "user:skill:amplitude-listener-events-adoption": {
+      "name": "amplitude-listener-events-adoption",
+      "type": "skill",
+      "id": "fa0e7599-5f56-48cf-bf3b-891f0b9f6f38",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/amplitude-listener-events-adoption/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/amplitude-listener-events-adoption/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/amplitude-listener-events-adoption/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/amplitude-listener-events-adoption/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
     "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
       "type": "skill",
@@ -46,6 +80,669 @@
         },
         {
           "path": ".gitlab/duo/skills/cli-e2e-test-authoring/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:datadog-analysis": {
+      "name": "datadog-analysis",
+      "type": "skill",
+      "id": "0bddffe8-a496-4cf2-85f5-5525453eb54b",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/datadog-analysis/references/datadog_mcp.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/datadog-analysis/references/known_patterns.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/datadog-analysis/references/report-template.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/datadog-analysis/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/datadog-analysis/references/datadog_mcp.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/datadog-analysis/references/known_patterns.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/datadog-analysis/references/report-template.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/datadog-analysis/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/datadog-analysis/references/datadog_mcp.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/datadog-analysis/references/known_patterns.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/datadog-analysis/references/report-template.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/datadog-analysis/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/datadog-analysis/references/datadog_mcp.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/datadog-analysis/references/known_patterns.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/datadog-analysis/references/report-template.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/datadog-analysis/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:doc-audit": {
+      "name": "doc-audit",
+      "type": "skill",
+      "id": "7683e9a7-4d61-40be-a993-9de987dba976",
+      "version": 2,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/doc-audit/references/section-audit-instructions.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/doc-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/doc-audit/references/section-audit-instructions.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/doc-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/doc-audit/references/section-audit-instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/doc-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/doc-audit/references/section-audit-instructions.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/doc-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:feature-spec": {
+      "name": "feature-spec",
+      "type": "skill",
+      "id": "856e81e9-f291-45c2-8108-30be503122d0",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-3-implementation.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/phase-4-finalize.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/context-schema.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/references/spec-templates.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-spec/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-3-implementation.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/phase-4-finalize.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/context-schema.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/references/spec-templates.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-spec/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-3-implementation.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/phase-4-finalize.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/context-schema.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/references/spec-templates.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-spec/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-1-resolve-source.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-2-discovery-and-spec.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-3-implementation.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/phase-4-finalize.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/context-schema.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/implementation-plan-prompt.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/references/spec-templates.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-spec/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:feature-sprint": {
+      "name": "feature-sprint",
+      "type": "skill",
+      "id": "01ebc12a-443d-4719-a045-e66f4c3ca457",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/feature-sprint/phase-1-init.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/phase-2-execute.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/feature-sprint/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-1-init.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-2-execute.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/feature-sprint/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-1-init.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-2-execute.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/feature-sprint/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-1-init.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-2-execute.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/phase-3-finalize.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/references/group-prompt-template.md",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/parse_implementation_plan.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/resolve_ready_groups.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/scripts/sync_checkboxes.py",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/feature-sprint/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:playbook-cli-audit": {
+      "name": "playbook-cli-audit",
+      "type": "skill",
+      "id": "dcfa9fec-ec46-40ea-b03a-e2f316cc0088",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/playbook-cli-audit/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/playbook-cli-audit/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/playbook-cli-audit/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/playbook-cli-audit/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:product-map": {
+      "name": "product-map",
+      "type": "skill",
+      "id": "bbe7b3ad-ee21-4c9a-b808-f9abee570848",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/product-map/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/product-map/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/product-map/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/product-map/SKILL.md",
+          "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:skill:release-proprietary": {
+      "name": "release-proprietary",
+      "type": "skill",
+      "id": "43db67da-b17c-475e-9289-927ce8518a3b",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "b7e72473-52d8-4266-9d86-bd33b6395747"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "claude"
+        },
+        {
+          "path": ".claude/skills/release-proprietary/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "cursor"
+        },
+        {
+          "path": ".cursor/skills/release-proprietary/SKILL.md",
+          "agent": "cursor",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "copilot"
+        },
+        {
+          "path": ".github/skills/release-proprietary/SKILL.md",
+          "agent": "copilot",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/bump-versions.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/changelog-next.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/changelog-release.mjs",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/check-ci.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/check-oss-sync-pr.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/commit-next-cycle.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/commit-release.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/tag-release.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/scripts/wait-for-oss-sync.sh",
+          "agent": "gitlab_duo"
+        },
+        {
+          "path": ".gitlab/duo/skills/release-proprietary/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
         }
@@ -322,711 +1019,7 @@
           "agent": "packmind"
         }
       ]
-    },
-    "default:skill:packmind-cli-list-commands": {
-      "name": "Packmind CLI List Commands",
-      "type": "skill",
-      "id": "74d42562-7209-4bfa-b690-cb5c23fadf2f",
-      "version": 1,
-      "spaceId": "",
-      "packageIds": [],
-      "source": "default",
-      "files": [
-        {
-          "path": ".claude/skills/packmind-cli-list-commands/LICENSE.txt",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-cli-list-commands/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-cli-list-commands/LICENSE.txt",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-cli-list-commands/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-cli-list-commands/LICENSE.txt",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-cli-list-commands/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-cli-list-commands/LICENSE.txt",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-cli-list-commands/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "default:skill:packmind-create-package": {
-      "name": "Package Creator",
-      "type": "skill",
-      "id": "8e9b9e9c-65ab-438f-bbbb-e3c5a625c625",
-      "version": 1,
-      "spaceId": "",
-      "packageIds": [],
-      "source": "default",
-      "files": [
-        {
-          "path": ".claude/skills/packmind-create-package/LICENSE.txt",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-create-package/README.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-create-package/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-create-package/LICENSE.txt",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-create-package/README.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-create-package/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-create-package/LICENSE.txt",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-create-package/README.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-create-package/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-create-package/LICENSE.txt",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-create-package/README.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-create-package/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "default:skill:packmind-onboard": {
-      "name": "packmind-onboard",
-      "type": "skill",
-      "id": "0c808e08-70e8-402c-a60e-c38e9076e391",
-      "version": 1,
-      "spaceId": "",
-      "packageIds": [],
-      "source": "default",
-      "files": [
-        {
-          "path": ".claude/skills/packmind-onboard/LICENSE.txt",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/README.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/references/ci-local-workflow-parity.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/references/file-template-consistency.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/references/role-taxonomy-drift.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/references/test-data-construction.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-onboard/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/LICENSE.txt",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/README.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/references/ci-local-workflow-parity.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/references/file-template-consistency.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/references/role-taxonomy-drift.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/references/test-data-construction.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-onboard/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/LICENSE.txt",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/README.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/references/ci-local-workflow-parity.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/references/file-template-consistency.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/references/role-taxonomy-drift.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/references/test-data-construction.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-onboard/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/LICENSE.txt",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/README.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/references/ci-local-workflow-parity.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/references/file-template-consistency.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/references/role-taxonomy-drift.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/references/test-data-construction.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-onboard/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
-    },
-    "default:skill:packmind-update-playbook": {
-      "name": "Update Playbook",
-      "type": "skill",
-      "id": "cf068672-d48e-4669-a8e2-aa7d7d027f94",
-      "version": 1,
-      "spaceId": "",
-      "packageIds": [],
-      "source": "default",
-      "files": [
-        {
-          "path": ".claude/skills/packmind-update-playbook/LICENSE.txt",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/references/agent-skills-specification.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/references/create-command-procedure.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/references/create-skill-procedure.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/references/create-standard-procedure.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/SKILL.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/steps/analyze-commands.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/steps/analyze-skills.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".claude/skills/packmind-update-playbook/steps/analyze-standards.md",
-          "agent": "claude",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/LICENSE.txt",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/references/agent-skills-specification.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/references/create-command-procedure.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/references/create-skill-procedure.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/references/create-standard-procedure.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/SKILL.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/steps/analyze-commands.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/steps/analyze-skills.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".cursor/skills/packmind-update-playbook/steps/analyze-standards.md",
-          "agent": "cursor",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/LICENSE.txt",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/references/agent-skills-specification.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/references/create-command-procedure.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/references/create-skill-procedure.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/references/create-standard-procedure.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/SKILL.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/steps/analyze-commands.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/steps/analyze-skills.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".github/skills/packmind-update-playbook/steps/analyze-standards.md",
-          "agent": "copilot",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/LICENSE.txt",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/references/agent-skills-specification.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/references/create-command-procedure.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/references/create-skill-procedure.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/references/create-standard-procedure.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/SKILL.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/steps/analyze-commands.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/steps/analyze-skills.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        },
-        {
-          "path": ".gitlab/duo/skills/packmind-update-playbook/steps/analyze-standards.md",
-          "agent": "gitlab_duo",
-          "isSkillDefinition": true
-        }
-      ]
     }
   },
-  "cliVersion": "0.30.0"
+  "cliVersion": "0.29.1"
 }
