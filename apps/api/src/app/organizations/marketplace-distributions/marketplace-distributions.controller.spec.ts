@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import {
   createMarketplaceDistributionId,
   createMarketplaceId,
@@ -6,6 +5,7 @@ import {
   createPackageId,
   createUserId,
   DistributionStatus,
+  FindMarketplaceDistributionByIdResponse,
   IDeploymentPort,
   MarketplaceDistribution,
 } from '@packmind/types';
@@ -67,12 +67,12 @@ describe('MarketplaceDistributionsController', () => {
   });
 
   describe('on successful lookup', () => {
-    let result: MarketplaceDistribution;
+    let result: FindMarketplaceDistributionByIdResponse;
 
     beforeEach(async () => {
-      mockDeploymentAdapter.findMarketplaceDistributionById.mockResolvedValue(
-        distributionRow,
-      );
+      mockDeploymentAdapter.findMarketplaceDistributionById.mockResolvedValue({
+        marketplaceDistribution: distributionRow,
+      });
       result = await controller.getMarketplaceDistributionById(
         organizationId,
         marketplaceDistributionId,
@@ -80,8 +80,8 @@ describe('MarketplaceDistributionsController', () => {
       );
     });
 
-    it('returns the distribution row', () => {
-      expect(result).toEqual(distributionRow);
+    it('returns the wrapped distribution row', () => {
+      expect(result).toEqual({ marketplaceDistribution: distributionRow });
     });
 
     it('forwards the command to the deployment adapter', () => {
@@ -97,20 +97,21 @@ describe('MarketplaceDistributionsController', () => {
   });
 
   describe('when the distribution is not found', () => {
-    beforeEach(() => {
-      mockDeploymentAdapter.findMarketplaceDistributionById.mockResolvedValue(
-        null,
+    let result: FindMarketplaceDistributionByIdResponse;
+
+    beforeEach(async () => {
+      mockDeploymentAdapter.findMarketplaceDistributionById.mockResolvedValue({
+        marketplaceDistribution: null,
+      });
+      result = await controller.getMarketplaceDistributionById(
+        organizationId,
+        marketplaceDistributionId,
+        baseRequest,
       );
     });
 
-    it('throws NotFoundException', async () => {
-      await expect(
-        controller.getMarketplaceDistributionById(
-          organizationId,
-          marketplaceDistributionId,
-          baseRequest,
-        ),
-      ).rejects.toBeInstanceOf(NotFoundException);
+    it('returns null inside the response wrapper', () => {
+      expect(result).toEqual({ marketplaceDistribution: null });
     });
   });
 });

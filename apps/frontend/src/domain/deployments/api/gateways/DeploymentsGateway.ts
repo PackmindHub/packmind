@@ -47,13 +47,13 @@ import {
   AddArtefactsToPackageCommand,
 } from '@packmind/types';
 import {
-  MarketplaceDistribution,
+  FindMarketplaceDistributionByIdCommand,
+  IFindMarketplaceDistributionByIdUseCase,
   OrganizationId,
   PublishPackageOnMarketplaceResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
-  FindMarketplaceDistributionByIdArgs,
   IDeploymentsGateway,
   PublishPackageOnMarketplaceArgs,
 } from './IDeploymentsGateway';
@@ -341,12 +341,13 @@ export class DeploymentsGatewayApi
     );
   };
 
-  findMarketplaceDistributionById = async ({
-    organizationId,
-    marketplaceDistributionId,
-  }: FindMarketplaceDistributionByIdArgs): Promise<MarketplaceDistribution> => {
-    return this._api.get<MarketplaceDistribution>(
-      `${this._endpoint}/${organizationId}/marketplace-distributions/${marketplaceDistributionId}`,
-    );
-  };
+  findMarketplaceDistributionById: NewGateway<IFindMarketplaceDistributionByIdUseCase> =
+    async ({
+      organizationId,
+      marketplaceDistributionId,
+    }: NewPackmindCommandBody<FindMarketplaceDistributionByIdCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/marketplace-distributions/${marketplaceDistributionId}`,
+      );
+    };
 }

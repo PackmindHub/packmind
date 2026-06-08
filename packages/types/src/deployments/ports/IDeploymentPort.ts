@@ -41,6 +41,7 @@ import {
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
   FindMarketplaceDistributionByIdCommand,
+  FindMarketplaceDistributionByIdResponse,
   CancelPluginRemovalCommand,
   CancelPluginRemovalResponse,
   LinkMarketplaceCommand,
@@ -91,7 +92,6 @@ import {
   ValidateMarketplaceUrlResponse,
 } from '../contracts';
 import { Distribution } from '../Distribution';
-import { MarketplaceDistribution } from '../MarketplaceDistribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -689,12 +689,13 @@ export interface IDeploymentPort {
 
   /**
    * Looks up a single marketplace distribution row by id, scoped to the
-   * caller's organization. Returns `null` when the row is missing or belongs
-   * to another organization (callers should map `null` to HTTP 404).
+   * caller's organization. The wrapped `marketplaceDistribution` is `null`
+   * when the row is missing or belongs to another organization (callers
+   * should map that to HTTP 404).
    */
   findMarketplaceDistributionById(
     command: FindMarketplaceDistributionByIdCommand,
-  ): Promise<MarketplaceDistribution | null>;
+  ): Promise<FindMarketplaceDistributionByIdResponse>;
 
   /**
    * Marks a published marketplace plugin distribution as `to_be_removed`.

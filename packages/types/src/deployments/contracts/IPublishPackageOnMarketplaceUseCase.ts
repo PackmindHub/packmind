@@ -42,11 +42,3 @@ export type IPublishPackageOnMarketplaceUseCase = IUseCase<
   PublishPackageOnMarketplaceCommand,
   PublishPackageOnMarketplaceResponse
 >;
-
-/**
- * Command used by the controller's polling endpoint to look up a single
- * `MarketplaceDistribution` row by id, scoped to the caller's organization.
- */
-export type FindMarketplaceDistributionByIdCommand = PackmindCommand & {
-  marketplaceDistributionId: MarketplaceDistributionId;
-};

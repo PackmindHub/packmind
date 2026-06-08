@@ -1,6 +1,7 @@
 import { ApiService } from '../../../../services/api/ApiService';
 import { DeploymentsGatewayApi } from './DeploymentsGateway';
 import type {
+  FindMarketplaceDistributionByIdResponse,
   MarketplaceDistribution,
   MarketplaceDistributionId,
   MarketplaceId,
@@ -89,16 +90,18 @@ describe('DeploymentsGatewayApi - marketplace publish wrappers', () => {
   });
 
   describe('findMarketplaceDistributionById', () => {
-    describe('when the api service resolves with a distribution row', () => {
-      let row: MarketplaceDistribution;
-      let result: MarketplaceDistribution;
+    describe('when the api service resolves with a wrapped distribution row', () => {
+      let response: FindMarketplaceDistributionByIdResponse;
+      let result: FindMarketplaceDistributionByIdResponse;
 
       beforeEach(async () => {
-        row = {
-          id: marketplaceDistributionId,
-          status: 'in_progress',
-        } as unknown as MarketplaceDistribution;
-        getMock.mockResolvedValueOnce(row);
+        response = {
+          marketplaceDistribution: {
+            id: marketplaceDistributionId,
+            status: 'in_progress',
+          } as unknown as MarketplaceDistribution,
+        };
+        getMock.mockResolvedValueOnce(response);
 
         result = await gateway.findMarketplaceDistributionById({
           organizationId,
@@ -112,8 +115,25 @@ describe('DeploymentsGatewayApi - marketplace publish wrappers', () => {
         );
       });
 
-      it('returns the row from the api service', () => {
-        expect(result).toBe(row);
+      it('returns the wrapped response from the api service', () => {
+        expect(result).toBe(response);
+      });
+    });
+
+    describe('when the api service resolves with a null row', () => {
+      let result: FindMarketplaceDistributionByIdResponse;
+
+      beforeEach(async () => {
+        getMock.mockResolvedValueOnce({ marketplaceDistribution: null });
+
+        result = await gateway.findMarketplaceDistributionById({
+          organizationId,
+          marketplaceDistributionId,
+        });
+      });
+
+      it('returns the null wrapper from the api service', () => {
+        expect(result).toEqual({ marketplaceDistribution: null });
       });
     });
   });

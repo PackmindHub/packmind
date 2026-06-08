@@ -1,6 +1,4 @@
 import {
-  MarketplaceDistribution,
-  MarketplaceDistributionId,
   MarketplaceId,
   NewGateway,
   OrganizationId,
@@ -8,6 +6,7 @@ import {
   PublishPackageOnMarketplaceResponse,
 } from '@packmind/types';
 import {
+  IFindMarketplaceDistributionByIdUseCase,
   IGetPackageByIdUseCase,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
@@ -43,15 +42,6 @@ export type PublishPackageOnMarketplaceArgs = {
   organizationId: OrganizationId;
   marketplaceId: MarketplaceId;
   packageId: PackageId;
-};
-
-/**
- * Arguments passed to `findMarketplaceDistributionById`. Used by the status
- * polling helper after the publish action returns its `in_progress` row.
- */
-export type FindMarketplaceDistributionByIdArgs = {
-  organizationId: OrganizationId;
-  marketplaceDistributionId: MarketplaceDistributionId;
 };
 
 export interface IDeploymentsGateway {
@@ -90,9 +80,9 @@ export interface IDeploymentsGateway {
   ): Promise<PublishPackageOnMarketplaceResponse>;
   /**
    * Fetches a single `MarketplaceDistribution` row by id. Used by status
-   * polling once the publish job has been enqueued.
+   * polling once the publish job has been enqueued. The endpoint always
+   * resolves with HTTP 200 — `marketplaceDistribution` is `null` when the
+   * row is missing or belongs to another organization.
    */
-  findMarketplaceDistributionById(
-    args: FindMarketplaceDistributionByIdArgs,
-  ): Promise<MarketplaceDistribution>;
+  findMarketplaceDistributionById: NewGateway<IFindMarketplaceDistributionByIdUseCase>;
 }

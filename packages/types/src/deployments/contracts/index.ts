@@ -46,6 +46,7 @@ export * from './IUnlinkMarketplaceUseCase';
 export * from './IListMarketplaceDistributionsForPackageUseCase';
 export * from './IListMarketplacesUseCase';
 export * from './IPublishPackageOnMarketplaceUseCase';
+export * from './IFindMarketplaceDistributionByIdUseCase';
 export * from './IValidateMarketplaceUrlUseCase';
 export * from './IMarkPluginForRemovalUseCase';
 export * from './ICancelPluginRemovalUseCase';

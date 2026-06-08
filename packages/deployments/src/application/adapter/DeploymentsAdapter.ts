@@ -72,6 +72,7 @@ import {
   IStandardsPort,
   IStandardsPortName,
   FindMarketplaceDistributionByIdCommand,
+  FindMarketplaceDistributionByIdResponse,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListDeploymentsByPackageCommand,
@@ -89,7 +90,6 @@ import {
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
-  MarketplaceDistribution,
   NotifyArtefactsDistributionCommand,
   NotifyArtefactsDistributionResponse,
   NotifyDistributionCommand,
@@ -1167,17 +1167,14 @@ export class DeploymentsAdapter
 
   async findMarketplaceDistributionById(
     command: FindMarketplaceDistributionByIdCommand,
-  ): Promise<MarketplaceDistribution | null> {
+  ): Promise<FindMarketplaceDistributionByIdResponse> {
     const row = await this.marketplaceDistributionRepository.findById(
       command.marketplaceDistributionId,
     );
-    if (!row) {
-      return null;
+    if (!row || row.organizationId !== command.organizationId) {
+      return { marketplaceDistribution: null };
     }
-    if (row.organizationId !== command.organizationId) {
-      return null;
-    }
-    return row;
+    return { marketplaceDistribution: row };
   }
 
   async markPluginForRemoval(

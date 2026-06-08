@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   FindMarketplaceDistributionByIdCommand,
+  FindMarketplaceDistributionByIdResponse,
   IDeploymentPort,
-  MarketplaceDistribution,
   MarketplaceDistributionId,
   OrganizationId,
 } from '@packmind/types';
@@ -49,7 +42,7 @@ export class MarketplaceDistributionsController {
     @Param('marketplaceDistributionId')
     marketplaceDistributionId: MarketplaceDistributionId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<MarketplaceDistribution> {
+  ): Promise<FindMarketplaceDistributionByIdResponse> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -67,13 +60,6 @@ export class MarketplaceDistributionsController {
       source: request.clientSource,
     };
 
-    const row =
-      await this.deploymentAdapter.findMarketplaceDistributionById(command);
-    if (!row) {
-      throw new NotFoundException(
-        `Marketplace distribution "${marketplaceDistributionId}" was not found`,
-      );
-    }
-    return row;
+    return this.deploymentAdapter.findMarketplaceDistributionById(command);
   }
 }
