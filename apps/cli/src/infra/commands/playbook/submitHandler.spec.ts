@@ -1404,10 +1404,15 @@ describe('playbookSubmitHandler', () => {
         expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
       });
 
-      it('does not clear the staged changes', async () => {
+      it('does not remove any staged change', async () => {
         await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
 
         expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+
+      it('does not clear all staged changes', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
         expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
       });
 
@@ -1882,20 +1887,30 @@ describe('playbookSubmitHandler', () => {
         ]);
       });
 
-      it('treats it as a no-op and does not block on a skip', async () => {
+      it('does not block on a skip', async () => {
         await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
         expect(logErrorConsole).not.toHaveBeenCalled();
+      });
+
+      it('does not submit any proposal', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
         expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
       });
 
-      it('clears the staged entry and exits 0', async () => {
+      it('clears the staged entry', async () => {
         await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
         expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
           '.claude/skills/my-skill',
           'space-123',
         );
+      });
+
+      it('exits 0', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
         expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
@@ -1981,17 +1996,27 @@ describe('playbookSubmitHandler', () => {
         expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
       });
 
-      it('preserves all staging, including the valid change', async () => {
+      it('does not remove the valid change from staging', async () => {
         await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
 
         expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+
+      it('does not clear all staging', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
         expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
       });
 
-      it('exits 1 and reports the skipped skill', async () => {
+      it('exits 1', async () => {
         await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
 
         expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('reports the skipped skill', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
         expect(logErrorConsole).toHaveBeenCalledWith(
           expect.stringContaining('My Skill'),
         );

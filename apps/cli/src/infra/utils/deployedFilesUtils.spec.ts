@@ -70,41 +70,45 @@ describe('resolveDeployedRenderAgents', () => {
     );
   });
 
-  it('recovers the artifact agent when lockFile.agents is empty', () => {
-    const lockFile: PackmindLockFile = {
-      lockfileVersion: 2,
-      packageSlugs: [],
-      agents: [],
-      installedAt: '2026-01-01',
-      artifacts: {
-        'art-1': {
-          name: 'My Skill',
-          type: 'skill',
-          id: 'art-1',
-          version: 1,
-          spaceId: 'sp-1',
-          packageIds: [],
-          files: [
-            { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
-          ],
-          source: 'user',
+  describe('when lockFile.agents is empty', () => {
+    it('recovers the artifact agent from the per-file records', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {
+          'art-1': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+            source: 'user',
+          },
         },
-      },
-    };
+      };
 
-    expect(resolveDeployedRenderAgents(lockFile)).toEqual(['copilot']);
+      expect(resolveDeployedRenderAgents(lockFile)).toEqual(['copilot']);
+    });
   });
 
-  it('returns no agents when none are recorded anywhere', () => {
-    const lockFile: PackmindLockFile = {
-      lockfileVersion: 2,
-      packageSlugs: [],
-      agents: [],
-      installedAt: '2026-01-01',
-      artifacts: {},
-    };
+  describe('when no agents are recorded anywhere', () => {
+    it('returns no agents', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {},
+      };
 
-    expect(resolveDeployedRenderAgents(lockFile)).toEqual([]);
+      expect(resolveDeployedRenderAgents(lockFile)).toEqual([]);
+    });
   });
 });
 
@@ -163,39 +167,41 @@ describe('fetchDeployedFiles', () => {
     });
   });
 
-  it('renders for the agent recorded on the artifact even when lockFile.agents is empty', async () => {
-    const getContentByVersions = jest.fn().mockResolvedValue({
-      fileUpdates: { createOrUpdate: [] },
-    });
-    const gateway: DeploymentGateway = {
-      deployment: { getContentByVersions },
-    };
-    const lockFile: PackmindLockFile = {
-      lockfileVersion: 2,
-      packageSlugs: [],
-      agents: [],
-      installedAt: '2026-01-01',
-      artifacts: {
-        'art-1': {
-          name: 'My Skill',
-          type: 'skill',
-          id: 'art-1',
-          version: 1,
-          spaceId: 'sp-1',
-          packageIds: [],
-          files: [
-            { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
-          ],
-          source: 'user',
+  describe('when lockFile.agents is empty', () => {
+    it('renders for the agent recorded on the artifact', async () => {
+      const getContentByVersions = jest.fn().mockResolvedValue({
+        fileUpdates: { createOrUpdate: [] },
+      });
+      const gateway: DeploymentGateway = {
+        deployment: { getContentByVersions },
+      };
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {
+          'art-1': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+            source: 'user',
+          },
         },
-      },
-    };
+      };
 
-    await fetchDeployedFiles(gateway, lockFile);
+      await fetchDeployedFiles(gateway, lockFile);
 
-    expect(getContentByVersions).toHaveBeenCalledWith(
-      expect.objectContaining({ agents: ['copilot'] }),
-    );
+      expect(getContentByVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ agents: ['copilot'] }),
+      );
+    });
   });
 
   it('returns empty array on error', async () => {
