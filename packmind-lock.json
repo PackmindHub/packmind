@@ -16,7 +16,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-08T03:13:31.335Z",
+  "installedAt": "2026-06-08T08:01:42.858Z",
   "artifacts": {
     "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
@@ -146,6 +146,35 @@
           "path": ".gitlab/duo/skills/working-with-pm-design-kit/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        }
+      ]
+    },
+    "user:standard:amplitude-analytics-usage": {
+      "name": "Amplitude analytics usage",
+      "type": "standard",
+      "id": "583f6c33-8b36-45f6-985c-5d37d2989b66",
+      "version": 1,
+      "spaceId": "02d1f9c9-a449-4794-b911-186cccd48884",
+      "packageIds": [
+        "cfdeadaf-30be-44c4-91a7-3131b68a6d92"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-amplitude-analytics-usage.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".cursor/rules/packmind/standard-amplitude-analytics-usage.mdc",
+          "agent": "cursor"
+        },
+        {
+          "path": ".github/instructions/packmind-amplitude-analytics-usage.instructions.md",
+          "agent": "copilot"
+        },
+        {
+          "path": ".packmind/standards/amplitude-analytics-usage.md",
+          "agent": "packmind"
         }
       ]
     },
