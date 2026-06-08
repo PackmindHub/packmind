@@ -50,6 +50,7 @@ const buildConnectedAppProvider = (
   url: 'https://github.com',
   authMethod: 'app',
   displayName: '',
+  lastDeploymentAt: null,
   ...overrides,
 });
 

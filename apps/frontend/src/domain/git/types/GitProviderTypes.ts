@@ -25,6 +25,7 @@ export type GitProviderUI = Omit<
   hasAuth: boolean;
   repos?: GitRepoUI[];
   authMethod?: GitProviderAuthMethod;
+  lastDeploymentAt: string | null;
 };
 
 // Frontend-specific GitRepo interface for UI

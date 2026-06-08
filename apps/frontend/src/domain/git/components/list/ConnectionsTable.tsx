@@ -10,6 +10,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
@@ -74,6 +75,7 @@ const TableHeader: React.FC = () => (
     <PMBox width="70px" textAlign="right">
       Repos
     </PMBox>
+    <PMBox width="140px">Last deployment</PMBox>
     <PMBox width="90px" />
   </PMHStack>
 );
@@ -162,6 +164,10 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         {repoCount}
       </PMText>
 
+      <PMBox width="140px">
+        <LastDeploymentCell lastDeploymentAt={connection.lastDeploymentAt} />
+      </PMBox>
+
       <PMHStack width="90px" gap={1} justify="flex-end">
         <RefreshStatusButton
           isFetching={probe.isFetching}
@@ -176,6 +182,30 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         />
       </PMHStack>
     </PMHStack>
+  );
+};
+
+interface LastDeploymentCellProps {
+  lastDeploymentAt: string | null;
+}
+
+const LastDeploymentCell: React.FC<LastDeploymentCellProps> = ({
+  lastDeploymentAt,
+}) => {
+  if (!lastDeploymentAt) {
+    return (
+      <PMText fontSize="sm" color="faded" fontStyle="italic">
+        Never used
+      </PMText>
+    );
+  }
+  const date = new Date(lastDeploymentAt);
+  return (
+    <PMTooltip label={format(date, 'yyyy-MM-dd h:mm a')} placement="top">
+      <PMText fontSize="sm" color="secondary">
+        {formatDistanceToNowStrict(date, { addSuffix: true })}
+      </PMText>
+    </PMTooltip>
   );
 };
 

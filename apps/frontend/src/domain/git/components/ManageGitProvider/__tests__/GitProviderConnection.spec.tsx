@@ -116,6 +116,7 @@ const mockGitProviderUI = (
   hasAuth: true,
   url: 'https://github.com',
   displayName: '',
+  lastDeploymentAt: null,
   ...overrides,
 });
 
