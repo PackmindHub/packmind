@@ -141,10 +141,11 @@ export async function playbookSubmitHandler(
   });
 
   // Build proposals
-  const { proposals: allProposals, conflicts } = await buildProposals(
-    changes,
-    resolver.getTargetContext,
-  );
+  const {
+    proposals: allProposals,
+    conflicts,
+    skipped,
+  } = await buildProposals(changes, resolver.getTargetContext);
 
   // Pre-flight: reject skill proposals whose description exceeds the limit.
   // The backend enforces the same cap; failing fast here keeps the error tied
@@ -170,6 +171,33 @@ export async function playbookSubmitHandler(
           'Only one agent version can be submitted at a time. Use "playbook unstage" to remove one.',
       );
     }
+    exit(1);
+    return;
+  }
+
+  // Pre-flight: a staged entry whose change could not be prepared (e.g. the
+  // deployed SKILL.md was not returned by the server, or the artifact is
+  // missing from the lock file) must NOT be treated as "no changes". Abort the
+  // whole submit and keep ALL staging intact so the user never silently loses
+  // staged work — the empty-proposals branch below would otherwise clear it,
+  // and the success branches clear every staged path for the space (skipped
+  // entries included). Blocking the batch is the safe, all-or-nothing choice.
+  if (skipped.length > 0) {
+    for (const entry of skipped) {
+      logErrorConsole(
+        `Could not prepare ${capitalize(entry.artifactType)} "${entry.artifactName}" (${entry.filePath}): ${entry.reason}.`,
+      );
+    }
+    const readyCount = allProposals.length;
+    if (readyCount > 0) {
+      logWarningConsole(
+        `${readyCount} other change${readyCount !== 1 ? 's were' : ' was'} ready but nothing was submitted — the whole batch is blocked.`,
+      );
+    }
+    logInfoConsole(
+      'Your staged changes were kept. Fix the issue above (for stale deployed content, run `packmind pull` to sync), ' +
+        'or drop the affected change with `packmind playbook unstage <path>`, then retry.',
+    );
     exit(1);
     return;
   }

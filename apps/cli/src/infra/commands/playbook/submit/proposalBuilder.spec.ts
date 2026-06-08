@@ -536,6 +536,22 @@ describe('buildProposals', () => {
         expect.stringContaining('deployed content unavailable'),
       );
     });
+
+    it('reports the standard as skipped with a reason', async () => {
+      const { entries, getCtx } = setupNoDeployedContent();
+
+      const { skipped } = await buildProposals(entries, getCtx);
+
+      expect(skipped).toEqual([
+        {
+          artifactName: 'My Standard',
+          artifactType: 'standard',
+          filePath: '.packmind/standards/my-standard.md',
+          spaceId: 'space-123',
+          reason: 'deployed content unavailable',
+        },
+      ]);
+    });
   });
 
   describe('when updated entry has no artifact in lock file', () => {
@@ -558,6 +574,25 @@ describe('buildProposals', () => {
       expect(logWarningConsole).toHaveBeenCalledWith(
         expect.stringContaining('not found in lock file'),
       );
+    });
+
+    it('reports the entry as skipped with a reason', async () => {
+      const entries = [makeEntry({ changeType: 'updated' })];
+
+      const { skipped } = await buildProposals(
+        entries,
+        defaultGetTargetContext,
+      );
+
+      expect(skipped).toEqual([
+        {
+          artifactName: 'My Standard',
+          artifactType: 'standard',
+          filePath: '.packmind/standards/my-standard.md',
+          spaceId: 'space-123',
+          reason: 'artifact not found in lock file',
+        },
+      ]);
     });
   });
 
@@ -627,6 +662,134 @@ describe('buildProposals', () => {
 
       const types = proposals.map((p) => p.type);
       expect(types).toContain(ChangeProposalType.updateSkillDescription);
+    });
+  });
+
+  describe('when updated skill has no deployed SKILL.md', () => {
+    const setupSkillWithoutDeployedContent = () => {
+      const lockFile = makeLockFile({
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+          },
+        },
+      });
+      // Server returned no file under the skill's directory (e.g. rendered for
+      // a different agent path, or the skill version was dropped server-side).
+      const getCtx = jest.fn().mockResolvedValue(
+        makeTargetContext({
+          lockFile,
+          deployedFiles: [],
+        }),
+      );
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          content: SKILL_CONTENT,
+          filePath: '.github/skills/my-skill',
+        }),
+      ];
+      return { entries, getCtx };
+    };
+
+    it('produces no proposals', async () => {
+      const { entries, getCtx } = setupSkillWithoutDeployedContent();
+
+      const { proposals } = await buildProposals(entries, getCtx);
+
+      expect(proposals).toHaveLength(0);
+    });
+
+    it('reports the skill as skipped with a reason', async () => {
+      const { entries, getCtx } = setupSkillWithoutDeployedContent();
+
+      const { skipped } = await buildProposals(entries, getCtx);
+
+      expect(skipped).toEqual([
+        {
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+          filePath: '.github/skills/my-skill',
+          spaceId: 'space-123',
+          reason: 'deployed SKILL.md content not found',
+        },
+      ]);
+    });
+  });
+
+  describe('when updated skill local content cannot be parsed', () => {
+    const setupUnparseableSkill = () => {
+      const lockFile = makeLockFile({
+        artifacts: {
+          'my-skill': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'artifact-skill-1',
+            version: 1,
+            spaceId: 'space-123',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+          },
+        },
+      });
+      const getCtx = jest.fn().mockResolvedValue(
+        makeTargetContext({
+          lockFile,
+          deployedFiles: [
+            {
+              path: '.github/skills/my-skill/SKILL.md',
+              content: 'name: My Skill\nprompt: anything\n',
+            },
+          ],
+        }),
+      );
+      const entries = [
+        makeEntry({
+          changeType: 'updated',
+          artifactType: 'skill',
+          artifactName: 'My Skill',
+          // Unterminated flow collection — invalid YAML that yaml.parse throws on.
+          content: 'name: My Skill\ndescription: ["unterminated\n',
+          filePath: '.github/skills/my-skill',
+        }),
+      ];
+      return { entries, getCtx };
+    };
+
+    it('produces no proposals', async () => {
+      const { entries, getCtx } = setupUnparseableSkill();
+
+      const { proposals } = await buildProposals(entries, getCtx);
+
+      expect(proposals).toHaveLength(0);
+    });
+
+    it('reports the skill as skipped with a parse-failure reason', async () => {
+      const { entries, getCtx } = setupUnparseableSkill();
+
+      const { skipped } = await buildProposals(entries, getCtx);
+
+      expect(skipped).toEqual([
+        {
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+          filePath: '.github/skills/my-skill',
+          spaceId: 'space-123',
+          reason: 'failed to parse local skill content',
+        },
+      ]);
     });
   });
 

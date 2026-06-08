@@ -307,7 +307,7 @@ describe('playbookStatusHandler', () => {
       );
     });
 
-    it('calls getContentByVersions with lock file artifacts and agents', async () => {
+    it('calls getContentByVersions with lock file artifacts and the agents the files were deployed under', async () => {
       await playbookStatusHandler(buildDeps());
 
       expect(mockGetContentByVersions).toHaveBeenCalledWith({
@@ -320,7 +320,9 @@ describe('playbookStatusHandler', () => {
             spaceId: 'space-123',
           },
         ],
-        agents: ['claude'],
+        // union of lockFile.agents (['claude']) and the per-file agent
+        // recorded on the artifact ('packmind')
+        agents: ['claude', 'packmind'],
       });
     });
   });
