@@ -74,11 +74,13 @@ export class GitProviderGatewayApi
     hasApp: boolean;
     appSlug?: string;
     revokedAt?: Date | null;
+    linkedProviderCount: number;
   }> {
     return await this._api.get<{
       hasApp: boolean;
       appSlug?: string;
       revokedAt?: Date | null;
+      linkedProviderCount: number;
     }>(`${this._endpoint}/${organizationId}/git/providers/github/app/status`);
   }
 
@@ -135,19 +137,22 @@ export class GitProviderGatewayApi
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI> {
-    const body = {
-      source: data.source,
-      url: data.url,
-      authMethod: data.authMethod ?? 'token',
-      ...(data.displayName !== undefined
-        ? { displayName: data.displayName }
-        : {}),
-      ...(data.authMethod === 'app'
-        ? {
-            appInstallationId: data.appInstallationId,
-          }
-        : { token: data.token }),
-    };
+    // Only forward fields the caller actually set. Defaulting authMethod here
+    // would make a partial update (e.g. renaming) look like a switch to token
+    // auth on the backend, which then rejects the request because no token was
+    // supplied.
+    const body: Record<string, unknown> = {};
+    if (data.source !== undefined) body.source = data.source;
+    if (data.url !== undefined) body.url = data.url;
+    if (data.displayName !== undefined) body.displayName = data.displayName;
+    if (data.authMethod !== undefined) {
+      body.authMethod = data.authMethod;
+      if (data.authMethod === 'app') {
+        body.appInstallationId = data.appInstallationId;
+      } else {
+        body.token = data.token;
+      }
+    }
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers/${id}`,
       body,

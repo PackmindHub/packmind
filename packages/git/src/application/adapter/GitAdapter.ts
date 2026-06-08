@@ -314,6 +314,15 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._addGitProvider.execute(command);
   }
 
+  public findGitProviderByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null> {
+    return this.gitServices
+      .getGitProviderService()
+      .findGitProviderByAppInstallation(organizationId, appInstallationId);
+  }
+
   public async addGitRepo(command: AddGitRepoCommand): Promise<GitRepo> {
     return this._addGitRepo.execute(command);
   }

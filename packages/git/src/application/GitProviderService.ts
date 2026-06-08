@@ -38,6 +38,16 @@ export class GitProviderService {
     return this.gitProviderRepository.findByOrganizationId(organizationId);
   }
 
+  async findGitProviderByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null> {
+    return this.gitProviderRepository.findByAppInstallation(
+      organizationId,
+      appInstallationId,
+    );
+  }
+
   async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,

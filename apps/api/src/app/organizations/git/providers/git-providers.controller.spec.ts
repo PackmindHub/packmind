@@ -458,22 +458,25 @@ describe('GitProvidersController', () => {
 
   describe('getGithubAppStatus', () => {
     describe('on cloud edition', () => {
-      const expected = { hasApp: true };
+      const expected = { hasApp: true, linkedProviderCount: 0 };
       let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
       beforeEach(async () => {
         resolveGithubAppMode.mockResolvedValue('shared');
         mockService.getGithubAppStatus.mockResolvedValue(expected);
 
-        result = await controller.getGithubAppStatus(orgId);
+        result = await controller.getGithubAppStatus(orgId, mockRequest);
       });
 
       it('returns the service result', () => {
         expect(result).toBe(expected);
       });
 
-      it('calls the service with orgId', () => {
-        expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({ orgId });
+      it('calls the service with orgId and userId', () => {
+        expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({
+          orgId,
+          userId,
+        });
       });
     });
 
@@ -487,22 +490,24 @@ describe('GitProvidersController', () => {
           hasApp: true,
           appSlug: 'my-packmind-app',
           revokedAt: null,
+          linkedProviderCount: 0,
         };
         let result: Awaited<ReturnType<typeof controller.getGithubAppStatus>>;
 
         beforeEach(async () => {
           mockService.getGithubAppStatus.mockResolvedValue(expected);
 
-          result = await controller.getGithubAppStatus(orgId);
+          result = await controller.getGithubAppStatus(orgId, mockRequest);
         });
 
         it('returns the service result with appSlug', () => {
           expect(result).toBe(expected);
         });
 
-        it('calls the service with orgId', () => {
+        it('calls the service with orgId and userId', () => {
           expect(mockService.getGithubAppStatus).toHaveBeenCalledWith({
             orgId,
+            userId,
           });
         });
       });
@@ -511,12 +516,15 @@ describe('GitProvidersController', () => {
         it('returns hasApp false', async () => {
           const expected = {
             hasApp: false,
-            appSlug: undefined,
             revokedAt: null,
+            linkedProviderCount: 0,
           };
           mockService.getGithubAppStatus.mockResolvedValue(expected);
 
-          const result = await controller.getGithubAppStatus(orgId);
+          const result = await controller.getGithubAppStatus(
+            orgId,
+            mockRequest,
+          );
 
           expect(result).toBe(expected);
         });
