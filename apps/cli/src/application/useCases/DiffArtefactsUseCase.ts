@@ -11,6 +11,7 @@ import {
   FileModification,
   IPullContentResponse,
 } from '@packmind/types';
+import { resolveDeployedRenderAgents } from '../../infra/utils/deployedFilesUtils';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
@@ -101,7 +102,7 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
         const response =
           await this.packmindGateway.deployment.getContentByVersions({
             artifacts: Object.values(lockFile.artifacts),
-            agents: lockFile.agents,
+            agents: resolveDeployedRenderAgents(lockFile),
           });
         return {
           ...response,

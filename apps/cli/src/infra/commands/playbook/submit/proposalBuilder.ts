@@ -205,12 +205,19 @@ function buildUpdatedCommandProposals(
   }));
 }
 
+type UpdatedSkillResult = {
+  proposals: ProposalItem[];
+  // Non-null when the diff could not be computed (the update was skipped),
+  // so the caller can refuse to clear staging instead of treating it as a no-op.
+  skippedReason: string | null;
+};
+
 function buildUpdatedSkillProposals(
   entry: PlaybookChangeEntry,
   artifactId: string | null,
   deployedFiles: FileModification[],
-): ProposalItem[] {
-  if (!artifactId) return [];
+): UpdatedSkillResult {
+  if (!artifactId) return { proposals: [], skippedReason: null };
 
   const proposals: ProposalItem[] = [];
   const base: Pick<ProposalItem, 'artefactId' | 'targetId' | 'spaceId'> = {
@@ -227,10 +234,16 @@ function buildUpdatedSkillProposals(
     logWarningConsole(
       `Skipping "${entry.artifactName}" — failed to parse local skill content.`,
     );
-    return [];
+    return {
+      proposals: [],
+      skippedReason: 'failed to parse local skill content',
+    };
   }
 
-  // Find the deployed SKILL.md to compare against
+  // Find the deployed SKILL.md to compare against. `deployedFiles` is rendered
+  // for the agents the lock file recorded the artifacts under (see
+  // fetchDeployedFiles), so the SKILL.md is present at the same path the user
+  // edited.
   const normalizedEntryPath = normalizePath(entry.filePath);
   const skillMdFile = deployedFiles.find((f) => {
     const normalized = normalizePath(f.path);
@@ -264,7 +277,10 @@ function buildUpdatedSkillProposals(
     logWarningConsole(
       `Skipping "${entry.artifactName}" — deployed SKILL.md content not found.`,
     );
-    return [];
+    return {
+      proposals: [],
+      skippedReason: 'deployed SKILL.md content not found',
+    };
   }
 
   // Handle helper files
@@ -355,7 +371,7 @@ function buildUpdatedSkillProposals(
     }
   }
 
-  return proposals;
+  return { proposals, skippedReason: null };
 }
 
 function buildRemovedProposals(
@@ -403,14 +419,41 @@ export type ArtifactConflict = {
   entries: Array<{ filePath: string; codingAgent: string }>;
 };
 
+// A staged entry that could not be processed as intended (e.g. its deployed
+// content was not returned by the server, or its artifact is missing from the
+// lock file). Surfaced so the caller blocks the submit instead of treating the
+// empty diff as "no changes" and silently clearing the user's staging.
+export type SkippedEntry = {
+  artifactName: string;
+  artifactType: PlaybookChangeEntry['artifactType'];
+  filePath: string;
+  spaceId: string;
+  reason: string;
+};
+
+function toSkippedEntry(
+  entry: PlaybookChangeEntry,
+  reason: string,
+): SkippedEntry {
+  return {
+    artifactName: entry.artifactName,
+    artifactType: entry.artifactType,
+    filePath: entry.filePath,
+    spaceId: entry.spaceId,
+    reason,
+  };
+}
+
 export async function buildProposals(
   changes: PlaybookChangeEntry[],
   getTargetContext: (entry: PlaybookChangeEntry) => Promise<TargetContext>,
 ): Promise<{
   proposals: ProposalItem[];
   conflicts: ArtifactConflict[];
+  skipped: SkippedEntry[];
 }> {
   const proposals: ProposalItem[] = [];
+  const skipped: SkippedEntry[] = [];
   const updateSources = new Map<
     string,
     {
@@ -450,6 +493,7 @@ export async function buildProposals(
         logWarningConsole(
           `Skipping "${entry.artifactName}" — artifact not found in lock file.`,
         );
+        skipped.push(toSkippedEntry(entry, 'artifact not found in lock file'));
         continue;
       }
       proposals.push(...buildRemovedProposals(entry, artifactId, ctx.lockFile));
@@ -463,6 +507,7 @@ export async function buildProposals(
         logWarningConsole(
           `Skipping "${entry.artifactName}" — artifact not found in lock file. Try running a deploy first.`,
         );
+        skipped.push(toSkippedEntry(entry, 'artifact not found in lock file'));
         continue;
       }
 
@@ -495,6 +540,7 @@ export async function buildProposals(
         logWarningConsole(
           `Skipping "${entry.artifactName}" — deployed content unavailable. Run \`packmind pull\` to sync before submitting updates.`,
         );
+        skipped.push(toSkippedEntry(entry, 'deployed content unavailable'));
         continue;
       }
 
@@ -513,11 +559,18 @@ export async function buildProposals(
             ...buildUpdatedCommandProposals(entry, artifactId, deployedContent),
           );
           break;
-        case 'skill':
-          proposals.push(
-            ...buildUpdatedSkillProposals(entry, artifactId, ctx.deployedFiles),
+        case 'skill': {
+          const skillResult = buildUpdatedSkillProposals(
+            entry,
+            artifactId,
+            ctx.deployedFiles,
           );
+          proposals.push(...skillResult.proposals);
+          if (skillResult.skippedReason) {
+            skipped.push(toSkippedEntry(entry, skillResult.skippedReason));
+          }
           break;
+        }
       }
     }
   }
@@ -529,5 +582,5 @@ export async function buildProposals(
     }
   }
 
-  return { proposals, conflicts };
+  return { proposals, conflicts, skipped };
 }

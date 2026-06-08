@@ -1,4 +1,8 @@
-import { ArtifactVersionEntry, FileModification } from '@packmind/types';
+import {
+  ArtifactVersionEntry,
+  CodingAgent,
+  FileModification,
+} from '@packmind/types';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 import {
   getAgentHomeDirPrefix,
@@ -27,6 +31,34 @@ export function lockFileToArtifactVersionEntries(
   }));
 }
 
+/**
+ * The agents to re-render deployed content for.
+ *
+ * `lockFile.agents` is the top-level config and can be empty or stale — when it
+ * is, the server falls back to the *organization's* render configuration, which
+ * may not include the agent the artifacts actually live under. That makes the
+ * re-render land at different paths than the on-disk files (e.g. a Copilot skill
+ * in `.github/skills/` re-rendered as `.claude/skills/`), so playbook
+ * status/submit can no longer match the deployed content to the local file.
+ *
+ * Each lock file entry records the agent of every file it deployed, so the
+ * union of those per-file agents is the authoritative set the content was
+ * rendered under. We pass that (combined with `lockFile.agents`) so the
+ * re-render reproduces the recorded on-disk layout. Falls back to
+ * `lockFile.agents` when no per-file agents are present.
+ */
+export function resolveDeployedRenderAgents(
+  lockFile: PackmindLockFile,
+): CodingAgent[] {
+  const agents = new Set<CodingAgent>(lockFile.agents ?? []);
+  for (const entry of Object.values(lockFile.artifacts)) {
+    for (const file of entry.files) {
+      agents.add(file.agent);
+    }
+  }
+  return [...agents];
+}
+
 export type FetchDeployedFilesOptions = {
   // The project directory the lockfile lives in. When this is a home-install
   // directory (e.g. `~/.claude`), the on-disk file layout has been remapped to
@@ -46,7 +78,7 @@ export async function fetchDeployedFiles(
     const artifacts = lockFileToArtifactVersionEntries(lockFile);
     const response = await gateway.deployment.getContentByVersions({
       artifacts,
-      agents: lockFile.agents,
+      agents: resolveDeployedRenderAgents(lockFile),
     });
     return remapDeployedFilesForHomeInstall(
       response.fileUpdates.createOrUpdate,

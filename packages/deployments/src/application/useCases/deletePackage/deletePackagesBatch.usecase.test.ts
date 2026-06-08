@@ -8,6 +8,7 @@ import {
   createSpaceId,
   createUserId,
   createOrganizationId,
+  PackagesDeletedEvent,
   DeletePackagesBatchCommand,
   PackagesDeletedEvent,
 } from '@packmind/types';
