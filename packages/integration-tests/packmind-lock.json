@@ -11,7 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-05T03:05:28.171Z",
+  "installedAt": "2026-06-08T03:06:30.807Z",
   "artifacts": {
     "user:standard:integration-tests-structure-and-patterns": {
       "name": "Integration Tests Structure and Patterns",
