@@ -107,6 +107,7 @@ export class ListMarketplacesUseCase
           providerSourceById.get(gitRepo.providerId) ??
           GitProviderVendors.unknown;
         repositoryByMarketplaceId.set(marketplace.id, {
+          gitProviderId: gitRepo.providerId,
           owner: gitRepo.owner,
           repo: gitRepo.repo,
           branch: gitRepo.branch,

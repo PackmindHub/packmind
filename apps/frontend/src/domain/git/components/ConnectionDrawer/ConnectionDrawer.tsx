@@ -12,8 +12,19 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuArrowLeft, LuGitBranch, LuPencil, LuTrash2 } from 'react-icons/lu';
-import { GitProviderVendor, OrganizationId } from '@packmind/types';
+import {
+  LuArrowLeft,
+  LuArrowRight,
+  LuGitBranch,
+  LuPencil,
+  LuTrash2,
+} from 'react-icons/lu';
+import { Link } from 'react-router';
+import {
+  GitProviderVendor,
+  MarketplaceListItem,
+  OrganizationId,
+} from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useAddRepositoryMutation,
@@ -24,6 +35,8 @@ import {
   useRevokeGithubAppMutation,
   useUpdateGitProviderMutation,
 } from '../../api/queries';
+import { useMarketplaces } from '../../../marketplaces/api/queries';
+import { useAuthContext } from '../../../accounts/hooks';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { DisplayNameEditor } from './DisplayNameEditor';
 import { VendorMark } from '../shared/VendorMark';
@@ -149,6 +162,15 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   const removeMutation = useRemoveRepositoryMutation();
   const updateMutation = useUpdateGitProviderMutation();
   const revokeMutation = useRevokeGithubAppMutation();
+
+  const { data: marketplacesData } = useMarketplaces(organizationId);
+  const marketplacesForConnection = useMemo<MarketplaceListItem[]>(
+    () =>
+      (marketplacesData ?? []).filter(
+        (m) => m.repository?.gitProviderId === connection.id,
+      ),
+    [marketplacesData, connection.id],
+  );
 
   const diff = useMemo(() => {
     const before = new Set(initialSelection.tuples.map(tupleKey));
@@ -341,6 +363,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
       (r) => `${r.owner}/${r.repo}`,
     ),
   ).size;
+  const marketplaceCount = marketplacesForConnection.length;
   const applying = progress?.phase === 'running';
   const placeholder = vendorPlaceholder(connection.source);
   const headerTitle = connection.displayName.trim() || placeholder;
@@ -396,6 +419,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
             <ViewMode
               connection={connection}
               repoCount={repoCount}
+              marketplaces={marketplacesForConnection}
               placeholder={placeholder}
               otherNames={otherNames}
               onSaveDisplayName={submitDisplayName}
@@ -442,7 +466,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onDelete(connection)}
-              disabled={repoCount > 0}
+              disabled={repoCount > 0 || marketplaceCount > 0}
               data-testid="connection-drawer-delete"
             >
               <PMIcon fontSize="sm" color="red.500">
@@ -452,9 +476,9 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
                 Delete connection
               </PMText>
             </PMButton>
-            {repoCount > 0 && (
+            {deleteBlockedReason(repoCount, marketplaceCount) && (
               <PMText fontSize="xs" color="faded">
-                Remove tracked repos first to delete.
+                {deleteBlockedReason(repoCount, marketplaceCount)}
               </PMText>
             )}
           </PMHStack>
@@ -543,6 +567,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
 interface ViewModeProps {
   connection: GitProviderUI;
   repoCount: number;
+  marketplaces: MarketplaceListItem[];
   placeholder: string;
   otherNames: string[];
   onSaveDisplayName: (next: string) => Promise<void>;
@@ -556,6 +581,7 @@ interface ViewModeProps {
 const ViewMode: React.FC<ViewModeProps> = ({
   connection,
   repoCount,
+  marketplaces,
   placeholder,
   otherNames,
   onSaveDisplayName,
@@ -581,6 +607,10 @@ const ViewMode: React.FC<ViewModeProps> = ({
         onRevoke={onRevoke}
         isRevoking={isRevoking}
       />
+
+      {marketplaces.length > 0 && (
+        <MarketplacesPreview marketplaces={marketplaces} />
+      )}
 
       <PMVStack gap={2} align="stretch" flex={1} minH={0}>
         <PMHStack justify="space-between" align="baseline">
@@ -797,6 +827,109 @@ const RepositoriesPreview: React.FC<{
     </PMBox>
   );
 };
+
+const MarketplacesPreview: React.FC<{
+  marketplaces: MarketplaceListItem[];
+}> = ({ marketplaces }) => {
+  const { organization } = useAuthContext();
+  const orgSlug = organization?.slug;
+
+  const sorted = useMemo(
+    () =>
+      [...marketplaces].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      ),
+    [marketplaces],
+  );
+
+  return (
+    <PMVStack
+      gap={2}
+      align="stretch"
+      data-testid="connection-drawer-marketplaces"
+    >
+      <PMHStack justify="space-between" align="baseline">
+        <PMText
+          fontSize="xs"
+          color="faded"
+          textTransform="uppercase"
+          letterSpacing="wider"
+          fontWeight="semibold"
+        >
+          Marketplaces ({sorted.length})
+        </PMText>
+        {orgSlug && (
+          <Link
+            to={`/org/${orgSlug}/marketplaces`}
+            data-testid="connection-drawer-marketplaces-manage"
+          >
+            <PMHStack
+              gap={1.5}
+              align="center"
+              color="secondary"
+              _hover={{ color: 'branding.primary' }}
+            >
+              <PMText fontSize="xs" fontWeight="medium">
+                Manage in Marketplaces
+              </PMText>
+              <PMIcon fontSize="xs">
+                <LuArrowRight />
+              </PMIcon>
+            </PMHStack>
+          </Link>
+        )}
+      </PMHStack>
+      <PMBox
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="md"
+        bg="background.secondary"
+        overflow="hidden"
+      >
+        {sorted.map((marketplace, idx) => (
+          <PMVStack
+            key={marketplace.id}
+            gap={0.5}
+            align="stretch"
+            paddingX={3}
+            paddingY={2}
+            borderBottom={idx === sorted.length - 1 ? undefined : '1px solid'}
+            borderColor="border.tertiary"
+          >
+            <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
+              {marketplace.name}
+            </PMText>
+            <PMText fontSize="xs" color="secondary" truncate>
+              {marketplaceCoordinates(marketplace)}
+            </PMText>
+          </PMVStack>
+        ))}
+      </PMBox>
+    </PMVStack>
+  );
+};
+
+function deleteBlockedReason(
+  repoCount: number,
+  marketplaceCount: number,
+): string {
+  if (repoCount > 0 && marketplaceCount > 0) {
+    return 'Detach repos and unlink marketplaces first to delete.';
+  }
+  if (repoCount > 0) {
+    return 'Remove tracked repos first to delete.';
+  }
+  if (marketplaceCount > 0) {
+    return 'Unlink marketplaces (managed in Marketplaces) first to delete.';
+  }
+  return '';
+}
+
+function marketplaceCoordinates(marketplace: MarketplaceListItem): string {
+  const repository = marketplace.repository;
+  if (!repository) return 'Repository unavailable';
+  return `${repository.owner}/${repository.repo} · ${repository.branch}`;
+}
 
 function diffSummary(adds: number, removes: number): string {
   const parts: string[] = [];

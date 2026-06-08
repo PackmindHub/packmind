@@ -14,20 +14,18 @@ describe('GitNotConnectedNotice', () => {
       </UIProvider>,
     );
 
-  it('renders the connect-a-Git-provider call to action', () => {
+  it('renders the add-a-Git-connection call to action', () => {
     renderNotice('acme');
 
     expect(screen.getByTestId('git-not-connected-notice')).toBeInTheDocument();
-    expect(
-      screen.getByText('Connect a Git provider first'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Add a Git connection first')).toBeInTheDocument();
   });
 
-  it('deep-links to the Git provider settings page for the org', () => {
+  it('deep-links to the Git settings page for the org', () => {
     renderNotice('acme');
 
     const link = screen.getByRole('link', {
-      name: 'Connect a Git provider',
+      name: 'Add a Git connection',
     });
     expect(link).toHaveAttribute('href', '/org/acme/settings/git');
   });

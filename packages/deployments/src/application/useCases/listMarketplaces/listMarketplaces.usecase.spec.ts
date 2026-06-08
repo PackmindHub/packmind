@@ -223,6 +223,10 @@ describe('ListMarketplacesUseCase', () => {
         });
       });
 
+      it('exposes the backing gitProviderId on the first marketplace', () => {
+        expect(result[0].repository?.gitProviderId).toBe(providerId);
+      });
+
       it('builds the repository web url for the first marketplace', () => {
         expect(result[0].repository?.url).toBe(
           'https://github.com/acme/plugins',

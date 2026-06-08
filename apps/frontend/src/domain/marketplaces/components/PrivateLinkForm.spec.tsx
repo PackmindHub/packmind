@@ -59,6 +59,7 @@ describe('PrivateLinkForm', () => {
             organizationId: 'org-1',
             hasAuth: true,
             authMethod: 'token',
+            displayName: '',
           },
         ],
       },
@@ -106,7 +107,7 @@ describe('PrivateLinkForm', () => {
 
     renderForm();
     expect(
-      screen.getByText('Loading your connected Git providers…'),
+      screen.getByText('Loading your Git connections…'),
     ).toBeInTheDocument();
   });
 
@@ -120,12 +121,100 @@ describe('PrivateLinkForm', () => {
     expect(screen.getByTestId('git-not-connected-notice')).toBeInTheDocument();
   });
 
+  it('excludes CLI-managed providers (no credentials) from the dropdown', () => {
+    useGetGitProvidersQueryMock.mockReturnValue({
+      data: {
+        providers: [
+          {
+            id: 'gp-1',
+            source: 'github',
+            url: 'https://github.com',
+            organizationId: 'org-1',
+            hasAuth: true,
+            authMethod: 'token',
+            displayName: '',
+          },
+          {
+            id: 'gp-cli',
+            source: 'gitlab',
+            url: 'https://gitlab.com',
+            organizationId: 'org-1',
+            hasAuth: false,
+            authMethod: 'token',
+            displayName: '',
+          },
+        ],
+      },
+      isLoading: false,
+    });
+
+    renderForm();
+    const options = screen
+      .getAllByRole('option')
+      .map((option) => (option as HTMLOptionElement).value);
+    expect(options).toContain('gp-1');
+    expect(options).not.toContain('gp-cli');
+  });
+
+  it('shows the GitNotConnectedNotice when only CLI-managed providers exist', () => {
+    useGetGitProvidersQueryMock.mockReturnValue({
+      data: {
+        providers: [
+          {
+            id: 'gp-cli',
+            source: 'gitlab',
+            url: 'https://gitlab.com',
+            organizationId: 'org-1',
+            hasAuth: false,
+            authMethod: 'token',
+            displayName: '',
+          },
+        ],
+      },
+      isLoading: false,
+    });
+
+    renderForm();
+    expect(screen.getByTestId('git-not-connected-notice')).toBeInTheDocument();
+  });
+
   it('renders the form when at least one provider is connected', () => {
     renderForm();
     expect(
       screen.getByRole('form', { name: 'Link a private marketplace' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Git provider')).toBeInTheDocument();
+    expect(screen.getByText('Git connection')).toBeInTheDocument();
+  });
+
+  it('labels a connection with its display name when one is set', () => {
+    useGetGitProvidersQueryMock.mockReturnValue({
+      data: {
+        providers: [
+          {
+            id: 'gp-1',
+            source: 'github',
+            url: 'https://github.com',
+            organizationId: 'org-1',
+            hasAuth: true,
+            authMethod: 'token',
+            displayName: 'Acme Engineering',
+          },
+        ],
+      },
+      isLoading: false,
+    });
+
+    renderForm();
+    expect(
+      screen.getByRole('option', { name: 'Acme Engineering' }),
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to vendor and URL when the display name is empty', () => {
+    renderForm();
+    expect(
+      screen.getByRole('option', { name: 'GITHUB — https://github.com' }),
+    ).toBeInTheDocument();
   });
 
   it('disables the submit button until every field is populated', () => {

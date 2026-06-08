@@ -37,6 +37,7 @@ interface SpaceNavBlockProps {
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;
+  dataTestId?: string;
 }
 
 export function getSpaceInitials(name: string): string {
@@ -54,6 +55,7 @@ export function SpaceNavBlock({
   isActive,
   isSelected,
   onSpaceClick,
+  dataTestId,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const { isCollapsed } = useSidebarCollapse();
 
@@ -64,6 +66,7 @@ export function SpaceNavBlock({
         orgSlug={orgSlug}
         isActive={isActive}
         onSpaceClick={onSpaceClick}
+        dataTestId={dataTestId}
       />
     );
   }
@@ -75,6 +78,7 @@ export function SpaceNavBlock({
       isActive={isActive}
       isSelected={isSelected}
       onSpaceClick={onSpaceClick}
+      dataTestId={dataTestId}
     />
   );
 }
@@ -132,6 +136,7 @@ function ExpandedSpaceNavBlock({
   isActive,
   isSelected,
   onSpaceClick,
+  dataTestId,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
   const pinMutation = usePinSpaceMutation();
@@ -146,6 +151,7 @@ function ExpandedSpaceNavBlock({
           isActive={isActive}
           isSelected={isSelected}
           onSpaceClick={onSpaceClick}
+          dataTestId={dataTestId}
         />
       )}
 
@@ -233,6 +239,7 @@ function CollapsedSpaceNavBlock({
   orgSlug,
   isActive,
   onSpaceClick,
+  dataTestId,
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
   const navigate = useNavigate();
@@ -271,6 +278,7 @@ function CollapsedSpaceNavBlock({
             display="flex"
             alignItems="center"
             justifyContent="center"
+            data-testid={dataTestId}
           >
             <PMAvatar.Root
               size="xs"
@@ -352,12 +360,14 @@ function SpaceNameRow({
   isActive,
   isSelected,
   onSpaceClick,
+  dataTestId,
 }: Readonly<{
   space: UserSpaceWithRole;
   orgSlug: string;
   isActive: boolean;
   isSelected: boolean;
   onSpaceClick: () => void;
+  dataTestId?: string;
 }>): React.ReactElement {
   const navigate = useNavigate();
   const pinMutation = usePinSpaceMutation();
@@ -382,6 +392,7 @@ function SpaceNameRow({
         '& .space-settings-btn': { opacity: 0, transition: 'opacity 0.15s' },
         '&:hover .space-settings-btn': { opacity: 1 },
       }}
+      data-testid={dataTestId}
     >
       <PMBox display="flex" alignItems="center" flex={1} minW={0}>
         <PMText

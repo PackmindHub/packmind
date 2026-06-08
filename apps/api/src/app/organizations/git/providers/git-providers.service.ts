@@ -15,6 +15,7 @@ import {
   GitProvider,
   GitProviderId,
   GitRepo,
+  GitRepoAlreadyExistsError,
   GitRepoId,
   IGitPort,
   ListProvidersCommand,
@@ -26,7 +27,7 @@ import {
   createOrganizationGitHubAppId,
 } from '@packmind/types';
 import { InjectGitAdapter } from '../../../shared/HexaInjection';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
@@ -77,12 +78,14 @@ type CompleteGithubAppManifestResponse = {
 
 type GetGithubAppStatusCommand = {
   orgId: OrganizationId;
+  userId: UserId;
 };
 
 type GetGithubAppStatusResponse = {
   hasApp: boolean;
   appSlug?: string;
   revokedAt?: Date | null;
+  linkedProviderCount: number;
 };
 
 type RevokeGithubAppCommand = {
@@ -183,10 +186,11 @@ export class GitProvidersService {
       );
     }
 
-    const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
-    if (!appWebUrl) {
+    const configuredAppWebUrl = await Configuration.getConfig('APP_WEB_URL');
+    if (!configuredAppWebUrl) {
       throw new BadRequestException('APP_WEB_URL is not configured');
     }
+    const appWebUrl = removeTrailingSlash(configuredAppWebUrl);
 
     const organization = await this.accountsHexa
       .getAdapter()
@@ -376,6 +380,24 @@ export class GitProvidersService {
       );
     }
 
+    const existing = await this.gitAdapter.findGitProviderByAppInstallation(
+      command.organizationId,
+      command.installationId,
+    );
+
+    if (existing) {
+      this.logger.info(
+        'Reusing existing GitHub App provider for installation',
+        {
+          providerId: existing.id,
+          organizationId: command.organizationId,
+          installationId: command.installationId,
+        },
+      );
+      await this.materializeReposForAppInstallation(existing, command);
+      return existing;
+    }
+
     const addCommand: AddGitProviderCommand = {
       userId: String(command.userId),
       organizationId: String(command.organizationId),
@@ -444,16 +466,25 @@ export class GitProvidersService {
         });
         materialized += 1;
       } catch (error) {
-        this.logger.warn(
-          'Failed to materialize repo after GitHub App install',
-          {
+        if (error instanceof GitRepoAlreadyExistsError) {
+          this.logger.debug('Repo already materialized, skipping', {
             providerId: provider.id,
             organizationId: command.organizationId,
             owner: availableRepo.owner,
             repo: availableRepo.name,
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
+          });
+        } else {
+          this.logger.warn(
+            'Failed to materialize repo after GitHub App install',
+            {
+              providerId: provider.id,
+              organizationId: command.organizationId,
+              owner: availableRepo.owner,
+              repo: availableRepo.name,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+        }
       }
     }
 
@@ -584,17 +615,37 @@ export class GitProvidersService {
 
     // Shared mode uses an env-configured GitHub App — no on-prem record exists.
     if (mode === 'shared') {
-      return { hasApp: true };
+      return { hasApp: true, linkedProviderCount: 0 };
     }
 
     const record = await this.gitAdapter.getActiveOrganizationGitHubApp(
       command.orgId,
     );
 
+    if (!record) {
+      return {
+        hasApp: false,
+        revokedAt: null,
+        linkedProviderCount: 0,
+      };
+    }
+
+    const { providers } = await this.gitAdapter.listProviders({
+      organizationId: command.orgId,
+      userId: command.userId,
+    });
+
+    const linkedProviderCount = providers.filter(
+      (p) =>
+        p.authMethod === 'app' &&
+        String(p.organizationGitHubAppId) === String(record.id),
+    ).length;
+
     return {
-      hasApp: !!record,
-      appSlug: record?.appSlug,
-      revokedAt: record?.revokedAt ?? null,
+      hasApp: true,
+      appSlug: record.appSlug,
+      revokedAt: record.revokedAt ?? null,
+      linkedProviderCount,
     };
   }
 
@@ -614,6 +665,23 @@ export class GitProvidersService {
     if (!record) {
       throw new NotFoundException(
         'No active GitHub App found for this organization',
+      );
+    }
+
+    const { providers } = await this.gitAdapter.listProviders({
+      organizationId: command.orgId,
+      userId: command.userId,
+    });
+
+    const count = providers.filter(
+      (p) =>
+        p.authMethod === 'app' &&
+        String(p.organizationGitHubAppId) === String(record.id),
+    ).length;
+
+    if (count > 0) {
+      throw new BadRequestException(
+        `Cannot revoke the GitHub App: ${count} connection(s) still use it. Delete those connections first.`,
       );
     }
 

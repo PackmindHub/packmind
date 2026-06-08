@@ -1,14 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Dialog, Portal } from '@chakra-ui/react';
 import {
   PMAlert,
   PMBox,
   PMButton,
   PMHStack,
   PMIcon,
+  PMInput,
   PMSkeleton,
   PMText,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import { LuCheck, LuGithub, LuShieldCheck } from 'react-icons/lu';
 import { OrganizationId } from '@packmind/types';
@@ -16,7 +19,9 @@ import {
   useGetGithubAppManifestMutation,
   useGetGithubAppStatusQuery,
   useGithubAppInstallUrlMutation,
+  useRevokeGithubAppMutation,
 } from '../../api/queries/GitProviderQueries';
+import { extractErrorMessage } from '../../utils/errorUtils';
 import { GET_GIT_PROVIDERS_KEY } from '../../api/queryKeys';
 
 type GithubAppMode = 'on-prem' | 'shared';
@@ -33,6 +38,13 @@ type AppInstalledMessage = {
   orgId: string;
 };
 
+const appNameFromSlug = (slug: string): string =>
+  slug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
 export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   organizationId,
   githubAppMode,
@@ -41,9 +53,44 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   const queryClient = useQueryClient();
   const installUrlMutation = useGithubAppInstallUrlMutation();
   const manifestMutation = useGetGithubAppManifestMutation();
+  const revokeMutation = useRevokeGithubAppMutation();
   const [popupError, setPopupError] = useState<string | null>(null);
+  const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
+  const [revokeConfirmationInput, setRevokeConfirmationInput] = useState('');
 
   const statusQuery = useGetGithubAppStatusQuery();
+
+  const expectedAppName = appNameFromSlug(statusQuery.data?.appSlug ?? '');
+  const linkedProviderCount = statusQuery.data?.linkedProviderCount ?? 0;
+  const hasLinkedProviders = linkedProviderCount > 0;
+  const isRevokeConfirmEnabled =
+    revokeConfirmationInput === expectedAppName &&
+    expectedAppName.length > 0 &&
+    !hasLinkedProviders &&
+    !revokeMutation.isPending;
+
+  const handleRevokeDialogOpenChange = (details: { open: boolean }) => {
+    if (revokeMutation.isPending) return;
+    setIsRevokeDialogOpen(details.open);
+  };
+
+  const handleRevokeSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isRevokeConfirmEnabled) return;
+    try {
+      await revokeMutation.mutateAsync();
+      setIsRevokeDialogOpen(false);
+    } catch (err) {
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to revoke',
+        description: extractErrorMessage(
+          err,
+          'Failed to revoke the GitHub App registration.',
+        ),
+      });
+    }
+  };
 
   const handleMessage = useCallback(
     async (event: MessageEvent) => {
@@ -214,9 +261,126 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
                   ? 'Waiting for confirmation from GitHub.'
                   : 'Opens a GitHub popup. Pick the orgs and repos to grant access.'}
               </PMText>
+              {githubAppMode === 'on-prem' && (
+                <PMBox
+                  as="button"
+                  onClick={
+                    revokeMutation.isPending
+                      ? undefined
+                      : () => setIsRevokeDialogOpen(true)
+                  }
+                  aria-disabled={revokeMutation.isPending}
+                  bg="transparent"
+                  border="none"
+                  padding="0"
+                  cursor={revokeMutation.isPending ? 'not-allowed' : 'pointer'}
+                  opacity={revokeMutation.isPending ? 0.6 : 1}
+                  fontSize="xs"
+                  color="error"
+                  fontWeight="medium"
+                  textDecoration="underline"
+                  textUnderlineOffset="2px"
+                  _hover={{ color: 'red.400' }}
+                  alignSelf="flex-start"
+                  data-testid="github-app-auth-revoke-registration"
+                >
+                  {revokeMutation.isPending
+                    ? 'Revoking…'
+                    : 'Revoke registration'}
+                </PMBox>
+              )}
             </PMVStack>
           )}
         </>
+      )}
+
+      {githubAppMode === 'on-prem' && statusQuery.data?.hasApp === true && (
+        <Dialog.Root
+          open={isRevokeDialogOpen}
+          onOpenChange={handleRevokeDialogOpenChange}
+          placement="center"
+          onExitComplete={() => setRevokeConfirmationInput('')}
+        >
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner>
+              <Dialog.Content>
+                <form onSubmit={handleRevokeSubmit}>
+                  <Dialog.Header>
+                    <Dialog.Title>Revoke GitHub App registration?</Dialog.Title>
+                  </Dialog.Header>
+
+                  <Dialog.Body>
+                    <PMVStack gap={4} align="stretch">
+                      <PMText>
+                        This removes the <strong>{expectedAppName}</strong>{' '}
+                        registration for your organization. You'll be able to
+                        register a new app afterward.
+                      </PMText>
+                      {hasLinkedProviders && (
+                        <PMAlert.Root status="error">
+                          <PMAlert.Indicator />
+                          <PMAlert.Content>
+                            <PMAlert.Title>
+                              {linkedProviderCount}{' '}
+                              {linkedProviderCount === 1
+                                ? 'connection is'
+                                : 'connections are'}{' '}
+                              still using this app
+                            </PMAlert.Title>
+                            <PMAlert.Description>
+                              Delete {linkedProviderCount === 1 ? 'it' : 'them'}{' '}
+                              from the Connections tab before revoking the
+                              registration.
+                            </PMAlert.Description>
+                          </PMAlert.Content>
+                        </PMAlert.Root>
+                      )}
+                      <PMVStack gap={2} align="stretch">
+                        <PMText variant="body" fontSize="sm">
+                          Type <strong>{expectedAppName}</strong> to confirm:
+                        </PMText>
+                        <PMInput
+                          placeholder="Enter app name"
+                          value={revokeConfirmationInput}
+                          onChange={(e) =>
+                            setRevokeConfirmationInput(e.target.value)
+                          }
+                          disabled={hasLinkedProviders}
+                          data-testid="github-app-auth-revoke-input"
+                        />
+                      </PMVStack>
+                    </PMVStack>
+                  </Dialog.Body>
+
+                  <Dialog.Footer>
+                    <Dialog.ActionTrigger asChild>
+                      <PMButton
+                        type="button"
+                        variant="tertiary"
+                        disabled={revokeMutation.isPending}
+                      >
+                        Cancel
+                      </PMButton>
+                    </Dialog.ActionTrigger>
+                    <PMButton
+                      type="submit"
+                      colorScheme="red"
+                      disabled={!isRevokeConfirmEnabled}
+                      loading={revokeMutation.isPending}
+                      ml={3}
+                      data-testid="github-app-auth-revoke-confirm"
+                    >
+                      Revoke registration
+                    </PMButton>
+                  </Dialog.Footer>
+                </form>
+
+                <Dialog.CloseTrigger />
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
       )}
     </PMVStack>
   );

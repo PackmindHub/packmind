@@ -11,8 +11,8 @@ export interface GitNotConnectedNoticeProps {
 }
 
 /**
- * Shown inside `PrivateLinkForm` when the organization has not connected any
- * Git provider yet. Deep-links to the Git settings page so the admin can fix
+ * Shown inside `PrivateLinkForm` when the organization has no user-configured
+ * Git connection yet. Deep-links to the Git settings page so the admin can fix
  * the prerequisite without losing the link-marketplace flow context.
  */
 export const GitNotConnectedNotice = ({
@@ -22,15 +22,15 @@ export const GitNotConnectedNotice = ({
     <PMAlert.Root status="info" data-testid="git-not-connected-notice">
       <PMAlert.Indicator />
       <PMVStack align="start" gap={2}>
-        <PMAlert.Title>Connect a Git provider first</PMAlert.Title>
+        <PMAlert.Title>Add a Git connection first</PMAlert.Title>
         <PMAlert.Description>
-          Linking a private marketplace requires a Git provider with read access
-          to the repository. Connect one to continue.
+          Linking a private marketplace requires a Git connection with read
+          access to the repository. Add one to continue.
         </PMAlert.Description>
         <PMHStack gap={2} paddingTop={1}>
           <PMButton variant="primary" size="sm" asChild>
             <Link to={routes.org.toSettingsGit(orgSlug)}>
-              Connect a Git provider
+              Add a Git connection
             </Link>
           </PMButton>
         </PMHStack>

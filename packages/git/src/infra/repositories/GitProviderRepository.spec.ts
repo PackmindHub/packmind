@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   createGitProviderId,
   createOrganizationGitHubAppId,
+  createUserId,
   GitProvider,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -212,6 +213,134 @@ describe('GitProviderRepository', () => {
 
     it('includes second provider in results', async () => {
       expect(foundGitProviders.map((p) => p.id)).toContain(gitProvider2.id);
+    });
+  });
+
+  describe('when finding a git provider by app installation', () => {
+    describe('when an app-auth provider exists for the org and installation', () => {
+      let appProvider: ReturnType<typeof gitProviderFactory>;
+      let found: Awaited<
+        ReturnType<typeof gitProviderRepository.findByAppInstallation>
+      >;
+
+      beforeEach(async () => {
+        appProvider = gitProviderFactory({
+          organizationId: testOrganization.id,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 424242,
+        });
+        await gitProviderRepository.add(appProvider);
+
+        found = await gitProviderRepository.findByAppInstallation(
+          testOrganization.id,
+          424242,
+        );
+      });
+
+      it('returns the matching provider', () => {
+        expect(found?.id).toBe(appProvider.id);
+      });
+    });
+
+    describe('when no provider matches the installation in the org', () => {
+      let found: Awaited<
+        ReturnType<typeof gitProviderRepository.findByAppInstallation>
+      >;
+
+      beforeEach(async () => {
+        found = await gitProviderRepository.findByAppInstallation(
+          testOrganization.id,
+          999999,
+        );
+      });
+
+      it('returns null', () => {
+        expect(found).toBeNull();
+      });
+    });
+
+    describe('when the matching installation exists in a different org', () => {
+      let found: Awaited<
+        ReturnType<typeof gitProviderRepository.findByAppInstallation>
+      >;
+
+      beforeEach(async () => {
+        const otherOrganization = await organizationRepository.save({
+          id: createOrganizationId(uuidv4()),
+          name: 'Other Organization',
+          slug: 'other-organization',
+        });
+        const otherProvider = gitProviderFactory({
+          organizationId: otherOrganization.id,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 111111,
+        });
+        await gitProviderRepository.add(otherProvider);
+
+        found = await gitProviderRepository.findByAppInstallation(
+          testOrganization.id,
+          111111,
+        );
+      });
+
+      it('returns null', () => {
+        expect(found).toBeNull();
+      });
+    });
+
+    describe('when the matching provider is soft-deleted', () => {
+      let found: Awaited<
+        ReturnType<typeof gitProviderRepository.findByAppInstallation>
+      >;
+
+      beforeEach(async () => {
+        const provider = gitProviderFactory({
+          organizationId: testOrganization.id,
+          token: null,
+          authMethod: 'app',
+          appInstallationId: 555555,
+        });
+        await gitProviderRepository.add(provider);
+        await gitProviderRepository.deleteById(
+          provider.id,
+          createUserId(uuidv4()),
+        );
+
+        found = await gitProviderRepository.findByAppInstallation(
+          testOrganization.id,
+          555555,
+        );
+      });
+
+      it('returns null', () => {
+        expect(found).toBeNull();
+      });
+    });
+
+    describe('when only a token-auth provider has that installation id', () => {
+      let found: Awaited<
+        ReturnType<typeof gitProviderRepository.findByAppInstallation>
+      >;
+
+      beforeEach(async () => {
+        const tokenProvider = gitProviderFactory({
+          organizationId: testOrganization.id,
+          authMethod: 'token',
+          appInstallationId: 777777,
+        });
+        await gitProviderRepository.add(tokenProvider);
+
+        found = await gitProviderRepository.findByAppInstallation(
+          testOrganization.id,
+          777777,
+        );
+      });
+
+      it('returns null', () => {
+        expect(found).toBeNull();
+      });
     });
   });
 

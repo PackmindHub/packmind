@@ -291,6 +291,7 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
         slug?: string;
         name?: string;
         version?: string;
+        description?: string;
         source?: { source?: string; url?: string; path?: string };
       };
 
@@ -395,6 +396,38 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
           'https://github.com/acme/plugins/pull/1',
         );
       });
+    });
+  });
+
+  describe('when the renderer supplies a plugin description', () => {
+    let pluginEntry: { description?: string };
+
+    beforeEach(async () => {
+      mockRenderer.mockResolvedValue({
+        ...renderedFiles,
+        pluginDescription:
+          'Packmind - space @engineering: Security curated package',
+      });
+
+      await job.runJob('job-with-description', input, new AbortController());
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1] as Array<{
+        path: string;
+        content: string;
+      }>;
+      const descriptorCommit = committedFiles.find(
+        (f) => f.path === '.claude-plugin/marketplace.json',
+      );
+      const parsed = JSON.parse(descriptorCommit?.content ?? '{}') as {
+        plugins: Array<{ slug?: string; description?: string }>;
+      };
+      pluginEntry = parsed.plugins.find((p) => p.slug === 'security') ?? {};
+    });
+
+    it('writes the description into the descriptor entry', () => {
+      expect(pluginEntry.description).toBe(
+        'Packmind - space @engineering: Security curated package',
+      );
     });
   });
 
@@ -691,6 +724,13 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       const emitted = mockEventEmitter.emit.mock
         .calls[0][0] as PluginPublishedEvent;
       expect(emitted.payload.wasNoop).toBe(true);
+    });
+
+    it('still ensures the rolling PR so a branch orphaned by a prior failed publish self-heals', () => {
+      expect(mockGitPort.openOrUpdatePullRequest).toHaveBeenCalledWith(
+        gitRepo,
+        expect.objectContaining({ head: MARKETPLACE_SYNC_BRANCH }),
+      );
     });
   });
 

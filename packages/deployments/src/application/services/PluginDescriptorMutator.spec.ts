@@ -150,6 +150,45 @@ describe('applyPluginDescriptorMutation', () => {
     });
   });
 
+  describe('when a plugin description is supplied', () => {
+    let result: MarketplaceDescriptor;
+
+    beforeEach(() => {
+      result = applyPluginDescriptorMutation(baseDescriptor, {
+        pluginSlug: 'security',
+        pluginName: 'Security',
+        pluginVersion: '0.1.0',
+        pluginDescription: 'Packmind - space @engineering: Security pack',
+        pluginSource: sampleSource,
+      });
+    });
+
+    it('writes the description onto the new plugin entry', () => {
+      const inserted = result.plugins.find((p) => p.slug === 'security');
+      expect(inserted?.description).toBe(
+        'Packmind - space @engineering: Security pack',
+      );
+    });
+  });
+
+  describe('when no plugin description is supplied', () => {
+    let result: MarketplaceDescriptor;
+
+    beforeEach(() => {
+      result = applyPluginDescriptorMutation(baseDescriptor, {
+        pluginSlug: 'security',
+        pluginName: 'Security',
+        pluginVersion: '0.1.0',
+        pluginSource: sampleSource,
+      });
+    });
+
+    it('leaves description undefined on the new plugin entry', () => {
+      const inserted = result.plugins.find((p) => p.slug === 'security');
+      expect(inserted?.description).toBeUndefined();
+    });
+  });
+
   describe('idempotency', () => {
     describe('when called twice with the same input', () => {
       let first: MarketplaceDescriptor;

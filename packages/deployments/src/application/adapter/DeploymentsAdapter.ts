@@ -130,6 +130,7 @@ import { RemovePluginFromMarketplaceJobFactory } from '../../infra/jobs/RemovePl
 import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { formatMarketplacePluginDescription } from '../services/formatMarketplacePluginDescription';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -858,11 +859,16 @@ export class DeploymentsAdapter
       pluginName: params.package.name,
     });
 
+    const marketplacePluginDescription = formatMarketplacePluginDescription({
+      spaceSlug: space.slug,
+      packageDescription: response.pluginDescription,
+    });
+
     return {
       files: response.files.map((f) => ({ path: f.path, content: f.content })),
       pluginName: response.pluginName,
       pluginVersion: response.pluginVersion,
-      pluginDescription: response.pluginDescription,
+      pluginDescription: marketplacePluginDescription,
     };
   }
 

@@ -32,5 +32,6 @@ export type PluginRef = {
   slug: string;
   name: string;
   version?: string;
+  description?: string;
   source?: PluginSource;
 };

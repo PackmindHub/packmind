@@ -68,7 +68,12 @@ export const PrivateLinkForm = ({
     gitProviderId as GitProviderId,
   );
 
-  const providers = providersQuery.data?.providers ?? [];
+  // Only user-configured providers (PAT token or active GitHub App
+  // installation) can list repositories. CLI-created providers are
+  // URL-tracking-only and hold no credentials, so they are filtered out.
+  const providers = (providersQuery.data?.providers ?? []).filter(
+    (provider) => provider.hasAuth,
+  );
 
   const filteredRepos = useMemo(() => {
     const repos = reposQuery.data ?? [];
@@ -85,9 +90,7 @@ export const PrivateLinkForm = ({
   const fieldsValid = Boolean(gitProviderId.trim() && selectedRepo);
 
   if (providersQuery.isLoading) {
-    return (
-      <PMText color="secondary">Loading your connected Git providers…</PMText>
-    );
+    return <PMText color="secondary">Loading your Git connections…</PMText>;
   }
 
   if (providers.length === 0) {
@@ -133,13 +136,13 @@ export const PrivateLinkForm = ({
       <PMVStack align="stretch" gap={4}>
         {errorMessage && <SubmitErrorBanner message={errorMessage} />}
 
-        <Field label="Git provider">
+        <Field label="Git connection">
           <PMNativeSelect
             name="gitProviderId"
             value={gitProviderId}
             onChange={handleProviderChange}
             items={[
-              { value: '', label: 'Select a provider' },
+              { value: '', label: 'Select a connection' },
               ...providers.map((provider) => ({
                 value: provider.id,
                 label: providerLabel(provider),
@@ -294,7 +297,11 @@ const Field = ({
 function providerLabel(provider: {
   source: string;
   url: string | null;
+  displayName: string;
 }): string {
+  const displayName = provider.displayName.trim();
+  if (displayName) return displayName;
+  // Unnamed connections fall back to the vendor + URL coordinates.
   const vendor = provider.source.toUpperCase();
   return provider.url ? `${vendor} — ${provider.url}` : vendor;
 }

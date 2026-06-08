@@ -188,9 +188,18 @@ export const SidebarNavigation: React.FunctionComponent<
     setActiveSpacePanel(null);
   }, [location.pathname]);
 
-  // Use spaceSlug from URL if available, otherwise use first space from query
-  const currentSpaceSlug =
-    spaceSlug || (spaces && spaces.length > 0 ? spaces[0].slug : undefined);
+  // Routes that live outside of any space — on these, no space should appear
+  // active in the sidebar (all spaces collapsed).
+  const isOrgOnlySection = /^\/org\/[^/]+\/(settings|setup|profile)(\/|$)/.test(
+    location.pathname,
+  );
+
+  const fallbackSpaceSlug =
+    isOrgOnlySection || !spaces?.length ? undefined : spaces[0].slug;
+
+  // Use spaceSlug from URL if available, otherwise fall back to the first
+  // space — except on org-only sections where we want no active space.
+  const currentSpaceSlug = spaceSlug || fallbackSpaceSlug;
 
   const sidebarWidth = isCollapsed
     ? SIDEBAR_WIDTH_COLLAPSED
@@ -510,6 +519,7 @@ export const SidebarNavigation: React.FunctionComponent<
                     setActiveSpacePanel(defaultSpace.id);
                   }
                 }}
+                dataTestId={SidebarNavigationDataTestId.DefaultSpaceRow}
               />
 
               {spaces && (

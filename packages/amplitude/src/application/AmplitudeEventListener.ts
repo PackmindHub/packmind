@@ -40,6 +40,9 @@ import {
   PlaybookArtefactMovedEvent,
   PluginRenderedEvent,
   PluginDeletedEvent,
+  PluginPublishAttemptedEvent,
+  PluginPublishedEvent,
+  PluginPublishFailedEvent,
   MarketplaceLinkedEvent,
   MarketplacePluginRemovalInitiatedEvent,
   MarketplaceUnlinkedEvent,
@@ -138,6 +141,9 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(PlaybookArtefactMovedEvent, this.onPlaybookArtefactMoved);
     this.subscribe(PluginRenderedEvent, this.onPluginRendered);
     this.subscribe(PluginDeletedEvent, this.onPluginDeleted);
+    this.subscribe(PluginPublishAttemptedEvent, this.onPluginPublishAttempted);
+    this.subscribe(PluginPublishedEvent, this.onPluginPublished);
+    this.subscribe(PluginPublishFailedEvent, this.onPluginPublishFailed);
     this.subscribe(MarketplaceLinkedEvent, this.onMarketplaceLinked);
     this.subscribe(MarketplaceUnlinkedEvent, this.onMarketplaceUnlinked);
     this.subscribe(
@@ -564,6 +570,51 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
         marketplaceRepo: payload.marketplaceRepo,
       }),
     }));
+  };
+
+  private onPluginPublishAttempted = async (
+    event: PluginPublishAttemptedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'plugin_publish_attempted',
+      (payload) => ({
+        marketplaceDistributionId: payload.marketplaceDistributionId,
+        marketplaceId: payload.marketplaceId,
+        packageId: payload.packageId,
+        isFirstPublishForPackage: payload.isFirstPublishForPackage,
+      }),
+    );
+  };
+
+  private onPluginPublished = async (
+    event: PluginPublishedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'plugin_published', (payload) => ({
+      marketplaceDistributionId: payload.marketplaceDistributionId,
+      marketplaceId: payload.marketplaceId,
+      packageId: payload.packageId,
+      wasNoop: payload.wasNoop,
+      ...(payload.prUrl !== undefined && { prUrl: payload.prUrl }),
+      ...(payload.commitCountAfter !== undefined && {
+        commitCountAfter: payload.commitCountAfter,
+      }),
+    }));
+  };
+
+  private onPluginPublishFailed = async (
+    event: PluginPublishFailedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'plugin_publish_failed',
+      (payload) => ({
+        marketplaceDistributionId: payload.marketplaceDistributionId,
+        marketplaceId: payload.marketplaceId,
+        packageId: payload.packageId,
+        failureReason: payload.failureReason,
+      }),
+    );
   };
 
   private onMarketplaceLinked = async (
