@@ -16,3 +16,4 @@ This standard defines how to structure use cases in the Packmind monorepo follow
 * Reuse existing use cases through port/adapter interfaces instead of instantiating them directly within use cases
 * Extend AbstractSpaceMemberUseCase and implement executeForSpaceMembers method for use cases operating within a specific space (command includes spaceId), with automatic user, organization, and space membership validation
 * Extend SpaceMemberCommand instead of PackmindCommand for use case commands that include a spaceId to get both organizationId and spaceId typing
+* Never directly call Repositories in Adapter classes, repos must be called from Use Cases
