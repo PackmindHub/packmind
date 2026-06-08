@@ -6,7 +6,7 @@ import {
   Organization,
   User,
 } from '@packmind/types';
-import { gitProviderFactory } from '../../../../test';
+import { gitProviderFactory, gitRepoFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
 import { ListProvidersUseCase } from './listProviders.usecase';
 
@@ -265,6 +265,33 @@ describe('ListProvidersUseCase', () => {
 
       it('projects authMethod app for the app provider', () => {
         expect(result.providers[1].authMethod).toBe('app');
+      });
+    });
+  });
+
+  describe('repos projection', () => {
+    describe('when the provider eager-loads both standard and marketplace repos', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const standardRepo = gitRepoFactory({ type: 'standard' });
+        const marketplaceRepo = gitRepoFactory({ type: 'marketplace' });
+        const provider = gitProviderFactory({
+          organizationId,
+          token: 'valid-token',
+          repos: [standardRepo, marketplaceRepo],
+        });
+        mockGitProviderService.findGitProvidersByOrganizationId.mockResolvedValue(
+          [provider],
+        );
+
+        result = await useCase.execute({ organizationId, userId });
+      });
+
+      it('returns only standard-typed repos', () => {
+        expect(result.providers[0].repos).toEqual([
+          expect.objectContaining({ type: 'standard' }),
+        ]);
       });
     });
   });

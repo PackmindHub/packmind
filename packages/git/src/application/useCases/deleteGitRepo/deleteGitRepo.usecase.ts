@@ -43,8 +43,13 @@ export class DeleteGitRepoUseCase extends AbstractAdminUseCase<
       throw new Error('Repository ID is required');
     }
 
-    // Business rule: repository must exist
-    const repository = await this.gitRepoService.findGitRepoById(repositoryId);
+    // Business rule: repository must exist. We use the type-ignoring finder
+    // here so this use case can serve both standard and marketplace deletion
+    // paths — `UnlinkMarketplaceUseCase` routes through `IGitPort.deleteGitRepo`
+    // to soft-delete the marketplace-typed `GitRepo`, and the default
+    // `findGitRepoById` filters those out.
+    const repository =
+      await this.gitRepoService.findGitRepoByIdIgnoringType(repositoryId);
     if (!repository) {
       throw new Error('Repository not found');
     }

@@ -259,5 +259,61 @@ describe('AddMembersToSpaceUseCase', () => {
         );
       });
     });
+
+    describe('when caller is an org admin without space admin role', () => {
+      const targetUserId = createUserId('member-1');
+
+      beforeEach(() => {
+        const orgAdmin = userFactory({
+          id: userId,
+          memberships: [{ userId, organizationId, role: 'admin' }],
+        });
+        accountsPort.getUserById.mockResolvedValue(orgAdmin);
+        membershipService.addSpaceMembership.mockResolvedValue(
+          userSpaceMembershipFactory({
+            userId: targetUserId,
+            spaceId,
+            role: UserSpaceRole.MEMBER,
+          }),
+        );
+      });
+
+      it('adds members and returns the created memberships', async () => {
+        const result = await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
+        expect(result).toHaveLength(1);
+      });
+
+      it('emits the membership event without checking space-admin membership', async () => {
+        await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              spaceId,
+              memberUserIds: [targetUserId],
+            }),
+          }),
+        );
+      });
+
+      it('does not check space membership for org admins', async () => {
+        await useCase.execute(
+          buildCommand({
+            members: [{ userId: targetUserId, role: UserSpaceRole.MEMBER }],
+          }),
+        );
+
+        expect(membershipService.findMembership).not.toHaveBeenCalled();
+      });
+    });
   });
 });

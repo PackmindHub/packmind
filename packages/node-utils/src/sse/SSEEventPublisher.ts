@@ -13,6 +13,9 @@ import {
   createUserContextChangeEvent,
   createDistributionStatusChangeEvent,
   createChangeProposalUpdateEvent,
+  createMarketplacePublishCompletedEvent,
+  type MarketplacePublishCompletedStatus,
+  type PublishFailureReason,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -345,6 +348,84 @@ export class SSEEventPublisher {
         {
           organizationId,
           spaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish a marketplace publish completed event so the user who triggered
+   * the publish receives a terminal-state notification with the rolling PR
+   * URL (when available). Targets the publishing user only — other org
+   * members do not need this toast.
+   */
+  static async publishMarketplacePublishCompletedEvent(params: {
+    marketplaceDistributionId: string;
+    marketplaceId: string;
+    packageId: string;
+    pluginSlug: string;
+    packageName: string;
+    marketplaceName: string;
+    status: MarketplacePublishCompletedStatus;
+    userId: string;
+    prUrl?: string;
+    failureReason?: PublishFailureReason;
+  }): Promise<void> {
+    const {
+      marketplaceDistributionId,
+      marketplaceId,
+      packageId,
+      pluginSlug,
+      packageName,
+      marketplaceName,
+      status,
+      userId,
+      prUrl,
+      failureReason,
+    } = params;
+
+    SSEEventPublisher.getInstance().logger.info(
+      'Publishing marketplace publish completed event',
+      {
+        marketplaceDistributionId,
+        marketplaceId,
+        packageId,
+        status,
+      },
+    );
+
+    try {
+      const event = createMarketplacePublishCompletedEvent({
+        marketplaceDistributionId,
+        marketplaceId,
+        packageId,
+        pluginSlug,
+        packageName,
+        marketplaceName,
+        status,
+        prUrl,
+        failureReason,
+      });
+
+      await SSEEventPublisher.publishEvent(
+        'MARKETPLACE_PUBLISH_COMPLETED',
+        [],
+        event,
+        [userId],
+      );
+
+      SSEEventPublisher.getInstance().logger.debug(
+        'Successfully published marketplace publish completed event',
+        { marketplaceDistributionId, status },
+      );
+    } catch (error) {
+      SSEEventPublisher.getInstance().logger.error(
+        'Failed to publish marketplace publish completed event',
+        {
+          marketplaceDistributionId,
+          status,
           error: error instanceof Error ? error.message : String(error),
         },
       );

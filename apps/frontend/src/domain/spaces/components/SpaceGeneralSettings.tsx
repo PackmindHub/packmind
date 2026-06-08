@@ -15,14 +15,21 @@ export function SpaceGeneralSettings() {
   const currentUserMember = data?.members?.find((m) => m.userId === user?.id);
   const isSpaceAdmin = currentUserMember?.role === 'admin';
   const isOrgAdmin = organization?.role === 'admin';
+  const canEditIdentity = isSpaceAdmin || isOrgAdmin;
   const canDeleteSpace = isSpaceAdmin || isOrgAdmin;
 
   return (
     <PMVStack align="stretch" gap={6} pt={4}>
-      {isSpaceAdmin && <SpaceIdentitySection />}
+      {space && (
+        <SpaceIdentitySection
+          key={space.id}
+          space={space}
+          canEdit={canEditIdentity}
+        />
+      )}
       {isSpaceAdmin && !space?.isDefaultSpace && <SpaceAccessSection />}
-      {!space?.isDefaultSpace && (
-        <SpaceDangerZoneSection canDeleteSpace={canDeleteSpace} />
+      {!space?.isDefaultSpace && space && (
+        <SpaceDangerZoneSection space={space} canDelete={canDeleteSpace} />
       )}
     </PMVStack>
   );

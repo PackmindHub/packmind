@@ -70,6 +70,14 @@ const DISTRIBUTION_STATUS_BADGE: Record<
     label: 'No changes',
     colorPalette: 'gray',
   },
+  [DistributionStatus.to_be_removed]: {
+    label: 'To be removed',
+    colorPalette: 'gray',
+  },
+  [DistributionStatus.removed]: {
+    label: 'Removed',
+    colorPalette: 'gray',
+  },
 };
 
 type Row = {

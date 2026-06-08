@@ -97,6 +97,11 @@ export default function SettingsIndexRouteModule() {
                 exact
                 data-testid={SettingsRouteDataTestIds.UsersLink}
               />,
+              <SidebarNavigationLink
+                url={orgSlug ? routes.org.toSettingsSpaces(orgSlug) : '#'}
+                label="Spaces"
+                exact
+              />,
             ]}
           />
 
