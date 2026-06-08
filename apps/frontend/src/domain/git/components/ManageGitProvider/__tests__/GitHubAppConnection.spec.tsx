@@ -119,8 +119,8 @@ describe('GitHubAppInstallSlot', () => {
       >,
     );
 
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign: mockLocationAssign },
+    Object.defineProperty(window.location, 'assign', {
+      value: mockLocationAssign,
       writable: true,
       configurable: true,
     });
@@ -395,8 +395,8 @@ describe('GitHubAppConnection', () => {
       },
     } as ReturnType<typeof useGetMeQuery>);
 
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign: mockLocationAssign },
+    Object.defineProperty(window.location, 'assign', {
+      value: mockLocationAssign,
       writable: true,
       configurable: true,
     });
