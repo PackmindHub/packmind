@@ -17,6 +17,11 @@ import {
   useGetGithubAppManifestMutation,
 } from '../../../api/queries/GitProviderQueries';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
+import { navigateTo } from '../../../../../shared/utils/browserNavigation';
+
+jest.mock('../../../../../shared/utils/browserNavigation', () => ({
+  navigateTo: jest.fn(),
+}));
 
 jest.mock('../../../api/queries/GitProviderQueries', () => ({
   useGithubAppInstallUrlMutation: jest.fn(),
@@ -108,7 +113,7 @@ describe('GitHubAppInstallSlot', () => {
     removeItem: jest.fn(),
   };
 
-  const mockLocationAssign = jest.fn();
+  const mockNavigateTo = navigateTo as jest.MockedFunction<typeof navigateTo>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -118,12 +123,6 @@ describe('GitHubAppInstallSlot', () => {
         typeof useGithubAppInstallUrlMutation
       >,
     );
-
-    Object.defineProperty(window.location, 'assign', {
-      value: mockLocationAssign,
-      writable: true,
-      configurable: true,
-    });
 
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
@@ -205,8 +204,8 @@ describe('GitHubAppInstallSlot', () => {
         screen.getByRole('button', { name: /install packmind on github/i }),
       );
 
-      expect(mockLocationAssign).toHaveBeenCalledTimes(1);
-      expect(mockLocationAssign).toHaveBeenCalledWith(installUrl);
+      expect(mockNavigateTo).toHaveBeenCalledTimes(1);
+      expect(mockNavigateTo).toHaveBeenCalledWith(installUrl);
     });
 
     it('shows an error when the install URL mutation fails', async () => {
@@ -352,7 +351,7 @@ describe('GitHubAppConnection', () => {
     removeItem: jest.fn(),
   };
 
-  const mockLocationAssign = jest.fn();
+  const mockNavigateTo = navigateTo as jest.MockedFunction<typeof navigateTo>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -394,12 +393,6 @@ describe('GitHubAppConnection', () => {
         },
       },
     } as ReturnType<typeof useGetMeQuery>);
-
-    Object.defineProperty(window.location, 'assign', {
-      value: mockLocationAssign,
-      writable: true,
-      configurable: true,
-    });
 
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
