@@ -1,6 +1,7 @@
 import React from 'react';
 import { PMBox, PMButton, PMEmptyState, PMHStack, PMIcon } from '@packmind/ui';
-import { LuGithub, LuGitlab, LuPlus } from 'react-icons/lu';
+import { LuPlus } from 'react-icons/lu';
+import { BRANDED_VENDORS, vendorIcon, vendorLabel } from '../shared/VendorMark';
 
 interface ConnectionsEmptyStateProps {
   onAddConnection: () => void;
@@ -21,12 +22,11 @@ export const ConnectionsEmptyState: React.FC<ConnectionsEmptyStateProps> = ({
       description="Connect a GitHub or GitLab account so Packmind can publish your playbooks to the right repos."
       icon={
         <PMHStack gap={2}>
-          <VendorTile>
-            <LuGithub />
-          </VendorTile>
-          <VendorTile>
-            <LuGitlab />
-          </VendorTile>
+          {BRANDED_VENDORS.map((vendor) => (
+            <VendorTile key={vendor} aria-label={vendorLabel(vendor)}>
+              {vendorIcon(vendor)}
+            </VendorTile>
+          ))}
         </PMHStack>
       }
     >
@@ -40,8 +40,18 @@ export const ConnectionsEmptyState: React.FC<ConnectionsEmptyStateProps> = ({
   </PMBox>
 );
 
-const VendorTile: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+interface VendorTileProps {
+  children: React.ReactNode;
+  'aria-label': string;
+}
+
+const VendorTile: React.FC<VendorTileProps> = ({
+  children,
+  'aria-label': ariaLabel,
+}) => (
   <PMBox
+    role="img"
+    aria-label={ariaLabel}
     width="40px"
     height="40px"
     borderRadius="md"

@@ -18,6 +18,14 @@ const VENDOR_ICON: Record<GitProviderVendor, React.ReactNode> = {
   unknown: <LuGitBranch />,
 };
 
+export const vendorIcon = (vendor: GitProviderVendor): React.ReactNode =>
+  VENDOR_ICON[vendor];
+
+export const BRANDED_VENDORS: readonly GitProviderVendor[] = [
+  'github',
+  'gitlab',
+];
+
 interface VendorMarkProps {
   vendor: GitProviderVendor;
   size?: 'sm' | 'md';
@@ -46,7 +54,7 @@ export const VendorMark: React.FC<VendorMarkProps> = ({
         color="text.primary"
         flexShrink={0}
       >
-        <PMIcon fontSize={iconSize}>{VENDOR_ICON[vendor]}</PMIcon>
+        <PMIcon fontSize={iconSize}>{vendorIcon(vendor)}</PMIcon>
       </PMBox>
       {showLabel && (
         <PMText
