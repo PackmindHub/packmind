@@ -12,6 +12,7 @@ import {
   IGitPort,
   MARKETPLACE_DESCRIPTOR_FILENAME,
   MarketplaceDescriptor,
+  MarketplaceErrorKind,
   MarketplaceId,
   MarketplaceReconciliationJobInput,
   MarketplaceReconciliationJobOutput,
@@ -202,6 +203,10 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       return {
         state: 'unreachable',
         lastValidatedAt,
+        errorKind: null,
+        errorDetail: null,
+        pendingPrUrl: null,
+        outdatedPluginSlugs: null,
       };
     }
 
@@ -220,8 +225,17 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       await this.marketplaceRepository.updateState(marketplace.id, {
         state: 'unreachable',
         lastValidatedAt,
+        errorKind: 'repo_not_found',
+        errorDetail: ERROR_DETAIL_REPO_NOT_FOUND,
       });
-      return { state: 'unreachable', lastValidatedAt };
+      return {
+        state: 'unreachable',
+        lastValidatedAt,
+        errorKind: 'repo_not_found',
+        errorDetail: ERROR_DETAIL_REPO_NOT_FOUND,
+        pendingPrUrl: marketplace.pendingPrUrl,
+        outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+      };
     }
 
     // Step 3 — Fetch the descriptor from git, probing the official
@@ -247,14 +261,62 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
           error: getErrorMessage(error),
         },
       );
+      const { errorKind, errorDetail } = classifyFetchError(error);
       await this.marketplaceRepository.updateState(marketplace.id, {
         state: 'unreachable',
         lastValidatedAt,
+        errorKind,
+        errorDetail,
       });
-      return { state: 'unreachable', lastValidatedAt };
+      return {
+        state: 'unreachable',
+        lastValidatedAt,
+        errorKind,
+        errorDetail,
+        pendingPrUrl: marketplace.pendingPrUrl,
+        outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+      };
     }
 
     if (!descriptorFile) {
+      // A missing descriptor file is ambiguous: the repo may be gone/renamed
+      // (404 on the contents path) or genuinely reachable with a broken
+      // contract. Probe the repo itself to tell the two apart.
+      const reachability =
+        await this.gitPort.checkMarketplaceRepoExists(gitRepo);
+      if (!reachability.exists) {
+        const errorKind: MarketplaceErrorKind =
+          reachability.reason ?? 'network_transient';
+        const errorDetail =
+          errorKind === 'repo_not_found'
+            ? ERROR_DETAIL_REPO_NOT_FOUND
+            : errorKind === 'auth_failed'
+              ? ERROR_DETAIL_AUTH_FAILED
+              : ERROR_DETAIL_NETWORK_TRANSIENT;
+        this.logger.warn(
+          `[${this.origin}] Marketplace ${marketplace.id} repo unreachable (${errorKind})`,
+          {
+            marketplaceId: marketplace.id,
+            owner: gitRepo.owner,
+            repo: gitRepo.repo,
+          },
+        );
+        await this.marketplaceRepository.updateState(marketplace.id, {
+          state: 'unreachable',
+          lastValidatedAt,
+          errorKind,
+          errorDetail,
+        });
+        return {
+          state: 'unreachable',
+          lastValidatedAt,
+          errorKind,
+          errorDetail,
+          pendingPrUrl: marketplace.pendingPrUrl,
+          outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+        };
+      }
+
       // The repository was reachable but the descriptor file itself is
       // missing — this is a broken contract on the marketplace side, not a
       // transient network failure. Surface it as `bad_format` so admins can
@@ -271,8 +333,17 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       await this.marketplaceRepository.updateState(marketplace.id, {
         state: 'bad_format',
         lastValidatedAt,
+        errorKind: null,
+        errorDetail: ERROR_DETAIL_BAD_FORMAT,
       });
-      return { state: 'bad_format', lastValidatedAt };
+      return {
+        state: 'bad_format',
+        lastValidatedAt,
+        errorKind: null,
+        errorDetail: ERROR_DETAIL_BAD_FORMAT,
+        pendingPrUrl: marketplace.pendingPrUrl,
+        outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+      };
     }
 
     // Step 4 — Parse the descriptor.
@@ -295,8 +366,17 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       await this.marketplaceRepository.updateState(marketplace.id, {
         state: 'bad_format',
         lastValidatedAt,
+        errorKind: null,
+        errorDetail: ERROR_DETAIL_BAD_FORMAT,
       });
-      return { state: 'bad_format', lastValidatedAt };
+      return {
+        state: 'bad_format',
+        lastValidatedAt,
+        errorKind: null,
+        errorDetail: ERROR_DETAIL_BAD_FORMAT,
+        pendingPrUrl: marketplace.pendingPrUrl,
+        outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+      };
     }
 
     // Step 5 — Cross-check `MarketplaceDistribution` rows against the
@@ -383,6 +463,8 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         lastValidatedAt,
         descriptor: enrichedDescriptor,
         pluginCount: descriptor.plugins.length,
+        errorKind: null,
+        errorDetail: null,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} drifted — descriptor updated`,
@@ -397,6 +479,8 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       await this.marketplaceRepository.updateState(marketplace.id, {
         state,
         lastValidatedAt,
+        errorKind: null,
+        errorDetail: null,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} is healthy`,
@@ -404,7 +488,14 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       );
     }
 
-    return { state, lastValidatedAt };
+    return {
+      state,
+      lastValidatedAt,
+      errorKind: null,
+      errorDetail: null,
+      pendingPrUrl: marketplace.pendingPrUrl, // replaced in Task 4
+      outdatedPluginSlugs: marketplace.outdatedPluginSlugs, // replaced in Task 6
+    };
   }
 
   getJobName(input: MarketplaceReconciliationJobInput): string {
@@ -448,6 +539,38 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       },
     };
   }
+}
+
+const ERROR_DETAIL_AUTH_FAILED =
+  'The marketplace credentials are invalid or expired. Reconnect the Git provider.';
+const ERROR_DETAIL_NETWORK_TRANSIENT =
+  'The marketplace repository is temporarily unreachable.';
+const ERROR_DETAIL_REPO_NOT_FOUND =
+  'The marketplace repository could not be found. It may have been deleted or renamed.';
+const ERROR_DETAIL_BAD_FORMAT =
+  'The marketplace descriptor is missing or unparseable.';
+
+/**
+ * Map a thrown git fetch error to a credential vs transient failure. Repo-gone
+ * (404) is detected separately via a repo-existence probe, because a 404 on the
+ * descriptor path is indistinguishable from a missing file at the throw site.
+ */
+function classifyFetchError(error: unknown): {
+  errorKind: MarketplaceErrorKind;
+  errorDetail: string;
+} {
+  const status = (error as { response?: { status?: number } })?.response
+    ?.status;
+  if (status === 401 || status === 403) {
+    return {
+      errorKind: 'auth_failed',
+      errorDetail: ERROR_DETAIL_AUTH_FAILED,
+    };
+  }
+  return {
+    errorKind: 'network_transient',
+    errorDetail: ERROR_DETAIL_NETWORK_TRANSIENT,
+  };
 }
 
 /**

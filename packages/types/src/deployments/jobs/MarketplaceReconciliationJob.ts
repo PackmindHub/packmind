@@ -1,3 +1,4 @@
+import { MarketplaceErrorKind } from '../MarketplaceErrorKind';
 import { MarketplaceId } from '../MarketplaceId';
 import { MarketplaceState } from '../MarketplaceState';
 
@@ -19,4 +20,8 @@ export interface MarketplaceReconciliationJobInput {
 export interface MarketplaceReconciliationJobOutput {
   state: MarketplaceState;
   lastValidatedAt: Date;
+  errorKind: MarketplaceErrorKind | null;
+  errorDetail: string | null;
+  pendingPrUrl: string | null;
+  outdatedPluginSlugs: string[] | null;
 }

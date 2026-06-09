@@ -113,6 +113,8 @@ describe('MarketplaceReconciliationDelayedJob', () => {
 
     mockGitPort = {
       getFileFromRepo: jest.fn(),
+      checkMarketplaceRepoExists: jest.fn().mockResolvedValue({ exists: true }),
+      findOpenSyncPullRequest: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
@@ -287,13 +289,18 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         expect(result.state).toBe('unreachable');
       });
 
+      it('classifies a plain fetch failure as network_transient', () => {
+        expect(result.errorKind).toBe('network_transient');
+      });
+
       it('updates the state with a fresh lastValidatedAt', () => {
         expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
           marketplaceId,
-          {
+          expect.objectContaining({
             state: 'unreachable',
             lastValidatedAt: expect.any(Date),
-          },
+            errorKind: 'network_transient',
+          }),
         );
       });
 
@@ -328,21 +335,25 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       it('updates the state with a fresh lastValidatedAt', () => {
         expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
           marketplaceId,
-          {
+          expect.objectContaining({
             state: 'unreachable',
             lastValidatedAt: expect.any(Date),
-          },
+            errorKind: 'repo_not_found',
+          }),
         );
       });
     });
   });
 
   describe('bad_format state', () => {
-    describe('when getFileFromRepo returns null (descriptor missing)', () => {
+    describe('when getFileFromRepo returns null and the repo is reachable', () => {
       let result: MarketplaceReconciliationJobOutput;
 
       beforeEach(async () => {
         mockGitPort.getFileFromRepo.mockResolvedValue(null);
+        mockGitPort.checkMarketplaceRepoExists.mockResolvedValue({
+          exists: true,
+        });
 
         result = await job.runJob('job-bf-1', input, new AbortController());
       });
@@ -351,13 +362,50 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         expect(result.state).toBe('bad_format');
       });
 
+      it('leaves errorKind null for a broken-contract descriptor', () => {
+        expect(result.errorKind).toBeNull();
+      });
+
       it('updates the state with a fresh lastValidatedAt', () => {
         expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
           marketplaceId,
-          {
+          expect.objectContaining({
             state: 'bad_format',
             lastValidatedAt: expect.any(Date),
-          },
+            errorKind: null,
+          }),
+        );
+      });
+    });
+
+    describe('when getFileFromRepo returns null and the repo is gone', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+        mockGitPort.checkMarketplaceRepoExists.mockResolvedValue({
+          exists: false,
+          reason: 'repo_not_found',
+        });
+
+        result = await job.runJob('job-bf-gone', input, new AbortController());
+      });
+
+      it('persists state="unreachable"', () => {
+        expect(result.state).toBe('unreachable');
+      });
+
+      it('classifies the failure as repo_not_found', () => {
+        expect(result.errorKind).toBe('repo_not_found');
+      });
+
+      it('updates the state with errorKind=repo_not_found', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          expect.objectContaining({
+            state: 'unreachable',
+            errorKind: 'repo_not_found',
+          }),
         );
       });
     });
@@ -384,12 +432,63 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       it('updates the state with a fresh lastValidatedAt', () => {
         expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
           marketplaceId,
-          {
+          expect.objectContaining({
             state: 'bad_format',
             lastValidatedAt: expect.any(Date),
-          },
+            errorKind: null,
+          }),
         );
       });
+    });
+  });
+
+  describe('credential failures', () => {
+    describe.each([401, 403])('when getFileFromRepo throws %i', (status) => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockRejectedValue({ response: { status } });
+        result = await job.runJob('job-auth', input, new AbortController());
+      });
+
+      it('classifies the failure as auth_failed', () => {
+        expect(result.errorKind).toBe('auth_failed');
+      });
+
+      it('persists state="unreachable" with errorKind=auth_failed', () => {
+        expect(mockMarketplaceRepository.updateState).toHaveBeenCalledWith(
+          marketplaceId,
+          expect.objectContaining({
+            state: 'unreachable',
+            errorKind: 'auth_failed',
+          }),
+        );
+      });
+    });
+  });
+
+  describe('healthy reconcile clears error fields', () => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'abc',
+        content: JSON.stringify(baseDescriptor.raw),
+      });
+      mockParserRegistry.parse.mockReturnValue({
+        ...baseDescriptor,
+        raw: { reformatted: true },
+      });
+      result = await job.runJob('job-healthy', input, new AbortController());
+    });
+
+    it('returns a null errorKind', () => {
+      expect(result.errorKind).toBeNull();
+    });
+
+    it('patches errorKind and errorDetail to null', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+      expect(patch).toMatchObject({ errorKind: null, errorDetail: null });
     });
   });
 
