@@ -10,7 +10,7 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { StandardsAdapter } from '@packmind/standards';
-import { ImportPracticeLegacyUseCase } from '../useCases/importPracticeLegacy/importPracticeLegacy.usecase';
+import { ImportPracticeLegacyUseCase } from '../useCases/importPracticeLegacy/ImportPracticeLegacyUseCase';
 import {
   IImportPracticeLegacyPort,
   ImportPracticeLegacyCommand,

@@ -1,1 +1,1 @@
-export * from './importPracticeLegacy.usecase';
+export * from './ImportPracticeLegacyUseCase';

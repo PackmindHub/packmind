@@ -19,7 +19,7 @@ import {
   Standard,
 } from '@packmind/types';
 import { StandardsAdapter } from '@packmind/standards';
-import { ImportPracticeLegacyUseCase } from './importPracticeLegacy.usecase';
+import { ImportPracticeLegacyUseCase } from './ImportPracticeLegacyUseCase';
 import { LegacyPracticeInput } from '../../../types';
 
 describe('ImportPracticeLegacyUseCase', () => {
