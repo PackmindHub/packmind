@@ -3,11 +3,11 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProvider,
   GitProviderDisplayNameNotEditableError,
-  GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   IAccountsPort,
-  PackmindCommand,
+  IUpdateGitProviderUseCase,
+  UpdateGitProviderCommand,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
@@ -20,15 +20,10 @@ import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'UpdateGitProviderUseCase';
 
-export type UpdateGitProviderCommand = PackmindCommand & {
-  id: GitProviderId;
-  gitProvider: Partial<Omit<GitProvider, 'id'>>;
-};
-
-export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
-  UpdateGitProviderCommand,
-  GitProvider
-> {
+export class UpdateGitProviderUseCase
+  extends AbstractAdminUseCase<UpdateGitProviderCommand, GitProvider>
+  implements IUpdateGitProviderUseCase
+{
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
