@@ -19,6 +19,7 @@ import { IMarketplaceDistributionRepository } from '../../domain/repositories/IM
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceDescriptorParserRegistry } from '../../application/services/MarketplaceDescriptorParserRegistry';
 import { PackageService } from '../../application/services/PackageService';
+import { PackageVersionFingerprintService } from '../../application/services/PackageVersionFingerprintService';
 
 const origin = 'PublishPluginToMarketplaceJobFactory';
 
@@ -41,6 +42,7 @@ export class PublishPluginToMarketplaceJobFactory implements IJobFactory<Publish
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly renderer: PluginRenderer,
+    private readonly versionFingerprintService: PackageVersionFingerprintService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -57,6 +59,7 @@ export class PublishPluginToMarketplaceJobFactory implements IJobFactory<Publish
       this.gitPort,
       this.parserRegistry,
       this.renderer,
+      this.versionFingerprintService,
       this.eventEmitterService,
     );
 

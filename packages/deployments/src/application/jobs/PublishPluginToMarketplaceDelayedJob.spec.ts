@@ -38,6 +38,7 @@ import {
   PluginRendererResult,
   PublishPluginToMarketplaceDelayedJob,
 } from './PublishPluginToMarketplaceDelayedJob';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
 
 describe('PublishPluginToMarketplaceDelayedJob', () => {
   const marketplaceDistributionId = createMarketplaceDistributionId(uuidv4());
@@ -129,6 +130,7 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockRenderer: jest.MockedFunction<PluginRenderer>;
+  let mockVersionFingerprintService: jest.Mocked<PackageVersionFingerprintService>;
   let mockEventEmitter: jest.Mocked<PackmindEventEmitterService>;
   let job: PublishPluginToMarketplaceDelayedJob;
 
@@ -194,6 +196,14 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
 
     mockRenderer = jest.fn().mockResolvedValue(renderedFiles);
 
+    mockVersionFingerprintService = {
+      compute: jest.fn().mockResolvedValue({
+        recipes: {},
+        standards: {},
+        skills: {},
+      }),
+    } as unknown as jest.Mocked<PackageVersionFingerprintService>;
+
     mockEventEmitter = {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -207,6 +217,7 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       mockGitPort,
       mockParserRegistry,
       mockRenderer,
+      mockVersionFingerprintService,
       mockEventEmitter,
       stubLogger(),
     );
@@ -349,6 +360,17 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
           status: DistributionStatus.success,
           gitCommit: successfulCommit.sha,
           contentHash: expect.any(String),
+        }),
+      );
+    });
+
+    it('records the artifact-version fingerprint computed by the service', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          versionFingerprint: { recipes: {}, standards: {}, skills: {} },
         }),
       );
     });

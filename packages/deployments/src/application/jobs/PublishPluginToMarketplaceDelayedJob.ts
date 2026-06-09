@@ -52,6 +52,7 @@ import {
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { PackageService } from '../services/PackageService';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
 import { resolveMarketplaceReadBranch } from '../services/resolveMarketplaceReadBranch';
 
 const logOrigin = 'PublishPluginToMarketplaceDelayedJob';
@@ -124,6 +125,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly renderer: PluginRenderer,
+    private readonly versionFingerprintService: PackageVersionFingerprintService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
@@ -160,6 +162,12 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       marketplace = context.marketplace;
       pkg = context.pkg;
       const { distribution } = context;
+
+      // Baseline the package's current artifact versions so reconcile can later
+      // detect "outdated". Computed once and recorded on every terminal row —
+      // including no-ops — so a no-change publish still refreshes the baseline.
+      const versionFingerprint =
+        await this.versionFingerprintService.compute(pkg);
 
       const rendered = await this.renderer({
         marketplace,
@@ -199,6 +207,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           {
             status: DistributionStatus.no_changes,
             contentHash,
+            versionFingerprint,
           },
         );
         this.eventEmitterService.emit(
@@ -381,6 +390,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
               status: DistributionStatus.no_changes,
               contentHash,
               prUrl: healedPrUrl,
+              versionFingerprint,
             },
           );
           this.eventEmitterService.emit(
@@ -422,6 +432,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
           contentHash,
           gitCommit: gitCommit?.sha,
           prUrl,
+          versionFingerprint,
         },
       );
 

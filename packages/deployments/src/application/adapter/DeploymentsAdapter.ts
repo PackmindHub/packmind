@@ -132,6 +132,7 @@ import { RemovePluginFromMarketplaceJobFactory } from '../../infra/jobs/RemovePl
 import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
 import { formatMarketplacePluginDescription } from '../services/formatMarketplacePluginDescription';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
@@ -724,6 +725,15 @@ export class DeploymentsAdapter
   ): Promise<IDeploymentsDelayedJobs> {
     this.logger.debug('Building delayed jobs for Deployments domain');
 
+    // Shared fingerprint service: baselines a package's artifact versions at
+    // publish time and recomputes them on reconcile to flag "outdated". Built
+    // once here and shared by the publish + reconciliation factories.
+    const versionFingerprintService = new PackageVersionFingerprintService(
+      this.recipesPort!,
+      this.standardsPort!,
+      this.skillsPort!,
+    );
+
     const jobFactory = new PublishArtifactsJobFactory(
       this.distributionRepository,
       this.gitPort!,
@@ -775,6 +785,7 @@ export class DeploymentsAdapter
         this.gitPort!,
         this.marketplaceDescriptorParserRegistry,
         async (params) => this.renderPluginForPublishJob(params),
+        versionFingerprintService,
         eventEmitterService,
       );
     jobsService.registerJobQueue(
