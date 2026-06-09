@@ -8,7 +8,7 @@ import {
 import { stubLogger } from '@packmind/test-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
-import { SaveLLMConfigurationUseCase } from './saveLLMConfiguration.usecase';
+import { SaveLLMConfigurationUseCase } from './SaveLLMConfigurationUseCase';
 
 describe('SaveLLMConfigurationUseCase', () => {
   const organizationId = createOrganizationId('org-123');

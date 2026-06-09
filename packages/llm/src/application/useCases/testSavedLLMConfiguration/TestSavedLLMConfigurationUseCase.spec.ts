@@ -7,7 +7,7 @@ import {
 import { stubLogger } from '@packmind/test-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
-import { TestSavedLLMConfigurationUseCase } from './testSavedLLMConfiguration.usecase';
+import { TestSavedLLMConfigurationUseCase } from './TestSavedLLMConfigurationUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
 import * as utils from '../utils';
 

@@ -1,7 +1,7 @@
-export { GetAiServiceForOrganizationUseCase } from './getAiServiceForOrganization/getAiServiceForOrganization.usecase';
-export { GetLLMConfigurationUseCase } from './getLLMConfiguration/getLLMConfiguration.usecase';
-export { GetModelsUseCase } from './getModels/getModels.usecase';
-export { SaveLLMConfigurationUseCase } from './saveLLMConfiguration/saveLLMConfiguration.usecase';
-export { TestLLMConnectionUseCase } from './testLLMConnection/testLLMConnection.usecase';
-export { TestSavedLLMConfigurationUseCase } from './testSavedLLMConfiguration/testSavedLLMConfiguration.usecase';
-export { GetAvailableProvidersUseCase } from './getAvailableProviders/getAvailableProviders.usecase';
+export { GetAiServiceForOrganizationUseCase } from './getAiServiceForOrganization/GetAiServiceForOrganizationUseCase';
+export { GetLLMConfigurationUseCase } from './getLLMConfiguration/GetLLMConfigurationUseCase';
+export { GetModelsUseCase } from './getModels/GetModelsUseCase';
+export { SaveLLMConfigurationUseCase } from './saveLLMConfiguration/SaveLLMConfigurationUseCase';
+export { TestLLMConnectionUseCase } from './testLLMConnection/TestLLMConnectionUseCase';
+export { TestSavedLLMConfigurationUseCase } from './testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase';
+export { GetAvailableProvidersUseCase } from './getAvailableProviders/GetAvailableProvidersUseCase';

@@ -6,7 +6,7 @@ import {
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { TestLLMConnectionUseCase } from './testLLMConnection.usecase';
+import { TestLLMConnectionUseCase } from './TestLLMConnectionUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
 
 jest.mock('../../../factories/createLLMService');

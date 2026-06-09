@@ -5,7 +5,7 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
-import { GetLLMConfigurationUseCase } from './getLLMConfiguration.usecase';
+import { GetLLMConfigurationUseCase } from './GetLLMConfigurationUseCase';
 import * as utils from '../utils';
 
 jest.mock('../utils');

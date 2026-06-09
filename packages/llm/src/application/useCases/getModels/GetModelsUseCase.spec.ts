@@ -9,7 +9,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory, userFactory } from '@packmind/accounts/test';
-import { GetModelsUseCase } from './getModels.usecase';
+import { GetModelsUseCase } from './GetModelsUseCase';
 import { createLLMService } from '../../../factories/createLLMService';
 
 jest.mock('../../../factories/createLLMService');

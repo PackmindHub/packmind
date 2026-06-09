@@ -1,1 +1,1 @@
-export { SaveLLMConfigurationUseCase } from './saveLLMConfiguration.usecase';
+export { SaveLLMConfigurationUseCase } from './SaveLLMConfigurationUseCase';

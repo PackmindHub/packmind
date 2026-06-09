@@ -2,7 +2,7 @@ import { createOrganizationId, LLMProvider } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
-import { GetAiServiceForOrganizationUseCase } from './getAiServiceForOrganization.usecase';
+import { GetAiServiceForOrganizationUseCase } from './GetAiServiceForOrganizationUseCase';
 import { PackmindService } from '../../../infra/services/PackmindService';
 import { OpenAIService } from '../../../infra/services/OpenAIService';
 import { AnthropicService } from '../../../infra/services/AnthropicService';

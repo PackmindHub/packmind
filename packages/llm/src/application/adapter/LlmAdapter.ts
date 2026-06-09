@@ -23,13 +23,13 @@ import { DataSource } from 'typeorm';
 import { IAIProviderRepository } from '../../domain/repositories/IAIProviderRepository';
 import { AIProviderRepository } from '../../infra/repositories/AIProviderRepository';
 import { AIProviderSchema } from '../../infra/schemas/AIProviderSchema';
-import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
-import { GetLLMConfigurationUseCase } from '../useCases/getLLMConfiguration/getLLMConfiguration.usecase';
-import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
-import { SaveLLMConfigurationUseCase } from '../useCases/saveLLMConfiguration/saveLLMConfiguration.usecase';
-import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
-import { TestSavedLLMConfigurationUseCase } from '../useCases/testSavedLLMConfiguration/testSavedLLMConfiguration.usecase';
-import { GetAvailableProvidersUseCase } from '../useCases/getAvailableProviders/getAvailableProviders.usecase';
+import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase';
+import { GetLLMConfigurationUseCase } from '../useCases/getLLMConfiguration/GetLLMConfigurationUseCase';
+import { GetModelsUseCase } from '../useCases/getModels/GetModelsUseCase';
+import { SaveLLMConfigurationUseCase } from '../useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase';
+import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/TestLLMConnectionUseCase';
+import { TestSavedLLMConfigurationUseCase } from '../useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase';
+import { GetAvailableProvidersUseCase } from '../useCases/getAvailableProviders/GetAvailableProvidersUseCase';
 
 const origin = 'LlmAdapter';
 
