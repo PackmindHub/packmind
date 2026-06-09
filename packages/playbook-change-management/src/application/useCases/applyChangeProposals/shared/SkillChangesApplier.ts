@@ -12,7 +12,7 @@ import {
   SpaceId,
   UserId,
 } from '@packmind/types';
-import { IChangesProposalApplier } from './IChangesProposalApplier';
+import { IChangesProposalApplier } from '../IChangesProposalApplier';
 
 export class SkillChangesApplier
   extends SkillChangeProposalApplier

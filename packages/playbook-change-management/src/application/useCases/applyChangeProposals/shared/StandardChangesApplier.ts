@@ -12,7 +12,7 @@ import {
   StandardVersion,
   UserId,
 } from '@packmind/types';
-import { IChangesProposalApplier } from './IChangesProposalApplier';
+import { IChangesProposalApplier } from '../IChangesProposalApplier';
 
 export class StandardChangesApplier
   extends StandardChangeProposalApplier

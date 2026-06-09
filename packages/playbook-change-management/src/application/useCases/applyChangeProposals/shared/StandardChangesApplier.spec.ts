@@ -14,7 +14,7 @@ import {
   DiffService,
   ChangeProposalConflictError,
 } from '@packmind/types';
-import { changeProposalFactory } from '../../../../test';
+import { changeProposalFactory } from '../../../../../test';
 import { StandardChangesApplier } from './StandardChangesApplier';
 
 describe('StandardChangesApplier', () => {

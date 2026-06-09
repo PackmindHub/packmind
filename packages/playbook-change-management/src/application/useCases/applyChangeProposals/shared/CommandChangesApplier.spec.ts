@@ -15,7 +15,7 @@ import {
 } from '@packmind/types';
 import { CommandChangesApplier } from './CommandChangesApplier';
 import { recipeFactory, recipeVersionFactory } from '@packmind/recipes/test';
-import { changeProposalFactory } from '../../../../test';
+import { changeProposalFactory } from '../../../../../test';
 
 describe('CommandChangesApplier', () => {
   let recipeVersion: RecipeVersion;

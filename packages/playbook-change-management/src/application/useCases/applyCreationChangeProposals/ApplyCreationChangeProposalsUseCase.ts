@@ -33,9 +33,9 @@ import {
   CreatedIds,
   ICreateChangeProposalApplier,
 } from './ICreateChangeProposalApplier';
-import { CommandCreateChangeProposalApplier } from './CommandCreateChangeProposalApplier';
-import { StandardCreateChangeProposalApplier } from './StandardCreateChangeProposalApplier';
-import { SkillCreateChangeProposalApplier } from './SkillCreateChangeProposalApplier';
+import { CommandCreateChangeProposalApplier } from './shared/CommandCreateChangeProposalApplier';
+import { StandardCreateChangeProposalApplier } from './shared/StandardCreateChangeProposalApplier';
+import { SkillCreateChangeProposalApplier } from './shared/SkillCreateChangeProposalApplier';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 export type {

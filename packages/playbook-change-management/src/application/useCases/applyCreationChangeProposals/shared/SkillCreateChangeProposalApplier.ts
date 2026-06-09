@@ -1,7 +1,7 @@
 import {
   CreatedIds,
   ICreateChangeProposalApplier,
-} from './ICreateChangeProposalApplier';
+} from '../ICreateChangeProposalApplier';
 import {
   CAMEL_TO_YAML_KEY,
   ChangeProposal,

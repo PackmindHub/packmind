@@ -37,13 +37,13 @@ import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { DiffService } from '@packmind/types';
-import { CommandChangesApplier } from './CommandChangesApplier';
+import { CommandChangesApplier } from './shared/CommandChangesApplier';
 import {
   IChangesProposalApplier,
   ObjectVersions,
 } from './IChangesProposalApplier';
-import { SkillChangesApplier } from './SkillChangesApplier';
-import { StandardChangesApplier } from './StandardChangesApplier';
+import { SkillChangesApplier } from './shared/SkillChangesApplier';
+import { StandardChangesApplier } from './shared/StandardChangesApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
 export class ApplyChangeProposalsUseCase<
