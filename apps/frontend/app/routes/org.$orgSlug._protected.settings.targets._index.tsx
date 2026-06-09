@@ -108,7 +108,7 @@ export default function TargetsRouteModule() {
                 Configure Git Settings
               </PMButton>
               <PMText fontSize="sm" color="faded">
-                Once you have Git providers configured, you can create targets
+                Once you have Git connections configured, you can create targets
                 for deployment
               </PMText>
             </PMVStack>

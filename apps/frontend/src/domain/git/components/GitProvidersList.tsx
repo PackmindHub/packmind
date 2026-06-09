@@ -95,7 +95,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       await deleteProviderMutation.mutateAsync({ id: providerToDelete.id });
       setDeleteAlert({
         type: 'success',
-        message: GIT_MESSAGES.success.providerDeleted,
+        message: GIT_MESSAGES.success.connectionDeleted,
       });
       setDeleteDialogOpen(false);
       setProviderToDelete(null);
@@ -106,7 +106,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
         type: 'error',
         message: extractErrorMessage(
           err,
-          GIT_MESSAGES.error.providerDeleteFailed,
+          GIT_MESSAGES.error.connectionDeleteFailed,
         ),
       });
       setDeleteDialogOpen(false);
@@ -225,7 +225,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
 
       <PMAlertDialog
         title="Delete connection"
-        message={GIT_MESSAGES.confirmation.deleteProvider(
+        message={GIT_MESSAGES.confirmation.deleteConnection(
           providerToDelete?.url ?? providerToDelete?.source ?? '',
         )}
         confirmText="Delete"
