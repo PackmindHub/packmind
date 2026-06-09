@@ -3,11 +3,12 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProvider,
   GitProviderDisplayNameNotEditableError,
-  GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   IAccountsPort,
-  PackmindCommand,
+  IUpdateGitProviderUseCase,
+  UpdateGitProviderCommand,
+  UpdateGitProviderResponse,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
@@ -20,15 +21,13 @@ import { providerHasAuth } from '../shared/providerAuthState';
 
 const origin = 'UpdateGitProviderUseCase';
 
-export type UpdateGitProviderCommand = PackmindCommand & {
-  id: GitProviderId;
-  gitProvider: Partial<Omit<GitProvider, 'id'>>;
-};
-
-export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
-  UpdateGitProviderCommand,
-  GitProvider
-> {
+export class UpdateGitProviderUseCase
+  extends AbstractAdminUseCase<
+    UpdateGitProviderCommand,
+    UpdateGitProviderResponse
+  >
+  implements IUpdateGitProviderUseCase
+{
   constructor(
     private readonly gitProviderService: GitProviderService,
     accountsAdapter: IAccountsPort,
@@ -40,7 +39,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
 
   protected async executeForAdmins(
     command: UpdateGitProviderCommand & AdminContext,
-  ): Promise<GitProvider> {
+  ): Promise<UpdateGitProviderResponse> {
     const { id, gitProvider, organization } = command;
 
     // Business rule: id is required
