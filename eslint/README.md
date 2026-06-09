@@ -7,13 +7,27 @@ plain CommonJS so the root ESM `eslint.config.mjs` can import it directly (no bu
 
 ### `packmind/use-case-filename`
 
-Enforces that use-case files are named in PascalCase (e.g. `AddGitRepoUseCase.ts`)
-and rejects the legacy lowercase suffix form (`addGitRepo.usecase.ts`).
+Enforces that use-case files **and** exported use-case classes are PascalCase
+ending in `UseCase` (capital "C"). It reports:
 
-- Only reports on the forbidden `.usecase` / `.usecase.spec` / `.usecase.test` suffix,
-  so helpers inside `useCases/` (`index.ts`, `utils.ts`, `shared/*`) are never flagged.
-- The rule's scope (which files it runs against) is set by the `files` glob in the
-  root `eslint.config.mjs` — currently `**/application/useCases/**/*.ts`.
+- `legacyFilename` — filename uses the legacy dotted `.usecase` suffix
+  (`addGitRepo.usecase.ts` → `AddGitRepoUseCase.ts`). The original extension
+  (`.ts` / `.tsx`) is preserved in the suggestion.
+- `filenameCasing` — filename ends in the mis-cased `Usecase`
+  (`CaptureRecipeUsecase.ts` → `CaptureRecipeUseCase.ts`).
+- `classCasing` — exported class ends in the mis-cased `Usecase`
+  (`class CaptureRecipeUsecase` → `CaptureRecipeUseCase`).
+- `classMissingSuffix` — exported, non-`Error` class does not end in `UseCase`
+  (`class CommitToGit` → `CommitToGitUseCase`).
+
+Not flagged: error classes (`extends Error` or named `*Error`), non-exported
+classes, and files with no exported class (helpers like `utils.ts`).
+
+Scope is set by the `files` / `ignores` globs in the root `eslint.config.mjs`
+(`**/application/useCases/**/*.ts`, excluding `shared/**` and `index.ts`), and the
+rule itself only runs on files under `packages/` — `apps/*` are out of scope
+because they may co-locate non-use-case classes under `useCases/` (e.g. the CLI's
+diff strategies).
 
 ## Wiring
 
