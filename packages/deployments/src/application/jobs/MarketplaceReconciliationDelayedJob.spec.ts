@@ -19,10 +19,13 @@ import {
   MarketplaceDistribution,
   MarketplaceReconciliationJobInput,
   MarketplaceReconciliationJobOutput,
+  Package,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { PackageService } from '../services/PackageService';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
 import { MarketplaceReconciliationDelayedJob } from './MarketplaceReconciliationDelayedJob';
 
 describe('MarketplaceReconciliationDelayedJob', () => {
@@ -73,6 +76,8 @@ describe('MarketplaceReconciliationDelayedJob', () => {
   let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
+  let mockPackageService: jest.Mocked<PackageService>;
+  let mockVersionFingerprintService: jest.Mocked<PackageVersionFingerprintService>;
   let mockQueue: jest.Mocked<
     IQueue<
       MarketplaceReconciliationJobInput,
@@ -121,6 +126,18 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       parse: jest.fn().mockReturnValue(baseDescriptor),
     } as unknown as jest.Mocked<MarketplaceDescriptorParserRegistry>;
 
+    mockPackageService = {
+      findById: jest.fn().mockResolvedValue(null),
+    } as unknown as jest.Mocked<PackageService>;
+
+    mockVersionFingerprintService = {
+      compute: jest.fn().mockResolvedValue({
+        recipes: {},
+        standards: {},
+        skills: {},
+      }),
+    } as unknown as jest.Mocked<PackageVersionFingerprintService>;
+
     mockQueue = {
       addJob: jest.fn().mockResolvedValue('queued-job-id'),
       cancelJob: jest.fn().mockResolvedValue(undefined),
@@ -140,6 +157,8 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
+      mockPackageService,
+      mockVersionFingerprintService,
       stubLogger(),
     );
   });
@@ -563,6 +582,154 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         expect(result.pendingPrUrl).toBe(
           'https://github.com/acme/market/pull/3',
         );
+      });
+    });
+  });
+
+  describe('outdated plugin detection', () => {
+    const packageId = createPackageId(uuidv4());
+
+    const makeSuccessDistribution = (
+      over: Partial<MarketplaceDistribution> = {},
+    ): MarketplaceDistribution =>
+      ({
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId,
+        pluginSlug: 'p1',
+        authorId: userId,
+        status: DistributionStatus.success,
+        source: 'app',
+        createdAt: new Date('2026-01-02T00:00:00Z'),
+        ...over,
+      }) as unknown as MarketplaceDistribution;
+
+    beforeEach(() => {
+      // Healthy descriptor read so the success path is exercised.
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'abc',
+        content: JSON.stringify(baseDescriptor.raw),
+      });
+      mockParserRegistry.parse.mockReturnValue({
+        ...baseDescriptor,
+        raw: { reformatted: true },
+      });
+      mockPackageService.findById.mockResolvedValue({
+        id: packageId,
+        recipes: [],
+        standards: [],
+        skills: [],
+      } as unknown as Package);
+    });
+
+    describe('when the current fingerprint differs from the published one', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [
+            makeSuccessDistribution({
+              versionFingerprint: {
+                recipes: { r: 1 },
+                standards: {},
+                skills: {},
+              },
+            }),
+          ],
+        );
+        mockVersionFingerprintService.compute.mockResolvedValue({
+          recipes: { r: 2 },
+          standards: {},
+          skills: {},
+        });
+        result = await job.runJob('job-out', input, new AbortController());
+      });
+
+      it('flags the plugin slug as outdated', () => {
+        expect(result.outdatedPluginSlugs).toEqual(['p1']);
+      });
+
+      it('persists the outdated slugs', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.outdatedPluginSlugs).toEqual(['p1']);
+      });
+    });
+
+    describe('when the current fingerprint equals the published one', () => {
+      it('reports no outdated plugins', async () => {
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [
+            makeSuccessDistribution({
+              versionFingerprint: {
+                recipes: { r: 1 },
+                standards: {},
+                skills: {},
+              },
+            }),
+          ],
+        );
+        mockVersionFingerprintService.compute.mockResolvedValue({
+          recipes: { r: 1 },
+          standards: {},
+          skills: {},
+        });
+        const result = await job.runJob(
+          'job-out2',
+          input,
+          new AbortController(),
+        );
+        expect(result.outdatedPluginSlugs).toBeNull();
+      });
+    });
+
+    describe('when the distribution predates fingerprints', () => {
+      it('never marks the plugin outdated', async () => {
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [makeSuccessDistribution({ versionFingerprint: undefined })],
+        );
+        const result = await job.runJob(
+          'job-out3',
+          input,
+          new AbortController(),
+        );
+        expect(result.outdatedPluginSlugs).toBeNull();
+      });
+    });
+
+    describe('when a package has multiple success distributions', () => {
+      it('compares only the most recent one', async () => {
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [
+            makeSuccessDistribution({
+              createdAt: new Date('2026-02-01T00:00:00Z'),
+              versionFingerprint: {
+                recipes: { r: 2 },
+                standards: {},
+                skills: {},
+              },
+            }),
+            makeSuccessDistribution({
+              createdAt: new Date('2026-01-01T00:00:00Z'),
+              versionFingerprint: {
+                recipes: { r: 1 },
+                standards: {},
+                skills: {},
+              },
+            }),
+          ],
+        );
+        mockVersionFingerprintService.compute.mockResolvedValue({
+          recipes: { r: 2 },
+          standards: {},
+          skills: {},
+        });
+        const result = await job.runJob(
+          'job-out4',
+          input,
+          new AbortController(),
+        );
+        expect(result.outdatedPluginSlugs).toBeNull();
       });
     });
   });

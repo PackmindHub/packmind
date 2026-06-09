@@ -17,6 +17,7 @@ import {
   MarketplaceReconciliationJobInput,
   MarketplaceReconciliationJobOutput,
   MarketplaceState,
+  versionFingerprintsEqual,
 } from '@packmind/types';
 import { Job } from 'bullmq';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
@@ -24,6 +25,8 @@ import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRe
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
 import { MARKETPLACE_SYNC_BRANCH } from '../services/marketplaceSyncPullRequest';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { PackageService } from '../services/PackageService';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
 
 /**
  * Default cron pattern for the marketplace reconciliation sweep. Configurable
@@ -101,6 +104,8 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
+    private readonly packageService: PackageService,
+    private readonly versionFingerprintService: PackageVersionFingerprintService,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);
@@ -470,6 +475,40 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       pendingPrUrl = marketplace.pendingPrUrl; // keep last known on lookup error
     }
 
+    // Outdated detection: for the latest success distribution per package,
+    // compare the package's CURRENT artifact-version fingerprint against the
+    // fingerprint captured at publish. Distributions published before
+    // fingerprints existed (versionFingerprint undefined) are skipped.
+    const latestSuccessByPackage = new Map<
+      string,
+      (typeof successDistributions)[number]
+    >();
+    for (const dist of successDistributions) {
+      // successDistributions is ordered by createdAt DESC, so first wins.
+      if (!latestSuccessByPackage.has(dist.packageId)) {
+        latestSuccessByPackage.set(dist.packageId, dist);
+      }
+    }
+
+    const outdatedSet = new Set<string>();
+    await Promise.all(
+      Array.from(latestSuccessByPackage.values()).map(async (dist) => {
+        if (!dist.versionFingerprint) {
+          return; // cannot determine — never mark outdated
+        }
+        const pkg = await this.packageService.findById(dist.packageId);
+        if (!pkg) {
+          return;
+        }
+        const current = await this.versionFingerprintService.compute(pkg);
+        if (!versionFingerprintsEqual(current, dist.versionFingerprint)) {
+          outdatedSet.add(dist.pluginSlug);
+        }
+      }),
+    );
+    const outdatedPluginSlugs =
+      outdatedSet.size > 0 ? Array.from(outdatedSet) : null;
+
     // Step 7 — Persist the update.
     if (state === 'drift') {
       const enrichedDescriptor: MarketplaceDescriptor = {
@@ -485,6 +524,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         errorKind: null,
         errorDetail: null,
         pendingPrUrl,
+        outdatedPluginSlugs,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} drifted — descriptor updated`,
@@ -502,6 +542,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         errorKind: null,
         errorDetail: null,
         pendingPrUrl,
+        outdatedPluginSlugs,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} is healthy`,
@@ -515,7 +556,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       errorKind: null,
       errorDetail: null,
       pendingPrUrl,
-      outdatedPluginSlugs: marketplace.outdatedPluginSlugs, // replaced in Task 6
+      outdatedPluginSlugs,
     };
   }
 

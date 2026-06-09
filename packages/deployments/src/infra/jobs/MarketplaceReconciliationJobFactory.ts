@@ -6,6 +6,8 @@ import { MarketplaceReconciliationDelayedJob } from '../../application/jobs/Mark
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceDescriptorParserRegistry } from '../../application/services/MarketplaceDescriptorParserRegistry';
+import { PackageService } from '../../application/services/PackageService';
+import { PackageVersionFingerprintService } from '../../application/services/PackageVersionFingerprintService';
 
 const origin = 'MarketplaceReconciliationJobFactory';
 
@@ -25,6 +27,8 @@ export class MarketplaceReconciliationJobFactory implements IJobFactory<Marketpl
     private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
+    private readonly packageService: PackageService,
+    private readonly versionFingerprintService: PackageVersionFingerprintService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -38,6 +42,8 @@ export class MarketplaceReconciliationJobFactory implements IJobFactory<Marketpl
       this.gitRepoService,
       this.gitPort,
       this.parserRegistry,
+      this.packageService,
+      this.versionFingerprintService,
     );
 
     return {

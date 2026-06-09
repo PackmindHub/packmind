@@ -757,6 +757,8 @@ export class DeploymentsAdapter
       this.gitRepoService,
       this.gitPort!,
       this.marketplaceDescriptorParserRegistry,
+      this.deploymentsServices.getPackageService(),
+      versionFingerprintService,
     );
     jobsService.registerJobQueue(
       reconciliationFactory.getQueueName(),
