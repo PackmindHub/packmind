@@ -20,8 +20,8 @@ import {
   useCheckProviderAuthQuery,
   useGetGitProvidersQuery,
   useGetRepositoriesByProviderQuery,
+  useGithubAppInstallUrlMutation,
   useRemoveRepositoryMutation,
-  useRevokeGithubAppMutation,
   useUpdateGitProviderMutation,
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
@@ -148,7 +148,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   const addMutation = useAddRepositoryMutation();
   const removeMutation = useRemoveRepositoryMutation();
   const updateMutation = useUpdateGitProviderMutation();
-  const revokeMutation = useRevokeGithubAppMutation();
+  const installUrlMutation = useGithubAppInstallUrlMutation();
 
   const diff = useMemo(() => {
     const before = new Set(initialSelection.tuples.map(tupleKey));
@@ -306,25 +306,21 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
     }
   }, [connection.id, reauthDraft.patValue, updateMutation]);
 
-  const revokeApp = useCallback(async () => {
+  const manageApp = useCallback(async () => {
     try {
-      await revokeMutation.mutateAsync();
-      pmToaster.create({
-        type: 'success',
-        title: 'GitHub App revoked',
-      });
-      onClose();
+      const { installUrl } = await installUrlMutation.mutateAsync();
+      window.location.assign(installUrl);
     } catch (err) {
       pmToaster.create({
         type: 'error',
-        title: 'Failed to revoke',
+        title: 'Failed to open GitHub',
         description: extractErrorMessage(
           err,
-          'Failed to revoke the GitHub App connection.',
+          'Failed to open the GitHub App installation.',
         ),
       });
     }
-  }, [onClose, revokeMutation]);
+  }, [installUrlMutation]);
 
   const usesApp =
     connection.source === 'github' && connection.authMethod === 'app';
@@ -395,8 +391,8 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               onEditingDisplayNameChange={onEditingDisplayNameChange}
               onManageRepos={() => setMode('edit-repos')}
               onReauth={() => setMode('reauth')}
-              onRevoke={usesApp ? revokeApp : null}
-              isRevoking={revokeMutation.isPending}
+              onManageApp={usesApp ? manageApp : null}
+              isManagingApp={installUrlMutation.isPending}
             />
           )}
 
@@ -541,8 +537,8 @@ interface ViewModeProps {
   onEditingDisplayNameChange: (editing: boolean) => void;
   onManageRepos: () => void;
   onReauth: () => void;
-  onRevoke: (() => void) | null;
-  isRevoking: boolean;
+  onManageApp: (() => void) | null;
+  isManagingApp: boolean;
 }
 
 const ViewMode: React.FC<ViewModeProps> = ({
@@ -554,8 +550,8 @@ const ViewMode: React.FC<ViewModeProps> = ({
   onEditingDisplayNameChange,
   onManageRepos,
   onReauth,
-  onRevoke,
-  isRevoking,
+  onManageApp,
+  isManagingApp,
 }) => {
   return (
     <>
@@ -570,8 +566,8 @@ const ViewMode: React.FC<ViewModeProps> = ({
       <StatusBlock
         connection={connection}
         onReauth={onReauth}
-        onRevoke={onRevoke}
-        isRevoking={isRevoking}
+        onManageApp={onManageApp}
+        isManagingApp={isManagingApp}
       />
 
       <PMVStack gap={2} align="stretch" flex={1} minH={0}>
@@ -610,9 +606,9 @@ const ViewMode: React.FC<ViewModeProps> = ({
 const StatusBlock: React.FC<{
   connection: GitProviderUI;
   onReauth: () => void;
-  onRevoke: (() => void) | null;
-  isRevoking: boolean;
-}> = ({ connection, onReauth, onRevoke, isRevoking }) => {
+  onManageApp: (() => void) | null;
+  isManagingApp: boolean;
+}> = ({ connection, onReauth, onManageApp, isManagingApp }) => {
   const probe = useCheckProviderAuthQuery(connection.id, {
     enabled: connection.hasAuth,
   });
@@ -661,29 +657,29 @@ const StatusBlock: React.FC<{
             >
               Re-authenticate
             </PMBox>
-            {onRevoke && (
+            {onManageApp && (
               <>
                 <PMText fontSize="xs" color="faded">
                   ·
                 </PMText>
                 <PMBox
                   as="button"
-                  onClick={isRevoking ? undefined : onRevoke}
-                  aria-disabled={isRevoking}
+                  onClick={isManagingApp ? undefined : onManageApp}
+                  aria-disabled={isManagingApp}
                   bg="transparent"
                   border="none"
                   padding="0"
-                  cursor={isRevoking ? 'not-allowed' : 'pointer'}
-                  opacity={isRevoking ? 0.6 : 1}
+                  cursor={isManagingApp ? 'not-allowed' : 'pointer'}
+                  opacity={isManagingApp ? 0.6 : 1}
                   fontSize="xs"
-                  color="error"
+                  color="text.secondary"
                   fontWeight="medium"
                   textDecoration="underline"
                   textUnderlineOffset="2px"
-                  _hover={{ color: 'red.400' }}
-                  data-testid="connection-drawer-revoke-app"
+                  _hover={{ color: 'branding.primary' }}
+                  data-testid="connection-drawer-manage-app"
                 >
-                  {isRevoking ? 'Revoking…' : 'Revoke connection'}
+                  {isManagingApp ? 'Opening…' : 'Manage app'}
                 </PMBox>
               </>
             )}
