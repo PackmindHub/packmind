@@ -13,7 +13,8 @@ Enforces use-case _structure_ for files under `application/useCases/`:
   (`addGitRepo.usecase.ts` → `AddGitRepoUseCase.ts`). The original extension
   (`.ts` / `.tsx`) is preserved in the suggestion.
 - `classMissingSuffix` — exported, non-`Error` class does not end in `UseCase`
-  (`class CommitToGit` → `CommitToGitUseCase`).
+  (`class CommitToGit` → `CommitToGitUseCase`). Escape hatch: a legitimate helper
+  class (mapper/DTO/builder) belongs under a `shared/` subfolder, which is exempt.
 
 Not flagged: error classes (`extends Error` or named `*Error`), non-exported
 classes, files with no exported class (helpers like `utils.ts`), and mis-cased

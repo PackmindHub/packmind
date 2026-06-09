@@ -86,7 +86,7 @@ ruleTester.run('use-case-filename', rule as unknown as Rule.RuleModule, {
       errors: [
         {
           message:
-            'Use-case class "CommitToGit" must be PascalCase ending in "UseCase". Rename it to "CommitToGitUseCase".',
+            'Use-case class "CommitToGit" must be PascalCase ending in "UseCase" (rename to "CommitToGitUseCase"). If this is a helper (mapper/DTO/builder), move it under a "shared/" subfolder, which is exempt.',
         },
       ],
     },

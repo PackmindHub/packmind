@@ -37,7 +37,7 @@ module.exports = {
       legacyFilename:
         'Use-case file "{{filename}}" uses the legacy ".usecase" suffix. Rename it to PascalCase ending in "UseCase", e.g. "{{suggestion}}".',
       classMissingSuffix:
-        'Use-case class "{{name}}" must be PascalCase ending in "UseCase". Rename it to "{{suggestion}}".',
+        'Use-case class "{{name}}" must be PascalCase ending in "UseCase" (rename to "{{suggestion}}"). If this is a helper (mapper/DTO/builder), move it under a "shared/" subfolder, which is exempt.',
     },
   },
   create(context) {
