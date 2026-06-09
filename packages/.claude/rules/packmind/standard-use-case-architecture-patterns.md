@@ -1,12 +1,12 @@
 ---
 name: 'Use Case Architecture Patterns'
 alwaysApply: true
-description: 'Standardize hexagonal-architecture use case contracts and implementations in the Packmind monorepo by defining typed Command/Response/IUseCase exports under packages/types/src/{domain}/contracts, extending PackmindCommand/PublicPackmindCommand/SpaceMemberCommand and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase with command-object-only execution methods to enforce consistent auth/validation, clean contracts, and safer reuse via ports/adapters.'
+description: 'Standardize Packmind monorepo use case contracts and implementations using hexagonal architecture with typed Command/Response interfaces, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase patterns to enforce consistent authentication/authorization, separation of concerns, and type-safe command passing.'
 ---
 
 # Standard: Use Case Architecture Patterns
 
-Standardize hexagonal-architecture use case contracts and implementations in the Packmind monorepo by defining typed Command/Response/IUseCase exports under packages/types/src/{domain}/contracts, extending PackmindCommand/PublicPackmindCommand/SpaceMemberCommand and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase with command-object-only execution methods to enforce consistent auth/validation, clean contracts, and safer reuse via ports/adapters. :
+Standardize Packmind monorepo use case contracts and implementations using hexagonal architecture with typed Command/Response interfaces, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase patterns to enforce consistent authentication/authorization, separation of concerns, and type-safe command passing. :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
 * Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both
@@ -16,6 +16,7 @@ Standardize hexagonal-architecture use case contracts and implementations in the
 * Extend PackmindCommand for authenticated use case commands that include userId and organizationId, or extend PublicPackmindCommand for public endpoints without authentication
 * Extend SpaceMemberCommand instead of PackmindCommand for use case commands that include a spaceId to get both organizationId and spaceId typing
 * Implement IPublicUseCase interface directly with an execute method for public use cases that don't require authentication, without extending any abstract use case class
+* Never directly call Repositories in Adapter classes, repos must be called from Use Cases
 * Never spread commands as multiple arguments in hexagon or UseCase classes; always pass the complete command object to maintain type safety and reduce errors
 * Restrict use case classes to expose only the execute method for public use cases or executeForMembers/executeForAdmins methods for member/admin use cases, with no other public methods
 * Reuse existing use cases through port/adapter interfaces instead of instantiating them directly within use cases
