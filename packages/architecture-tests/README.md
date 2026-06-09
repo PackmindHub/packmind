@@ -45,13 +45,17 @@ Rules live in `src/*.arch.spec.ts`. Layer selection globs are centralised in
 
 ### Core workflow layering — `src/layering.arch.spec.ts`
 
-| Rule                                            | Guards                                                                                                            |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `infra/repositories` ↛ `application/**`         | Persistence must not depend upward on use cases/adapters/services.                                                |
-| `application/useCases` ↛ `infra/repositories`   | Use cases reach data via services/ports, never concrete repositories. (`standard-use-case-architecture-patterns`) |
-| `application/adapter(s)` ↛ `infra/repositories` | "Never directly call Repositories in Adapter classes." (`standard-use-case-architecture-patterns`)                |
-| `application/services` ↛ `infra/repositories`   | Services depend on repository **interfaces** (`domain/repositories`), not implementations.                        |
-| `apps/api` controllers ↛ `infra/repositories`   | The API layer goes through ports, never straight to persistence. (`standard-nestjs-module-hierarchy`)             |
+| Rule                                              | Guards                                                                                                                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `infra/repositories` ↛ `application/**`           | Persistence must not depend upward on use cases/adapters/services.                                                                                           |
+| `application/useCases` ↛ `infra/repositories`     | Use cases reach data via services/ports, never concrete repositories. (`standard-use-case-architecture-patterns`)                                            |
+| `application/adapter(s)` ↛ `infra/repositories`   | "Never directly call Repositories in Adapter classes." (`standard-use-case-architecture-patterns`)                                                           |
+| `application/services` ↛ `infra/repositories`     | Services depend on repository **interfaces** (`domain/repositories`), not implementations.                                                                   |
+| `application/services` ↛ `application/useCases`   | Use cases orchestrate services, never the reverse — a service reaching back up inverts the layer.                                                            |
+| `application/services` ↛ `application/adapter(s)` | The adapter is the port entry point at the top of the layer; services below it must not depend back up.                                                      |
+| `apps/api` ↛ `infra/repositories`                 | No API file (controller, module, NestJS service) may reach concrete persistence — only ports. (`standard-nestjs-module-hierarchy`)                           |
+| `apps/api` ↛ `application/**`                     | The API reaches each domain only through its `@packmind/types` port (injected by port-name via the HexaRegistry), never use cases/services/adapter directly. |
+| `infra/schemas` ↛ `application/**`                | EntitySchema files are pure ORM mapping. (`infra/jobs` legitimately wires application jobs; schemas do not.)                                                 |
 
 ### Domain purity — `src/domain-purity.arch.spec.ts`
 
@@ -70,9 +74,20 @@ Domains considered: `accounts`, `spaces`, `standards`, `recipes`, `skills`,
 `git`, `deployments`, `coding-agent` (see `DOMAIN_PACKAGES` in
 `src/architecture.ts`).
 
+### Shared-package purity & reverse dependencies — `src/boundaries.arch.spec.ts`
+
+Between packages the graph is layered too:
+`apps/api → domain packages → @packmind/types (+ node-utils, logger)`.
+
+| Rule                                 | Guards                                                                                                          |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `@packmind/types` ↛ any domain       | The contract package is a leaf — depending on a domain is a cycle and breaks "ports live in `@packmind/types`". |
+| `node-utils` / `logger` ↛ any domain | Base packages everything builds on must not depend back on a domain.                                            |
+| any domain ↛ `apps/api`              | Reverse dependency: the API consumes domains, never the other way round.                                        |
+
 ## Known violations (tech debt)
 
-As of introduction, **8 of 15 rules pass** and **7 fail**. Failures are real and
+As of introduction, **15 of 22 rules pass** and **7 fail**. Failures are real and
 left visible on purpose. Each is either fixed by refactoring the offending import
 or accepted as tracked debt.
 
