@@ -718,6 +718,111 @@ describe('InstallPackagesUseCase', () => {
     });
   });
 
+  describe('when an agent is removed but the artifact survives', () => {
+    const skillKey = 'user:skill:my-skill';
+    const skillId = createSkillId(uuidv4());
+    const claudeSkillPath = '.claude/skills/my-skill/SKILL.md';
+    const copilotSkillPath = '.github/skills/my-skill/SKILL.md';
+
+    beforeEach(() => {
+      publicPackage.skills = [
+        {
+          id: skillId,
+          spaceId: publicSpace.id,
+          name: 'My Skill',
+          slug: 'my-skill',
+        } as Skill,
+      ];
+
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: createSkillVersionId(uuidv4()),
+        skillId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        version: 1,
+        spaceId: publicSpace.id,
+      } as unknown as SkillVersion);
+
+      spacesPort.findMembership.mockResolvedValue(
+        createSpaceMembership(userId, 'public-space-id'),
+      );
+
+      command = {
+        ...command,
+        packagesSlugs: ['@public/my-package'],
+        agents: [CodingAgents.claude],
+        packmindLockFile: {
+          lockfileVersion: 2,
+          packageSlugs: ['@public/my-package'],
+          agents: [CodingAgents.claude, CodingAgents.copilot],
+          installedAt: new Date().toISOString(),
+          artifacts: {
+            [skillKey]: {
+              name: 'My Skill',
+              type: 'skill',
+              id: String(skillId),
+              version: 1,
+              spaceId: 'public-space-id',
+              packageIds: ['my-pkg-id'],
+              source: 'user',
+              files: [
+                { path: claudeSkillPath, agent: CodingAgents.claude },
+                { path: copilotSkillPath, agent: CodingAgents.copilot },
+              ],
+            },
+          },
+        } as unknown as PackmindLockFile,
+      };
+
+      lockFileService.buildLockFile.mockReturnValue({
+        lockfileVersion: 2,
+        packageSlugs: ['@public/my-package'],
+        agents: [CodingAgents.claude],
+        installedAt: new Date().toISOString(),
+        artifacts: {
+          [skillKey]: {
+            name: 'My Skill',
+            type: 'skill',
+            id: String(skillId),
+            version: 1,
+            spaceId: 'public-space-id',
+            packageIds: ['my-pkg-id'],
+            source: 'user',
+            files: [{ path: claudeSkillPath, agent: CodingAgents.claude }],
+          },
+        },
+      } as unknown as PackmindLockFile);
+    });
+
+    it('adds the dropped agent rendering to the delete section', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates.delete).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ path: copilotSkillPath }),
+        ]),
+      );
+    });
+
+    it('keeps the surviving agent rendering out of the delete section', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.fileUpdates.delete).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ path: claudeSkillPath }),
+        ]),
+      );
+    });
+
+    it('adds the dropped agent rendering to the delete section only once', async () => {
+      const result = await useCase.execute(command);
+
+      expect(
+        result.fileUpdates.delete.filter((d) => d.path === copilotSkillPath),
+      ).toHaveLength(1);
+    });
+  });
+
   describe('when a package is not found in an accessible space', () => {
     beforeEach(() => {
       spacesPort.findMembership.mockResolvedValue(
