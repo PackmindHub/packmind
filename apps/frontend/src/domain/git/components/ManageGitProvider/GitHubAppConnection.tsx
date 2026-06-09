@@ -15,6 +15,7 @@ import {
   useGetGithubAppManifestMutation,
 } from '../../api/queries/GitProviderQueries';
 import { GitProviderUI } from '../../types/GitProviderTypes';
+import { redirectTo } from '../../../../shared/utils/navigation';
 
 interface GitHubAppConnectionProps {
   organizationId: OrganizationId;
@@ -55,10 +56,14 @@ export const GitHubAppInstallSlot: React.FC<{
 
   const handleInstallClick = async () => {
     if (!organizationId) return;
-    const { installUrl } = await installUrlMutation.mutateAsync({
-      gitProviderId: editingProviderId,
-    });
-    window.location.assign(installUrl);
+    try {
+      const { installUrl } = await installUrlMutation.mutateAsync({
+        gitProviderId: editingProviderId,
+      });
+      redirectTo(installUrl);
+    } catch {
+      // The mutation already surfaces its error via installUrlMutation.error.
+    }
   };
 
   const errorMessage = installUrlMutation.error

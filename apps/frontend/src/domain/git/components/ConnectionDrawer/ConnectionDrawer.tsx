@@ -25,6 +25,7 @@ import {
   useUpdateGitProviderMutation,
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
+import { redirectTo } from '../../../../shared/utils/navigation';
 import { DisplayNameEditor } from './DisplayNameEditor';
 import { VendorMark, vendorLabel } from '../shared/VendorMark';
 import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
@@ -311,7 +312,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
       const { installUrl } = await installUrlMutation.mutateAsync({
         gitProviderId: connection.id,
       });
-      window.location.assign(installUrl);
+      redirectTo(installUrl);
     } catch (err) {
       pmToaster.create({
         type: 'error',
