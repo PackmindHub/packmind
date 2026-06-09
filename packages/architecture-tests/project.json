@@ -7,6 +7,7 @@
   "targets": {
     "arch": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "parallel": false,
         "commands": [

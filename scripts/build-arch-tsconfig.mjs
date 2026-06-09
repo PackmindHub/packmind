@@ -19,8 +19,11 @@ const ROOT = process.cwd();
 const EFFECTIVE = path.join(ROOT, 'tsconfig.base.effective.json');
 const OUT = path.join(ROOT, 'tsconfig.arch.json');
 
-// Importing select-tsconfig runs it immediately and (re)generates the effective
-// config for the current PACKMIND_EDITION, so we always read fresh path aliases.
+// select-tsconfig does its work at module-evaluation time, (re)generating the
+// effective config for the current PACKMIND_EDITION. This script is always run
+// as its own short-lived process (the `arch` Nx target), so the dynamic import
+// re-runs every invocation. Note: ESM modules are cached per-process, so a
+// second import within the SAME process would not re-run it.
 await import('./select-tsconfig.mjs');
 
 if (!fs.existsSync(EFFECTIVE)) {
@@ -39,10 +42,18 @@ const arch = {
     noEmit: true,
     skipLibCheck: true,
   },
-  // Domain packages + the NestJS API layer. Specs (*.spec.ts/*.test.ts) are
-  // excluded so test files don't pollute the dependency graph.
+  // Domain packages + the NestJS API layer. Specs (*.spec.ts/*.test.ts) and the
+  // architecture-tests package itself are excluded so test/infra files don't
+  // pollute the scanned dependency graph.
   include: ['packages/*/src/**/*.ts', 'apps/api/src/**/*.ts'],
-  exclude: ['node_modules', 'dist', 'tmp', '**/*.spec.ts', '**/*.test.ts'],
+  exclude: [
+    'node_modules',
+    'dist',
+    'tmp',
+    'packages/architecture-tests/**',
+    '**/*.spec.ts',
+    '**/*.test.ts',
+  ],
 };
 
 fs.writeFileSync(OUT, JSON.stringify(arch, null, 2) + '\n');
