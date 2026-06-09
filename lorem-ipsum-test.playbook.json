@@ -1,0 +1,31 @@
+{
+  "name": "Lorem Ipsum Test Standard2",
+  "description": "A placeholder standard created for testing purposes. Verifies the standard creation and distribution workflow with dummy lorem ipsum rules.",
+  "scope": "TypeScript files (*.ts)",
+  "rules": [
+    {
+      "content": "Use `lorem` declarations instead of `ipsum` for variable naming consistency",
+      "examples": {
+        "positive": "const lorem = getData();",
+        "negative": "const ipsum = getData();",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer `dolor sit amet` pattern for function return types",
+      "examples": {
+        "positive": "function getConsectetur(): DolorSitAmet {\n  return { dolor: true, sit: 'amet' };\n}",
+        "negative": "function getConsectetur() {\n  return { dolor: true, sit: 'amet' };\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Place `adipiscing` helpers in dedicated utility files",
+      "examples": {
+        "positive": "// utils/adipiscing.ts\nexport function adipiscingHelper() { /* ... */ }",
+        "negative": "// components/MyComponent.ts\nfunction adipiscingHelper() { /* ... */ }",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

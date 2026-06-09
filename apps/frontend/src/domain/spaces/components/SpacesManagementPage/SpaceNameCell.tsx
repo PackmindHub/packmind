@@ -1,29 +1,25 @@
 import React from 'react';
-import { Box } from '@chakra-ui/react';
-import { PMBadge, PMHStack, PMText } from '@packmind/ui';
-import { SpaceColorToken } from './types';
+import { PMBadge, PMHStack, PMStatus, PMText } from '@packmind/ui';
+import type { SpaceColor } from '@packmind/types';
 
 interface SpaceNameCellProps {
   name: string;
-  colorToken: SpaceColorToken;
-  isOrgWide: boolean;
+  color: SpaceColor;
+  isDefaultSpace: boolean;
 }
 
 export const SpaceNameCell: React.FC<SpaceNameCellProps> = ({
   name,
-  colorToken,
-  isOrgWide,
+  color,
+  isDefaultSpace,
 }) => {
   return (
     <PMHStack gap={2} align="center">
-      <Box
-        boxSize="2"
-        borderRadius="full"
-        bg={`${colorToken}.500`}
-        flexShrink={0}
-      />
+      <PMStatus.Root colorPalette={color} as="span">
+        <PMStatus.Indicator />
+      </PMStatus.Root>
       <PMText fontWeight="semibold">{name}</PMText>
-      {isOrgWide && (
+      {isDefaultSpace && (
         <PMBadge size="xs" colorPalette="purple">
           org-wide
         </PMBadge>

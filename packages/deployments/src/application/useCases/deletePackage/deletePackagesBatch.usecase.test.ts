@@ -10,6 +10,7 @@ import {
   createOrganizationId,
   PackagesDeletedEvent,
   DeletePackagesBatchCommand,
+  PackagesDeletedEvent,
 } from '@packmind/types';
 
 describe('DeletePackagesBatchUsecase', () => {

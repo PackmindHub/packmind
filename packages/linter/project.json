@@ -1,0 +1,20 @@
+{
+  "name": "linter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/linter/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/linter",
+        "tsConfig": "packages/linter/tsconfig.lib.json",
+        "packageJson": "packages/linter/package.json",
+        "main": "packages/linter/src/index.ts",
+        "assets": ["packages/linter/*.md"]
+      }
+    }
+  }
+}
