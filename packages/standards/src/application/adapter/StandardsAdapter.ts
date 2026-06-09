@@ -50,26 +50,26 @@ import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepo
 import { GetRuleExamplesCommand } from '../../domain/useCases';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsServices } from '../services/StandardsServices';
-import { AddRuleToStandardUsecase } from '../useCases/addRuleToStandard/addRuleToStandard.usecase';
-import { CreateRuleExampleUsecase } from '../useCases/createRuleExample/createRuleExample.usecase';
-import { CreateStandardUsecase } from '../useCases/createStandard/createStandard.usecase';
-import { CreateStandardSamplesUsecase } from '../useCases/createStandardSamples/createStandardSamples.usecase';
-import { CreateStandardWithExamplesUsecase } from '../useCases/createStandardWithExamples/createStandardWithExamples.usecase';
-import { CreateStandardWithPackagesUsecase } from '../useCases/createStandardWithPackages/createStandardWithPackages.usecase';
-import { DeleteRuleExampleUsecase } from '../useCases/deleteRuleExample/deleteRuleExample.usecase';
-import { DeleteStandardUsecase } from '../useCases/deleteStandard/deleteStandard.usecase';
-import { DeleteStandardsBatchUsecase } from '../useCases/deleteStandardsBatch/deleteStandardsBatch.usecase';
-import { FindStandardBySlugUsecase } from '../useCases/findStandardBySlug/findStandardBySlug.usecase';
-import { GetLatestStandardVersionUsecase } from '../useCases/getLatestStandardVersion/getLatestStandardVersion.usecase';
-import { GetRuleExamplesUsecase } from '../useCases/getRuleExamples/getRuleExamples.usecase';
-import { GetRulesByStandardIdUsecase } from '../useCases/getRulesByStandardId/getRulesByStandardId.usecase';
-import { GetStandardByIdUsecase } from '../useCases/getStandardById/getStandardById.usecase';
-import { GetStandardVersionUsecase } from '../useCases/getStandardVersion/getStandardVersion.usecase';
-import { GetStandardVersionByIdUsecase } from '../useCases/getStandardVersionById/getStandardVersionById.usecase';
-import { ListStandardsBySpaceUsecase } from '../useCases/listStandardsBySpace/listStandardsBySpace.usecase';
-import { ListStandardVersionsUsecase } from '../useCases/listStandardVersions/listStandardVersions.usecase';
-import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRuleExample.usecase';
-import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
+import { AddRuleToStandardUseCase } from '../useCases/addRuleToStandard/AddRuleToStandardUseCase';
+import { CreateRuleExampleUseCase } from '../useCases/createRuleExample/CreateRuleExampleUseCase';
+import { CreateStandardUseCase } from '../useCases/createStandard/CreateStandardUseCase';
+import { CreateStandardSamplesUseCase } from '../useCases/createStandardSamples/CreateStandardSamplesUseCase';
+import { CreateStandardWithExamplesUseCase } from '../useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase';
+import { CreateStandardWithPackagesUseCase } from '../useCases/createStandardWithPackages/CreateStandardWithPackagesUseCase';
+import { DeleteRuleExampleUseCase } from '../useCases/deleteRuleExample/DeleteRuleExampleUseCase';
+import { DeleteStandardUseCase } from '../useCases/deleteStandard/DeleteStandardUseCase';
+import { DeleteStandardsBatchUseCase } from '../useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase';
+import { FindStandardBySlugUseCase } from '../useCases/findStandardBySlug/FindStandardBySlugUseCase';
+import { GetLatestStandardVersionUseCase } from '../useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase';
+import { GetRuleExamplesUseCase } from '../useCases/getRuleExamples/GetRuleExamplesUseCase';
+import { GetRulesByStandardIdUseCase } from '../useCases/getRulesByStandardId/GetRulesByStandardIdUseCase';
+import { GetStandardByIdUseCase } from '../useCases/getStandardById/GetStandardByIdUseCase';
+import { GetStandardVersionUseCase } from '../useCases/getStandardVersion/GetStandardVersionUseCase';
+import { GetStandardVersionByIdUseCase } from '../useCases/getStandardVersionById/GetStandardVersionByIdUseCase';
+import { ListStandardsBySpaceUseCase } from '../useCases/listStandardsBySpace/ListStandardsBySpaceUseCase';
+import { ListStandardVersionsUseCase } from '../useCases/listStandardVersions/ListStandardVersionsUseCase';
+import { UpdateRuleExampleUseCase } from '../useCases/updateRuleExample/UpdateRuleExampleUseCase';
+import { UpdateStandardUseCase } from '../useCases/updateStandard/UpdateStandardUseCase';
 
 const origin = 'StandardsAdapter';
 
@@ -85,26 +85,26 @@ export class StandardsAdapter
   private eventEmitterService: PackmindEventEmitterService | null = null;
 
   // Use cases - all initialized in initialize()
-  private _createStandard!: CreateStandardUsecase;
-  private _createStandardWithExamples!: CreateStandardWithExamplesUsecase;
-  private _createStandardSamples!: CreateStandardSamplesUsecase;
-  private _createStandardWithPackages!: CreateStandardWithPackagesUsecase;
-  private _updateStandard!: UpdateStandardUsecase;
-  private _addRuleToStandard!: AddRuleToStandardUsecase;
-  private _getStandardById!: GetStandardByIdUsecase;
-  private _findStandardBySlug!: FindStandardBySlugUsecase;
-  private _listStandardsBySpace!: ListStandardsBySpaceUsecase;
-  private _listStandardVersions!: ListStandardVersionsUsecase;
-  private _getStandardVersion!: GetStandardVersionUsecase;
-  private _getLatestStandardVersion!: GetLatestStandardVersionUsecase;
-  private _getStandardVersionById!: GetStandardVersionByIdUsecase;
-  private _getRulesByStandardId!: GetRulesByStandardIdUsecase;
-  private _deleteStandard!: DeleteStandardUsecase;
-  private _deleteStandardsBatch!: DeleteStandardsBatchUsecase;
-  private _createRuleExample!: CreateRuleExampleUsecase;
-  private _getRuleExamples!: GetRuleExamplesUsecase;
-  private _updateRuleExample!: UpdateRuleExampleUsecase;
-  private _deleteRuleExample!: DeleteRuleExampleUsecase;
+  private _createStandard!: CreateStandardUseCase;
+  private _createStandardWithExamples!: CreateStandardWithExamplesUseCase;
+  private _createStandardSamples!: CreateStandardSamplesUseCase;
+  private _createStandardWithPackages!: CreateStandardWithPackagesUseCase;
+  private _updateStandard!: UpdateStandardUseCase;
+  private _addRuleToStandard!: AddRuleToStandardUseCase;
+  private _getStandardById!: GetStandardByIdUseCase;
+  private _findStandardBySlug!: FindStandardBySlugUseCase;
+  private _listStandardsBySpace!: ListStandardsBySpaceUseCase;
+  private _listStandardVersions!: ListStandardVersionsUseCase;
+  private _getStandardVersion!: GetStandardVersionUseCase;
+  private _getLatestStandardVersion!: GetLatestStandardVersionUseCase;
+  private _getStandardVersionById!: GetStandardVersionByIdUseCase;
+  private _getRulesByStandardId!: GetRulesByStandardIdUseCase;
+  private _deleteStandard!: DeleteStandardUseCase;
+  private _deleteStandardsBatch!: DeleteStandardsBatchUseCase;
+  private _createRuleExample!: CreateRuleExampleUseCase;
+  private _getRuleExamples!: GetRuleExamplesUseCase;
+  private _updateRuleExample!: UpdateRuleExampleUseCase;
+  private _deleteRuleExample!: DeleteRuleExampleUseCase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -166,64 +166,64 @@ export class StandardsAdapter
     // Step 4: Create ALL use cases with non-null ports
     // At this point, we know standardDelayedJobs is not null due to isReady() check
     // Use cases that don't depend on external ports
-    this._listStandardVersions = new ListStandardVersionsUsecase(
+    this._listStandardVersions = new ListStandardVersionsUseCase(
       this.services.getStandardVersionService(),
     );
 
-    this._getStandardVersion = new GetStandardVersionUsecase(
+    this._getStandardVersion = new GetStandardVersionUseCase(
       this.services.getStandardVersionService(),
     );
 
-    this._getLatestStandardVersion = new GetLatestStandardVersionUsecase(
+    this._getLatestStandardVersion = new GetLatestStandardVersionUseCase(
       this.services.getStandardVersionService(),
     );
 
-    this._getStandardVersionById = new GetStandardVersionByIdUsecase(
+    this._getStandardVersionById = new GetStandardVersionByIdUseCase(
       this.services.getStandardVersionService(),
     );
 
-    this._getRulesByStandardId = new GetRulesByStandardIdUsecase(
+    this._getRulesByStandardId = new GetRulesByStandardIdUseCase(
       this.services.getStandardVersionService(),
     );
 
-    this._deleteStandard = new DeleteStandardUsecase(
+    this._deleteStandard = new DeleteStandardUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
 
-    this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
+    this._deleteStandardsBatch = new DeleteStandardsBatchUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
 
-    this._findStandardBySlug = new FindStandardBySlugUsecase(
+    this._findStandardBySlug = new FindStandardBySlugUseCase(
       this.services.getStandardService(),
     );
 
-    this._getRuleExamples = new GetRuleExamplesUsecase(
+    this._getRuleExamples = new GetRuleExamplesUseCase(
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
     );
 
     // Use cases that depend on accountsPort (required)
-    this._getStandardById = new GetStandardByIdUsecase(
+    this._getStandardById = new GetStandardByIdUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
     );
 
-    this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
+    this._listStandardsBySpace = new ListStandardsBySpaceUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
     );
 
     // Use cases that depend on delayed jobs (required)
-    this._createStandard = new CreateStandardUsecase(
+    this._createStandard = new CreateStandardUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
@@ -233,7 +233,7 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
     );
 
-    this._updateStandard = new UpdateStandardUsecase(
+    this._updateStandard = new UpdateStandardUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
@@ -244,7 +244,7 @@ export class StandardsAdapter
       this.eventEmitterService,
     );
 
-    this._addRuleToStandard = new AddRuleToStandardUsecase(
+    this._addRuleToStandard = new AddRuleToStandardUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
@@ -257,7 +257,7 @@ export class StandardsAdapter
     );
 
     // Use cases that depend on linterPort
-    this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
+    this._createStandardWithExamples = new CreateStandardWithExamplesUseCase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.services.getStandardSummaryService(),
@@ -267,7 +267,7 @@ export class StandardsAdapter
       this.linterPort,
     );
 
-    this._createStandardSamples = new CreateStandardSamplesUsecase(
+    this._createStandardSamples = new CreateStandardSamplesUseCase(
       this.spacesPort,
       this.accountsPort,
       this,
@@ -275,14 +275,14 @@ export class StandardsAdapter
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
-    this._createStandardWithPackages = new CreateStandardWithPackagesUsecase(
+    this._createStandardWithPackages = new CreateStandardWithPackagesUseCase(
       this.spacesPort,
       this.accountsPort,
       this._createStandardWithExamples,
       this.deploymentsPort,
     );
 
-    this._createRuleExample = new CreateRuleExampleUsecase(
+    this._createRuleExample = new CreateRuleExampleUseCase(
       this.spacesPort,
       this.accountsPort,
       this.repositories.getRuleExampleRepository(),
@@ -292,7 +292,7 @@ export class StandardsAdapter
       this.linterPort,
     );
 
-    this._updateRuleExample = new UpdateRuleExampleUsecase(
+    this._updateRuleExample = new UpdateRuleExampleUseCase(
       this.spacesPort,
       this.accountsPort,
       this.repositories,
@@ -300,7 +300,7 @@ export class StandardsAdapter
       this.linterPort,
     );
 
-    this._deleteRuleExample = new DeleteRuleExampleUsecase(
+    this._deleteRuleExample = new DeleteRuleExampleUseCase(
       this.spacesPort,
       this.accountsPort,
       this.repositories,

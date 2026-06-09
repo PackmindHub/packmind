@@ -72,6 +72,7 @@ describe(
           source: GitProviderVendors.github,
           url: 'https://api.github.com',
           token: 'test-github-token',
+          authMethod: 'token' as const,
         },
       });
 

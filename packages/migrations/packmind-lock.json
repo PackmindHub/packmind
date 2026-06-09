@@ -11,6 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
+  "installedAt": "2026-06-09T03:11:23.613Z",
   "artifacts": {
     "user:command:create-or-update-model-and-typeorm-schemas": {
       "name": "Create or update model and TypeORM schemas",
@@ -42,5 +43,5 @@
       ]
     }
   },
-  "cliVersion": "0.29.1"
+  "cliVersion": "0.30.0"
 }

@@ -2,7 +2,7 @@ import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { ILinterPort, ILinterPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LinterAdapter } from './LinterAdapter';
-import { LinterUsecases } from './LinterUsecases';
+import { LinterUseCases } from './LinterUseCases';
 
 export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
   private linterAdapter: ILinterPort;
@@ -34,8 +34,8 @@ export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
     return ILinterPortName;
   }
 
-  public getLinterUsecases(): LinterUsecases {
-    return new LinterUsecases();
+  public getLinterUseCases(): LinterUseCases {
+    return new LinterUseCases();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function

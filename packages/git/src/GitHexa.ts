@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   BaseHexaOpts,
+  Configuration,
   HexaRegistry,
   JobsService,
 } from '@packmind/node-utils';
@@ -20,6 +21,10 @@ import { FetchFileContentCallback } from './application/jobs/FetchFileContentDel
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
+import {
+  GithubAppMode,
+  GithubTokenResolverFactory,
+} from './infra/repositories/github/auth/GithubTokenResolverFactory';
 
 const origin = 'GitHexa';
 
@@ -35,6 +40,7 @@ const origin = 'GitHexa';
 
 export type GitHexaOpts = BaseHexaOpts & {
   gitRepoFactory?: IGitRepoFactory;
+  githubTokenResolverFactory?: GithubTokenResolverFactory;
 };
 
 const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
@@ -79,6 +85,15 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('Initializing GitHexa (adapter retrieval phase)');
 
     try {
+      // Resolve GitHub App hosting mode at bootstrap so use cases get the
+      // correct value. Mode is inferred from GITHUB_APP_SLUG presence: when
+      // set, a single shared App is configured via env; when unset, each org
+      // registers its own App via the manifest flow (on-prem).
+      const slug = await Configuration.getConfig('GITHUB_APP_SLUG');
+      const mode: GithubAppMode = slug ? 'shared' : 'on-prem';
+
+      this.adapter.setMode(mode);
+
       // Get all required ports and services
       const ports = {
         [IAccountsPortName]:

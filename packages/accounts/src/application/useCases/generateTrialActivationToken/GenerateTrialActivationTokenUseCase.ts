@@ -2,7 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResult,
+  GenerateTrialActivationTokenResponse,
   IAccountsPort,
   createUserId,
 } from '@packmind/types';
@@ -12,7 +12,7 @@ const origin = 'GenerateTrialActivationTokenUseCase';
 
 export class GenerateTrialActivationTokenUseCase extends AbstractMemberUseCase<
   GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResult
+  GenerateTrialActivationTokenResponse
 > {
   constructor(
     accountsPort: IAccountsPort,
@@ -25,7 +25,7 @@ export class GenerateTrialActivationTokenUseCase extends AbstractMemberUseCase<
 
   protected async executeForMembers(
     command: GenerateTrialActivationTokenCommand & MemberContext,
-  ): Promise<GenerateTrialActivationTokenResult> {
+  ): Promise<GenerateTrialActivationTokenResponse> {
     this.logger.info('Generating trial activation token', {
       userId: command.userId,
     });

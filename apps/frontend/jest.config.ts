@@ -22,7 +22,10 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(?:.*[\\\\/])?(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)[@\\\\/]).+\\.[tj]sx?$',
   ],
-  testMatch: ['<rootDir>/src/**/*.(spec|test).[jt]s?(x)'],
+  testMatch: [
+    '<rootDir>/src/**/*.(spec|test).[jt]s?(x)',
+    '<rootDir>/app/**/*.(spec|test).[jt]s?(x)',
+  ],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',
   moduleNameMapper: {

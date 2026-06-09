@@ -2,8 +2,9 @@ import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
 import {
   CheckDirectoryExistenceResult,
-  GitProvider,
+  CheckProviderAuthResponse,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepoId,
   IListProvidersUseCase,
   ListProvidersResponse,
@@ -17,6 +18,7 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
+import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
 export class GitProviderGatewayApi
   extends PackmindGateway
@@ -48,19 +50,85 @@ export class GitProviderGatewayApi
     return provider as GitProviderUI;
   }
 
+  async getGithubAppInstallUrl(
+    organizationId: OrganizationId,
+  ): Promise<{ installUrl: string; state: string }> {
+    return await this._api.get<{ installUrl: string; state: string }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/install-url`,
+    );
+  }
+
+  async getGithubAppManifest(organizationId: OrganizationId): Promise<{
+    manifest: GitHubAppManifest;
+    state: string;
+    manifestPostUrl: string;
+  }> {
+    return await this._api.get<{
+      manifest: GitHubAppManifest;
+      state: string;
+      manifestPostUrl: string;
+    }>(`${this._endpoint}/${organizationId}/git/providers/github/app/manifest`);
+  }
+
+  async getGithubAppStatus(organizationId: OrganizationId): Promise<{
+    hasApp: boolean;
+    appSlug?: string;
+    revokedAt?: Date | null;
+    linkedProviderCount: number;
+  }> {
+    return await this._api.get<{
+      hasApp: boolean;
+      appSlug?: string;
+      revokedAt?: Date | null;
+      linkedProviderCount: number;
+    }>(`${this._endpoint}/${organizationId}/git/providers/github/app/status`);
+  }
+
+  async revokeGithubApp(organizationId: OrganizationId): Promise<void> {
+    await this._api.delete(
+      `${this._endpoint}/${organizationId}/git/providers/github/app`,
+    );
+  }
+
+  async submitGithubAppCallback(
+    organizationId: OrganizationId,
+    body: { installationId: number; state: string },
+  ): Promise<GitProviderWithoutToken> {
+    return await this._api.post<GitProviderWithoutToken>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/callback`,
+      body,
+    );
+  }
+
+  async submitGithubAppManifestCallback(
+    organizationId: OrganizationId,
+    body: { code: string; state: string },
+  ): Promise<{ installUrl: string }> {
+    return await this._api.post<{ installUrl: string }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/manifest-callback`,
+      body,
+    );
+  }
+
   async createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
   ): Promise<GitProviderUI> {
-    const gitProvider: Omit<GitProvider, 'id'> = {
+    const body = {
       source: data.source,
       organizationId,
       url: data.url,
-      token: data.token,
+      authMethod: data.authMethod ?? 'token',
+      displayName: data.displayName ?? '',
+      ...(data.authMethod === 'app'
+        ? {
+            appInstallationId: data.appInstallationId,
+          }
+        : { token: data.token }),
     };
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers`,
-      gitProvider,
+      body,
     );
   }
 
@@ -69,14 +137,25 @@ export class GitProviderGatewayApi
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI> {
-    const gitProvider: Partial<Omit<GitProvider, 'id'>> = {
-      source: data.source,
-      url: data.url,
-      token: data.token,
-    };
+    // Only forward fields the caller actually set. Defaulting authMethod here
+    // would make a partial update (e.g. renaming) look like a switch to token
+    // auth on the backend, which then rejects the request because no token was
+    // supplied.
+    const body: Record<string, unknown> = {};
+    if (data.source !== undefined) body.source = data.source;
+    if (data.url !== undefined) body.url = data.url;
+    if (data.displayName !== undefined) body.displayName = data.displayName;
+    if (data.authMethod !== undefined) {
+      body.authMethod = data.authMethod;
+      if (data.authMethod === 'app') {
+        body.appInstallationId = data.appInstallationId;
+      } else {
+        body.token = data.token;
+      }
+    }
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers/${id}`,
-      gitProvider,
+      body,
     );
   }
 
@@ -151,6 +230,15 @@ export class GitProviderGatewayApi
   ): Promise<void> {
     return this._api.delete<void>(
       `${this._endpoint}/${organizationId}/git/providers/${providerId}/repositories/${repoId}`,
+    );
+  }
+
+  async checkProviderAuth(
+    organizationId: OrganizationId,
+    providerId: GitProviderId,
+  ): Promise<CheckProviderAuthResponse> {
+    return this._api.get<CheckProviderAuthResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${providerId}/check-auth`,
     );
   }
 

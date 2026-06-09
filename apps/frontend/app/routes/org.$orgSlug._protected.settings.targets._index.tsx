@@ -30,13 +30,13 @@ export default function TargetsRouteModule() {
   const { data: providersResponse } = useGetGitProvidersQuery();
   const providers = providersResponse?.providers ?? [];
 
-  // Helper function to check if a gitRepoId's provider has a token
-  const getProviderHasToken = (gitRepoIdToCheck: GitRepoId): boolean => {
+  // Helper function to check if a gitRepoId's provider has working auth configured
+  const getProviderHasAuth = (gitRepoIdToCheck: GitRepoId): boolean => {
     const gitRepo = gitRepos.find((r) => r.id === gitRepoIdToCheck);
     if (!gitRepo) return true; // Default to true if repo not found
     const provider = providers.find((p) => p.id === gitRepo.providerId);
     if (!provider) return true; // Default to true if provider not found
-    return provider.hasToken;
+    return provider.hasAuth;
   };
 
   if (!organization) {
@@ -108,7 +108,7 @@ export default function TargetsRouteModule() {
                 Configure Git Settings
               </PMButton>
               <PMText fontSize="sm" color="faded">
-                Once you have Git providers configured, you can create targets
+                Once you have Git connections configured, you can create targets
                 for deployment
               </PMText>
             </PMVStack>
@@ -121,7 +121,7 @@ export default function TargetsRouteModule() {
               providerUrl={repo.providerUrl}
               targets={repo.targets || []}
               gitRepoId={repo.gitRepoId as GitRepoId}
-              hasToken={getProviderHasToken(repo.gitRepoId as GitRepoId)}
+              hasAuth={getProviderHasAuth(repo.gitRepoId as GitRepoId)}
             />
           ))
         )}

@@ -19,7 +19,7 @@ import {
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
   GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResult,
+  GenerateTrialActivationTokenResponse,
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
   GetCurrentApiKeyCommand,
@@ -196,7 +196,7 @@ export interface IAccountsPort {
 
   generateTrialActivationToken(
     command: GenerateTrialActivationTokenCommand,
-  ): Promise<GenerateTrialActivationTokenResult>;
+  ): Promise<GenerateTrialActivationTokenResponse>;
 
   activateTrialAccount(
     command: ActivateTrialAccountCommand,

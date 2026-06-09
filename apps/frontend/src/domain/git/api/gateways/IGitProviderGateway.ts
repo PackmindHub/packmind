@@ -1,6 +1,8 @@
 import {
   CheckDirectoryExistenceResult,
+  CheckProviderAuthResponse,
   GitProviderId,
+  GitProviderWithoutToken,
   GitRepoId,
   IListProvidersUseCase,
   NewGateway,
@@ -13,6 +15,7 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
+import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
 export interface IGitProviderGateway {
   // Git Provider CRUD operations
@@ -21,6 +24,29 @@ export interface IGitProviderGateway {
     organizationId: OrganizationId,
     id: GitProviderId,
   ): Promise<GitProviderUI>;
+  getGithubAppInstallUrl(
+    organizationId: OrganizationId,
+  ): Promise<{ installUrl: string; state: string }>;
+  getGithubAppManifest(organizationId: OrganizationId): Promise<{
+    manifest: GitHubAppManifest;
+    state: string;
+    manifestPostUrl: string;
+  }>;
+  getGithubAppStatus(organizationId: OrganizationId): Promise<{
+    hasApp: boolean;
+    appSlug?: string;
+    revokedAt?: Date | null;
+    linkedProviderCount: number;
+  }>;
+  revokeGithubApp(organizationId: OrganizationId): Promise<void>;
+  submitGithubAppCallback(
+    organizationId: OrganizationId,
+    body: { installationId: number; state: string },
+  ): Promise<GitProviderWithoutToken>;
+  submitGithubAppManifestCallback(
+    organizationId: OrganizationId,
+    body: { code: string; state: string },
+  ): Promise<{ installUrl: string }>;
   createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
@@ -54,6 +80,12 @@ export interface IGitProviderGateway {
     providerId: GitProviderId,
     repoId: GitRepoId,
   ): Promise<void>;
+
+  // Auth probe
+  checkProviderAuth(
+    organizationId: OrganizationId,
+    providerId: GitProviderId,
+  ): Promise<CheckProviderAuthResponse>;
 
   // Branch operations
   checkBranchExists(

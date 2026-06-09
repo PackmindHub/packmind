@@ -3,6 +3,7 @@ import { IGitRepoRepository } from './IGitRepoRepository';
 import { IGitCommitRepository } from './IGitCommitRepository';
 import { IGitRepoFactory } from './IGitRepoFactory';
 import { IGitProviderFactory } from './IGitProviderFactory';
+import { IOrganizationGitHubAppRepository } from './IOrganizationGitHubAppRepository';
 
 /**
  * IGitRepositories - Repository aggregator interface for the Git domain
@@ -36,4 +37,9 @@ export interface IGitRepositories {
    * Get the git provider factory instance
    */
   getGitProviderFactory(): IGitProviderFactory;
+
+  /**
+   * Get the organization GitHub App repository instance
+   */
+  getOrganizationGitHubAppRepository(): IOrganizationGitHubAppRepository;
 }

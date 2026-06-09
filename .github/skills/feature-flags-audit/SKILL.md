@@ -47,6 +47,7 @@ For each flag, search the codebase for where it is consumed. Use Grep:
 
 Scope the search to:
 - `apps/frontend/src/**`
+- `apps/frontend/app/**` — the React Router v7 file-based route tree. Route modules live here (e.g. `apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx`), **not** under `src/`, and they gate flags too (typically via `isFeatureFlagEnabled(...)` to show/hide nav entries, routes, or whole pages). Omitting this directory will mis-report a live route-gated flag as an orphan.
 - `packages/**`
 
 Exclude:
@@ -94,6 +95,8 @@ Add an **E2E tested** column to the output table (Step 5) with either `Yes` or `
 ### Step 4 — Detect orphans
 
 A flag is **orphan** if, after the two-pass search, no usage is found outside the canonical file and its test. Orphans are candidates for removal and worth surfacing — they often accumulate when a feature ships and nobody remembers to delete the gate.
+
+**Before declaring a flag orphan, confirm the search covered `apps/frontend/app/**` (the route tree), not just `apps/frontend/src/**`.** A flag is frequently consumed only in a route module to gate a nav entry or page — missing that directory is the most common cause of a false orphan.
 
 For orphans:
 - Set status to `Orphan`.
@@ -146,4 +149,5 @@ Output only the report — no preamble, no "here is the table" sentence. The use
 - **Audience targeting is email-only.** Do not describe the audience as "organizations", "plans", "teams", or "percentages" — those concepts do not exist in this system. A domain like `@packmind.com` means "any user whose email is at this domain", nothing more.
 - **The registry is static.** There is no env var, no remote config, no runtime override. The file is the source of truth.
 - **The backend does not use feature flags.** Do not scan `apps/api/`, `apps/mcp-server/`, or `apps/cli/`. If you ever find a `_FEATURE_KEY` import there, flag it as unusual — it would be a violation of the established pattern.
+- **Frontend code is split across two roots.** Components and domain logic live in `apps/frontend/src/`, but React Router v7 route modules live in `apps/frontend/app/routes/`. Flags are gated in both. Searching only `src/` is the classic miss — e.g. `MARKETPLACES_FEATURE_KEY` is consumed solely in `apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx` to gate the Settings → Distribution → Marketplaces nav entry, and would look like an orphan if `app/` were skipped.
 - **`PMFeatureFlag` with empty `featureKeys={[]}` always renders.** This is a rare pattern but if you see it while reading usages, don't count it as a real gate.

@@ -96,6 +96,7 @@ describe('AuthGatewayApi', () => {
   describe('getMe', () => {
     describe('when user is authenticated', () => {
       const mockResponse = {
+        edition: 'oss' as const,
         message: 'User authenticated',
         authenticated: true,
         user: {
@@ -115,6 +116,7 @@ describe('AuthGatewayApi', () => {
           name: 'Test Org',
           slug: 'test-org',
           role: 'admin',
+          githubAppMode: 'on-prem' as const,
         },
       };
       let result: Awaited<ReturnType<typeof gateway.getMe>>;
@@ -136,6 +138,7 @@ describe('AuthGatewayApi', () => {
     describe('when user is not authenticated', () => {
       it('returns authentication failure response', async () => {
         const mockResponse = {
+          edition: 'oss' as const,
           message: 'Not authenticated',
           authenticated: false,
         };

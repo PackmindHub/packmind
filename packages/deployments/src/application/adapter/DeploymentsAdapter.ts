@@ -34,12 +34,14 @@ import {
   GetDashboardNonLiveCommand,
   GetDeployedContentCommand,
   GetDeployedContentResponse,
+  GetLastDistributionDateByProvidersCommand,
+  GetLastDistributionDateByProvidersResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   GetTargetsByGitRepoCommand,
   GetTargetByIdCommand,
   GetTargetByIdResponse,
@@ -101,18 +103,18 @@ import { IDistributedPackageRepository } from '../../domain/repositories/IDistri
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
-import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
+import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
-import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
-import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
+import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
+import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
-import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
+import { DeletePackagesBatchUseCase } from '../useCases/deletePackage/DeletePackagesBatchUseCase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { DeployDefaultSkillsUseCase } from '../useCases/DeployDefaultSkillsUseCase';
 import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDefaultSkillsZipForAgentUseCase';
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
-import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
+import { GetPackageByIdUseCase } from '../useCases/getPackageById/GetPackageByIdUseCase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetTargetByIdUseCase } from '../useCases/GetTargetByIdUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
@@ -123,15 +125,16 @@ import { ListActiveDistributedPackagesBySpaceUseCase } from '../useCases/ListAct
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
-import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
-import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/notifyArtefactsDistribution.usecase';
-import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
+import { ListPackagesUseCase } from '../useCases/listPackages/ListPackagesUseCase';
+import { NotifyArtefactsDistributionUseCase } from '../useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase';
+import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/NotifyDistributionUseCase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
-import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
-import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
+import { ListPackagesBySpaceUseCase } from '../useCases/listPackagesBySpace/ListPackagesBySpaceUseCase';
+import { GetPackageSummaryUseCase } from '../useCases/getPackageSummary/GetPackageSummaryUseCase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { GetContentByVersionsUseCase } from '../useCases/GetContentByVersionsUseCase';
+import { GetLastDistributionDateByProvidersUseCase } from '../useCases/GetLastDistributionDateByProvidersUseCase';
 import { GetDashboardKpiUseCase } from '../useCases/getDashboardKpi/GetDashboardKpiUseCase';
 import { GetDashboardNonLiveUseCase } from '../useCases/getDashboardNonLive/GetDashboardNonLiveUseCase';
 import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
@@ -175,14 +178,14 @@ export class DeploymentsAdapter
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullContentUseCase;
-  private _listPackagesUseCase!: ListPackagesUsecase;
-  private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
-  private _getPackageSummaryUseCase!: GetPackageSummaryUsecase;
-  private _createPackageUseCase!: CreatePackageUsecase;
-  private _updatePackageUseCase!: UpdatePackageUsecase;
-  private _getPackageByIdUseCase!: GetPackageByIdUsecase;
-  private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
-  private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
+  private _listPackagesUseCase!: ListPackagesUseCase;
+  private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUseCase;
+  private _getPackageSummaryUseCase!: GetPackageSummaryUseCase;
+  private _createPackageUseCase!: CreatePackageUseCase;
+  private _updatePackageUseCase!: UpdatePackageUseCase;
+  private _getPackageByIdUseCase!: GetPackageByIdUseCase;
+  private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
+  private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
@@ -197,6 +200,7 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
+  private _getLastDistributionDateByProvidersUseCase!: GetLastDistributionDateByProvidersUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -445,7 +449,7 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
-    this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
+    this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUseCase(
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
@@ -464,17 +468,17 @@ export class DeploymentsAdapter
         this.gitPort,
       );
 
-    this._listPackagesUseCase = new ListPackagesUsecase(
+    this._listPackagesUseCase = new ListPackagesUseCase(
       this.accountsPort,
       this.deploymentsServices,
     );
 
-    this._getPackageSummaryUseCase = new GetPackageSummaryUsecase(
+    this._getPackageSummaryUseCase = new GetPackageSummaryUseCase(
       this.accountsPort,
       this.deploymentsServices,
     );
 
-    this._createPackageUseCase = new CreatePackageUsecase(
+    this._createPackageUseCase = new CreatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
@@ -483,7 +487,7 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
-    this._updatePackageUseCase = new UpdatePackageUsecase(
+    this._updatePackageUseCase = new UpdatePackageUseCase(
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
@@ -493,17 +497,18 @@ export class DeploymentsAdapter
       ports.eventEmitterService,
     );
 
-    this._getPackageByIdUseCase = new GetPackageByIdUsecase(
+    this._getPackageByIdUseCase = new GetPackageByIdUseCase(
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
     );
 
-    this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
+    this._deletePackagesBatchUseCase = new DeletePackagesBatchUseCase(
       this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
     );
 
-    this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
+    this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUseCase(
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
@@ -535,6 +540,12 @@ export class DeploymentsAdapter
         this.distributedPackageRepository,
         this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
+      );
+
+    this._getLastDistributionDateByProvidersUseCase =
+      new GetLastDistributionDateByProvidersUseCase(
+        this.accountsPort,
+        this.distributionRepository,
       );
 
     this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
@@ -679,7 +690,7 @@ export class DeploymentsAdapter
 
   async getRenderModeConfiguration(
     command: GetRenderModeConfigurationCommand,
-  ): Promise<GetRenderModeConfigurationResult> {
+  ): Promise<GetRenderModeConfigurationResponse> {
     return this._getRenderModeConfigurationUseCase.execute(command);
   }
 
@@ -835,5 +846,11 @@ export class DeploymentsAdapter
 
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
     return this._listActiveDistributedPackagesBySpaceUseCase;
+  }
+
+  getLastDistributionDateByProviders(
+    command: GetLastDistributionDateByProvidersCommand,
+  ): Promise<GetLastDistributionDateByProvidersResponse> {
+    return this._getLastDistributionDateByProvidersUseCase.execute(command);
   }
 }

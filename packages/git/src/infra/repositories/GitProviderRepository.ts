@@ -50,7 +50,10 @@ export class GitProviderRepository
   }
 
   /**
-   * Encrypt the token field in a GitProvider before saving to database
+   * Encrypt sensitive fields (token) in a GitProvider before saving to the
+   * database. Empty/null token values pass through unchanged, and
+   * already-encrypted values (3-part iv:enc:tag envelope) are not
+   * re-encrypted.
    */
   private async encryptGitProvider(
     gitProvider: GitProvider,
@@ -60,14 +63,20 @@ export class GitProviderRepository
     }
 
     const encryptionService = await this.getEncryptionService();
-    return {
-      ...gitProvider,
-      token: encryptionService.encrypt(gitProvider.token),
-    };
+
+    const next: GitProvider = { ...gitProvider };
+
+    if (next.token && !encryptionService.isEncrypted(next.token)) {
+      next.token = encryptionService.encrypt(next.token);
+    }
+
+    return next;
   }
 
   /**
-   * Decrypt the token field in a GitProvider after reading from database
+   * Decrypt sensitive fields (token) in a GitProvider after reading from the
+   * database. Plaintext / empty values pass through unchanged, matching the
+   * existing backward-compatibility behavior of EncryptionService.decrypt.
    */
   private async decryptGitProvider(
     gitProvider: GitProvider,
@@ -77,10 +86,14 @@ export class GitProviderRepository
     }
 
     const encryptionService = await this.getEncryptionService();
-    return {
-      ...gitProvider,
-      token: encryptionService.decrypt(gitProvider.token),
-    };
+
+    const next: GitProvider = { ...gitProvider };
+
+    if (next.token) {
+      next.token = encryptionService.decrypt(next.token);
+    }
+
+    return next;
   }
 
   override async add(gitProvider: GitProvider): Promise<GitProvider> {
@@ -152,6 +165,46 @@ export class GitProviderRepository
     } catch (error) {
       this.logger.error('Failed to find git providers by organization ID', {
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null> {
+    this.logger.info('Finding git provider by app installation', {
+      organizationId,
+      appInstallationId,
+    });
+
+    try {
+      const result = await this.repository.findOne({
+        where: { organizationId, appInstallationId, authMethod: 'app' },
+        relations: ['repos'],
+      });
+
+      if (!result) {
+        this.logger.info('No git provider found for app installation', {
+          organizationId,
+          appInstallationId,
+        });
+        return null;
+      }
+
+      const decryptedResult = await this.decryptGitProvider(result);
+      this.logger.info('Git provider found for app installation', {
+        organizationId,
+        appInstallationId,
+        providerId: decryptedResult.id,
+      });
+      return decryptedResult;
+    } catch (error) {
+      this.logger.error('Failed to find git provider by app installation', {
+        organizationId,
+        appInstallationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

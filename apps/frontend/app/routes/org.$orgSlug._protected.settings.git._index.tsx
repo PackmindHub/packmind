@@ -10,7 +10,11 @@ export default function SettingsGitRouteModule() {
   }
 
   return (
-    <PMPage title="Git" subtitle="Manage your git providers and repositories">
+    <PMPage
+      title="Git connections"
+      subtitle="Grant Packmind access to specific repos. Each connection is the bridge that lets Packmind publish your playbooks on your team's behalf."
+      isFullWidth
+    >
       <GitProvidersPage organizationId={organization.id} />
     </PMPage>
   );

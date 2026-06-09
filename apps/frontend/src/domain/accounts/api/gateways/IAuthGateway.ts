@@ -30,15 +30,21 @@ export interface SignOutResponse {
   message: string;
 }
 
+export type GithubAppMode = 'on-prem' | 'shared';
+
+type EditionFlag = {
+  edition: 'cloud' | 'oss';
+};
+
 export type MeResponse =
-  | {
+  | (EditionFlag & {
       message: string;
       authenticated: false;
       user?: never;
       organization?: never;
       organizations?: never;
-    }
-  | {
+    })
+  | (EditionFlag & {
       message: string;
       authenticated: true;
       user: {
@@ -52,6 +58,7 @@ export type MeResponse =
         name: string;
         slug: string;
         role: UserOrganizationRole;
+        githubAppMode: GithubAppMode;
       };
       organizations?: Array<{
         organization: {
@@ -61,7 +68,7 @@ export type MeResponse =
         };
         role: UserOrganizationRole;
       }>;
-    };
+    });
 
 export interface TokenResponse {
   access_token: string;

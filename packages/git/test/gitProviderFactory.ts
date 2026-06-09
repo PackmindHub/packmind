@@ -16,6 +16,8 @@ export const gitProviderFactory: Factory<GitProvider> = (
     organizationId: createOrganizationId(uuidv4()),
     url: 'https://api.github.com',
     token: 'test-token',
+    authMethod: 'token',
+    displayName: '',
     ...gitProvider,
   };
 };
@@ -29,6 +31,8 @@ export const gitlabProviderFactory: Factory<GitProvider> = (
     organizationId: createOrganizationId(uuidv4()),
     url: 'https://gitlab.com',
     token: 'glpat-test-token',
+    authMethod: 'token',
+    displayName: '',
     ...gitProvider,
   };
 };

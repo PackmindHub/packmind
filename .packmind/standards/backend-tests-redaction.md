@@ -6,7 +6,7 @@ This standard establishes best practices for writing backend tests using Jest in
 
 * Use assertive, verb-first unit test names instead of starting with 'should'
 * Avoid testing that a method is a function; instead invoke the method and assert its observable behavior
-* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values. This rule targets structured logging stubs such as `PackmindLogger`, NestJS `Logger`, or Winston logger instances (e.g. `logger.warn.toHaveBeenCalledWith(...)`, `Logger.prototype.error`). It does NOT apply to CLI handler dependency functions named `error`, `log`, or `warn` that are passed as explicit constructor/function parameters — those represent user-facing terminal output and asserting on them (including message content) is correct behavioral testing.
+* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
 * Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling
 * Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
 * Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels

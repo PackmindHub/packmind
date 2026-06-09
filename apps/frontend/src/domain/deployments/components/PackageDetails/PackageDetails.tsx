@@ -82,8 +82,8 @@ export const PackageDetails = ({
     useListPackageDeploymentsQuery(id);
 
   const { data: providersResponse } = useGetGitProvidersQuery();
-  const hasGitProviderWithToken =
-    providersResponse?.providers?.some((p) => p.hasToken) ?? false;
+  const hasGitProviderWithAuth =
+    providersResponse?.providers?.some((p) => p.hasAuth) ?? false;
 
   const deletePackageMutation = useDeletePackagesBatchMutation();
 
@@ -270,7 +270,7 @@ export const PackageDetails = ({
       isFullWidth
       actions={
         <PMHStack gap={3}>
-          {hasGitProviderWithToken && (
+          {hasGitProviderWithAuth && (
             <DeployPackageButton
               label="Distribute"
               size="md"

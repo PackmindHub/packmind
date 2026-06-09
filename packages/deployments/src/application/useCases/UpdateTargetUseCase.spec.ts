@@ -119,7 +119,8 @@ describe('UpdateTargetUseCase', () => {
         source: 'github',
         organizationId,
         url: 'https://github.com',
-        hasToken: true,
+        authMethod: 'token',
+        hasAuth: true,
       };
 
       const updatedTarget: Target = {
@@ -185,7 +186,8 @@ describe('UpdateTargetUseCase', () => {
         source: 'github',
         organizationId,
         url: 'https://github.com',
-        hasToken: false,
+        authMethod: 'token',
+        hasAuth: false,
       };
 
       let thrownError: Error;
@@ -411,7 +413,8 @@ describe('UpdateTargetUseCase', () => {
               {
                 id: localProviderId,
                 source: 'github',
-                hasToken: false,
+                authMethod: 'token',
+                hasAuth: false,
                 organizationId,
                 url: 'https://github.com',
               },
@@ -460,7 +463,8 @@ describe('UpdateTargetUseCase', () => {
       source: 'github',
       organizationId,
       url: 'https://github.com',
-      hasToken: true,
+      authMethod: 'token',
+      hasAuth: true,
     };
 
     const updatedTarget: Target = {

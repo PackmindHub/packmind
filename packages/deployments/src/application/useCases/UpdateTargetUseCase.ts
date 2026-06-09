@@ -58,7 +58,7 @@ export class UpdateTargetUseCase implements IUpdateTargetUseCase {
         (p) => p.id === repo.providerId,
       );
 
-      if (provider && !provider.hasToken) {
+      if (provider && !provider.hasAuth) {
         throw new TargetPathUpdateForbiddenError(targetId);
       }
     }

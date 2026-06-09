@@ -1403,6 +1403,32 @@ describe('playbookSubmitHandler', () => {
 
         expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
       });
+
+      it('does not remove any staged change', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+
+      it('does not clear all staged changes', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+        expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
+      });
+
+      it('exits with a non-zero code', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('logs an actionable error naming the skill', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'update skill' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('My Skill'),
+        );
+      });
     });
 
     describe('successful submit', () => {
@@ -1797,6 +1823,203 @@ describe('playbookSubmitHandler', () => {
         await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
 
         expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when an updated skill is identical to its deployed version', () => {
+      const NOOP_SKILL_CONTENT =
+        'name: My Skill\ndescription: A useful skill\nprompt: Do something\n';
+      const DEPLOYED_SKILL_MD = [
+        '---',
+        'name: My Skill',
+        'description: A useful skill',
+        '---',
+        'Do something',
+      ].join('\n');
+
+      beforeEach(() => {
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-skill': {
+              name: 'My Skill',
+              type: 'skill',
+              id: 'artifact-skill-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/SKILL.md',
+                content: DEPLOYED_SKILL_MD,
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            filePath: '.claude/skills/my-skill',
+            artifactType: 'skill',
+            artifactName: 'My Skill',
+            codingAgent: 'claude',
+            changeType: 'updated',
+            content: NOOP_SKILL_CONTENT,
+          }),
+        ]);
+      });
+
+      it('does not block on a skip', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+        expect(logErrorConsole).not.toHaveBeenCalled();
+      });
+
+      it('does not submit any proposal', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+        expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+      });
+
+      it('clears the staged entry', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          '.claude/skills/my-skill',
+          'space-123',
+        );
+      });
+
+      it('exits 0', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'no diff' }));
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when one update is valid and another is skipped', () => {
+      const LOCAL_COMMAND_CONTENT =
+        '---\nname: My Command\n---\nDo something different';
+
+      beforeEach(() => {
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['claude'],
+          installedAt: '2026-03-17T00:00:00.000Z',
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-command': {
+              name: 'My Command',
+              type: 'command',
+              id: 'artifact-cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            },
+            'my-skill': {
+              name: 'My Skill',
+              type: 'skill',
+              id: 'artifact-skill-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                { path: '.claude/skills/my-skill/SKILL.md', agent: 'claude' },
+              ],
+            },
+          },
+        });
+
+        // Deployed content is returned for the command (so it produces a valid
+        // proposal) but NOT for the skill (so the skill is skipped).
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/commands/my-command.md',
+                content: COMMAND_CONTENT,
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            filePath: '.claude/commands/my-command.md',
+            artifactType: 'command',
+            artifactName: 'My Command',
+            codingAgent: 'claude',
+            changeType: 'updated',
+            content: LOCAL_COMMAND_CONTENT,
+          }),
+          makeEntry({
+            filePath: '.claude/skills/my-skill',
+            artifactType: 'skill',
+            artifactName: 'My Skill',
+            codingAgent: 'claude',
+            changeType: 'updated',
+            content: 'name: My Skill\ndescription: A skill\nprompt: Do it\n',
+          }),
+        ]);
+      });
+
+      it('blocks the entire batch without submitting the valid change', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+        expect(mockGateway.changeProposals.batchCreate).not.toHaveBeenCalled();
+      });
+
+      it('does not remove the valid change from staging', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+
+      it('does not clear all staging', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+        expect(mockPlaybookLocalRepository.clearAll).not.toHaveBeenCalled();
+      });
+
+      it('exits 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('reports the skipped skill', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'mixed' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('My Skill'),
+        );
       });
     });
 

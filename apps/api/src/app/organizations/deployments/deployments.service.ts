@@ -16,7 +16,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   CreatePackageCommand,
   CreatePackageResponse,
   UpdatePackageCommand,
@@ -112,7 +112,7 @@ export class DeploymentsService {
 
   async getRenderModeConfiguration(
     command: GetRenderModeConfigurationCommand,
-  ): Promise<GetRenderModeConfigurationResult> {
+  ): Promise<GetRenderModeConfigurationResponse> {
     return this.deploymentAdapter.getRenderModeConfiguration(command);
   }
 

@@ -12,7 +12,9 @@ export type AddGitProviderCommand = PackmindCommand & {
   allowTokenlessProvider?: boolean;
 };
 
+export type AddGitProviderResponse = GitProvider;
+
 export type IAddGitProviderUseCase = IUseCase<
   AddGitProviderCommand,
-  GitProvider
+  AddGitProviderResponse
 >;

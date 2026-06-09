@@ -1,4 +1,5 @@
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
+import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
@@ -17,7 +18,7 @@ export class GithubRepository implements IGitRepo {
   private readonly options: GithubRepositoryOptions;
 
   constructor(
-    private readonly token: string,
+    private readonly resolver: IGithubTokenResolver,
     options: GithubRepositoryOptions,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -38,11 +39,28 @@ export class GithubRepository implements IGitRepo {
     this.axiosInstance = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    // Inject token from resolver on every request
+    this.axiosInstance.interceptors.request.use(async (config) => {
+      const token = await resolver.getToken();
+      config.headers['Authorization'] = `token ${token}`;
+      return config;
+    });
+
+    // Fire onUnauthorized hook on 401 responses
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error?.response?.status === 401) {
+          await resolver.onUnauthorized();
+        }
+        return Promise.reject(error);
+      },
+    );
 
     this.logger.info('GithubRepository initialized successfully', {
       owner: this.options.owner,

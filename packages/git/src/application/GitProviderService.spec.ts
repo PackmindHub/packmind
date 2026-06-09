@@ -55,22 +55,31 @@ describe('GitProviderService', () => {
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
     mockGitlabProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
+      checkAuth: jest.fn(),
     } as jest.Mocked<IGitProvider>;
 
     mockGitProviderFactory = {
       createGitProvider: jest.fn().mockImplementation((provider) => {
+        // Mirror factory token-validation behaviour so service-layer tests
+        // can verify that a null token on a 'token' provider is rejected.
+        if (provider.authMethod === 'token' && !provider.token) {
+          return Promise.reject(new Error('Git provider token not configured'));
+        }
         if (provider.source === GitProviderVendors.github) {
-          return mockGithubProviderInstance;
+          return Promise.resolve(mockGithubProviderInstance);
         }
         if (provider.source === GitProviderVendors.gitlab) {
-          return mockGitlabProviderInstance;
+          return Promise.resolve(mockGitlabProviderInstance);
         }
-        throw new Error(`Unsupported git provider source: ${provider.source}`);
+        return Promise.reject(
+          new Error(`Unsupported git provider source: ${provider.source}`),
+        );
       }),
     } as jest.Mocked<IGitProviderFactory>;
 
@@ -96,6 +105,7 @@ describe('GitProviderService', () => {
       token: 'github-token',
       organizationId: createOrganizationId('org-1'),
       url: 'https://api.github.com',
+      authMethod: 'token' as const,
     };
     let result: GitProvider;
 

@@ -3,11 +3,11 @@ import { RenderModeConfiguration } from '../RenderModeConfiguration';
 
 export type GetRenderModeConfigurationCommand = PackmindCommand;
 
-export type GetRenderModeConfigurationResult = {
+export type GetRenderModeConfigurationResponse = {
   configuration: RenderModeConfiguration | null;
 };
 
 export type IGetRenderModeConfigurationUseCase = IUseCase<
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult
+  GetRenderModeConfigurationResponse
 >;

@@ -5,6 +5,7 @@ import {
   DeploymentGateway,
   fetchDeployedFiles,
   lockFileToArtifactVersionEntries,
+  resolveDeployedRenderAgents,
 } from './deployedFilesUtils';
 import { PackmindLockFile } from '../../domain/repositories/PackmindLockFile';
 
@@ -38,6 +39,76 @@ describe('lockFileToArtifactVersionEntries', () => {
         spaceId: 'sp-1',
       },
     ]);
+  });
+});
+
+describe('resolveDeployedRenderAgents', () => {
+  it('unions lockFile.agents with the per-file agents recorded on artifacts', () => {
+    const lockFile: PackmindLockFile = {
+      lockfileVersion: 2,
+      packageSlugs: [],
+      agents: ['claude'],
+      installedAt: '2026-01-01',
+      artifacts: {
+        'art-1': {
+          name: 'My Skill',
+          type: 'skill',
+          id: 'art-1',
+          version: 1,
+          spaceId: 'sp-1',
+          packageIds: [],
+          files: [
+            { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+          ],
+          source: 'user',
+        },
+      },
+    };
+
+    expect(resolveDeployedRenderAgents(lockFile).sort()).toEqual(
+      ['claude', 'copilot'].sort(),
+    );
+  });
+
+  describe('when lockFile.agents is empty', () => {
+    it('recovers the artifact agent from the per-file records', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {
+          'art-1': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+            source: 'user',
+          },
+        },
+      };
+
+      expect(resolveDeployedRenderAgents(lockFile)).toEqual(['copilot']);
+    });
+  });
+
+  describe('when no agents are recorded anywhere', () => {
+    it('returns no agents', () => {
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {},
+      };
+
+      expect(resolveDeployedRenderAgents(lockFile)).toEqual([]);
+    });
   });
 });
 
@@ -93,6 +164,43 @@ describe('fetchDeployedFiles', () => {
         ],
         agents: lockFile.agents,
       });
+    });
+  });
+
+  describe('when lockFile.agents is empty', () => {
+    it('renders for the agent recorded on the artifact', async () => {
+      const getContentByVersions = jest.fn().mockResolvedValue({
+        fileUpdates: { createOrUpdate: [] },
+      });
+      const gateway: DeploymentGateway = {
+        deployment: { getContentByVersions },
+      };
+      const lockFile: PackmindLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        installedAt: '2026-01-01',
+        artifacts: {
+          'art-1': {
+            name: 'My Skill',
+            type: 'skill',
+            id: 'art-1',
+            version: 1,
+            spaceId: 'sp-1',
+            packageIds: [],
+            files: [
+              { path: '.github/skills/my-skill/SKILL.md', agent: 'copilot' },
+            ],
+            source: 'user',
+          },
+        },
+      };
+
+      await fetchDeployedFiles(gateway, lockFile);
+
+      expect(getContentByVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ agents: ['copilot'] }),
+      );
     });
   });
 

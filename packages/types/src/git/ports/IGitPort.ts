@@ -6,6 +6,8 @@ import {
   AddGitRepoCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  CheckProviderAuthCommand,
+  CheckProviderAuthResponse,
   ExternalRepository,
   FetchFileContentInput,
   FetchFileContentOutput,
@@ -24,6 +26,7 @@ import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
 import { DeleteItem, FileModification } from '../../deployments/FileUpdates';
+import { OrganizationGitHubApp } from '../OrganizationGitHubApp';
 
 export const IGitPortName = 'IGitPort' as const;
 
@@ -111,6 +114,21 @@ export interface IGitPort {
   addGitProvider(command: AddGitProviderCommand): Promise<GitProvider>;
 
   /**
+   * Find an existing GitHub App provider for a given organization and
+   * installation id. Used by the install-callback flow to make a re-run
+   * idempotent: if a provider already exists for the same installation we
+   * reuse it instead of inserting a duplicate row.
+   *
+   * @param organizationId - The organization ID
+   * @param appInstallationId - The GitHub App installation ID
+   * @returns Promise of the matching provider, or null if none exists
+   */
+  findGitProviderByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null>;
+
+  /**
    * Add a new git repository to a provider
    *
    * @param command - Command containing repository details and user/organization context
@@ -175,6 +193,19 @@ export interface IGitPort {
     repo: string,
     branch: string,
   ): Promise<boolean>;
+
+  /**
+   * Probe a git provider's stored credentials against the upstream API to
+   * determine whether they still work. Used by the connection drawer to
+   * surface a live status instead of relying on whether credentials are
+   * merely present in the database.
+   *
+   * @param command - Command containing the gitProviderId and member context
+   * @returns Promise resolving to `{ ok: true }` or `{ ok: false, reason }`
+   */
+  checkProviderAuth(
+    command: CheckProviderAuthCommand,
+  ): Promise<CheckProviderAuthResponse>;
 
   /**
    * Update a git provider
@@ -272,4 +303,39 @@ export interface IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string>;
+
+  /**
+   * Persist (upsert) an OrganizationGitHubApp record.
+   * If an active record already exists for the org it is revoked first,
+   * then the new record is inserted (within a transaction).
+   * Used exclusively by the OSS manifest-callback flow.
+   *
+   * @param app - The fully-populated OrganizationGitHubApp to persist
+   * @returns The persisted (decrypted) record
+   */
+  upsertOrganizationGitHubApp(
+    app: OrganizationGitHubApp,
+  ): Promise<OrganizationGitHubApp>;
+
+  /**
+   * Returns the active (non-revoked) OrganizationGitHubApp for the given org,
+   * or null if none exists.
+   *
+   * @param orgId - The organization ID
+   * @returns The active app record, or null
+   */
+  getActiveOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<OrganizationGitHubApp | null>;
+
+  /**
+   * Marks the active OrganizationGitHubApp for the given org as revoked.
+   * No-ops if no active record exists.
+   * Note: this does NOT cascade-delete existing GitProvider rows pointing at this org.
+   * Those providers will start failing at next token mint. Admin must re-register
+   * and users will need to re-install the new app.
+   *
+   * @param orgId - The organization ID
+   */
+  revokeOrganizationGitHubApp(orgId: OrganizationId): Promise<void>;
 }

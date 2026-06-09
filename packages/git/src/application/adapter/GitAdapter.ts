@@ -5,6 +5,8 @@ import {
   AddGitRepoCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  CheckProviderAuthCommand,
+  CheckProviderAuthResponse,
   DeleteItem,
   FileModification,
   FetchFileContentInput,
@@ -29,32 +31,35 @@ import {
   IGitPort,
   ListProvidersCommand,
   ListProvidersResponse,
+  OrganizationGitHubApp,
   OrganizationId,
   QueryOption,
   UserId,
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
+import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { GitServices } from '../GitServices';
-import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
-import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
-import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/checkBranchExists.usecase';
-import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
-import { CommitToGit } from '../useCases/commitToGit/commitToGit.usecase';
-import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/deleteGitProvider.usecase';
-import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/deleteGitRepo.usecase';
-import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
-import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
-import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
-import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/getOrganizationRepositories.usecase';
-import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/getRepositoryById.usecase';
-import { HandleWebHook } from '../useCases/handleWebHook/handleWebHook.usecase';
-import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
-import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAvailableRepos.usecase';
-import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
-import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
-import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGitProvider.usecase';
+import { AddGitProviderUseCase } from '../useCases/addGitProvider/AddGitProviderUseCase';
+import { AddGitRepoUseCase } from '../useCases/addGitRepo/AddGitRepoUseCase';
+import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/CheckBranchExistsUseCase';
+import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
+import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
+import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
+import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/DeleteGitProviderUseCase';
+import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/DeleteGitRepoUseCase';
+import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';
+import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
+import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase';
+import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
+import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase';
+import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/GetRepositoryByIdUseCase';
+import { HandleWebHookUseCase } from '../useCases/handleWebHook/HandleWebHookUseCase';
+import { HandleWebHookWithoutContentUseCase } from '../useCases/handleWebHookWithoutContent/HandleWebHookWithoutContentUseCase';
+import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/ListAvailableReposUseCase';
+import { ListProvidersUseCase } from '../useCases/listProviders/ListProvidersUseCase';
+import { ListReposUseCase } from '../useCases/listRepos/ListReposUseCase';
+import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/UpdateGitProviderUseCase';
 
 const origin = 'GitAdapter';
 
@@ -62,6 +67,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private accountsPort: IAccountsPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
   private gitDelayedJobs: IGitDelayedJobs | null = null;
+  private mode: GithubAppMode = 'on-prem';
 
   // Use cases - all initialized in initialize()
   private _addGitProvider!: AddGitProviderUseCase;
@@ -71,13 +77,14 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _updateGitProvider!: UpdateGitProviderUseCase;
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
-  private _commitToGit!: CommitToGit;
-  private _handleWebHook!: HandleWebHook;
-  private _handleWebHookWithoutContent!: HandleWebHookWithoutContent;
-  private _getFileFromRepo!: GetFileFromRepo;
+  private _commitToGit!: CommitToGitUseCase;
+  private _handleWebHook!: HandleWebHookUseCase;
+  private _handleWebHookWithoutContent!: HandleWebHookWithoutContentUseCase;
+  private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
   private _listRepos!: ListReposUseCase;
   private _listProviders!: ListProvidersUseCase;
+  private _checkProviderAuth!: CheckProviderAuthUseCase;
   private _getOrganizationRepositories!: GetOrganizationRepositoriesUseCase;
   private _getRepositoryById!: GetRepositoryByIdUseCase;
   private _findGitRepoByOwnerRepoAndBranchInOrganization!: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
@@ -89,6 +96,27 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('GitAdapter constructed - awaiting initialization');
+  }
+
+  /**
+   * Set the GitHub App hosting mode for use in credential validation.
+   * Must be called before use cases that validate credentials are invoked.
+   */
+  public setMode(mode: GithubAppMode): void {
+    this.mode = mode;
+    // Recreate affected use cases with the new mode
+    if (this.accountsPort) {
+      this._addGitProvider = new AddGitProviderUseCase(
+        this.gitServices.getGitProviderService(),
+        this.accountsPort,
+        this.mode,
+      );
+      this._updateGitProvider = new UpdateGitProviderUseCase(
+        this.gitServices.getGitProviderService(),
+        this.accountsPort,
+        this.mode,
+      );
+    }
   }
 
   /**
@@ -121,6 +149,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._addGitProvider = new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
+      this.mode,
     );
 
     this._addGitRepo = new AddGitRepoUseCase(
@@ -145,6 +174,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._updateGitProvider = new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
+      this.mode,
     );
 
     // Use cases that don't depend on external ports
@@ -156,26 +186,26 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitProviderService(),
     );
 
-    this._commitToGit = new CommitToGit(
+    this._commitToGit = new CommitToGitUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
     );
 
-    this._handleWebHook = new HandleWebHook(
+    this._handleWebHook = new HandleWebHookUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitRepoFactory(),
     );
 
-    this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
+    this._handleWebHookWithoutContent = new HandleWebHookWithoutContentUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
     );
 
-    this._getFileFromRepo = new GetFileFromRepo(
+    this._getFileFromRepo = new GetFileFromRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
     );
@@ -190,6 +220,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     );
 
     this._listProviders = new ListProvidersUseCase(
+      this.accountsPort,
+      this.gitServices.getGitProviderService(),
+    );
+
+    this._checkProviderAuth = new CheckProviderAuthUseCase(
       this.accountsPort,
       this.gitServices.getGitProviderService(),
     );
@@ -277,6 +312,15 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
   public addGitProvider(command: AddGitProviderCommand): Promise<GitProvider> {
     return this._addGitProvider.execute(command);
+  }
+
+  public findGitProviderByAppInstallation(
+    organizationId: OrganizationId,
+    appInstallationId: number,
+  ): Promise<GitProvider | null> {
+    return this.gitServices
+      .getGitProviderService()
+      .findGitProviderByAppInstallation(organizationId, appInstallationId);
   }
 
   public async addGitRepo(command: AddGitRepoCommand): Promise<GitRepo> {
@@ -403,6 +447,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._listProviders.execute(command);
   }
 
+  public async checkProviderAuth(
+    command: CheckProviderAuthCommand,
+  ): Promise<CheckProviderAuthResponse> {
+    return this._checkProviderAuth.execute(command);
+  }
+
   public async getOrganizationRepositories(
     organizationId: OrganizationId,
   ): Promise<GitRepo[]> {
@@ -457,5 +507,29 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       input,
       onComplete,
     );
+  }
+
+  public async upsertOrganizationGitHubApp(
+    app: OrganizationGitHubApp,
+  ): Promise<OrganizationGitHubApp> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .upsertForOrganization(app);
+  }
+
+  public async getActiveOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<OrganizationGitHubApp | null> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .findActiveByOrganizationId(orgId);
+  }
+
+  public async revokeOrganizationGitHubApp(
+    orgId: OrganizationId,
+  ): Promise<void> {
+    return this.gitServices
+      .getOrganizationGitHubAppRepository()
+      .markRevoked(orgId);
   }
 }

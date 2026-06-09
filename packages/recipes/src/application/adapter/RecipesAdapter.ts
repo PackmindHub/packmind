@@ -39,18 +39,18 @@ import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
 import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactory';
 import { UpdateRecipesAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesServices } from '../services/RecipesServices';
-import { CaptureRecipeUsecase } from '../useCases/captureRecipe/captureRecipe.usecase';
-import { CaptureRecipeWithPackagesUsecase } from '../useCases/captureRecipeWithPackages/captureRecipeWithPackages.usecase';
-import { DeleteRecipeUsecase } from '../useCases/deleteRecipe/deleteRecipe.usecase';
-import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
-import { FindRecipeBySlugUsecase } from '../useCases/findRecipeBySlug/findRecipeBySlug.usecase';
-import { GetRecipeByIdUsecase } from '../useCases/getRecipeById/getRecipeById.usecase';
-import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeVersion.usecase';
-import { ListRecipesBySpaceUsecase } from '../useCases/listRecipesBySpace/listRecipesBySpace.usecase';
-import { ListRecipeVersionsUsecase } from '../useCases/listRecipeVersions/listRecipeVersions.usecase';
-import { UpdateRecipeFromUIUsecase } from '../useCases/updateRecipeFromUI/updateRecipeFromUI.usecase';
-import { UpdateRecipesFromGitHubUsecase } from '../useCases/updateRecipesFromGitHub/updateRecipesFromGitHub.usecase';
-import { UpdateRecipesFromGitLabUsecase } from '../useCases/updateRecipesFromGitLab/updateRecipesFromGitLab.usecase';
+import { CaptureRecipeUseCase } from '../useCases/captureRecipe/CaptureRecipeUseCase';
+import { CaptureRecipeWithPackagesUseCase } from '../useCases/captureRecipeWithPackages/CaptureRecipeWithPackagesUseCase';
+import { DeleteRecipeUseCase } from '../useCases/deleteRecipe/DeleteRecipeUseCase';
+import { DeleteRecipesBatchUseCase } from '../useCases/deleteRecipesBatch/DeleteRecipesBatchUseCase';
+import { FindRecipeBySlugUseCase } from '../useCases/findRecipeBySlug/FindRecipeBySlugUseCase';
+import { GetRecipeByIdUseCase } from '../useCases/getRecipeById/GetRecipeByIdUseCase';
+import { GetRecipeVersionUseCase } from '../useCases/getRecipeVersion/GetRecipeVersionUseCase';
+import { ListRecipesBySpaceUseCase } from '../useCases/listRecipesBySpace/ListRecipesBySpaceUseCase';
+import { ListRecipeVersionsUseCase } from '../useCases/listRecipeVersions/ListRecipeVersionsUseCase';
+import { UpdateRecipeFromUIUseCase } from '../useCases/updateRecipeFromUI/UpdateRecipeFromUIUseCase';
+import { UpdateRecipesFromGitHubUseCase } from '../useCases/updateRecipesFromGitHub/UpdateRecipesFromGitHubUseCase';
+import { UpdateRecipesFromGitLabUseCase } from '../useCases/updateRecipesFromGitLab/UpdateRecipesFromGitLabUseCase';
 
 const origin = 'RecipesAdapter';
 
@@ -68,18 +68,18 @@ export class RecipesAdapter
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   // Use cases - created in initialize()
-  private _captureRecipe!: CaptureRecipeUsecase;
-  private _captureRecipeWithPackages!: CaptureRecipeWithPackagesUsecase;
-  private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUsecase;
-  private _updateRecipesFromGitLab!: UpdateRecipesFromGitLabUsecase;
-  private _updateRecipeFromUI!: UpdateRecipeFromUIUsecase;
-  private _deleteRecipe!: DeleteRecipeUsecase;
-  private _getRecipeById!: GetRecipeByIdUsecase;
-  private _findRecipeBySlug!: FindRecipeBySlugUsecase;
-  private _listRecipesBySpace!: ListRecipesBySpaceUsecase;
-  private _listRecipeVersions!: ListRecipeVersionsUsecase;
-  private _getRecipeVersion!: GetRecipeVersionUsecase;
-  private _deleteRecipesBatch!: DeleteRecipesBatchUsecase;
+  private _captureRecipe!: CaptureRecipeUseCase;
+  private _captureRecipeWithPackages!: CaptureRecipeWithPackagesUseCase;
+  private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUseCase;
+  private _updateRecipesFromGitLab!: UpdateRecipesFromGitLabUseCase;
+  private _updateRecipeFromUI!: UpdateRecipeFromUIUseCase;
+  private _deleteRecipe!: DeleteRecipeUseCase;
+  private _getRecipeById!: GetRecipeByIdUseCase;
+  private _findRecipeBySlug!: FindRecipeBySlugUseCase;
+  private _listRecipesBySpace!: ListRecipesBySpaceUseCase;
+  private _listRecipeVersions!: ListRecipeVersionsUseCase;
+  private _getRecipeVersion!: GetRecipeVersionUseCase;
+  private _deleteRecipesBatch!: DeleteRecipesBatchUseCase;
 
   constructor(
     private readonly recipesServices: RecipesServices,
@@ -130,7 +130,7 @@ export class RecipesAdapter
     }
 
     // Step 4: Create all use cases with non-null ports/services
-    this._captureRecipe = new CaptureRecipeUsecase(
+    this._captureRecipe = new CaptureRecipeUseCase(
       this.spacesPort,
       this.accountsPort,
       this.recipesServices.getRecipeService(),
@@ -139,14 +139,14 @@ export class RecipesAdapter
       ports.eventEmitterService,
     );
 
-    this._captureRecipeWithPackages = new CaptureRecipeWithPackagesUsecase(
+    this._captureRecipeWithPackages = new CaptureRecipeWithPackagesUseCase(
       this.accountsPort,
       this._captureRecipe,
       this.deploymentPort,
       this.spacesPort,
     );
 
-    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
+    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUseCase(
       this.recipesServices.getRecipeService(),
       this.gitPort!,
       this.deploymentPort!,
@@ -155,7 +155,7 @@ export class RecipesAdapter
       this.recipesDelayedJobs,
     );
 
-    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
+    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUseCase(
       this.recipesServices.getRecipeService(),
       this.gitPort!,
       this.deploymentPort!,
@@ -164,7 +164,7 @@ export class RecipesAdapter
       this.recipesDelayedJobs,
     );
 
-    this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
+    this._updateRecipeFromUI = new UpdateRecipeFromUIUseCase(
       this.spacesPort,
       this.accountsPort,
       this.recipesServices.getRecipeService(),
@@ -173,7 +173,7 @@ export class RecipesAdapter
       ports.eventEmitterService,
     );
 
-    this._deleteRecipe = new DeleteRecipeUsecase(
+    this._deleteRecipe = new DeleteRecipeUseCase(
       this.spacesPort,
       this.accountsPort,
       this.recipesServices.getRecipeService(),
@@ -181,31 +181,31 @@ export class RecipesAdapter
       ports.eventEmitterService,
     );
 
-    this._getRecipeById = new GetRecipeByIdUsecase(
+    this._getRecipeById = new GetRecipeByIdUseCase(
       this.spacesPort,
       this.accountsPort,
       this.recipesServices.getRecipeService(),
     );
 
-    this._findRecipeBySlug = new FindRecipeBySlugUsecase(
+    this._findRecipeBySlug = new FindRecipeBySlugUseCase(
       this.recipesServices.getRecipeService(),
     );
 
-    this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
+    this._listRecipesBySpace = new ListRecipesBySpaceUseCase(
       this.spacesPort,
       this.accountsPort,
       this.recipesServices.getRecipeService(),
     );
 
-    this._listRecipeVersions = new ListRecipeVersionsUsecase(
+    this._listRecipeVersions = new ListRecipeVersionsUseCase(
       this.recipesServices.getRecipeVersionService(),
     );
 
-    this._getRecipeVersion = new GetRecipeVersionUsecase(
+    this._getRecipeVersion = new GetRecipeVersionUseCase(
       this.recipesServices.getRecipeVersionService(),
     );
 
-    this._deleteRecipesBatch = new DeleteRecipesBatchUsecase(
+    this._deleteRecipesBatch = new DeleteRecipesBatchUseCase(
       this._deleteRecipe,
     );
 

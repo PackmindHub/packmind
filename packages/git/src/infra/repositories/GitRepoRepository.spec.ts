@@ -1,6 +1,7 @@
 import { GitRepoRepository } from './GitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
+import { OrganizationGitHubAppSchema } from '../schemas/OrganizationGitHubAppSchema';
 import { Repository } from 'typeorm';
 import {
   createTestDatasourceFixture,
@@ -18,6 +19,7 @@ describe('GitRepoRepository', () => {
   const fixture = createTestDatasourceFixture([
     GitRepoSchema,
     GitProviderSchema,
+    OrganizationGitHubAppSchema,
     OrganizationSchema,
   ]);
 

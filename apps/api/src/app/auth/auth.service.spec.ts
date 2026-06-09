@@ -3,6 +3,13 @@ import { createOrganizationId, createUserId, User } from '@packmind/types';
 import { AuthService, GetMeResponse } from './auth.service';
 import { JwtPayload } from './JwtPayload';
 
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  Configuration: {
+    getConfig: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('AuthService - getMe method', () => {
   let mockJwtService: JwtService;
   let mockAccountsAdapter: jest.Mocked<{
@@ -92,6 +99,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns authenticated user with organization', () => {
           expect(result).toEqual({
+            edition: 'oss',
             authenticated: true,
             user: {
               id: '1',
@@ -102,6 +110,7 @@ describe('AuthService - getMe method', () => {
               name: 'Test Organization',
               slug: 'test-organization',
               role: 'admin',
+              githubAppMode: 'on-prem',
             },
           });
         });
@@ -137,6 +146,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns unauthenticated response', () => {
           expect(result).toEqual({
+            edition: 'oss',
             message: 'User does not have access to the organization in token',
             authenticated: false,
           });
@@ -165,6 +175,7 @@ describe('AuthService - getMe method', () => {
           const result = await authService.getMe('valid-jwt-token');
 
           expect(result).toEqual({
+            edition: 'oss',
             message: 'User does not have access to the organization in token',
             authenticated: false,
           });
@@ -215,6 +226,7 @@ describe('AuthService - getMe method', () => {
 
         it('returns authenticated with user organizations list', () => {
           expect(result).toEqual({
+            edition: 'oss',
             user: {
               id: '1',
               email: 'testuser@packmind.com',
@@ -279,6 +291,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -298,6 +311,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -317,6 +331,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns unauthenticated response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'No valid access token found',
           authenticated: false,
         });
@@ -339,6 +354,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'Invalid or expired access token',
           authenticated: false,
         });
@@ -361,6 +377,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'Invalid or expired access token',
           authenticated: false,
         });
@@ -383,6 +400,7 @@ describe('AuthService - getMe method', () => {
 
       it('returns error response', () => {
         expect(result).toEqual({
+          edition: 'oss',
           message: 'Invalid or expired access token',
           authenticated: false,
         });
