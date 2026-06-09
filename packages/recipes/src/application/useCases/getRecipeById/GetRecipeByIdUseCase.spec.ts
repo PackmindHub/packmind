@@ -1,10 +1,11 @@
-import { ListRecipesBySpaceUsecase } from './ListRecipesBySpaceUsecase';
+import { GetRecipeByIdUseCase } from './GetRecipeByIdUseCase';
 import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import {
   IAccountsPort,
   ISpacesPort,
   Space,
+  createRecipeId,
   createSpaceId,
   createOrganizationId,
   createUserId,
@@ -12,15 +13,15 @@ import {
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 
-describe('ListRecipesBySpaceUsecase', () => {
-  let usecase: ListRecipesBySpaceUsecase;
+describe('GetRecipeByIdUseCase', () => {
+  let usecase: GetRecipeByIdUseCase;
   let recipeService: jest.Mocked<RecipeService>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
 
   beforeEach(() => {
     recipeService = {
-      listRecipesBySpace: jest.fn(),
+      getRecipeById: jest.fn(),
     } as unknown as jest.Mocked<RecipeService>;
 
     accountsAdapter = {
@@ -39,7 +40,7 @@ describe('ListRecipesBySpaceUsecase', () => {
       }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
-    usecase = new ListRecipesBySpaceUsecase(
+    usecase = new GetRecipeByIdUseCase(
       spacesPort,
       accountsAdapter,
       recipeService,
@@ -52,20 +53,39 @@ describe('ListRecipesBySpaceUsecase', () => {
   });
 
   describe('executeForMembers', () => {
-    describe('when listing recipes for a space', () => {
+    describe('when request is valid', () => {
       const organizationId = createOrganizationId('org-1');
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
-      let spaceRecipes: ReturnType<typeof recipeFactory>[];
-      let result: { recipes: ReturnType<typeof recipeFactory>[] };
+      const recipeId = createRecipeId('recipe-1');
+
+      let organization: {
+        id: typeof organizationId;
+        name: string;
+        slug: string;
+      };
+      let user: {
+        id: typeof userId;
+        email: string;
+        passwordHash: string;
+        active: boolean;
+        memberships: {
+          userId: typeof userId;
+          organizationId: typeof organizationId;
+          role: 'member';
+        }[];
+      };
+      let space: Space;
+      let recipe: ReturnType<typeof recipeFactory>;
+      let result: { recipe: ReturnType<typeof recipeFactory> | null };
 
       beforeEach(async () => {
-        const organization = {
+        organization = {
           id: organizationId,
           name: 'Test Org',
           slug: 'test-org',
         };
-        const user = {
+        user = {
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
@@ -78,179 +98,60 @@ describe('ListRecipesBySpaceUsecase', () => {
             },
           ],
         };
-        const space: Space = {
+        space = {
           id: spaceId,
           name: 'Test Space',
           slug: 'test-space',
           organizationId,
         };
-
-        spaceRecipes = [recipeFactory({ spaceId }), recipeFactory({ spaceId })];
-
-        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-        accountsAdapter.getUserById.mockResolvedValue(user);
-        spacesPort.getSpaceById.mockResolvedValue(space);
-        recipeService.listRecipesBySpace.mockResolvedValue(spaceRecipes);
-
-        result = await usecase.execute({
-          userId,
-          organizationId,
-          spaceId,
-        });
-      });
-
-      it('calls listRecipesBySpace with the space id', () => {
-        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
-          includeDeleted: undefined,
-        });
-      });
-
-      it('returns the correct number of recipes', () => {
-        expect(result.recipes).toHaveLength(2);
-      });
-
-      it('includes the first space recipe', () => {
-        expect(result.recipes).toContainEqual(spaceRecipes[0]);
-      });
-
-      it('includes the second space recipe', () => {
-        expect(result.recipes).toContainEqual(spaceRecipes[1]);
-      });
-    });
-
-    describe('when organization has no recipes', () => {
-      const organizationId = createOrganizationId('org-1');
-      const spaceId = createSpaceId('space-1');
-      const userId = createUserId('user-1');
-      let result: { recipes: ReturnType<typeof recipeFactory>[] };
-
-      beforeEach(async () => {
-        const organization = {
-          id: organizationId,
-          name: 'Test Org',
-          slug: 'test-org',
-        };
-        const user = {
-          id: userId,
-          email: 'test@example.com',
-          passwordHash: 'hash',
-          active: true,
-          memberships: [
-            {
-              userId,
-              organizationId,
-              role: 'member' as const,
-            },
-          ],
-        };
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
-
-        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-        accountsAdapter.getUserById.mockResolvedValue(user);
-        spacesPort.getSpaceById.mockResolvedValue(space);
-        recipeService.listRecipesBySpace.mockResolvedValue([]);
-
-        result = await usecase.execute({
-          userId,
-          organizationId,
-          spaceId,
-        });
-      });
-
-      it('calls listRecipesBySpace with the space id', () => {
-        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
-          includeDeleted: undefined,
-        });
-      });
-
-      it('returns an empty array', () => {
-        expect(result.recipes).toEqual([]);
-      });
-    });
-
-    describe('when filtering recipes by space', () => {
-      const organizationId = createOrganizationId('org-1');
-      const spaceId = createSpaceId('space-1');
-      const otherSpaceId = createSpaceId('space-2');
-      const userId = createUserId('user-1');
-      let recipeInSpace: ReturnType<typeof recipeFactory>;
-      let orgLevelRecipe: ReturnType<typeof recipeFactory>;
-      let recipeInOtherSpace: ReturnType<typeof recipeFactory>;
-      let result: { recipes: ReturnType<typeof recipeFactory>[] };
-
-      beforeEach(async () => {
-        const organization = {
-          id: organizationId,
-          name: 'Test Org',
-          slug: 'test-org',
-        };
-        const user = {
-          id: userId,
-          email: 'test@example.com',
-          passwordHash: 'hash',
-          active: true,
-          memberships: [
-            {
-              userId,
-              organizationId,
-              role: 'member' as const,
-            },
-          ],
-        };
-        const space: Space = {
-          id: spaceId,
-          name: 'Test Space',
-          slug: 'test-space',
-          organizationId,
-        };
-
-        recipeInSpace = recipeFactory({ spaceId });
-        orgLevelRecipe = recipeFactory({
+        recipe = recipeFactory({
+          id: recipeId,
           spaceId: createSpaceId('space-1'),
         });
-        recipeInOtherSpace = recipeFactory({
-          spaceId: otherSpaceId,
-        });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
-        recipeService.listRecipesBySpace.mockResolvedValue([recipeInSpace]);
+        recipeService.getRecipeById.mockResolvedValue(recipe);
 
         result = await usecase.execute({
           userId,
           organizationId,
           spaceId,
+          recipeId,
         });
       });
 
-      it('returns only recipes from the requested space', () => {
-        expect(result.recipes).toHaveLength(1);
+      it('fetches organization by id', () => {
+        expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
+          organizationId,
+        );
       });
 
-      it('includes the recipe from the requested space', () => {
-        expect(result.recipes).toContainEqual(recipeInSpace);
+      it('fetches user by id', () => {
+        expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
       });
 
-      it('excludes org-level recipes', () => {
-        expect(result.recipes).not.toContainEqual(orgLevelRecipe);
+      it('fetches space by id', () => {
+        expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
       });
 
-      it('excludes recipes from other spaces', () => {
-        expect(result.recipes).not.toContainEqual(recipeInOtherSpace);
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      });
+
+      it('returns the recipe', () => {
+        expect(result.recipe).toEqual(recipe);
       });
     });
 
-    describe('when deduplicating recipes', () => {
+    describe('when recipe does not exist', () => {
       const organizationId = createOrganizationId('org-1');
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
-      let result: { recipes: ReturnType<typeof recipeFactory>[] };
+      const recipeId = createRecipeId('recipe-1');
+
+      let result: { recipe: ReturnType<typeof recipeFactory> | null };
 
       beforeEach(async () => {
         const organization = {
@@ -278,36 +179,34 @@ describe('ListRecipesBySpaceUsecase', () => {
           organizationId,
         };
 
-        const recipeInSpace = recipeFactory({ spaceId });
-
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
-        recipeService.listRecipesBySpace.mockResolvedValue([recipeInSpace]);
+        recipeService.getRecipeById.mockResolvedValue(null);
 
         result = await usecase.execute({
           userId,
           organizationId,
           spaceId,
+          recipeId,
         });
       });
 
-      it('returns recipes without duplicates', () => {
-        expect(result.recipes).toHaveLength(1);
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
       });
 
-      it('contains unique recipe ids', () => {
-        const recipeIds = result.recipes.map((r) => r.id);
-        const uniqueRecipeIds = new Set(recipeIds);
-        expect(recipeIds.length).toBe(uniqueRecipeIds.size);
+      it('returns null', () => {
+        expect(result.recipe).toBeNull();
       });
     });
 
     describe('when user is not found', () => {
-      it('throws User not found error', async () => {
+      it('throws error', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
         accountsAdapter.getUserById.mockResolvedValue(null);
 
@@ -316,16 +215,18 @@ describe('ListRecipesBySpaceUsecase', () => {
             userId,
             organizationId,
             spaceId,
+            recipeId,
           }),
         ).rejects.toThrow('User not found');
       });
     });
 
     describe('when organization is not found', () => {
-      it('throws an error', async () => {
+      it('throws error', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
         const user = {
           id: userId,
@@ -349,16 +250,18 @@ describe('ListRecipesBySpaceUsecase', () => {
             userId,
             organizationId,
             spaceId,
+            recipeId,
           }),
         ).rejects.toThrow();
       });
     });
 
     describe('when space is not found', () => {
-      it('throws Space not found error', async () => {
+      it('throws error', async () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
         const organization = {
           id: organizationId,
@@ -388,17 +291,19 @@ describe('ListRecipesBySpaceUsecase', () => {
             userId,
             organizationId,
             spaceId,
+            recipeId,
           }),
         ).rejects.toThrow(`Space with id ${spaceId} not found`);
       });
     });
 
     describe('when space does not belong to organization', () => {
-      it('throws Space does not belong to organization error', async () => {
+      it('throws error', async () => {
         const organizationId = createOrganizationId('org-1');
         const differentOrgId = createOrganizationId('org-2');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
         const organization = {
           id: organizationId,
@@ -434,9 +339,67 @@ describe('ListRecipesBySpaceUsecase', () => {
             userId,
             organizationId,
             spaceId,
+            recipeId,
           }),
         ).rejects.toThrow(
           `Space ${spaceId} does not belong to organization ${organizationId}`,
+        );
+      });
+    });
+
+    describe('when recipe does not belong to organization', () => {
+      it('throws error', async () => {
+        const organizationId = createOrganizationId('org-1');
+        const spaceId = createSpaceId('space-1');
+        const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
+
+        const organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId,
+              role: 'member' as const,
+            },
+          ],
+        };
+        // Space belongs to the correct organization
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+        // But recipe's spaceId doesn't match the requested spaceId
+        const differentSpaceId = createSpaceId('space-2');
+        const recipe = recipeFactory({
+          id: recipeId,
+          spaceId: differentSpaceId,
+        });
+
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        recipeService.getRecipeById.mockResolvedValue(recipe);
+
+        await expect(
+          usecase.execute({
+            userId,
+            organizationId,
+            spaceId,
+            recipeId,
+          }),
+        ).rejects.toThrow(
+          `Recipe ${recipeId} does not belong to space ${spaceId}`,
         );
       });
     });
@@ -450,6 +413,7 @@ describe('ListRecipesBySpaceUsecase', () => {
         const organizationId = createOrganizationId('org-1');
         const spaceId = createSpaceId('space-1');
         const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
         const organization = {
           id: organizationId,
@@ -485,19 +449,20 @@ describe('ListRecipesBySpaceUsecase', () => {
             userId,
             organizationId,
             spaceId,
+            recipeId,
           }),
         ).rejects.toThrow(SpaceMembershipRequiredError);
       });
     });
 
-    describe('when includeDeleted is true', () => {
-      const organizationId = createOrganizationId('org-1');
-      const spaceId = createSpaceId('space-1');
-      const userId = createUserId('user-1');
-      let spaceRecipes: ReturnType<typeof recipeFactory>[];
-      let result: { recipes: ReturnType<typeof recipeFactory>[] };
+    describe('when recipe does not belong to space', () => {
+      it('throws error for recipe with different spaceId', async () => {
+        const organizationId = createOrganizationId('org-1');
+        const spaceId = createSpaceId('space-1');
+        const differentSpaceId = createSpaceId('space-2');
+        const userId = createUserId('user-1');
+        const recipeId = createRecipeId('recipe-1');
 
-      beforeEach(async () => {
         const organization = {
           id: organizationId,
           name: 'Test Org',
@@ -522,30 +487,160 @@ describe('ListRecipesBySpaceUsecase', () => {
           slug: 'test-space',
           organizationId,
         };
-
-        spaceRecipes = [recipeFactory({ spaceId }), recipeFactory({ spaceId })];
+        const recipe = recipeFactory({
+          id: recipeId,
+          spaceId: differentSpaceId,
+        });
 
         accountsAdapter.getOrganizationById.mockResolvedValue(organization);
         accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
-        recipeService.listRecipesBySpace.mockResolvedValue(spaceRecipes);
+        recipeService.getRecipeById.mockResolvedValue(recipe);
 
-        result = await usecase.execute({
-          userId,
-          organizationId,
-          spaceId,
-          includeDeleted: true,
-        });
+        await expect(
+          usecase.execute({
+            userId,
+            organizationId,
+            spaceId,
+            recipeId,
+          }),
+        ).rejects.toThrow(
+          `Recipe ${recipeId} does not belong to space ${spaceId}`,
+        );
+      });
+    });
+
+    it('returns recipe with matching spaceId', async () => {
+      const organizationId = createOrganizationId('org-1');
+      const spaceId = createSpaceId('space-1');
+      const userId = createUserId('user-1');
+      const recipeId = createRecipeId('recipe-1');
+
+      const organization = {
+        id: organizationId,
+        name: 'Test Org',
+        slug: 'test-org',
+      };
+      const user = {
+        id: userId,
+        email: 'test@example.com',
+        passwordHash: 'hash',
+        active: true,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'member' as const,
+          },
+        ],
+      };
+      const space: Space = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+      const recipe = recipeFactory({
+        id: recipeId,
+        spaceId,
       });
 
-      it('passes includeDeleted option to service', () => {
-        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
-          includeDeleted: true,
-        });
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      recipeService.getRecipeById.mockResolvedValue(recipe);
+
+      const result = await usecase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        recipeId,
       });
 
-      it('returns the recipes from the space', () => {
-        expect(result.recipes).toEqual(spaceRecipes);
+      expect(result.recipe).toEqual(recipe);
+    });
+
+    it('returns organization-level recipe (null spaceId)', async () => {
+      const organizationId = createOrganizationId('org-1');
+      const spaceId = createSpaceId('space-1');
+      const userId = createUserId('user-1');
+      const recipeId = createRecipeId('recipe-1');
+
+      const organization = {
+        id: organizationId,
+        name: 'Test Org',
+        slug: 'test-org',
+      };
+      const user = {
+        id: userId,
+        email: 'test@example.com',
+        passwordHash: 'hash',
+        active: true,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'member' as const,
+          },
+        ],
+      };
+      const space: Space = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+      const recipe = recipeFactory({
+        id: recipeId,
+        spaceId: createSpaceId('space-1'),
+      });
+
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      recipeService.getRecipeById.mockResolvedValue(recipe);
+
+      const result = await usecase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        recipeId,
+      });
+
+      expect(result.recipe).toEqual(recipe);
+    });
+  });
+
+  describe('getRecipeById (legacy internal method)', () => {
+    describe('when recipe exists', () => {
+      const recipeId = createRecipeId('recipe-1');
+      let recipe: ReturnType<typeof recipeFactory>;
+      let result: ReturnType<typeof recipeFactory> | null;
+
+      beforeEach(async () => {
+        recipe = recipeFactory({ id: recipeId });
+        recipeService.getRecipeById.mockResolvedValue(recipe);
+        result = await usecase.getRecipeById(recipeId);
+      });
+
+      it('returns the recipe', () => {
+        expect(result).toEqual(recipe);
+      });
+
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      });
+    });
+
+    describe('when recipe does not exist', () => {
+      it('returns null', async () => {
+        const recipeId = createRecipeId('recipe-1');
+
+        recipeService.getRecipeById.mockResolvedValue(null);
+
+        const result = await usecase.getRecipeById(recipeId);
+
+        expect(result).toBeNull();
       });
     });
   });

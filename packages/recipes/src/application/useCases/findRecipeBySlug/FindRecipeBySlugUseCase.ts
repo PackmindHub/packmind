@@ -2,9 +2,9 @@ import { RecipeService } from '../../services/RecipeService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { OrganizationId, QueryOption, Recipe } from '@packmind/types';
 
-const origin = 'FindRecipeBySlugUsecase';
+const origin = 'FindRecipeBySlugUseCase';
 
-export class FindRecipeBySlugUsecase {
+export class FindRecipeBySlugUseCase {
   constructor(
     private readonly recipeService: RecipeService,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -12,7 +12,7 @@ export class FindRecipeBySlugUsecase {
       LogLevel.DEBUG,
     ),
   ) {
-    this.logger.info('FindRecipeBySlugUsecase initialized');
+    this.logger.info('FindRecipeBySlugUseCase initialized');
   }
 
   public async findRecipeBySlug(

@@ -26,9 +26,9 @@ import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 
-const origin = 'CaptureRecipeUsecase';
+const origin = 'CaptureRecipeUseCase';
 
-export class CaptureRecipeUsecase
+export class CaptureRecipeUseCase
   extends AbstractSpaceMemberUseCase<
     CaptureRecipeCommand,
     CaptureRecipeResponse
@@ -44,7 +44,7 @@ export class CaptureRecipeUsecase
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(spacesPort, accountsPort, new PackmindLogger(origin));
-    this.logger.info('CaptureRecipeUsecase initialized');
+    this.logger.info('CaptureRecipeUseCase initialized');
   }
 
   protected async executeForSpaceMembers(

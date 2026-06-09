@@ -17,9 +17,9 @@ import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 
-const origin = 'UpdateRecipeFromUIUsecase';
+const origin = 'UpdateRecipeFromUIUseCase';
 
-export class UpdateRecipeFromUIUsecase
+export class UpdateRecipeFromUIUseCase
   extends AbstractSpaceMemberUseCase<
     UpdateRecipeFromUICommand,
     UpdateRecipeFromUIResponse
@@ -35,7 +35,7 @@ export class UpdateRecipeFromUIUsecase
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(spacesPort, accountsPort, new PackmindLogger(origin));
-    this.logger.info('UpdateRecipeFromUIUsecase initialized');
+    this.logger.info('UpdateRecipeFromUIUseCase initialized');
   }
 
   protected async executeForSpaceMembers(

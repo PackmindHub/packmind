@@ -14,9 +14,9 @@ import {
 } from '@packmind/types';
 import { RecipeService } from '../../services/RecipeService';
 
-const origin = 'GetRecipeByIdUsecase';
+const origin = 'GetRecipeByIdUseCase';
 
-export class GetRecipeByIdUsecase
+export class GetRecipeByIdUseCase
   extends AbstractSpaceMemberUseCase<
     GetRecipeByIdCommand,
     GetRecipeByIdResponse
@@ -30,7 +30,7 @@ export class GetRecipeByIdUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
-    this.logger.info('GetRecipeByIdUsecase initialized');
+    this.logger.info('GetRecipeByIdUseCase initialized');
   }
 
   async executeForSpaceMembers(

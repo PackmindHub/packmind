@@ -9,11 +9,11 @@ import {
 } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import {
-  BaseUpdateRecipesFromWebhookUsecase,
+  BaseUpdateRecipesFromWebhookUseCase,
   CommonRepoData,
-} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUsecase';
+} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUseCase';
 
-const origin = 'UpdateRecipesFromGitLabUsecase';
+const origin = 'UpdateRecipesFromGitLabUseCase';
 
 interface GitLabWebhookPayload {
   object_kind: string;
@@ -26,8 +26,8 @@ interface GitLabWebhookPayload {
   };
 }
 
-export class UpdateRecipesFromGitLabUsecase
-  extends BaseUpdateRecipesFromWebhookUsecase
+export class UpdateRecipesFromGitLabUseCase
+  extends BaseUpdateRecipesFromWebhookUseCase
   implements IUpdateRecipesFromGitLabUseCase
 {
   constructor(

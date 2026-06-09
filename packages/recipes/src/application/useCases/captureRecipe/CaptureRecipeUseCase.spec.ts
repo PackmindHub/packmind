@@ -31,15 +31,15 @@ import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { CaptureRecipeUsecase } from './CaptureRecipeUsecase';
+import { CaptureRecipeUseCase } from './CaptureRecipeUseCase';
 
 // Mock external dependencies
 jest.mock('slug');
 
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
-describe('CaptureRecipeUsecase', () => {
-  let captureRecipeUsecase: CaptureRecipeUsecase;
+describe('CaptureRecipeUseCase', () => {
+  let captureRecipeUsecase: CaptureRecipeUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
@@ -99,7 +99,7 @@ describe('CaptureRecipeUsecase', () => {
     // Default: no existing recipes (can be overridden in individual tests)
     recipeService.listRecipesBySpace.mockResolvedValue([]);
 
-    captureRecipeUsecase = new CaptureRecipeUsecase(
+    captureRecipeUsecase = new CaptureRecipeUseCase(
       spacesPort,
       accountsPort,
       recipeService,

@@ -1,16 +1,16 @@
 // Re-export all use cases
-export { CaptureRecipeUsecase } from './captureRecipe/CaptureRecipeUsecase';
-export { UpdateRecipesFromGitHubUsecase } from './updateRecipesFromGitHub/UpdateRecipesFromGitHubUsecase';
-export { UpdateRecipesFromGitLabUsecase } from './updateRecipesFromGitLab/UpdateRecipesFromGitLabUsecase';
-export { UpdateRecipeFromUIUsecase } from './updateRecipeFromUI/UpdateRecipeFromUIUsecase';
-export { DeleteRecipeUsecase } from './deleteRecipe/DeleteRecipeUsecase';
-export { GetRecipeByIdUsecase } from './getRecipeById/GetRecipeByIdUsecase';
-export { FindRecipeBySlugUsecase } from './findRecipeBySlug/FindRecipeBySlugUsecase';
-export { ListRecipesBySpaceUsecase } from './listRecipesBySpace/ListRecipesBySpaceUsecase';
-export { ListRecipeVersionsUsecase } from './listRecipeVersions/ListRecipeVersionsUsecase';
-export { GetRecipeVersionUsecase } from './getRecipeVersion/GetRecipeVersionUsecase';
-export { DeleteRecipesBatchUsecase } from './deleteRecipesBatch/DeleteRecipesBatchUsecase';
-export { BaseUpdateRecipesFromWebhookUsecase } from './updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUsecase';
+export { CaptureRecipeUseCase } from './captureRecipe/CaptureRecipeUseCase';
+export { UpdateRecipesFromGitHubUseCase } from './updateRecipesFromGitHub/UpdateRecipesFromGitHubUseCase';
+export { UpdateRecipesFromGitLabUseCase } from './updateRecipesFromGitLab/UpdateRecipesFromGitLabUseCase';
+export { UpdateRecipeFromUIUseCase } from './updateRecipeFromUI/UpdateRecipeFromUIUseCase';
+export { DeleteRecipeUseCase } from './deleteRecipe/DeleteRecipeUseCase';
+export { GetRecipeByIdUseCase } from './getRecipeById/GetRecipeByIdUseCase';
+export { FindRecipeBySlugUseCase } from './findRecipeBySlug/FindRecipeBySlugUseCase';
+export { ListRecipesBySpaceUseCase } from './listRecipesBySpace/ListRecipesBySpaceUseCase';
+export { ListRecipeVersionsUseCase } from './listRecipeVersions/ListRecipeVersionsUseCase';
+export { GetRecipeVersionUseCase } from './getRecipeVersion/GetRecipeVersionUseCase';
+export { DeleteRecipesBatchUseCase } from './deleteRecipesBatch/DeleteRecipesBatchUseCase';
+export { BaseUpdateRecipesFromWebhookUseCase } from './updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUseCase';
 
 // Re-export all types from shared for backward compatibility
 export * from '@packmind/node-utils';

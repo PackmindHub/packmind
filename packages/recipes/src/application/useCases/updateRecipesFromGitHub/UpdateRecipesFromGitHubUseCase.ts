@@ -9,11 +9,11 @@ import {
 import { IDeploymentPort } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import {
-  BaseUpdateRecipesFromWebhookUsecase,
+  BaseUpdateRecipesFromWebhookUseCase,
   CommonRepoData,
-} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUsecase';
+} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUseCase';
 
-const origin = 'UpdateRecipesFromGitHubUsecase';
+const origin = 'UpdateRecipesFromGitHubUseCase';
 
 interface GitHubWebhookPayload {
   repository?: {
@@ -25,8 +25,8 @@ interface GitHubWebhookPayload {
   };
 }
 
-export class UpdateRecipesFromGitHubUsecase
-  extends BaseUpdateRecipesFromWebhookUsecase
+export class UpdateRecipesFromGitHubUseCase
+  extends BaseUpdateRecipesFromWebhookUseCase
   implements IUpdateRecipesFromGitHubUseCase
 {
   constructor(

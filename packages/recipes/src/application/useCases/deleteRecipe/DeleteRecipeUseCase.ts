@@ -18,9 +18,9 @@ import {
   UserId,
 } from '@packmind/types';
 
-const origin = 'DeleteRecipeUsecase';
+const origin = 'DeleteRecipeUseCase';
 
-export class DeleteRecipeUsecase
+export class DeleteRecipeUseCase
   extends AbstractSpaceMemberUseCase<DeleteRecipeCommand, DeleteRecipeResponse>
   implements IDeleteRecipeUseCase
 {
@@ -33,7 +33,7 @@ export class DeleteRecipeUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('DeleteRecipeUsecase initialized');
+    this.logger.info('DeleteRecipeUseCase initialized');
   }
 
   protected async executeForSpaceMembers(

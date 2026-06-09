@@ -11,11 +11,11 @@ import {
   createOrganizationId,
   createSpaceId,
 } from '@packmind/types';
-import { CaptureRecipeUsecase } from '../captureRecipe/CaptureRecipeUsecase';
+import { CaptureRecipeUseCase } from '../captureRecipe/CaptureRecipeUseCase';
 
-const origin = 'CaptureRecipeWithPackagesUsecase';
+const origin = 'CaptureRecipeWithPackagesUseCase';
 
-export class CaptureRecipeWithPackagesUsecase
+export class CaptureRecipeWithPackagesUseCase
   extends AbstractMemberUseCase<
     CaptureRecipeWithPackagesCommand,
     CaptureRecipeWithPackagesResponse
@@ -24,12 +24,12 @@ export class CaptureRecipeWithPackagesUsecase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly captureRecipeUsecase: CaptureRecipeUsecase,
+    private readonly captureRecipeUsecase: CaptureRecipeUseCase,
     private readonly deploymentsPort: IDeploymentPort,
     private readonly spacesPort: ISpacesPort,
   ) {
     super(accountsPort, new PackmindLogger(origin));
-    this.logger.info('CaptureRecipeWithPackagesUsecase initialized');
+    this.logger.info('CaptureRecipeWithPackagesUseCase initialized');
   }
 
   async executeForMembers(
@@ -67,7 +67,7 @@ export class CaptureRecipeWithPackagesUsecase
       );
     }
 
-    // Step 2: Create the recipe using CaptureRecipeUsecase
+    // Step 2: Create the recipe using CaptureRecipeUseCase
     this.logger.info('Capturing recipe', { name });
     const recipe = await this.captureRecipeUsecase.execute({
       name,

@@ -2,9 +2,9 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { RecipeId, RecipeVersion } from '@packmind/types';
 
-const origin = 'ListRecipeVersionsUsecase';
+const origin = 'ListRecipeVersionsUseCase';
 
-export class ListRecipeVersionsUsecase {
+export class ListRecipeVersionsUseCase {
   constructor(
     private readonly recipeVersionService: RecipeVersionService,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -12,7 +12,7 @@ export class ListRecipeVersionsUsecase {
       LogLevel.DEBUG,
     ),
   ) {
-    this.logger.info('ListRecipeVersionsUsecase initialized');
+    this.logger.info('ListRecipeVersionsUseCase initialized');
   }
 
   public async listRecipeVersions(

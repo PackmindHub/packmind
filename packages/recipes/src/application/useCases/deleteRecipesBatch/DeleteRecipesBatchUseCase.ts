@@ -1,4 +1,4 @@
-import { DeleteRecipeUsecase } from '../deleteRecipe/DeleteRecipeUsecase';
+import { DeleteRecipeUseCase } from '../deleteRecipe/DeleteRecipeUseCase';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   DeleteRecipesBatchCommand,
@@ -6,17 +6,17 @@ import {
   IDeleteRecipesBatchUseCase,
 } from '@packmind/types';
 
-const origin = 'DeleteRecipesBatchUsecase';
+const origin = 'DeleteRecipesBatchUseCase';
 
-export class DeleteRecipesBatchUsecase implements IDeleteRecipesBatchUseCase {
+export class DeleteRecipesBatchUseCase implements IDeleteRecipesBatchUseCase {
   constructor(
-    private readonly deleteRecipeUsecase: DeleteRecipeUsecase,
+    private readonly deleteRecipeUsecase: DeleteRecipeUseCase,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
     ),
   ) {
-    this.logger.info('DeleteRecipesBatchUsecase initialized');
+    this.logger.info('DeleteRecipesBatchUseCase initialized');
   }
 
   public async execute(

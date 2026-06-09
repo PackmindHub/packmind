@@ -24,10 +24,10 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { DeleteRecipeUsecase } from './DeleteRecipeUsecase';
+import { DeleteRecipeUseCase } from './DeleteRecipeUseCase';
 
-describe('DeleteRecipeUsecase', () => {
-  let deleteRecipeUsecase: DeleteRecipeUsecase;
+describe('DeleteRecipeUseCase', () => {
+  let deleteRecipeUsecase: DeleteRecipeUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
@@ -70,7 +70,7 @@ describe('DeleteRecipeUsecase', () => {
 
     stubLogger();
 
-    deleteRecipeUsecase = new DeleteRecipeUsecase(
+    deleteRecipeUsecase = new DeleteRecipeUseCase(
       spacesPort,
       accountsPort,
       recipeService,

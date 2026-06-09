@@ -14,7 +14,7 @@ export interface CommonRepoData {
   name: string;
 }
 
-export abstract class BaseUpdateRecipesFromWebhookUsecase {
+export abstract class BaseUpdateRecipesFromWebhookUseCase {
   protected recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   constructor(
