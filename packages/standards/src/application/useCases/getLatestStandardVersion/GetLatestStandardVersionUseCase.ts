@@ -1,0 +1,40 @@
+import { StandardVersionService } from '../../services/StandardVersionService';
+import { StandardVersion } from '@packmind/types';
+import { StandardId } from '@packmind/types';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+
+const origin = 'GetLatestStandardVersionUseCase';
+
+export class GetLatestStandardVersionUseCase {
+  constructor(
+    private readonly standardVersionService: StandardVersionService,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.DEBUG,
+    ),
+  ) {
+    this.logger.info('GetLatestStandardVersionUseCase initialized');
+  }
+
+  public async getLatestStandardVersion(
+    standardId: StandardId,
+  ): Promise<StandardVersion | null> {
+    this.logger.info('Getting latest standard version', { standardId });
+
+    try {
+      const standardVersion =
+        await this.standardVersionService.getLatestStandardVersion(standardId);
+      this.logger.info('Latest standard version retrieved successfully', {
+        standardId,
+        found: !!standardVersion,
+      });
+      return standardVersion;
+    } catch (error) {
+      this.logger.error('Failed to get latest standard version', {
+        standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+}

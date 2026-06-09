@@ -4,7 +4,7 @@ import { ISpacesPort } from '@packmind/types';
 import { GenerateStandardSummaryInput } from '../../domain/jobs/GenerateStandardSummary';
 import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/GenerateStandardSummaryDelayedJob';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { UpdateStandardVersionSummaryUsecase } from '../../application/useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
+import { UpdateStandardVersionSummaryUseCase } from '../../application/useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUseCase';
 import { StandardSummaryService } from '../../application/services/StandardSummaryService';
 import { StandardVersionService } from '../../application/services/StandardVersionService';
 
@@ -26,7 +26,7 @@ export class GenerateStandardSummaryJobFactory implements IJobFactory<GenerateSt
 
     this._delayedJob = new GenerateStandardSummaryDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
-      new UpdateStandardVersionSummaryUsecase(this.standardsRepositories),
+      new UpdateStandardVersionSummaryUseCase(this.standardsRepositories),
       this.standardSummaryService,
       this.standardVersionService,
       this.spacesPort,
