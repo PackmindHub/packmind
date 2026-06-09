@@ -21,7 +21,7 @@
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
     "@packmind/playbook-change-management": "*",
-    "uuid": "11.1.1",
+    "uuid": "^11.1.0",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*",
     "@packmind/linter": "*",
