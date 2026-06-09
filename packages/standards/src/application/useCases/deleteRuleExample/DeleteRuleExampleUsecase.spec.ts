@@ -24,7 +24,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
-import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
+import { DeleteRuleExampleUsecase } from './DeleteRuleExampleUsecase';
 
 describe('DeleteRuleExampleUsecase', () => {
   let usecase: DeleteRuleExampleUsecase;

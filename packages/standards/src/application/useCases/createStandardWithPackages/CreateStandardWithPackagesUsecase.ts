@@ -14,7 +14,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { CreateStandardWithExamplesUsecase } from '../createStandardWithExamples/createStandardWithExamples.usecase';
+import { CreateStandardWithExamplesUsecase } from '../createStandardWithExamples/CreateStandardWithExamplesUsecase';
 
 const origin = 'CreateStandardWithPackagesUsecase';
 

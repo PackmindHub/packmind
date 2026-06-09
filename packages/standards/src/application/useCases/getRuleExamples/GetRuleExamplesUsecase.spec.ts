@@ -1,7 +1,7 @@
 import {
   GetRuleExamplesRequest,
   GetRuleExamplesUsecase,
-} from './getRuleExamples.usecase';
+} from './GetRuleExamplesUsecase';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { ruleExampleFactory } from '../../../../test/ruleExampleFactory';

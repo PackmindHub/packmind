@@ -32,7 +32,7 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { CreateStandardUsecase } from './createStandard.usecase';
+import { CreateStandardUsecase } from './CreateStandardUsecase';
 
 // Mock external dependencies
 jest.mock('slug');

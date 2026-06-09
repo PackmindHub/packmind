@@ -14,7 +14,7 @@ import {
 } from '../../domain/jobs/GenerateStandardSummary';
 import { StandardSummaryService } from '../services/StandardSummaryService';
 import { StandardVersionService } from '../services/StandardVersionService';
-import { UpdateStandardVersionSummaryUsecase } from '../useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
+import { UpdateStandardVersionSummaryUsecase } from '../useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUsecase';
 
 const logOrigin = 'GenerateStandardSummaryDelayedJob';
 

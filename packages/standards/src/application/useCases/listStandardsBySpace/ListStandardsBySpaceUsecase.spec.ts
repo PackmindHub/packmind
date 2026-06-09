@@ -15,7 +15,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
 import { StandardService } from '../../services/StandardService';
-import { ListStandardsBySpaceUsecase } from './listStandardsBySpace.usecase';
+import { ListStandardsBySpaceUsecase } from './ListStandardsBySpaceUsecase';
 
 describe('ListStandardsBySpaceUsecase', () => {
   let usecase: ListStandardsBySpaceUsecase;

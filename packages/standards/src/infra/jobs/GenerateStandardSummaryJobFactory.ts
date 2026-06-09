@@ -4,7 +4,7 @@ import { ISpacesPort } from '@packmind/types';
 import { GenerateStandardSummaryInput } from '../../domain/jobs/GenerateStandardSummary';
 import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/GenerateStandardSummaryDelayedJob';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { UpdateStandardVersionSummaryUsecase } from '../../application/useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
+import { UpdateStandardVersionSummaryUsecase } from '../../application/useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUsecase';
 import { StandardSummaryService } from '../../application/services/StandardSummaryService';
 import { StandardVersionService } from '../../application/services/StandardVersionService';
 

@@ -1,4 +1,4 @@
-import { AddRuleToStandardUsecase } from './addRuleToStandard.usecase';
+import { AddRuleToStandardUsecase } from './AddRuleToStandardUsecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';

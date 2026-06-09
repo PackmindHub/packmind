@@ -2,7 +2,7 @@ import {
   PackmindEventEmitterService,
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
-import { UpdateStandardUsecase } from './updateStandard.usecase';
+import { UpdateStandardUsecase } from './UpdateStandardUsecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';

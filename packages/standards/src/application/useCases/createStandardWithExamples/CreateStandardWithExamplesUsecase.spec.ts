@@ -24,7 +24,7 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardService } from '../../services/StandardService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { CreateStandardWithExamplesUsecase } from './createStandardWithExamples.usecase';
+import { CreateStandardWithExamplesUsecase } from './CreateStandardWithExamplesUsecase';
 
 describe('CreateStandardWithExamplesUsecase', () => {
   let usecase: CreateStandardWithExamplesUsecase;

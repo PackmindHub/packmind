@@ -25,7 +25,7 @@ import { RuleNotInSpaceError } from '../../../domain/errors/RuleNotInSpaceError'
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
-import { CreateRuleExampleUsecase } from './createRuleExample.usecase';
+import { CreateRuleExampleUsecase } from './CreateRuleExampleUsecase';
 
 describe('CreateRuleExampleUsecase', () => {
   let createRuleExampleUsecase: CreateRuleExampleUsecase;

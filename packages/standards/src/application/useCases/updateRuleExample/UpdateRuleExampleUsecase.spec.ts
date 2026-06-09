@@ -25,7 +25,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
-import { UpdateRuleExampleUsecase } from './updateRuleExample.usecase';
+import { UpdateRuleExampleUsecase } from './UpdateRuleExampleUsecase';
 
 describe('UpdateRuleExampleUsecase', () => {
   let usecase: UpdateRuleExampleUsecase;

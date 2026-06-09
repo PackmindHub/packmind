@@ -23,7 +23,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
 import * as samplesModule from '../../../../samples';
-import { CreateStandardSamplesUsecase } from './createStandardSamples.usecase';
+import { CreateStandardSamplesUsecase } from './CreateStandardSamplesUsecase';
 
 jest.mock('../../../../samples');
 
