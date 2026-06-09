@@ -363,9 +363,9 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
   return (
     <>
       <PMDrawer.Header borderBottom="1px solid" borderColor="border.tertiary">
-        <PMHStack gap={3} align="center">
+        <PMHStack gap={3} align="center" width="100%" minW={0}>
           <VendorMark vendor={connection.source} size="md" showLabel={false} />
-          <PMVStack gap={0.5} align="start" flex={1} minW={0}>
+          <PMVStack gap={0.5} align="stretch" flex={1} minW={0}>
             <PMHeading
               level="h4"
               truncate
