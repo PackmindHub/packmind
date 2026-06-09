@@ -59,10 +59,10 @@ import {
   UpdateActiveDetectionProgramSeverityCommand,
   UpdateActiveDetectionProgramSeverityResponse,
 } from '@packmind/types';
-import { LinterUsecases } from '.';
+import { LinterUseCases } from '.';
 
 export class LinterAdapter implements ILinterPort {
-  constructor(private readonly linterUsecases: LinterUsecases) {}
+  constructor(private readonly linterUseCases: LinterUseCases) {}
 
   createDetectionProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

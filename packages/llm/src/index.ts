@@ -9,7 +9,7 @@ export { AnthropicService } from './infra/services/AnthropicService';
 export { GeminiService } from './infra/services/GeminiService';
 export { AzureOpenAIService } from './infra/services/AzureOpenAIService';
 export { PackmindService } from './infra/services/PackmindService';
-export { GetAiServiceForOrganizationUseCase } from './application/useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
+export { GetAiServiceForOrganizationUseCase } from './application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase';
 export { createLLMService } from './factories/createLLMService';
 export type {
   LLMServiceConfig,

@@ -12,7 +12,7 @@ import {
   FetchFileContentOutput,
 } from '../../domain/jobs/FetchFileContent';
 import { GitRepoService } from '../GitRepoService';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
 
 const logOrigin = 'FetchFileContentDelayedJob';
 
@@ -40,7 +40,7 @@ export class FetchFileContentDelayedJob extends AbstractAIDelayedJob<
       queueListeners: Partial<QueueListeners>,
     ) => Promise<IQueue<FetchFileContentInput, FetchFileContentOutput>>,
     private readonly gitRepoService: GitRepoService,
-    private readonly getFileFromRepo: GetFileFromRepo,
+    private readonly getFileFromRepo: GetFileFromRepoUseCase,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);

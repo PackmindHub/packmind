@@ -14,7 +14,7 @@ import {
 } from '../../domain/jobs/GenerateStandardSummary';
 import { StandardSummaryService } from '../services/StandardSummaryService';
 import { StandardVersionService } from '../services/StandardVersionService';
-import { UpdateStandardVersionSummaryUsecase } from '../useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
+import { UpdateStandardVersionSummaryUseCase } from '../useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUseCase';
 
 const logOrigin = 'GenerateStandardSummaryDelayedJob';
 
@@ -30,7 +30,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
     ) => Promise<
       IQueue<GenerateStandardSummaryInput, GenerateStandardSummaryOutput>
     >,
-    private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUsecase,
+    private readonly _updateStandardVersionSummaryUseCase: UpdateStandardVersionSummaryUseCase,
     private readonly _standardSummaryService: StandardSummaryService,
     private readonly _standardVersionService: StandardVersionService,
     private readonly _spacesPort: ISpacesPort,
@@ -173,7 +173,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
   private async updateSummaryForStandardVersionId(
     result: GenerateStandardSummaryOutput,
   ) {
-    await this._updateStandardVersionSummaryUsecase.execute({
+    await this._updateStandardVersionSummaryUseCase.execute({
       organizationId: result.organizationId,
       standardVersionId: result.standardVersion.id,
       summary: result.summary,

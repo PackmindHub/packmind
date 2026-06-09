@@ -1,1 +1,1 @@
-export { GetLLMConfigurationUseCase } from './getLLMConfiguration.usecase';
+export { GetLLMConfigurationUseCase } from './GetLLMConfigurationUseCase';

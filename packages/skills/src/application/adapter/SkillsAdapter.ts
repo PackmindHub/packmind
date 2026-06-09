@@ -41,19 +41,19 @@ import {
 } from '@packmind/types';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
 import { SkillsServices } from '../services/SkillsServices';
-import { CreateSkillUsecase } from '../useCases/createSkill/createSkill.usecase';
-import { DeleteSkillUsecase } from '../useCases/deleteSkill/deleteSkill.usecase';
-import { DeleteSkillsBatchUsecase } from '../useCases/deleteSkillsBatch/deleteSkillsBatch.usecase';
-import { FindSkillBySlugUsecase } from '../useCases/findSkillBySlug/findSkillBySlug.usecase';
-import { GetLatestSkillVersionUsecase } from '../useCases/getLatestSkillVersion/getLatestSkillVersion.usecase';
-import { GetSkillByIdUsecase } from '../useCases/getSkillById/getSkillById.usecase';
-import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/getSkillVersion.usecase';
-import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/getSkillWithFiles.usecase';
-import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
-import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/listSkillVersions.usecase';
-import { SaveSkillVersionUsecase } from '../useCases/saveSkillVersion/saveSkillVersion.usecase';
-import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
-import { UploadSkillUseCase } from '../useCases/uploadSkill/uploadSkill.usecase';
+import { CreateSkillUseCase } from '../useCases/createSkill/CreateSkillUseCase';
+import { DeleteSkillUseCase } from '../useCases/deleteSkill/DeleteSkillUseCase';
+import { DeleteSkillsBatchUseCase } from '../useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase';
+import { FindSkillBySlugUseCase } from '../useCases/findSkillBySlug/FindSkillBySlugUseCase';
+import { GetLatestSkillVersionUseCase } from '../useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase';
+import { GetSkillByIdUseCase } from '../useCases/getSkillById/GetSkillByIdUseCase';
+import { GetSkillVersionUseCase } from '../useCases/getSkillVersion/GetSkillVersionUseCase';
+import { GetSkillWithFilesUseCase } from '../useCases/getSkillWithFiles/GetSkillWithFilesUseCase';
+import { ListSkillsBySpaceUseCase } from '../useCases/listSkillsBySpace/ListSkillsBySpaceUseCase';
+import { ListSkillVersionsUseCase } from '../useCases/listSkillVersions/ListSkillVersionsUseCase';
+import { SaveSkillVersionUseCase } from '../useCases/saveSkillVersion/SaveSkillVersionUseCase';
+import { UpdateSkillUseCase } from '../useCases/updateSkill/UpdateSkillUseCase';
+import { UploadSkillUseCase } from '../useCases/uploadSkill/UploadSkillUseCase';
 
 const origin = 'SkillsAdapter';
 
@@ -63,19 +63,19 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   private eventEmitterService: PackmindEventEmitterService | null = null;
 
   // Use cases - all initialized in initialize()
-  private _createSkill!: CreateSkillUsecase;
+  private _createSkill!: CreateSkillUseCase;
   private _uploadSkill!: UploadSkillUseCase;
-  private _updateSkill!: UpdateSkillUsecase;
-  private _deleteSkill!: DeleteSkillUsecase;
-  private _deleteSkillsBatch!: DeleteSkillsBatchUsecase;
-  private _getSkillById!: GetSkillByIdUsecase;
-  private _getSkillWithFiles!: GetSkillWithFilesUsecase;
-  private _findSkillBySlug!: FindSkillBySlugUsecase;
-  private _listSkillsBySpace!: ListSkillsBySpaceUsecase;
-  private _getSkillVersion!: GetSkillVersionUsecase;
-  private _getLatestSkillVersion!: GetLatestSkillVersionUsecase;
-  private _listSkillVersions!: ListSkillVersionsUsecase;
-  private _saveSkillVersion!: SaveSkillVersionUsecase;
+  private _updateSkill!: UpdateSkillUseCase;
+  private _deleteSkill!: DeleteSkillUseCase;
+  private _deleteSkillsBatch!: DeleteSkillsBatchUseCase;
+  private _getSkillById!: GetSkillByIdUseCase;
+  private _getSkillWithFiles!: GetSkillWithFilesUseCase;
+  private _findSkillBySlug!: FindSkillBySlugUseCase;
+  private _listSkillsBySpace!: ListSkillsBySpaceUseCase;
+  private _getSkillVersion!: GetSkillVersionUseCase;
+  private _getLatestSkillVersion!: GetLatestSkillVersionUseCase;
+  private _listSkillVersions!: ListSkillVersionsUseCase;
+  private _saveSkillVersion!: SaveSkillVersionUseCase;
 
   constructor(
     private readonly services: SkillsServices,
@@ -109,7 +109,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     }
 
     // Create all use cases with non-null dependencies
-    this._createSkill = new CreateSkillUsecase(
+    this._createSkill = new CreateSkillUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
@@ -126,7 +126,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.eventEmitterService,
     );
 
-    this._updateSkill = new UpdateSkillUsecase(
+    this._updateSkill = new UpdateSkillUseCase(
       this.accountsPort,
       this.spacesPort,
       this.services.getSkillService(),
@@ -134,66 +134,66 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.eventEmitterService,
     );
 
-    this._deleteSkill = new DeleteSkillUsecase(
+    this._deleteSkill = new DeleteSkillUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
       this.eventEmitterService,
     );
 
-    this._deleteSkillsBatch = new DeleteSkillsBatchUsecase(
+    this._deleteSkillsBatch = new DeleteSkillsBatchUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
       this.eventEmitterService,
     );
 
-    this._getSkillById = new GetSkillByIdUsecase(
+    this._getSkillById = new GetSkillByIdUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
     );
 
-    this._getSkillWithFiles = new GetSkillWithFilesUsecase(
+    this._getSkillWithFiles = new GetSkillWithFilesUseCase(
       this.accountsPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.services.getSkillFileService(),
     );
 
-    this._findSkillBySlug = new FindSkillBySlugUsecase(
+    this._findSkillBySlug = new FindSkillBySlugUseCase(
       this.accountsPort,
       this.services.getSkillService(),
       this.spacesPort,
     );
 
-    this._listSkillsBySpace = new ListSkillsBySpaceUsecase(
+    this._listSkillsBySpace = new ListSkillsBySpaceUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getSkillService(),
     );
 
-    this._getSkillVersion = new GetSkillVersionUsecase(
+    this._getSkillVersion = new GetSkillVersionUseCase(
       this.accountsPort,
       this.services.getSkillVersionService(),
       this.services.getSkillService(),
       this.spacesPort,
     );
 
-    this._getLatestSkillVersion = new GetLatestSkillVersionUsecase(
+    this._getLatestSkillVersion = new GetLatestSkillVersionUseCase(
       this.accountsPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.spacesPort,
     );
 
-    this._listSkillVersions = new ListSkillVersionsUsecase(
+    this._listSkillVersions = new ListSkillVersionsUseCase(
       this.accountsPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
     );
 
-    this._saveSkillVersion = new SaveSkillVersionUsecase(
+    this._saveSkillVersion = new SaveSkillVersionUseCase(
       this.accountsPort,
       this.spacesPort,
       this.services.getSkillService(),

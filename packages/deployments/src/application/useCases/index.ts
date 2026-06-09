@@ -1,9 +1,9 @@
 // Re-export individual use cases
-export { AddArtefactsToPackageUsecase } from './addArtefactsToPackage/addArtefactsToPackage.usecase';
+export { AddArtefactsToPackageUseCase } from './addArtefactsToPackage/AddArtefactsToPackageUseCase';
 export { AddTargetUseCase } from './AddTargetUseCase';
-export { CreatePackageUsecase } from './createPackage/createPackage.usecase';
+export { CreatePackageUseCase } from './createPackage/CreatePackageUseCase';
 export { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
-export { DeletePackagesBatchUsecase } from './deletePackage/deletePackagesBatch.usecase';
+export { DeletePackagesBatchUseCase } from './deletePackage/DeletePackagesBatchUseCase';
 export { DeleteTargetUseCase } from './DeleteTargetUseCase';
 export { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 export { DownloadDefaultSkillsZipForAgentUseCase } from './DownloadDefaultSkillsZipForAgentUseCase';
@@ -13,7 +13,7 @@ export { ListDistributionsBySkillUseCase } from './ListDistributionsBySkillUseCa
 export { GetTargetsByGitRepoUseCase } from './GetTargetsByGitRepoUseCase';
 export { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 export { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
-export { NotifyDistributionUseCase } from './notifyDistribution/notifyDistribution.usecase';
+export { NotifyDistributionUseCase } from './notifyDistribution/NotifyDistributionUseCase';
 export { PullContentUseCase } from './PullContentUseCase';
 export { RenderPackageAsPluginUseCase } from './renderPackageAsPlugin/RenderPackageAsPluginUseCase';
 export { RemovePackageFromTargetsUseCase } from './RemovePackageFromTargetsUseCase';
