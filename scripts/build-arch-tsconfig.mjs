@@ -35,6 +35,18 @@ if (!fs.existsSync(EFFECTIVE)) {
 
 const effective = JSON.parse(fs.readFileSync(EFFECTIVE, 'utf8'));
 
+// Without compilerOptions.paths the `@packmind/*` aliases cannot be resolved, so
+// ArchUnitTS would build no cross-package edges and the cross-domain rules would
+// pass for the wrong reason (false green). Fail loudly rather than silently.
+const paths = effective.compilerOptions?.paths;
+if (!paths || Object.keys(paths).length === 0) {
+  console.error(
+    `[build-arch-tsconfig] ${path.basename(EFFECTIVE)} has no compilerOptions.paths; ` +
+      'cannot resolve @packmind/* aliases. Aborting to avoid false-green results.',
+  );
+  process.exit(1);
+}
+
 const arch = {
   // NB: self-contained — no `extends`, since ArchUnitTS does not resolve it.
   compilerOptions: {

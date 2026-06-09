@@ -14,7 +14,7 @@ import { ARCH_TSCONFIG, LAYER_GLOBS } from './architecture';
  * test — see the package README for the standards each rule guards.
  */
 describe('Core workflow layering', () => {
-  describe('infrastructure does not depend upward on the application layer', () => {
+  describe('repository implementations do not depend upward on the application layer', () => {
     it('forbids infra/repositories from importing the application layer', async () => {
       const rule = projectFiles(ARCH_TSCONFIG)
         .inPath(LAYER_GLOBS.repositories)
