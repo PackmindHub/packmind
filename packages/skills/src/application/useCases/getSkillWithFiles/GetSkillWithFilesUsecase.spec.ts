@@ -17,7 +17,7 @@ import {
 import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
-import { GetSkillWithFilesUsecase } from './getSkillWithFiles.usecase';
+import { GetSkillWithFilesUsecase } from './GetSkillWithFilesUsecase';
 
 describe('GetSkillWithFilesUsecase', () => {
   let usecase: GetSkillWithFilesUsecase;

@@ -19,7 +19,7 @@ import { skillVersionFactory } from '../../../../test/skillVersionFactory';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillFileService } from '../../services/SkillFileService';
-import { SaveSkillVersionUsecase } from './saveSkillVersion.usecase';
+import { SaveSkillVersionUsecase } from './SaveSkillVersionUsecase';
 
 describe('SaveSkillVersionUsecase', () => {
   let usecase: SaveSkillVersionUsecase;

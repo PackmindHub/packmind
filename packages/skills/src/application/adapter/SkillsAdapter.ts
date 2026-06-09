@@ -41,19 +41,19 @@ import {
 } from '@packmind/types';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
 import { SkillsServices } from '../services/SkillsServices';
-import { CreateSkillUsecase } from '../useCases/createSkill/createSkill.usecase';
-import { DeleteSkillUsecase } from '../useCases/deleteSkill/deleteSkill.usecase';
-import { DeleteSkillsBatchUsecase } from '../useCases/deleteSkillsBatch/deleteSkillsBatch.usecase';
-import { FindSkillBySlugUsecase } from '../useCases/findSkillBySlug/findSkillBySlug.usecase';
-import { GetLatestSkillVersionUsecase } from '../useCases/getLatestSkillVersion/getLatestSkillVersion.usecase';
-import { GetSkillByIdUsecase } from '../useCases/getSkillById/getSkillById.usecase';
-import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/getSkillVersion.usecase';
-import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/getSkillWithFiles.usecase';
-import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
-import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/listSkillVersions.usecase';
-import { SaveSkillVersionUsecase } from '../useCases/saveSkillVersion/saveSkillVersion.usecase';
-import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
-import { UploadSkillUseCase } from '../useCases/uploadSkill/uploadSkill.usecase';
+import { CreateSkillUsecase } from '../useCases/createSkill/CreateSkillUsecase';
+import { DeleteSkillUsecase } from '../useCases/deleteSkill/DeleteSkillUsecase';
+import { DeleteSkillsBatchUsecase } from '../useCases/deleteSkillsBatch/DeleteSkillsBatchUsecase';
+import { FindSkillBySlugUsecase } from '../useCases/findSkillBySlug/FindSkillBySlugUsecase';
+import { GetLatestSkillVersionUsecase } from '../useCases/getLatestSkillVersion/GetLatestSkillVersionUsecase';
+import { GetSkillByIdUsecase } from '../useCases/getSkillById/GetSkillByIdUsecase';
+import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/GetSkillVersionUsecase';
+import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/GetSkillWithFilesUsecase';
+import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/ListSkillsBySpaceUsecase';
+import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/ListSkillVersionsUsecase';
+import { SaveSkillVersionUsecase } from '../useCases/saveSkillVersion/SaveSkillVersionUsecase';
+import { UpdateSkillUsecase } from '../useCases/updateSkill/UpdateSkillUsecase';
+import { UploadSkillUseCase } from '../useCases/uploadSkill/UploadSkillUseCase';
 
 const origin = 'SkillsAdapter';
 

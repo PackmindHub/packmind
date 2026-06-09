@@ -1,4 +1,4 @@
-import { UploadSkillUseCase } from './uploadSkill.usecase';
+import { UploadSkillUseCase } from './UploadSkillUseCase';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';

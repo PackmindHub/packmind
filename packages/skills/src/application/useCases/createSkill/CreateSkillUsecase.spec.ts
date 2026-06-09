@@ -5,27 +5,29 @@ import {
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
-  DeleteSkillsBatchCommand,
+  CreateSkillCommand,
   IAccountsPort,
   ISpacesPort,
   Organization,
   Space,
   User,
   createOrganizationId,
-  createSkillId,
   createSpaceId,
   createUserId,
+  SpaceId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
 import { SkillService } from '../../services/SkillService';
-import { DeleteSkillsBatchUsecase } from './deleteSkillsBatch.usecase';
+import { SkillVersionService } from '../../services/SkillVersionService';
+import { CreateSkillUsecase } from './CreateSkillUsecase';
 
-describe('DeleteSkillsBatchUsecase', () => {
-  let usecase: DeleteSkillsBatchUsecase;
+describe('CreateSkillUsecase', () => {
+  let usecase: CreateSkillUsecase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let skillService: jest.Mocked<SkillService>;
+  let skillVersionService: jest.Mocked<SkillVersionService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -37,13 +39,20 @@ describe('DeleteSkillsBatchUsecase', () => {
 
     spacesPort = {
       getSpaceById: jest.fn(),
+      createSpace: jest.fn(),
+      listSpacesByOrganization: jest.fn(),
+      getSpaceBySlug: jest.fn(),
       findMembership: jest.fn().mockResolvedValue({ role: 'member' }),
     } as jest.Mocked<ISpacesPort>;
 
     skillService = {
-      getSkillById: jest.fn(),
-      deleteSkill: jest.fn(),
+      addSkill: jest.fn(),
+      listSkillsBySpace: jest.fn(),
     } as unknown as jest.Mocked<SkillService>;
+
+    skillVersionService = {
+      addSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<SkillVersionService>;
 
     eventEmitterService = {
       emit: jest.fn(),
@@ -51,10 +60,11 @@ describe('DeleteSkillsBatchUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    usecase = new DeleteSkillsBatchUsecase(
+    usecase = new CreateSkillUsecase(
       spacesPort,
       accountsPort,
       skillService,
+      skillVersionService,
       eventEmitterService,
       stubbedLogger,
     );
@@ -64,17 +74,16 @@ describe('DeleteSkillsBatchUsecase', () => {
     jest.clearAllMocks();
   });
 
-  describe('delete skills batch', () => {
-    describe('with valid skills', () => {
+  describe('create skill', () => {
+    describe('with unique slug in space', () => {
       let userId: string;
       let organizationId: string;
-      let spaceId: string;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
       let space: Space;
-      let command: DeleteSkillsBatchCommand;
-      let skill1: ReturnType<typeof skillFactory>;
-      let skill2: ReturnType<typeof skillFactory>;
+      let command: CreateSkillCommand;
+      let createdSkill: ReturnType<typeof skillFactory>;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
@@ -100,83 +109,140 @@ describe('DeleteSkillsBatchUsecase', () => {
           organizationId,
         };
 
-        skill1 = skillFactory({ spaceId });
-        skill2 = skillFactory({ spaceId });
-
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skill1.id, skill2.id],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+          allowedTools: 'Read,Write',
+          license: 'MIT',
+          compatibility: 'All environments',
+          metadata: { category: 'test' },
         };
+
+        createdSkill = skillFactory({
+          name: command.name,
+          description: command.description,
+          slug: 'test-skill',
+          spaceId,
+          userId,
+          version: 1,
+          prompt: command.prompt,
+          allowedTools: command.allowedTools,
+          license: command.license,
+          compatibility: command.compatibility,
+          metadata: command.metadata,
+        });
 
         accountsPort.getUserById.mockResolvedValue(user);
         accountsPort.getOrganizationById.mockResolvedValue(organization);
         spacesPort.getSpaceById.mockResolvedValue(space);
-        skillService.getSkillById.mockImplementation((id) => {
-          if (id === skill1.id) return Promise.resolve(skill1);
-          if (id === skill2.id) return Promise.resolve(skill2);
-          return Promise.resolve(null);
-        });
-        skillService.deleteSkill.mockResolvedValue(undefined);
+        skillService.listSkillsBySpace.mockResolvedValue([]);
+        skillService.addSkill.mockResolvedValue(createdSkill);
+        skillVersionService.addSkillVersion.mockResolvedValue(
+          undefined as unknown as never,
+        );
       });
 
-      it('retrieves first skill by ID', async () => {
+      it('validates user exists', async () => {
         await usecase.execute(command);
 
-        expect(skillService.getSkillById).toHaveBeenCalledWith(skill1.id);
+        expect(accountsPort.getUserById).toHaveBeenCalledWith(userId);
       });
 
-      it('retrieves second skill by ID', async () => {
+      it('validates organization exists', async () => {
         await usecase.execute(command);
 
-        expect(skillService.getSkillById).toHaveBeenCalledWith(skill2.id);
+        expect(accountsPort.getOrganizationById).toHaveBeenCalledWith(
+          organizationId,
+        );
       });
 
-      it('validates each skill space belongs to organization', async () => {
+      it('validates space exists', async () => {
         await usecase.execute(command);
 
         expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
       });
 
-      it('deletes first skill', async () => {
+      it('lists existing skills in space', async () => {
         await usecase.execute(command);
 
-        expect(skillService.deleteSkill).toHaveBeenCalledWith(
-          skill1.id,
+        expect(skillService.listSkillsBySpace).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('creates skill with correct attributes', async () => {
+        await usecase.execute(command);
+
+        expect(skillService.addSkill).toHaveBeenCalledWith({
+          name: command.name,
+          description: command.description,
+          slug: 'test-skill',
+          version: 1,
+          prompt: command.prompt,
           userId,
+          spaceId,
+          allowedTools: command.allowedTools,
+          license: command.license,
+          compatibility: command.compatibility,
+          metadata: command.metadata,
+        });
+      });
+
+      it('creates skill version with correct attributes', async () => {
+        await usecase.execute(command);
+
+        expect(skillVersionService.addSkillVersion).toHaveBeenCalledWith({
+          skillId: createdSkill.id,
+          name: command.name,
+          slug: 'test-skill',
+          description: command.description,
+          version: 1,
+          prompt: command.prompt,
+          userId,
+          allowedTools: command.allowedTools,
+          license: command.license,
+          compatibility: command.compatibility,
+          metadata: command.metadata,
+        });
+      });
+
+      it('emits SkillCreatedEvent with fileCount zero', async () => {
+        await usecase.execute(command);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              skillId: createdSkill.id,
+              spaceId,
+              organizationId,
+              userId,
+              source: 'ui',
+              fileCount: 0,
+            }),
+          }),
         );
       });
 
-      it('deletes second skill', async () => {
-        await usecase.execute(command);
-
-        expect(skillService.deleteSkill).toHaveBeenCalledWith(
-          skill2.id,
-          userId,
-        );
-      });
-
-      it('emits two SkillDeletedEvents', async () => {
-        await usecase.execute(command);
-
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
-      });
-
-      it('returns success', async () => {
+      it('returns created skill', async () => {
         const result = await usecase.execute(command);
 
-        expect(result).toEqual({ success: true });
+        expect(result).toEqual(createdSkill);
       });
     });
 
-    describe('with empty skill list', () => {
+    describe('when slug exists', () => {
       let userId: string;
       let organizationId: string;
       let spaceId: string;
       let user: User;
       let organization: Organization;
-      let command: DeleteSkillsBatchCommand;
+      let space: Space;
+      let command: CreateSkillCommand;
+      let existingSkill1: ReturnType<typeof skillFactory>;
+      let existingSkill2: ReturnType<typeof skillFactory>;
+      let createdSkill: ReturnType<typeof skillFactory>;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
@@ -195,110 +261,72 @@ describe('DeleteSkillsBatchUsecase', () => {
           name: 'Test Org',
           slug: 'test-org',
         };
+        space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
 
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
+
+        existingSkill1 = skillFactory({ slug: 'test-skill' });
+        existingSkill2 = skillFactory({ slug: 'test-skill-1' });
+
+        createdSkill = skillFactory({
+          name: command.name,
+          description: command.description,
+          slug: 'test-skill-2',
+          spaceId,
+          userId,
+        });
 
         accountsPort.getUserById.mockResolvedValue(user);
         accountsPort.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        skillService.listSkillsBySpace.mockResolvedValue([
+          existingSkill1,
+          existingSkill2,
+        ]);
+        skillService.addSkill.mockResolvedValue(createdSkill);
+        skillVersionService.addSkillVersion.mockResolvedValue(
+          undefined as unknown as never,
+        );
       });
 
-      it('returns success without processing', async () => {
+      it('creates skill with incremented slug', async () => {
+        await usecase.execute(command);
+
+        expect(skillService.addSkill).toHaveBeenCalledWith(
+          expect.objectContaining({
+            slug: 'test-skill-2',
+          }),
+        );
+      });
+
+      it('returns created skill', async () => {
         const result = await usecase.execute(command);
 
-        expect(result).toEqual({ success: true });
-      });
-
-      it('does not call skillService.getSkillById', async () => {
-        await usecase.execute(command);
-
-        expect(skillService.getSkillById).not.toHaveBeenCalled();
-      });
-
-      it('does not call skillService.deleteSkill', async () => {
-        await usecase.execute(command);
-
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
-      });
-
-      it('does not emit events', async () => {
-        await usecase.execute(command);
-
-        expect(eventEmitterService.emit).not.toHaveBeenCalled();
+        expect(result).toEqual(createdSkill);
       });
     });
   });
 
   describe('authorization validation', () => {
-    describe('when skill not found', () => {
-      let userId: string;
-      let organizationId: string;
-      let spaceId: string;
-      let skillId: string;
-      let user: User;
-      let organization: Organization;
-      let command: DeleteSkillsBatchCommand;
-
-      beforeEach(() => {
-        userId = createUserId(uuidv4());
-        organizationId = createOrganizationId(uuidv4());
-        spaceId = createSpaceId(uuidv4());
-        skillId = createSkillId(uuidv4());
-
-        user = {
-          id: userId,
-          email: 'test@example.com',
-          passwordHash: 'hashed_password',
-          memberships: [{ organizationId, role: 'member', userId }],
-          active: true,
-        };
-        organization = {
-          id: organizationId,
-          name: 'Test Org',
-          slug: 'test-org',
-        };
-
-        command = {
-          userId,
-          organizationId,
-          spaceId,
-          skillIds: [skillId],
-        };
-
-        accountsPort.getUserById.mockResolvedValue(user);
-        accountsPort.getOrganizationById.mockResolvedValue(organization);
-        skillService.getSkillById.mockResolvedValue(null);
-      });
-
-      it('throws error', async () => {
-        await expect(usecase.execute(command)).rejects.toThrow(
-          `Skill with id ${skillId} not found`,
-        );
-      });
-
-      it('does not call deleteSkill', async () => {
-        try {
-          await usecase.execute(command);
-        } catch {
-          // Expected error
-        }
-
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
-      });
-    });
-
     describe('when space not found', () => {
       let userId: string;
       let organizationId: string;
       let spaceId: string;
       let user: User;
       let organization: Organization;
-      let command: DeleteSkillsBatchCommand;
-      let skill: ReturnType<typeof skillFactory>;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
@@ -318,18 +346,17 @@ describe('DeleteSkillsBatchUsecase', () => {
           slug: 'test-org',
         };
 
-        skill = skillFactory({ spaceId });
-
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skill.id],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(user);
         accountsPort.getOrganizationById.mockResolvedValue(organization);
-        skillService.getSkillById.mockResolvedValue(skill);
         spacesPort.getSpaceById.mockResolvedValue(null);
       });
 
@@ -339,14 +366,24 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
 
@@ -358,8 +395,7 @@ describe('DeleteSkillsBatchUsecase', () => {
       let user: User;
       let organization: Organization;
       let space: Space;
-      let command: DeleteSkillsBatchCommand;
-      let skill: ReturnType<typeof skillFactory>;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
@@ -386,18 +422,17 @@ describe('DeleteSkillsBatchUsecase', () => {
           organizationId: otherOrganizationId,
         };
 
-        skill = skillFactory({ spaceId });
-
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skill.id],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(user);
         accountsPort.getOrganizationById.mockResolvedValue(organization);
-        skillService.getSkillById.mockResolvedValue(skill);
         spacesPort.getSpaceById.mockResolvedValue(space);
       });
 
@@ -407,14 +442,24 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
 
@@ -422,20 +467,20 @@ describe('DeleteSkillsBatchUsecase', () => {
       let userId: string;
       let organizationId: string;
       let spaceId: string;
-      let skillId: string;
-      let command: DeleteSkillsBatchCommand;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
-        skillId = createSkillId(uuidv4());
 
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skillId],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(null);
@@ -447,24 +492,34 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call getSkillById', async () => {
+      it('does not call getSpaceById', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.getSkillById).not.toHaveBeenCalled();
+        expect(spacesPort.getSpaceById).not.toHaveBeenCalled();
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
 
@@ -472,15 +527,13 @@ describe('DeleteSkillsBatchUsecase', () => {
       let userId: string;
       let organizationId: string;
       let spaceId: string;
-      let skillId: string;
       let user: User;
-      let command: DeleteSkillsBatchCommand;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
-        skillId = createSkillId(uuidv4());
 
         user = {
           id: userId,
@@ -494,7 +547,9 @@ describe('DeleteSkillsBatchUsecase', () => {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skillId],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(user);
@@ -507,24 +562,34 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call getSkillById', async () => {
+      it('does not call getSpaceById', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.getSkillById).not.toHaveBeenCalled();
+        expect(spacesPort.getSpaceById).not.toHaveBeenCalled();
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
 
@@ -532,18 +597,16 @@ describe('DeleteSkillsBatchUsecase', () => {
       let userId: string;
       let organizationId: string;
       let otherOrganizationId: string;
-      let spaceId: string;
-      let skillId: string;
+      let spaceId: SpaceId;
       let user: User;
       let organization: Organization;
-      let command: DeleteSkillsBatchCommand;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
         otherOrganizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
-        skillId = createSkillId(uuidv4());
 
         user = {
           id: userId,
@@ -564,7 +627,9 @@ describe('DeleteSkillsBatchUsecase', () => {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skillId],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(user);
@@ -577,24 +642,34 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call getSkillById', async () => {
+      it('does not call getSpaceById', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.getSkillById).not.toHaveBeenCalled();
+        expect(spacesPort.getSpaceById).not.toHaveBeenCalled();
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
+      });
+
+      it('does not call addSkillVersion', async () => {
+        try {
+          await usecase.execute(command);
+        } catch {
+          // Expected error
+        }
+
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
 
@@ -602,16 +677,15 @@ describe('DeleteSkillsBatchUsecase', () => {
       let userId: string;
       let organizationId: string;
       let spaceId: string;
-      let skillId: string;
       let user: User;
       let organization: Organization;
-      let command: DeleteSkillsBatchCommand;
+      let space: Space;
+      let command: CreateSkillCommand;
 
       beforeEach(() => {
         userId = createUserId(uuidv4());
         organizationId = createOrganizationId(uuidv4());
         spaceId = createSpaceId(uuidv4());
-        skillId = createSkillId(uuidv4());
 
         user = {
           id: userId,
@@ -625,16 +699,25 @@ describe('DeleteSkillsBatchUsecase', () => {
           name: 'Test Org',
           slug: 'test-org',
         };
+        space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
 
         command = {
           userId,
           organizationId,
           spaceId,
-          skillIds: [skillId],
+          name: 'Test Skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
         };
 
         accountsPort.getUserById.mockResolvedValue(user);
         accountsPort.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
         spacesPort.findMembership.mockResolvedValue(null);
       });
 
@@ -644,24 +727,24 @@ describe('DeleteSkillsBatchUsecase', () => {
         );
       });
 
-      it('does not call getSkillById', async () => {
+      it('does not call addSkill', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.getSkillById).not.toHaveBeenCalled();
+        expect(skillService.addSkill).not.toHaveBeenCalled();
       });
 
-      it('does not call deleteSkill', async () => {
+      it('does not call addSkillVersion', async () => {
         try {
           await usecase.execute(command);
         } catch {
           // Expected error
         }
 
-        expect(skillService.deleteSkill).not.toHaveBeenCalled();
+        expect(skillVersionService.addSkillVersion).not.toHaveBeenCalled();
       });
     });
   });

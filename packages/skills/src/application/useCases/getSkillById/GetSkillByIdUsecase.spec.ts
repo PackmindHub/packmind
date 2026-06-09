@@ -16,7 +16,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
 import { SkillService } from '../../services/SkillService';
-import { GetSkillByIdUsecase } from './getSkillById.usecase';
+import { GetSkillByIdUsecase } from './GetSkillByIdUsecase';
 
 describe('GetSkillByIdUsecase', () => {
   let usecase: GetSkillByIdUsecase;

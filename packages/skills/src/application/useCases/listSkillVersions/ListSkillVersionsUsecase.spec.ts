@@ -14,7 +14,7 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
-import { ListSkillVersionsUsecase } from './listSkillVersions.usecase';
+import { ListSkillVersionsUsecase } from './ListSkillVersionsUsecase';
 
 describe('ListSkillVersionsUsecase', () => {
   let usecase: ListSkillVersionsUsecase;
