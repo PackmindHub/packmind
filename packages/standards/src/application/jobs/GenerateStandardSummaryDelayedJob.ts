@@ -14,7 +14,7 @@ import {
 } from '../../domain/jobs/GenerateStandardSummary';
 import { StandardSummaryService } from '../services/StandardSummaryService';
 import { StandardVersionService } from '../services/StandardVersionService';
-import { UpdateStandardVersionSummaryUsecase } from '../useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUsecase';
+import { UpdateStandardVersionSummaryUseCase } from '../useCases/updateStandardVersionSummary/UpdateStandardVersionSummaryUseCase';
 
 const logOrigin = 'GenerateStandardSummaryDelayedJob';
 
@@ -30,7 +30,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
     ) => Promise<
       IQueue<GenerateStandardSummaryInput, GenerateStandardSummaryOutput>
     >,
-    private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUsecase,
+    private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUseCase,
     private readonly _standardSummaryService: StandardSummaryService,
     private readonly _standardVersionService: StandardVersionService,
     private readonly _spacesPort: ISpacesPort,
