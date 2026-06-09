@@ -9,7 +9,7 @@ import {
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
 import { GitProviderUI } from '../../types/GitProviderTypes';
-import { VendorMark } from '../shared/VendorMark';
+import { VendorMark, vendorLabel } from '../shared/VendorMark';
 
 interface CliManagedTableProps {
   entries: GitProviderUI[];
@@ -187,7 +187,7 @@ const ProviderRow: React.FC<ProviderRowProps> = ({
             fontWeight="medium"
             truncate
           >
-            {urlLabel}
+            {vendorLabel(provider.source)} · {urlLabel}
           </PMText>
         </PMHStack>
 

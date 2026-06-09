@@ -9,6 +9,9 @@ const VENDOR_LABEL: Record<GitProviderVendor, string> = {
   unknown: 'Git',
 };
 
+export const vendorLabel = (vendor: GitProviderVendor): string =>
+  VENDOR_LABEL[vendor];
+
 const VENDOR_ICON: Record<GitProviderVendor, React.ReactNode> = {
   github: <LuGithub />,
   gitlab: <LuGitlab />,
@@ -32,6 +35,7 @@ export const VendorMark: React.FC<VendorMarkProps> = ({
   return (
     <PMHStack gap={2} align="center" minW={0}>
       <PMBox
+        aria-hidden
         width={size === 'md' ? '28px' : '22px'}
         height={size === 'md' ? '28px' : '22px'}
         borderRadius="sm"

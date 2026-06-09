@@ -26,7 +26,7 @@ import {
 } from '../../api/queries';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { DisplayNameEditor } from './DisplayNameEditor';
-import { VendorMark } from '../shared/VendorMark';
+import { VendorMark, vendorLabel } from '../shared/VendorMark';
 import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
 import {
   ConnectionStatusView,
@@ -375,6 +375,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
               {headerTitle}
             </PMHeading>
             <PMText fontSize="xs" color="faded" truncate>
+              {vendorLabel(connection.source)} ·{' '}
               {connection.url ??
                 (usesApp ? 'GitHub App' : 'Personal access token')}
             </PMText>

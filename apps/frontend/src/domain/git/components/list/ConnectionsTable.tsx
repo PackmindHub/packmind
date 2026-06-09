@@ -14,7 +14,7 @@ import { format, formatDistanceToNowStrict } from 'date-fns';
 import { GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
-import { VendorMark } from '../shared/VendorMark';
+import { VendorMark, vendorLabel } from '../shared/VendorMark';
 import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
 import {
   deriveConnectionStatus,
@@ -142,11 +142,11 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
           >
             {hasDisplayName ? connection.displayName : placeholder}
           </PMText>
-          {connection.url && (
-            <PMText as="p" fontSize="xs" color="faded" truncate>
-              {connection.url}
-            </PMText>
-          )}
+          <PMText as="p" fontSize="xs" color="faded" truncate>
+            {connection.url
+              ? `${vendorLabel(connection.source)} · ${connection.url}`
+              : vendorLabel(connection.source)}
+          </PMText>
         </PMVStack>
       </PMHStack>
 
