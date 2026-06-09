@@ -7,7 +7,7 @@ import {
   ILlmPort,
 } from '@packmind/types';
 import { GenerateProgramInput } from '../domain';
-import { GenerateProgramDelayedJob } from '../application/useCases/generateProgramUseCase/GenerateProgramDelayedJob';
+import { GenerateProgramDelayedJob } from '../application/useCases/generateProgramUseCase/shared/GenerateProgramDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 
 const origin = 'GenerateProgramJobFactory';

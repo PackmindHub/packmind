@@ -6,7 +6,7 @@ import {
   ILinterPort,
   ILlmPort,
 } from '@packmind/types';
-import { AssessRuleDetectionDelayedJob } from '../application/useCases/assessRuleDetection/AssessRuleDetectionDelayedJob';
+import { AssessRuleDetectionDelayedJob } from '../application/useCases/assessRuleDetection/shared/AssessRuleDetectionDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 
 const origin = 'AssessRuleDetectionJobFactory';

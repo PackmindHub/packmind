@@ -85,37 +85,37 @@ import {
   UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
 import type { DetectionProgramService } from '../services/DetectionProgramService';
-import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
-import { CopyDetectionHeuristicsUseCase } from '../useCases/copyDetectionHeuristics/copyDetectionHeuristics.usecase';
-import { CopyDetectionProgramsToNewRuleUseCase } from '../useCases/copyDetectionProgramsToNewRule/copyDetectionProgramsToNewRule.usecase';
-import { CopyLinterArtefactsUseCase } from '../useCases/copyLinterArtefacts/copyLinterArtefacts.usecase';
-import { MoveLinterArtefactsToNewRulesUseCase } from '../useCases/moveLinterArtefactsToNewRules/moveLinterArtefactsToNewRules.usecase';
-import { SoftDeleteLinterArtefactsByRuleUseCase } from '../useCases/softDeleteLinterArtefactsByRule/softDeleteLinterArtefactsByRule.usecase';
-import { CopyRuleDetectionAssessmentsUseCase } from '../useCases/copyRuleDetectionAssessments/copyRuleDetectionAssessments.usecase';
-import { CreateDetectionHeuristicsUseCase } from '../useCases/createDetectionHeuristics/createDetectionHeuristics.usecase';
-import { CreateEmptyRuleDetectionAssessmentUseCase } from '../useCases/createEmptyRuleDetectionAssessment/createEmptyRuleDetectionAssessment.usecase';
-import { GetDetectionProgramsForPackagesUseCase } from '../useCases/getDetectionProgramsForPackages/getDetectionProgramsForPackages.usecase';
-import { CreateDetectionProgramUseCase } from '../useCases/createDetectionProgram/createDetectionProgram.usecase';
-import { CreateNewDetectionProgramVersionUsecase } from '../useCases/createNewDetectionProgramVersion/createNewDetectionProgramVersion.usecase';
-import { GetActiveDetectionProgramUseCase } from '../useCases/getActiveDetectionProgram/getActiveDetectionProgram.usecase';
-import { GetActiveDetectionProgramForRuleUseCase } from '../useCases/getActiveDetectionProgramForRule/getActiveDetectionProgramForRule.usecase';
-import { GetAllDetectionProgramsByRuleUseCase } from '../useCases/getAllDetectionProgramsByRule/getAllDetectionProgramsByRule.usecase';
-import { GetDetectionHeuristicsUseCase } from '../useCases/getDetectionHeuristics/getDetectionHeuristics.usecase';
-import { GetDetectionProgramMetadataUseCase } from '../useCases/getDetectionProgramMetadata/getDetectionProgramMetadata.usecase';
-import { GetDraftDetectionProgramForRuleUseCase } from '../useCases/getDraftDetectionProgramForRule/getDraftDetectionProgramForRule.usecase';
-import { GetRuleDetectionAssessmentUseCase } from '../useCases/getRuleDetectionAssessment/getRuleDetectionAssessment.usecase';
-import { GetStandardRulesDetectionStatusUseCase } from '../useCases/getStandardRulesDetectionStatus/getStandardRulesDetectionStatus.usecase';
-import { ListDetectionProgramUseCase } from '../useCases/listDetectionProgram/listDetectionProgram.usecase';
-import { StartGenerationProgramUseCase } from '../useCases/startProgramGeneration/startGenerationProgram.usecase';
-import { StartRuleDetectionAssessmentUseCase } from '../useCases/startRuleDetectionAssessment/startRuleDetectionAssessment.usecase';
+import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRuleLanguageDetectionStatus/ComputeRuleLanguageDetectionStatusUseCase';
+import { CopyDetectionHeuristicsUseCase } from '../useCases/copyDetectionHeuristics/CopyDetectionHeuristicsUseCase';
+import { CopyDetectionProgramsToNewRuleUseCase } from '../useCases/copyDetectionProgramsToNewRule/CopyDetectionProgramsToNewRuleUseCase';
+import { CopyLinterArtefactsUseCase } from '../useCases/copyLinterArtefacts/CopyLinterArtefactsUseCase';
+import { MoveLinterArtefactsToNewRulesUseCase } from '../useCases/moveLinterArtefactsToNewRules/MoveLinterArtefactsToNewRulesUseCase';
+import { SoftDeleteLinterArtefactsByRuleUseCase } from '../useCases/softDeleteLinterArtefactsByRule/SoftDeleteLinterArtefactsByRuleUseCase';
+import { CopyRuleDetectionAssessmentsUseCase } from '../useCases/copyRuleDetectionAssessments/CopyRuleDetectionAssessmentsUseCase';
+import { CreateDetectionHeuristicsUseCase } from '../useCases/createDetectionHeuristics/CreateDetectionHeuristicsUseCase';
+import { CreateEmptyRuleDetectionAssessmentUseCase } from '../useCases/createEmptyRuleDetectionAssessment/CreateEmptyRuleDetectionAssessmentUseCase';
+import { GetDetectionProgramsForPackagesUseCase } from '../useCases/getDetectionProgramsForPackages/GetDetectionProgramsForPackagesUseCase';
+import { CreateDetectionProgramUseCase } from '../useCases/createDetectionProgram/CreateDetectionProgramUseCase';
+import { CreateNewDetectionProgramVersionUseCase } from '../useCases/createNewDetectionProgramVersion/CreateNewDetectionProgramVersionUseCase';
+import { GetActiveDetectionProgramUseCase } from '../useCases/getActiveDetectionProgram/GetActiveDetectionProgramUseCase';
+import { GetActiveDetectionProgramForRuleUseCase } from '../useCases/getActiveDetectionProgramForRule/GetActiveDetectionProgramForRuleUseCase';
+import { GetAllDetectionProgramsByRuleUseCase } from '../useCases/getAllDetectionProgramsByRule/GetAllDetectionProgramsByRuleUseCase';
+import { GetDetectionHeuristicsUseCase } from '../useCases/getDetectionHeuristics/GetDetectionHeuristicsUseCase';
+import { GetDetectionProgramMetadataUseCase } from '../useCases/getDetectionProgramMetadata/GetDetectionProgramMetadataUseCase';
+import { GetDraftDetectionProgramForRuleUseCase } from '../useCases/getDraftDetectionProgramForRule/GetDraftDetectionProgramForRuleUseCase';
+import { GetRuleDetectionAssessmentUseCase } from '../useCases/getRuleDetectionAssessment/GetRuleDetectionAssessmentUseCase';
+import { GetStandardRulesDetectionStatusUseCase } from '../useCases/getStandardRulesDetectionStatus/GetStandardRulesDetectionStatusUseCase';
+import { ListDetectionProgramUseCase } from '../useCases/listDetectionProgram/ListDetectionProgramUseCase';
+import { StartGenerationProgramUseCase } from '../useCases/startProgramGeneration/StartGenerationProgramUseCase';
+import { StartRuleDetectionAssessmentUseCase } from '../useCases/startRuleDetectionAssessment/StartRuleDetectionAssessmentUseCase';
 import { TestProgramExecutionUseCase } from '../useCases/testProgramExecutionUseCase/TestProgramExecutionUseCase';
-import { UpdateActiveDetectionProgramUseCase } from '../useCases/updateActiveDetectionProgram/updateActiveDetectionProgram.usecase';
-import { UpdateActiveDetectionProgramSeverityUseCase } from '../useCases/updateActiveDetectionProgramSeverity/updateActiveDetectionProgramSeverity.usecase';
-import { UpdateDetectionProgramUseCase } from '../useCases/updateDetectionProgram/updateDetectionProgram.usecase';
-import { UpdateDetectionProgramStatusUseCase } from '../useCases/updateDetectionProgramStatus/updateDetectionProgramStatus.usecase';
-import { TrackLinterExecutionUseCase } from '../useCases/trackLinterExecution/trackLinterExecution.usecase';
-import { UpdateRuleDetectionHeuristicsUseCase } from '../useCases/updateRuleDetectionHeuristics/updateRuleDetectionHeuristics.usecase';
-import { UpdateRuleDetectionStatusAfterUpdateUseCase } from '../useCases/updateRuleDetectionStatusAfterUpdate/updateRuleDetectionStatusAfterUpdate.usecase';
+import { UpdateActiveDetectionProgramUseCase } from '../useCases/updateActiveDetectionProgram/UpdateActiveDetectionProgramUseCase';
+import { UpdateActiveDetectionProgramSeverityUseCase } from '../useCases/updateActiveDetectionProgramSeverity/UpdateActiveDetectionProgramSeverityUseCase';
+import { UpdateDetectionProgramUseCase } from '../useCases/updateDetectionProgram/UpdateDetectionProgramUseCase';
+import { UpdateDetectionProgramStatusUseCase } from '../useCases/updateDetectionProgramStatus/UpdateDetectionProgramStatusUseCase';
+import { TrackLinterExecutionUseCase } from '../useCases/trackLinterExecution/TrackLinterExecutionUseCase';
+import { UpdateRuleDetectionHeuristicsUseCase } from '../useCases/updateRuleDetectionHeuristics/UpdateRuleDetectionHeuristicsUseCase';
+import { UpdateRuleDetectionStatusAfterUpdateUseCase } from '../useCases/updateRuleDetectionStatusAfterUpdate/UpdateRuleDetectionStatusAfterUpdateUseCase';
 
 type LinterAdapterDependencies = {
   hexaFactory: {
@@ -164,7 +164,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   // Use cases - created in initialize() after ports are set
   private _createDetectionProgramUseCase!: CreateDetectionProgramUseCase;
   private _getActiveDetectionProgramUseCase!: GetActiveDetectionProgramUseCase;
-  private _createNewDetectionProgramVersionUseCase!: CreateNewDetectionProgramVersionUsecase;
+  private _createNewDetectionProgramVersionUseCase!: CreateNewDetectionProgramVersionUseCase;
   private _listDetectionProgramUseCase!: ListDetectionProgramUseCase;
   private _updateDetectionProgramUseCase!: UpdateDetectionProgramUseCase;
   private _updateActiveDetectionProgramUseCase!: UpdateActiveDetectionProgramUseCase;
@@ -249,7 +249,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       );
 
     this._createNewDetectionProgramVersionUseCase =
-      new CreateNewDetectionProgramVersionUsecase(
+      new CreateNewDetectionProgramVersionUseCase(
         this.repositories.getDetectionProgramRepository(),
         this.repositories.getActiveDetectionProgramRepository(),
         this.standardsPort,

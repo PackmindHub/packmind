@@ -4,7 +4,7 @@ import type {
   MoveLinterArtefactsToNewRulesCommand,
   ILinterPort,
 } from '@packmind/types';
-import { MoveLinterArtefactsDelayedJob } from '../application/useCases/moveLinterArtefactsToNewRules/MoveLinterArtefactsDelayedJob';
+import { MoveLinterArtefactsDelayedJob } from '../application/useCases/moveLinterArtefactsToNewRules/shared/MoveLinterArtefactsDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 
 const origin = 'MoveLinterArtefactsJobFactory';

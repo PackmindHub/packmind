@@ -1,6 +1,6 @@
-import { GenerateProgramDelayedJob } from '../../application/useCases/generateProgramUseCase/GenerateProgramDelayedJob';
-import { AssessRuleDetectionDelayedJob } from '../../application/useCases/assessRuleDetection/AssessRuleDetectionDelayedJob';
-import { MoveLinterArtefactsDelayedJob } from '../../application/useCases/moveLinterArtefactsToNewRules/MoveLinterArtefactsDelayedJob';
+import { GenerateProgramDelayedJob } from '../../application/useCases/generateProgramUseCase/shared/GenerateProgramDelayedJob';
+import { AssessRuleDetectionDelayedJob } from '../../application/useCases/assessRuleDetection/shared/AssessRuleDetectionDelayedJob';
+import { MoveLinterArtefactsDelayedJob } from '../../application/useCases/moveLinterArtefactsToNewRules/shared/MoveLinterArtefactsDelayedJob';
 
 export interface ILinterDelayedJobs {
   generateProgramDelayedJob: GenerateProgramDelayedJob;

@@ -64,7 +64,7 @@ import {
   RuleNotLinkedToStandardForProgramGenerationError,
   StandardNotFoundForProgramGenerationError,
   UnauthorizedProgramGenerationError,
-} from '../../application/useCases/generateProgramUseCase/errors';
+} from '../../application/useCases/generateProgramUseCase/shared/errors';
 import { ActiveDetectionProgramNotFoundError } from '../../domain/errors/ActiveDetectionProgramNotFoundError';
 import { DetectionProgramNotFoundError } from '../../domain/errors/DetectionProgramNotFoundError';
 import { UnauthorizedTestProgramExecutionError } from '../../domain/errors/UnauthorizedTestProgramExecutionError';
