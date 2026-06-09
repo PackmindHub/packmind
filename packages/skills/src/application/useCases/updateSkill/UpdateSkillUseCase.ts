@@ -19,9 +19,9 @@ import { IUpdateSkill } from '../../../domain/useCases/IUpdateSkill';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 
-const origin = 'UpdateSkillUsecase';
+const origin = 'UpdateSkillUseCase';
 
-export class UpdateSkillUsecase
+export class UpdateSkillUseCase
   extends AbstractMemberUseCase<UpdateSkillCommand, UpdateSkillResponse>
   implements IUpdateSkill
 {
@@ -34,7 +34,7 @@ export class UpdateSkillUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
-    this.logger.info('UpdateSkillUsecase initialized');
+    this.logger.info('UpdateSkillUseCase initialized');
   }
 
   public async executeForMembers(

@@ -19,10 +19,10 @@ import { skillVersionFactory } from '../../../../test/skillVersionFactory';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillFileService } from '../../services/SkillFileService';
-import { SaveSkillVersionUsecase } from './SaveSkillVersionUsecase';
+import { SaveSkillVersionUseCase } from './SaveSkillVersionUseCase';
 
-describe('SaveSkillVersionUsecase', () => {
-  let usecase: SaveSkillVersionUsecase;
+describe('SaveSkillVersionUseCase', () => {
+  let usecase: SaveSkillVersionUseCase;
   let skillVersionService: jest.Mocked<SkillVersionService>;
   let skillService: jest.Mocked<SkillService>;
   let skillFileService: jest.Mocked<SkillFileService>;
@@ -56,7 +56,7 @@ describe('SaveSkillVersionUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    usecase = new SaveSkillVersionUsecase(
+    usecase = new SaveSkillVersionUseCase(
       accountsPort,
       spacesPort,
       skillService,

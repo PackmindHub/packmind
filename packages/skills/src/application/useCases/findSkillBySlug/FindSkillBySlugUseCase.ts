@@ -11,9 +11,9 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'FindSkillBySlugUsecase';
+const origin = 'FindSkillBySlugUseCase';
 
-export class FindSkillBySlugUsecase
+export class FindSkillBySlugUseCase
   extends AbstractMemberUseCase<FindSkillBySlugCommand, FindSkillBySlugResponse>
   implements IFindSkillBySlugUseCase
 {
@@ -24,7 +24,7 @@ export class FindSkillBySlugUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
-    this.logger.info('FindSkillBySlugUsecase initialized');
+    this.logger.info('FindSkillBySlugUseCase initialized');
   }
 
   async executeForMembers(

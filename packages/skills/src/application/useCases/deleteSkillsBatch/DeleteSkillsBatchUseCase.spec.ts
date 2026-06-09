@@ -19,10 +19,10 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
 import { SkillService } from '../../services/SkillService';
-import { DeleteSkillsBatchUsecase } from './DeleteSkillsBatchUsecase';
+import { DeleteSkillsBatchUseCase } from './DeleteSkillsBatchUseCase';
 
-describe('DeleteSkillsBatchUsecase', () => {
-  let usecase: DeleteSkillsBatchUsecase;
+describe('DeleteSkillsBatchUseCase', () => {
+  let usecase: DeleteSkillsBatchUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let skillService: jest.Mocked<SkillService>;
@@ -51,7 +51,7 @@ describe('DeleteSkillsBatchUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    usecase = new DeleteSkillsBatchUsecase(
+    usecase = new DeleteSkillsBatchUseCase(
       spacesPort,
       accountsPort,
       skillService,

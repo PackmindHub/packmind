@@ -11,9 +11,9 @@ import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 
-const origin = 'GetSkillWithFilesUsecase';
+const origin = 'GetSkillWithFilesUseCase';
 
-export class GetSkillWithFilesUsecase
+export class GetSkillWithFilesUseCase
   extends AbstractMemberUseCase<
     GetSkillWithFilesCommand,
     GetSkillWithFilesResponse

@@ -16,10 +16,10 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../../test/skillFactory';
 import { SkillService } from '../../services/SkillService';
-import { GetSkillByIdUsecase } from './GetSkillByIdUsecase';
+import { GetSkillByIdUseCase } from './GetSkillByIdUseCase';
 
-describe('GetSkillByIdUsecase', () => {
-  let usecase: GetSkillByIdUsecase;
+describe('GetSkillByIdUseCase', () => {
+  let usecase: GetSkillByIdUseCase;
   let skillService: jest.Mocked<SkillService>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
@@ -51,7 +51,7 @@ describe('GetSkillByIdUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    usecase = new GetSkillByIdUsecase(
+    usecase = new GetSkillByIdUseCase(
       spacesPort,
       accountsAdapter,
       skillService,

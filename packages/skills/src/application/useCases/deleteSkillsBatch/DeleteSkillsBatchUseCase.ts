@@ -18,9 +18,9 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'DeleteSkillsBatchUsecase';
+const origin = 'DeleteSkillsBatchUseCase';
 
-export class DeleteSkillsBatchUsecase
+export class DeleteSkillsBatchUseCase
   extends AbstractSpaceMemberUseCase<
     DeleteSkillsBatchCommand,
     DeleteSkillsBatchResponse
@@ -35,7 +35,7 @@ export class DeleteSkillsBatchUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('DeleteSkillsBatchUsecase initialized');
+    this.logger.info('DeleteSkillsBatchUseCase initialized');
   }
 
   async executeForSpaceMembers(

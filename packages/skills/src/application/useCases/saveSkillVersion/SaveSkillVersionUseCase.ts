@@ -15,9 +15,9 @@ import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillFileService } from '../../services/SkillFileService';
 
-const origin = 'SaveSkillVersionUsecase';
+const origin = 'SaveSkillVersionUseCase';
 
-export class SaveSkillVersionUsecase
+export class SaveSkillVersionUseCase
   extends AbstractMemberUseCase<
     SaveSkillVersionCommand,
     SaveSkillVersionResponse
@@ -33,7 +33,7 @@ export class SaveSkillVersionUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
-    this.logger.info('SaveSkillVersionUsecase initialized');
+    this.logger.info('SaveSkillVersionUseCase initialized');
   }
 
   async executeForMembers(

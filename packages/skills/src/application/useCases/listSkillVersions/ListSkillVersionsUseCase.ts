@@ -9,9 +9,9 @@ import {
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 
-const origin = 'ListSkillVersionsUsecase';
+const origin = 'ListSkillVersionsUseCase';
 
-export class ListSkillVersionsUsecase
+export class ListSkillVersionsUseCase
   extends AbstractMemberUseCase<
     ListSkillVersionsCommand,
     ListSkillVersionsResponse

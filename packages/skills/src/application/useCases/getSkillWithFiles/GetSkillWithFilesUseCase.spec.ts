@@ -17,10 +17,10 @@ import {
 import { SkillFileService } from '../../services/SkillFileService';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
-import { GetSkillWithFilesUsecase } from './GetSkillWithFilesUsecase';
+import { GetSkillWithFilesUseCase } from './GetSkillWithFilesUseCase';
 
-describe('GetSkillWithFilesUsecase', () => {
-  let usecase: GetSkillWithFilesUsecase;
+describe('GetSkillWithFilesUseCase', () => {
+  let usecase: GetSkillWithFilesUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSkillService: jest.Mocked<SkillService>;
   let mockSkillVersionService: jest.Mocked<SkillVersionService>;
@@ -113,7 +113,7 @@ describe('GetSkillWithFilesUsecase', () => {
       findByVersionId: jest.fn(),
     } as unknown as jest.Mocked<SkillFileService>;
 
-    usecase = new GetSkillWithFilesUsecase(
+    usecase = new GetSkillWithFilesUseCase(
       mockAccountsPort,
       mockSkillService,
       mockSkillVersionService,

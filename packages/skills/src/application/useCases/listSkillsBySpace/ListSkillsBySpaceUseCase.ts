@@ -13,9 +13,9 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'ListSkillsBySpaceUsecase';
+const origin = 'ListSkillsBySpaceUseCase';
 
-export class ListSkillsBySpaceUsecase
+export class ListSkillsBySpaceUseCase
   extends AbstractSpaceMemberUseCase<
     ListSkillsBySpaceCommand,
     ListSkillsBySpaceResponse
@@ -29,7 +29,7 @@ export class ListSkillsBySpaceUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
-    this.logger.info('ListSkillsBySpaceUsecase initialized');
+    this.logger.info('ListSkillsBySpaceUseCase initialized');
   }
 
   async executeForSpaceMembers(

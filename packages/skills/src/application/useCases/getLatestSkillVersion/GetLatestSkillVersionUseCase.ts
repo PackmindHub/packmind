@@ -12,9 +12,9 @@ import { IGetLatestSkillVersion } from '../../../domain/useCases/IGetLatestSkill
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'GetLatestSkillVersionUsecase';
+const origin = 'GetLatestSkillVersionUseCase';
 
-export class GetLatestSkillVersionUsecase
+export class GetLatestSkillVersionUseCase
   extends AbstractMemberUseCase<
     GetLatestSkillVersionCommand,
     GetLatestSkillVersionResponse
@@ -29,7 +29,7 @@ export class GetLatestSkillVersionUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
-    this.logger.info('GetLatestSkillVersionUsecase initialized');
+    this.logger.info('GetLatestSkillVersionUseCase initialized');
   }
 
   async executeForMembers(

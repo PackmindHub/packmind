@@ -13,9 +13,9 @@ import { IGetSkillVersion } from '../../../domain/useCases/IGetSkillVersion';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'GetSkillVersionUsecase';
+const origin = 'GetSkillVersionUseCase';
 
-export class GetSkillVersionUsecase
+export class GetSkillVersionUseCase
   extends AbstractMemberUseCase<GetSkillVersionCommand, GetSkillVersionResponse>
   implements IGetSkillVersion
 {
@@ -27,7 +27,7 @@ export class GetSkillVersionUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
-    this.logger.info('GetSkillVersionUsecase initialized');
+    this.logger.info('GetSkillVersionUseCase initialized');
   }
 
   async executeForMembers(

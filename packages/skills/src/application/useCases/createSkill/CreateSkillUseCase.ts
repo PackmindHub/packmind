@@ -19,9 +19,9 @@ import slug from 'slug';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 
-const origin = 'CreateSkillUsecase';
+const origin = 'CreateSkillUseCase';
 
-export class CreateSkillUsecase extends AbstractSpaceMemberUseCase<
+export class CreateSkillUseCase extends AbstractSpaceMemberUseCase<
   CreateSkillCommand,
   CreateSkillResponse
 > {
@@ -34,7 +34,7 @@ export class CreateSkillUsecase extends AbstractSpaceMemberUseCase<
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('CreateSkillUsecase initialized');
+    this.logger.info('CreateSkillUseCase initialized');
   }
 
   async executeForSpaceMembers(

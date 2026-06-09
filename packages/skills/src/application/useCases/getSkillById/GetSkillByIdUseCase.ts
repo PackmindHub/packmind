@@ -12,9 +12,9 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 
-const origin = 'GetSkillByIdUsecase';
+const origin = 'GetSkillByIdUseCase';
 
-export class GetSkillByIdUsecase
+export class GetSkillByIdUseCase
   extends AbstractSpaceMemberUseCase<GetSkillByIdCommand, GetSkillByIdResponse>
   implements IGetSkillByIdUseCase
 {
@@ -25,7 +25,7 @@ export class GetSkillByIdUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
-    this.logger.info('GetSkillByIdUsecase initialized');
+    this.logger.info('GetSkillByIdUseCase initialized');
   }
 
   async executeForSpaceMembers(

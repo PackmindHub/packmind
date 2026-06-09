@@ -14,10 +14,10 @@ import {
 } from '@packmind/types';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
-import { ListSkillVersionsUsecase } from './ListSkillVersionsUsecase';
+import { ListSkillVersionsUseCase } from './ListSkillVersionsUseCase';
 
-describe('ListSkillVersionsUsecase', () => {
-  let usecase: ListSkillVersionsUsecase;
+describe('ListSkillVersionsUseCase', () => {
+  let usecase: ListSkillVersionsUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSkillService: jest.Mocked<SkillService>;
   let mockSkillVersionService: jest.Mocked<SkillVersionService>;
@@ -109,7 +109,7 @@ describe('ListSkillVersionsUsecase', () => {
       addSkillVersion: jest.fn(),
     } as unknown as jest.Mocked<SkillVersionService>;
 
-    usecase = new ListSkillVersionsUsecase(
+    usecase = new ListSkillVersionsUseCase(
       mockAccountsPort,
       mockSkillService,
       mockSkillVersionService,
