@@ -2,7 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
-  GitProvider,
+  AddGitProviderResponse,
   IAccountsPort,
   IAddGitProviderUseCase,
 } from '@packmind/types';
@@ -20,7 +20,7 @@ export { AddGitProviderCommand };
 const origin = 'AddGitProviderUseCase';
 
 export class AddGitProviderUseCase
-  extends AbstractMemberUseCase<AddGitProviderCommand, GitProvider>
+  extends AbstractMemberUseCase<AddGitProviderCommand, AddGitProviderResponse>
   implements IAddGitProviderUseCase
 {
   constructor(
@@ -34,7 +34,7 @@ export class AddGitProviderUseCase
 
   protected async executeForMembers(
     command: AddGitProviderCommand & MemberContext,
-  ): Promise<GitProvider> {
+  ): Promise<AddGitProviderResponse> {
     const {
       gitProvider,
       organization,

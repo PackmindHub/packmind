@@ -2,11 +2,11 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
+  AddGitRepoResponse,
   createUserId,
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
-  GitRepo,
   GitRepoAlreadyExistsError,
   IAccountsPort,
   IAddGitRepoUseCase,
@@ -18,7 +18,7 @@ import { GitRepoService } from '../../GitRepoService';
 const origin = 'AddGitRepoUseCase';
 
 export class AddGitRepoUseCase
-  extends AbstractMemberUseCase<AddGitRepoCommand, GitRepo>
+  extends AbstractMemberUseCase<AddGitRepoCommand, AddGitRepoResponse>
   implements IAddGitRepoUseCase
 {
   constructor(
@@ -33,7 +33,7 @@ export class AddGitRepoUseCase
 
   protected async executeForMembers(
     command: AddGitRepoCommand & MemberContext,
-  ): Promise<GitRepo> {
+  ): Promise<AddGitRepoResponse> {
     const {
       organization,
       gitProviderId,
