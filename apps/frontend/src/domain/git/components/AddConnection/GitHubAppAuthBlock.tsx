@@ -81,7 +81,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
 
   const handleInstallClick = async () => {
     try {
-      const { installUrl } = await installUrlMutation.mutateAsync();
+      const { installUrl } = await installUrlMutation.mutateAsync({});
       window.location.assign(installUrl);
     } catch {
       // installUrlMutation.error surfaces below.

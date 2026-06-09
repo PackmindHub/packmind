@@ -308,7 +308,9 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
 
   const manageApp = useCallback(async () => {
     try {
-      const { installUrl } = await installUrlMutation.mutateAsync();
+      const { installUrl } = await installUrlMutation.mutateAsync({
+        gitProviderId: connection.id,
+      });
       window.location.assign(installUrl);
     } catch (err) {
       pmToaster.create({
@@ -320,7 +322,7 @@ const DrawerBody: React.FC<DrawerBodyProps> = ({
         ),
       });
     }
-  }, [installUrlMutation]);
+  }, [installUrlMutation, connection.id]);
 
   const usesApp =
     connection.source === 'github' && connection.authMethod === 'app';

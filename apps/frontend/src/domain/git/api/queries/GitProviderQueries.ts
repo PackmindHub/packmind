@@ -168,13 +168,20 @@ export const useGithubAppInstallUrlMutation = () => {
   const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      gitProviderId,
+    }: {
+      gitProviderId?: GitProviderId;
+    }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch GitHub App install URL',
         );
       }
-      return gitProviderGateway.getGithubAppInstallUrl(organization.id);
+      return gitProviderGateway.getGithubAppInstallUrl(
+        organization.id,
+        gitProviderId,
+      );
     },
     onError: (error) => {
       console.error('Error fetching GitHub App install URL:', error);

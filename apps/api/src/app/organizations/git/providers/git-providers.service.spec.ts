@@ -52,9 +52,11 @@ import { PackmindLogger } from '@packmind/logger';
 import { GitProvidersService } from './git-providers.service';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import {
+  createGitProviderId,
   createOrganizationGitHubAppId,
   createOrganizationId,
   createUserId,
+  GitProviderNotFoundError,
   IDeploymentPort,
   IGitPort,
   OrganizationGitHubApp,
@@ -277,6 +279,75 @@ describe('GitProvidersService', () => {
               'No GitHub App registered for this organization',
             ),
           );
+        });
+      });
+    });
+
+    describe('re-authentication (gitProviderId provided)', () => {
+      const providerId = createGitProviderId(
+        '00000000-0000-0000-0000-0000000000bb',
+      );
+
+      beforeEach(() => {
+        resolveGithubAppMode.mockResolvedValue('shared');
+        Configuration.getConfig.mockResolvedValue('packmind-cloud');
+      });
+
+      describe('when the provider is a GitHub App connection', () => {
+        beforeEach(() => {
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [
+              { id: providerId, source: 'github', authMethod: 'app' },
+            ],
+          });
+        });
+
+        it('signs the state including the gitProviderId', async () => {
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            gitProviderId: providerId,
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({
+              gitProviderId: '00000000-0000-0000-0000-0000000000bb',
+            }),
+          );
+        });
+      });
+
+      describe('when the provider is not a GitHub App connection', () => {
+        it('throws BadRequestException', async () => {
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [
+              { id: providerId, source: 'github', authMethod: 'token' },
+            ],
+          });
+
+          await expect(
+            service.buildGithubAppInstallUrl({
+              organizationId: orgId,
+              userId,
+              gitProviderId: providerId,
+            }),
+          ).rejects.toThrow(BadRequestException);
+        });
+      });
+
+      describe('when the provider does not exist in the organization', () => {
+        it('throws BadRequestException', async () => {
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [],
+          });
+
+          await expect(
+            service.buildGithubAppInstallUrl({
+              organizationId: orgId,
+              userId,
+              gitProviderId: providerId,
+            }),
+          ).rejects.toThrow(BadRequestException);
         });
       });
     });
@@ -660,6 +731,141 @@ describe('GitProvidersService', () => {
           expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
             expect.objectContaining({ gitProviderId: 'prov-existing' }),
           );
+        });
+      });
+    });
+
+    describe('when re-authenticating (state carries gitProviderId)', () => {
+      const targetId = createGitProviderId('prov-reauth');
+      const reauthPayload = {
+        ...validPayload,
+        gitProviderId: 'prov-reauth',
+      };
+
+      beforeEach(() => {
+        mockSigner.verify.mockReturnValue(reauthPayload);
+      });
+
+      describe('when the new installation is not yet owned', () => {
+        const reboundProvider = {
+          id: 'prov-reauth',
+          source: 'github',
+          authMethod: 'app',
+        };
+
+        beforeEach(() => {
+          (
+            mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
+          ).mockResolvedValue(null);
+          (mockGitAdapter.updateGitProvider as jest.Mock).mockResolvedValue(
+            reboundProvider,
+          );
+        });
+
+        it('rebinds the targeted provider to the new installation', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 99999,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.updateGitProvider).toHaveBeenCalledWith(
+            targetId,
+            expect.objectContaining({
+              appInstallationId: 99999,
+              organizationGitHubAppId: orgGitHubAppId,
+              revokedAt: null,
+            }),
+            userId,
+            orgId,
+          );
+        });
+
+        it('does not create a new provider', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 99999,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.addGitProvider).not.toHaveBeenCalled();
+        });
+
+        it('returns the rebound provider', async () => {
+          const result = await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 99999,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(result).toEqual(reboundProvider);
+        });
+      });
+
+      describe('when the new installation is already owned by another provider', () => {
+        const owner = {
+          id: 'prov-owner',
+          source: 'github',
+          authMethod: 'app',
+        };
+
+        beforeEach(() => {
+          (
+            mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
+          ).mockResolvedValue(owner);
+        });
+
+        it('does not rebind the targeted provider', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 99999,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.updateGitProvider).not.toHaveBeenCalled();
+        });
+
+        it('returns the provider that already owns the installation', async () => {
+          const result = await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 99999,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(result).toEqual(owner);
+        });
+      });
+
+      describe('when the targeted provider can no longer be updated', () => {
+        beforeEach(() => {
+          (
+            mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
+          ).mockResolvedValue(null);
+          (mockGitAdapter.updateGitProvider as jest.Mock).mockRejectedValue(
+            new GitProviderNotFoundError(targetId),
+          );
+        });
+
+        it('throws BadRequestException', async () => {
+          await expect(
+            service.completeGithubAppInstall({
+              organizationId: orgId,
+              userId,
+              installationId: 99999,
+              state: 'STUB_STATE',
+              source: 'web',
+            }),
+          ).rejects.toThrow(BadRequestException);
         });
       });
     });
