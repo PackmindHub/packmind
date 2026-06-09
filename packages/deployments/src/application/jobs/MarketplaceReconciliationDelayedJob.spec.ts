@@ -492,6 +492,81 @@ describe('MarketplaceReconciliationDelayedJob', () => {
     });
   });
 
+  describe('pending sync PR', () => {
+    beforeEach(() => {
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'abc',
+        content: JSON.stringify(baseDescriptor.raw),
+      });
+      mockParserRegistry.parse.mockReturnValue({
+        ...baseDescriptor,
+        raw: { reformatted: true },
+      });
+    });
+
+    describe('when an open sync PR exists', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.findOpenSyncPullRequest.mockResolvedValue({
+          url: 'https://github.com/acme/market/pull/7',
+          number: 7,
+        });
+        result = await job.runJob('job-pr', input, new AbortController());
+      });
+
+      it('returns the pending PR url', () => {
+        expect(result.pendingPrUrl).toBe(
+          'https://github.com/acme/market/pull/7',
+        );
+      });
+
+      it('persists the pending PR url', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.pendingPrUrl).toBe(
+          'https://github.com/acme/market/pull/7',
+        );
+      });
+    });
+
+    describe('when no open sync PR exists', () => {
+      it('clears the pending PR url to null', async () => {
+        mockGitPort.findOpenSyncPullRequest.mockResolvedValue(null);
+        const result = await job.runJob(
+          'job-pr2',
+          input,
+          new AbortController(),
+        );
+        expect(result.pendingPrUrl).toBeNull();
+      });
+    });
+
+    describe('when the sync PR lookup throws', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockMarketplaceRepository.findById.mockResolvedValue({
+          ...marketplace,
+          pendingPrUrl: 'https://github.com/acme/market/pull/3',
+        });
+        mockGitPort.findOpenSyncPullRequest.mockRejectedValue(
+          new Error('rate limited'),
+        );
+        result = await job.runJob('job-pr3', input, new AbortController());
+      });
+
+      it('does not flip the marketplace to unreachable', () => {
+        expect(result.state).toBe('healthy');
+      });
+
+      it('falls back to the last known pending PR url', () => {
+        expect(result.pendingPrUrl).toBe(
+          'https://github.com/acme/market/pull/3',
+        );
+      });
+    });
+  });
+
   describe('soft-deleted marketplace', () => {
     let result: MarketplaceReconciliationJobOutput;
 

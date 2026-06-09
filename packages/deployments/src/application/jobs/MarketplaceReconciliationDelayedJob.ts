@@ -22,6 +22,7 @@ import { Job } from 'bullmq';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
+import { MARKETPLACE_SYNC_BRANCH } from '../services/marketplaceSyncPullRequest';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 
 /**
@@ -451,6 +452,24 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     const state: MarketplaceState =
       driftedPluginSlugs.length > 0 || descriptorChanged ? 'drift' : 'healthy';
 
+    // Surface a pending "Packmind sync" PR (poll-on-refresh; cleaned on the
+    // next reconcile once the PR is merged/closed). Best-effort: a lookup
+    // failure must not flip the marketplace to unreachable.
+    let pendingPrUrl: string | null = null;
+    try {
+      const openPr = await this.gitPort.findOpenSyncPullRequest(
+        gitRepo,
+        MARKETPLACE_SYNC_BRANCH,
+      );
+      pendingPrUrl = openPr?.url ?? null;
+    } catch (error) {
+      this.logger.warn(
+        `[${this.origin}] Failed to look up sync PR for marketplace ${marketplace.id}`,
+        { marketplaceId: marketplace.id, error: getErrorMessage(error) },
+      );
+      pendingPrUrl = marketplace.pendingPrUrl; // keep last known on lookup error
+    }
+
     // Step 7 — Persist the update.
     if (state === 'drift') {
       const enrichedDescriptor: MarketplaceDescriptor = {
@@ -465,6 +484,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         pluginCount: descriptor.plugins.length,
         errorKind: null,
         errorDetail: null,
+        pendingPrUrl,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} drifted — descriptor updated`,
@@ -481,6 +501,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         lastValidatedAt,
         errorKind: null,
         errorDetail: null,
+        pendingPrUrl,
       });
       this.logger.info(
         `[${this.origin}] Marketplace ${marketplace.id} is healthy`,
@@ -493,7 +514,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       lastValidatedAt,
       errorKind: null,
       errorDetail: null,
-      pendingPrUrl: marketplace.pendingPrUrl, // replaced in Task 4
+      pendingPrUrl,
       outdatedPluginSlugs: marketplace.outdatedPluginSlugs, // replaced in Task 6
     };
   }
