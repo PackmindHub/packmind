@@ -17,7 +17,6 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-08T14:26:51.967Z",
   "artifacts": {
     "user:skill:agent-skill-frontmatter-audit": {
       "name": "agent-skill-frontmatter-audit",
