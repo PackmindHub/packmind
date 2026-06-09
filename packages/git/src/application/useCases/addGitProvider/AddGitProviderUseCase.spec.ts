@@ -1,4 +1,4 @@
-import { AddGitProviderUseCase } from './addGitProvider.usecase';
+import { AddGitProviderUseCase } from './AddGitProviderUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import {
   GitProviderDisplayNameAlreadyUsedError,

@@ -1,4 +1,4 @@
-import { GetFileFromRepo } from './getFileFromRepo.usecase';
+import { GetFileFromRepo } from './GetFileFromRepo';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';

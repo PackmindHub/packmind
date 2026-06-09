@@ -1,4 +1,4 @@
-import { CommitToGit } from './commitToGit.usecase';
+import { CommitToGit } from './CommitToGit';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
 import { createGitRepoId, GitRepo } from '@packmind/types';

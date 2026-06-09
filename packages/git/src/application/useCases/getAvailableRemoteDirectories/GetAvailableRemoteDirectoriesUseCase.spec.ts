@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createGitProviderId } from '@packmind/types';
 import { GitRepo, createGitRepoId } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories.usecase';
+import { GetAvailableRemoteDirectoriesUseCase } from './GetAvailableRemoteDirectoriesUseCase';
 
 // Mock Cache
 jest.mock('@packmind/node-utils', () => ({

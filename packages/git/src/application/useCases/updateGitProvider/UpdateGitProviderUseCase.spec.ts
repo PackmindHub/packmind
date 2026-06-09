@@ -15,7 +15,7 @@ import {
 } from '@packmind/types';
 import { gitProviderFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
-import { UpdateGitProviderUseCase } from './updateGitProvider.usecase';
+import { UpdateGitProviderUseCase } from './UpdateGitProviderUseCase';
 
 describe('UpdateGitProviderUseCase', () => {
   let useCase: UpdateGitProviderUseCase;

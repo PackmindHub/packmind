@@ -1,4 +1,4 @@
-import { AddGitRepoUseCase } from './addGitRepo.usecase';
+import { AddGitRepoUseCase } from './AddGitRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { AddGitRepoCommand } from '../../../domain/useCases/IAddGitRepo';

@@ -12,7 +12,7 @@ import {
   FetchFileContentOutput,
 } from '../../domain/jobs/FetchFileContent';
 import { GitRepoService } from '../GitRepoService';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { GetFileFromRepo } from '../useCases/getFileFromRepo/GetFileFromRepo';
 
 const logOrigin = 'FetchFileContentDelayedJob';
 

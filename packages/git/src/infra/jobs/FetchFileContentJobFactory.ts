@@ -3,7 +3,7 @@ import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { GitProviderService } from '../../application/GitProviderService';
 import { GitRepoService } from '../../application/GitRepoService';
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
-import { GetFileFromRepo } from '../../application/useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { GetFileFromRepo } from '../../application/useCases/getFileFromRepo/GetFileFromRepo';
 import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 

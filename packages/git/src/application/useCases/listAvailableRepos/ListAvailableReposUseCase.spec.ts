@@ -5,7 +5,7 @@ import {
   createOrganizationId,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { ListAvailableReposUseCase } from './listAvailableRepos.usecase';
+import { ListAvailableReposUseCase } from './ListAvailableReposUseCase';
 
 describe('ListAvailableReposUseCase', () => {
   let useCase: ListAvailableReposUseCase;

@@ -8,7 +8,7 @@ import {
 } from '@packmind/types';
 import { gitProviderFactory } from '../../../../test';
 import { GitProviderService } from '../../GitProviderService';
-import { ListProvidersUseCase } from './listProviders.usecase';
+import { ListProvidersUseCase } from './ListProvidersUseCase';
 
 describe('ListProvidersUseCase', () => {
   let useCase: ListProvidersUseCase;

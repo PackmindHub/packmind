@@ -5,7 +5,7 @@ import {
   createOrganizationId,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { CheckBranchExistsUseCase } from './checkBranchExists.usecase';
+import { CheckBranchExistsUseCase } from './CheckBranchExistsUseCase';
 
 describe('CheckBranchExistsUseCase', () => {
   let useCase: CheckBranchExistsUseCase;

@@ -1,4 +1,4 @@
-import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence.usecase';
+import { CheckDirectoryExistenceUseCase } from './CheckDirectoryExistenceUseCase';
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
