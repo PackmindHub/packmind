@@ -81,6 +81,8 @@ import {
   UpdateRuleDetectionAssessmentAfterUpdateResponse,
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
+  UpdateHeuristicsFollowingChatbotInputCommand,
+  UpdateHeuristicsFollowingChatbotInputResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
   UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
@@ -115,6 +117,7 @@ import { UpdateDetectionProgramUseCase } from '../useCases/updateDetectionProgra
 import { UpdateDetectionProgramStatusUseCase } from '../useCases/updateDetectionProgramStatus/UpdateDetectionProgramStatusUseCase';
 import { TrackLinterExecutionUseCase } from '../useCases/trackLinterExecution/TrackLinterExecutionUseCase';
 import { UpdateRuleDetectionHeuristicsUseCase } from '../useCases/updateRuleDetectionHeuristics/UpdateRuleDetectionHeuristicsUseCase';
+import { GenerateHeuristicFollowingChatbotInputUseCase } from '../useCases/generateHeuristicFollowingChatbotInput/GenerateHeuristicFollowingChatbotInputUseCase';
 import { UpdateRuleDetectionStatusAfterUpdateUseCase } from '../useCases/updateRuleDetectionStatusAfterUpdate/UpdateRuleDetectionStatusAfterUpdateUseCase';
 
 type LinterAdapterDependencies = {
@@ -186,6 +189,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private _getStandardRulesDetectionStatusUseCase!: GetStandardRulesDetectionStatusUseCase;
   private _testProgramExecutionUseCase!: TestProgramExecutionUseCase;
   private _updateRuleDetectionHeuristicsUseCase!: UpdateRuleDetectionHeuristicsUseCase;
+  private _generateHeuristicFollowingChatbotInputUseCase!: GenerateHeuristicFollowingChatbotInputUseCase;
   private _getDetectionHeuristicsUseCase!: GetDetectionHeuristicsUseCase;
   private _createDetectionHeuristicsUseCase!: CreateDetectionHeuristicsUseCase;
   private _getDetectionProgramsForPackagesUseCase!: GetDetectionProgramsForPackagesUseCase;
@@ -359,13 +363,19 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       this.standardsPort,
     );
 
+    this._generateHeuristicFollowingChatbotInputUseCase =
+      new GenerateHeuristicFollowingChatbotInputUseCase(
+        this.accountsPort,
+        this.repositories,
+        this.standardsPort,
+        this.llmPort,
+      );
+
     this._updateRuleDetectionHeuristicsUseCase =
       new UpdateRuleDetectionHeuristicsUseCase(
         this.repositories,
         this.standardsPort,
         () => this,
-        this.accountsPort,
-        this.llmPort,
       );
 
     this._getDetectionHeuristicsUseCase = new GetDetectionHeuristicsUseCase(
@@ -565,6 +575,12 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     command: UpdateRuleDetectionHeuristicsCommand,
   ): Promise<UpdateRuleDetectionHeuristicsResponse> {
     return this._updateRuleDetectionHeuristicsUseCase.execute(command);
+  }
+
+  async updateHeuristicsFollowingChatbotInput(
+    command: UpdateHeuristicsFollowingChatbotInputCommand,
+  ): Promise<UpdateHeuristicsFollowingChatbotInputResponse> {
+    return this._generateHeuristicFollowingChatbotInputUseCase.execute(command);
   }
 
   async getDetectionHeuristics(

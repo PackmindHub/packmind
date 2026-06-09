@@ -5,7 +5,6 @@ import {
   UpdateRuleDetectionHeuristicsResponse,
   IStandardsPort,
   ILinterPort,
-  ILlmPort,
   RuleId,
   ProgrammingLanguage,
   OrganizationId,
@@ -13,11 +12,9 @@ import {
   createUserId,
   createOrganizationId,
   UpdateHeuristicsFollowingChatbotInputCommand,
-  IAccountsPort,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import { GenerateHeuristicFollowingChatbotInputUseCase } from '../generateHeuristicFollowingChatbotInput/GenerateHeuristicFollowingChatbotInputUseCase';
 
 const origin = 'UpdateRuleDetectionHeuristicsUseCase';
 
@@ -26,8 +23,6 @@ export class UpdateRuleDetectionHeuristicsUseCase implements IUpdateRuleDetectio
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
-    private readonly accountsPort: IAccountsPort,
-    private readonly llmPort: ILlmPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -64,14 +59,7 @@ export class UpdateRuleDetectionHeuristicsUseCase implements IUpdateRuleDetectio
         detectionHeuristicsId: command.detectionHeuristicsId,
       });
 
-      // Call updateHeuristicsFollowingChatbotInput to generate new heuristic
-      const chatbotUseCase = new GenerateHeuristicFollowingChatbotInputUseCase(
-        this.accountsPort,
-        this.linterRepositories,
-        this.standardsAdapter,
-        this.llmPort,
-      );
-
+      // Reuse the chatbot heuristic generation through the linter port
       const chatbotCommand: UpdateHeuristicsFollowingChatbotInputCommand = {
         detectionHeuristicsId: command.detectionHeuristicsId,
         question,
@@ -80,7 +68,10 @@ export class UpdateRuleDetectionHeuristicsUseCase implements IUpdateRuleDetectio
         organizationId: command.organizationId,
       };
 
-      const chatbotResponse = await chatbotUseCase.execute(chatbotCommand);
+      const chatbotResponse =
+        await this.getLinterAdapter().updateHeuristicsFollowingChatbotInput(
+          chatbotCommand,
+        );
 
       // Append the new heuristic to the command's heuristics array if not empty
       if (chatbotResponse.newHeuristic?.trim()) {

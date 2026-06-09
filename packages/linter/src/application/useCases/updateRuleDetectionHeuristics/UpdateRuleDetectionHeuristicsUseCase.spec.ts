@@ -13,12 +13,10 @@ import {
   ILinterPort,
   Rule,
   RuleDetectionAssessment,
-  IAccountsPort,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { GenerateHeuristicFollowingChatbotInputUseCase } from '../generateHeuristicFollowingChatbotInput/GenerateHeuristicFollowingChatbotInputUseCase';
 
 // Mock SSEEventPublisher
 jest.mock('@packmind/node-utils', () => ({
@@ -28,11 +26,6 @@ jest.mock('@packmind/node-utils', () => ({
   },
 }));
 
-// Mock the GenerateHeuristicFollowingChatbotInputUseCase
-jest.mock(
-  '../generateHeuristicFollowingChatbotInput/GenerateHeuristicFollowingChatbotInputUseCase',
-);
-
 describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   let useCase: UpdateRuleDetectionHeuristicsUseCase;
   let heuristicsRepository: jest.Mocked<IRuleDetectionHeuristicsRepository>;
@@ -40,9 +33,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   let standardsAdapter: jest.Mocked<IStandardsPort>;
   let linterAdapter: jest.Mocked<ILinterPort>;
   let getLinterAdapter: jest.Mock<ILinterPort, []>;
-  let accountsPort: jest.Mocked<IAccountsPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
-  let mockChatbotUseCase: jest.Mocked<GenerateHeuristicFollowingChatbotInputUseCase>;
 
   beforeEach(() => {
     heuristicsRepository = {
@@ -69,35 +60,19 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
     linterAdapter = {
       startRuleDetectionAssessment: jest.fn(),
+      updateHeuristicsFollowingChatbotInput: jest
+        .fn()
+        .mockResolvedValue({ newHeuristic: 'generated heuristic' }),
     } as unknown as jest.Mocked<ILinterPort>;
 
     getLinterAdapter = jest.fn().mockReturnValue(linterAdapter);
 
-    accountsPort = {
-      getUserById: jest.fn(),
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
-
     stubbedLogger = stubLogger();
-
-    // Mock the chatbot use case
-    mockChatbotUseCase = {
-      execute: jest
-        .fn()
-        .mockResolvedValue({ newHeuristic: 'generated heuristic' }),
-    } as unknown as jest.Mocked<GenerateHeuristicFollowingChatbotInputUseCase>;
-
-    (GenerateHeuristicFollowingChatbotInputUseCase as jest.Mock).mockClear();
-    (
-      GenerateHeuristicFollowingChatbotInputUseCase as jest.Mock
-    ).mockImplementation(() => mockChatbotUseCase);
 
     useCase = new UpdateRuleDetectionHeuristicsUseCase(
       linterRepositories,
       standardsAdapter,
       getLinterAdapter,
-      accountsPort,
-      null,
       stubbedLogger,
     );
   });
@@ -577,7 +552,9 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       it('does not call chatbot use case', async () => {
         await useCase.execute(command);
 
-        expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+        expect(
+          linterAdapter.updateHeuristicsFollowingChatbotInput,
+        ).not.toHaveBeenCalled();
       });
 
       it('updates heuristics without generated content', async () => {
@@ -601,7 +578,9 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       it('does not call chatbot use case', async () => {
         await useCase.execute(command);
 
-        expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+        expect(
+          linterAdapter.updateHeuristicsFollowingChatbotInput,
+        ).not.toHaveBeenCalled();
       });
 
       it('updates heuristics without generated content', async () => {
@@ -631,7 +610,9 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
     it('skips appending if generated heuristic is empty', async () => {
       // Mock empty heuristic generation
-      mockChatbotUseCase.execute.mockResolvedValueOnce({ newHeuristic: '' });
+      linterAdapter.updateHeuristicsFollowingChatbotInput.mockResolvedValueOnce(
+        { newHeuristic: '' },
+      );
 
       heuristicsRepository.getHeuristicsById
         .mockReset()
