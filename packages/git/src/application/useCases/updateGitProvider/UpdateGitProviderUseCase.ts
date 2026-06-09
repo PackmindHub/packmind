@@ -8,6 +8,7 @@ import {
   IAccountsPort,
   IUpdateGitProviderUseCase,
   UpdateGitProviderCommand,
+  UpdateGitProviderResponse,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
@@ -21,7 +22,10 @@ import { providerHasAuth } from '../shared/providerAuthState';
 const origin = 'UpdateGitProviderUseCase';
 
 export class UpdateGitProviderUseCase
-  extends AbstractAdminUseCase<UpdateGitProviderCommand, GitProvider>
+  extends AbstractAdminUseCase<
+    UpdateGitProviderCommand,
+    UpdateGitProviderResponse
+  >
   implements IUpdateGitProviderUseCase
 {
   constructor(
@@ -35,7 +39,7 @@ export class UpdateGitProviderUseCase
 
   protected async executeForAdmins(
     command: UpdateGitProviderCommand & AdminContext,
-  ): Promise<GitProvider> {
+  ): Promise<UpdateGitProviderResponse> {
     const { id, gitProvider, organization } = command;
 
     // Business rule: id is required
