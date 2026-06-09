@@ -1,4 +1,4 @@
-import { ListRecipesBySpaceUsecase } from './listRecipesBySpace.usecase';
+import { ListRecipesBySpaceUsecase } from './ListRecipesBySpaceUsecase';
 import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import {

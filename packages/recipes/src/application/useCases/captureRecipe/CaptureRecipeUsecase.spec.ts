@@ -31,7 +31,7 @@ import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { CaptureRecipeUsecase } from './captureRecipe.usecase';
+import { CaptureRecipeUsecase } from './CaptureRecipeUsecase';
 
 // Mock external dependencies
 jest.mock('slug');

@@ -1,4 +1,4 @@
-import { DeleteRecipeUsecase } from '../deleteRecipe/deleteRecipe.usecase';
+import { DeleteRecipeUsecase } from '../deleteRecipe/DeleteRecipeUsecase';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   DeleteRecipesBatchCommand,

@@ -24,7 +24,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { DeleteRecipeUsecase } from './deleteRecipe.usecase';
+import { DeleteRecipeUsecase } from './DeleteRecipeUsecase';
 
 describe('DeleteRecipeUsecase', () => {
   let deleteRecipeUsecase: DeleteRecipeUsecase;

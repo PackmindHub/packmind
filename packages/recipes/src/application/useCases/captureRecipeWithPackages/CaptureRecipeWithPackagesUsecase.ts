@@ -11,7 +11,7 @@ import {
   createOrganizationId,
   createSpaceId,
 } from '@packmind/types';
-import { CaptureRecipeUsecase } from '../captureRecipe/captureRecipe.usecase';
+import { CaptureRecipeUsecase } from '../captureRecipe/CaptureRecipeUsecase';
 
 const origin = 'CaptureRecipeWithPackagesUsecase';
 

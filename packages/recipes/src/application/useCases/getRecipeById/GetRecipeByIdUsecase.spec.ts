@@ -1,4 +1,4 @@
-import { GetRecipeByIdUsecase } from './getRecipeById.usecase';
+import { GetRecipeByIdUsecase } from './GetRecipeByIdUsecase';
 import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import {

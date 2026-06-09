@@ -11,7 +11,7 @@ import { createOrganizationId } from '@packmind/types';
 import {
   BaseUpdateRecipesFromWebhookUsecase,
   CommonRepoData,
-} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhook.usecase';
+} from '../updateRecipesFromWebhook/BaseUpdateRecipesFromWebhookUsecase';
 
 const origin = 'UpdateRecipesFromGitHubUsecase';
 
