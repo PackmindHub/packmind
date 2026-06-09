@@ -1,5 +1,6 @@
 import {
   queryOptions,
+  QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
@@ -13,6 +14,7 @@ import {
   MarketplaceState,
   OrganizationId,
   PackageId,
+  SyncMarketplaceNowResponse,
 } from '@packmind/types';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import {
@@ -57,6 +59,36 @@ export const marketplaceQueryKeys = {
       marketplaceId,
     ] as const,
 };
+
+/**
+ * Merge a reconcile result into the cached marketplace list row in place. Used
+ * by the on-open refresh hook so each row's live state updates as its
+ * per-row `syncMarketplaceNow` resolves, without re-fetching the whole list.
+ */
+export function patchMarketplaceInCache(
+  queryClient: QueryClient,
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+  patch: SyncMarketplaceNowResponse,
+): void {
+  queryClient.setQueryData<MarketplaceListItem[]>(
+    marketplaceQueryKeys.list(organizationId),
+    (rows) =>
+      rows?.map((row) =>
+        row.id === marketplaceId
+          ? {
+              ...row,
+              state: patch.state,
+              lastValidatedAt: patch.lastValidatedAt,
+              errorKind: patch.errorKind,
+              errorDetail: patch.errorDetail,
+              pendingPrUrl: patch.pendingPrUrl,
+              outdatedPluginSlugs: patch.outdatedPluginSlugs,
+            }
+          : row,
+      ),
+  );
+}
 
 // Query-options factory exposed as marketplaceQueries.list(...) so route
 // clientLoaders can call queryClient.ensureQueryData(marketplaceQueries.list({ orgId }))

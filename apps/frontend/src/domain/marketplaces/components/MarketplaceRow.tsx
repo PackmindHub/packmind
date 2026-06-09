@@ -3,7 +3,9 @@ import { Link } from 'react-router';
 import {
   PMButton,
   PMConfirmationModal,
+  PMHStack,
   PMLink,
+  PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -14,6 +16,11 @@ export interface MarketplaceRowProps {
   marketplace: MarketplaceListItem;
   onUnlink: (marketplaceId: MarketplaceId) => void;
   isUnlinking: boolean;
+  /**
+   * When true, the row's state cell shows an inline spinner indicating its
+   * live state is being refreshed on page open.
+   */
+  isRefreshing?: boolean;
   /**
    * Organization slug used to build the link to the marketplace details
    * sub-route. When omitted, the marketplace name renders as plain text.
@@ -38,6 +45,7 @@ export function MarketplaceRow({
   marketplace,
   onUnlink,
   isUnlinking,
+  isRefreshing = false,
   orgSlug,
 }: Readonly<MarketplaceRowProps>): Record<string, React.ReactNode> {
   return {
@@ -45,7 +53,14 @@ export function MarketplaceRow({
     name: <MarketplaceNameCell marketplace={marketplace} orgSlug={orgSlug} />,
     repository: <MarketplaceRepositoryCell marketplace={marketplace} />,
     vendor: <PMText variant="small">{vendorLabel(marketplace.vendor)}</PMText>,
-    state: <MarketplaceStateBadge state={marketplace.state} />,
+    state: (
+      <PMHStack gap={2} align="center" justify="center">
+        <MarketplaceStateBadge state={marketplace.state} />
+        {isRefreshing && (
+          <PMSpinner size="xs" aria-label="Checking marketplace" />
+        )}
+      </PMHStack>
+    ),
     pluginCount: (
       <PMText variant="small" fontVariantNumeric="tabular-nums">
         {marketplace.pluginCount}

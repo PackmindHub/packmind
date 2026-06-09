@@ -23,6 +23,11 @@ export interface MarketplacesIndexProps {
    * `useUnlinkMarketplace`.
    */
   unlinkingMarketplaceId?: MarketplaceId | null;
+  /**
+   * Ids of rows whose live state is currently being refreshed on page open.
+   * Each such row shows an inline "checking" indicator next to its state.
+   */
+  refreshingIds?: ReadonlySet<MarketplaceId>;
   onUnlink: (marketplaceId: MarketplaceId) => void;
   /**
    * Kept for parity with the route call site (`organizationId` was passed by
@@ -68,6 +73,7 @@ export const MarketplacesIndex = ({
   marketplaces,
   isLoading,
   unlinkingMarketplaceId,
+  refreshingIds,
   onUnlink,
   orgSlug,
 }: Readonly<MarketplacesIndexProps>) => {
@@ -78,10 +84,11 @@ export const MarketplacesIndex = ({
           marketplace,
           onUnlink,
           isUnlinking: unlinkingMarketplaceId === marketplace.id,
+          isRefreshing: refreshingIds?.has(marketplace.id) ?? false,
           orgSlug,
         }),
       ),
-    [marketplaces, onUnlink, unlinkingMarketplaceId, orgSlug],
+    [marketplaces, onUnlink, unlinkingMarketplaceId, refreshingIds, orgSlug],
   );
 
   if (isLoading) {

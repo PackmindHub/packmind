@@ -27,6 +27,10 @@ const buildMarketplace = (
     raw: {},
   },
   pluginCount: 7,
+  errorKind: null,
+  errorDetail: null,
+  pendingPrUrl: null,
+  outdatedPluginSlugs: null,
   createdAt: new Date('2026-04-01T10:00:00.000Z'),
   updatedAt: new Date('2026-04-01T10:00:00.000Z'),
   deletedAt: null,
@@ -46,12 +50,14 @@ describe('MarketplacesIndex', () => {
   const renderIndex = (props: {
     marketplaces?: MarketplaceListItem[];
     isLoading?: boolean;
+    refreshingIds?: ReadonlySet<MarketplaceId>;
   }) =>
     render(
       <UIProvider>
         <MarketplacesIndex
           marketplaces={props.marketplaces ?? []}
           isLoading={props.isLoading ?? false}
+          refreshingIds={props.refreshingIds}
           onUnlink={jest.fn()}
         />
       </UIProvider>,
@@ -106,5 +112,19 @@ describe('MarketplacesIndex', () => {
     });
 
     expect(screen.getByText('1 marketplace linked')).toBeInTheDocument();
+  });
+
+  describe('when a row is refreshing on open', () => {
+    it('renders the checking indicator only for the refreshing row', () => {
+      renderIndex({
+        marketplaces: [
+          buildMarketplace({ id: 'mkt-1' as MarketplaceId }),
+          buildMarketplace({ id: 'mkt-2' as MarketplaceId }),
+        ],
+        refreshingIds: new Set(['mkt-1' as MarketplaceId]),
+      });
+
+      expect(screen.getAllByLabelText('Checking marketplace')).toHaveLength(1);
+    });
   });
 });

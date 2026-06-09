@@ -14,6 +14,7 @@ import {
   LinkMarketplacePanel,
   MarketplacesIndex,
 } from '../../src/domain/marketplaces/components';
+import { useRefreshMarketplacesOnOpen } from '../../src/domain/marketplaces/hooks';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 
 type AdminGuardOrganization =
@@ -82,6 +83,10 @@ export default function MarketplacesRouteModule() {
   const orgId = organization?.id ?? '';
   const orgSlug = organization?.slug ?? '';
   const { data: marketplaces, isLoading } = useMarketplaces(orgId);
+  const { refreshingIds } = useRefreshMarketplacesOnOpen(
+    orgId,
+    marketplaces ?? [],
+  );
   const unlinkMutation = useUnlinkMarketplace(orgId);
   const [unlinkingId, setUnlinkingId] = useState<MarketplaceId | null>(null);
 
@@ -114,6 +119,7 @@ export default function MarketplacesRouteModule() {
         marketplaces={marketplaces ?? []}
         isLoading={isLoading}
         unlinkingMarketplaceId={unlinkingId}
+        refreshingIds={refreshingIds}
         onUnlink={handleUnlink}
         organizationId={orgId}
         orgSlug={orgSlug}
