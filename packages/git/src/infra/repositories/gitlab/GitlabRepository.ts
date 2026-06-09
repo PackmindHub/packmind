@@ -712,6 +712,46 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
+  public async findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const baseBranch = this.options.branch || 'main';
+    const response = await this.axiosInstance.get(
+      `/projects/${this.encodedProjectPath}/merge_requests`,
+      {
+        params: {
+          source_branch: head,
+          target_branch: baseBranch,
+          state: 'opened',
+        },
+      },
+    );
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const first = response.data[0];
+      return { url: first.web_url, number: first.iid };
+    }
+    return null;
+  }
+
+  public async checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    try {
+      await this.axiosInstance.get(`/projects/${this.encodedProjectPath}`);
+      return { exists: true };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return { exists: false, reason: 'auth_failed' };
+      }
+      if (status === 404) {
+        return { exists: false, reason: 'repo_not_found' };
+      }
+      return { exists: false, reason: 'network_transient' };
+    }
+  }
+
   private extractHttpStatus(error: unknown): number | undefined {
     if (
       error &&

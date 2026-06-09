@@ -193,6 +193,53 @@ export class GitProviderService {
     return gitRepoInstance.openOrUpdatePullRequest(command);
   }
 
+  async findOpenSyncPullRequest(
+    gitRepo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.findOpenPullRequest(head);
+  }
+
+  async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (
+      !gitProvider ||
+      (gitProvider.authMethod !== 'app' && !gitProvider.token)
+    ) {
+      return { exists: false, reason: 'auth_failed' };
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.checkRepositoryExists();
+  }
+
   async listAvailableTargets(
     gitRepo: GitRepo,
     path?: string,

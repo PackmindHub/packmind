@@ -425,6 +425,24 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       .openOrUpdatePullRequest(repo, command);
   }
 
+  public async findOpenSyncPullRequest(
+    repo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    return this.gitServices
+      .getGitProviderService()
+      .findOpenSyncPullRequest(repo, head);
+  }
+
+  public async checkMarketplaceRepoExists(repo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    return this.gitServices
+      .getGitProviderService()
+      .checkMarketplaceRepoExists(repo);
+  }
+
   public async handleWebHook(
     command: HandleWebHookCommand,
   ): Promise<HandleWebHookResult> {

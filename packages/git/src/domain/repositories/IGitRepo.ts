@@ -73,4 +73,23 @@ export interface IGitRepo {
     title: string;
     body?: string;
   }): Promise<{ url: string; number: number; wasCreated: boolean }>;
+
+  /**
+   * Find an OPEN pull request whose head is `head` targeting the repo's
+   * configured base branch. Returns `null` when none is open. Used by the
+   * marketplace reconcile to surface a pending "Packmind sync" PR.
+   */
+  findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null>;
+
+  /**
+   * Probe whether the repository is currently reachable with the configured
+   * credentials. Distinguishes the three failure modes the marketplaces page
+   * surfaces, so the caller never has to infer them from raw exceptions.
+   */
+  checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }>;
 }

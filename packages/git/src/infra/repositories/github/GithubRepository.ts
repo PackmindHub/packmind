@@ -474,7 +474,7 @@ export class GithubRepository implements IGitRepo {
     });
 
     // Step 1: Look up any existing open PR matching head -> base.
-    const existing = await this.findOpenPullRequest(head, baseBranch);
+    const existing = await this.findOpenPullRequestForBase(head, baseBranch);
     if (existing) {
       this.logger.debug('Existing open pull request found, skipping creation', {
         owner,
@@ -519,7 +519,10 @@ export class GithubRepository implements IGitRepo {
           'GitHub reported PR already exists, re-running lookup',
           { owner, repo, head, base: baseBranch },
         );
-        const racedExisting = await this.findOpenPullRequest(head, baseBranch);
+        const racedExisting = await this.findOpenPullRequestForBase(
+          head,
+          baseBranch,
+        );
         if (racedExisting) {
           return {
             url: racedExisting.url,
@@ -546,7 +549,34 @@ export class GithubRepository implements IGitRepo {
     }
   }
 
-  private async findOpenPullRequest(
+  public async findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const baseBranch = this.options.branch || 'main';
+    return this.findOpenPullRequestForBase(head, baseBranch);
+  }
+
+  public async checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    const { owner, repo } = this.options;
+    try {
+      await this.axiosInstance.get(`/repos/${owner}/${repo}`);
+      return { exists: true };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return { exists: false, reason: 'auth_failed' };
+      }
+      if (status === 404) {
+        return { exists: false, reason: 'repo_not_found' };
+      }
+      return { exists: false, reason: 'network_transient' };
+    }
+  }
+
+  private async findOpenPullRequestForBase(
     head: string,
     base: string,
   ): Promise<{ url: string; number: number } | null> {

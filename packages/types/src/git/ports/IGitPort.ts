@@ -122,6 +122,24 @@ export interface IGitPort {
   ): Promise<{ url: string; number: number; wasCreated: boolean }>;
 
   /**
+   * Find the open "Packmind sync" pull request on a marketplace repo, or
+   * `null` when none is open. Used by reconcile to surface a pending PR.
+   */
+  findOpenSyncPullRequest(
+    repo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null>;
+
+  /**
+   * Probe a marketplace repo's reachability with the configured credentials,
+   * distinguishing auth failure / repo gone / transient network error.
+   */
+  checkMarketplaceRepoExists(repo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }>;
+
+  /**
    * Handle webhook payload for a git repository with file content
    *
    * @param command - The webhook command

@@ -1223,6 +1223,92 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('findOpenPullRequest', () => {
+    describe('when an open pull request exists', () => {
+      let result: Awaited<
+        ReturnType<typeof githubRepository.findOpenPullRequest>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 7,
+              html_url: 'https://github.com/test-owner/test-repo/pull/7',
+            },
+          ],
+        });
+        result = await githubRepository.findOpenPullRequest('packmind/sync');
+      });
+
+      it('returns the first open pull request mapped to url and number', () => {
+        expect(result).toEqual({
+          url: 'https://github.com/test-owner/test-repo/pull/7',
+          number: 7,
+        });
+      });
+    });
+
+    describe('when no open pull request exists', () => {
+      it('returns null', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        const result =
+          await githubRepository.findOpenPullRequest('packmind/sync');
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('checkRepositoryExists', () => {
+    describe('when the repository endpoint returns 200', () => {
+      it('reports the repository exists', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: {} });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: true });
+      });
+    });
+
+    describe('when the repository endpoint returns 404', () => {
+      it('classifies the failure as repo_not_found', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 404 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
+    });
+
+    describe('when the repository endpoint returns 401', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 401 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the repository endpoint returns 403', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 403 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the request fails with a network error', () => {
+      it('classifies the failure as network_transient', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue(new Error('socket hang up'));
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'network_transient' });
+      });
+    });
+  });
+
   describe('isValidBranch', () => {
     it('returns true for main branch', () => {
       const result = githubRepository.isValidBranch('refs/heads/main');
