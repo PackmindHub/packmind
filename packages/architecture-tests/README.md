@@ -70,10 +70,14 @@ Rules live in `src/*.arch.spec.ts`. Layer selection globs are centralised in
 | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/<domain>/src` ↛ `packages/<other-domain>/src` (one rule per domain) | Domains collaborate only through `@packmind/types` ports wired by the HexaRegistry — never by importing each other's source. Complements the Nx `env:*` tag boundaries. (`standard-port-adapter-cross-domain-integration`) |
 
-Domains considered: `accounts`, `spaces`, `standards`, `recipes`, `skills`,
-`git`, `deployments`, `coding-agent`, `llm` (see `DOMAIN_PACKAGES` in
-`src/architecture.ts`). The list is maintained explicitly — a domain package
-missing its hexagon layers is a problem to surface, not to auto-skip.
+Domains are **discovered**, not hardcoded: every package under `packages/` that
+owns a `src/domain/` layer is a domain (today: `accounts`, `spaces`, `standards`,
+`recipes`, `skills`, `git`, `deployments`, `coding-agent`, `llm`). Shared/leaf
+packages (`types`, `logger`, `node-utils`, `test-utils`, `migrations`, `editions`,
+`frontend`, `assets`, `linter-*`) have no `domain/` layer, so importing them stays
+legal for everyone. The only hardcoded list is `EXCLUDED_PACKAGES` in
+`src/architecture.ts`, which contains just `ui` (the Chakra frontend library — not
+a backend hexagon). A new domain package is therefore covered automatically.
 
 ### Shared-package purity & reverse dependencies — `src/boundaries.arch.spec.ts`
 
