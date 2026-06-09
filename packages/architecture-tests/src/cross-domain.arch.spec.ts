@@ -19,9 +19,7 @@ describe('Cross-domain isolation', () => {
     'forbids the %s domain from importing another domain directly',
     async (domain) => {
       const others = DOMAIN_PACKAGES.filter((d) => d !== domain);
-      const otherDomainsSrc = new RegExp(
-        `packages/(${others.join('|')})/src/`,
-      );
+      const otherDomainsSrc = new RegExp(`packages/(${others.join('|')})/src/`);
 
       const rule = projectFiles(ARCH_TSCONFIG)
         .inPath(`packages/${domain}/src/**`)

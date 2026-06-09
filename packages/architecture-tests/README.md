@@ -45,25 +45,25 @@ Rules live in `src/*.arch.spec.ts`. Layer selection globs are centralised in
 
 ### Core workflow layering — `src/layering.arch.spec.ts`
 
-| Rule | Guards |
-| --- | --- |
-| `infra/repositories` ↛ `application/**` | Persistence must not depend upward on use cases/adapters/services. |
-| `application/useCases` ↛ `infra/repositories` | Use cases reach data via services/ports, never concrete repositories. (`standard-use-case-architecture-patterns`) |
-| `application/adapter(s)` ↛ `infra/repositories` | "Never directly call Repositories in Adapter classes." (`standard-use-case-architecture-patterns`) |
-| `application/services` ↛ `infra/repositories` | Services depend on repository **interfaces** (`domain/repositories`), not implementations. |
-| `apps/api` controllers ↛ `infra/repositories` | The API layer goes through ports, never straight to persistence. (`standard-nestjs-module-hierarchy`) |
+| Rule                                            | Guards                                                                                                            |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `infra/repositories` ↛ `application/**`         | Persistence must not depend upward on use cases/adapters/services.                                                |
+| `application/useCases` ↛ `infra/repositories`   | Use cases reach data via services/ports, never concrete repositories. (`standard-use-case-architecture-patterns`) |
+| `application/adapter(s)` ↛ `infra/repositories` | "Never directly call Repositories in Adapter classes." (`standard-use-case-architecture-patterns`)                |
+| `application/services` ↛ `infra/repositories`   | Services depend on repository **interfaces** (`domain/repositories`), not implementations.                        |
+| `apps/api` controllers ↛ `infra/repositories`   | The API layer goes through ports, never straight to persistence. (`standard-nestjs-module-hierarchy`)             |
 
 ### Domain purity — `src/domain-purity.arch.spec.ts`
 
-| Rule | Guards |
-| --- | --- |
+| Rule                           | Guards                                                               |
+| ------------------------------ | -------------------------------------------------------------------- |
 | `domain/**` ↛ `application/**` | The innermost ring must not know about the layer that depends on it. |
-| `domain/**` ↛ `infra/**` | Domain stays free of infrastructure. |
+| `domain/**` ↛ `infra/**`       | Domain stays free of infrastructure.                                 |
 
 ### Cross-domain isolation — `src/cross-domain.arch.spec.ts`
 
-| Rule | Guards |
-| --- | --- |
+| Rule                                                                          | Guards                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/<domain>/src` ↛ `packages/<other-domain>/src` (one rule per domain) | Domains collaborate only through `@packmind/types` ports wired by the HexaRegistry — never by importing each other's source. Complements the Nx `env:*` tag boundaries. (`standard-port-adapter-cross-domain-integration`) |
 
 Domains considered: `accounts`, `spaces`, `standards`, `recipes`, `skills`,

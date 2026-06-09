@@ -7,7 +7,10 @@ import * as path from 'path';
  * monorepo sources are discovered. Paths in violations are relative to repo root
  * (e.g. `packages/recipes/src/...`), which is what the rule globs below match.
  */
-export const ARCH_TSCONFIG = path.resolve(__dirname, '../../../tsconfig.arch.json');
+export const ARCH_TSCONFIG = path.resolve(
+  __dirname,
+  '../../../tsconfig.arch.json',
+);
 
 /**
  * Domain (hexagon) packages under `packages/`. These follow the ports & adapters
