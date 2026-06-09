@@ -2,13 +2,13 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetOrganizationOnboardingStatusCommand,
+  GetOrganizationOnboardingStatusResponse,
   IAccountsPort,
   IDeploymentPort,
   IGetOrganizationOnboardingStatusUseCase,
   IGitPort,
   ISpacesPort,
   IStandardsPort,
-  OrganizationOnboardingStatus,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
 
@@ -17,7 +17,7 @@ const origin = 'GetOrganizationOnboardingStatusUseCase';
 export class GetOrganizationOnboardingStatusUseCase
   extends AbstractMemberUseCase<
     GetOrganizationOnboardingStatusCommand,
-    OrganizationOnboardingStatus
+    GetOrganizationOnboardingStatusResponse
   >
   implements IGetOrganizationOnboardingStatusUseCase
 {
@@ -36,7 +36,7 @@ export class GetOrganizationOnboardingStatusUseCase
 
   async executeForMembers(
     command: GetOrganizationOnboardingStatusCommand & MemberContext,
-  ): Promise<OrganizationOnboardingStatus> {
+  ): Promise<GetOrganizationOnboardingStatusResponse> {
     const { organization, user, userId } = command;
 
     this.logger.info('Fetching organization onboarding status', {
@@ -106,7 +106,7 @@ export class GetOrganizationOnboardingStatusUseCase
       hasDeployed = overviews.some((overview) => overview.length > 0);
     }
 
-    const status: OrganizationOnboardingStatus = {
+    const status: GetOrganizationOnboardingStatusResponse = {
       hasConnectedGitProvider,
       hasConnectedGitRepo,
       hasCreatedStandard,

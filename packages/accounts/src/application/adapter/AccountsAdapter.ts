@@ -66,7 +66,7 @@ import {
   IStartTrial,
   IGenerateTrialActivationTokenUseCase,
   GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResult,
+  GenerateTrialActivationTokenResponse,
   IActivateTrialAccountUseCase,
   ActivateTrialAccountCommand,
   ActivateTrialAccountResult,
@@ -648,7 +648,7 @@ export class AccountsAdapter
 
   public async generateTrialActivationToken(
     command: GenerateTrialActivationTokenCommand,
-  ): Promise<GenerateTrialActivationTokenResult> {
+  ): Promise<GenerateTrialActivationTokenResponse> {
     if (!this._generateTrialActivationToken) {
       throw new Error(
         'Trial activation token generation not available - missing dependencies',
