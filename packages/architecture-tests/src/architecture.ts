@@ -56,8 +56,6 @@ export const LAYER_GLOBS = {
   schemas: 'packages/*/src/infra/schemas/**',
   // The shared contract package (ports, contracts, events, entity types).
   types: 'packages/types/src/**',
-  // NestJS controllers in the API app.
-  controllers: 'apps/api/src/**/*.controller.ts',
   // The whole NestJS API app (controllers, modules, providers).
   apiAll: 'apps/api/src/**/*.ts',
 } as const;
