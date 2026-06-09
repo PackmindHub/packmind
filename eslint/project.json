@@ -1,0 +1,7 @@
+{
+  "name": "eslint-rules",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "eslint",
+  "projectType": "library",
+  "tags": ["env:node"]
+}
