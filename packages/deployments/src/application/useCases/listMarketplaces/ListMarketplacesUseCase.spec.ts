@@ -19,7 +19,7 @@ import {
 } from '@packmind/types';
 import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
-import { ListMarketplacesUseCase } from './listMarketplaces.usecase';
+import { ListMarketplacesUseCase } from './ListMarketplacesUseCase';
 
 describe('ListMarketplacesUseCase', () => {
   const organizationId: OrganizationId = createOrganizationId(uuidv4());

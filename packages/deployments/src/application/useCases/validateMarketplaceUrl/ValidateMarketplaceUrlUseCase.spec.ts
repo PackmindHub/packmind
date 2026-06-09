@@ -19,7 +19,7 @@ import {
   ValidateMarketplaceUrlCommand,
 } from '@packmind/types';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
-import { ValidateMarketplaceUrlUseCase } from './validateMarketplaceUrl.usecase';
+import { ValidateMarketplaceUrlUseCase } from './ValidateMarketplaceUrlUseCase';
 
 describe('ValidateMarketplaceUrlUseCase', () => {
   const organizationId: OrganizationId = createOrganizationId(uuidv4());

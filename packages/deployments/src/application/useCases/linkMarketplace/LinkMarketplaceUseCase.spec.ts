@@ -32,7 +32,7 @@ import {
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 import { MarketplaceDescriptorParserRegistry } from '../../services/MarketplaceDescriptorParserRegistry';
-import { LinkMarketplaceUseCase } from './linkMarketplace.usecase';
+import { LinkMarketplaceUseCase } from './LinkMarketplaceUseCase';
 
 describe('LinkMarketplaceUseCase', () => {
   const organizationId: OrganizationId = createOrganizationId(uuidv4());

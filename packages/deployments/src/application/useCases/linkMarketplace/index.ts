@@ -1,1 +1,1 @@
-export { LinkMarketplaceUseCase } from './linkMarketplace.usecase';
+export { LinkMarketplaceUseCase } from './LinkMarketplaceUseCase';

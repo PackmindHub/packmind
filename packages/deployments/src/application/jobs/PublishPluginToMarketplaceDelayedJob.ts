@@ -743,7 +743,7 @@ class PublishJobFailure extends Error {
  * marketplace consumers (e.g. Claude Code's `git-subdir` plugin source).
  *
  * Mirrors the cloud-host convention used by
- * `listMarketplaces.usecase`'s `buildRepositoryWebUrl` helper, but appends
+ * `ListMarketplacesUseCase`'s `buildRepositoryWebUrl` helper, but appends
  * the `.git` suffix that `git clone` accepts. GitLab `owner` may itself be
  * a `group/subgroup` path — that is fine, the slashes carry through into a
  * valid URL.

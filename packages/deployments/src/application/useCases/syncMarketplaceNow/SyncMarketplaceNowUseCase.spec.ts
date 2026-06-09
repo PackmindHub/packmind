@@ -12,7 +12,7 @@ import {
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
-import { SyncMarketplaceNowUseCase } from './syncMarketplaceNow.usecase';
+import { SyncMarketplaceNowUseCase } from './SyncMarketplaceNowUseCase';
 
 describe('SyncMarketplaceNowUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());

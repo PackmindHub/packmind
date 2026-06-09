@@ -13,7 +13,7 @@ import {
   User,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
-import { FindMarketplaceDistributionByIdUseCase } from './findMarketplaceDistributionById.usecase';
+import { FindMarketplaceDistributionByIdUseCase } from './FindMarketplaceDistributionByIdUseCase';
 
 describe('FindMarketplaceDistributionByIdUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());

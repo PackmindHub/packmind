@@ -1,1 +1,1 @@
-export { MarkPluginForRemovalUseCase } from './markPluginForRemoval.usecase';
+export { MarkPluginForRemovalUseCase } from './MarkPluginForRemovalUseCase';

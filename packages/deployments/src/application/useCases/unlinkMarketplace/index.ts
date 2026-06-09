@@ -1,1 +1,1 @@
-export { UnlinkMarketplaceUseCase } from './unlinkMarketplace.usecase';
+export { UnlinkMarketplaceUseCase } from './UnlinkMarketplaceUseCase';

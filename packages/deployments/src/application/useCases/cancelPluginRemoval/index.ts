@@ -1,1 +1,1 @@
-export { CancelPluginRemovalUseCase } from './cancelPluginRemoval.usecase';
+export { CancelPluginRemovalUseCase } from './CancelPluginRemovalUseCase';

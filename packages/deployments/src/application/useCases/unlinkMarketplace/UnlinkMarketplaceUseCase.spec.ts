@@ -20,7 +20,7 @@ import {
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
-import { UnlinkMarketplaceUseCase } from './unlinkMarketplace.usecase';
+import { UnlinkMarketplaceUseCase } from './UnlinkMarketplaceUseCase';
 
 describe('UnlinkMarketplaceUseCase', () => {
   const organizationId: OrganizationId = createOrganizationId(uuidv4());

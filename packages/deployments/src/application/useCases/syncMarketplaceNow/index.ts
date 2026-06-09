@@ -1,1 +1,1 @@
-export { SyncMarketplaceNowUseCase } from './syncMarketplaceNow.usecase';
+export { SyncMarketplaceNowUseCase } from './SyncMarketplaceNowUseCase';

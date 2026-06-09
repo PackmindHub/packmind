@@ -27,7 +27,7 @@ export type PackageDeletedDistributionsAdapter = {
  * distribution of that package:
  *
  *  - Subscribes to `PackagesDeletedEvent` (emitted by
- *    `DeletePackagesBatchUsecase`).
+ *    `DeletePackagesBatchUseCase`).
  *  - For each deleted package, looks up every `success`-state distribution
  *    via `findActiveByPackageId` (the `success` filter skips already
  *    `to_be_removed` rows so the listener is idempotent on retries).

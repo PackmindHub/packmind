@@ -1,1 +1,1 @@
-export { FindMarketplaceDistributionByIdUseCase } from './findMarketplaceDistributionById.usecase';
+export { FindMarketplaceDistributionByIdUseCase } from './FindMarketplaceDistributionByIdUseCase';

@@ -1,1 +1,1 @@
-export { ValidateMarketplaceUrlUseCase } from './validateMarketplaceUrl.usecase';
+export { ValidateMarketplaceUrlUseCase } from './ValidateMarketplaceUrlUseCase';

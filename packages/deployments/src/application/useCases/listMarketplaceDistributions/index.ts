@@ -1,1 +1,1 @@
-export { ListMarketplaceDistributionsUseCase } from './listMarketplaceDistributions.usecase';
+export { ListMarketplaceDistributionsUseCase } from './ListMarketplaceDistributionsUseCase';

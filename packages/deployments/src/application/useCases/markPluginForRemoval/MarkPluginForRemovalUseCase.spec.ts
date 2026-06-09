@@ -21,7 +21,7 @@ import {
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
 import { PackageService } from '../../services/PackageService';
-import { MarkPluginForRemovalUseCase } from './markPluginForRemoval.usecase';
+import { MarkPluginForRemovalUseCase } from './MarkPluginForRemovalUseCase';
 
 describe('MarkPluginForRemovalUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());

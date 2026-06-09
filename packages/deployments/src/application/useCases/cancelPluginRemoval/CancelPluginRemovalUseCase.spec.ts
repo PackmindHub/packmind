@@ -18,7 +18,7 @@ import {
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
-import { CancelPluginRemovalUseCase } from './cancelPluginRemoval.usecase';
+import { CancelPluginRemovalUseCase } from './CancelPluginRemovalUseCase';
 
 describe('CancelPluginRemovalUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());

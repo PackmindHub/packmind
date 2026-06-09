@@ -18,7 +18,7 @@ import {
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
 import { PackageService } from '../../services/PackageService';
-import { ListMarketplaceDistributionsUseCase } from './listMarketplaceDistributions.usecase';
+import { ListMarketplaceDistributionsUseCase } from './ListMarketplaceDistributionsUseCase';
 
 describe('ListMarketplaceDistributionsUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
