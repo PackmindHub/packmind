@@ -1,4 +1,4 @@
-import { CreatePackageUsecase } from './createPackage.usecase';
+import { CreatePackageUsecase } from './CreatePackageUsecase';
 import {
   createUserId,
   createOrganizationId,

@@ -1,4 +1,4 @@
-import { DeletePackagesBatchUsecase } from './deletePackagesBatch.usecase';
+import { DeletePackagesBatchUsecase } from './DeletePackagesBatchUsecase';
 import { PackageService } from '../../services/PackageService';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';

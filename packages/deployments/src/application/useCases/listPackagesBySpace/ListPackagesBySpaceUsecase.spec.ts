@@ -1,4 +1,4 @@
-import { ListPackagesBySpaceUsecase } from './listPackagesBySpace.usecase';
+import { ListPackagesBySpaceUsecase } from './ListPackagesBySpaceUsecase';
 import {
   createUserId,
   createOrganizationId,

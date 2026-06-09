@@ -1,4 +1,4 @@
-import { NotifyArtefactsDistributionUseCase } from './notifyArtefactsDistribution.usecase';
+import { NotifyArtefactsDistributionUseCase } from './NotifyArtefactsDistributionUseCase';
 import {
   createOrganizationId,
   createPackageId,

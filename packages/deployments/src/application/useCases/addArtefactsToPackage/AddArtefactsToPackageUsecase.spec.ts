@@ -1,4 +1,4 @@
-import { AddArtefactsToPackageUsecase } from './addArtefactsToPackage.usecase';
+import { AddArtefactsToPackageUsecase } from './AddArtefactsToPackageUsecase';
 import {
   AddArtefactsToPackageCommand,
   createOrganizationId,

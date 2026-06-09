@@ -1,4 +1,4 @@
-import { NotifyDistributionUseCase } from './notifyDistribution.usecase';
+import { NotifyDistributionUseCase } from './NotifyDistributionUseCase';
 import { parseGitRepoInfo } from '../../services/gitInfoHelpers';
 import {
   CodingAgent,

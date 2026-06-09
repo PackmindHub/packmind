@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { packageFactory } from '../../../../test';
 import { PackageService } from '../services/PackageService';
 import { DeploymentsServices } from '../services/DeploymentsServices';
-import { GetPackageSummaryUsecase } from './getPackageSummary.usecase';
+import { GetPackageSummaryUsecase } from './GetPackageSummaryUsecase';
 
 afterEach(() => jest.clearAllMocks());
 
