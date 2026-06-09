@@ -28,7 +28,7 @@ import { IStandardVersionRepository } from '../../../domain/repositories/IStanda
 import { CreateRuleExampleUseCase } from './CreateRuleExampleUseCase';
 
 describe('CreateRuleExampleUseCase', () => {
-  let createRuleExampleUsecase: CreateRuleExampleUseCase;
+  let createRuleExampleUseCase: CreateRuleExampleUseCase;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
@@ -109,7 +109,7 @@ describe('CreateRuleExampleUseCase', () => {
     accountsAdapter.getUserById.mockResolvedValue(user);
     accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
-    createRuleExampleUsecase = new CreateRuleExampleUseCase(
+    createRuleExampleUseCase = new CreateRuleExampleUseCase(
       spacesPort,
       accountsAdapter,
       ruleExampleRepository,
@@ -154,7 +154,7 @@ describe('CreateRuleExampleUseCase', () => {
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
-      const result = await createRuleExampleUsecase.execute(command);
+      const result = await createRuleExampleUseCase.execute(command);
 
       expect(result).toEqual(expectedRuleExample);
     });
@@ -187,7 +187,7 @@ describe('CreateRuleExampleUseCase', () => {
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
-      await createRuleExampleUsecase.execute(command);
+      await createRuleExampleUseCase.execute(command);
 
       expect(eventEmitterService.emit).toHaveBeenCalledWith(
         expect.any(RuleUpdatedEvent),
@@ -209,7 +209,7 @@ describe('CreateRuleExampleUseCase', () => {
 
         ruleRepository.findByIdInSpace.mockResolvedValue(null);
 
-        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+        await expect(createRuleExampleUseCase.execute(command)).rejects.toThrow(
           RuleNotInSpaceError,
         );
       });
@@ -228,7 +228,7 @@ describe('CreateRuleExampleUseCase', () => {
           negative: 'var variable = value;',
         };
 
-        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+        await expect(createRuleExampleUseCase.execute(command)).rejects.toThrow(
           'Language is required and cannot be empty',
         );
       });
@@ -262,7 +262,7 @@ describe('CreateRuleExampleUseCase', () => {
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
-      const result = await createRuleExampleUsecase.execute(command);
+      const result = await createRuleExampleUseCase.execute(command);
 
       expect(result).toEqual(expectedRuleExample);
     });
@@ -295,7 +295,7 @@ describe('CreateRuleExampleUseCase', () => {
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
       standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
-      const result = await createRuleExampleUsecase.execute(command);
+      const result = await createRuleExampleUseCase.execute(command);
 
       expect(result).toEqual(expectedRuleExample);
     });
@@ -320,7 +320,7 @@ describe('CreateRuleExampleUseCase', () => {
       ruleRepository.findByIdInSpace.mockResolvedValue(rule);
       ruleExampleRepository.add.mockRejectedValue(new Error('Database error'));
 
-      await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+      await expect(createRuleExampleUseCase.execute(command)).rejects.toThrow(
         'Database error',
       );
     });
@@ -339,7 +339,7 @@ describe('CreateRuleExampleUseCase', () => {
           negative: 'var variable = value;',
         };
 
-        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+        await expect(createRuleExampleUseCase.execute(command)).rejects.toThrow(
           SpaceMembershipRequiredError,
         );
       });

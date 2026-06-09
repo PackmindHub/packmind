@@ -30,7 +30,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
     ) => Promise<
       IQueue<GenerateStandardSummaryInput, GenerateStandardSummaryOutput>
     >,
-    private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUseCase,
+    private readonly _updateStandardVersionSummaryUseCase: UpdateStandardVersionSummaryUseCase,
     private readonly _standardSummaryService: StandardSummaryService,
     private readonly _standardVersionService: StandardVersionService,
     private readonly _spacesPort: ISpacesPort,
@@ -173,7 +173,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
   private async updateSummaryForStandardVersionId(
     result: GenerateStandardSummaryOutput,
   ) {
-    await this._updateStandardVersionSummaryUsecase.execute({
+    await this._updateStandardVersionSummaryUseCase.execute({
       organizationId: result.organizationId,
       standardVersionId: result.standardVersion.id,
       summary: result.summary,

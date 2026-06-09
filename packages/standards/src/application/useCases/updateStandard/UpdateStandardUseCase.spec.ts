@@ -48,7 +48,7 @@ jest.mock('slug');
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
 describe('UpdateStandardUseCase', () => {
-  let updateStandardUsecase: UpdateStandardUseCase;
+  let updateStandardUseCase: UpdateStandardUseCase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
@@ -183,7 +183,7 @@ describe('UpdateStandardUseCase', () => {
       removeAllListeners: jest.fn().mockReturnThis(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    updateStandardUsecase = new UpdateStandardUseCase(
+    updateStandardUseCase = new UpdateStandardUseCase(
       spacesPort,
       accountsAdapter,
       standardService,
@@ -196,7 +196,7 @@ describe('UpdateStandardUseCase', () => {
     );
 
     // Spy on the generateStandardSummary method
-    jest.spyOn(updateStandardUsecase, 'generateStandardSummary');
+    jest.spyOn(updateStandardUseCase, 'generateStandardSummary');
   });
 
   afterEach(() => {
@@ -306,7 +306,7 @@ describe('UpdateStandardUseCase', () => {
           newStandardVersion,
         );
 
-        const response = await updateStandardUsecase.execute(inputData);
+        const response = await updateStandardUseCase.execute(inputData);
         result = response.standard;
       });
 
@@ -349,13 +349,13 @@ describe('UpdateStandardUseCase', () => {
 
       it('calls generateStandardSummary method once', () => {
         expect(
-          updateStandardUsecase.generateStandardSummary,
+          updateStandardUseCase.generateStandardSummary,
         ).toHaveBeenCalledTimes(1);
       });
 
       it('calls generateStandardSummary method with correct parameters', () => {
         expect(
-          updateStandardUsecase.generateStandardSummary,
+          updateStandardUseCase.generateStandardSummary,
         ).toHaveBeenCalledWith(
           createUserId(inputData.userId),
           inputData.organizationId,
@@ -468,7 +468,7 @@ describe('UpdateStandardUseCase', () => {
         );
         ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
 
-        const response = await updateStandardUsecase.execute(inputData);
+        const response = await updateStandardUseCase.execute(inputData);
         result = response.standard;
       });
 
@@ -485,7 +485,7 @@ describe('UpdateStandardUseCase', () => {
       describe('when content is unchanged', () => {
         it('does not call generateStandardSummary method', () => {
           expect(
-            updateStandardUsecase.generateStandardSummary,
+            updateStandardUseCase.generateStandardSummary,
           ).not.toHaveBeenCalled();
         });
       });
@@ -574,7 +574,7 @@ describe('UpdateStandardUseCase', () => {
         standardService.updateStandard.mockResolvedValue(updatedStandard);
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
-        await updateStandardUsecase.execute(inputData);
+        await updateStandardUseCase.execute(inputData);
       });
 
       it('preserves the original slug', () => {
@@ -702,7 +702,7 @@ describe('UpdateStandardUseCase', () => {
           newStandardVersion,
         );
 
-        await updateStandardUsecase.execute(inputData);
+        await updateStandardUseCase.execute(inputData);
       });
 
       it('still updates the standard despite summary failure', () => {
@@ -804,7 +804,7 @@ describe('UpdateStandardUseCase', () => {
           newStandardVersion,
         );
 
-        await updateStandardUsecase.execute(inputData);
+        await updateStandardUseCase.execute(inputData);
       });
 
       it('passes the correct userId to standard update', () => {
@@ -925,7 +925,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('calls updateStandard', () => {
@@ -963,7 +963,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('calls updateStandard', () => {
@@ -1004,7 +1004,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('calls updateStandard', () => {
@@ -1046,7 +1046,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('calls updateStandard', () => {
@@ -1096,7 +1096,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('calls updateStandard', () => {
@@ -1157,7 +1157,7 @@ describe('UpdateStandardUseCase', () => {
             newVersion,
           );
 
-          const response = await updateStandardUsecase.execute(inputData);
+          const response = await updateStandardUseCase.execute(inputData);
           result = response.standard;
         });
 
@@ -1198,13 +1198,13 @@ describe('UpdateStandardUseCase', () => {
 
         it('throws error', async () => {
           await expect(
-            updateStandardUsecase.execute(inputData),
+            updateStandardUseCase.execute(inputData),
           ).rejects.toThrow(`Space with id ${spaceId} not found`);
         });
 
         it('does not call getStandardById', async () => {
           try {
-            await updateStandardUsecase.execute(inputData);
+            await updateStandardUseCase.execute(inputData);
           } catch {
             // Expected to throw
           }
@@ -1236,7 +1236,7 @@ describe('UpdateStandardUseCase', () => {
 
         it('throws error', async () => {
           await expect(
-            updateStandardUsecase.execute(inputData),
+            updateStandardUseCase.execute(inputData),
           ).rejects.toThrow(
             `Space ${spaceId} does not belong to organization ${organizationId}`,
           );
@@ -1244,7 +1244,7 @@ describe('UpdateStandardUseCase', () => {
 
         it('does not call getStandardById', async () => {
           try {
-            await updateStandardUsecase.execute(inputData);
+            await updateStandardUseCase.execute(inputData);
           } catch {
             // Expected to throw
           }
@@ -1278,7 +1278,7 @@ describe('UpdateStandardUseCase', () => {
 
         it('throws error', async () => {
           await expect(
-            updateStandardUsecase.execute(inputData),
+            updateStandardUseCase.execute(inputData),
           ).rejects.toThrow(
             `Standard ${standardId} does not belong to space ${spaceId}`,
           );
@@ -1286,7 +1286,7 @@ describe('UpdateStandardUseCase', () => {
 
         it('does not call getLatestStandardVersion', async () => {
           try {
-            await updateStandardUsecase.execute(inputData);
+            await updateStandardUseCase.execute(inputData);
           } catch {
             // Expected to throw
           }
@@ -1318,13 +1318,13 @@ describe('UpdateStandardUseCase', () => {
 
         it('throws error', async () => {
           await expect(
-            updateStandardUsecase.execute(inputData),
+            updateStandardUseCase.execute(inputData),
           ).rejects.toThrow(`Standard with id ${standardId} not found`);
         });
 
         it('does not call getLatestStandardVersion', async () => {
           try {
-            await updateStandardUsecase.execute(inputData);
+            await updateStandardUseCase.execute(inputData);
           } catch {
             // Expected to throw
           }
@@ -1357,7 +1357,7 @@ describe('UpdateStandardUseCase', () => {
           );
 
           await expect(
-            updateStandardUsecase.execute(inputData),
+            updateStandardUseCase.execute(inputData),
           ).rejects.toThrow(`No versions found for standard ${standardId}`);
         });
       });
@@ -1394,7 +1394,7 @@ describe('UpdateStandardUseCase', () => {
         const error = new Error('Database error');
         standardService.updateStandard.mockRejectedValue(error);
 
-        await expect(updateStandardUsecase.execute(inputData)).rejects.toThrow(
+        await expect(updateStandardUseCase.execute(inputData)).rejects.toThrow(
           'Database error',
         );
       });
@@ -1479,7 +1479,7 @@ describe('UpdateStandardUseCase', () => {
             scope: null,
           };
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
 
           const ruleAddedCalls = eventEmitterService.emit.mock.calls.filter(
             (call) => call[0] instanceof RuleAddedEvent,
@@ -1519,7 +1519,7 @@ describe('UpdateStandardUseCase', () => {
             scope: null,
           };
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
 
           const ruleDeletedCalls = eventEmitterService.emit.mock.calls.filter(
             (call) => call[0] instanceof RuleDeletedEvent,
@@ -1558,7 +1558,7 @@ describe('UpdateStandardUseCase', () => {
             scope: null,
           };
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('emits RuleAddedEvent for each added rule', () => {
@@ -1601,7 +1601,7 @@ describe('UpdateStandardUseCase', () => {
             scope: null,
           };
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('emits RuleAddedEvent for new content', () => {
@@ -1642,7 +1642,7 @@ describe('UpdateStandardUseCase', () => {
             scope: null,
           };
 
-          await updateStandardUsecase.execute(inputData);
+          await updateStandardUseCase.execute(inputData);
         });
 
         it('does not emit RuleAddedEvent', () => {
@@ -1679,7 +1679,7 @@ describe('UpdateStandardUseCase', () => {
         scope: null,
       };
 
-      await expect(updateStandardUsecase.execute(command)).rejects.toThrow(
+      await expect(updateStandardUseCase.execute(command)).rejects.toThrow(
         SpaceMembershipRequiredError,
       );
     });

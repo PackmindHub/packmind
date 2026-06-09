@@ -32,7 +32,7 @@ import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRep
 import { SkillParseError } from '../../errors/SkillParseError';
 import { SkillValidationError } from '../../errors/SkillValidationError';
 
-const origin = 'UploadSkillUsecase';
+const origin = 'UploadSkillUseCase';
 
 export class UploadSkillUseCase
   extends AbstractMemberUseCase<UploadSkillCommand, UploadSkillResponse>
@@ -53,7 +53,7 @@ export class UploadSkillUseCase
     super(accountsPort, logger);
     this.skillParser = new SkillParser();
     this.skillValidator = new SkillValidator();
-    this.logger.info('UploadSkillUsecase initialized');
+    this.logger.info('UploadSkillUseCase initialized');
   }
 
   async executeForMembers(

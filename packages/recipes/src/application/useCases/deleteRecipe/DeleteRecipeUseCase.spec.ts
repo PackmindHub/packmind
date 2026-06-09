@@ -27,7 +27,7 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { DeleteRecipeUseCase } from './DeleteRecipeUseCase';
 
 describe('DeleteRecipeUseCase', () => {
-  let deleteRecipeUsecase: DeleteRecipeUseCase;
+  let deleteRecipeUseCase: DeleteRecipeUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
@@ -70,7 +70,7 @@ describe('DeleteRecipeUseCase', () => {
 
     stubLogger();
 
-    deleteRecipeUsecase = new DeleteRecipeUseCase(
+    deleteRecipeUseCase = new DeleteRecipeUseCase(
       spacesPort,
       accountsPort,
       recipeService,
@@ -147,7 +147,7 @@ describe('DeleteRecipeUseCase', () => {
         recipeVersionService.deleteRecipeVersionsForRecipe.mockResolvedValue();
         recipeService.deleteRecipe.mockResolvedValue();
 
-        await deleteRecipeUsecase.execute(command);
+        await deleteRecipeUseCase.execute(command);
       });
 
       it('calls RecipeService.deleteRecipe with correct parameters', () => {
@@ -211,14 +211,14 @@ describe('DeleteRecipeUseCase', () => {
       });
 
       it('throws the error from RecipeService', async () => {
-        await expect(deleteRecipeUsecase.execute(command)).rejects.toThrow(
+        await expect(deleteRecipeUseCase.execute(command)).rejects.toThrow(
           'Recipe deletion failed',
         );
       });
 
       it('calls RecipeService.deleteRecipe with correct parameters', async () => {
         try {
-          await deleteRecipeUsecase.execute(command);
+          await deleteRecipeUseCase.execute(command);
         } catch {
           // Ignore error for this test
         }
@@ -231,7 +231,7 @@ describe('DeleteRecipeUseCase', () => {
 
       it('calls RecipeService.deleteRecipe exactly once', async () => {
         try {
-          await deleteRecipeUsecase.execute(command);
+          await deleteRecipeUseCase.execute(command);
         } catch {
           // Ignore error for this test
         }
@@ -257,7 +257,7 @@ describe('DeleteRecipeUseCase', () => {
 
       it('throws an error with the correct message', async () => {
         await expect(
-          deleteRecipeUsecase.execute(nonExistentCommand),
+          deleteRecipeUseCase.execute(nonExistentCommand),
         ).rejects.toThrow(`Recipe ${nonExistentRecipeId} not found`);
       });
     });
@@ -280,7 +280,7 @@ describe('DeleteRecipeUseCase', () => {
 
       it('throws an error with the correct message', async () => {
         await expect(
-          deleteRecipeUsecase.execute(failingCommand),
+          deleteRecipeUseCase.execute(failingCommand),
         ).rejects.toThrow('Database connection failed');
       });
     });
@@ -291,7 +291,7 @@ describe('DeleteRecipeUseCase', () => {
       });
 
       it('throws a SpaceMembershipRequiredError', async () => {
-        await expect(deleteRecipeUsecase.execute(command)).rejects.toThrow(
+        await expect(deleteRecipeUseCase.execute(command)).rejects.toThrow(
           SpaceMembershipRequiredError,
         );
       });

@@ -40,7 +40,7 @@ jest.mock('slug');
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
 describe('CreateStandardUseCase', () => {
-  let createStandardUsecase: CreateStandardUseCase;
+  let createStandardUseCase: CreateStandardUseCase;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
@@ -141,7 +141,7 @@ describe('CreateStandardUseCase', () => {
     standardService.listStandardsBySpace.mockResolvedValue([]);
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
-    createStandardUsecase = new CreateStandardUseCase(
+    createStandardUseCase = new CreateStandardUseCase(
       spacesPort,
       accountsPort,
       standardService,
@@ -173,7 +173,7 @@ describe('CreateStandardUseCase', () => {
         scope: null,
       };
 
-      await expect(createStandardUsecase.execute(command)).rejects.toThrow(
+      await expect(createStandardUseCase.execute(command)).rejects.toThrow(
         SpaceMembershipRequiredError,
       );
     });
@@ -222,7 +222,7 @@ describe('CreateStandardUseCase', () => {
           createdStandardVersion,
         );
 
-        result = await createStandardUsecase.execute(inputData);
+        result = await createStandardUseCase.execute(inputData);
       });
 
       it('generates the correct slug from the standard name', () => {
@@ -356,7 +356,7 @@ describe('CreateStandardUseCase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('calls slug with the original name', () => {
@@ -409,7 +409,7 @@ describe('CreateStandardUseCase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('calls slug with the original name including special characters', () => {
@@ -453,7 +453,7 @@ describe('CreateStandardUseCase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.execute(inputData);
+        await createStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({ rules: [] }),
@@ -484,7 +484,7 @@ describe('CreateStandardUseCase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.execute(inputData);
+        await createStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -520,7 +520,7 @@ describe('CreateStandardUseCase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
 
           expect(
             standardVersionService.addStandardVersion,
@@ -552,7 +552,7 @@ describe('CreateStandardUseCase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
 
           expect(
             standardVersionService.addStandardVersion,
@@ -584,7 +584,7 @@ describe('CreateStandardUseCase', () => {
         standardService.addStandard.mockRejectedValue(error);
 
         try {
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         } catch (e) {
           thrownError = e as Error;
         }
@@ -635,7 +635,7 @@ describe('CreateStandardUseCase', () => {
         standardVersionService.addStandardVersion.mockRejectedValue(error);
 
         try {
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         } catch (e) {
           thrownError = e as Error;
         }
@@ -680,7 +680,7 @@ describe('CreateStandardUseCase', () => {
           createdStandardVersion,
         );
 
-        result = await createStandardUsecase.execute(inputData);
+        result = await createStandardUseCase.execute(inputData);
       });
 
       it('returns created standard', () => {
@@ -718,7 +718,7 @@ describe('CreateStandardUseCase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
 
           expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -779,7 +779,7 @@ describe('CreateStandardUseCase', () => {
             createdRules,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('emits correct number of events', () => {
@@ -825,7 +825,7 @@ describe('CreateStandardUseCase', () => {
             ruleFactory({ standardVersionId: createdStandardVersion.id }),
           ]);
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('calls findByStandardVersionId with correct standardVersionId', () => {
@@ -858,7 +858,7 @@ describe('CreateStandardUseCase', () => {
           );
           ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('emits only one event', () => {
@@ -873,7 +873,7 @@ describe('CreateStandardUseCase', () => {
     });
 
     describe('slug uniqueness', () => {
-      let createStandardUsecase: CreateStandardUseCase;
+      let createStandardUseCase: CreateStandardUseCase;
       let standardService: jest.Mocked<StandardService>;
       let standardVersionService: jest.Mocked<StandardVersionService>;
       let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
@@ -928,7 +928,7 @@ describe('CreateStandardUseCase', () => {
           deleteById: jest.fn(),
         } as unknown as jest.Mocked<IRuleRepository>;
 
-        createStandardUsecase = new CreateStandardUseCase(
+        createStandardUseCase = new CreateStandardUseCase(
           spacesPort,
           accountsPort,
           standardService,
@@ -979,7 +979,7 @@ describe('CreateStandardUseCase', () => {
             createdVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('queries standards by space', () => {
@@ -1028,7 +1028,7 @@ describe('CreateStandardUseCase', () => {
             createdVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('increments slug with -1 for standard', () => {
@@ -1073,7 +1073,7 @@ describe('CreateStandardUseCase', () => {
             createdVersion,
           );
 
-          await createStandardUsecase.execute(inputData);
+          await createStandardUseCase.execute(inputData);
         });
 
         it('increments slug with -2 for standard', () => {

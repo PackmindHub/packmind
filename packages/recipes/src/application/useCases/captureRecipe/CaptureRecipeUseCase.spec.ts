@@ -39,7 +39,7 @@ jest.mock('slug');
 const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
 describe('CaptureRecipeUseCase', () => {
-  let captureRecipeUsecase: CaptureRecipeUseCase;
+  let captureRecipeUseCase: CaptureRecipeUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
@@ -99,7 +99,7 @@ describe('CaptureRecipeUseCase', () => {
     // Default: no existing recipes (can be overridden in individual tests)
     recipeService.listRecipesBySpace.mockResolvedValue([]);
 
-    captureRecipeUsecase = new CaptureRecipeUseCase(
+    captureRecipeUseCase = new CaptureRecipeUseCase(
       spacesPort,
       accountsPort,
       recipeService,
@@ -137,7 +137,7 @@ describe('CaptureRecipeUseCase', () => {
           },
         ];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
@@ -211,7 +211,7 @@ describe('CaptureRecipeUseCase', () => {
           codeSnippet?: string;
         }[] = [];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
@@ -245,7 +245,7 @@ describe('CaptureRecipeUseCase', () => {
         const contextValidationCheckpoints = ['Check prerequisites'];
         const steps = [{ name: 'Step One', description: 'Do something' }];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
@@ -279,7 +279,7 @@ describe('CaptureRecipeUseCase', () => {
         const contextValidationCheckpoints: string[] = [];
         const steps = [{ name: 'Step One', description: 'Do something' }];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
@@ -317,7 +317,7 @@ describe('CaptureRecipeUseCase', () => {
           codeSnippet?: string;
         }[] = [];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
@@ -358,7 +358,7 @@ describe('CaptureRecipeUseCase', () => {
           },
         ];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           [],
           [],
@@ -396,7 +396,7 @@ describe('CaptureRecipeUseCase', () => {
           },
         ];
 
-        result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUseCase.assembleRecipeContent(
           summary,
           [],
           [],
@@ -471,7 +471,7 @@ describe('CaptureRecipeUseCase', () => {
           userId,
         };
 
-        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+        const expectedContent = captureRecipeUseCase.assembleRecipeContent(
           command.summary!,
           command.whenToUse!,
           command.contextValidationCheckpoints!,
@@ -501,7 +501,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeSummaryService.createRecipeSummary).not.toHaveBeenCalled();
       });
@@ -537,7 +537,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
           recipeId: createdRecipe.id,
@@ -596,7 +596,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        result = await captureRecipeUsecase.execute(command);
+        result = await captureRecipeUseCase.execute(command);
       });
 
       it('returns the created recipe', () => {
@@ -648,7 +648,7 @@ describe('CaptureRecipeUseCase', () => {
           generatedSummary,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
           expect.any(String), // organizationId
@@ -698,7 +698,7 @@ describe('CaptureRecipeUseCase', () => {
           generatedSummary,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
           recipeId: createdRecipe.id,
@@ -748,7 +748,7 @@ describe('CaptureRecipeUseCase', () => {
           generatedSummary,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
           expect.any(String), // organizationId
@@ -799,7 +799,7 @@ describe('CaptureRecipeUseCase', () => {
           new Error('AI service not configured'),
         );
 
-        const result = await captureRecipeUsecase.execute(command);
+        const result = await captureRecipeUseCase.execute(command);
 
         expect(result).toEqual(createdRecipe);
       });
@@ -839,7 +839,7 @@ describe('CaptureRecipeUseCase', () => {
             new Error('AI service not configured'),
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
 
           expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
             recipeId: createdRecipe.id,
@@ -887,7 +887,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(mockSlug).toHaveBeenCalledWith(command.name);
       });
@@ -904,7 +904,7 @@ describe('CaptureRecipeUseCase', () => {
           userId,
         };
 
-        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+        const expectedContent = captureRecipeUseCase.assembleRecipeContent(
           command.summary!,
           command.whenToUse!,
           command.contextValidationCheckpoints!,
@@ -931,7 +931,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(recipeService.addRecipe).toHaveBeenCalledWith({
           name: command.name,
@@ -975,7 +975,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         const recipeCall = recipeService.addRecipe.mock.invocationCallOrder[0];
         const versionCall =
@@ -1014,7 +1014,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        const result = await captureRecipeUsecase.execute(command);
+        const result = await captureRecipeUseCase.execute(command);
 
         expect(result).toEqual(createdRecipe);
       });
@@ -1033,7 +1033,7 @@ describe('CaptureRecipeUseCase', () => {
           userId,
         };
 
-        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+        const expectedContent = captureRecipeUseCase.assembleRecipeContent(
           command.summary!,
           command.whenToUse!,
           command.contextValidationCheckpoints!,
@@ -1056,7 +1056,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(mockSlug).toHaveBeenCalledWith('My Complex Recipe Name');
       });
@@ -1075,7 +1075,7 @@ describe('CaptureRecipeUseCase', () => {
 
         mockSlug.mockReturnValue('recipe-with-special-characters');
 
-        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+        const expectedContent = captureRecipeUseCase.assembleRecipeContent(
           command.summary!,
           command.whenToUse!,
           command.contextValidationCheckpoints!,
@@ -1098,7 +1098,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         expect(mockSlug).toHaveBeenCalledWith(
           'Recipe with "Special" Characters!',
@@ -1140,7 +1140,7 @@ describe('CaptureRecipeUseCase', () => {
             createdRecipeVersion,
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
 
           expect(recipeService.addRecipe).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -1181,7 +1181,7 @@ describe('CaptureRecipeUseCase', () => {
             createdRecipeVersion,
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
 
           expect(mockSlug).not.toHaveBeenCalled();
         });
@@ -1220,7 +1220,7 @@ describe('CaptureRecipeUseCase', () => {
             createdRecipeVersion,
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
 
           expect(recipeService.addRecipe).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -1247,7 +1247,7 @@ describe('CaptureRecipeUseCase', () => {
           const existingRecipes = [recipeFactory({ slug: 'existing-slug' })];
           recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
 
-          await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+          await expect(captureRecipeUseCase.execute(command)).rejects.toThrow(
             RecipeSlugAlreadyExistsError,
           );
         });
@@ -1268,7 +1268,7 @@ describe('CaptureRecipeUseCase', () => {
           const existingRecipes = [recipeFactory({ slug: 'existing-slug' })];
           recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
 
-          await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+          await expect(captureRecipeUseCase.execute(command)).rejects.toThrow(
             'A command with slug "existing-slug" already exists in this space',
           );
         });
@@ -1290,7 +1290,7 @@ describe('CaptureRecipeUseCase', () => {
           recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
 
           try {
-            await captureRecipeUsecase.execute(command);
+            await captureRecipeUseCase.execute(command);
           } catch {
             // Expected to throw
           }
@@ -1332,7 +1332,7 @@ describe('CaptureRecipeUseCase', () => {
             createdRecipeVersion,
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
         });
 
         it('calls slug library with recipe name', () => {
@@ -1381,7 +1381,7 @@ describe('CaptureRecipeUseCase', () => {
             createdRecipeVersion,
           );
 
-          await captureRecipeUsecase.execute(command);
+          await captureRecipeUseCase.execute(command);
 
           expect(mockSlug).toHaveBeenCalledWith('Test Recipe');
         });
@@ -1421,7 +1421,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         const emittedEvent = eventEmitterService.emit.mock
           .calls[0][0] as CommandCreatedEvent;
@@ -1461,7 +1461,7 @@ describe('CaptureRecipeUseCase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.execute(command);
+        await captureRecipeUseCase.execute(command);
 
         const emittedEvent = eventEmitterService.emit.mock
           .calls[0][0] as CommandCreatedEvent;
@@ -1485,7 +1485,7 @@ describe('CaptureRecipeUseCase', () => {
         const error = new Error('Database connection failed');
         recipeService.addRecipe.mockRejectedValue(error);
 
-        await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+        await expect(captureRecipeUseCase.execute(command)).rejects.toThrow(
           'Database connection failed',
         );
       });
@@ -1508,7 +1508,7 @@ describe('CaptureRecipeUseCase', () => {
           userId,
         };
 
-        await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+        await expect(captureRecipeUseCase.execute(command)).rejects.toThrow(
           SpaceMembershipRequiredError,
         );
       });

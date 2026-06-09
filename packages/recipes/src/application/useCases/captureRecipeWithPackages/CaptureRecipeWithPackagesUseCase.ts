@@ -24,7 +24,7 @@ export class CaptureRecipeWithPackagesUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly captureRecipeUsecase: CaptureRecipeUseCase,
+    private readonly captureRecipeUseCase: CaptureRecipeUseCase,
     private readonly deploymentsPort: IDeploymentPort,
     private readonly spacesPort: ISpacesPort,
   ) {
@@ -69,7 +69,7 @@ export class CaptureRecipeWithPackagesUseCase
 
     // Step 2: Create the recipe using CaptureRecipeUseCase
     this.logger.info('Capturing recipe', { name });
-    const recipe = await this.captureRecipeUsecase.execute({
+    const recipe = await this.captureRecipeUseCase.execute({
       name,
       summary,
       whenToUse,

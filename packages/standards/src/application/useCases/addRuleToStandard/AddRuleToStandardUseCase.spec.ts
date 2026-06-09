@@ -37,7 +37,7 @@ import { createStandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 
 describe('AddRuleToStandardUseCase', () => {
-  let addRuleToStandardUsecase: AddRuleToStandardUseCase;
+  let addRuleToStandardUseCase: AddRuleToStandardUseCase;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
@@ -134,7 +134,7 @@ describe('AddRuleToStandardUseCase', () => {
     // Setup default mock implementations
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
-    addRuleToStandardUsecase = new AddRuleToStandardUseCase(
+    addRuleToStandardUseCase = new AddRuleToStandardUseCase(
       spacesPort,
       accountsPort,
       standardService,
@@ -235,7 +235,7 @@ describe('AddRuleToStandardUseCase', () => {
           newStandardVersion,
         );
 
-        result = await addRuleToStandardUsecase.execute(inputData);
+        result = await addRuleToStandardUseCase.execute(inputData);
       });
 
       it('finds the standard by slug and organization', () => {
@@ -360,7 +360,7 @@ describe('AddRuleToStandardUseCase', () => {
         standardService.updateStandard.mockResolvedValue(updatedStandard);
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
-        const result = await addRuleToStandardUsecase.execute(inputData);
+        const result = await addRuleToStandardUseCase.execute(inputData);
 
         expect(result).toEqual({ standardVersion: newVersion });
       });
@@ -382,7 +382,7 @@ describe('AddRuleToStandardUseCase', () => {
           };
 
           try {
-            await addRuleToStandardUsecase.execute(inputData);
+            await addRuleToStandardUseCase.execute(inputData);
           } catch (error) {
             thrownError = error as Error;
           }
@@ -418,7 +418,7 @@ describe('AddRuleToStandardUseCase', () => {
           };
 
           try {
-            await addRuleToStandardUsecase.execute(inputData);
+            await addRuleToStandardUseCase.execute(inputData);
           } catch (error) {
             thrownError = error as Error;
           }
@@ -460,7 +460,7 @@ describe('AddRuleToStandardUseCase', () => {
           );
 
           await expect(
-            addRuleToStandardUsecase.execute(inputData),
+            addRuleToStandardUseCase.execute(inputData),
           ).rejects.toThrow(
             `No versions found for standard ${existingStandard.id}`,
           );
@@ -499,7 +499,7 @@ describe('AddRuleToStandardUseCase', () => {
         standardService.updateStandard.mockRejectedValue(error);
 
         await expect(
-          addRuleToStandardUsecase.execute(inputData),
+          addRuleToStandardUseCase.execute(inputData),
         ).rejects.toThrow('Database connection failed');
       });
     });
@@ -546,7 +546,7 @@ describe('AddRuleToStandardUseCase', () => {
         standardService.updateStandard.mockResolvedValue(updatedStandard);
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
       });
 
       it('increments standard version correctly', () => {
@@ -603,7 +603,7 @@ describe('AddRuleToStandardUseCase', () => {
         standardService.updateStandard.mockResolvedValue(updatedStandard);
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -648,7 +648,7 @@ describe('AddRuleToStandardUseCase', () => {
         standardService.updateStandard.mockResolvedValue(updatedStandard);
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -719,7 +719,7 @@ describe('AddRuleToStandardUseCase', () => {
           ],
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -756,7 +756,7 @@ describe('AddRuleToStandardUseCase', () => {
             ],
           };
 
-          await addRuleToStandardUsecase.execute(inputData);
+          await addRuleToStandardUseCase.execute(inputData);
         });
 
         it('emits exactly two events', () => {
@@ -792,7 +792,7 @@ describe('AddRuleToStandardUseCase', () => {
           ],
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -816,7 +816,7 @@ describe('AddRuleToStandardUseCase', () => {
           examples: [],
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -840,7 +840,7 @@ describe('AddRuleToStandardUseCase', () => {
           // examples not provided
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -901,7 +901,7 @@ describe('AddRuleToStandardUseCase', () => {
           spaceId,
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -926,7 +926,7 @@ describe('AddRuleToStandardUseCase', () => {
           spaceId,
         };
 
-        await addRuleToStandardUsecase.execute(inputData);
+        await addRuleToStandardUseCase.execute(inputData);
 
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -957,7 +957,7 @@ describe('AddRuleToStandardUseCase', () => {
         };
 
         await expect(
-          addRuleToStandardUsecase.execute(inputData),
+          addRuleToStandardUseCase.execute(inputData),
         ).rejects.toThrow('Standard does not belong to the requested space');
       });
     });
@@ -975,7 +975,7 @@ describe('AddRuleToStandardUseCase', () => {
         };
 
         await expect(
-          addRuleToStandardUsecase.execute(inputData),
+          addRuleToStandardUseCase.execute(inputData),
         ).rejects.toThrow(SpaceMembershipRequiredError);
       });
     });

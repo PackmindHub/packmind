@@ -13,7 +13,7 @@ import { stubLogger } from '@packmind/test-utils';
 import { createRuleId } from '@packmind/types';
 
 describe('GetRuleExamplesUseCase', () => {
-  let getRuleExamplesUsecase: GetRuleExamplesUseCase;
+  let getRuleExamplesUseCase: GetRuleExamplesUseCase;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -45,7 +45,7 @@ describe('GetRuleExamplesUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    getRuleExamplesUsecase = new GetRuleExamplesUseCase(
+    getRuleExamplesUseCase = new GetRuleExamplesUseCase(
       ruleExampleRepository,
       ruleRepository,
       stubbedLogger,
@@ -81,7 +81,7 @@ describe('GetRuleExamplesUseCase', () => {
         ruleRepository.findById.mockResolvedValue(rule);
         ruleExampleRepository.findByRuleId.mockResolvedValue(mockRuleExamples);
 
-        result = await getRuleExamplesUsecase.getRuleExamples(request);
+        result = await getRuleExamplesUseCase.getRuleExamples(request);
       });
 
       it('calls ruleRepository.findById with the ruleId', () => {
@@ -109,7 +109,7 @@ describe('GetRuleExamplesUseCase', () => {
         ruleRepository.findById.mockResolvedValue(rule);
         ruleExampleRepository.findByRuleId.mockResolvedValue([]);
 
-        result = await getRuleExamplesUsecase.getRuleExamples(request);
+        result = await getRuleExamplesUseCase.getRuleExamples(request);
       });
 
       it('calls ruleRepository.findById with the ruleId', () => {
@@ -137,7 +137,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         await expect(
-          getRuleExamplesUsecase.getRuleExamples(request),
+          getRuleExamplesUseCase.getRuleExamples(request),
         ).rejects.toThrow(`Rule with id ${ruleId} not found`);
       });
 
@@ -145,7 +145,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }
@@ -157,7 +157,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }
@@ -180,7 +180,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         await expect(
-          getRuleExamplesUsecase.getRuleExamples(request),
+          getRuleExamplesUseCase.getRuleExamples(request),
         ).rejects.toThrow('Rule fetch error');
       });
 
@@ -188,7 +188,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }
@@ -200,7 +200,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }
@@ -226,7 +226,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         await expect(
-          getRuleExamplesUsecase.getRuleExamples(request),
+          getRuleExamplesUseCase.getRuleExamples(request),
         ).rejects.toThrow('Database error');
       });
 
@@ -234,7 +234,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }
@@ -246,7 +246,7 @@ describe('GetRuleExamplesUseCase', () => {
         const request: GetRuleExamplesRequest = { ruleId };
 
         try {
-          await getRuleExamplesUsecase.getRuleExamples(request);
+          await getRuleExamplesUseCase.getRuleExamples(request);
         } catch {
           // Expected to throw
         }

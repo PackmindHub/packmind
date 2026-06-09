@@ -27,7 +27,7 @@ import {
   SkillCreatedEvent,
 } from '@packmind/types';
 
-describe('UploadSkillUsecase', () => {
+describe('UploadSkillUseCase', () => {
   let usecase: UploadSkillUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;

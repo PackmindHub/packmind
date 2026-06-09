@@ -10,7 +10,7 @@ const origin = 'DeleteRecipesBatchUseCase';
 
 export class DeleteRecipesBatchUseCase implements IDeleteRecipesBatchUseCase {
   constructor(
-    private readonly deleteRecipeUsecase: DeleteRecipeUseCase,
+    private readonly deleteRecipeUseCase: DeleteRecipeUseCase,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -33,7 +33,7 @@ export class DeleteRecipesBatchUseCase implements IDeleteRecipesBatchUseCase {
     try {
       await Promise.all(
         recipeIds.map((recipeId) =>
-          this.deleteRecipeUsecase.execute({
+          this.deleteRecipeUseCase.execute({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             recipeId: recipeId as any,
             spaceId,

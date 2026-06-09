@@ -9,7 +9,7 @@ import {
 
 export { LinterHexa } from './LinterHexa';
 export { LinterModule } from './nest-api/linter.module';
-export { LinterUsecases } from './LinterUsecases';
+export { LinterUseCases } from './LinterUseCases';
 export { LinterAdapter } from './LinterAdapter';
 export * from './GenerateProgramCommand';
 

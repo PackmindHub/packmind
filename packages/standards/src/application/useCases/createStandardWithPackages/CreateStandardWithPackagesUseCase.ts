@@ -28,7 +28,7 @@ export class CreateStandardWithPackagesUseCase
   constructor(
     spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
-    private readonly createStandardWithExamplesUsecase: CreateStandardWithExamplesUseCase,
+    private readonly createStandardWithExamplesUseCase: CreateStandardWithExamplesUseCase,
     private readonly deploymentsPort: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -75,7 +75,7 @@ export class CreateStandardWithPackagesUseCase
     // Step 2: Create the standard using CreateStandardWithExamplesUseCase
     this.logger.info('Creating standard with examples', { name });
     const standard =
-      await this.createStandardWithExamplesUsecase.createStandardWithExamples({
+      await this.createStandardWithExamplesUseCase.createStandardWithExamples({
         name,
         description,
         summary: summary || null,
