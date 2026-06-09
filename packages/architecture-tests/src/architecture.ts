@@ -52,6 +52,27 @@ export const LAYER_GLOBS = {
   infra: 'packages/*/src/infra/**',
   // Concrete repository implementations only (NOT schemas/entities).
   repositories: 'packages/*/src/infra/repositories/**',
+  // TypeORM EntitySchema definitions (pure ORM mapping).
+  schemas: 'packages/*/src/infra/schemas/**',
+  // The shared contract package (ports, contracts, events, entity types).
+  types: 'packages/types/src/**',
   // NestJS controllers in the API app.
   controllers: 'apps/api/src/**/*.controller.ts',
+  // The whole NestJS API app (controllers, modules, providers).
+  apiAll: 'apps/api/src/**/*.ts',
 } as const;
+
+/**
+ * Matches the source of ANY domain package. Used by reverse-dependency rules
+ * (shared/base packages and the contract package must not depend on domains).
+ * Built the same way as the per-domain target in `cross-domain.arch.spec.ts`.
+ */
+export const DOMAIN_SRC_REGEX = new RegExp(
+  `packages/(${DOMAIN_PACKAGES.join('|')})/src/`,
+);
+
+/**
+ * Matches the source of the shared/base packages that domains build on top of.
+ * These must never depend back on a domain (would create a cycle / inversion).
+ */
+export const SHARED_BASE_REGEX = /packages\/(node-utils|logger)\/src\//;
