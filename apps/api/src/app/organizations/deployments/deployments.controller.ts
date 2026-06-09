@@ -23,7 +23,7 @@ import {
   RenderModeConfiguration,
   RenderMode,
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   RecipeId,
   RecipeVersionId,
   StandardId,
@@ -544,7 +544,7 @@ export class DeploymentsController {
   async getRenderModeConfiguration(
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<GetRenderModeConfigurationResult> {
+  ): Promise<GetRenderModeConfigurationResponse> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/renderModeConfiguration - Fetching render mode configuration',
       {
