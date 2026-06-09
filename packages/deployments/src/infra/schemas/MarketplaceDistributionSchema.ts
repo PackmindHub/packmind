@@ -97,6 +97,11 @@ export const MarketplaceDistributionSchema = new EntitySchema<
       type: 'varchar',
       nullable: true,
     },
+    versionFingerprint: {
+      name: 'version_fingerprint',
+      type: 'jsonb',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

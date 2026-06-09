@@ -5,6 +5,8 @@ export * from './TargetWithRepository';
 export * from './MarketplaceId';
 export * from './MarketplaceVendor';
 export * from './MarketplaceState';
+export * from './MarketplaceErrorKind';
+export * from './VersionFingerprint';
 export * from './PluginRef';
 export * from './MarketplaceDescriptor';
 export * from './MarketplaceDescriptorFilename';

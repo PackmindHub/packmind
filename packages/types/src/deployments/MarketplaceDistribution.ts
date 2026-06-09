@@ -7,6 +7,7 @@ import { MarketplaceDistributionId } from './MarketplaceDistributionId';
 import { MarketplaceId } from './MarketplaceId';
 import { PackageId } from './Package';
 import { PublishFailureReason } from './PublishFailureReason';
+import { VersionFingerprint } from './VersionFingerprint';
 
 /**
  * Persistent record of a single attempt to publish a Packmind package as a
@@ -33,5 +34,7 @@ export type MarketplaceDistribution = WithSoftDelete<
     error?: string;
     failureReason?: PublishFailureReason;
     contentHash?: string;
+    /** Artifact-version fingerprint captured at publish time; used to flag the marketplace outdated. */
+    versionFingerprint?: VersionFingerprint;
   }>
 >;

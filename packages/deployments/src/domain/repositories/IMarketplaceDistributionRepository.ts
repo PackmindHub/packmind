@@ -6,6 +6,7 @@ import {
   MarketplaceId,
   PackageId,
   PublishFailureReason,
+  VersionFingerprint,
 } from '@packmind/types';
 
 /**
@@ -25,6 +26,7 @@ export type MarketplaceDistributionStatusUpdate = {
   error?: string;
   failureReason?: PublishFailureReason;
   contentHash?: string;
+  versionFingerprint?: VersionFingerprint;
 };
 
 /**

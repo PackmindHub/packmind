@@ -52,6 +52,10 @@ export const marketplaceFactory: Factory<Marketplace> = (
     lastValidatedAt: null,
     descriptor,
     pluginCount: descriptor.plugins.length,
+    errorKind: null,
+    errorDetail: null,
+    pendingPrUrl: null,
+    outdatedPluginSlugs: null,
     ...overrides,
   } as Marketplace;
 };

@@ -3,6 +3,7 @@ import {
   IRepository,
   Marketplace,
   MarketplaceDescriptor,
+  MarketplaceErrorKind,
   MarketplaceId,
   MarketplaceState,
   OrganizationId,
@@ -17,6 +18,11 @@ export type MarketplaceStateUpdate = {
   lastValidatedAt: Date;
   descriptor?: MarketplaceDescriptor;
   pluginCount?: number;
+  // Each field is set only when present; pass `null` explicitly to clear.
+  errorKind?: MarketplaceErrorKind | null;
+  errorDetail?: string | null;
+  pendingPrUrl?: string | null;
+  outdatedPluginSlugs?: string[] | null;
 };
 
 /**

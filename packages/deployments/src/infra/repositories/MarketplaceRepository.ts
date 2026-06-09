@@ -196,6 +196,22 @@ export class MarketplaceRepository
         updates.pluginCount = patch.pluginCount;
       }
 
+      if (patch.errorKind !== undefined) {
+        updates.errorKind = patch.errorKind;
+      }
+
+      if (patch.errorDetail !== undefined) {
+        updates.errorDetail = patch.errorDetail;
+      }
+
+      if (patch.pendingPrUrl !== undefined) {
+        updates.pendingPrUrl = patch.pendingPrUrl;
+      }
+
+      if (patch.outdatedPluginSlugs !== undefined) {
+        updates.outdatedPluginSlugs = patch.outdatedPluginSlugs;
+      }
+
       const result = await this.repository
         .createQueryBuilder()
         .update()

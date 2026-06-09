@@ -225,6 +225,10 @@ export class LinkMarketplaceUseCase
       lastValidatedAt: null,
       descriptor,
       pluginCount: descriptor.plugins.length,
+      errorKind: null,
+      errorDetail: null,
+      pendingPrUrl: null,
+      outdatedPluginSlugs: null,
     } as Marketplace;
     const insertedMarketplace =
       await this.marketplaceRepository.add(marketplaceEntity);

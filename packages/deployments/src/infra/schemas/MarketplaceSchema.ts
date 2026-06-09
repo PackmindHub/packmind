@@ -82,6 +82,26 @@ export const MarketplaceSchema = new EntitySchema<
       nullable: false,
       default: 0,
     },
+    errorKind: {
+      name: 'error_kind',
+      type: 'varchar',
+      nullable: true,
+    },
+    errorDetail: {
+      name: 'error_detail',
+      type: 'text',
+      nullable: true,
+    },
+    pendingPrUrl: {
+      name: 'pending_pr_url',
+      type: 'text',
+      nullable: true,
+    },
+    outdatedPluginSlugs: {
+      name: 'outdated_plugin_slugs',
+      type: 'jsonb',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

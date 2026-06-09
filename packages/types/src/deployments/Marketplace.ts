@@ -3,6 +3,7 @@ import { UserId } from '../accounts/User';
 import { GitRepoId } from '../git/GitRepoId';
 import { WithSoftDelete, WithTimestamps } from '../database/types';
 import { MarketplaceDescriptor } from './MarketplaceDescriptor';
+import { MarketplaceErrorKind } from './MarketplaceErrorKind';
 import { MarketplaceId } from './MarketplaceId';
 import { MarketplaceState } from './MarketplaceState';
 import { MarketplaceVendor } from './MarketplaceVendor';
@@ -28,5 +29,13 @@ export type Marketplace = WithSoftDelete<
     lastValidatedAt: Date | null;
     descriptor: MarketplaceDescriptor;
     pluginCount: number;
+    /** Sub-classification of an `unreachable` state; `null` otherwise. */
+    errorKind: MarketplaceErrorKind | null;
+    /** Short, PII-safe, user-facing explanation of the last failure; `null` when healthy. */
+    errorDetail: string | null;
+    /** URL of the open "Packmind sync" PR on the marketplace repo, or `null` when none is open. */
+    pendingPrUrl: string | null;
+    /** Slugs whose served plugin is built from a package that has changed since last publish. */
+    outdatedPluginSlugs: string[] | null;
   }>
 >;

@@ -346,6 +346,9 @@ export class MarketplaceDistributionRepository
       if (patch.contentHash !== undefined) {
         updates.contentHash = patch.contentHash;
       }
+      if (patch.versionFingerprint !== undefined) {
+        updates.versionFingerprint = patch.versionFingerprint;
+      }
 
       const result = await this.repository
         .createQueryBuilder()
