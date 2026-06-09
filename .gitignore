@@ -36,6 +36,7 @@ dockerfile/prod/secrets
 
 
 tsconfig.base.effective.json
+tsconfig.arch.json
 packages/linter/js-playground-local
 
 # Runtime-installed sprite sandbox compose overrides (scripts/install-michel-skills.sh)

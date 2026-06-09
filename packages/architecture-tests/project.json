@@ -1,0 +1,19 @@
+{
+  "name": "architecture-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/architecture-tests/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "arch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": [
+          "node scripts/build-arch-tsconfig.mjs",
+          "NODE_OPTIONS='--max-old-space-size=8192' jest --config packages/architecture-tests/jest.arch.config.ts --runInBand"
+        ]
+      }
+    }
+  }
+}
