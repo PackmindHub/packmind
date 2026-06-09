@@ -17,9 +17,13 @@ export const ARCH_TSCONFIG = path.resolve(
  * layout (application / domain / infra) and may only talk to each other through
  * `@packmind/types` ports — never by importing each other's source directly.
  *
+ * Maintained explicitly (not auto-discovered) on purpose: a domain package that
+ * is *missing* its expected hexagon layers is itself an architecture problem we
+ * want surfaced, not silently skipped. Add every new domain package here.
+ *
  * Infrastructure/shared packages (types, logger, node-utils, test-utils,
- * migrations, ui, editions, linter-*) are intentionally excluded: they are not
- * domains and have different layering.
+ * migrations, ui, frontend, assets, editions, linter-*) are intentionally
+ * excluded: they are not domains and have different layering.
  */
 export const DOMAIN_PACKAGES = [
   'accounts',
@@ -30,6 +34,7 @@ export const DOMAIN_PACKAGES = [
   'git',
   'deployments',
   'coding-agent',
+  'llm',
 ] as const;
 
 /**

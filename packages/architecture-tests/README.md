@@ -71,8 +71,9 @@ Rules live in `src/*.arch.spec.ts`. Layer selection globs are centralised in
 | `packages/<domain>/src` ↛ `packages/<other-domain>/src` (one rule per domain) | Domains collaborate only through `@packmind/types` ports wired by the HexaRegistry — never by importing each other's source. Complements the Nx `env:*` tag boundaries. (`standard-port-adapter-cross-domain-integration`) |
 
 Domains considered: `accounts`, `spaces`, `standards`, `recipes`, `skills`,
-`git`, `deployments`, `coding-agent` (see `DOMAIN_PACKAGES` in
-`src/architecture.ts`).
+`git`, `deployments`, `coding-agent`, `llm` (see `DOMAIN_PACKAGES` in
+`src/architecture.ts`). The list is maintained explicitly — a domain package
+missing its hexagon layers is a problem to surface, not to auto-skip.
 
 ### Shared-package purity & reverse dependencies — `src/boundaries.arch.spec.ts`
 
@@ -87,7 +88,7 @@ Between packages the graph is layered too:
 
 ## Known violations (tech debt)
 
-As of introduction, **15 of 22 rules pass** and **7 fail**. Failures are real and
+As of introduction, **16 of 23 rules pass** and **7 fail**. Failures are real and
 left visible on purpose. Each is either fixed by refactoring the offending import
 or accepted as tracked debt.
 
