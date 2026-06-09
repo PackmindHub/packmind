@@ -5,29 +5,35 @@ plain CommonJS so the root ESM `eslint.config.mjs` can import it directly (no bu
 
 ## Rules
 
-### `packmind/use-case-filename`
+### `packmind/use-case-filename` — structural
 
-Enforces that use-case files **and** exported use-case classes are PascalCase
-ending in `UseCase` (capital "C"). It reports:
+Enforces use-case _structure_ for files under `application/useCases/`:
 
 - `legacyFilename` — filename uses the legacy dotted `.usecase` suffix
   (`addGitRepo.usecase.ts` → `AddGitRepoUseCase.ts`). The original extension
   (`.ts` / `.tsx`) is preserved in the suggestion.
-- `filenameCasing` — filename ends in the mis-cased `Usecase`
-  (`CaptureRecipeUsecase.ts` → `CaptureRecipeUseCase.ts`).
-- `classCasing` — exported class ends in the mis-cased `Usecase`
-  (`class CaptureRecipeUsecase` → `CaptureRecipeUseCase`).
 - `classMissingSuffix` — exported, non-`Error` class does not end in `UseCase`
   (`class CommitToGit` → `CommitToGitUseCase`).
 
 Not flagged: error classes (`extends Error` or named `*Error`), non-exported
-classes, and files with no exported class (helpers like `utils.ts`).
+classes, files with no exported class (helpers like `utils.ts`), and mis-cased
+`Usecase` names (left to `usecase-casing`).
 
-Scope is set by the `files` / `ignores` globs in the root `eslint.config.mjs`
-(`**/application/useCases/**/*.ts`, excluding `shared/**` and `index.ts`), and the
-rule itself only runs on files under `packages/` — `apps/*` are out of scope
-because they may co-locate non-use-case classes under `useCases/` (e.g. the CLI's
-diff strategies).
+Scope: `**/application/useCases/**/*.ts` (excluding `shared/**` and `index.ts`),
+and only under `packages/` — `apps/*` are out of scope because they may co-locate
+non-use-case classes under `useCases/` (e.g. the CLI's diff strategies).
+
+### `packmind/usecase-casing` — casing (repo-wide)
+
+The use-case concept is spelled `UseCase`, never `Usecase`. This rule runs across
+the whole repo and flags the mis-cased `Usecase` in:
+
+- `filenameCasing` — filenames (`CaptureRecipeUsecase.ts` → `CaptureRecipeUseCase.ts`)
+- `identifierCasing` — identifiers: class names, variables, parameters, properties,
+  type/interface names (`captureRecipeUsecase` → `captureRecipeUseCase`).
+
+Only PascalCase-style `Usecase` (capital "U", lowercase "c") is flagged; the
+all-lowercase legacy `usecase` file suffix is handled by `use-case-filename`.
 
 ## Wiring
 

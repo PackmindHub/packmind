@@ -7,18 +7,26 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   ...tseslint.configs.recommended,
+  // Register the local workspace plugin once (globally) so both rules below can
+  // reference it with different file scopes.
+  { plugins: { packmind } },
   {
-    // Enforce PascalCase use-case naming ending in "UseCase" (bans legacy
-    // <name>.usecase.ts and mis-cased "...Usecase"). Glob is project-relative
-    // because `nx lint` runs `eslint .` with cwd = project dir. `shared/**` and
-    // `index.ts` are excluded: they hold helpers/barrels, not use-case classes.
+    // Structural use-case rules: ban legacy <name>.usecase.ts and require use-case
+    // classes to end in "UseCase". Glob is project-relative because `nx lint` runs
+    // `eslint .` with cwd = project dir. `shared/**` and `index.ts` are excluded:
+    // they hold helpers/barrels, not use-case classes.
     files: ['**/application/useCases/**/*.ts'],
     ignores: [
       '**/application/useCases/**/shared/**',
       '**/application/useCases/**/index.ts',
     ],
-    plugins: { packmind },
     rules: { 'packmind/use-case-filename': 'error' },
+  },
+  {
+    // Repo-wide: the use-case concept is spelled "UseCase", never "Usecase"
+    // (filenames and identifiers alike).
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: { 'packmind/usecase-casing': 'error' },
   },
   {
     files: ['**/*.json'],

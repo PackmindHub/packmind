@@ -7,5 +7,6 @@
 module.exports = {
   rules: {
     'use-case-filename': require('./rules/use-case-filename'),
+    'usecase-casing': require('./rules/usecase-casing'),
   },
 };

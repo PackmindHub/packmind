@@ -1,19 +1,21 @@
 'use strict';
 
 /**
- * ESLint rule: enforce the use-case naming convention.
+ * ESLint rule: structural use-case naming.
  *
- * Files and exported use-case classes under `application/useCases/` must be
- * PascalCase ending in `UseCase` (capital "C"). The rule reports:
- *   - filenames using the legacy dotted `.usecase` suffix      -> messageId legacyFilename
- *   - filenames ending in the mis-cased `Usecase`              -> messageId filenameCasing
- *   - exported classes ending in the mis-cased `Usecase`       -> messageId classCasing
- *   - exported (non-Error) classes not ending in `UseCase`     -> messageId classMissingSuffix
+ * For files under `application/useCases/` (packages only — see the scope gate
+ * and the consuming config), it reports:
+ *   - filenames using the legacy dotted `.usecase` suffix  -> messageId legacyFilename
+ *   - exported (non-Error) classes that are PascalCase but lack the `UseCase`
+ *     suffix, e.g. `CommitToGit`                            -> messageId classMissingSuffix
  *
- * Error classes (`extends Error` or named `*Error`) are ignored, as are files
- * with no exported class (helpers like `utils.ts`). The set of linted files is
- * controlled by the `files`/`ignores` globs in the consuming ESLint config
- * (see root `eslint.config.mjs`), which excludes `index.ts` and `shared/**`.
+ * The mis-cased "Usecase" -> "UseCase" concern (filenames AND identifiers) is
+ * handled separately by the repo-wide `usecase-casing` rule, so this rule
+ * deliberately ignores names containing "Usecase" to avoid double reporting.
+ *
+ * Error classes (`extends Error` or named `*Error`) and files with no exported
+ * class (helpers like `utils.ts`) are not flagged. `index.ts` and `shared/**`
+ * are excluded by the consuming config.
  */
 
 const path = require('path');
@@ -22,24 +24,18 @@ const toPascalCase = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Legacy dotted suffix: foo.usecase.ts | foo.usecase.spec.ts | foo.usecase.test.tsx ...
 const LEGACY = /\.usecase(\.(spec|test))?\.(tsx?)$/;
-// Mis-cased filename ending: FooUsecase.ts | FooUsecase.spec.ts ...
-const FILENAME_CASING = /Usecase((?:\.(spec|test))?\.tsx?)$/;
 
 module.exports = {
   meta: {
     type: 'suggestion',
     docs: {
       description:
-        'Use-case files and classes must be PascalCase ending in "UseCase" (not <name>.usecase.ts and not "...Usecase").',
+        'Use-case files must not use the legacy <name>.usecase.ts suffix, and use-case classes must end in "UseCase".',
     },
     schema: [],
     messages: {
       legacyFilename:
         'Use-case file "{{filename}}" uses the legacy ".usecase" suffix. Rename it to PascalCase ending in "UseCase", e.g. "{{suggestion}}".',
-      filenameCasing:
-        'Use-case file "{{filename}}" must end in "UseCase" (capital "C"), not "Usecase". Rename it to "{{suggestion}}".',
-      classCasing:
-        'Use-case class "{{name}}" must end in "UseCase" (capital "C"), not "Usecase". Rename it to "{{suggestion}}".',
       classMissingSuffix:
         'Use-case class "{{name}}" must be PascalCase ending in "UseCase". Rename it to "{{suggestion}}".',
     },
@@ -67,38 +63,23 @@ module.exports = {
 
     return {
       Program(node) {
-        if (!base) return;
-
         const legacy = base.match(LEGACY);
-        if (legacy) {
-          const stem = base.slice(0, legacy.index);
-          const kind = legacy[2] ? `.${legacy[2]}` : '';
-          const ext = legacy[3]; // preserve original extension (ts / tsx)
-          context.report({
-            node,
-            messageId: 'legacyFilename',
-            data: {
-              filename: base,
-              suggestion: `${toPascalCase(stem)}UseCase${kind}.${ext}`,
-            },
-          });
-          return;
-        }
-
-        if (FILENAME_CASING.test(base)) {
-          context.report({
-            node,
-            messageId: 'filenameCasing',
-            data: {
-              filename: base,
-              suggestion: base.replace(FILENAME_CASING, 'UseCase$1'),
-            },
-          });
-        }
+        if (!legacy) return;
+        const stem = base.slice(0, legacy.index);
+        const kind = legacy[2] ? `.${legacy[2]}` : '';
+        const ext = legacy[3]; // preserve original extension (ts / tsx)
+        context.report({
+          node,
+          messageId: 'legacyFilename',
+          data: {
+            filename: base,
+            suggestion: `${toPascalCase(stem)}UseCase${kind}.${ext}`,
+          },
+        });
       },
 
       ClassDeclaration(node) {
-        if (!base || !node.id) return;
+        if (!node.id) return;
         const parent = node.parent;
         const isExported =
           parent &&
@@ -108,20 +89,13 @@ module.exports = {
 
         const name = node.id.name;
         if (/UseCase$/.test(name)) return; // conformant
+        if (/Usecase/.test(name)) return; // mis-cased: handled by usecase-casing
 
-        if (/Usecase$/.test(name)) {
-          context.report({
-            node: node.id,
-            messageId: 'classCasing',
-            data: { name, suggestion: name.replace(/Usecase$/, 'UseCase') },
-          });
-        } else {
-          context.report({
-            node: node.id,
-            messageId: 'classMissingSuffix',
-            data: { name, suggestion: `${name}UseCase` },
-          });
-        }
+        context.report({
+          node: node.id,
+          messageId: 'classMissingSuffix',
+          data: { name, suggestion: `${name}UseCase` },
+        });
       },
     };
   },

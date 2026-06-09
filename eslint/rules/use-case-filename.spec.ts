@@ -36,6 +36,15 @@ ruleTester.run('use-case-filename', rule as unknown as Rule.RuleModule, {
     },
     // Non-exported classes are ignored.
     { code: 'class Helper {}', filename: p('getFoo/GetFooUseCase.ts') },
+    // Mis-cased name/filename: NOT this rule's job (handled by usecase-casing).
+    {
+      code: 'export class CaptureRecipeUsecase {}',
+      filename: p('captureRecipe/Whatever.ts'),
+    },
+    {
+      code: 'const x = 1;',
+      filename: p('captureRecipe/CaptureRecipeUsecase.ts'),
+    },
     // Out of scope: apps/* are never checked, even for non-conformant names.
     {
       code: 'export class CommandDiffStrategy {}',
@@ -70,32 +79,10 @@ ruleTester.run('use-case-filename', rule as unknown as Rule.RuleModule, {
         },
       ],
     },
-    // Mis-cased filename: Usecase -> UseCase.
-    {
-      code: 'const x = 1;',
-      filename: p('captureRecipe/CaptureRecipeUsecase.ts'),
-      errors: [
-        {
-          message:
-            'Use-case file "CaptureRecipeUsecase.ts" must end in "UseCase" (capital "C"), not "Usecase". Rename it to "CaptureRecipeUseCase.ts".',
-        },
-      ],
-    },
-    {
-      code: 'const x = 1;',
-      filename: p('captureRecipe/CaptureRecipeUsecase.spec.ts'),
-      errors: [{ messageId: 'filenameCasing' }],
-    },
-    // Mis-cased exported class.
-    {
-      code: 'export class CaptureRecipeUsecase {}',
-      filename: p('captureRecipe/Conformant.ts'),
-      errors: [{ messageId: 'classCasing' }],
-    },
     // Exported use-case class missing the UseCase suffix (bare).
     {
       code: 'export class CommitToGit {}',
-      filename: p('commitToGit/Conformant.ts'),
+      filename: p('commitToGit/CommitToGit.ts'),
       errors: [
         {
           message:
@@ -105,7 +92,7 @@ ruleTester.run('use-case-filename', rule as unknown as Rule.RuleModule, {
     },
     {
       code: 'export default class CommitToGit {}',
-      filename: p('commitToGit/Conformant.ts'),
+      filename: p('commitToGit/CommitToGit.ts'),
       errors: [{ messageId: 'classMissingSuffix' }],
     },
   ],
