@@ -19,9 +19,9 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
-const origin = 'UpdatePackageUsecase';
+const origin = 'UpdatePackageUseCase';
 
-export class UpdatePackageUsecase
+export class UpdatePackageUseCase
   extends AbstractSpaceMemberUseCase<
     UpdatePackageCommand,
     UpdatePackageResponse
@@ -39,7 +39,7 @@ export class UpdatePackageUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('UpdatePackageUsecase initialized');
+    this.logger.info('UpdatePackageUseCase initialized');
   }
 
   async executeForSpaceMembers(

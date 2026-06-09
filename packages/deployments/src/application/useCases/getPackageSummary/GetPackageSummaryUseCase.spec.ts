@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { packageFactory } from '../../../../test';
 import { PackageService } from '../services/PackageService';
 import { DeploymentsServices } from '../services/DeploymentsServices';
-import { GetPackageSummaryUsecase } from './GetPackageSummaryUsecase';
+import { GetPackageSummaryUseCase } from './GetPackageSummaryUseCase';
 
 afterEach(() => jest.clearAllMocks());
 
@@ -45,7 +45,7 @@ function makeUser(userId: string): User {
   };
 }
 
-describe('GetPackageSummaryUsecase', () => {
+describe('GetPackageSummaryUseCase', () => {
   const userId = uuidv4();
 
   let accountsPort: jest.Mocked<
@@ -59,7 +59,7 @@ describe('GetPackageSummaryUsecase', () => {
     >
   >;
   let deploymentsServices: jest.Mocked<DeploymentsServices>;
-  let useCase: GetPackageSummaryUsecase;
+  let useCase: GetPackageSummaryUseCase;
 
   const baseCommand = {
     userId,
@@ -81,7 +81,7 @@ describe('GetPackageSummaryUsecase', () => {
       getPackageService: jest.fn().mockReturnValue(packageService),
     } as unknown as jest.Mocked<DeploymentsServices>;
 
-    useCase = new GetPackageSummaryUsecase(
+    useCase = new GetPackageSummaryUseCase(
       accountsPort as unknown as IAccountsPort,
       deploymentsServices,
       stubLogger(),

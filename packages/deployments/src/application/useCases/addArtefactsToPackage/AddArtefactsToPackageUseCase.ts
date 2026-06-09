@@ -15,9 +15,9 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
-const origin = 'AddArtefactsToPackageUsecase';
+const origin = 'AddArtefactsToPackageUseCase';
 
-export class AddArtefactsToPackageUsecase
+export class AddArtefactsToPackageUseCase
   extends AbstractSpaceMemberUseCase<
     AddArtefactsToPackageCommand,
     AddArtefactsToPackageResponse
@@ -34,7 +34,7 @@ export class AddArtefactsToPackageUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('AddArtefactsToPackageUsecase initialized');
+    this.logger.info('AddArtefactsToPackageUseCase initialized');
   }
 
   async executeForSpaceMembers(

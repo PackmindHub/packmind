@@ -1,9 +1,9 @@
 // Re-export individual use cases
-export { AddArtefactsToPackageUsecase } from './addArtefactsToPackage/AddArtefactsToPackageUsecase';
+export { AddArtefactsToPackageUseCase } from './addArtefactsToPackage/AddArtefactsToPackageUseCase';
 export { AddTargetUseCase } from './AddTargetUseCase';
-export { CreatePackageUsecase } from './createPackage/CreatePackageUsecase';
+export { CreatePackageUseCase } from './createPackage/CreatePackageUseCase';
 export { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
-export { DeletePackagesBatchUsecase } from './deletePackage/DeletePackagesBatchUsecase';
+export { DeletePackagesBatchUseCase } from './deletePackage/DeletePackagesBatchUseCase';
 export { DeleteTargetUseCase } from './DeleteTargetUseCase';
 export { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 export { DownloadDefaultSkillsZipForAgentUseCase } from './DownloadDefaultSkillsZipForAgentUseCase';

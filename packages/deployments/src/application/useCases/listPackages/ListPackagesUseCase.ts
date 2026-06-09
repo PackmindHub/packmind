@@ -8,9 +8,9 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
-const origin = 'ListPackagesUsecase';
+const origin = 'ListPackagesUseCase';
 
-export class ListPackagesUsecase
+export class ListPackagesUseCase
   extends AbstractMemberUseCase<ListPackagesCommand, ListPackagesResponse>
   implements IListPackagesUseCase
 {
@@ -20,7 +20,7 @@ export class ListPackagesUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
-    this.logger.info('ListPackagesUsecase initialized');
+    this.logger.info('ListPackagesUseCase initialized');
   }
 
   async executeForMembers(

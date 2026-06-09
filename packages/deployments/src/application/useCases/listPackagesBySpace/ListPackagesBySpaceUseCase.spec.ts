@@ -1,4 +1,4 @@
-import { ListPackagesBySpaceUsecase } from './ListPackagesBySpaceUsecase';
+import { ListPackagesBySpaceUseCase } from './ListPackagesBySpaceUseCase';
 import {
   createUserId,
   createOrganizationId,
@@ -16,8 +16,8 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('ListPackagesBySpaceUsecase', () => {
-  let useCase: ListPackagesBySpaceUsecase;
+describe('ListPackagesBySpaceUseCase', () => {
+  let useCase: ListPackagesBySpaceUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
   let mockPackageService: jest.Mocked<PackageService>;
@@ -82,7 +82,7 @@ describe('ListPackagesBySpaceUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    useCase = new ListPackagesBySpaceUsecase(
+    useCase = new ListPackagesBySpaceUseCase(
       mockSpacesPort,
       mockAccountsPort,
       mockServices,

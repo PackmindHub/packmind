@@ -1,4 +1,4 @@
-import { AddArtefactsToPackageUsecase } from './AddArtefactsToPackageUsecase';
+import { AddArtefactsToPackageUseCase } from './AddArtefactsToPackageUseCase';
 import {
   AddArtefactsToPackageCommand,
   createOrganizationId,
@@ -32,8 +32,8 @@ import { PackageService } from '../../services/PackageService';
 import { PackageRepository } from '../../../infra/repositories/PackageRepository';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('AddArtefactsToPackageUsecase', () => {
-  let useCase: AddArtefactsToPackageUsecase;
+describe('AddArtefactsToPackageUseCase', () => {
+  let useCase: AddArtefactsToPackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
   let mockPackageService: jest.Mocked<PackageService>;
@@ -179,7 +179,7 @@ describe('AddArtefactsToPackageUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    useCase = new AddArtefactsToPackageUsecase(
+    useCase = new AddArtefactsToPackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
       mockServices,

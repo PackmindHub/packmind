@@ -19,9 +19,9 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 
-const origin = 'CreatePackageUsecase';
+const origin = 'CreatePackageUseCase';
 
-export class CreatePackageUsecase
+export class CreatePackageUseCase
   extends AbstractSpaceMemberUseCase<
     CreatePackageCommand,
     CreatePackageResponse
@@ -38,7 +38,7 @@ export class CreatePackageUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsPort, logger);
-    this.logger.info('CreatePackageUsecase initialized');
+    this.logger.info('CreatePackageUseCase initialized');
   }
 
   async executeForSpaceMembers(

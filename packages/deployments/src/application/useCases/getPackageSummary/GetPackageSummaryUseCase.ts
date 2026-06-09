@@ -9,9 +9,9 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
-const origin = 'GetPackageSummaryUsecase';
+const origin = 'GetPackageSummaryUseCase';
 
-export class GetPackageSummaryUsecase
+export class GetPackageSummaryUseCase
   extends AbstractMemberUseCase<
     GetPackageSummaryCommand,
     GetPackageSummaryResponse

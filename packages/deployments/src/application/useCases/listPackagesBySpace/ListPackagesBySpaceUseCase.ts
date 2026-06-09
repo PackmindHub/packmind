@@ -12,9 +12,9 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
-const origin = 'ListPackagesBySpaceUsecase';
+const origin = 'ListPackagesBySpaceUseCase';
 
-export class ListPackagesBySpaceUsecase
+export class ListPackagesBySpaceUseCase
   extends AbstractSpaceMemberUseCase<
     ListPackagesBySpaceCommand,
     ListPackagesBySpaceResponse
@@ -28,7 +28,7 @@ export class ListPackagesBySpaceUsecase
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(spacesPort, accountsAdapter, logger);
-    this.logger.info('ListPackagesBySpaceUsecase initialized');
+    this.logger.info('ListPackagesBySpaceUseCase initialized');
   }
 
   async executeForSpaceMembers(

@@ -13,9 +13,9 @@ import {
   IDeletePackagesBatchUseCase,
 } from '@packmind/types';
 
-const origin = 'DeletePackagesBatchUsecase';
+const origin = 'DeletePackagesBatchUseCase';
 
-export class DeletePackagesBatchUsecase implements IDeletePackagesBatchUseCase {
+export class DeletePackagesBatchUseCase implements IDeletePackagesBatchUseCase {
   constructor(
     private readonly packageService: PackageService,
     private readonly eventEmitterService: PackmindEventEmitterService,
@@ -24,7 +24,7 @@ export class DeletePackagesBatchUsecase implements IDeletePackagesBatchUseCase {
       LogLevel.DEBUG,
     ),
   ) {
-    this.logger.info('DeletePackagesBatchUsecase initialized');
+    this.logger.info('DeletePackagesBatchUseCase initialized');
   }
 
   public async execute(

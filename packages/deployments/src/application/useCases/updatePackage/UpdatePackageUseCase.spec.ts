@@ -1,4 +1,4 @@
-import { UpdatePackageUsecase } from './UpdatePackageUsecase';
+import { UpdatePackageUseCase } from './UpdatePackageUseCase';
 import {
   createUserId,
   createOrganizationId,
@@ -35,8 +35,8 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
 
-describe('UpdatePackageUsecase', () => {
-  let useCase: UpdatePackageUsecase;
+describe('UpdatePackageUseCase', () => {
+  let useCase: UpdatePackageUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockServices: jest.Mocked<DeploymentsServices>;
   let mockPackageService: jest.Mocked<PackageService>;
@@ -184,7 +184,7 @@ describe('UpdatePackageUsecase', () => {
 
     stubbedLogger = stubLogger();
 
-    useCase = new UpdatePackageUsecase(
+    useCase = new UpdatePackageUseCase(
       mockSpacesPort,
       mockAccountsPort,
       mockServices,

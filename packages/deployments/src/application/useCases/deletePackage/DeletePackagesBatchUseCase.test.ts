@@ -1,4 +1,4 @@
-import { DeletePackagesBatchUsecase } from './DeletePackagesBatchUsecase';
+import { DeletePackagesBatchUseCase } from './DeletePackagesBatchUseCase';
 import { PackageService } from '../../services/PackageService';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
@@ -12,8 +12,8 @@ import {
   DeletePackagesBatchCommand,
 } from '@packmind/types';
 
-describe('DeletePackagesBatchUsecase', () => {
-  let usecase: DeletePackagesBatchUsecase;
+describe('DeletePackagesBatchUseCase', () => {
+  let usecase: DeletePackagesBatchUseCase;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
@@ -31,7 +31,7 @@ describe('DeletePackagesBatchUsecase', () => {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    usecase = new DeletePackagesBatchUsecase(
+    usecase = new DeletePackagesBatchUseCase(
       mockPackageService,
       mockEventEmitterService,
       stubLogger(),
