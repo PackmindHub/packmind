@@ -2216,6 +2216,111 @@ describe('playbookAddHandler', () => {
     });
   });
 
+  describe('when adding an orphaned file for a deconfigured agent', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 2,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        artifacts: {},
+      });
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.github/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: 100,
+          permissions: '644',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('logs an error naming the deconfigured agent', async () => {
+      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(
+        buildDeps({ filePath: '.github/skills/my-skill' }),
+      );
+
+      expect(logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('copilot'),
+      );
+    });
+
+    it('exits with 1', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.github/skills/my-skill' }),
+      );
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not add to playbook', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.github/skills/my-skill' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+    });
+
+    it('does not run the name uniqueness collision check', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.github/skills/my-skill' }),
+      );
+
+      expect(mockPackmindCliHexa.listSkills).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when adding a new file for a still-configured agent', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 2,
+        packageSlugs: ['my-package'],
+        agents: ['claude'],
+        artifacts: {},
+      });
+    });
+
+    it('stages the new artifact instead of rejecting it', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.claude/commands/my-command.md' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalled();
+    });
+  });
+
+  describe('when the lock file has no configured agents', () => {
+    beforeEach(() => {
+      mockLockFileRepository.read.mockResolvedValue({
+        lockfileVersion: 1,
+        packageSlugs: ['my-package'],
+        agents: [],
+        artifacts: {},
+      });
+      mockReadSkillDirectory.mockResolvedValue([
+        {
+          path: '/project/.github/skills/my-skill/SKILL.md',
+          relativePath: 'SKILL.md',
+          content: VALID_SKILL_MD_CONTENT,
+          size: 100,
+          permissions: '644',
+          isBase64: false,
+        },
+      ]);
+    });
+
+    it('does not reject the add on the deconfigured-agent guard', async () => {
+      await playbookAddHandler(
+        buildDeps({ filePath: '.github/skills/my-skill' }),
+      );
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalled();
+    });
+  });
+
   describe('when creating a skill with a name that already exists', () => {
     beforeEach(() => {
       (mockPackmindCliHexa.listSkills as jest.Mock).mockResolvedValue([

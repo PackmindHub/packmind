@@ -423,6 +423,26 @@ export async function playbookAddHandler(
     }
   }
 
+  // Guard against re-adding an orphaned rendering for a deconfigured agent.
+  // When an agent is dropped from packmind.json and the project is re-installed,
+  // the lock file's `agents` no longer lists it. A leftover file on disk
+  // (e.g. `.github/skills/X` after removing copilot) is no longer tracked, so it
+  // resolves as `created` and would otherwise surface a confusing "already
+  // exists" collision against the still-existing artifact. Reject it clearly.
+  if (
+    changeType === 'created' &&
+    earlyLockFile &&
+    earlyLockFile.agents.length > 0 &&
+    !earlyLockFile.agents.includes(codingAgent)
+  ) {
+    logErrorConsole(
+      `Cannot add this ${artifactType}: it is rendered for the "${codingAgent}" agent, which is not in your configured agents (${earlyLockFile.agents.join(', ')}).\n` +
+        `This file is no longer managed by Packmind. Re-add "${codingAgent}" to your agents and run ${formatLabel('packmind-cli install')} to manage it again, or delete the file if it is no longer needed.`,
+    );
+    exit(1);
+    return;
+  }
+
   // Check if artifact is outdated before staging updates
   if (changeType === 'updated' && existingLockEntry) {
     try {
