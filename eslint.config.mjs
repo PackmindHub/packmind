@@ -1,11 +1,19 @@
 import nx from '@nx/eslint-plugin';
 import tseslint from 'typescript-eslint';
+import packmind from './eslint/index.js';
 
 export default [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   ...tseslint.configs.recommended,
+  {
+    // Enforce PascalCase use-case file naming (bans legacy <name>.usecase.ts).
+    // Glob is project-relative because `nx lint` runs `eslint .` with cwd = project dir.
+    files: ['**/application/useCases/**/*.ts'],
+    plugins: { packmind },
+    rules: { 'packmind/use-case-filename': 'error' },
+  },
   {
     files: ['**/*.json'],
     // Override or add rules here
