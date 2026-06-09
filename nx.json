@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "{workspaceRoot}/eslint/**/*"
+    ],
     "sharedGlobals": [
       "{workspaceRoot}/jest.preset.ts",
       "{workspaceRoot}/jest-utils.ts",
