@@ -55,7 +55,13 @@ export function MarketplaceRow({
     vendor: <PMText variant="small">{vendorLabel(marketplace.vendor)}</PMText>,
     state: (
       <PMHStack gap={2} align="center" justify="center">
-        <MarketplaceStateBadge state={marketplace.state} />
+        <MarketplaceStateBadge
+          state={marketplace.state}
+          errorKind={marketplace.errorKind}
+          errorDetail={marketplace.errorDetail}
+          driftedPluginSlugs={marketplace.descriptor?.driftedPluginSlugs}
+          outdatedPluginSlugs={marketplace.outdatedPluginSlugs}
+        />
         {isRefreshing && (
           <PMSpinner size="xs" aria-label="Checking marketplace" />
         )}

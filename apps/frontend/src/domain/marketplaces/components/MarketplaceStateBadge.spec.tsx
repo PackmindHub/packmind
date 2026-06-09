@@ -65,4 +65,58 @@ describe('MarketplaceStateBadge', () => {
       screen.getByTestId('marketplace-state-badge-drift'),
     ).toBeInTheDocument();
   });
+
+  describe('when unreachable with a typed errorKind', () => {
+    it('labels an auth failure "Auth error"', () => {
+      render(
+        <UIProvider>
+          <MarketplaceStateBadge state="unreachable" errorKind="auth_failed" />
+        </UIProvider>,
+      );
+
+      expect(screen.getByText('Auth error')).toBeInTheDocument();
+    });
+
+    it('labels a missing repo "Repo not found"', () => {
+      render(
+        <UIProvider>
+          <MarketplaceStateBadge
+            state="unreachable"
+            errorKind="repo_not_found"
+          />
+        </UIProvider>,
+      );
+
+      expect(screen.getByText('Repo not found')).toBeInTheDocument();
+    });
+  });
+
+  describe('when the marketplace has outdated plugins', () => {
+    it('renders the outdated badge alongside the state badge', () => {
+      render(
+        <UIProvider>
+          <MarketplaceStateBadge
+            state="healthy"
+            outdatedPluginSlugs={['plugin-one']}
+          />
+        </UIProvider>,
+      );
+
+      expect(
+        screen.getByTestId('marketplace-outdated-badge'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not render the outdated badge when there are no outdated slugs', () => {
+      render(
+        <UIProvider>
+          <MarketplaceStateBadge state="healthy" outdatedPluginSlugs={[]} />
+        </UIProvider>,
+      );
+
+      expect(
+        screen.queryByTestId('marketplace-outdated-badge'),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

@@ -5,6 +5,7 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMLink,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -32,6 +33,8 @@ export const MarketplaceDetailsHeader = ({
   const driftedSlugs = marketplace.descriptor?.driftedPluginSlugs ?? [];
   const showDriftPanel =
     marketplace.state === 'drift' && driftedSlugs.length > 0;
+  const pendingPrUrl = marketplace.pendingPrUrl;
+  const outdatedSlugs = marketplace.outdatedPluginSlugs ?? [];
   const syncMarketplace = useSyncMarketplaceNow(organizationId, marketplace.id);
 
   return (
@@ -46,7 +49,10 @@ export const MarketplaceDetailsHeader = ({
         <PMHStack align="center" gap={3}>
           <MarketplaceStateBadge
             state={marketplace.state}
+            errorKind={marketplace.errorKind}
+            errorDetail={marketplace.errorDetail}
             driftedPluginSlugs={driftedSlugs}
+            outdatedPluginSlugs={marketplace.outdatedPluginSlugs}
           />
           <PMButton
             variant="secondary"
@@ -78,6 +84,55 @@ export const MarketplaceDetailsHeader = ({
                       variant="small"
                       fontFamily="mono"
                       data-testid={`marketplace-drift-slug-${slug}`}
+                    >
+                      {slug}
+                    </PMText>
+                  ))}
+                </PMVStack>
+              </PMVStack>
+            </PMAlert.Description>
+          </PMBox>
+        </PMAlert.Root>
+      )}
+      {pendingPrUrl && (
+        <PMAlert.Root status="info" data-testid="marketplace-pending-pr-panel">
+          <PMAlert.Indicator />
+          <PMBox>
+            <PMAlert.Title>PR waiting for validation</PMAlert.Title>
+            <PMAlert.Description>
+              <PMText variant="small">
+                A Packmind sync pull request is open on the marketplace repo.{' '}
+                <PMLink
+                  href={pendingPrUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="underline"
+                >
+                  Review the pull request
+                </PMLink>
+              </PMText>
+            </PMAlert.Description>
+          </PMBox>
+        </PMAlert.Root>
+      )}
+      {outdatedSlugs.length > 0 && (
+        <PMAlert.Root status="warning" data-testid="marketplace-outdated-panel">
+          <PMAlert.Indicator />
+          <PMBox>
+            <PMAlert.Title>Outdated plugins</PMAlert.Title>
+            <PMAlert.Description>
+              <PMVStack align="start" gap={1}>
+                <PMText variant="small">
+                  These plugins were built from packages that changed since they
+                  were last published:
+                </PMText>
+                <PMVStack align="start" gap={0}>
+                  {outdatedSlugs.map((slug) => (
+                    <PMText
+                      key={slug}
+                      variant="small"
+                      fontFamily="mono"
+                      data-testid={`marketplace-outdated-slug-${slug}`}
                     >
                       {slug}
                     </PMText>

@@ -119,4 +119,48 @@ describe('MarketplaceDetailsHeader', () => {
 
     expect(screen.queryByTestId('marketplace-drift-panel')).toBeNull();
   });
+
+  describe('pending sync PR panel', () => {
+    it('renders a link to the open pull request when one is pending', () => {
+      renderHeader(
+        makeMarketplace({
+          pendingPrUrl: 'https://github.com/acme/plugins/pull/9',
+        }),
+      );
+
+      const panel = screen.getByTestId('marketplace-pending-pr-panel');
+      expect(panel).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'Review the pull request' }),
+      ).toHaveAttribute('href', 'https://github.com/acme/plugins/pull/9');
+    });
+
+    it('is absent when there is no pending PR', () => {
+      renderHeader(makeMarketplace({ pendingPrUrl: null }));
+      expect(screen.queryByTestId('marketplace-pending-pr-panel')).toBeNull();
+    });
+  });
+
+  describe('outdated plugins panel', () => {
+    it('lists each outdated plugin slug', () => {
+      renderHeader(
+        makeMarketplace({ outdatedPluginSlugs: ['plugin-a', 'plugin-b'] }),
+      );
+
+      expect(
+        screen.getByTestId('marketplace-outdated-panel'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('marketplace-outdated-slug-plugin-a'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('marketplace-outdated-slug-plugin-b'),
+      ).toBeInTheDocument();
+    });
+
+    it('is absent when there are no outdated plugins', () => {
+      renderHeader(makeMarketplace({ outdatedPluginSlugs: null }));
+      expect(screen.queryByTestId('marketplace-outdated-panel')).toBeNull();
+    });
+  });
 });
