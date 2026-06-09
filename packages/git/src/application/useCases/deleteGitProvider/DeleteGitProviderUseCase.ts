@@ -1,12 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
+  DeleteGitProviderCommand,
+  DeleteGitProviderResponse,
   GitProviderHasRepositoriesError,
-  GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   IAccountsPort,
-  PackmindCommand,
+  IDeleteGitProviderUseCase,
   createUserId,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
@@ -14,17 +15,13 @@ import { GitRepoService } from '../../GitRepoService';
 
 const origin = 'DeleteGitProviderUseCase';
 
-export type DeleteGitProviderCommand = PackmindCommand & {
-  id: GitProviderId;
-  force?: boolean;
-};
-
-type DeleteGitProviderResult = Record<string, never>;
-
-export class DeleteGitProviderUseCase extends AbstractAdminUseCase<
-  DeleteGitProviderCommand,
-  DeleteGitProviderResult
-> {
+export class DeleteGitProviderUseCase
+  extends AbstractAdminUseCase<
+    DeleteGitProviderCommand,
+    DeleteGitProviderResponse
+  >
+  implements IDeleteGitProviderUseCase
+{
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
@@ -36,7 +33,7 @@ export class DeleteGitProviderUseCase extends AbstractAdminUseCase<
 
   protected async executeForAdmins(
     command: DeleteGitProviderCommand & AdminContext,
-  ): Promise<DeleteGitProviderResult> {
+  ): Promise<DeleteGitProviderResponse> {
     const { id, userId, force = false, organization } = command;
 
     // Business rule: provider ID is required
