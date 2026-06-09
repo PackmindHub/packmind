@@ -27,10 +27,37 @@ describe('GitProviderGatewayApi', () => {
   beforeEach(() => {
     gateway = new GitProviderGatewayApi();
     mockedApi.put.mockResolvedValue({} as never);
+    mockedApi.get.mockResolvedValue({} as never);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('getGithubAppInstallUrl', () => {
+    describe('when no gitProviderId is provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppInstallUrl(organizationId);
+      });
+
+      it('requests the install-url endpoint without a query string', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/install-url`,
+        );
+      });
+    });
+
+    describe('when a gitProviderId is provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppInstallUrl(organizationId, providerId);
+      });
+
+      it('appends the gitProviderId query param', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/install-url?gitProviderId=${providerId}`,
+        );
+      });
+    });
   });
 
   describe('updateGitProvider', () => {

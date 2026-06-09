@@ -16,6 +16,7 @@ import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { routes } from '../../../../shared/utils/routes';
+import { redirectTo } from '../../../../shared/utils/navigation';
 
 // Live probe of a provider's stored credentials. Used by the connection
 // drawer to surface a "Disconnected" status without waiting for the user to
@@ -168,13 +169,20 @@ export const useGithubAppInstallUrlMutation = () => {
   const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      gitProviderId,
+    }: {
+      gitProviderId?: GitProviderId;
+    }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch GitHub App install URL',
         );
       }
-      return gitProviderGateway.getGithubAppInstallUrl(organization.id);
+      return gitProviderGateway.getGithubAppInstallUrl(
+        organization.id,
+        gitProviderId,
+      );
     },
     onError: (error) => {
       console.error('Error fetching GitHub App install URL:', error);
@@ -201,8 +209,7 @@ export const useSubmitGithubAppCallbackMutation = () => {
       });
       if (organization?.slug) {
         const target = routes.org.toSettingsGit(organization.slug);
-        window.location.assign(target);
-        window.location.href = target;
+        redirectTo(target);
       }
     },
     onError: (error) => {
@@ -227,8 +234,7 @@ export const useSubmitGithubAppManifestCallbackMutation = () => {
       );
     },
     onSuccess: ({ installUrl }) => {
-      window.location.assign(installUrl);
-      window.location.href = installUrl;
+      redirectTo(installUrl);
     },
     onError: (error) => {
       console.error('Error submitting GitHub App manifest callback:', error);

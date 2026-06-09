@@ -160,7 +160,26 @@ describe('GitProvidersController', () => {
         expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith({
           organizationId: orgId,
           userId,
+          gitProviderId: undefined,
         });
+      });
+    });
+
+    describe('when a gitProviderId query param is provided', () => {
+      it('forwards the gitProviderId to the service', async () => {
+        resolveGithubAppMode.mockResolvedValue('shared');
+        mockService.buildGithubAppInstallUrl.mockResolvedValue({
+          installUrl:
+            'https://github.com/apps/my-app/installations/new?state=abc',
+          state: 'abc',
+        });
+        const providerId = createGitProviderId('prov-reauth');
+
+        await controller.getGithubAppInstallUrl(orgId, mockRequest, providerId);
+
+        expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith(
+          expect.objectContaining({ gitProviderId: providerId }),
+        );
       });
     });
   });
