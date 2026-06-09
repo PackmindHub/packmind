@@ -5,9 +5,9 @@ import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 
-const origin = 'GetFileFromRepo';
+const origin = 'GetFileFromRepoUseCase';
 
-export class GetFileFromRepo {
+export class GetFileFromRepoUseCase {
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoFactory: IGitRepoFactory,

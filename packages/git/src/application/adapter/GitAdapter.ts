@@ -45,17 +45,17 @@ import { AddGitRepoUseCase } from '../useCases/addGitRepo/AddGitRepoUseCase';
 import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/CheckBranchExistsUseCase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
 import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
-import { CommitToGit } from '../useCases/commitToGit/CommitToGit';
+import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
 import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/DeleteGitProviderUseCase';
 import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/DeleteGitRepoUseCase';
 import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
 import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/GetFileFromRepo';
+import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase';
 import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/GetRepositoryByIdUseCase';
-import { HandleWebHook } from '../useCases/handleWebHook/HandleWebHook';
-import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/HandleWebHookWithoutContent';
+import { HandleWebHookUseCase } from '../useCases/handleWebHook/HandleWebHookUseCase';
+import { HandleWebHookWithoutContentUseCase } from '../useCases/handleWebHookWithoutContent/HandleWebHookWithoutContentUseCase';
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/ListAvailableReposUseCase';
 import { ListProvidersUseCase } from '../useCases/listProviders/ListProvidersUseCase';
 import { ListReposUseCase } from '../useCases/listRepos/ListReposUseCase';
@@ -77,10 +77,10 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _updateGitProvider!: UpdateGitProviderUseCase;
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
-  private _commitToGit!: CommitToGit;
-  private _handleWebHook!: HandleWebHook;
-  private _handleWebHookWithoutContent!: HandleWebHookWithoutContent;
-  private _getFileFromRepo!: GetFileFromRepo;
+  private _commitToGit!: CommitToGitUseCase;
+  private _handleWebHook!: HandleWebHookUseCase;
+  private _handleWebHookWithoutContent!: HandleWebHookWithoutContentUseCase;
+  private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
   private _listRepos!: ListReposUseCase;
   private _listProviders!: ListProvidersUseCase;
@@ -186,26 +186,26 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitProviderService(),
     );
 
-    this._commitToGit = new CommitToGit(
+    this._commitToGit = new CommitToGitUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
     );
 
-    this._handleWebHook = new HandleWebHook(
+    this._handleWebHook = new HandleWebHookUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitRepoFactory(),
     );
 
-    this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
+    this._handleWebHookWithoutContent = new HandleWebHookWithoutContentUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
     );
 
-    this._getFileFromRepo = new GetFileFromRepo(
+    this._getFileFromRepo = new GetFileFromRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
     );

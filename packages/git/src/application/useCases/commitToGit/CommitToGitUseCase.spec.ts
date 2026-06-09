@@ -1,4 +1,4 @@
-import { CommitToGit } from './CommitToGit';
+import { CommitToGitUseCase } from './CommitToGitUseCase';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
 import { createGitRepoId, GitRepo } from '@packmind/types';
@@ -16,8 +16,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/types';
 
-describe('CommitToGit', () => {
-  let commitToGit: CommitToGit;
+describe('CommitToGitUseCase', () => {
+  let commitToGit: CommitToGitUseCase;
   let mockGitCommitService: jest.Mocked<GitCommitService>;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
@@ -64,7 +64,7 @@ describe('CommitToGit', () => {
       }),
     } as jest.Mocked<IGitRepoFactory>;
 
-    commitToGit = new CommitToGit(
+    commitToGit = new CommitToGitUseCase(
       mockGitCommitService,
       mockGitProviderService,
       mockGitRepoFactory,

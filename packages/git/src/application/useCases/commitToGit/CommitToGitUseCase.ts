@@ -13,9 +13,9 @@ import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 
-const origin = 'CommitToGit';
+const origin = 'CommitToGitUseCase';
 
-export class CommitToGit {
+export class CommitToGitUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,

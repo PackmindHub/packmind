@@ -3,7 +3,7 @@ import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { GitProviderService } from '../../application/GitProviderService';
 import { GitRepoService } from '../../application/GitRepoService';
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
-import { GetFileFromRepo } from '../../application/useCases/getFileFromRepo/GetFileFromRepo';
+import { GetFileFromRepoUseCase } from '../../application/useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 
@@ -22,7 +22,7 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
   async createQueue(): Promise<IJobQueue<FetchFileContentInput>> {
     this.logger.info('Creating FetchFileContent job queue');
 
-    const getFileFromRepo = new GetFileFromRepo(
+    const getFileFromRepo = new GetFileFromRepoUseCase(
       this.gitProviderService,
       this.gitRepoFactory,
     );

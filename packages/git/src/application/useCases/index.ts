@@ -9,10 +9,10 @@ export { DeleteGitProviderUseCase } from './deleteGitProvider/DeleteGitProviderU
 export { DeleteGitRepoUseCase } from './deleteGitRepo/DeleteGitRepoUseCase';
 export { ListAvailableReposUseCase } from './listAvailableRepos/ListAvailableReposUseCase';
 export { CheckBranchExistsUseCase } from './checkBranchExists/CheckBranchExistsUseCase';
-export { CommitToGit } from './commitToGit/CommitToGit';
-export { HandleWebHook } from './handleWebHook/HandleWebHook';
-export { HandleWebHookWithoutContent } from './handleWebHookWithoutContent/HandleWebHookWithoutContent';
-export { GetFileFromRepo } from './getFileFromRepo/GetFileFromRepo';
+export { CommitToGitUseCase } from './commitToGit/CommitToGitUseCase';
+export { HandleWebHookUseCase } from './handleWebHook/HandleWebHookUseCase';
+export { HandleWebHookWithoutContentUseCase } from './handleWebHookWithoutContent/HandleWebHookWithoutContentUseCase';
+export { GetFileFromRepoUseCase } from './getFileFromRepo/GetFileFromRepoUseCase';
 export { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';
 export { ListReposUseCase } from './listRepos/ListReposUseCase';
 export { ListProvidersUseCase } from './listProviders/ListProvidersUseCase';

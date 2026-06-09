@@ -1,4 +1,4 @@
-import { GetFileFromRepo } from './GetFileFromRepo';
+import { GetFileFromRepoUseCase } from './GetFileFromRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
@@ -6,8 +6,8 @@ import { GitRepo } from '@packmind/types';
 import { GitProvider, GitProviderVendors } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 
-describe('GetFileFromRepo', () => {
-  let useCase: GetFileFromRepo;
+describe('GetFileFromRepoUseCase', () => {
+  let useCase: GetFileFromRepoUseCase;
   let gitProviderService: jest.Mocked<GitProviderService>;
   let gitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockGitRepoInstance: jest.Mocked<IGitRepo>;
@@ -49,7 +49,7 @@ describe('GetFileFromRepo', () => {
       }),
     } as jest.Mocked<IGitRepoFactory>;
 
-    useCase = new GetFileFromRepo(
+    useCase = new GetFileFromRepoUseCase(
       gitProviderService,
       gitRepoFactory,
       stubLogger(),

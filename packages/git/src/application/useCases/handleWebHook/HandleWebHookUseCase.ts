@@ -12,9 +12,9 @@ import {
   IHandleWebHookUseCase,
 } from '@packmind/types';
 
-const origin = 'HandleWebHook';
+const origin = 'HandleWebHookUseCase';
 
-export class HandleWebHook implements IHandleWebHookUseCase {
+export class HandleWebHookUseCase implements IHandleWebHookUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,

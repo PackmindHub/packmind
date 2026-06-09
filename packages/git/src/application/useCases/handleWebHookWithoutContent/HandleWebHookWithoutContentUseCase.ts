@@ -14,9 +14,9 @@ import {
   GitlabWebhookPushPayload,
 } from '../../../domain/types/webhookPayloads';
 
-const origin = 'HandleWebHookWithoutContent';
+const origin = 'HandleWebHookWithoutContentUseCase';
 
-export class HandleWebHookWithoutContent implements IHandleWebHookWithoutContentUseCase {
+export class HandleWebHookWithoutContentUseCase implements IHandleWebHookWithoutContentUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
