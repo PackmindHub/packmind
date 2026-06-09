@@ -22,7 +22,8 @@
     "bullmq": "^5.58.2",
     "uuid": "^11.1.0",
     "slug": "^11.0.0",
-    "archiver": "^7.0.1"
+    "archiver": "^7.0.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",

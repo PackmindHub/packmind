@@ -1,9 +1,10 @@
 import { PackmindHttpClient } from './PackmindHttpClient';
 import {
+  Distribution,
   Gateway,
   IGetTargetsByOrganizationUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   IUpdateRenderModeConfigurationUseCase,
-  Distribution,
 } from '@packmind/types';
 import { IDeploymentsGateway } from '../IPackmindGateway';
 
@@ -38,4 +39,12 @@ export class DeploymentsGateway implements IDeploymentsGateway {
       `/api/v0/organizations/${organizationId}/deployments/package/${packageId}`,
     );
   };
+
+  listActiveDistributedPackagesBySpace: Gateway<IListActiveDistributedPackagesBySpaceUseCase> =
+    async ({ spaceId }) => {
+      const organizationId = this.httpClient.getOrganizationId();
+      return this.httpClient.request(
+        `/api/v0/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
+      );
+    };
 }

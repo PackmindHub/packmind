@@ -35,6 +35,21 @@ export class MockJobQueue<Input, Output> implements IQueue<Input, Output> {
     }
   }
 
+  async removeRepeatable(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _name: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _pattern: string,
+    jobId: string,
+  ): Promise<void> {
+    // Mock implementation — remove any queued job tagged with this id so
+    // assertions in tests reflect a cleared schedule.
+    const jobIndex = this.jobs.findIndex((job) => job.id === jobId);
+    if (jobIndex >= 0) {
+      this.jobs.splice(jobIndex, 1);
+    }
+  }
+
   async addWorker(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     runner: Runner<Input, Output>,
