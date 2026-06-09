@@ -35,6 +35,14 @@ jobs:
 
       - run: npm ci --ignore-scripts --no-audit --no-fund
 
+      # tsconfig.base.effective.json is git-ignored, so generate it before Nx
+      # builds its project graph (the vite/vitest plugins parse every project's
+      # tsconfig, which `extends` this file). Mirrors the quality workflow.
+      - name: Generate effective tsconfig (OSS)
+        env:
+          PACKMIND_EDITION: oss
+        run: node scripts/select-tsconfig.mjs
+
       # Generates tsconfig.arch.json and runs the dedicated `arch` Nx target.
       # PACKMIND_EDITION=oss is set by the test:arch script itself.
       - name: Run architecture tests
