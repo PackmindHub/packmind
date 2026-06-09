@@ -16,6 +16,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
+import {
+  prepareMarketplaceRemovalJob,
+  runMarketplaceRemovalJob,
+} from './helpers/marketplaceRemovalJob';
 import { TestApp } from './helpers/TestApp';
 
 const DESCRIPTOR_JSON = JSON.stringify({
@@ -28,6 +32,8 @@ const DESCRIPTOR_JSON = JSON.stringify({
   ],
 });
 
+type RemovalJobHandle = ReturnType<typeof prepareMarketplaceRemovalJob>;
+
 describe('Marketplace plugin removal: cancellation reverts state', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
 
@@ -38,6 +44,7 @@ describe('Marketplace plugin removal: cancellation reverts state', () => {
   let marketplaceId: MarketplaceId;
   let pkg: Package;
   let distributionRow: MarketplaceDistribution;
+  let removalJob: RemovalJobHandle;
 
   beforeAll(() => fixture.initialize());
 
@@ -53,10 +60,13 @@ describe('Marketplace plugin removal: cancellation reverts state', () => {
     ));
 
     gitPort = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: DESCRIPTOR_JSON,
-    });
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) =>
+        path === 'packmind-lock.json'
+          ? null
+          : { sha: 'mock-sha', content: DESCRIPTOR_JSON },
+      );
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {
@@ -128,14 +138,24 @@ describe('Marketplace plugin removal: cancellation reverts state', () => {
     });
     distributionRow = inserted as unknown as MarketplaceDistribution;
 
-    // Mark the plugin for removal, then immediately cancel it. The
-    // distribution row should be reverted back to `success` with no
-    // `MarketplacePluginRemovalInitiatedEvent` cleanup needed (cancel
-    // does not emit a domain event per AC5).
+    removalJob = prepareMarketplaceRemovalJob(testApp, gitPort);
+
+    // Mark the plugin for removal, drive the removal job so the row reaches
+    // `to_be_removed` (the job owns that flip after committing to the sync
+    // branch), then cancel it. The distribution row should be reverted back to
+    // `success` with no `MarketplacePluginRemovalInitiatedEvent` cleanup needed
+    // (cancel does not emit a domain event per AC5).
     await testApp.deploymentsHexa.getAdapter().markPluginForRemoval({
       ...dataFactory.packmindCommand(),
       marketplaceId,
       distributionId: distributionRow.id,
+    });
+    await runMarketplaceRemovalJob(removalJob, {
+      marketplaceDistributionId: distributionRow.id,
+      marketplaceId,
+      packageId: pkg.id,
+      organizationId: dataFactory.organization.id,
+      userId: dataFactory.user.id,
     });
     await testApp.deploymentsHexa.getAdapter().cancelPluginRemoval({
       ...dataFactory.packmindCommand(),

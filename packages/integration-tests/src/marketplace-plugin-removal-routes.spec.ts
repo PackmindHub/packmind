@@ -18,7 +18,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
+import {
+  prepareMarketplaceRemovalJob,
+  runMarketplaceRemovalJob,
+} from './helpers/marketplaceRemovalJob';
 import { TestApp } from './helpers/TestApp';
+
+type RemovalJobHandle = ReturnType<typeof prepareMarketplaceRemovalJob>;
 
 const DESCRIPTOR_JSON = JSON.stringify({
   name: 'Anthropic Marketplace',
@@ -59,6 +65,7 @@ describe('Marketplace plugin removal: manual-trigger routes', () => {
   let pkg: Package;
   let eventEmitterService: PackmindEventEmitterService;
   let stubAdapter: jest.Mocked<StubRemovalAdapter>;
+  let removalJob: RemovalJobHandle;
 
   beforeAll(() => fixture.initialize());
 
@@ -74,10 +81,13 @@ describe('Marketplace plugin removal: manual-trigger routes', () => {
     ));
 
     gitPort = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: DESCRIPTOR_JSON,
-    });
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) =>
+        path === 'packmind-lock.json'
+          ? null
+          : { sha: 'mock-sha', content: DESCRIPTOR_JSON },
+      );
 
     const deploymentsAdapter = testApp.deploymentsHexa.getAdapter();
     const adapterAny = deploymentsAdapter as unknown as {
@@ -138,6 +148,12 @@ describe('Marketplace plugin removal: manual-trigger routes', () => {
       onMarketplacePluginRemovalInitiated: jest.fn(),
     };
     new StubRemovalListener(stubAdapter).initialize(eventEmitterService);
+
+    // Since the removal-status refactor, `markPluginForRemoval` leaves the row
+    // at `success` and enqueues the job that flips it to `to_be_removed` after
+    // committing to the sync branch. Prepare the job so each scenario can drive
+    // it inline after marking.
+    removalJob = prepareMarketplaceRemovalJob(testApp, gitPort);
   });
 
   afterEach(async () => {
@@ -171,6 +187,16 @@ describe('Marketplace plugin removal: manual-trigger routes', () => {
         ...dataFactory.packmindCommand(),
         marketplaceId,
         distributionId: distributionRow.id,
+      });
+
+      // The status flip now happens in the removal job once the deletion
+      // lands on the sync branch — drive it inline.
+      await runMarketplaceRemovalJob(removalJob, {
+        marketplaceDistributionId: distributionRow.id,
+        marketplaceId,
+        packageId: pkg.id,
+        organizationId: dataFactory.organization.id,
+        userId: dataFactory.user.id,
       });
     });
 
@@ -239,6 +265,16 @@ describe('Marketplace plugin removal: manual-trigger routes', () => {
         ...dataFactory.packmindCommand(),
         marketplaceId,
         packageId: pkg.id,
+      });
+
+      // The status flip now happens in the removal job once the deletion
+      // lands on the sync branch — drive it inline.
+      await runMarketplaceRemovalJob(removalJob, {
+        marketplaceDistributionId: distributionRow.id,
+        marketplaceId,
+        packageId: pkg.id,
+        organizationId: dataFactory.organization.id,
+        userId: dataFactory.user.id,
       });
     });
 

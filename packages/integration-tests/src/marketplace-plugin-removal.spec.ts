@@ -16,6 +16,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
+import {
+  prepareMarketplaceRemovalJob,
+  runMarketplaceRemovalJob,
+} from './helpers/marketplaceRemovalJob';
 import { TestApp } from './helpers/TestApp';
 
 /**
@@ -45,6 +49,8 @@ const POST_REMOVAL_DESCRIPTOR_JSON = JSON.stringify({
   plugins: [{ name: 'plugin-beta', version: '0.2.0' }],
 });
 
+type RemovalJobHandle = ReturnType<typeof prepareMarketplaceRemovalJob>;
+
 describe('Marketplace plugin removal: reconciliation success path', () => {
   const fixture = createIntegrationTestFixture(integrationTestSchemas);
 
@@ -55,6 +61,7 @@ describe('Marketplace plugin removal: reconciliation success path', () => {
   let marketplaceId: MarketplaceId;
   let pkg: Package;
   let distributionRow: MarketplaceDistribution;
+  let removalJob: RemovalJobHandle;
 
   beforeAll(() => fixture.initialize());
 
@@ -70,10 +77,13 @@ describe('Marketplace plugin removal: reconciliation success path', () => {
     ));
 
     gitPort = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue({
-      sha: 'mock-sha',
-      content: INITIAL_DESCRIPTOR_JSON,
-    });
+    jest
+      .spyOn(gitPort, 'getFileFromRepo')
+      .mockImplementation(async (_repo, path) =>
+        path === 'packmind-lock.json'
+          ? null
+          : { sha: 'mock-sha', content: INITIAL_DESCRIPTOR_JSON },
+      );
 
     // Stub the BullMQ-backed reconciliation job so the link path does
     // not try to reach a real queue. We invoke `runJob` directly later.
@@ -150,11 +160,24 @@ describe('Marketplace plugin removal: reconciliation success path', () => {
     });
     distributionRow = inserted as unknown as MarketplaceDistribution;
 
-    // Step 4 — admin marks the plugin for removal (manual trigger).
+    removalJob = prepareMarketplaceRemovalJob(testApp, gitPort);
+
+    // Step 4 — admin marks the plugin for removal (manual trigger), then the
+    // removal job commits the deletion to the sync branch and flips the row to
+    // `to_be_removed`. `markPluginForRemoval` no longer flips it directly, so
+    // the job must be driven for the reconciliation cross-check to find a
+    // `to_be_removed` row.
     await testApp.deploymentsHexa.getAdapter().markPluginForRemoval({
       ...dataFactory.packmindCommand(),
       marketplaceId,
       distributionId: distributionRow.id,
+    });
+    await runMarketplaceRemovalJob(removalJob, {
+      marketplaceDistributionId: distributionRow.id,
+      marketplaceId,
+      packageId: pkg.id,
+      organizationId: dataFactory.organization.id,
+      userId: dataFactory.user.id,
     });
 
     // Step 5 — descriptor now reflects the marketplace cleanup PR (the
