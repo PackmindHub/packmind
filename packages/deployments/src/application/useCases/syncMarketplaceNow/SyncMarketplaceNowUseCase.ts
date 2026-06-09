@@ -12,6 +12,9 @@ import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceRecon
 
 const origin = 'SyncMarketplaceNowUseCase';
 
+/** Skip a re-fetch when the row was validated within this window (debounces rapid page reopens). */
+const RECONCILE_FRESHNESS_WINDOW_MS = 10_000;
+
 /**
  * Runs an immediate reconciliation of a single marketplace and returns the
  * resulting state. Member-scoped stop-gap that lets an org member refresh a
@@ -71,16 +74,35 @@ export class SyncMarketplaceNowUseCase
       throw new MarketplaceNotFoundError(marketplaceId);
     }
 
-    const { state, lastValidatedAt } =
-      await this.reconciliationJob.reconcileNow(marketplaceId);
+    const isFresh =
+      marketplace.lastValidatedAt != null &&
+      Date.now() - new Date(marketplace.lastValidatedAt).getTime() <
+        RECONCILE_FRESHNESS_WINDOW_MS;
+
+    if (isFresh) {
+      this.logger.info('Marketplace recently validated — skipping reconcile', {
+        marketplaceId,
+        organizationId: organization.id,
+      });
+      return {
+        state: marketplace.state,
+        lastValidatedAt: marketplace.lastValidatedAt as Date,
+        errorKind: marketplace.errorKind,
+        errorDetail: marketplace.errorDetail,
+        pendingPrUrl: marketplace.pendingPrUrl,
+        outdatedPluginSlugs: marketplace.outdatedPluginSlugs,
+      };
+    }
+
+    const result = await this.reconciliationJob.reconcileNow(marketplaceId);
 
     this.logger.info('Manual marketplace reconciliation completed', {
       marketplaceId,
       organizationId: organization.id,
       actorId: command.user.id,
-      state,
+      state: result.state,
     });
 
-    return { state, lastValidatedAt };
+    return result;
   }
 }

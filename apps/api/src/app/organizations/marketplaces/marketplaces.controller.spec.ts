@@ -98,6 +98,10 @@ describe('MarketplacesController', () => {
     lastValidatedAt: new Date('2026-05-29T10:00:00.000Z'),
     descriptor,
     pluginCount: 3,
+    errorKind: null,
+    errorDetail: null,
+    pendingPrUrl: null,
+    outdatedPluginSlugs: null,
     createdAt: new Date('2026-05-29T10:00:00.000Z'),
     updatedAt: new Date('2026-05-29T10:00:00.000Z'),
     deletedAt: null,
@@ -421,6 +425,39 @@ describe('MarketplacesController', () => {
           organizationId,
           source: 'ui',
         });
+      });
+    });
+
+    describe('when a marketplace carries live-state fields', () => {
+      const liveStateResponse: ListMarketplacesResponse = [
+        {
+          ...marketplace,
+          state: 'unreachable',
+          errorKind: 'auth_failed',
+          errorDetail: 'creds expired',
+          pendingPrUrl: 'https://github.com/acme/plugins/pull/9',
+          outdatedPluginSlugs: ['plugin-one'],
+          addedByUserName: 'Test User',
+          repository: {
+            gitProviderId,
+            owner: 'acme',
+            repo: 'plugins',
+            branch: 'main',
+            providerSource: 'github',
+            url: 'https://github.com/acme/plugins',
+          },
+        },
+      ];
+
+      it('forwards the live-state fields to the response body', async () => {
+        mockDeploymentAdapter.listMarketplaces.mockResolvedValue(
+          liveStateResponse,
+        );
+        const result = await controller.listMarketplaces(
+          organizationId,
+          baseRequest,
+        );
+        expect(result).toEqual(liveStateResponse);
       });
     });
 

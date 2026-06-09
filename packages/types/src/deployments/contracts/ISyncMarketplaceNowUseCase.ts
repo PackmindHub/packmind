@@ -1,4 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
+import { MarketplaceErrorKind } from '../MarketplaceErrorKind';
 import { MarketplaceId } from '../MarketplaceId';
 import { MarketplaceState } from '../MarketplaceState';
 
@@ -21,6 +22,10 @@ export type SyncMarketplaceNowCommand = PackmindCommand & {
 export type SyncMarketplaceNowResponse = {
   state: MarketplaceState;
   lastValidatedAt: Date;
+  errorKind: MarketplaceErrorKind | null;
+  errorDetail: string | null;
+  pendingPrUrl: string | null;
+  outdatedPluginSlugs: string[] | null;
 };
 
 export type ISyncMarketplaceNowUseCase = IUseCase<

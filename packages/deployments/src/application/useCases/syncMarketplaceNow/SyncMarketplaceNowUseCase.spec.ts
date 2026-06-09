@@ -55,9 +55,14 @@ describe('SyncMarketplaceNowUseCase', () => {
     } as unknown as jest.Mocked<IMarketplaceRepository>;
 
     mockReconciliationJob = {
-      reconcileNow: jest
-        .fn()
-        .mockResolvedValue({ state: 'healthy', lastValidatedAt }),
+      reconcileNow: jest.fn().mockResolvedValue({
+        state: 'healthy',
+        lastValidatedAt,
+        errorKind: null,
+        errorDetail: null,
+        pendingPrUrl: null,
+        outdatedPluginSlugs: null,
+      }),
     };
 
     mockAccountsPort = {
@@ -100,6 +105,57 @@ describe('SyncMarketplaceNowUseCase', () => {
 
     it('returns the validation timestamp', () => {
       expect(response.lastValidatedAt).toEqual(lastValidatedAt);
+    });
+  });
+
+  describe('freshness window', () => {
+    describe('when the marketplace was validated within the window', () => {
+      let response: Awaited<ReturnType<SyncMarketplaceNowUseCase['execute']>>;
+
+      beforeEach(async () => {
+        mockMarketplaceRepository.findByOrganizationAndId.mockResolvedValue({
+          ...existingMarketplace,
+          state: 'unreachable',
+          lastValidatedAt: new Date(),
+          errorKind: 'auth_failed',
+          errorDetail: 'creds expired',
+          pendingPrUrl: null,
+          outdatedPluginSlugs: ['x'],
+        } as unknown as Marketplace);
+        response = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+        });
+      });
+
+      it('does not run reconciliation', () => {
+        expect(mockReconciliationJob.reconcileNow).not.toHaveBeenCalled();
+      });
+
+      it('returns the row state without re-fetching', () => {
+        expect(response.state).toBe('unreachable');
+      });
+
+      it('returns the row errorKind without re-fetching', () => {
+        expect(response.errorKind).toBe('auth_failed');
+      });
+    });
+
+    describe('when the marketplace validation is stale', () => {
+      beforeEach(async () => {
+        mockMarketplaceRepository.findByOrganizationAndId.mockResolvedValue({
+          ...existingMarketplace,
+          lastValidatedAt: new Date('2020-01-01T00:00:00.000Z'),
+        } as unknown as Marketplace);
+        await useCase.execute({ userId, organizationId, marketplaceId });
+      });
+
+      it('runs reconciliation', () => {
+        expect(mockReconciliationJob.reconcileNow).toHaveBeenCalledWith(
+          marketplaceId,
+        );
+      });
     });
   });
 
