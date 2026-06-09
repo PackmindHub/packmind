@@ -2,7 +2,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   IAccountsPort,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -11,7 +11,7 @@ const origin = 'GetRenderModeConfigurationUseCase';
 
 export class GetRenderModeConfigurationUseCase extends AbstractMemberUseCase<
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult
+  GetRenderModeConfigurationResponse
 > {
   constructor(
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
@@ -24,7 +24,7 @@ export class GetRenderModeConfigurationUseCase extends AbstractMemberUseCase<
 
   protected async executeForMembers(
     command: GetRenderModeConfigurationCommand & MemberContext,
-  ): Promise<GetRenderModeConfigurationResult> {
+  ): Promise<GetRenderModeConfigurationResponse> {
     this.logger.info('Retrieving render mode configuration', {
       organizationId: command.organizationId,
       userId: command.userId,

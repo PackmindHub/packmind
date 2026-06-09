@@ -16,4 +16,9 @@ export type AddGitRepoCommand = PackmindCommand & {
   allowTokenlessProvider?: boolean;
 };
 
-export type IAddGitRepoUseCase = IUseCase<AddGitRepoCommand, GitRepo>;
+export type AddGitRepoResponse = GitRepo;
+
+export type IAddGitRepoUseCase = IUseCase<
+  AddGitRepoCommand,
+  AddGitRepoResponse
+>;

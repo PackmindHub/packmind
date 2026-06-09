@@ -10,7 +10,10 @@ export type OrganizationOnboardingStatus = {
   hasInvitedColleague: boolean;
 };
 
+export type GetOrganizationOnboardingStatusResponse =
+  OrganizationOnboardingStatus;
+
 export type IGetOrganizationOnboardingStatusUseCase = IUseCase<
   GetOrganizationOnboardingStatusCommand,
-  OrganizationOnboardingStatus
+  GetOrganizationOnboardingStatusResponse
 >;

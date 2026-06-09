@@ -4,8 +4,8 @@ import {
   IAccountsPort,
   IUpdateRenderModeConfigurationUseCase,
   RenderMode,
-  RenderModeConfiguration,
   UpdateRenderModeConfigurationCommand,
+  UpdateRenderModeConfigurationResponse,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
@@ -16,7 +16,7 @@ const allowedRenderModes = new Set(Object.values(RenderMode));
 export class UpdateRenderModeConfigurationUseCase
   extends AbstractAdminUseCase<
     UpdateRenderModeConfigurationCommand,
-    RenderModeConfiguration
+    UpdateRenderModeConfigurationResponse
   >
   implements IUpdateRenderModeConfigurationUseCase
 {

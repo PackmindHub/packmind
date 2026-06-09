@@ -23,11 +23,11 @@ import {
   UserNotInOrganizationError,
 } from './UserAccessErrors';
 
-type TestResult = PackmindResult & { success: boolean };
+type TestResponse = PackmindResult & { success: boolean };
 
 class TestSpaceAdminUseCase extends AbstractSpaceAdminUseCase<
   SpaceAdminCommand,
-  TestResult
+  TestResponse
 > {
   constructor(
     spacesPort: ISpacesPort,
@@ -35,14 +35,14 @@ class TestSpaceAdminUseCase extends AbstractSpaceAdminUseCase<
     logger: ReturnType<typeof stubLogger>,
     private readonly onExecute: (
       command: SpaceAdminCommand & SpaceAdminContext,
-    ) => Promise<TestResult>,
+    ) => Promise<TestResponse>,
   ) {
     super(spacesPort, accountsPort, logger);
   }
 
   protected executeForSpaceAdmins(
     command: SpaceAdminCommand & SpaceAdminContext,
-  ): Promise<TestResult> {
+  ): Promise<TestResponse> {
     return this.onExecute(command);
   }
 }
@@ -62,7 +62,7 @@ describe('AbstractSpaceAdminUseCase', () => {
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
   let mockExecuteForSpaceAdmins: jest.MockedFunction<
-    (command: SpaceAdminCommand & SpaceAdminContext) => Promise<TestResult>
+    (command: SpaceAdminCommand & SpaceAdminContext) => Promise<TestResponse>
   >;
   let logger: ReturnType<typeof stubLogger>;
   let useCase: TestSpaceAdminUseCase;
@@ -111,7 +111,7 @@ describe('AbstractSpaceAdminUseCase', () => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
     mockExecuteForSpaceAdmins = jest
-      .fn<Promise<TestResult>, [SpaceAdminCommand & SpaceAdminContext]>()
+      .fn<Promise<TestResponse>, [SpaceAdminCommand & SpaceAdminContext]>()
       .mockResolvedValue({ success: true });
     logger = stubLogger();
 
@@ -138,7 +138,7 @@ describe('AbstractSpaceAdminUseCase', () => {
 
   describe('execute', () => {
     describe('when the caller is a space admin', () => {
-      let result: TestResult;
+      let result: TestResponse;
 
       beforeEach(async () => {
         mockGetUserById.mockResolvedValue(buildUser());

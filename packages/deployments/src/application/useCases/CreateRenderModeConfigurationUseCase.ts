@@ -2,10 +2,10 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CreateRenderModeConfigurationCommand,
+  CreateRenderModeConfigurationResponse,
   IAccountsPort,
   ICreateRenderModeConfigurationUseCase,
   RenderMode,
-  RenderModeConfiguration,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
@@ -14,7 +14,7 @@ const origin = 'CreateRenderModeConfigurationUseCase';
 export class CreateRenderModeConfigurationUseCase
   extends AbstractMemberUseCase<
     CreateRenderModeConfigurationCommand,
-    RenderModeConfiguration
+    CreateRenderModeConfigurationResponse
   >
   implements ICreateRenderModeConfigurationUseCase
 {
@@ -29,7 +29,7 @@ export class CreateRenderModeConfigurationUseCase
 
   protected async executeForMembers(
     command: CreateRenderModeConfigurationCommand & MemberContext,
-  ): Promise<RenderModeConfiguration> {
+  ): Promise<CreateRenderModeConfigurationResponse> {
     const { membership, organization, activeRenderModes, user } = command;
     const isAdmin = membership.role === 'admin';
 

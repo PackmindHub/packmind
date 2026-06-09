@@ -6,7 +6,9 @@ export type CreateRenderModeConfigurationCommand = PackmindCommand & {
   activeRenderModes?: RenderMode[];
 };
 
+export type CreateRenderModeConfigurationResponse = RenderModeConfiguration;
+
 export type ICreateRenderModeConfigurationUseCase = IUseCase<
   CreateRenderModeConfigurationCommand,
-  RenderModeConfiguration
+  CreateRenderModeConfigurationResponse
 >;
