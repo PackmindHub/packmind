@@ -1,0 +1,41 @@
+name: Architecture Tests
+
+# Runs the ArchUnitTS architecture rules (packages/architecture-tests) as a
+# dedicated, NON-BLOCKING check. The job is allowed to fail (continue-on-error)
+# so that pre-existing architecture violations are reported and monitored over
+# time without blocking merges. Open the job logs to see the offending imports.
+
+env:
+  HUSKY: '0'
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  architecture-tests:
+    name: Architecture rules (non-blocking)
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    # Allow this job to fail without failing the workflow run or blocking PRs.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+
+      # Generates tsconfig.arch.json and runs the dedicated `arch` Nx target.
+      # PACKMIND_EDITION=oss is set by the test:arch script itself.
+      - name: Run architecture tests
+        run: npm run test:arch
