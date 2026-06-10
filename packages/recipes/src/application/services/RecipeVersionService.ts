@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
-import { RecipeVersionRepository } from '../../infra/repositories/RecipeVersionRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createRecipeVersionId,
@@ -14,7 +13,7 @@ const origin = 'RecipeVersionService';
 
 export class RecipeVersionService {
   constructor(
-    private readonly recipeVersionRepository: IRecipeVersionRepository = new RecipeVersionRepository(),
+    private readonly recipeVersionRepository: IRecipeVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RecipeVersionService initialized');

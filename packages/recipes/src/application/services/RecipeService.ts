@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
-import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createRecipeId,
@@ -40,7 +39,7 @@ export type UpdateRecipeData = {
 
 export class RecipeService {
   constructor(
-    private readonly recipeRepository: IRecipeRepository = new RecipeRepository(),
+    private readonly recipeRepository: IRecipeRepository,
     private readonly recipeVersionRepository: IRecipeVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
