@@ -351,13 +351,13 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       expect(branchCallOrder).toBeLessThan(commitCallOrder);
     });
 
-    it('updates the distribution status to success with a content hash', () => {
+    it('updates the distribution status to pending_merge with a content hash', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).toHaveBeenCalledWith(
         marketplaceDistributionId,
         expect.objectContaining({
-          status: DistributionStatus.success,
+          status: DistributionStatus.pending_merge,
           gitCommit: successfulCommit.sha,
           contentHash: expect.any(String),
         }),
@@ -386,7 +386,7 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       );
     });
 
-    it('persists the PR URL on the success distribution row', () => {
+    it('persists the PR URL on the pending_merge distribution row', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).toHaveBeenCalledWith(
@@ -597,13 +597,13 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       await job.runJob('job-existing-pr', input, new AbortController());
     });
 
-    it('persists the existing PR URL on the success distribution row', () => {
+    it('persists the existing PR URL on the pending_merge distribution row', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).toHaveBeenCalledWith(
         marketplaceDistributionId,
         expect.objectContaining({
-          status: DistributionStatus.success,
+          status: DistributionStatus.pending_merge,
           prUrl: 'https://github.com/acme/plugins/pull/42',
         }),
       );
@@ -619,13 +619,13 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       await job.runJob('job-pr-failure', input, new AbortController());
     });
 
-    it('still records a success status', () => {
+    it('still records a pending_merge status', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).toHaveBeenCalledWith(
         marketplaceDistributionId,
         expect.objectContaining({
-          status: DistributionStatus.success,
+          status: DistributionStatus.pending_merge,
         }),
       );
     });
@@ -684,6 +684,38 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       const emitted = mockEventEmitter.emit.mock
         .calls[0][0] as PluginPublishedEvent;
       expect(emitted.payload.wasNoop).toBe(true);
+    });
+  });
+
+  describe('when the previous pending_merge row has the same content hash', () => {
+    beforeEach(async () => {
+      const expectedHash = buildPluginContentHash(
+        renderedFiles.files.map((f) => ({ path: f.path, content: f.content })),
+      );
+
+      mockMarketplaceDistributionRepository.findLatestByPackageAndMarketplace.mockResolvedValue(
+        marketplaceDistributionFactory({
+          status: DistributionStatus.pending_merge,
+          contentHash: expectedHash,
+        }),
+      );
+
+      await job.runJob('job-pending-noop', input, new AbortController());
+    });
+
+    it('does not push any commit to git', () => {
+      expect(mockGitPort.commitToGit).not.toHaveBeenCalled();
+    });
+
+    it('records no_changes status since the content already awaits merge on the sync branch', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(
+        marketplaceDistributionId,
+        expect.objectContaining({
+          status: DistributionStatus.no_changes,
+        }),
+      );
     });
   });
 

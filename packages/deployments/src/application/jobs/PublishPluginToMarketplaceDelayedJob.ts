@@ -89,7 +89,7 @@ export type PluginRenderer = (params: {
  *  2. Render the plugin via the injected renderer (typically the
  *     `RenderPackageAsPluginUseCase`).
  *  3. Compute the content hash and short-circuit on no-op against the previous
- *     `success` row's hash.
+ *     `success` or `pending_merge` row's hash.
  *  4. Refetch + reparse the marketplace descriptor (fresh read to surface any
  *     concurrent edit since the use case ran).
  *  5. Re-apply the name-collision check against unmanaged plugin entries.
@@ -97,7 +97,10 @@ export type PluginRenderer = (params: {
  *  7. Push the rendered files + updated descriptor on the rolling
  *     `packmind/sync` branch via `IGitPort.commitToGit`. Catches the
  *     `NO_CHANGES_DETECTED` signal as a no-op.
- *  8. Persist the terminal status on the distribution row.
+ *  8. Persist the resulting status on the distribution row — `pending_merge`
+ *     when the commit landed on the sync branch (the reconciliation sweep
+ *     later promotes it to `success` once the rolling PR merges),
+ *     `no_changes`/`failure` as terminal states.
  *  9. Emit `PluginPublishedEvent` (success/no-op) or `PluginPublishFailedEvent`.
  *
  * BullMQ concurrency is intentionally constrained to a single worker — Git
@@ -184,6 +187,9 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       const contentHash = buildPluginContentHash(pluginEntries);
 
       // Short-circuit no-op against the previous success row's content hash.
+      // A pending_merge row counts too: its content already sits on the sync
+      // branch awaiting merge, so re-publishing identical content would only
+      // produce an empty commit and a duplicate pending row.
       const previous =
         await this.marketplaceDistributionRepository.findLatestByPackageAndMarketplace(
           input.packageId,
@@ -192,7 +198,8 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       const wasNoopByHash =
         previous &&
         previous.id !== distribution.id &&
-        previous.status === DistributionStatus.success &&
+        (previous.status === DistributionStatus.success ||
+          previous.status === DistributionStatus.pending_merge) &&
         previous.contentHash === contentHash;
       if (wasNoopByHash) {
         this.logger.info(
@@ -425,10 +432,14 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
         input.marketplaceDistributionId,
       );
 
+      // The commit only landed on the rolling sync branch — the plugin is not
+      // live until the PR merges. The reconciliation sweep owns the
+      // `pending_merge → success` promotion (matched via the lock file's
+      // content hash on the default branch).
       await this.marketplaceDistributionRepository.updateStatus(
         input.marketplaceDistributionId,
         {
-          status: DistributionStatus.success,
+          status: DistributionStatus.pending_merge,
           contentHash,
           gitCommit: gitCommit?.sha,
           prUrl,
