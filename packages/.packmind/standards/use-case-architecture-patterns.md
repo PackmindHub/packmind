@@ -4,7 +4,7 @@ This standard defines how to structure use cases in the Packmind monorepo follow
 
 ## Rules
 
-* Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
+* Response and Commands must not be defined in the same file than the associated UseCase class
 * Extend PackmindCommand for authenticated use case commands that include userId and organizationId, or extend PublicPackmindCommand for public endpoints without authentication
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both
 * Extend AbstractMemberUseCase and implement executeForMembers method for organization-scoped use cases that do NOT operate within a specific space, with automatic user and organization validation
@@ -17,3 +17,5 @@ This standard defines how to structure use cases in the Packmind monorepo follow
 * Extend AbstractSpaceMemberUseCase and implement executeForSpaceMembers method for use cases operating within a specific space (command includes spaceId), with automatic user, organization, and space membership validation
 * Extend SpaceMemberCommand instead of PackmindCommand for use case commands that include a spaceId to get both organizationId and spaceId typing
 * Never directly call Repositories in Adapter classes, repos must be called from Use Cases
+* Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
+* UseCase must be associated with a Command and Response type
