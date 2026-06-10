@@ -70,15 +70,15 @@ export interface IMarketplaceDistributionRepository extends IRepository<Marketpl
   ): Promise<MarketplaceDistribution | null>;
 
   /**
-   * Return the most recent (non-soft-deleted) `success`-state distribution
-   * for a given `(package, marketplace)` pair — or `null` when none exists.
+   * Return the most recent (non-soft-deleted) active (`success` or
+   * `pending_merge`) distribution for a given `(package, marketplace)` pair —
+   * or `null` when none exists.
    *
    * Used by `MarkPluginForRemovalUseCase` when the caller targets a package
-   * by id (rather than passing the distribution id directly) and by the
-   * package-delete cascade listener to locate the latest live distribution
-   * to flip to `to_be_removed`.
+   * by id (rather than passing the distribution id directly): a publish still
+   * awaiting its sync-PR merge must be removable too.
    */
-  findLatestSuccessfulByPackageAndMarketplace(
+  findLatestActiveByPackageAndMarketplace(
     packageId: PackageId,
     marketplaceId: MarketplaceId,
   ): Promise<MarketplaceDistribution | null>;

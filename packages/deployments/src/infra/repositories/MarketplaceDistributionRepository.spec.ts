@@ -551,7 +551,7 @@ describe('MarketplaceDistributionRepository', () => {
     });
   });
 
-  describe('findLatestSuccessfulByPackageAndMarketplace', () => {
+  describe('findLatestActiveByPackageAndMarketplace', () => {
     describe('when both success and non-success rows exist', () => {
       let latest: MarketplaceDistribution;
       let older: MarketplaceDistribution;
@@ -589,7 +589,7 @@ describe('MarketplaceDistributionRepository', () => {
           }),
         );
 
-        result = await repository.findLatestSuccessfulByPackageAndMarketplace(
+        result = await repository.findLatestActiveByPackageAndMarketplace(
           pkg.id,
           marketplace.id,
         );
@@ -604,7 +604,28 @@ describe('MarketplaceDistributionRepository', () => {
       });
     });
 
-    describe('when no success-state distribution exists', () => {
+    describe('when the latest active row is a pending_merge publish', () => {
+      it('returns the pending_merge row', async () => {
+        const pending = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.pending_merge,
+          }),
+        );
+
+        const result = await repository.findLatestActiveByPackageAndMarketplace(
+          pkg.id,
+          marketplace.id,
+        );
+
+        expect(result?.id).toEqual(pending.id);
+      });
+    });
+
+    describe('when no active distribution exists', () => {
       it('returns null even if other statuses exist', async () => {
         await repository.add(
           marketplaceDistributionFactory({
@@ -616,11 +637,10 @@ describe('MarketplaceDistributionRepository', () => {
           }),
         );
 
-        const result =
-          await repository.findLatestSuccessfulByPackageAndMarketplace(
-            pkg.id,
-            marketplace.id,
-          );
+        const result = await repository.findLatestActiveByPackageAndMarketplace(
+          pkg.id,
+          marketplace.id,
+        );
 
         expect(result).toBeNull();
       });
@@ -638,11 +658,10 @@ describe('MarketplaceDistributionRepository', () => {
       );
       await repository.deleteById(distribution.id);
 
-      const result =
-        await repository.findLatestSuccessfulByPackageAndMarketplace(
-          pkg.id,
-          marketplace.id,
-        );
+      const result = await repository.findLatestActiveByPackageAndMarketplace(
+        pkg.id,
+        marketplace.id,
+      );
 
       expect(result).toBeNull();
     });

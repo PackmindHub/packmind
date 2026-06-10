@@ -58,10 +58,10 @@ const logOrigin = 'RemovePluginFromMarketplaceDelayedJob';
  *     onto `packmind/sync` via `IGitPort.commitToGit`. `NO_CHANGES_DETECTED`
  *     (plugin already gone) is treated as a no-op.
  *  5. Once the deletion is on `packmind/sync`, flip the distribution
- *     `success → to_be_removed`. The status therefore tracks the sync branch:
- *     it only flips after the deletion PR genuinely exists, never on the bare
- *     request. The flip is guarded to `success` rows so it never regresses a
- *     cascade-preflipped row or a terminal `removed` row.
+ *     `success`/`pending_merge` → `to_be_removed`. The status therefore tracks
+ *     the sync branch: it only flips after the deletion PR genuinely exists,
+ *     never on the bare request. The flip is guarded to those statuses so it
+ *     never regresses a cascade-preflipped row or a terminal `removed` row.
  *
  * The terminal `removed` transition stays owned by
  * `MarketplaceReconciliationDelayedJob`, which fires once the deletion PR
@@ -117,14 +117,16 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     const { distribution, marketplace } = await this.loadContext(input);
 
     // A removal cancelled before the commit landed clears `removalRequestedAt`
-    // while the status is still `success` (the manual flow never flips the
-    // status — this job does, once the commit lands). Detect that race and
-    // abort without committing so a cancelled removal never reaches the repo.
-    // Scoped to `success` rows: the package-deletion cascade pre-flips its rows
-    // to `to_be_removed` before enqueuing, so this guard never short-circuits a
-    // cascade-driven removal (which carries no `removalRequestedAt` marker).
+    // while the status is still `success`/`pending_merge` (the manual flow
+    // never flips the status — this job does, once the commit lands). Detect
+    // that race and abort without committing so a cancelled removal never
+    // reaches the repo. Scoped to those statuses: the package-deletion cascade
+    // pre-flips its rows to `to_be_removed` before enqueuing, so this guard
+    // never short-circuits a cascade-driven removal (which carries no
+    // `removalRequestedAt` marker).
     if (
-      distribution.status === DistributionStatus.success &&
+      (distribution.status === DistributionStatus.success ||
+        distribution.status === DistributionStatus.pending_merge) &&
       !distribution.removalRequestedAt
     ) {
       this.logger.info(
@@ -296,15 +298,19 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
   }
 
   /**
-   * Flip `success → to_be_removed` once the deletion lives on `packmind/sync`.
-   * Guarded to `success` rows: a `to_be_removed` row (cascade pre-flip or a
-   * prior run) is already correct, and a terminal `removed` row must never be
-   * regressed. Rethrows on DB failure so the job retries.
+   * Flip `success`/`pending_merge` → `to_be_removed` once the deletion lives
+   * on `packmind/sync`. Guarded to those statuses: a `to_be_removed` row
+   * (cascade pre-flip or a prior run) is already correct, and a terminal
+   * `removed` row must never be regressed. Rethrows on DB failure so the job
+   * retries.
    */
   private async transitionToToBeRemoved(
     distribution: MarketplaceDistribution,
   ): Promise<void> {
-    if (distribution.status !== DistributionStatus.success) {
+    if (
+      distribution.status !== DistributionStatus.success &&
+      distribution.status !== DistributionStatus.pending_merge
+    ) {
       return;
     }
     await this.marketplaceDistributionRepository.updateStatus(distribution.id, {
@@ -314,7 +320,7 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
       `[${this.origin}] Distribution flipped to to_be_removed after the sync-branch commit`,
       {
         marketplaceDistributionId: distribution.id,
-        fromStatus: DistributionStatus.success,
+        fromStatus: distribution.status,
         toStatus: DistributionStatus.to_be_removed,
       },
     );

@@ -274,6 +274,54 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     });
   });
 
+  describe('when the distribution is a pending_merge publish marked for removal', () => {
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...distribution,
+        status: DistributionStatus.pending_merge,
+      });
+      await job.runJob('job-pending-merge', input, new AbortController());
+    });
+
+    it('commits the deletion to the rolling sync branch', () => {
+      expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: MARKETPLACE_SYNC_BRANCH }),
+        expect.any(Array),
+        MARKETPLACE_SYNC_PR_TITLE,
+        expect.any(Array),
+      );
+    });
+
+    it('flips the distribution to to_be_removed once the sync commit landed', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(marketplaceDistributionId, {
+        status: DistributionStatus.to_be_removed,
+      });
+    });
+  });
+
+  describe('when a pending_merge removal was cancelled before the commit landed', () => {
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...distribution,
+        status: DistributionStatus.pending_merge,
+        removalRequestedAt: null,
+      });
+      await job.runJob('job-pending-cancelled', input, new AbortController());
+    });
+
+    it('does not commit the deletion to the sync branch', () => {
+      expect(mockGitPort.commitToGit).not.toHaveBeenCalled();
+    });
+
+    it('does not flip the status', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when the rolling sync branch does not yet exist', () => {
     beforeEach(async () => {
       mockGitPort.checkBranchExists.mockResolvedValue(false);

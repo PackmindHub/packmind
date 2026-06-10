@@ -162,12 +162,12 @@ export class MarketplaceDistributionRepository
     }
   }
 
-  async findLatestSuccessfulByPackageAndMarketplace(
+  async findLatestActiveByPackageAndMarketplace(
     packageId: PackageId,
     marketplaceId: MarketplaceId,
   ): Promise<MarketplaceDistribution | null> {
     this.logger.info(
-      'Finding latest successful marketplace distribution by package and marketplace',
+      'Finding latest active marketplace distribution by package and marketplace',
       { packageId, marketplaceId },
     );
 
@@ -180,20 +180,23 @@ export class MarketplaceDistributionRepository
         .andWhere('marketplace_distribution.marketplaceId = :marketplaceId', {
           marketplaceId,
         })
-        .andWhere('marketplace_distribution.status = :status', {
-          status: DistributionStatus.success,
+        .andWhere('marketplace_distribution.status IN (:...statuses)', {
+          statuses: [
+            DistributionStatus.success,
+            DistributionStatus.pending_merge,
+          ],
         })
         .orderBy('marketplace_distribution.createdAt', 'DESC')
         .getOne();
 
       this.logger.info(
-        'Latest successful marketplace distribution lookup completed',
+        'Latest active marketplace distribution lookup completed',
         { packageId, marketplaceId, found: !!row },
       );
       return row;
     } catch (error) {
       this.logger.error(
-        'Failed to find latest successful marketplace distribution',
+        'Failed to find latest active marketplace distribution',
         {
           packageId,
           marketplaceId,

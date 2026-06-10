@@ -63,6 +63,8 @@ describe('CancelPluginRemovalUseCase', () => {
     authorId: userId,
     status: DistributionStatus.to_be_removed,
     source: 'app',
+    // Merge-confirmed publish: cancelling its removal reverts to `success`.
+    publishConfirmedAt: new Date('2026-06-01T00:00:00.000Z'),
   } as unknown as MarketplaceDistribution;
 
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
@@ -134,6 +136,74 @@ describe('CancelPluginRemovalUseCase', () => {
 
     it('returns the distribution with the marker cleared', () => {
       expect(response.distribution.removalRequestedAt).toBeNull();
+    });
+  });
+
+  describe('when the removed publish was never merge-confirmed', () => {
+    let response: Awaited<ReturnType<CancelPluginRemovalUseCase['execute']>>;
+
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...pendingDistribution,
+        publishConfirmedAt: null,
+      } as MarketplaceDistribution);
+      response = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+    });
+
+    it('reverts status to pending_merge instead of fabricating success', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(distributionId, {
+        status: DistributionStatus.pending_merge,
+      });
+    });
+
+    it('returns the distribution in pending_merge state', () => {
+      expect(response.distribution.status).toBe(
+        DistributionStatus.pending_merge,
+      );
+    });
+
+    it('clears the removalRequestedAt marker', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).toHaveBeenCalledWith(distributionId, null);
+    });
+  });
+
+  describe('pending in the pre-commit window (pending_merge + removalRequestedAt)', () => {
+    let response: Awaited<ReturnType<CancelPluginRemovalUseCase['execute']>>;
+
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...pendingDistribution,
+        status: DistributionStatus.pending_merge,
+        publishConfirmedAt: null,
+        removalRequestedAt: new Date('2026-06-10T12:00:00.000Z'),
+      } as MarketplaceDistribution);
+      response = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+    });
+
+    it('does not write the status (still pending_merge)', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('returns the distribution still in pending_merge state', () => {
+      expect(response.distribution.status).toBe(
+        DistributionStatus.pending_merge,
+      );
     });
   });
 

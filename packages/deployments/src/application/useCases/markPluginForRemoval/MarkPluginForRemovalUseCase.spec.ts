@@ -83,7 +83,7 @@ describe('MarkPluginForRemovalUseCase', () => {
 
     mockMarketplaceDistributionRepository = {
       findById: jest.fn().mockResolvedValue(successDistribution),
-      findLatestSuccessfulByPackageAndMarketplace: jest
+      findLatestActiveByPackageAndMarketplace: jest
         .fn()
         .mockResolvedValue(successDistribution),
       updateStatus: jest.fn().mockResolvedValue(undefined),
@@ -148,7 +148,7 @@ describe('MarkPluginForRemovalUseCase', () => {
 
     it('does not call the by-package finder', () => {
       expect(
-        mockMarketplaceDistributionRepository.findLatestSuccessfulByPackageAndMarketplace,
+        mockMarketplaceDistributionRepository.findLatestActiveByPackageAndMarketplace,
       ).not.toHaveBeenCalled();
     });
 
@@ -223,9 +223,9 @@ describe('MarkPluginForRemovalUseCase', () => {
       });
     });
 
-    it('looks up the latest successful distribution by (package, marketplace)', () => {
+    it('looks up the latest active distribution by (package, marketplace)', () => {
       expect(
-        mockMarketplaceDistributionRepository.findLatestSuccessfulByPackageAndMarketplace,
+        mockMarketplaceDistributionRepository.findLatestActiveByPackageAndMarketplace,
       ).toHaveBeenCalledWith(packageId, marketplaceId);
     });
 
@@ -244,6 +244,64 @@ describe('MarkPluginForRemovalUseCase', () => {
     it('emits with trigger="from_marketplace"', () => {
       const emitted = mockEventEmitterService.emit.mock.calls[0][0];
       expect(emitted.payload.trigger).toBe('from_marketplace');
+    });
+  });
+
+  describe('when the target distribution is a pending_merge publish', () => {
+    beforeEach(() => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...successDistribution,
+        status: DistributionStatus.pending_merge,
+      } as MarketplaceDistribution);
+    });
+
+    it('stamps the removalRequestedAt marker', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).toHaveBeenCalledWith(distributionId, expect.any(Date));
+    });
+
+    it('does not flip the status (the removal job owns the flip after the sync commit)', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('enqueues the removal job for the distribution', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(mockRemovalJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          marketplaceDistributionId: distributionId,
+          marketplaceId,
+        }),
+      );
+    });
+
+    it('returns the distribution still in pending_merge state', async () => {
+      const { distribution } = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(distribution.status).toBe(DistributionStatus.pending_merge);
     });
   });
 
@@ -358,9 +416,9 @@ describe('MarkPluginForRemovalUseCase', () => {
     });
   });
 
-  describe('no success distribution exists for the package', () => {
+  describe('no active distribution exists for the package', () => {
     beforeEach(() => {
-      mockMarketplaceDistributionRepository.findLatestSuccessfulByPackageAndMarketplace.mockResolvedValue(
+      mockMarketplaceDistributionRepository.findLatestActiveByPackageAndMarketplace.mockResolvedValue(
         null,
       );
     });
