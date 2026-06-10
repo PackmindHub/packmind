@@ -250,9 +250,18 @@ export const useMarkPluginForRemovalByDistribution = (
       await queryClient.invalidateQueries({
         queryKey: marketplaceQueryKeys.distributions(),
       });
+      pmToaster.success({
+        title: 'Removal requested',
+        description:
+          'Packmind is preparing the deletion PR on the marketplace repository.',
+      });
     },
     onError: (error) => {
       console.error('Error marking plugin for removal:', error);
+      pmToaster.error({
+        title: 'Could not request removal',
+        description: 'Please refresh the list and try again.',
+      });
     },
   });
 };
@@ -286,9 +295,18 @@ export const useMarkPluginForRemovalByPackage = (
           queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, packageId],
         }),
       ]);
+      pmToaster.success({
+        title: 'Removal requested',
+        description:
+          'Packmind is preparing the deletion PR on the marketplace repository.',
+      });
     },
     onError: (error) => {
       console.error('Error marking plugin for removal:', error);
+      pmToaster.error({
+        title: 'Could not request removal',
+        description: 'Please refresh the list and try again.',
+      });
     },
   });
 };
@@ -312,9 +330,17 @@ export const useCancelPluginRemoval = (
       await queryClient.invalidateQueries({
         queryKey: marketplaceQueryKeys.distributions(),
       });
+      pmToaster.success({
+        title: 'Removal cancelled',
+        description: 'The plugin stays published on the marketplace.',
+      });
     },
     onError: (error) => {
       console.error('Error cancelling plugin removal:', error);
+      pmToaster.error({
+        title: 'Could not cancel removal',
+        description: 'Please refresh the list and try again.',
+      });
     },
   });
 };

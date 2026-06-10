@@ -27,4 +27,22 @@ describe('DistributionStatusBadge', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(label)).toBeInTheDocument();
   });
+
+  describe('when a removal has been requested on a still-published row', () => {
+    it('renders the removal-pending state instead of Published', () => {
+      render(
+        <UIProvider>
+          <DistributionStatusBadge
+            status={DistributionStatus.success}
+            removalRequestedAt={new Date('2026-06-10T12:00:00Z')}
+          />
+        </UIProvider>,
+      );
+
+      expect(
+        screen.getByTestId('distribution-status-badge-removal_pending'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Removal pending')).toBeInTheDocument();
+    });
+  });
 });

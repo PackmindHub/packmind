@@ -138,6 +138,25 @@ describe('MarketplaceDistributionsTable', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows the removal-pending badge and Cancel action once a removal is requested', () => {
+    renderTable([
+      makeDistribution({
+        status: DistributionStatus.success,
+        removalRequestedAt: new Date('2026-06-10T12:00:00Z'),
+      }),
+    ]);
+
+    expect(
+      screen.getByTestId('distribution-status-badge-removal_pending'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Cancel removal of My Package/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Remove My Package/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows a loading state while the query is pending', () => {
     useMarketplaceDistributionsMock.mockReturnValue({
       data: undefined,

@@ -142,7 +142,12 @@ const DistributionsTableRows = ({
             {formatPublishedAt(item.createdAt)}
           </PMText>
         ),
-        status: <DistributionStatusBadge status={item.status} />,
+        status: (
+          <DistributionStatusBadge
+            status={item.status}
+            removalRequestedAt={item.removalRequestedAt}
+          />
+        ),
         actions: (
           <PMFeatureFlag
             featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
@@ -201,7 +206,16 @@ const DistributionActionCell = ({
   onMark,
   onCancel,
 }: DistributionActionCellProps) => {
-  if (distribution.status === DistributionStatus.success) {
+  // A removal is pending the moment it is requested (`removalRequestedAt`),
+  // which happens while the status is still `success` — the background job
+  // only flips it to `to_be_removed` once the deletion lands on the sync
+  // branch. Keying off both makes the row react immediately to the request and
+  // prevents a second click on a still-`success` row.
+  const pendingRemoval =
+    !!distribution.removalRequestedAt ||
+    distribution.status === DistributionStatus.to_be_removed;
+
+  if (distribution.status === DistributionStatus.success && !pendingRemoval) {
     return (
       <RemovePluginButton
         pluginSlug={distribution.pluginSlug}
@@ -213,7 +227,7 @@ const DistributionActionCell = ({
     );
   }
 
-  if (distribution.status === DistributionStatus.to_be_removed) {
+  if (pendingRemoval) {
     return (
       <CancelRemovalButton
         pluginSlug={distribution.pluginSlug}
