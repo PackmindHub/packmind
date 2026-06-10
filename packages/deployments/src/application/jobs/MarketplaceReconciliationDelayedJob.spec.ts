@@ -227,6 +227,48 @@ describe('MarketplaceReconciliationDelayedJob', () => {
     });
   });
 
+  describe('healthy state — stored descriptor differs only by key order', () => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
+      // The stored baseline round-trips through a Postgres jsonb column,
+      // which re-sorts object keys. The parsed descriptor carries the
+      // parser's insertion order. The comparison must treat them as equal.
+      const jsonbOrderedMarketplace = {
+        ...marketplace,
+        descriptor: {
+          ...baseDescriptor,
+          plugins: [
+            { name: 'Plugin 1', slug: 'p1' },
+            { name: 'Plugin 2', slug: 'p2' },
+          ],
+        },
+      } as unknown as Marketplace;
+      mockMarketplaceRepository.findById.mockResolvedValue(
+        jsonbOrderedMarketplace,
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'abc',
+        content: JSON.stringify(baseDescriptor.raw),
+      });
+      mockParserRegistry.parse.mockReturnValue({
+        ...baseDescriptor,
+        raw: { reformatted: true },
+      });
+
+      result = await job.runJob('job-key-order', input, new AbortController());
+    });
+
+    it('reports healthy — key order is not a descriptor change', () => {
+      expect(result.state).toBe('healthy');
+    });
+
+    it('does not refresh the stored descriptor', () => {
+      const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+      expect(patch.descriptor).toBeUndefined();
+    });
+  });
+
   describe('drift state — descriptor differs', () => {
     const driftedDescriptor: MarketplaceDescriptor = {
       vendor: 'anthropic',

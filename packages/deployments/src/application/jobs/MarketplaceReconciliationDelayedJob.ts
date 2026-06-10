@@ -733,6 +733,12 @@ function classifyFetchError(error: unknown): {
 /**
  * Deep equality between two descriptors ignoring the `raw` payload (which is
  * a verbatim copy of the parsed JSON and so changes with formatting alone).
+ *
+ * The comparison must be key-order-insensitive: the stored baseline round-
+ * trips through a Postgres `jsonb` column, which re-sorts object keys, while
+ * the freshly parsed descriptor carries the parser's insertion order. A naive
+ * `JSON.stringify` equality therefore reported a change on every sweep and
+ * flagged a permanent spurious drift.
  */
 function descriptorsEquivalent(
   a: MarketplaceDescriptor,
@@ -746,7 +752,30 @@ function descriptorsEquivalent(
     version: descriptor.version,
     plugins: descriptor.plugins,
   });
-  // Plain JSON equality is sufficient — `MarketplaceDescriptor` is a plain
-  // structural type with primitives and arrays of plain objects.
-  return JSON.stringify(stripRaw(a)) === JSON.stringify(stripRaw(b));
+  return stableStringify(stripRaw(a)) === stableStringify(stripRaw(b));
+}
+
+/**
+ * JSON.stringify with recursively sorted object keys, so two structurally
+ * equal plain values serialize identically regardless of key insertion order.
+ * Array order stays significant — a reordered plugin list is a real file
+ * change. Sufficient for `MarketplaceDescriptor`: primitives, plain objects
+ * and arrays only.
+ */
+function stableStringify(value: unknown): string {
+  return JSON.stringify(sortKeysDeep(value));
+}
+
+function sortKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep);
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, sortKeysDeep(entry)]),
+    );
+  }
+  return value;
 }
