@@ -66,6 +66,10 @@ const DISTRIBUTION_STATUS_BADGE: Record<
     label: 'In progress',
     colorPalette: 'blue',
   },
+  [DistributionStatus.pending_merge]: {
+    label: 'Pending PR review',
+    colorPalette: 'blue',
+  },
   [DistributionStatus.no_changes]: {
     label: 'No changes',
     colorPalette: 'gray',
