@@ -10,6 +10,7 @@ import SpacesManagementPrototype from './spaces-management/SpacesManagementProto
 import MarketplacesPrototype from './marketplaces/MarketplacesPrototype';
 import MarketplaceDetailPrototype from './marketplace-detail/MarketplaceDetailPrototype';
 import GitConnectionsPrototype from './git-connections/GitConnectionsPrototype';
+import DeploymentsOverviewRedesignPrototype from './deployments-overview-redesign/DeploymentsOverviewRedesignPrototype';
 
 export interface Prototype {
   name: string;
@@ -72,5 +73,11 @@ export const prototypes: Prototype[] = [
     description:
       'Settings/git redesign: connections vs CLI-managed tabs, display names, health + last push, duplicate-repo warnings, no webhooks',
     component: GitConnectionsPrototype,
+  },
+  {
+    name: 'Deployments overview — redesign',
+    description:
+      'Drift-first redesign of /deployments: master/detail of packages with expandable artifact rows showing per-repo version gap, partial fix selection, and a full-screen Sync surface to redistribute',
+    component: DeploymentsOverviewRedesignPrototype,
   },
 ];
