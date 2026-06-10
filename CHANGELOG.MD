@@ -3,6 +3,7 @@
 ## Added
 
 - Enable rendering packmind artifacts in `~/.claude` #332
+- Add GitHub App connection method in organization git settings
 
 ## Changed
 
