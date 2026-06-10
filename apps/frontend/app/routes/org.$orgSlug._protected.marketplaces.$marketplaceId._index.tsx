@@ -83,6 +83,7 @@ export default function MarketplaceDetailsRouteModule() {
             organizationId={orgId}
             marketplaceId={marketplaceId as MarketplaceId}
             marketplaceName={marketplace?.name}
+            outdatedPluginSlugs={marketplace?.outdatedPluginSlugs}
           />
         </PMBox>
       </PMVStack>

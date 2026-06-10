@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY,
+  PMBadge,
   PMBox,
   PMEmptyState,
   PMFeatureFlag,
@@ -11,6 +12,7 @@ import {
   PMTableColumn,
   PMTableRow,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -34,6 +36,13 @@ export interface MarketplaceDistributionsTableProps {
   organizationId: OrganizationId | string;
   marketplaceId: MarketplaceId | string;
   marketplaceName?: string;
+  /**
+   * Plugin slugs (marketplace-level, from `marketplace.outdatedPluginSlugs`)
+   * whose served plugin was built from a package that changed upstream since
+   * the last publish. Rows whose `pluginSlug` matches render an "Outdated"
+   * badge next to their status.
+   */
+  outdatedPluginSlugs?: string[] | null;
 }
 
 const COLUMNS: PMTableColumn[] = [
@@ -54,6 +63,7 @@ export const MarketplaceDistributionsTable = ({
   organizationId,
   marketplaceId,
   marketplaceName,
+  outdatedPluginSlugs,
 }: Readonly<MarketplaceDistributionsTableProps>) => {
   const { data: distributions, isLoading } = useMarketplaceDistributions(
     organizationId,
@@ -92,6 +102,12 @@ export const MarketplaceDistributionsTable = ({
   const pendingCount = items.filter(
     (item) => item.status === DistributionStatus.pending_merge,
   ).length;
+  // Count rows whose plugin was built from a package that changed upstream
+  // since last publish — mirrors the per-row "Outdated" badge.
+  const outdatedSlugSet = new Set(outdatedPluginSlugs ?? []);
+  const outdatedCount = items.filter((item) =>
+    outdatedSlugSet.has(item.pluginSlug),
+  ).length;
 
   return (
     <PMVStack align="stretch" gap={3} width="full">
@@ -99,7 +115,7 @@ export const MarketplaceDistributionsTable = ({
         <PMText variant="small" color="secondary">
           {`${publishedCount} ${publishedCount === 1 ? 'plugin' : 'plugins'} published${
             pendingCount > 0 ? ` · ${pendingCount} pending review` : ''
-          }`}
+          }${outdatedCount > 0 ? ` · ${outdatedCount} outdated` : ''}`}
         </PMText>
       </PMHStack>
       <PMBox width="full">
@@ -108,6 +124,7 @@ export const MarketplaceDistributionsTable = ({
           organizationId={organizationId}
           marketplaceId={marketplaceId}
           marketplaceName={marketplaceName}
+          outdatedPluginSlugs={outdatedPluginSlugs}
         />
       </PMBox>
     </PMVStack>
@@ -119,6 +136,7 @@ interface DistributionsTableRowsProps {
   organizationId: OrganizationId | string;
   marketplaceId: MarketplaceId | string;
   marketplaceName?: string;
+  outdatedPluginSlugs?: string[] | null;
 }
 
 const DistributionsTableRows = ({
@@ -126,6 +144,7 @@ const DistributionsTableRows = ({
   organizationId,
   marketplaceId,
   marketplaceName,
+  outdatedPluginSlugs,
 }: DistributionsTableRowsProps) => {
   const { user } = useAuthContext();
   const markMutation = useMarkPluginForRemovalByDistribution(
@@ -133,6 +152,11 @@ const DistributionsTableRows = ({
     marketplaceId,
   );
   const cancelMutation = useCancelPluginRemoval(organizationId, marketplaceId);
+
+  const outdatedSlugSet = useMemo(
+    () => new Set(outdatedPluginSlugs ?? []),
+    [outdatedPluginSlugs],
+  );
 
   const rows = useMemo<PMTableRow[]>(
     () =>
@@ -159,10 +183,23 @@ const DistributionsTableRows = ({
           </PMText>
         ),
         status: (
-          <DistributionStatusBadge
-            status={item.status}
-            removalRequestedAt={item.removalRequestedAt}
-          />
+          <PMHStack gap={1} align="center" justify="center">
+            <DistributionStatusBadge
+              status={item.status}
+              removalRequestedAt={item.removalRequestedAt}
+            />
+            {outdatedSlugSet.has(item.pluginSlug) && (
+              <PMTooltip label="Built from a package that changed since it was last published. Republish to update.">
+                <PMBadge
+                  size="sm"
+                  colorPalette="yellow"
+                  data-testid={`distribution-outdated-badge-${item.pluginSlug}`}
+                >
+                  Outdated
+                </PMBadge>
+              </PMTooltip>
+            )}
+          </PMHStack>
         ),
         actions: (
           <PMFeatureFlag
@@ -189,7 +226,7 @@ const DistributionsTableRows = ({
           </PMFeatureFlag>
         ),
       })),
-    [items, marketplaceName, markMutation, cancelMutation],
+    [items, marketplaceName, markMutation, cancelMutation, outdatedSlugSet],
   );
 
   return (

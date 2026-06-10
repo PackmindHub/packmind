@@ -62,7 +62,10 @@ function makeDistribution(
   };
 }
 
-function renderTable(distributions: MarketplaceDistributionListItem[]) {
+function renderTable(
+  distributions: MarketplaceDistributionListItem[],
+  outdatedPluginSlugs?: string[] | null,
+) {
   useMarketplaceDistributionsMock.mockReturnValue({
     data: distributions,
     isLoading: false,
@@ -82,6 +85,7 @@ function renderTable(distributions: MarketplaceDistributionListItem[]) {
           organizationId={orgId}
           marketplaceId={marketplaceId}
           marketplaceName="Acme Playbook"
+          outdatedPluginSlugs={outdatedPluginSlugs}
         />
       </QueryClientProvider>
     </UIProvider>,
@@ -227,6 +231,64 @@ describe('MarketplaceDistributionsTable', () => {
     expect(
       screen.getByText('1 plugin published · 1 pending review'),
     ).toBeInTheDocument();
+  });
+
+  it('renders an Outdated badge on a row whose plugin is outdated', () => {
+    renderTable(
+      [makeDistribution({ status: DistributionStatus.success })],
+      ['my-plugin'],
+    );
+
+    expect(
+      screen.getByTestId('distribution-outdated-badge-my-plugin'),
+    ).toBeInTheDocument();
+  });
+
+  it('only badges the matching row when several plugins are listed', () => {
+    renderTable(
+      [
+        makeDistribution({ status: DistributionStatus.success }),
+        makeDistribution({
+          id: 'dist-2' as MarketplaceDistributionId,
+          pluginSlug: 'plugin-two',
+          status: DistributionStatus.success,
+        }),
+      ],
+      ['my-plugin'],
+    );
+
+    expect(
+      screen.getByTestId('distribution-outdated-badge-my-plugin'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('distribution-outdated-badge-plugin-two'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('appends the outdated count to the summary line', () => {
+    renderTable(
+      [
+        makeDistribution({ status: DistributionStatus.success }),
+        makeDistribution({
+          id: 'dist-2' as MarketplaceDistributionId,
+          pluginSlug: 'plugin-two',
+          status: DistributionStatus.pending_merge,
+        }),
+      ],
+      ['my-plugin'],
+    );
+
+    expect(
+      screen.getByText('1 plugin published · 1 pending review · 1 outdated'),
+    ).toBeInTheDocument();
+  });
+
+  it('renders no Outdated badge when no slugs are outdated', () => {
+    renderTable([makeDistribution({ status: DistributionStatus.success })], []);
+
+    expect(
+      screen.queryByTestId('distribution-outdated-badge-my-plugin'),
+    ).not.toBeInTheDocument();
   });
 
   it('shows a loading state while the query is pending', () => {
