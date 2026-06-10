@@ -37,6 +37,15 @@ export type MarketplaceDistribution = WithSoftDelete<
     /** Artifact-version fingerprint captured at publish time; used to flag the marketplace outdated. */
     versionFingerprint?: VersionFingerprint;
     /**
+     * Timestamp set by the reconciliation sweep the moment it confirms the
+     * publish actually landed on the marketplace's default branch
+     * (`pending_merge → success`, matched via the `packmind-lock.json`
+     * content hash). Null while the rolling sync PR is still open — this is
+     * the honest "published" date, as opposed to `createdAt` which only
+     * records when the publish was requested.
+     */
+    publishConfirmedAt?: Date | null;
+    /**
      * Timestamp captured the moment a removal is requested from the UI.
      * Set synchronously by `MarkPluginForRemovalUseCase` while `status` stays
      * `success` — the status only flips to `to_be_removed` once the deletion
