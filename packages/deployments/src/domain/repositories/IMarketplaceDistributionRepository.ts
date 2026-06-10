@@ -119,4 +119,16 @@ export interface IMarketplaceDistributionRepository extends IRepository<Marketpl
     id: MarketplaceDistributionId,
     patch: MarketplaceDistributionStatusUpdate,
   ): Promise<void>;
+
+  /**
+   * Set or clear the `removalRequestedAt` marker independently of `status`.
+   *
+   * `MarkPluginForRemovalUseCase` sets it to "now" the moment a removal is
+   * requested (the `status` stays `success` until the sync commit lands), and
+   * `CancelPluginRemovalUseCase` clears it (passes `null`). Bumps `updated_at`.
+   */
+  updateRemovalRequestedAt(
+    id: MarketplaceDistributionId,
+    removalRequestedAt: Date | null,
+  ): Promise<void>;
 }

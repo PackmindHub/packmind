@@ -36,5 +36,15 @@ export type MarketplaceDistribution = WithSoftDelete<
     contentHash?: string;
     /** Artifact-version fingerprint captured at publish time; used to flag the marketplace outdated. */
     versionFingerprint?: VersionFingerprint;
+    /**
+     * Timestamp captured the moment a removal is requested from the UI.
+     * Set synchronously by `MarkPluginForRemovalUseCase` while `status` stays
+     * `success` — the status only flips to `to_be_removed` once the deletion
+     * lands on the rolling sync branch. Lets the UI surface a "removal pending"
+     * state immediately, makes a repeated request idempotent, and lets the
+     * removal job detect a cancellation that landed before it ran. Cleared by
+     * `CancelPluginRemovalUseCase`.
+     */
+    removalRequestedAt?: Date | null;
   }>
 >;

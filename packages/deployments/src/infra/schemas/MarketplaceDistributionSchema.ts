@@ -102,6 +102,11 @@ export const MarketplaceDistributionSchema = new EntitySchema<
       type: 'jsonb',
       nullable: true,
     },
+    removalRequestedAt: {
+      name: 'removal_requested_at',
+      type: 'timestamp with time zone',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

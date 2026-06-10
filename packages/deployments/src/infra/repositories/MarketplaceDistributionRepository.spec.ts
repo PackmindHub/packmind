@@ -1062,4 +1062,71 @@ describe('MarketplaceDistributionRepository', () => {
       });
     });
   });
+
+  describe('updateRemovalRequestedAt', () => {
+    describe('when a removal request marker is set', () => {
+      let refreshed: MarketplaceDistribution | null;
+      const requestedAt = new Date('2026-06-10T12:00:00.000Z');
+
+      beforeEach(async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+
+        await repository.updateRemovalRequestedAt(distribution.id, requestedAt);
+
+        refreshed = await repository.findById(distribution.id);
+      });
+
+      it('persists the removalRequestedAt timestamp', async () => {
+        expect(refreshed?.removalRequestedAt).toEqual(requestedAt);
+      });
+
+      it('leaves the status untouched', async () => {
+        expect(refreshed?.status).toBe(DistributionStatus.success);
+      });
+    });
+
+    describe('when the marker is cleared', () => {
+      let refreshed: MarketplaceDistribution | null;
+
+      beforeEach(async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+            removalRequestedAt: new Date('2026-06-10T12:00:00.000Z'),
+          }),
+        );
+
+        await repository.updateRemovalRequestedAt(distribution.id, null);
+
+        refreshed = await repository.findById(distribution.id);
+      });
+
+      it('nulls the removalRequestedAt timestamp', async () => {
+        expect(refreshed?.removalRequestedAt).toBeNull();
+      });
+    });
+
+    describe('when the target distribution does not exist', () => {
+      it('throws', async () => {
+        await expect(
+          repository.updateRemovalRequestedAt(
+            createMarketplaceDistributionId(uuidv4()),
+            new Date('2026-06-10T12:00:00.000Z'),
+          ),
+        ).rejects.toThrow();
+      });
+    });
+  });
 });

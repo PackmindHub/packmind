@@ -377,4 +377,45 @@ export class MarketplaceDistributionRepository
       throw error;
     }
   }
+
+  async updateRemovalRequestedAt(
+    id: MarketplaceDistributionId,
+    removalRequestedAt: Date | null,
+  ): Promise<void> {
+    this.logger.info('Updating marketplace distribution removalRequestedAt', {
+      id,
+      requested: removalRequestedAt !== null,
+    });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .update()
+        .set({ removalRequestedAt })
+        .where('id = :id', { id })
+        .execute();
+
+      if (result.affected === 0) {
+        this.logger.warn(
+          'No marketplace distribution updated by updateRemovalRequestedAt',
+          { id },
+        );
+        throw new Error(`No marketplace distribution with id ${id} found`);
+      }
+
+      this.logger.info(
+        'Marketplace distribution removalRequestedAt updated successfully',
+        { id, requested: removalRequestedAt !== null },
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to update marketplace distribution removalRequestedAt',
+        {
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
 }
