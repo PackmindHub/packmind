@@ -132,7 +132,9 @@ const PackageMarketplaceRow = ({
         </PMVStack>
         <PMHStack gap={3} align="center">
           <DistributionStatusBadge status={relevantDistribution.status} />
-          {relevantDistribution.status === DistributionStatus.success && (
+          {(relevantDistribution.status === DistributionStatus.success ||
+            relevantDistribution.status ===
+              DistributionStatus.pending_merge) && (
             <RemovePluginButton
               pluginSlug={relevantDistribution.pluginSlug}
               marketplaceName={marketplace.name}

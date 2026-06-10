@@ -231,7 +231,14 @@ const DistributionActionCell = ({
     !!distribution.removalRequestedAt ||
     distribution.status === DistributionStatus.to_be_removed;
 
-  if (distribution.status === DistributionStatus.success && !pendingRemoval) {
+  // Removable while live (success) or while the publish still awaits its
+  // sync-PR merge (pending_merge) — the removal simply reverts the unmerged
+  // publish off the sync branch.
+  const removable =
+    distribution.status === DistributionStatus.success ||
+    distribution.status === DistributionStatus.pending_merge;
+
+  if (removable && !pendingRemoval) {
     return (
       <RemovePluginButton
         pluginSlug={distribution.pluginSlug}

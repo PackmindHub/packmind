@@ -137,7 +137,7 @@ describe('PackageMarketplaceDistributions', () => {
     expect(screen.getByText('Acme Playbook')).toBeInTheDocument();
   });
 
-  it('shows a pending-merge distribution with its badge but no Remove action', () => {
+  it('shows a pending-merge distribution with its badge and a Remove action', () => {
     useMarketplacesMock.mockReturnValue({
       data: [makeMarketplace()],
       isLoading: false,
@@ -157,9 +157,7 @@ describe('PackageMarketplaceDistributions', () => {
         `distribution-status-badge-${DistributionStatus.pending_merge}`,
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Remove/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Remove/i })).toBeInTheDocument();
   });
 
   it('skips marketplaces where the package has no active distribution', () => {

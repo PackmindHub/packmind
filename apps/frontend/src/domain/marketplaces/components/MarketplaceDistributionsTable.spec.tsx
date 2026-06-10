@@ -169,14 +169,27 @@ describe('MarketplaceDistributionsTable', () => {
     ).toBeInTheDocument();
   });
 
-  it('does not offer the Remove action for a pending_merge distribution', () => {
+  it('offers the Remove action for a pending_merge distribution', () => {
     renderTable([
       makeDistribution({ status: DistributionStatus.pending_merge }),
     ]);
 
     expect(
-      screen.queryByRole('button', { name: /Remove My Package/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: /Remove My Package/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the Cancel action once a pending_merge removal is requested', () => {
+    renderTable([
+      makeDistribution({
+        status: DistributionStatus.pending_merge,
+        removalRequestedAt: new Date('2026-06-10T12:00:00Z'),
+      }),
+    ]);
+
+    expect(
+      screen.getByRole('button', { name: /Cancel removal of My Package/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows a dash instead of a publish date while the publish awaits merge', () => {
