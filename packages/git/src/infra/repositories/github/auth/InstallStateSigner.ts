@@ -11,6 +11,7 @@ export interface InstallStatePayload {
   // For kind === 'install', identifies the OrganizationGitHubApp this install
   // belongs to. Absent for kind === 'manifest' (the App doesn't exist yet).
   organizationGitHubAppId?: string;
+  gitProviderId?: string;
 }
 
 export class InvalidInstallStateError extends Error {
@@ -45,6 +46,7 @@ export class InstallStateSigner {
       exp?: number;
       kind?: InstallStateKind;
       organizationGitHubAppId?: string;
+      gitProviderId?: string;
     },
   ): string {
     const nonce = payload.nonce ?? randomBytes(16).toString('hex');
@@ -62,6 +64,10 @@ export class InstallStateSigner {
 
     if (payload.organizationGitHubAppId !== undefined) {
       fullPayload.organizationGitHubAppId = payload.organizationGitHubAppId;
+    }
+
+    if (payload.gitProviderId !== undefined) {
+      fullPayload.gitProviderId = payload.gitProviderId;
     }
 
     const json = JSON.stringify(fullPayload);
@@ -143,6 +149,12 @@ export class InstallStateSigner {
         ? (record.organizationGitHubAppId as string)
         : undefined;
 
+    const gitProviderId =
+      typeof record.gitProviderId === 'string' &&
+      record.gitProviderId.length > 0
+        ? (record.gitProviderId as string)
+        : undefined;
+
     const payload: InstallStatePayload = {
       orgId: record.orgId as string,
       userId: record.userId as string,
@@ -150,6 +162,7 @@ export class InstallStateSigner {
       exp: record.exp as number,
       kind,
       organizationGitHubAppId,
+      gitProviderId,
     };
 
     if (payload.exp <= this.now()) {

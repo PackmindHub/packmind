@@ -52,9 +52,13 @@ export class GitProviderGatewayApi
 
   async getGithubAppInstallUrl(
     organizationId: OrganizationId,
+    gitProviderId?: GitProviderId,
   ): Promise<{ installUrl: string; state: string }> {
+    const query = gitProviderId
+      ? `?gitProviderId=${encodeURIComponent(gitProviderId)}`
+      : '';
     return await this._api.get<{ installUrl: string; state: string }>(
-      `${this._endpoint}/${organizationId}/git/providers/github/app/install-url`,
+      `${this._endpoint}/${organizationId}/git/providers/github/app/install-url${query}`,
     );
   }
 

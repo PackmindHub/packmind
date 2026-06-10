@@ -15,25 +15,25 @@ import {
   UserNotInOrganizationError,
 } from './UserAccessErrors';
 
-type TestResult = PackmindResult & { success: boolean };
+type TestResponse = PackmindResult & { success: boolean };
 
 class TestMemberUseCase extends AbstractMemberUseCase<
   PackmindCommand,
-  TestResult
+  TestResponse
 > {
   constructor(
     accountsPort: IAccountsPort,
     logger: ReturnType<typeof stubLogger>,
     private readonly onExecute: (
       command: PackmindCommand & MemberContext,
-    ) => Promise<TestResult>,
+    ) => Promise<TestResponse>,
   ) {
     super(accountsPort, logger);
   }
 
   protected executeForMembers(
     command: PackmindCommand & MemberContext,
-  ): Promise<TestResult> {
+  ): Promise<TestResponse> {
     return this.onExecute(command);
   }
 }
@@ -50,7 +50,7 @@ describe('AbstractMemberUseCase', () => {
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
   let mockExecuteForMembers: jest.MockedFunction<
-    (command: PackmindCommand & MemberContext) => Promise<TestResult>
+    (command: PackmindCommand & MemberContext) => Promise<TestResponse>
   >;
   let logger: ReturnType<typeof stubLogger>;
   let useCase: TestMemberUseCase;
@@ -92,7 +92,7 @@ describe('AbstractMemberUseCase', () => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
     mockExecuteForMembers = jest
-      .fn<Promise<TestResult>, [PackmindCommand & MemberContext]>()
+      .fn<Promise<TestResponse>, [PackmindCommand & MemberContext]>()
       .mockResolvedValue({ success: true });
     logger = stubLogger();
 
@@ -116,7 +116,7 @@ describe('AbstractMemberUseCase', () => {
     let user: User;
     let organization: Organization;
     let membership: UserOrganizationMembership;
-    let result: TestResult;
+    let result: TestResponse;
 
     beforeEach(async () => {
       user = buildUser();
@@ -155,7 +155,7 @@ describe('AbstractMemberUseCase', () => {
     let user: User;
     let organization: Organization;
     let membership: UserOrganizationMembership;
-    let result: TestResult;
+    let result: TestResponse;
 
     beforeEach(async () => {
       user = buildUser({

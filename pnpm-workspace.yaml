@@ -1,0 +1,37 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# Moved from package.json "pnpm".overrides — centralized here for pnpm 11
+overrides:
+  fast-xml-parser: 5.5.6
+
+# Converted from package.json "pnpm".onlyBuiltDependencies (list) to the allowBuilds map form
+allowBuilds:
+  bcrypt: true
+  '@swc/core': true
+  esbuild: true
+  '@nestjs/core': true
+  '@swc/cli': true
+  # Not built under pnpm 9 either (was absent from onlyBuiltDependencies); kept disabled.
+  # Native modules ship prebuilt binaries; their postinstall scripts are not required.
+  nx: false
+  '@google/genai': false
+  '@parcel/watcher': false
+  less: false
+  msgpackr-extract: false
+  protobufjs: false
+  unrs-resolver: false
+
+# Moved from .npmrc (pnpm 11 keeps only registry/auth settings in .npmrc)
+packageManagerStrict: false
+# Fail (not warn) if the active Node version doesn't satisfy package.json "engines.node"
+engineStrict: true
+autoInstallPeers: true
+strictPeerDependencies: false
+shamefullyHoist: false
+enablePrePostScripts: true
+publicHoistPattern:
+  - '@types/*'
+  - '*eslint*'
+  - '*prettier*'

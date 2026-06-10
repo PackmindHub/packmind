@@ -6,8 +6,11 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/logger": "*",
-    "@packmind/types": "*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/types": "workspace:*",
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
   }
 }

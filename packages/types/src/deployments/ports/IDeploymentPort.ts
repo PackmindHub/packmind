@@ -32,7 +32,7 @@ import {
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   GetTargetsByGitRepoCommand,
   GetTargetByIdCommand,
   GetTargetByIdResponse,
@@ -261,7 +261,7 @@ export interface IDeploymentPort {
    */
   getRenderModeConfiguration(
     command: GetRenderModeConfigurationCommand,
-  ): Promise<GetRenderModeConfigurationResult>;
+  ): Promise<GetRenderModeConfigurationResponse>;
 
   /**
    * Creates render mode configuration for an organization using default values

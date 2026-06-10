@@ -15,6 +15,7 @@ import {
   useGetGithubAppManifestMutation,
 } from '../../api/queries/GitProviderQueries';
 import { GitProviderUI } from '../../types/GitProviderTypes';
+import { redirectTo } from '../../../../shared/utils/navigation';
 
 interface GitHubAppConnectionProps {
   organizationId: OrganizationId;
@@ -32,13 +33,17 @@ export const GitHubAppInstallSlot: React.FC<{
   const isConnectedApp =
     editingProvider?.authMethod === 'app' && editingProvider?.hasAuth === true;
 
+  const editingProviderId = editingProvider?.id;
+
   const { mutateAsync: fetchInstallUrl } = installUrlMutation;
   useEffect(() => {
     if (!isConnectedApp) return;
     let cancelled = false;
     (async () => {
       try {
-        const { installUrl } = await fetchInstallUrl();
+        const { installUrl } = await fetchInstallUrl({
+          gitProviderId: editingProviderId,
+        });
         if (!cancelled) setViewUrl(installUrl);
       } catch {
         // The mutation already surfaces its error via installUrlMutation.error.
@@ -47,12 +52,18 @@ export const GitHubAppInstallSlot: React.FC<{
     return () => {
       cancelled = true;
     };
-  }, [isConnectedApp, fetchInstallUrl]);
+  }, [isConnectedApp, fetchInstallUrl, editingProviderId]);
 
   const handleInstallClick = async () => {
     if (!organizationId) return;
-    const { installUrl } = await installUrlMutation.mutateAsync();
-    window.location.assign(installUrl);
+    try {
+      const { installUrl } = await installUrlMutation.mutateAsync({
+        gitProviderId: editingProviderId,
+      });
+      redirectTo(installUrl);
+    } catch {
+      // The mutation already surfaces its error via installUrlMutation.error.
+    }
   };
 
   const errorMessage = installUrlMutation.error

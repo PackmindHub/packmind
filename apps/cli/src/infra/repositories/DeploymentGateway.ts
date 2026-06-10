@@ -1,7 +1,7 @@
 import {
   ArtifactType,
   Gateway,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   IGetContentByVersionsUseCase,
   IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
@@ -186,7 +186,7 @@ export class DeploymentGateway implements IDeploymentGateway {
   public getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
     async () => {
       const { organizationId } = this.httpClient.getAuthContext();
-      return this.httpClient.request<GetRenderModeConfigurationResult>(
+      return this.httpClient.request<GetRenderModeConfigurationResponse>(
         `/api/v0/organizations/${organizationId}/deployments/renderModeConfiguration`,
       );
     };

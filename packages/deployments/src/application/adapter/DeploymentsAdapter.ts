@@ -41,7 +41,7 @@ import {
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
+  GetRenderModeConfigurationResponse,
   GetTargetsByGitRepoCommand,
   GetTargetByIdCommand,
   GetTargetByIdResponse,
@@ -701,7 +701,7 @@ export class DeploymentsAdapter
 
   async getRenderModeConfiguration(
     command: GetRenderModeConfigurationCommand,
-  ): Promise<GetRenderModeConfigurationResult> {
+  ): Promise<GetRenderModeConfigurationResponse> {
     return this._getRenderModeConfigurationUseCase.execute(command);
   }
 

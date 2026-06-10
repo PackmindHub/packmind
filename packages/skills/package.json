@@ -6,12 +6,12 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/accounts": "*",
-    "@packmind/logger": "*",
-    "@packmind/node-utils": "*",
-    "@packmind/spaces": "*",
-    "@packmind/test-utils": "*",
-    "@packmind/types": "*",
+    "@packmind/accounts": "workspace:*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/spaces": "workspace:*",
+    "@packmind/test-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "slug": "^11.0.0"

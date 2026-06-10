@@ -23,11 +23,11 @@ import {
   UserNotInOrganizationError,
 } from './UserAccessErrors';
 
-type TestResult = PackmindResult & { success: boolean };
+type TestResponse = PackmindResult & { success: boolean };
 
 class TestSpaceMemberUseCase extends AbstractSpaceMemberUseCase<
   SpaceMemberCommand,
-  TestResult
+  TestResponse
 > {
   constructor(
     spacesPort: ISpacesPort,
@@ -35,14 +35,14 @@ class TestSpaceMemberUseCase extends AbstractSpaceMemberUseCase<
     logger: ReturnType<typeof stubLogger>,
     private readonly onExecute: (
       command: SpaceMemberCommand & SpaceMemberContext,
-    ) => Promise<TestResult>,
+    ) => Promise<TestResponse>,
   ) {
     super(spacesPort, accountsPort, logger);
   }
 
   protected executeForSpaceMembers(
     command: SpaceMemberCommand & SpaceMemberContext,
-  ): Promise<TestResult> {
+  ): Promise<TestResponse> {
     return this.onExecute(command);
   }
 }
@@ -62,7 +62,7 @@ describe('AbstractSpaceMemberUseCase', () => {
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
   let mockExecuteForSpaceMembers: jest.MockedFunction<
-    (command: SpaceMemberCommand & SpaceMemberContext) => Promise<TestResult>
+    (command: SpaceMemberCommand & SpaceMemberContext) => Promise<TestResponse>
   >;
   let logger: ReturnType<typeof stubLogger>;
   let useCase: TestSpaceMemberUseCase;
@@ -110,7 +110,7 @@ describe('AbstractSpaceMemberUseCase', () => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
     mockExecuteForSpaceMembers = jest
-      .fn<Promise<TestResult>, [SpaceMemberCommand & SpaceMemberContext]>()
+      .fn<Promise<TestResponse>, [SpaceMemberCommand & SpaceMemberContext]>()
       .mockResolvedValue({ success: true });
     logger = stubLogger();
 
@@ -137,7 +137,7 @@ describe('AbstractSpaceMemberUseCase', () => {
 
   describe('execute', () => {
     describe('when the caller is a space member', () => {
-      let result: TestResult;
+      let result: TestResponse;
 
       beforeEach(async () => {
         mockGetUserById.mockResolvedValue(buildUser());
@@ -159,7 +159,7 @@ describe('AbstractSpaceMemberUseCase', () => {
     });
 
     describe('when the caller is a space admin', () => {
-      let result: TestResult;
+      let result: TestResponse;
 
       beforeEach(async () => {
         mockGetUserById.mockResolvedValue(buildUser());

@@ -21,6 +21,7 @@ import {
   useRevokeGithubAppMutation,
 } from '../../api/queries/GitProviderQueries';
 import { extractErrorMessage } from '../../utils/errorUtils';
+import { redirectTo } from '../../../../shared/utils/navigation';
 
 type GitHubAppAuthBlockProps = {
   organizationId: OrganizationId;
@@ -79,8 +80,8 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
 
   const handleInstallClick = async () => {
     try {
-      const { installUrl } = await installUrlMutation.mutateAsync();
-      window.location.assign(installUrl);
+      const { installUrl } = await installUrlMutation.mutateAsync({});
+      redirectTo(installUrl);
     } catch {
       // installUrlMutation.error surfaces below.
     }

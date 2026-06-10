@@ -14,6 +14,8 @@ import {
   ClientSource,
   GitProvider,
   GitProviderId,
+  GitProviderNotFoundError,
+  GitProviderOrganizationMismatchError,
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
@@ -25,6 +27,7 @@ import {
   OrganizationGitHubAppId,
   OrganizationId,
   UserId,
+  createGitProviderId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
 import {
@@ -43,6 +46,7 @@ const origin = 'GitProvidersService';
 type BuildGithubAppInstallUrlCommand = {
   organizationId: OrganizationId;
   userId: UserId;
+  gitProviderId?: GitProviderId;
 };
 
 type BuildGithubAppInstallUrlResponse = {
@@ -166,11 +170,31 @@ export class GitProvidersService {
       // shared mode the resolver path doesn't read organizationGitHubAppId.
     }
 
+    let gitProviderId: string | undefined;
+    if (command.gitProviderId) {
+      const { providers } = await this.gitAdapter.listProviders({
+        userId: command.userId,
+        organizationId: command.organizationId,
+      });
+      const target = providers.find((p) => p.id === command.gitProviderId);
+      if (
+        !target ||
+        target.source !== 'github' ||
+        target.authMethod !== 'app'
+      ) {
+        throw new BadRequestException(
+          'Cannot re-authenticate: provider is not a GitHub App connection',
+        );
+      }
+      gitProviderId = String(command.gitProviderId);
+    }
+
     const state = this.signer.sign({
       orgId: String(command.organizationId),
       userId: String(command.userId),
       kind: 'install',
       organizationGitHubAppId,
+      gitProviderId,
     });
 
     const installUrl =
@@ -386,6 +410,14 @@ export class GitProvidersService {
       );
     }
 
+    if (payload.gitProviderId) {
+      return this.rebindProviderToInstallation(
+        createGitProviderId(payload.gitProviderId),
+        organizationGitHubAppId,
+        command,
+      );
+    }
+
     const existing = await this.gitAdapter.findGitProviderByAppInstallation(
       command.organizationId,
       command.installationId,
@@ -425,6 +457,61 @@ export class GitProvidersService {
     await this.materializeReposForAppInstallation(provider, command);
 
     return provider;
+  }
+
+  private async rebindProviderToInstallation(
+    targetId: GitProviderId,
+    organizationGitHubAppId: OrganizationGitHubAppId | null,
+    command: CompleteGithubAppInstallCommand,
+  ): Promise<GitProvider> {
+    const owner = await this.gitAdapter.findGitProviderByAppInstallation(
+      command.organizationId,
+      command.installationId,
+    );
+    if (owner && owner.id !== targetId) {
+      this.logger.info(
+        'Re-auth installation already owned by another provider; reusing it',
+        {
+          providerId: owner.id,
+          organizationId: command.organizationId,
+          installationId: command.installationId,
+        },
+      );
+      await this.materializeReposForAppInstallation(owner, command);
+      return owner;
+    }
+
+    let rebound: GitProvider;
+    try {
+      rebound = await this.gitAdapter.updateGitProvider(
+        targetId,
+        {
+          appInstallationId: command.installationId,
+          organizationGitHubAppId,
+          revokedAt: null,
+        },
+        command.userId,
+        command.organizationId,
+      );
+    } catch (error) {
+      if (
+        error instanceof GitProviderNotFoundError ||
+        error instanceof GitProviderOrganizationMismatchError
+      ) {
+        throw new BadRequestException(
+          'Stale re-authentication request. Restart from the connection.',
+        );
+      }
+      throw error;
+    }
+
+    this.logger.info('Rebound GitHub App provider to new installation', {
+      providerId: rebound.id,
+      organizationId: command.organizationId,
+      installationId: command.installationId,
+    });
+    await this.materializeReposForAppInstallation(rebound, command);
+    return rebound;
   }
 
   // After a GitHub App installation completes, mirror the repos the install

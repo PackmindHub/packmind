@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   ConflictException,
   BadRequestException,
@@ -106,16 +107,18 @@ export class GitProvidersController {
   async getGithubAppInstallUrl(
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
+    @Query('gitProviderId') gitProviderId?: GitProviderId,
   ): Promise<{ installUrl: string; state: string }> {
     this.logger.info(
       'GET /organizations/:orgId/git/providers/github/app/install-url',
-      { organizationId },
+      { organizationId, hasGitProviderId: Boolean(gitProviderId) },
     );
 
     try {
       return await this.gitProvidersService.buildGithubAppInstallUrl({
         organizationId,
         userId: req.user.userId,
+        gitProviderId: gitProviderId || undefined,
       });
     } catch (error) {
       const errorMessage =

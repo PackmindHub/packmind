@@ -52,12 +52,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -75,7 +81,7 @@ jobs:
         run: ./node_modules/.bin/nx test api
       - run: cp apps/api/docker-package.json dist/apps/api/.
       - run: cp package.json dist/apps/api/.
-      - run: cp package-lock.json dist/apps/api/.
+      - run: cp pnpm-lock.yaml dist/apps/api/.
       - run: cp tsconfig.base.effective.json dist/apps/api/.
 
       - name: Upload API build artifacts
@@ -95,12 +101,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -108,9 +120,9 @@ jobs:
       - name: Generate Chakra types
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-        run: npm run chakra:typegen
+        run: pnpm chakra:typegen
       - name: Typechecks
-        run: npm run typecheck:frontend
+        run: pnpm typecheck:frontend
       - name: Test Frontend
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -144,12 +156,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -165,6 +183,7 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx test mcp-server
       - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
+      - run: cp pnpm-lock.yaml dist/apps/mcp-server/.
 
       - name: Upload MCP-Server build artifacts
         uses: actions/upload-artifact@v4
@@ -183,12 +202,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -249,11 +274,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -264,7 +290,12 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
 
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
@@ -297,6 +328,9 @@ jobs:
           echo "Built executables (with embedded WASM files):"
           ls -lh dist/apps/cli-executables/
 
+      - name: Install dist CLI runtime dependencies
+        run: sh scripts/install-dist-cli-deps.sh
+
       - name: Test executables
         run: |
           node dist/apps/cli/main.cjs --version
@@ -325,14 +359,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Generate tsconfig
         env:
@@ -340,6 +380,9 @@ jobs:
         run: node scripts/select-tsconfig.mjs
 
       - run: ./node_modules/.bin/nx run packmind-cli:build
+
+      - name: Install dist CLI runtime dependencies
+        run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
         run: |
@@ -383,12 +426,16 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx test cli-e2e-tests
 
-      - name: Install latest production CLI from npm
+      - name: Install latest production CLI from registry
         run: |
           PROD_CLI_DIR="$(mktemp -d)"
           cd "${PROD_CLI_DIR}"
-          npm init -y --silent
-          npm install @packmind/cli
+          pnpm init
+          # Throwaway install: only need the CLI binary resolvable to run --version.
+          # bcrypt/msgpackr-extract ship prebuilt binaries, so their build scripts
+          # are not required. Disable strictDepBuilds (default true in pnpm 11) to
+          # avoid ERR_PNPM_IGNORED_BUILDS here where there is no allowBuilds config.
+          pnpm add @packmind/cli --config.strictDepBuilds=false
           CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
           cd -
           echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"

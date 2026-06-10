@@ -132,8 +132,8 @@ export class GitSettings
       'Checking…',
       'Status unknown',
       'Re-authenticate',
-      'Revoke connection',
-      'Revoking…',
+      'Manage app',
+      'Opening…',
       '·',
     ]);
     const description = lines.find((line) => !ignore.has(line));

@@ -17,6 +17,7 @@ import {
   useGetGithubAppManifestMutation,
 } from '../../../api/queries/GitProviderQueries';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
+import { redirectTo } from '../../../../../shared/utils/navigation';
 
 jest.mock('../../../api/queries/GitProviderQueries', () => ({
   useGithubAppInstallUrlMutation: jest.fn(),
@@ -27,6 +28,12 @@ jest.mock('../../../api/queries/GitProviderQueries', () => ({
 jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
   useGetMeQuery: jest.fn(),
 }));
+
+jest.mock('../../../../../shared/utils/navigation', () => ({
+  redirectTo: jest.fn(),
+}));
+
+const mockRedirectTo = redirectTo as jest.MockedFunction<typeof redirectTo>;
 
 const mockOrganizationId = 'org-1' as OrganizationId;
 
@@ -102,14 +109,6 @@ describe('GitHubAppInstallSlot', () => {
       typeof useGithubAppInstallUrlMutation
     >;
 
-  const mockLocalStorage = {
-    setItem: jest.fn(),
-    getItem: jest.fn(),
-    removeItem: jest.fn(),
-  };
-
-  const mockLocationAssign = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -118,17 +117,6 @@ describe('GitHubAppInstallSlot', () => {
         typeof useGithubAppInstallUrlMutation
       >,
     );
-
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign: mockLocationAssign },
-      writable: true,
-      configurable: true,
-    });
-
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    });
   });
 
   afterEach(() => {
@@ -182,7 +170,7 @@ describe('GitHubAppInstallSlot', () => {
       expect(mockMutateAsync).toHaveBeenCalled();
     });
 
-    it('navigates to the install URL via window.location.assign', async () => {
+    it('navigates to the install URL via redirectTo', async () => {
       const user = userEvent.setup();
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
@@ -205,8 +193,10 @@ describe('GitHubAppInstallSlot', () => {
         screen.getByRole('button', { name: /install packmind on github/i }),
       );
 
-      expect(mockLocationAssign).toHaveBeenCalledTimes(1);
-      expect(mockLocationAssign).toHaveBeenCalledWith(installUrl);
+      await waitFor(() => {
+        expect(mockRedirectTo).toHaveBeenCalledTimes(1);
+      });
+      expect(mockRedirectTo).toHaveBeenCalledWith(installUrl);
     });
 
     it('shows an error when the install URL mutation fails', async () => {
@@ -346,14 +336,6 @@ describe('GitHubAppConnection', () => {
     typeof useGetMeQuery
   >;
 
-  const mockLocalStorage = {
-    setItem: jest.fn(),
-    getItem: jest.fn(),
-    removeItem: jest.fn(),
-  };
-
-  const mockLocationAssign = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -394,17 +376,6 @@ describe('GitHubAppConnection', () => {
         },
       },
     } as ReturnType<typeof useGetMeQuery>);
-
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, assign: mockLocationAssign },
-      writable: true,
-      configurable: true,
-    });
-
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    });
   });
 
   afterEach(() => {

@@ -220,6 +220,47 @@ describe('InstallStateSigner', () => {
     });
   });
 
+  describe('gitProviderId payload field', () => {
+    describe('when gitProviderId is present', () => {
+      let payload: ReturnType<InstallStateSigner['verify']>;
+
+      beforeEach(() => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+          gitProviderId: '00000000-0000-0000-0000-0000000000bb',
+        });
+        payload = signer.verify(state);
+      });
+
+      it('round-trips gitProviderId', () => {
+        expect(payload.gitProviderId).toBe(
+          '00000000-0000-0000-0000-0000000000bb',
+        );
+      });
+    });
+
+    describe('when gitProviderId is absent', () => {
+      let payload: ReturnType<InstallStateSigner['verify']>;
+
+      beforeEach(() => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
+        payload = signer.verify(state);
+      });
+
+      it('omits gitProviderId', () => {
+        expect(payload.gitProviderId).toBeUndefined();
+      });
+    });
+  });
+
   describe('wrong key', () => {
     describe('when verifying with a different key', () => {
       it('throws InvalidInstallStateError', () => {

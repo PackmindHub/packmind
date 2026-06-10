@@ -8,7 +8,7 @@ ENV NODE_ENV=production
 # Update OpenSSL and install required system dependencies
 RUN apk update && \
     apk add --no-cache \
-        openssl=3.5.6-r0 \
+        openssl=3.5.7-r0 \
         bash=5.3.3-r1 \
         ca-certificates=20260413-r0 && \
     rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
@@ -18,9 +18,19 @@ USER node
 
 WORKDIR /app
 
-# Copy optimized API package.json and install only required dependencies
+# Activate pnpm via corepack in a shared cache so both root and node see the same binary
+# (otherwise corepack prepare runs as root and pnpm install re-downloads under node's home)
+USER root
+ENV COREPACK_HOME=/usr/local/share/node/corepack
+RUN corepack enable && corepack prepare pnpm@11.5.0 --activate && \
+    chmod -R a+rX "$COREPACK_HOME"
+USER node
+
+# Copy optimized API package.json + the workspace lockfile so transitive
+# versions are pinned for reproducible builds (mirrors the mcp-server image)
 COPY --chown=node:node apps/api/*package*.json package.json
-RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+COPY --chown=node:node pnpm-lock.yaml ./
+RUN pnpm install --prod --ignore-scripts
 
 # Copy the built application and migrations bundle with correct ownership
 COPY --chown=node:node dist/apps/api/main.js ./
@@ -56,17 +66,21 @@ RUN --mount=type=bind,source=.,target=/build-context \
 USER node
 ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 
-# Install migration dependencies
+# Install migration dependencies against the pinned workspace lockfile, then
+# prune the shared pnpm store once at the end (pruning between installs may
+# force re-downloads of packages shared by both projects)
 WORKDIR /app/migrations
-RUN npm install && npm cache clean --force
+COPY --chown=node:node pnpm-lock.yaml ./
+RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Return to app directory
 WORKDIR /app
 
-# Remove npm and its global node_modules to eliminate vulnerabilities
+
+# Remove npm/pnpm and their global node_modules to eliminate vulnerabilities
 USER root
-RUN rm -rf /usr/local/lib/node_modules/npm && \
-    rm -f /usr/local/bin/npm /usr/local/bin/npx
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/corepack
 USER node
 
 # Expose port
