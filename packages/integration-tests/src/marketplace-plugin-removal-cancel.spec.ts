@@ -134,6 +134,11 @@ describe('Marketplace plugin removal: cancellation reverts state', () => {
       pluginSlug: 'plugin-alpha',
       authorId: dataFactory.user.id,
       status: DistributionStatus.success,
+      // A live `success` distribution is one reconciliation has confirmed:
+      // `publishConfirmedAt` must be stamped, otherwise cancelling a removal
+      // reverts it to `pending_merge` (a never-merged publish) per
+      // CancelPluginRemovalUseCase.
+      publishConfirmedAt: new Date(),
       source: 'app',
     });
     distributionRow = inserted as unknown as MarketplaceDistribution;

@@ -17,6 +17,7 @@ import {
 import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { DataFactory } from '../helpers/DataFactory';
 import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
+import { runMarketplaceReconciliation } from '../helpers/marketplaceReconciliation';
 import { TestApp } from '../helpers/TestApp';
 
 const ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON = JSON.stringify({
@@ -55,6 +56,15 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
   let marketplace: LinkMarketplaceResponse;
   let pkg: Package;
   let commitToGitSpy: jest.SpyInstance;
+  /**
+   * The `packmind-lock.json` the first publish commits. Captured here but NOT
+   * served back during the publishes (the lock stays absent so both publishes
+   * keep their original code paths); it is only served to the reconciliation
+   * sweep, which mirrors the lock being merged to the default branch and
+   * confirms the pending publish to `success`.
+   */
+  let committedLockContent: string | null;
+  let currentLockContent: string | null;
   let eventEmitterService: PackmindEventEmitterService;
   let stubPublishedAdapter: jest.Mocked<StubPublishedAdapter>;
   let stubPublishedListener: StubPublishedListener;
@@ -74,14 +84,21 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
 
     gitPort = testApp.gitHexa.getAdapter();
 
+    committedLockContent = null;
+    currentLockContent = null;
+
     // Descriptor served on the marketplace repo. The standalone
-    // packmind-lock.json is reported missing so the first publish
-    // exercises the empty-lock first-publish path.
+    // packmind-lock.json is reported missing during the publishes (so the
+    // first publish exercises the empty-lock first-publish path); it is only
+    // served once `currentLockContent` is set, just before the reconciliation
+    // sweep below.
     jest
       .spyOn(gitPort, 'getFileFromRepo')
       .mockImplementation(async (_repo, path) => {
         if (path === 'packmind-lock.json') {
-          return null;
+          return currentLockContent === null
+            ? null
+            : { sha: 'mock-lock-sha', content: currentLockContent };
         }
         return {
           sha: 'mock-sha',
@@ -115,8 +132,12 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
     // `commitToGit` is what surfaces the no-op signal to the job.
     commitToGitSpy = jest
       .spyOn(gitPort, 'commitToGit')
-      .mockImplementation(async () => {
+      .mockImplementation(async (_repo, files) => {
         if (commitToGitSpy.mock.calls.length === 1) {
+          const lockFile = (
+            files as Array<{ path: string; content: string }>
+          ).find((file) => file.path === 'packmind-lock.json');
+          committedLockContent = lockFile?.content ?? null;
           return {
             sha: 'commit-sha-1',
           } as GitCommit;
@@ -208,6 +229,12 @@ describe('publishPackageOnMarketplace — no-op idempotency', () => {
         marketplaceId: marketplace.id,
         packageId: pkg.id,
       });
+
+      // Serve the lock the first publish committed, then drive a
+      // reconciliation so the (pending_merge) first row is confirmed to
+      // `success`. The no-op second row stays `no_changes`.
+      currentLockContent = committedLockContent;
+      await runMarketplaceReconciliation(testApp, marketplace.id);
 
       const distributionRepo = fixture.datasource.getRepository(
         MarketplaceDistributionSchema,

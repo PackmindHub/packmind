@@ -12,6 +12,7 @@ import {
 import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { DataFactory } from '../helpers/DataFactory';
 import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
+import { runMarketplaceReconciliation } from '../helpers/marketplaceReconciliation';
 import { TestApp } from '../helpers/TestApp';
 
 const ANTHROPIC_MARKETPLACE_DESCRIPTOR_JSON = JSON.stringify({
@@ -227,6 +228,11 @@ describe('publishPackageOnMarketplace — rolling PR amend', () => {
         marketplaceId: marketplace.id,
         packageId: pkg.id,
       });
+
+      // Both publishes land in `pending_merge`; drive a reconciliation so the
+      // rows are confirmed to `success` once their lock entries are present on
+      // the default branch — the in-memory lock now holds both publishes.
+      await runMarketplaceReconciliation(testApp, marketplace.id);
 
       const distributionRepo = fixture.datasource.getRepository(
         MarketplaceDistributionSchema,

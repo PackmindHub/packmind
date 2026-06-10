@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { DataFactory } from '../helpers/DataFactory';
 import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
+import { runMarketplaceReconciliation } from '../helpers/marketplaceReconciliation';
 import { TestApp } from '../helpers/TestApp';
 
 const INITIAL_DESCRIPTOR_JSON = JSON.stringify({
@@ -279,6 +280,11 @@ describe('publishPackageOnMarketplace — two concurrent publishers', () => {
         marketplaceId: marketplace.id,
         packageId: packageB.id,
       });
+
+      // Both publishes land in `pending_merge`; drive a reconciliation so the
+      // rows are confirmed to `success` — the in-memory lock now holds both
+      // plugin entries with their published content hashes.
+      await runMarketplaceReconciliation(testApp, marketplace.id);
 
       const distributionRepo = fixture.datasource.getRepository(
         MarketplaceDistributionSchema,
