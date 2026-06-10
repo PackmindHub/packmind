@@ -35,6 +35,7 @@ describe('StandardVersionService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByStandardId: jest.fn(),
+      findByStandardIds: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
       updateSummary: jest.fn(),
@@ -342,6 +343,39 @@ describe('StandardVersionService', () => {
     });
 
     it('returns versions for the specified standard', () => {
+      expect(result).toEqual(versions);
+    });
+  });
+
+  describe('listStandardVersionsByStandardIds', () => {
+    let standardIds: ReturnType<typeof createStandardId>[];
+    let versions: StandardVersion[];
+    let result: StandardVersion[];
+
+    beforeEach(async () => {
+      standardIds = [createStandardId(uuidv4()), createStandardId(uuidv4())];
+      versions = [
+        standardVersionFactory({ standardId: standardIds[0], version: 1 }),
+        standardVersionFactory({ standardId: standardIds[1], version: 1 }),
+      ];
+
+      standardVersionRepository.findByStandardIds = jest
+        .fn()
+        .mockResolvedValue(versions);
+
+      result =
+        await standardVersionService.listStandardVersionsByStandardIds(
+          standardIds,
+        );
+    });
+
+    it('calls repository with the given standard IDs', () => {
+      expect(standardVersionRepository.findByStandardIds).toHaveBeenCalledWith(
+        standardIds,
+      );
+    });
+
+    it('returns the versions across the requested standards', () => {
       expect(result).toEqual(versions);
     });
   });

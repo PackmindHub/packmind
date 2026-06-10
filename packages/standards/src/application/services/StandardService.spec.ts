@@ -38,6 +38,7 @@ describe('StandardService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -54,6 +55,7 @@ describe('StandardService', () => {
       restoreById: jest.fn(),
       list: jest.fn(),
       findByStandardId: jest.fn(),
+      findByStandardIds: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
       updateSummary: jest.fn(),
@@ -179,6 +181,29 @@ describe('StandardService', () => {
       it('returns null', () => {
         expect(result).toBeNull();
       });
+    });
+  });
+
+  describe('getStandardsByIds', () => {
+    let ids: StandardId[];
+    let standards: Standard[];
+    let result: Standard[];
+
+    beforeEach(async () => {
+      ids = [createStandardId(uuidv4()), createStandardId(uuidv4())];
+      standards = ids.map((id) => standardFactory({ id }));
+
+      standardRepository.findByIds = jest.fn().mockResolvedValue(standards);
+
+      result = await standardService.getStandardsByIds(ids);
+    });
+
+    it('queries the repository with the given ids', () => {
+      expect(standardRepository.findByIds).toHaveBeenCalledWith(ids);
+    });
+
+    it('returns the found standards', () => {
+      expect(result).toEqual(standards);
     });
   });
 

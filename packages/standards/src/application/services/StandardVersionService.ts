@@ -231,6 +231,30 @@ export class StandardVersionService {
     }
   }
 
+  async listStandardVersionsByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Listing standard versions by standard IDs', {
+      count: standardIds.length,
+    });
+
+    try {
+      const versions =
+        await this.standardVersionRepository.findByStandardIds(standardIds);
+      this.logger.info('Standard versions retrieved by standard IDs', {
+        requested: standardIds.length,
+        count: versions.length,
+      });
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to list standard versions by standard IDs', {
+        count: standardIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async getStandardVersion(
     standardId: StandardId,
     version: number,

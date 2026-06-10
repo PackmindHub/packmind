@@ -119,6 +119,59 @@ describe('StandardVersionRepository', () => {
     });
   });
 
+  describe('findByStandardIds', () => {
+    describe('when given multiple standard ids', () => {
+      let standardA: Standard;
+      let standardB: Standard;
+      let foundVersions: StandardVersion[];
+
+      beforeEach(async () => {
+        standardA = await standardRepo.save(
+          standardFactory({ slug: `standard-${uuidv4()}` }),
+        );
+        standardB = await standardRepo.save(
+          standardFactory({ slug: `standard-${uuidv4()}` }),
+        );
+
+        await standardVersionRepository.add(
+          standardVersionFactory({ standardId: standardA.id, version: 1 }),
+        );
+        await standardVersionRepository.add(
+          standardVersionFactory({ standardId: standardA.id, version: 2 }),
+        );
+        await standardVersionRepository.add(
+          standardVersionFactory({ standardId: standardB.id, version: 1 }),
+        );
+
+        foundVersions = await standardVersionRepository.findByStandardIds([
+          standardA.id,
+          standardB.id,
+        ]);
+      });
+
+      it('returns versions from every requested standard', () => {
+        expect(foundVersions).toHaveLength(3);
+      });
+
+      it('returns versions belonging only to the requested standards', () => {
+        const standardIds = [
+          ...new Set(foundVersions.map((v) => v.standardId)),
+        ].sort();
+        expect(standardIds).toEqual([standardA.id, standardB.id].sort());
+      });
+    });
+
+    describe('when given no ids', () => {
+      it('returns an empty array', async () => {
+        const foundVersions = await standardVersionRepository.findByStandardIds(
+          [],
+        );
+
+        expect(foundVersions).toEqual([]);
+      });
+    });
+  });
+
   it('can find a standard version by id', async () => {
     // Create standard first
     const standard = await standardRepo.save(
