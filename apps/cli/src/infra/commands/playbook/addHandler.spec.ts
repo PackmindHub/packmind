@@ -2061,20 +2061,18 @@ describe('playbookAddHandler', () => {
       ]);
     });
 
-    it('logs error about existing artifact', async () => {
-      const { logErrorConsole } = jest.requireMock('../../utils/consoleLogger');
-
+    it('stages the artifact as an update', async () => {
       await playbookAddHandler(buildDeps());
 
-      expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('already exists'),
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
       );
     });
 
-    it('exits with 1', async () => {
+    it('exits with 0', async () => {
       await playbookAddHandler(buildDeps());
 
-      expect(mockExit).toHaveBeenCalledWith(1);
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
 
     it('calls listCommands with spaceId for space-scoped check', async () => {
@@ -2085,10 +2083,141 @@ describe('playbookAddHandler', () => {
       });
     });
 
-    it('does not add to playbook', async () => {
+    it('fetches the latest version of the linked artifact', async () => {
       await playbookAddHandler(buildDeps());
 
-      expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      expect(mockGetLatestVersion).toHaveBeenCalledWith(
+        'command',
+        'cmd-1',
+        'space-123',
+      );
+    });
+
+    it('fetches deployed content including the adopted artifact', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockGetContentByVersions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifacts: [
+            expect.objectContaining({
+              id: 'cmd-1',
+              type: 'command',
+              version: 1,
+            }),
+          ],
+        }),
+      );
+    });
+
+    it('writes the adopted entry to the lockfile', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/project',
+        expect.objectContaining({
+          artifacts: expect.objectContaining({
+            'user:command:my-command': expect.objectContaining({
+              id: 'cmd-1',
+              version: 1,
+              spaceId: 'space-123',
+              source: 'user',
+              files: [
+                { path: '.claude/commands/my-command.md', agent: 'claude' },
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('logs the link information', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Linked "My Command" to existing command (v1)'),
+      );
+    });
+
+    describe('when local content matches the deployed version', () => {
+      beforeEach(async () => {
+        mockGetContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/commands/my-command.md',
+                content: VALID_COMMAND_CONTENT,
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+        await playbookAddHandler(buildDeps());
+      });
+
+      it('still writes the adopted entry to the lockfile', () => {
+        expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+          '/project',
+          expect.objectContaining({
+            artifacts: expect.objectContaining({
+              'user:command:my-command': expect.objectContaining({
+                id: 'cmd-1',
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('reports the artifact as already up to date', () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Already up to date'),
+        );
+      });
+
+      it('does not stage anything', () => {
+        expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      });
+
+      it('exits with 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when fetching the latest version fails', () => {
+      beforeEach(async () => {
+        mockGetLatestVersion.mockRejectedValue(new Error('network down'));
+        await playbookAddHandler(buildDeps());
+      });
+
+      it('logs a link failure error', () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to link "My Command"'),
+        );
+      });
+
+      it('does not write the lockfile', () => {
+        expect(mockLockFileRepository.write).not.toHaveBeenCalled();
+      });
+
+      it('does not stage anything', () => {
+        expect(mockPlaybookLocalRepository.addChange).not.toHaveBeenCalled();
+      });
+
+      it('exits with 1', () => {
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
     });
   });
 
@@ -2101,6 +2230,22 @@ describe('playbookAddHandler', () => {
       await playbookAddHandler(buildDeps());
 
       expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('stages the artifact as a creation', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'created' }),
+      );
+    });
+
+    it('scopes the name lookup to the target space', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockPackmindCliHexa.listCommands).toHaveBeenCalledWith({
+        spaceId: 'space-123',
+      });
     });
   });
 
@@ -2116,10 +2261,18 @@ describe('playbookAddHandler', () => {
       ]);
     });
 
-    it('exits with 1 (slug match)', async () => {
+    it('links to the slug-matching artifact and stages an update', async () => {
       await playbookAddHandler(buildDeps());
 
-      expect(mockExit).toHaveBeenCalledWith(1);
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
+      );
+    });
+
+    it('exits with 0', async () => {
+      await playbookAddHandler(buildDeps());
+
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 
@@ -2138,25 +2291,23 @@ describe('playbookAddHandler', () => {
     });
 
     describe('when the new name resolves to the same slug', () => {
-      it('exits with 1', async () => {
+      beforeEach(async () => {
         mockReadFile.mockReturnValue(
           `---\nname: Bon ete\ndescription: test\nscope: "**/*.ts"\n---\n# Bon ete\n\nSome description`,
         );
-        const { parseStandardMd } = jest.requireMock(
-          '../../../application/utils/parseStandardMd',
-        );
-        parseStandardMd.mockReturnValue({
-          name: 'Bon ete',
-          description: 'Some description',
-          scope: '**/*.ts',
-          rules: [],
-        });
-
         await playbookAddHandler(
           buildDeps({ filePath: '.packmind/standards/bon-ete.md' }),
         );
+      });
 
-        expect(mockExit).toHaveBeenCalledWith(1);
+      it('links to the slug-matching standard and stages an update', () => {
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+          expect.objectContaining({ changeType: 'updated' }),
+        );
+      });
+
+      it('exits with 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
   });
@@ -2322,18 +2473,16 @@ describe('playbookAddHandler', () => {
   });
 
   describe('when creating a skill with a name that already exists', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       (mockPackmindCliHexa.listSkills as jest.Mock).mockResolvedValue([
         {
+          id: 'skill-1',
           slug: 'my-skill',
           name: 'My Skill',
           description: 'desc',
           spaceId: 'space-123',
         },
       ]);
-    });
-
-    it('calls listSkills with spaceId for space-scoped check', async () => {
       mockReadSkillDirectory.mockResolvedValue([
         {
           path: '/project/.claude/skills/my-skill/SKILL.md',
@@ -2344,57 +2493,56 @@ describe('playbookAddHandler', () => {
           isBase64: false,
         },
       ]);
-
       await playbookAddHandler(
         buildDeps({ filePath: '.claude/skills/my-skill' }),
       );
+    });
 
+    it('calls listSkills with spaceId for space-scoped check', () => {
       expect(mockPackmindCliHexa.listSkills).toHaveBeenCalledWith({
         spaceId: 'space-123',
       });
     });
 
-    it('does not call listCommands', async () => {
-      mockReadSkillDirectory.mockResolvedValue([
-        {
-          path: '/project/.claude/skills/my-skill/SKILL.md',
-          relativePath: 'SKILL.md',
-          content: VALID_SKILL_MD_CONTENT,
-          size: 100,
-          permissions: '644',
-          isBase64: false,
-        },
-      ]);
-
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill' }),
-      );
-
+    it('does not call listCommands', () => {
       expect(mockPackmindCliHexa.listCommands).not.toHaveBeenCalled();
     });
 
-    it('exits with 1', async () => {
-      mockReadSkillDirectory.mockResolvedValue([
-        {
-          path: '/project/.claude/skills/my-skill/SKILL.md',
-          relativePath: 'SKILL.md',
-          content: VALID_SKILL_MD_CONTENT,
-          size: 100,
-          permissions: '644',
-          isBase64: false,
-        },
-      ]);
-
-      await playbookAddHandler(
-        buildDeps({ filePath: '.claude/skills/my-skill' }),
+    it('stages the skill as an update', () => {
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
       );
+    });
 
-      expect(mockExit).toHaveBeenCalledWith(1);
+    it('writes the adopted skill entry to the lockfile', () => {
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/project',
+        expect.objectContaining({
+          artifacts: expect.objectContaining({
+            'user:skill:my-skill': expect.objectContaining({
+              id: 'skill-1',
+              version: 1,
+              spaceId: 'space-123',
+              source: 'user',
+              files: [
+                {
+                  path: '.claude/skills/my-skill/SKILL.md',
+                  agent: 'claude',
+                },
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('exits with 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 
   describe('when creating a standard with a name that already exists', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockReadFile.mockReturnValue(VALID_STANDARD_CONTENT);
       (mockPackmindCliHexa.listStandards as jest.Mock).mockResolvedValue([
         {
@@ -2405,24 +2553,47 @@ describe('playbookAddHandler', () => {
           spaceId: 'space-123',
         },
       ]);
-    });
-
-    it('calls listStandards with spaceId for space-scoped check', async () => {
       await playbookAddHandler(
         buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
       );
+    });
 
+    it('calls listStandards with spaceId for space-scoped check', () => {
       expect(mockPackmindCliHexa.listStandards).toHaveBeenCalledWith({
         spaceId: 'space-123',
       });
     });
 
-    it('exits with 1', async () => {
-      await playbookAddHandler(
-        buildDeps({ filePath: '.packmind/standards/my-standard.md' }),
+    it('stages the standard as an update', () => {
+      expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledWith(
+        expect.objectContaining({ changeType: 'updated' }),
       );
+    });
 
-      expect(mockExit).toHaveBeenCalledWith(1);
+    it('writes the adopted standard entry to the lockfile', () => {
+      expect(mockLockFileRepository.write).toHaveBeenCalledWith(
+        '/project',
+        expect.objectContaining({
+          artifacts: expect.objectContaining({
+            'user:standard:my-standard': expect.objectContaining({
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              source: 'user',
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('exits with 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 

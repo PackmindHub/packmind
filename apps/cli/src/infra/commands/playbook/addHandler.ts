@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import slug from 'slug';
 
 import { resolveArtefactFromPath } from '../../../application/utils/resolveArtefactFromPath';
 import { parseCommandFile } from '../../../application/utils/parseCommandFile';
@@ -24,7 +23,6 @@ import {
   ArtifactType,
   MultiFileCodingAgent,
   Space,
-  SpaceId,
   validateArtifactFileFormat,
 } from '@packmind/types';
 import {
@@ -32,6 +30,11 @@ import {
   findLockFileEntryAndFileForPath,
 } from '../../../application/utils/lockFileUtils';
 import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
+import {
+  resolveExistingArtifact,
+  adoptArtifactIntoLockFile,
+  ExistingArtifact,
+} from './add/linkExistingArtifact';
 
 type SkillFile = {
   path: string;
@@ -184,6 +187,10 @@ export async function playbookAddHandler(
   const earlyLockFile = earlyTargetDir
     ? await lockFileRepository.read(earlyTargetDir)
     : null;
+
+  // Tracks the lockfile as the handler sees it, including an entry adopted by
+  // linking below. The already-up-to-date check must read the adopted state.
+  let activeLockFile = earlyLockFile;
 
   if (earlyLockFile && earlyTargetDir) {
     const normalizedForLookup = normalizePath(
@@ -469,24 +476,19 @@ export async function playbookAddHandler(
     }
   }
 
-  // Check name uniqueness for new artifacts
+  // Name collision check for new artifacts. A match means the local file is a
+  // materialization of an artifact the lockfile never tracked (typically
+  // created via `playbook submit`, which does not write the lockfile): link it
+  // and stage an update instead of failing or creating a duplicate.
   if (changeType === 'created') {
+    let existingArtifact: ExistingArtifact | null;
     try {
-      const existingNames = await listExistingArtifactNames(
+      existingArtifact = await resolveExistingArtifact(
         packmindCliHexa,
         artifactType,
         spaceId,
+        artifactName,
       );
-      const nameExists = existingNames.some(
-        (name) => slug(name) === slug(artifactName),
-      );
-      if (nameExists) {
-        logErrorConsole(
-          `A ${artifactType} named "${artifactName}" already exists in Packmind.`,
-        );
-        exit(1);
-        return;
-      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       logErrorConsole(
@@ -495,13 +497,57 @@ export async function playbookAddHandler(
       exit(1);
       return;
     }
+
+    if (existingArtifact) {
+      let remoteVersion: number;
+      try {
+        const packmindGateway = packmindCliHexa.getPackmindGateway();
+        ({ version: remoteVersion } =
+          await packmindGateway.deployment.getLatestVersion(
+            artifactType,
+            existingArtifact.id,
+            spaceId,
+          ));
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logErrorConsole(
+          `Failed to link "${existingArtifact.name}" to the existing ${artifactType}: ${errorMessage}`,
+        );
+        exit(1);
+        return;
+      }
+
+      const adoptedFilePath =
+        artifactType === 'skill'
+          ? `${normalizedFilePath}/SKILL.md`
+          : normalizedFilePath;
+
+      activeLockFile = adoptArtifactIntoLockFile({
+        lockFile: activeLockFile,
+        artifact: {
+          id: existingArtifact.id,
+          name: existingArtifact.name,
+          type: artifactType,
+          version: remoteVersion,
+          spaceId,
+        },
+        relativeFilePath: adoptedFilePath,
+        agent: codingAgent,
+      });
+      await lockFileRepository.write(targetDir, activeLockFile);
+
+      changeType = 'updated';
+      logInfoConsole(
+        `Linked "${existingArtifact.name}" to existing ${artifactType} (v${remoteVersion})${spaceName ? ` in space "${spaceName}"` : ''} — staged as update.`,
+      );
+    }
   }
 
   // Check if content matches deployed (via lock file artifact versions)
-  if (changeType === 'updated' && earlyLockFile) {
+  if (changeType === 'updated' && activeLockFile) {
     const deployedFiles = await fetchDeployedFiles(
       packmindCliHexa.getPackmindGateway(),
-      earlyLockFile,
+      activeLockFile,
       { projectDir: targetDir },
     );
 
@@ -568,33 +614,6 @@ export async function playbookAddHandler(
     `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
   );
   exit(0);
-}
-
-async function listExistingArtifactNames(
-  packmindCliHexa: PackmindCliHexa,
-  artifactType: ArtifactType,
-  spaceId: string,
-): Promise<string[]> {
-  switch (artifactType) {
-    case 'skill': {
-      const skills = await packmindCliHexa.listSkills({
-        spaceId: spaceId as SpaceId,
-      });
-      return skills.map((s) => s.name);
-    }
-    case 'command': {
-      const commands = await packmindCliHexa.listCommands({
-        spaceId: spaceId as SpaceId,
-      });
-      return commands.map((c) => c.name);
-    }
-    case 'standard': {
-      const standards = await packmindCliHexa.listStandards({
-        spaceId: spaceId as SpaceId,
-      });
-      return standards.map((s) => s.name);
-    }
-  }
 }
 
 export function formatSpaceList(spaces: Space[]): string {
