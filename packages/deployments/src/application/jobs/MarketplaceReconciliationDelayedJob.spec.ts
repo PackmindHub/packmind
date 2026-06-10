@@ -429,6 +429,57 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       });
     });
 
+    describe('when getFileFromRepo returns null and the probe reports auth failure', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+        mockGitPort.checkMarketplaceRepoExists.mockResolvedValue({
+          exists: false,
+          reason: 'auth_failed',
+        });
+
+        result = await job.runJob('job-bf-auth', input, new AbortController());
+      });
+
+      it('classifies the failure as auth_failed', () => {
+        expect(result.errorKind).toBe('auth_failed');
+      });
+
+      it('surfaces the credential error detail', () => {
+        expect(result.errorDetail).toBe(
+          'The marketplace credentials are invalid or expired. Reconnect the Git provider.',
+        );
+      });
+    });
+
+    describe('when getFileFromRepo returns null and the probe reports no reason', () => {
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+        mockGitPort.checkMarketplaceRepoExists.mockResolvedValue({
+          exists: false,
+        });
+
+        result = await job.runJob(
+          'job-bf-noreason',
+          input,
+          new AbortController(),
+        );
+      });
+
+      it('defaults the classification to network_transient', () => {
+        expect(result.errorKind).toBe('network_transient');
+      });
+
+      it('surfaces the transient error detail', () => {
+        expect(result.errorDetail).toBe(
+          'The marketplace repository is temporarily unreachable.',
+        );
+      });
+    });
+
     describe('when the parser throws (descriptor unparseable)', () => {
       let result: MarketplaceReconciliationJobOutput;
 
@@ -483,6 +534,33 @@ describe('MarketplaceReconciliationDelayedJob', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('error paths carry forward last-known live-state fields', () => {
+    let result: MarketplaceReconciliationJobOutput;
+
+    beforeEach(async () => {
+      mockMarketplaceRepository.findById.mockResolvedValue({
+        ...marketplace,
+        pendingPrUrl: 'https://github.com/acme/plugins/pull/5',
+        outdatedPluginSlugs: ['p1'],
+      });
+      mockGitPort.getFileFromRepo.mockRejectedValue(
+        new Error('upstream timeout'),
+      );
+
+      result = await job.runJob('job-carry', input, new AbortController());
+    });
+
+    it('echoes the last-known pending PR url on a fetch failure', () => {
+      expect(result.pendingPrUrl).toBe(
+        'https://github.com/acme/plugins/pull/5',
+      );
+    });
+
+    it('echoes the last-known outdated slugs on a fetch failure', () => {
+      expect(result.outdatedPluginSlugs).toEqual(['p1']);
     });
   });
 

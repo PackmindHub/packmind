@@ -1725,4 +1725,108 @@ describe('GitlabRepository', () => {
       });
     });
   });
+
+  describe('findOpenPullRequest', () => {
+    describe('when an open merge request exists', () => {
+      it('returns the first open merge request mapped to url and number', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: [
+            {
+              iid: 7,
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+            },
+          ],
+        });
+
+        const result =
+          await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(result).toEqual({
+          url: 'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+          number: 7,
+        });
+      });
+
+      it('queries the merge requests endpoint scoped to head and base branches', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/merge_requests',
+          {
+            params: {
+              source_branch: 'packmind/sync',
+              target_branch: 'main',
+              state: 'opened',
+            },
+          },
+        );
+      });
+    });
+
+    describe('when no open merge request exists', () => {
+      it('returns null', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        const result =
+          await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('checkRepositoryExists', () => {
+    describe('when the project endpoint returns 200', () => {
+      it('reports the repository exists', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: {} });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: true });
+      });
+    });
+
+    describe('when the project endpoint returns 404', () => {
+      it('classifies the failure as repo_not_found', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 404 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
+    });
+
+    describe('when the project endpoint returns 401', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 401 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the project endpoint returns 403', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 403 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the request fails with a network error', () => {
+      it('classifies the failure as network_transient', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('socket hang up'));
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'network_transient' });
+      });
+    });
+  });
 });
