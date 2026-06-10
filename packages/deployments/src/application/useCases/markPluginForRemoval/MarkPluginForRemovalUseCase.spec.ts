@@ -87,6 +87,7 @@ describe('MarkPluginForRemovalUseCase', () => {
         .fn()
         .mockResolvedValue(successDistribution),
       updateStatus: jest.fn().mockResolvedValue(undefined),
+      updateRemovalRequestedAt: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
 
     mockPackageService = {
@@ -165,6 +166,22 @@ describe('MarkPluginForRemovalUseCase', () => {
         distributionId,
       });
       expect(distribution.status).toBe(DistributionStatus.success);
+    });
+
+    it('stamps the removalRequestedAt marker', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).toHaveBeenCalledWith(distributionId, expect.any(Date));
+    });
+
+    it('returns the distribution carrying the removalRequestedAt marker', async () => {
+      const { distribution } = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(distribution.removalRequestedAt).toBeInstanceOf(Date);
     });
 
     it('emits one event', () => {
@@ -267,6 +284,60 @@ describe('MarkPluginForRemovalUseCase', () => {
           /* expected */
         });
       expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('idempotency — removal already requested', () => {
+    beforeEach(() => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...successDistribution,
+        removalRequestedAt: new Date('2026-06-10T12:00:00.000Z'),
+      } as MarketplaceDistribution);
+    });
+
+    it('resolves without throwing', async () => {
+      await expect(
+        useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+          distributionId,
+        }),
+      ).resolves.toMatchObject({
+        distribution: { id: distributionId },
+      });
+    });
+
+    it('does not re-stamp the removalRequestedAt marker', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('does not emit a duplicate event', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    });
+
+    it('does not enqueue a duplicate removal job', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+      expect(mockRemovalJob.addJob).not.toHaveBeenCalled();
     });
   });
 

@@ -18,19 +18,26 @@ const origin = 'CancelPluginRemovalUseCase';
 
 /**
  * Cancels a previously initiated plugin removal, reverting the target
- * distribution from `to_be_removed` back to `success`.
+ * distribution to `success` and clearing the `removalRequestedAt` marker.
  *
  * Admin-only. No domain event is emitted (per AC5 — cancellations are not
  * tracked in v1).
+ *
+ * A removal is cancellable in two states: while the request is still pending
+ * (`removalRequestedAt` set, status still `success` because the deletion has
+ * not yet landed on the sync branch) and after the job has flipped it to
+ * `to_be_removed`. Clearing the marker in the pending window also signals the
+ * `RemovePluginFromMarketplaceDelayedJob` to abort before committing.
  *
  * Flow:
  *  1. Resolve the marketplace by `(organizationId, marketplaceId)`. Miss →
  *     `MarketplaceNotFoundError`.
  *  2. Fetch the distribution by id and ensure it belongs to the marketplace.
  *     Miss → `PluginDistributionNotFoundError`.
- *  3. Validate the current status is `to_be_removed`. Other state →
- *     `PluginDistributionInvalidStateError`.
- *  4. `updateStatus(id, { status: success })`.
+ *  3. Validate a removal is actually pending — status `to_be_removed` OR
+ *     `removalRequestedAt` set. Otherwise → `PluginDistributionInvalidStateError`.
+ *  4. Revert the status to `success` (only when it was `to_be_removed`) and
+ *     clear `removalRequestedAt`.
  *  5. Return the mutated row.
  */
 export class CancelPluginRemovalUseCase
@@ -83,9 +90,12 @@ export class CancelPluginRemovalUseCase
       throw new PluginDistributionNotFoundError({ distributionId });
     }
 
-    if (distribution.status !== DistributionStatus.to_be_removed) {
+    const isPendingRemoval =
+      distribution.status === DistributionStatus.to_be_removed ||
+      !!distribution.removalRequestedAt;
+    if (!isPendingRemoval) {
       this.logger.warn(
-        'Cannot cancel plugin removal — distribution not in to_be_removed state',
+        'Cannot cancel plugin removal — no removal pending for distribution',
         {
           distributionId,
           currentStatus: distribution.status,
@@ -98,13 +108,24 @@ export class CancelPluginRemovalUseCase
       );
     }
 
-    await this.marketplaceDistributionRepository.updateStatus(distribution.id, {
-      status: DistributionStatus.success,
-    });
+    // Revert the status only when the job already flipped it to
+    // `to_be_removed`. In the pending window the status is still `success`, so
+    // clearing the marker alone is enough (and avoids a redundant write).
+    if (distribution.status === DistributionStatus.to_be_removed) {
+      await this.marketplaceDistributionRepository.updateStatus(
+        distribution.id,
+        { status: DistributionStatus.success },
+      );
+    }
+    await this.marketplaceDistributionRepository.updateRemovalRequestedAt(
+      distribution.id,
+      null,
+    );
 
     const updated: MarketplaceDistribution = {
       ...distribution,
       status: DistributionStatus.success,
+      removalRequestedAt: null,
     };
 
     this.logger.info(
@@ -112,7 +133,7 @@ export class CancelPluginRemovalUseCase
       {
         distributionId: distribution.id,
         marketplaceId,
-        fromStatus: DistributionStatus.to_be_removed,
+        fromStatus: distribution.status,
         toStatus: DistributionStatus.success,
       },
     );

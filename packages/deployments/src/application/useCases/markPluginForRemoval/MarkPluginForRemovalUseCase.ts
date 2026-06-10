@@ -40,6 +40,12 @@ const origin = 'MarkPluginForRemovalUseCase';
  * tracks the sync branch rather than the bare request. The reconciliation job
  * owns the terminal `removed` transition once the deletion PR merges.
  *
+ * Because the status stays `success` during that window, the request itself is
+ * recorded out-of-band via `removalRequestedAt`: it is stamped synchronously so
+ * the UI can surface a "removal pending" state immediately, and a repeated
+ * request becomes a no-op rather than a duplicate event/job (or a confusing
+ * `success`-already-flipped error).
+ *
  * Flow:
  *  1. Resolve the marketplace by `(organizationId, marketplaceId)`. Miss →
  *     `MarketplaceNotFoundError`.
@@ -47,14 +53,21 @@ const origin = 'MarkPluginForRemovalUseCase';
  *     ensure it belongs to the marketplace. By `packageId`: call
  *     `findLatestSuccessfulByPackageAndMarketplace`. Miss →
  *     `PluginDistributionNotFoundError`.
- *  3. Validate the current status is `success`. Other state →
+ *  3. If `removalRequestedAt` is already set, return the row unchanged
+ *     (idempotent — no duplicate event/job). Placed before the status guard so
+ *     a row the job has already flipped to `to_be_removed` re-resolves here
+ *     instead of erroring.
+ *  4. Validate the current status is `success`. Other state →
  *     `PluginDistributionInvalidStateError`.
- *  4. Emit `MarketplacePluginRemovalInitiatedEvent` with
+ *  5. Stamp `removalRequestedAt = now` so the request is observable before the
+ *     async job runs.
+ *  6. Emit `MarketplacePluginRemovalInitiatedEvent` with
  *     `trigger='from_marketplace'`.
- *  5. Enqueue `RemovePluginFromMarketplaceDelayedJob` so the deletion is
+ *  7. Enqueue `RemovePluginFromMarketplaceDelayedJob` so the deletion is
  *     committed onto the rolling `packmind/sync` PR (symmetric to publish); the
  *     job flips the status to `to_be_removed` once the commit lands.
- *  6. Return the distribution row (still `success`).
+ *  8. Return the distribution row (still `success`, now carrying
+ *     `removalRequestedAt`).
  */
 export class MarkPluginForRemovalUseCase
   extends AbstractAdminUseCase<
@@ -129,6 +142,22 @@ export class MarkPluginForRemovalUseCase
       });
     }
 
+    // Idempotent: a removal already requested (marker set) must not enqueue a
+    // second job or emit a duplicate event. Return the row as-is so the caller
+    // (and the UI) still observe the pending state. Placed before the status
+    // guard so a row the job has already flipped to `to_be_removed` resolves
+    // here rather than tripping the `success`-only guard below.
+    if (distribution.removalRequestedAt) {
+      this.logger.info(
+        'Marketplace plugin distribution already has a pending removal request — returning idempotently',
+        {
+          distributionId: distribution.id,
+          marketplaceId,
+        },
+      );
+      return { distribution };
+    }
+
     if (distribution.status !== DistributionStatus.success) {
       this.logger.warn(
         'Cannot mark distribution for removal — invalid current status',
@@ -146,6 +175,17 @@ export class MarkPluginForRemovalUseCase
 
     const pkg = await this.packageService.findById(distribution.packageId);
     const packageSlug = pkg?.slug ?? '';
+
+    // Stamp the request synchronously while the status stays `success`. This is
+    // the signal the UI keys off to switch the row to a "removal pending" state
+    // and the guard above keys off to stay idempotent. Persisted before the
+    // event/job so a write failure aborts the request instead of leaving a
+    // dangling event with no recorded request.
+    const requestedAt = new Date();
+    await this.marketplaceDistributionRepository.updateRemovalRequestedAt(
+      distribution.id,
+      requestedAt,
+    );
 
     this.eventEmitterService.emit(
       new MarketplacePluginRemovalInitiatedEvent({
@@ -193,7 +233,9 @@ export class MarkPluginForRemovalUseCase
       status: distribution.status,
     });
 
-    return { distribution };
+    return {
+      distribution: { ...distribution, removalRequestedAt: requestedAt },
+    };
   }
 
   private async resolveDistribution(

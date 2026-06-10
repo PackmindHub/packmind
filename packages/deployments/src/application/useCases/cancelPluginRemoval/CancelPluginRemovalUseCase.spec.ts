@@ -78,6 +78,7 @@ describe('CancelPluginRemovalUseCase', () => {
     mockMarketplaceDistributionRepository = {
       findById: jest.fn().mockResolvedValue(pendingDistribution),
       updateStatus: jest.fn().mockResolvedValue(undefined),
+      updateRemovalRequestedAt: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
 
     mockAccountsPort = {
@@ -117,11 +118,55 @@ describe('CancelPluginRemovalUseCase', () => {
       });
     });
 
+    it('clears the removalRequestedAt marker', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).toHaveBeenCalledWith(distributionId, null);
+    });
+
     it('returns the distribution under its original id', () => {
       expect(response.distribution.id).toEqual(distributionId);
     });
 
     it('returns the distribution with status restored to success', () => {
+      expect(response.distribution.status).toBe(DistributionStatus.success);
+    });
+
+    it('returns the distribution with the marker cleared', () => {
+      expect(response.distribution.removalRequestedAt).toBeNull();
+    });
+  });
+
+  describe('pending in the pre-commit window (success + removalRequestedAt)', () => {
+    let response: Awaited<ReturnType<CancelPluginRemovalUseCase['execute']>>;
+
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...pendingDistribution,
+        status: DistributionStatus.success,
+        removalRequestedAt: new Date('2026-06-10T12:00:00.000Z'),
+      } as MarketplaceDistribution);
+      response = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+      });
+    });
+
+    it('does not write the status (already success)', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('clears the removalRequestedAt marker', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateRemovalRequestedAt,
+      ).toHaveBeenCalledWith(distributionId, null);
+    });
+
+    it('returns the distribution in success state', () => {
       expect(response.distribution.status).toBe(DistributionStatus.success);
     });
   });

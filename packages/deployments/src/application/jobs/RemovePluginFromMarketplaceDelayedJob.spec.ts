@@ -53,8 +53,11 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     pluginSlug: 'security',
     authorId: userId,
     // The propose flow no longer pre-flips the status: the job receives a
-    // still-`success` row and owns the flip once the sync commit lands.
+    // still-`success` row and owns the flip once the sync commit lands. The
+    // manual flow stamps `removalRequestedAt`, which the job uses to tell an
+    // in-flight removal apart from one cancelled before the commit landed.
     status: DistributionStatus.success,
+    removalRequestedAt: new Date('2026-06-09T10:00:00.000Z'),
   });
 
   const marketplace = marketplaceFactory({
@@ -242,6 +245,29 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     });
 
     it('does not regress the status (leaves a terminal/pending row untouched)', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the removal was cancelled before the commit landed', () => {
+    beforeEach(async () => {
+      // Cancel in the pending window clears removalRequestedAt while the status
+      // is still `success` (the deletion never reached the sync branch).
+      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
+        ...distribution,
+        status: DistributionStatus.success,
+        removalRequestedAt: null,
+      });
+      await job.runJob('job-cancelled', input, new AbortController());
+    });
+
+    it('does not commit the deletion to the sync branch', () => {
+      expect(mockGitPort.commitToGit).not.toHaveBeenCalled();
+    });
+
+    it('does not flip the status', () => {
       expect(
         mockMarketplaceDistributionRepository.updateStatus,
       ).not.toHaveBeenCalled();
