@@ -3,7 +3,6 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   AddGitProviderResponse,
-  GitProvider,
   GithubAppMode,
   IAccountsPort,
   IAddGitProviderUseCase,
