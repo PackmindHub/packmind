@@ -6,8 +6,8 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/crisp": "*",
-    "@packmind/node-utils": "*",
+    "@packmind/crisp": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
     "typeorm": "^0.3.20"
   }
 }

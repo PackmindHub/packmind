@@ -102,17 +102,20 @@ services:
       - sh
       - -c
       - |
-        if [ -f node_modules/.package-lock.json ] && diff -q package-lock.json node_modules/.package-lock.json >/dev/null 2>&1; then
-          echo "[deps] node_modules up to date, skipping install"
-        else
-          apk add --no-cache git && \
-          npm install --unsafe-perm --audit=false --fund=false && \
-          chmod -R +x node_modules/.bin 2>/dev/null || true
+        apk add --no-cache git
+        corepack enable
+        corepack prepare pnpm@11.5.0 --activate
+        if ! pnpm install --frozen-lockfile --prefer-offline; then
+          echo "[deps] lockfile drift detected — run 'pnpm install' locally and commit pnpm-lock.yaml" >&2
+          exit 1
         fi
+        chmod -R +x node_modules/.bin 2>/dev/null || true
         node scripts/select-tsconfig.mjs
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
 
   run-migrations:
     image: node:24.15.0-alpine3.23
@@ -122,8 +125,10 @@ services:
       sh -lc '
         set -euo pipefail
         echo "[migrations] Running TypeORM migrations directly (bypassing Nx)..."
+        corepack enable
+        corepack prepare pnpm@11.5.0 --activate
         cd packages/migrations
-        npm run --no-update-notifier typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each
+        pnpm typeorm migration:run --dataSource=datasourceDocker.ts --transaction each
       '
     environment:
       CI: ${CI:-}
@@ -132,6 +137,8 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
     depends_on:
       install-dependencies:
         condition: service_completed_successfully
@@ -317,10 +324,12 @@ services:
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
+      - dev-corepack-cache:/root/.cache/node/corepack
+      - dev-pnpm-store:/root/.local/share/pnpm
     ports:
       - '9323:9323'
     working_dir: /packmind/apps/e2e-tests
-    entrypoint: npm run e2e
+    entrypoint: sh -c "corepack enable && corepack prepare pnpm@11.5.0 --activate && cd /packmind && pnpm e2e"
     environment:
       BASE_URL: http://frontend:4200
       CI: 'true'
@@ -339,3 +348,5 @@ volumes:
   dev-dist:
   dev-tmp:
   dev-node_modules:
+  dev-corepack-cache:
+  dev-pnpm-store:

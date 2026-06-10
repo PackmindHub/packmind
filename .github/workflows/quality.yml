@@ -58,12 +58,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 10
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
@@ -73,7 +79,7 @@ jobs:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
         run: ./node_modules/.bin/nx run-many -t lint --tuiAutoExit
       - name: Check code formatting
-        run: npm run prettier:check
+        run: pnpm prettier:check
 
   sonarqube:
     if: vars.PACKMIND_EDITION != 'proprietary'
@@ -87,13 +93,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: pnpm/action-setup@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Prepare SonarQube Cloud Scan
         run: cp private/sonar-project.properties .
 

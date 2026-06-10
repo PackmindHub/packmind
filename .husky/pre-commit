@@ -1,2 +1,2 @@
-npx pretty-quick --staged
+pnpm exec pretty-quick --staged
 scripts/precommit-lint.sh

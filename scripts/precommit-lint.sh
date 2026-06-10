@@ -14,6 +14,8 @@ if [[ ! -f "$CLI_BINARY" ]]; then
   nx run packmind-cli:build
 fi
 
+sh scripts/install-dist-cli-deps.sh >/dev/null
+
 OUTPUT=$(node "$CLI_BINARY" whoami 2>&1) || exit 0
 
 HOST=$(echo "$OUTPUT" | grep "^Host:" | awk '{print $2}')

@@ -9,8 +9,8 @@
     "typeorm": "typeorm-ts-node-commonjs"
   },
   "dependencies": {
-    "@packmind/logger": "*",
-    "@packmind/node-utils": "*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
     "tsconfig-paths": "^4.2.0"
   }
 }

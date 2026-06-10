@@ -6,9 +6,9 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/logger": "*",
-    "@packmind/node-utils": "*",
-    "@packmind/types": "*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
     "typeorm": "0.3.28",
     "@nestjs/common": "^11.1.17"
   }

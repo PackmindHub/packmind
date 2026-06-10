@@ -8,9 +8,9 @@
   "dependencies": {
     "crisp-api": "^10.0.17",
     "typeorm": "^0.3.20",
-    "@packmind/logger": "*",
-    "@packmind/node-utils": "*",
-    "@packmind/types": "*",
-    "@packmind/test-utils": "0.0.1"
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
+    "@packmind/test-utils": "workspace:*"
   }
 }
