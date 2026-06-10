@@ -296,6 +296,40 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
       }
     }
 
+    // Prune per-agent renderings left behind when an agent is dropped but the
+    // artifact survives. The whole-artifact delete above only fires when an
+    // artifact disappears entirely; here the artifact is still rendered for the
+    // remaining agents, so its previously-deployed file for the removed agent
+    // (e.g. `.github/skills/X` after dropping copilot) must be cleaned up too.
+    const renderedFilePaths = new Set<string>();
+    for (const entry of Object.values(lockFile.artifacts)) {
+      for (const file of entry.files) {
+        renderedFilePaths.add(file.path);
+      }
+    }
+    for (const [key, entry] of Object.entries(
+      command.packmindLockFile.artifacts,
+    )) {
+      if (inaccessibleSpaceIds.has(entry.spaceId)) {
+        continue;
+      }
+      // Only surviving artifacts — whole-artifact removal is handled above.
+      if (!lockFile.artifacts[key]) {
+        continue;
+      }
+      for (const file of entry.files) {
+        if (
+          !renderedFilePaths.has(file.path) &&
+          !mergedFileUpdates.delete.some((d) => d.path === file.path)
+        ) {
+          mergedFileUpdates.delete.push({
+            path: file.path,
+            type: DeleteItemType.File,
+          });
+        }
+      }
+    }
+
     mergedFileUpdates.createOrUpdate.push(
       this.lockFileService.createLockFileModification(lockFile),
     );

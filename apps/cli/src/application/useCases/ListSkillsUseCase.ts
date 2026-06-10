@@ -21,6 +21,7 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
         spaceId: command.spaceId,
       });
       return skills.map((s) => ({
+        id: s.id,
         slug: s.slug,
         name: s.name,
         description: s.description,
@@ -35,6 +36,7 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
           .list({ spaceId: createSpaceId(space.id) })
           .then((skills) =>
             skills.map((s) => ({
+              id: s.id,
               slug: s.slug,
               name: s.name,
               description: s.description,
