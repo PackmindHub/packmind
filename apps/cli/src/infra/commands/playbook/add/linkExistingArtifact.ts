@@ -1,6 +1,13 @@
 import slug from 'slug';
-import { ArtifactType, SpaceId } from '@packmind/types';
+import {
+  ArtifactType,
+  MultiFileCodingAgent,
+  PackmindLockFile,
+  PackmindLockFileEntry,
+  SpaceId,
+} from '@packmind/types';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
+import { normalizePath } from '../../../../application/utils/pathUtils';
 
 export type ExistingArtifact = {
   id: string;
@@ -47,4 +54,56 @@ async function listArtifactsForSpace(
       return standards.map((s) => ({ id: s.id, name: s.name }));
     }
   }
+}
+
+export type AdoptArtifactParams = {
+  lockFile: PackmindLockFile | null;
+  artifact: {
+    id: string;
+    name: string;
+    type: ArtifactType;
+    version: number;
+    spaceId: string;
+  };
+  relativeFilePath: string;
+  agent: MultiFileCodingAgent;
+};
+
+export function adoptArtifactIntoLockFile({
+  lockFile,
+  artifact,
+  relativeFilePath,
+  agent,
+}: AdoptArtifactParams): PackmindLockFile {
+  const base: PackmindLockFile = lockFile ?? {
+    lockfileVersion: 2,
+    packageSlugs: [],
+    agents: [],
+    artifacts: {},
+  };
+
+  const key = `user:${artifact.type}:${slug(artifact.name)}`;
+  const existing = base.artifacts[key];
+
+  const normalized = normalizePath(relativeFilePath);
+  const files = existing ? [...existing.files] : [];
+  if (!files.some((f) => normalizePath(f.path) === normalized)) {
+    files.push({ path: relativeFilePath, agent });
+  }
+
+  const entry: PackmindLockFileEntry = {
+    name: artifact.name,
+    type: artifact.type,
+    id: artifact.id,
+    version: artifact.version,
+    spaceId: artifact.spaceId,
+    packageIds: existing?.packageIds ?? [],
+    source: 'user',
+    files,
+  };
+
+  return {
+    ...base,
+    artifacts: { ...base.artifacts, [key]: entry },
+  };
 }

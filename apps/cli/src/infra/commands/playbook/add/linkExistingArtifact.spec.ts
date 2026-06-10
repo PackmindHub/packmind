@@ -1,5 +1,9 @@
-import { resolveExistingArtifact } from './linkExistingArtifact';
+import {
+  adoptArtifactIntoLockFile,
+  resolveExistingArtifact,
+} from './linkExistingArtifact';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
+import { PackmindLockFile } from '@packmind/types';
 
 describe('resolveExistingArtifact', () => {
   const buildHexa = (overrides: Record<string, unknown> = {}) =>
@@ -113,6 +117,168 @@ describe('resolveExistingArtifact', () => {
       );
 
       expect(result).toEqual({ id: 'skill-1', name: 'My Skill' });
+    });
+  });
+});
+
+describe('adoptArtifactIntoLockFile', () => {
+  const artifact = {
+    id: 'std-1',
+    name: 'My Standard',
+    type: 'standard' as const,
+    version: 3,
+    spaceId: 'space-123',
+  };
+
+  afterEach(() => jest.clearAllMocks());
+
+  describe('when no lockfile exists', () => {
+    it('creates a minimal v2 lockfile holding the adopted entry', () => {
+      const result = adoptArtifactIntoLockFile({
+        lockFile: null,
+        artifact,
+        relativeFilePath: '.claude/rules/packmind/standard-my-standard.md',
+        agent: 'claude',
+      });
+
+      expect(result).toEqual({
+        lockfileVersion: 2,
+        packageSlugs: [],
+        agents: [],
+        artifacts: {
+          'user:standard:my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 3,
+            spaceId: 'space-123',
+            packageIds: [],
+            source: 'user',
+            files: [
+              {
+                path: '.claude/rules/packmind/standard-my-standard.md',
+                agent: 'claude',
+              },
+            ],
+          },
+        },
+      });
+    });
+  });
+
+  describe('when the entry already exists under another agent path', () => {
+    const existingLockFile: PackmindLockFile = {
+      lockfileVersion: 2,
+      packageSlugs: ['my-package'],
+      agents: ['copilot'],
+      artifacts: {
+        'user:standard:my-standard': {
+          name: 'My Standard',
+          type: 'standard',
+          id: 'std-1',
+          version: 2,
+          spaceId: 'space-123',
+          packageIds: ['pkg-1'],
+          source: 'user',
+          files: [
+            {
+              path: '.github/instructions/packmind-my-standard.instructions.md',
+              agent: 'copilot',
+            },
+          ],
+        },
+      },
+    };
+
+    it('appends the new file path and refreshes the version', () => {
+      const result = adoptArtifactIntoLockFile({
+        lockFile: existingLockFile,
+        artifact,
+        relativeFilePath: '.claude/rules/packmind/standard-my-standard.md',
+        agent: 'claude',
+      });
+
+      expect(result.artifacts['user:standard:my-standard']).toEqual({
+        name: 'My Standard',
+        type: 'standard',
+        id: 'std-1',
+        version: 3,
+        spaceId: 'space-123',
+        packageIds: ['pkg-1'],
+        source: 'user',
+        files: [
+          {
+            path: '.github/instructions/packmind-my-standard.instructions.md',
+            agent: 'copilot',
+          },
+          {
+            path: '.claude/rules/packmind/standard-my-standard.md',
+            agent: 'claude',
+          },
+        ],
+      });
+    });
+
+    it('does not duplicate an already-tracked path', () => {
+      const result = adoptArtifactIntoLockFile({
+        lockFile: existingLockFile,
+        artifact,
+        relativeFilePath:
+          '.github/instructions/packmind-my-standard.instructions.md',
+        agent: 'copilot',
+      });
+
+      expect(result.artifacts['user:standard:my-standard'].files).toHaveLength(
+        1,
+      );
+    });
+  });
+
+  describe('when adopting over an existing entry', () => {
+    let existingLockFile: PackmindLockFile;
+
+    beforeEach(() => {
+      existingLockFile = {
+        lockfileVersion: 2,
+        packageSlugs: ['my-package'],
+        agents: ['copilot'],
+        artifacts: {
+          'user:standard:my-standard': {
+            name: 'My Standard',
+            type: 'standard',
+            id: 'std-1',
+            version: 2,
+            spaceId: 'space-123',
+            packageIds: ['pkg-1'],
+            source: 'user',
+            files: [
+              {
+                path: '.github/instructions/packmind-my-standard.instructions.md',
+                agent: 'copilot',
+              },
+            ],
+          },
+        },
+      };
+
+      adoptArtifactIntoLockFile({
+        lockFile: existingLockFile,
+        artifact,
+        relativeFilePath: '.claude/rules/packmind/standard-my-standard.md',
+        agent: 'claude',
+      });
+    });
+
+    it('keeps the input files untouched', () => {
+      expect(
+        existingLockFile.artifacts['user:standard:my-standard'].files,
+      ).toHaveLength(1);
+    });
+
+    it('keeps the input version untouched', () => {
+      expect(
+        existingLockFile.artifacts['user:standard:my-standard'].version,
+      ).toBe(2);
     });
   });
 });
