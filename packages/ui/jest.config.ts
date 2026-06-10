@@ -16,7 +16,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+    'node_modules/(?!(?:.*[\\\\/])?(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)[@\\\\/]).+\\.[tj]sx?$',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/packages/ui',

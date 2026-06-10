@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "@packmind/assets": "workspace:*",
     "@types/nprogress": "0.2.3",
     "nprogress": "0.2.0"
   }

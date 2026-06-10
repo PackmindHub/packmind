@@ -123,7 +123,7 @@ export const swcTransformWithDecorators = {
  * Standard transformIgnorePatterns for node packages
  */
 export const standardTransformIgnorePatterns = [
-  '/node_modules/(?!slug).+\\.js$',
+  'node_modules/(?!(?:.*[\\\\/])?slug[@\\\\/]).+\\.js$',
 ];
 
 /**
