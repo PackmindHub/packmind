@@ -119,6 +119,7 @@
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.25.4",
+    "@amplitude/analytics-core": "^2.48.2",
     "@amplitude/analytics-node": "^1.5.18",
     "@anthropic-ai/sdk": "^0.78.0",
     "@azure/openai": "^2.0.0",
