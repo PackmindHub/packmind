@@ -17,12 +17,14 @@ import {
   MarketplaceReconciliationJobInput,
   MarketplaceReconciliationJobOutput,
   MarketplaceState,
+  PackmindMarketplaceLock,
   versionFingerprintsEqual,
 } from '@packmind/types';
 import { Job } from 'bullmq';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
 import { fetchMarketplaceDescriptorFile } from '../services/fetchMarketplaceDescriptorFile';
+import { fetchPackmindMarketplaceLock } from '../services/packmindMarketplaceLock';
 import { MARKETPLACE_SYNC_BRANCH } from '../services/marketplaceSyncPullRequest';
 import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
 import { PackageService } from '../services/PackageService';
@@ -73,11 +75,18 @@ const logOrigin = 'MarketplaceReconciliationDelayedJob';
  *  4. Parses the file via `MarketplaceDescriptorParserRegistry`. Parser
  *     failures map to `state='unreachable'` (closest meaningful state per
  *     spec — the descriptor is no longer parseable from the source).
- *  5. Diff against the stored descriptor (deep-equal modulo `raw`):
+ *  5. Confirms pending sync transitions against the default branch:
+ *       - `pending_merge → success` when the `packmind-lock.json` entry's
+ *         contentHash matches the row's (the rolling sync PR merged);
+ *         stamps `publishConfirmedAt`.
+ *       - `to_be_removed → removed` when the slug left the descriptor.
+ *  6. Diff against the stored descriptor (deep-equal modulo `raw`):
  *       - identical → `state='healthy'`
+ *       - changed but explained by transitions confirmed in step 5 →
+ *         `state='healthy'`; persist new descriptor + new pluginCount
  *       - changed   → `state='drift'`; persist new descriptor + new
  *         pluginCount
- *  6. Persist via `IMarketplaceRepository.updateState`.
+ *  7. Persist via `IMarketplaceRepository.updateState`.
  *
  * PII compliance: marketplace name, owner/repo and ids are safe to log; any
  * potential PII (e.g., committer email lifted from descriptor metadata) is
@@ -386,12 +395,80 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     }
 
     // Step 5 — Cross-check `MarketplaceDistribution` rows against the
-    // descriptor's slug set. Two outcomes:
-    //   (a) `to_be_removed` rows whose slug is no longer in the descriptor
+    // descriptor's slug set. Three outcomes:
+    //   (a) `pending_merge` rows whose contentHash matches the default-branch
+    //       `packmind-lock.json` entry are promoted to `success` — proof the
+    //       rolling sync PR merged. Done first so the freshly confirmed rows
+    //       participate in drift/outdated detection below.
+    //   (b) `to_be_removed` rows whose slug is no longer in the descriptor
     //       transition to terminal `removed` (no domain event).
-    //   (b) `success` rows whose slug is absent AND not covered by a
+    //   (c) `success` rows whose slug is absent AND not covered by a
     //       `to_be_removed` row contribute to drift detection.
     const descriptorSlugs = new Set(descriptor.plugins.map((p) => p.slug));
+
+    // (a) Promote `pending_merge → success` for publishes that landed on the
+    // default branch. Best-effort: an unreadable lock postpones confirmation
+    // to the next sweep and must not fail the reconcile.
+    const pendingMergeDistributions =
+      await this.marketplaceDistributionRepository.findPendingMergesByMarketplaceId(
+        marketplace.id,
+      );
+    let defaultBranchLock: PackmindMarketplaceLock | null = null;
+    if (pendingMergeDistributions.length > 0) {
+      try {
+        defaultBranchLock = await fetchPackmindMarketplaceLock(
+          this.gitPort,
+          gitRepo,
+          gitRepo.branch,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `[${this.origin}] Failed to read packmind-lock.json while confirming pending publishes`,
+          { marketplaceId: marketplace.id, error: getErrorMessage(error) },
+        );
+      }
+    }
+    let confirmedPublishes = 0;
+    if (defaultBranchLock) {
+      for (const pendingMerge of pendingMergeDistributions) {
+        const lockEntry = defaultBranchLock.plugins[pendingMerge.pluginSlug];
+        if (
+          !pendingMerge.contentHash ||
+          lockEntry?.contentHash !== pendingMerge.contentHash
+        ) {
+          continue;
+        }
+        try {
+          await this.marketplaceDistributionRepository.updateStatus(
+            pendingMerge.id,
+            {
+              status: DistributionStatus.success,
+              publishConfirmedAt: lastValidatedAt,
+            },
+          );
+          confirmedPublishes += 1;
+          this.logger.info(
+            `[${this.origin}] Marketplace plugin publish confirmed on default branch`,
+            {
+              distributionId: pendingMerge.id,
+              marketplaceId: marketplace.id,
+              fromStatus: DistributionStatus.pending_merge,
+              toStatus: DistributionStatus.success,
+            },
+          );
+        } catch (error) {
+          this.logger.error(
+            `[${this.origin}] Failed to confirm pending publish`,
+            {
+              distributionId: pendingMerge.id,
+              marketplaceId: marketplace.id,
+              error: getErrorMessage(error),
+            },
+          );
+        }
+      }
+    }
+
     const [successDistributions, pendingRemovalDistributions] =
       await Promise.all([
         this.marketplaceDistributionRepository.findSuccessfulByMarketplaceId(
@@ -402,7 +479,8 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
         ),
       ]);
 
-    // (a) Transition `to_be_removed → removed` for slugs that vanished.
+    // (b) Transition `to_be_removed → removed` for slugs that vanished.
+    let confirmedRemovals = 0;
     const pendingRemovalSlugs = new Set<string>();
     for (const pending of pendingRemovalDistributions) {
       pendingRemovalSlugs.add(pending.pluginSlug);
@@ -412,6 +490,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
             pending.id,
             { status: DistributionStatus.removed },
           );
+          confirmedRemovals += 1;
           this.logger.info(
             `[${this.origin}] Marketplace plugin distribution transitioned to terminal removed`,
             {
@@ -434,7 +513,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       }
     }
 
-    // (b) Drift detection (AC9, AC10): a slug carried by a `success`
+    // (c) Drift detection (AC9, AC10): a slug carried by a `success`
     // distribution is missing AND is not in `pendingRemovalSlugs`.
     const driftedPluginSlugs: string[] = [];
     for (const live of successDistributions) {
@@ -449,13 +528,23 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     // Step 6 — Decide final state.
     //   - If `success` slugs went missing without a pending-removal pair →
     //     `drift` (regardless of descriptor diff).
+    //   - A descriptor diff explained by Packmind's own sync PR landing
+    //     (this sweep confirmed pending publishes/removals) is NOT drift —
+    //     the refreshed descriptor is persisted below so the next sweep
+    //     compares against it.
     //   - Else fall back to descriptor diff (`healthy` vs `drift`).
     const descriptorChanged = !descriptorsEquivalent(
       marketplace.descriptor,
       descriptor,
     );
+    const descriptorChangeExplained =
+      confirmedPublishes + confirmedRemovals > 0 &&
+      driftedPluginSlugs.length === 0;
     const state: MarketplaceState =
-      driftedPluginSlugs.length > 0 || descriptorChanged ? 'drift' : 'healthy';
+      driftedPluginSlugs.length > 0 ||
+      (descriptorChanged && !descriptorChangeExplained)
+        ? 'drift'
+        : 'healthy';
 
     // Surface a pending "Packmind sync" PR (poll-on-refresh; cleaned on the
     // next reconcile once the PR is merged/closed). Best-effort: a lookup
@@ -539,6 +628,12 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
       await this.marketplaceRepository.updateState(marketplace.id, {
         state,
         lastValidatedAt,
+        // An explained descriptor change (Packmind's own sync landing) must
+        // refresh the stored baseline, or the next sweep would diff against
+        // the pre-merge descriptor and flag a spurious drift.
+        ...(descriptorChanged
+          ? { descriptor, pluginCount: descriptor.plugins.length }
+          : {}),
         errorKind: null,
         errorDetail: null,
         pendingPrUrl,

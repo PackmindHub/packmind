@@ -241,6 +241,43 @@ export class MarketplaceDistributionRepository
     }
   }
 
+  async findPendingMergesByMarketplaceId(
+    marketplaceId: MarketplaceId,
+  ): Promise<MarketplaceDistribution[]> {
+    this.logger.info(
+      'Finding pending-merge marketplace distributions by marketplace ID',
+      { marketplaceId },
+    );
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('marketplace_distribution')
+        .where('marketplace_distribution.marketplaceId = :marketplaceId', {
+          marketplaceId,
+        })
+        .andWhere('marketplace_distribution.status = :status', {
+          status: DistributionStatus.pending_merge,
+        })
+        .orderBy('marketplace_distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Pending-merge marketplace distributions found by marketplace ID',
+        { marketplaceId, count: rows.length },
+      );
+      return rows;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find pending-merge marketplace distributions',
+        {
+          marketplaceId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
   async findPendingRemovalsByMarketplaceId(
     marketplaceId: MarketplaceId,
   ): Promise<MarketplaceDistribution[]> {
@@ -348,6 +385,9 @@ export class MarketplaceDistributionRepository
       }
       if (patch.versionFingerprint !== undefined) {
         updates.versionFingerprint = patch.versionFingerprint;
+      }
+      if (patch.publishConfirmedAt !== undefined) {
+        updates.publishConfirmedAt = patch.publishConfirmedAt;
       }
 
       const result = await this.repository

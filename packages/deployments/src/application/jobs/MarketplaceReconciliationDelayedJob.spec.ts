@@ -109,6 +109,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
     mockMarketplaceDistributionRepository = {
       findSuccessfulByMarketplaceId: jest.fn().mockResolvedValue([]),
       findPendingRemovalsByMarketplaceId: jest.fn().mockResolvedValue([]),
+      findPendingMergesByMarketplaceId: jest.fn().mockResolvedValue([]),
       updateStatus: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
 
@@ -869,6 +870,225 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         source: 'app',
       }) as unknown as MarketplaceDistribution;
 
+    const buildPendingMergeDistribution = (
+      slug: string,
+      contentHash: string,
+    ): MarketplaceDistribution =>
+      ({
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId: distributionPackageId,
+        pluginSlug: slug,
+        authorId: userId,
+        status: DistributionStatus.pending_merge,
+        source: 'app',
+        contentHash,
+      }) as unknown as MarketplaceDistribution;
+
+    const buildLockContent = (plugins: Record<string, string>): string =>
+      JSON.stringify({
+        schemaVersion: 1,
+        plugins: Object.fromEntries(
+          Object.entries(plugins).map(([slug, contentHash]) => [
+            slug,
+            {
+              version: '1.0.0',
+              contentHash,
+              lastPublishedAt: '2024-01-01T00:00:00Z',
+              lastPublishedBy: userId,
+            },
+          ]),
+        ),
+      });
+
+    describe('pending_merge → success promotion', () => {
+      describe('when a first publish landed on the default branch (lock hash matches)', () => {
+        const pendingMerge = buildPendingMergeDistribution('p3', 'hash-p3');
+        const mergedDescriptor: MarketplaceDescriptor = {
+          ...baseDescriptor,
+          plugins: [
+            ...baseDescriptor.plugins,
+            { slug: 'p3', name: 'Plugin 3' },
+          ],
+        };
+        let result: MarketplaceReconciliationJobOutput;
+
+        beforeEach(async () => {
+          mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) =>
+            path === 'packmind-lock.json'
+              ? {
+                  sha: 'lock-sha',
+                  content: buildLockContent({ p3: 'hash-p3' }),
+                }
+              : {
+                  sha: 'abc',
+                  content: JSON.stringify(mergedDescriptor.raw),
+                },
+          );
+          mockParserRegistry.parse.mockReturnValue(mergedDescriptor);
+          mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+            [pendingMerge],
+          );
+
+          result = await job.runJob('job-pm1', input, new AbortController());
+        });
+
+        it('promotes the pending row to success with a publishConfirmedAt stamp', () => {
+          expect(
+            mockMarketplaceDistributionRepository.updateStatus,
+          ).toHaveBeenCalledWith(pendingMerge.id, {
+            status: DistributionStatus.success,
+            publishConfirmedAt: expect.any(Date),
+          });
+        });
+
+        it('reports healthy — the confirmed publish explains the descriptor diff', () => {
+          expect(result.state).toBe('healthy');
+        });
+
+        it('persists the refreshed descriptor as the new comparison baseline', () => {
+          const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+          expect(patch.pluginCount).toBe(mergedDescriptor.plugins.length);
+        });
+      });
+
+      describe('when an update publish landed (slug already in descriptor, lock hash matches)', () => {
+        const pendingMerge = buildPendingMergeDistribution('p1', 'hash-p1-v2');
+
+        beforeEach(async () => {
+          mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) =>
+            path === 'packmind-lock.json'
+              ? {
+                  sha: 'lock-sha',
+                  content: buildLockContent({ p1: 'hash-p1-v2' }),
+                }
+              : {
+                  sha: 'abc',
+                  content: JSON.stringify(baseDescriptor.raw),
+                },
+          );
+          mockParserRegistry.parse.mockReturnValue({
+            ...baseDescriptor,
+            raw: { reformatted: true },
+          });
+          mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+            [pendingMerge],
+          );
+
+          await job.runJob('job-pm2', input, new AbortController());
+        });
+
+        it('promotes the pending row to success', () => {
+          expect(
+            mockMarketplaceDistributionRepository.updateStatus,
+          ).toHaveBeenCalledWith(pendingMerge.id, {
+            status: DistributionStatus.success,
+            publishConfirmedAt: expect.any(Date),
+          });
+        });
+      });
+
+      describe('when the lock still carries the previous content hash (PR not merged)', () => {
+        const pendingMerge = buildPendingMergeDistribution('p1', 'hash-p1-v2');
+        let result: MarketplaceReconciliationJobOutput;
+
+        beforeEach(async () => {
+          mockGitPort.getFileFromRepo.mockImplementation(async (_repo, path) =>
+            path === 'packmind-lock.json'
+              ? {
+                  sha: 'lock-sha',
+                  content: buildLockContent({ p1: 'hash-p1-v1' }),
+                }
+              : {
+                  sha: 'abc',
+                  content: JSON.stringify(baseDescriptor.raw),
+                },
+          );
+          mockParserRegistry.parse.mockReturnValue({
+            ...baseDescriptor,
+            raw: { reformatted: true },
+          });
+          mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+            [pendingMerge],
+          );
+
+          result = await job.runJob('job-pm3', input, new AbortController());
+        });
+
+        it('leaves the row in pending_merge', () => {
+          expect(
+            mockMarketplaceDistributionRepository.updateStatus,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('keeps the marketplace healthy', () => {
+          expect(result.state).toBe('healthy');
+        });
+      });
+
+      describe('when the lock file cannot be read', () => {
+        const pendingMerge = buildPendingMergeDistribution('p1', 'hash-p1-v2');
+        let result: MarketplaceReconciliationJobOutput;
+
+        beforeEach(async () => {
+          mockGitPort.getFileFromRepo.mockImplementation(
+            async (_repo, path) => {
+              if (path === 'packmind-lock.json') {
+                throw new Error('network blip');
+              }
+              return {
+                sha: 'abc',
+                content: JSON.stringify(baseDescriptor.raw),
+              };
+            },
+          );
+          mockParserRegistry.parse.mockReturnValue({
+            ...baseDescriptor,
+            raw: { reformatted: true },
+          });
+          mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+            [pendingMerge],
+          );
+
+          result = await job.runJob('job-pm4', input, new AbortController());
+        });
+
+        it('postpones the confirmation instead of failing the reconcile', () => {
+          expect(
+            mockMarketplaceDistributionRepository.updateStatus,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('still completes the reconcile as healthy', () => {
+          expect(result.state).toBe('healthy');
+        });
+      });
+
+      describe('when no pending merges exist', () => {
+        beforeEach(async () => {
+          mockGitPort.getFileFromRepo.mockResolvedValue({
+            sha: 'abc',
+            content: JSON.stringify(baseDescriptor.raw),
+          });
+          mockParserRegistry.parse.mockReturnValue({
+            ...baseDescriptor,
+            raw: { reformatted: true },
+          });
+
+          await job.runJob('job-pm5', input, new AbortController());
+        });
+
+        it('does not fetch the lock file', () => {
+          expect(mockGitPort.getFileFromRepo).not.toHaveBeenCalledWith(
+            gitRepo,
+            'packmind-lock.json',
+            gitRepo.branch,
+          );
+        });
+      });
+    });
+
     describe('to_be_removed → removed terminal transition', () => {
       const pending = buildPendingRemovalDistribution('p1');
       let result: MarketplaceReconciliationJobOutput;
@@ -903,14 +1123,17 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       });
 
       it('does not stamp driftedPluginSlugs on this signal alone', () => {
-        // descriptor differs (p1/p2 → p2) so descriptor diff yields drift —
-        // but driftedPluginSlugs must be empty for this case.
         const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
         expect(patch.descriptor?.driftedPluginSlugs).toBeUndefined();
       });
 
-      it('still reports drift due to descriptor diff', () => {
-        expect(result.state).toBe('drift');
+      it('reports healthy — the confirmed removal explains the descriptor diff', () => {
+        expect(result.state).toBe('healthy');
+      });
+
+      it('persists the refreshed descriptor as the new comparison baseline', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.pluginCount).toBe(1);
       });
     });
 
@@ -987,8 +1210,8 @@ describe('MarketplaceReconciliationDelayedJob', () => {
         });
       });
 
-      it('reports drift via descriptor diff path (not slug drift)', () => {
-        expect(result.state).toBe('drift'); // descriptor differs
+      it('reports healthy — the confirmed removal explains the descriptor diff', () => {
+        expect(result.state).toBe('healthy');
       });
     });
 

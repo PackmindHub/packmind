@@ -790,6 +790,85 @@ describe('MarketplaceDistributionRepository', () => {
     });
   });
 
+  describe('findPendingMergesByMarketplaceId', () => {
+    describe('with mixed status and marketplace rows', () => {
+      let pendingMerge: MarketplaceDistribution;
+      let result: MarketplaceDistribution[];
+
+      beforeEach(async () => {
+        pendingMerge = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.pending_merge,
+          }),
+        );
+        // Other status — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.success,
+          }),
+        );
+        // Pending merge on a different marketplace — must be excluded.
+        await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: otherMarketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.pending_merge,
+          }),
+        );
+
+        result = await repository.findPendingMergesByMarketplaceId(
+          marketplace.id,
+        );
+      });
+
+      it('returns exactly one row', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('returns the pending-merge row for the requested marketplace', () => {
+        expect(result[0].id).toEqual(pendingMerge.id);
+      });
+    });
+
+    describe('when no pending merge exists', () => {
+      it('returns an empty array', async () => {
+        const result = await repository.findPendingMergesByMarketplaceId(
+          marketplace.id,
+        );
+        expect(result).toEqual([]);
+      });
+    });
+
+    it('excludes soft-deleted distributions', async () => {
+      const distribution = await repository.add(
+        marketplaceDistributionFactory({
+          organizationId: organization.id,
+          marketplaceId: marketplace.id,
+          packageId: pkg.id,
+          authorId: user.id,
+          status: DistributionStatus.pending_merge,
+        }),
+      );
+      await repository.deleteById(distribution.id);
+
+      const result = await repository.findPendingMergesByMarketplaceId(
+        marketplace.id,
+      );
+
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('findSuccessfulByMarketplaceId', () => {
     describe('with mixed status and marketplace rows', () => {
       let success: MarketplaceDistribution;
@@ -913,6 +992,42 @@ describe('MarketplaceDistributionRepository', () => {
 
       it('leaves failureReason falsy', async () => {
         expect(refreshed?.failureReason).toBeFalsy();
+      });
+
+      it('leaves publishConfirmedAt falsy', async () => {
+        expect(refreshed?.publishConfirmedAt).toBeFalsy();
+      });
+    });
+
+    describe('when a pending_merge row is promoted to success with publishConfirmedAt', () => {
+      const confirmedAt = new Date('2026-06-10T12:00:00Z');
+      let refreshed: MarketplaceDistribution | null;
+
+      beforeEach(async () => {
+        const distribution = await repository.add(
+          marketplaceDistributionFactory({
+            organizationId: organization.id,
+            marketplaceId: marketplace.id,
+            packageId: pkg.id,
+            authorId: user.id,
+            status: DistributionStatus.pending_merge,
+          }),
+        );
+
+        await repository.updateStatus(distribution.id, {
+          status: DistributionStatus.success,
+          publishConfirmedAt: confirmedAt,
+        });
+
+        refreshed = await repository.findById(distribution.id);
+      });
+
+      it('writes the success status', async () => {
+        expect(refreshed?.status).toBe(DistributionStatus.success);
+      });
+
+      it('writes the publishConfirmedAt stamp', async () => {
+        expect(refreshed?.publishConfirmedAt).toEqual(confirmedAt);
       });
     });
 

@@ -27,6 +27,8 @@ export type MarketplaceDistributionStatusUpdate = {
   failureReason?: PublishFailureReason;
   contentHash?: string;
   versionFingerprint?: VersionFingerprint;
+  /** Stamped by reconciliation on the `pending_merge → success` promotion. */
+  publishConfirmedAt?: Date;
 };
 
 /**
@@ -88,6 +90,16 @@ export interface IMarketplaceDistributionRepository extends IRepository<Marketpl
    */
   findActiveByPackageId(
     packageId: PackageId,
+  ): Promise<MarketplaceDistribution[]>;
+
+  /**
+   * Return every (non-soft-deleted) `pending_merge`-state distribution for a
+   * given marketplace. Used by the reconciliation job to drive the
+   * `pending_merge → success` promotion once the rolling sync PR merges
+   * (matched via the default-branch `packmind-lock.json` content hash).
+   */
+  findPendingMergesByMarketplaceId(
+    marketplaceId: MarketplaceId,
   ): Promise<MarketplaceDistribution[]>;
 
   /**
