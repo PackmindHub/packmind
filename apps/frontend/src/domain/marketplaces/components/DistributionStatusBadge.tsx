@@ -51,6 +51,13 @@ const STATUS_PRESENTATION: Record<DistributionStatus, StatusPresentation> = {
     tooltip: 'Publication is running on Packmind.',
     icon: LuLoader,
   },
+  [DistributionStatus.pending_merge]: {
+    label: 'Pending PR review',
+    colorPalette: 'blue',
+    tooltip:
+      'The publish landed on the Packmind sync PR — the plugin goes live once the PR is merged on the marketplace repo.',
+    icon: LuClock,
+  },
   [DistributionStatus.success]: {
     label: 'Published',
     colorPalette: 'green',

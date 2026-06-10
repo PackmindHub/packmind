@@ -2,7 +2,9 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DistributionStatus } from '@packmind/types';
 import type {
+  MarketplaceDistributionListItem,
   MarketplaceId,
   MarketplaceListItem,
   MarketplaceState,
@@ -10,7 +12,25 @@ import type {
 } from '@packmind/types';
 import { MarketplaceDetailsHeader } from './MarketplaceDetailsHeader';
 
+const useMarketplaceDistributionsMock = jest.fn();
+const syncMutateMock = jest.fn();
+
+jest.mock('../api/queries', () => ({
+  useSyncMarketplaceNow: () => ({
+    mutate: syncMutateMock,
+    isPending: false,
+  }),
+  useMarketplaceDistributions: (...args: unknown[]) =>
+    useMarketplaceDistributionsMock(...args),
+}));
+
 const orgId = 'org-1' as OrganizationId;
+
+function makeDistributionWithStatus(
+  status: DistributionStatus,
+): MarketplaceDistributionListItem {
+  return { status } as MarketplaceDistributionListItem;
+}
 
 function makeMarketplace(
   overrides: Partial<MarketplaceListItem> = {},
@@ -45,6 +65,17 @@ function makeMarketplace(
 }
 
 describe('MarketplaceDetailsHeader', () => {
+  beforeEach(() => {
+    useMarketplaceDistributionsMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   const renderHeader = (marketplace: MarketplaceListItem) => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -138,6 +169,60 @@ describe('MarketplaceDetailsHeader', () => {
     it('is absent when there is no pending PR', () => {
       renderHeader(makeMarketplace({ pendingPrUrl: null }));
       expect(screen.queryByTestId('marketplace-pending-pr-panel')).toBeNull();
+    });
+  });
+
+  describe('no-open-sync-PR warning panel', () => {
+    it('warns when a pending publish exists but no sync PR is open', () => {
+      useMarketplaceDistributionsMock.mockReturnValue({
+        data: [makeDistributionWithStatus(DistributionStatus.pending_merge)],
+        isLoading: false,
+      });
+
+      renderHeader(makeMarketplace({ pendingPrUrl: null }));
+
+      expect(
+        screen.getByTestId('marketplace-no-sync-pr-panel'),
+      ).toBeInTheDocument();
+    });
+
+    it('warns when a pending removal exists but no sync PR is open', () => {
+      useMarketplaceDistributionsMock.mockReturnValue({
+        data: [makeDistributionWithStatus(DistributionStatus.to_be_removed)],
+        isLoading: false,
+      });
+
+      renderHeader(makeMarketplace({ pendingPrUrl: null }));
+
+      expect(
+        screen.getByTestId('marketplace-no-sync-pr-panel'),
+      ).toBeInTheDocument();
+    });
+
+    it('is absent while the sync PR is open', () => {
+      useMarketplaceDistributionsMock.mockReturnValue({
+        data: [makeDistributionWithStatus(DistributionStatus.pending_merge)],
+        isLoading: false,
+      });
+
+      renderHeader(
+        makeMarketplace({
+          pendingPrUrl: 'https://github.com/acme/plugins/pull/9',
+        }),
+      );
+
+      expect(screen.queryByTestId('marketplace-no-sync-pr-panel')).toBeNull();
+    });
+
+    it('is absent when no changes await merge', () => {
+      useMarketplaceDistributionsMock.mockReturnValue({
+        data: [makeDistributionWithStatus(DistributionStatus.success)],
+        isLoading: false,
+      });
+
+      renderHeader(makeMarketplace({ pendingPrUrl: null }));
+
+      expect(screen.queryByTestId('marketplace-no-sync-pr-panel')).toBeNull();
     });
   });
 

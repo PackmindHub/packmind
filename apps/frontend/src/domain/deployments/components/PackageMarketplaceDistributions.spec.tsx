@@ -137,6 +137,31 @@ describe('PackageMarketplaceDistributions', () => {
     expect(screen.getByText('Acme Playbook')).toBeInTheDocument();
   });
 
+  it('shows a pending-merge distribution with its badge but no Remove action', () => {
+    useMarketplacesMock.mockReturnValue({
+      data: [makeMarketplace()],
+      isLoading: false,
+    });
+    useMarketplaceDistributionsMock.mockReturnValue({
+      data: [makeDistribution({ status: DistributionStatus.pending_merge })],
+      isLoading: false,
+    });
+
+    renderComponent();
+
+    expect(
+      screen.getByTestId('package-marketplace-row-mkt-1'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        `distribution-status-badge-${DistributionStatus.pending_merge}`,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Remove/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('skips marketplaces where the package has no active distribution', () => {
     useMarketplacesMock.mockReturnValue({
       data: [makeMarketplace()],

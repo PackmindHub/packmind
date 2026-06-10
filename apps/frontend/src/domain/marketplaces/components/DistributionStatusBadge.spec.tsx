@@ -14,6 +14,7 @@ describe('DistributionStatusBadge', () => {
 
   it.each([
     [DistributionStatus.in_progress, 'In progress'],
+    [DistributionStatus.pending_merge, 'Pending PR review'],
     [DistributionStatus.success, 'Published'],
     [DistributionStatus.failure, 'Failed'],
     [DistributionStatus.no_changes, 'No changes'],

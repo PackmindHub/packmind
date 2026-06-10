@@ -9,10 +9,17 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { MarketplaceListItem, OrganizationId } from '@packmind/types';
+import {
+  DistributionStatus,
+  type MarketplaceListItem,
+  type OrganizationId,
+} from '@packmind/types';
 import { LuRefreshCw } from 'react-icons/lu';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
-import { useSyncMarketplaceNow } from '../api/queries';
+import {
+  useMarketplaceDistributions,
+  useSyncMarketplaceNow,
+} from '../api/queries';
 
 export interface MarketplaceDetailsHeaderProps {
   organizationId: OrganizationId | string;
@@ -36,6 +43,19 @@ export const MarketplaceDetailsHeader = ({
   const pendingPrUrl = marketplace.pendingPrUrl;
   const outdatedSlugs = marketplace.outdatedPluginSlugs ?? [];
   const syncMarketplace = useSyncMarketplaceNow(organizationId, marketplace.id);
+  // Shares the table's query (deduped by TanStack Query) to spot changes that
+  // are awaiting merge while no sync PR is open — the PR was likely closed
+  // without merging, or its creation failed.
+  const { data: distributions } = useMarketplaceDistributions(
+    organizationId,
+    marketplace.id,
+  );
+  const hasPendingSyncChanges = (distributions ?? []).some(
+    (distribution) =>
+      distribution.status === DistributionStatus.pending_merge ||
+      distribution.status === DistributionStatus.to_be_removed,
+  );
+  const showNoSyncPrPanel = hasPendingSyncChanges && !pendingPrUrl;
 
   return (
     <PMVStack align="stretch" gap={3}>
@@ -110,6 +130,27 @@ export const MarketplaceDetailsHeader = ({
                 >
                   Review the pull request
                 </PMLink>
+              </PMText>
+            </PMAlert.Description>
+          </PMBox>
+        </PMAlert.Root>
+      )}
+      {showNoSyncPrPanel && (
+        <PMAlert.Root
+          status="warning"
+          data-testid="marketplace-no-sync-pr-panel"
+        >
+          <PMAlert.Indicator />
+          <PMBox>
+            <PMAlert.Title>
+              Pending changes without an open sync PR
+            </PMAlert.Title>
+            <PMAlert.Description>
+              <PMText variant="small">
+                Some publishes or removals are awaiting merge, but no Packmind
+                sync pull request is open on the marketplace repo — it may have
+                been closed without merging, or failed to open. Publishing again
+                reopens it.
               </PMText>
             </PMAlert.Description>
           </PMBox>

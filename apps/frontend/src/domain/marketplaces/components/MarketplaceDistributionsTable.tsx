@@ -81,11 +81,25 @@ export const MarketplaceDistributionsTable = ({
     );
   }
 
+  // "Published" means live on the marketplace: confirmed-success rows and
+  // rows awaiting removal (still live until the deletion merges). A
+  // pending_merge publish is NOT live yet — it is counted separately.
+  const publishedCount = items.filter(
+    (item) =>
+      item.status === DistributionStatus.success ||
+      item.status === DistributionStatus.to_be_removed,
+  ).length;
+  const pendingCount = items.filter(
+    (item) => item.status === DistributionStatus.pending_merge,
+  ).length;
+
   return (
     <PMVStack align="stretch" gap={3} width="full">
       <PMHStack justify="space-between" align="center">
         <PMText variant="small" color="secondary">
-          {items.length} {items.length === 1 ? 'plugin' : 'plugins'} published
+          {`${publishedCount} ${publishedCount === 1 ? 'plugin' : 'plugins'} published${
+            pendingCount > 0 ? ` · ${pendingCount} pending review` : ''
+          }`}
         </PMText>
       </PMHStack>
       <PMBox width="full">
@@ -139,7 +153,9 @@ const DistributionsTableRows = ({
         ),
         publishedAt: (
           <PMText variant="small" color="secondary">
-            {formatPublishedAt(item.createdAt)}
+            {/* The honest go-live date: stamped by reconciliation once the
+                sync PR merges. Pending rows show a dash. */}
+            {formatPublishedAt(item.publishConfirmedAt)}
           </PMText>
         ),
         status: (

@@ -74,9 +74,12 @@ export function MarketplacePublishCompletedSubscription(): null {
       : undefined;
 
     if (status === 'success') {
+      // "success" means the publish job completed: the plugin landed on the
+      // rolling sync PR. It is NOT live until that PR is merged on the
+      // marketplace repo — the copy must not overclaim.
       pmToaster.success({
-        title: 'Publish complete',
-        description: `${labelledPackage} was published as ${labelledPlugin} to ${labelledMarketplace}.`,
+        title: 'Publish submitted for review',
+        description: `${labelledPackage} was submitted as ${labelledPlugin} to ${labelledMarketplace} — it goes live once the sync pull request is merged.`,
         action: prAction,
       });
       return;

@@ -157,6 +157,65 @@ describe('MarketplaceDistributionsTable', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows the pending-PR-review badge for a pending_merge distribution', () => {
+    renderTable([
+      makeDistribution({ status: DistributionStatus.pending_merge }),
+    ]);
+
+    expect(
+      screen.getByTestId(
+        `distribution-status-badge-${DistributionStatus.pending_merge}`,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('does not offer the Remove action for a pending_merge distribution', () => {
+    renderTable([
+      makeDistribution({ status: DistributionStatus.pending_merge }),
+    ]);
+
+    expect(
+      screen.queryByRole('button', { name: /Remove My Package/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a dash instead of a publish date while the publish awaits merge', () => {
+    renderTable([
+      makeDistribution({ status: DistributionStatus.pending_merge }),
+    ]);
+
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('shows the merge-confirmed date for a published distribution', () => {
+    const publishConfirmedAt = new Date('2026-06-05T00:00:00Z');
+    renderTable([
+      makeDistribution({
+        status: DistributionStatus.success,
+        publishConfirmedAt,
+      }),
+    ]);
+
+    expect(
+      screen.getByText(publishConfirmedAt.toLocaleDateString()),
+    ).toBeInTheDocument();
+  });
+
+  it('counts pending publishes separately from published plugins', () => {
+    renderTable([
+      makeDistribution({ status: DistributionStatus.success }),
+      makeDistribution({
+        id: 'dist-2' as MarketplaceDistributionId,
+        pluginSlug: 'plugin-two',
+        status: DistributionStatus.pending_merge,
+      }),
+    ]);
+
+    expect(
+      screen.getByText('1 plugin published · 1 pending review'),
+    ).toBeInTheDocument();
+  });
+
   it('shows a loading state while the query is pending', () => {
     useMarketplaceDistributionsMock.mockReturnValue({
       data: undefined,

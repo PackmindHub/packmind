@@ -106,6 +106,7 @@ const PackageMarketplaceRow = ({
         (d) =>
           d.packageId === packageId &&
           (d.status === DistributionStatus.success ||
+            d.status === DistributionStatus.pending_merge ||
             d.status === DistributionStatus.to_be_removed),
       ),
     [distributions, packageId],
