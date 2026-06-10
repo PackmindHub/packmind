@@ -136,6 +136,113 @@ describe('useRefreshMarketplacesOnOpen', () => {
     });
   });
 
+  describe('when a row fails to refresh', () => {
+    it('still clears refreshingIds for every row', async () => {
+      mockGateway.syncMarketplaceNow.mockImplementation(
+        (_org: OrganizationId, id: MarketplaceId) =>
+          id === ('m1' as MarketplaceId)
+            ? Promise.reject(new Error('boom'))
+            : Promise.resolve(okResponse('healthy')),
+      );
+      const rows = [makeRow('m1', null), makeRow('m2', null)];
+      const client = createClient();
+
+      const { result } = renderHook(
+        () => useRefreshMarketplacesOnOpen(orgId, rows),
+        { wrapper: createWrapper(client) },
+      );
+
+      await waitFor(() => {
+        expect(result.current.refreshingIds.size).toBe(0);
+      });
+    });
+
+    it('keeps draining the queue past the failing row', async () => {
+      mockGateway.syncMarketplaceNow.mockImplementation(
+        (_org: OrganizationId, id: MarketplaceId) =>
+          id === ('m1' as MarketplaceId)
+            ? Promise.reject(new Error('boom'))
+            : Promise.resolve(okResponse('healthy')),
+      );
+      const rows = Array.from({ length: 6 }, (_, i) => makeRow(`m${i}`, null));
+      const client = createClient();
+
+      renderHook(() => useRefreshMarketplacesOnOpen(orgId, rows), {
+        wrapper: createWrapper(client),
+      });
+
+      await waitFor(() => {
+        expect(mockGateway.syncMarketplaceNow).toHaveBeenCalledTimes(6);
+      });
+    });
+  });
+
+  describe('when the page unmounts mid-refresh', () => {
+    it('does not fire reconcile requests for rows still in the queue', async () => {
+      const resolvers: Array<() => void> = [];
+      mockGateway.syncMarketplaceNow.mockImplementation(
+        () =>
+          new Promise<SyncMarketplaceNowResponse>((resolve) => {
+            resolvers.push(() => resolve(okResponse('healthy')));
+          }),
+      );
+      const rows = Array.from({ length: 10 }, (_, i) => makeRow(`m${i}`, null));
+      const client = createClient();
+
+      const { unmount } = renderHook(
+        () => useRefreshMarketplacesOnOpen(orgId, rows),
+        { wrapper: createWrapper(client) },
+      );
+
+      await waitFor(() => {
+        expect(mockGateway.syncMarketplaceNow).toHaveBeenCalledTimes(4);
+      });
+
+      unmount();
+      resolvers.forEach((resolve) => resolve());
+      // Give any (incorrect) queued drains a chance to fire before asserting.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      expect(mockGateway.syncMarketplaceNow).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe('when a refresh reports drift', () => {
+    it('invalidates the list so drifted plugin slugs resync', async () => {
+      mockGateway.syncMarketplaceNow.mockResolvedValue(okResponse('drift'));
+      const rows = [makeRow('m1', null)];
+      const client = createClient();
+      const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
+
+      renderHook(() => useRefreshMarketplacesOnOpen(orgId, rows), {
+        wrapper: createWrapper(client),
+      });
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: marketplaceQueryKeys.list(orgId),
+        });
+      });
+    });
+
+    it('does not invalidate the list for a healthy result', async () => {
+      mockGateway.syncMarketplaceNow.mockResolvedValue(okResponse('healthy'));
+      const rows = [makeRow('m1', null)];
+      const client = createClient();
+      const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
+
+      const { result } = renderHook(
+        () => useRefreshMarketplacesOnOpen(orgId, rows),
+        { wrapper: createWrapper(client) },
+      );
+
+      await waitFor(() => {
+        expect(result.current.refreshingIds.size).toBe(0);
+      });
+      expect(invalidateSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when more rows than the concurrency cap need refreshing', () => {
     it('never exceeds the max in-flight requests', async () => {
       let inFlight = 0;

@@ -6,7 +6,10 @@ import type {
   OrganizationId,
 } from '@packmind/types';
 import { marketplaceGateway } from '../api/gateways';
-import { patchMarketplaceInCache } from '../api/queries/MarketplaceQueries';
+import {
+  marketplaceQueryKeys,
+  patchMarketplaceInCache,
+} from '../api/queries/MarketplaceQueries';
 
 const MAX_CONCURRENCY = 4;
 /** Client-side echo of the server freshness window; avoids firing for rows validated seconds ago. */
@@ -49,6 +52,9 @@ export function useRefreshMarketplacesOnOpen(
     let cancelled = false;
     const queue = [...targets];
     const runOne = async (): Promise<void> => {
+      // Stop draining the queue once the page is gone — queued rows must not
+      // fire server-side reconciliations the user will never see.
+      if (cancelled) return;
       const next = queue.shift();
       if (!next) return;
       try {
@@ -58,6 +64,15 @@ export function useRefreshMarketplacesOnOpen(
         );
         if (!cancelled) {
           patchMarketplaceInCache(queryClient, organizationId, next.id, result);
+          if (result.state === 'drift') {
+            // Drift details (descriptor.driftedPluginSlugs) are not part of
+            // the sync response, so re-fetch the list to pick up the slug
+            // list the reconcile just persisted — mirrors the manual
+            // "Sync now" path which invalidates on every result.
+            void queryClient.invalidateQueries({
+              queryKey: marketplaceQueryKeys.list(organizationId),
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to refresh marketplace on open', next.id, error);
@@ -81,6 +96,10 @@ export function useRefreshMarketplacesOnOpen(
 
     return () => {
       cancelled = true;
+      // Allow a clean re-run on remount (e.g. React StrictMode's dev
+      // double-mount) — otherwise the second mount would skip the refresh
+      // and leave the spinners populated by the first, now-cancelled run.
+      startedRef.current = false;
     };
     // Intentionally run once per mount; `startedRef` guards re-entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
