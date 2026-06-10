@@ -60,9 +60,11 @@ describe('PackageVersionFingerprintService', () => {
   });
 
   describe('when computing the fingerprint of a package', () => {
-    it('picks the highest recipe version when multiple exist', async () => {
-      const result = await service.compute(pkg);
-      expect(result.recipes[recipeIdA]).toBe(3);
+    describe('when a recipe has multiple versions', () => {
+      it('picks the highest version number', async () => {
+        const result = await service.compute(pkg);
+        expect(result.recipes[recipeIdA]).toBe(3);
+      });
     });
 
     it('records each recipe latest version', async () => {
