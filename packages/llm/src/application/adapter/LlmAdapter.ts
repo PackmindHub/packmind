@@ -19,10 +19,8 @@ import {
   GetAiServiceForOrganizationCommand,
   GetAiServiceForOrganizationResponse,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
 import { IAIProviderRepository } from '../../domain/repositories/IAIProviderRepository';
-import { AIProviderRepository } from '../../infra/repositories/AIProviderRepository';
-import { AIProviderSchema } from '../../infra/schemas/AIProviderSchema';
+import { ILlmRepositories } from '../../domain/repositories/ILlmRepositories';
 import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase';
 import { GetLLMConfigurationUseCase } from '../useCases/getLLMConfiguration/GetLLMConfigurationUseCase';
 import { GetModelsUseCase } from '../useCases/getModels/GetModelsUseCase';
@@ -50,7 +48,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   private _getAvailableProviders!: GetAvailableProvidersUseCase;
 
   constructor(
-    private readonly dataSource: DataSource,
+    private readonly llmRepositories: ILlmRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('LlmAdapter constructed - awaiting initialization');
@@ -73,10 +71,8 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       );
     }
 
-    // Initialize repository with dataSource
-    this.aiProviderRepository = new AIProviderRepository(
-      this.dataSource.getRepository(AIProviderSchema),
-    );
+    // Resolve repository from the aggregator
+    this.aiProviderRepository = this.llmRepositories.getAIProviderRepository();
 
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
