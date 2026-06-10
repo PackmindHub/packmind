@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 
 export interface IRecipeRepository extends IRepository<Recipe> {
+  findByIds(ids: RecipeId[], opts?: QueryOption): Promise<Recipe[]>;
   findBySlug(
     slug: string,
     organizationId: OrganizationId,

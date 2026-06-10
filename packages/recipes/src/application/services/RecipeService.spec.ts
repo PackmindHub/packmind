@@ -32,6 +32,7 @@ describe('RecipeService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -145,6 +146,29 @@ describe('RecipeService', () => {
       it('returns null', () => {
         expect(result).toBeNull();
       });
+    });
+  });
+
+  describe('getRecipesByIds', () => {
+    let ids: RecipeId[];
+    let recipes: Recipe[];
+    let result: Recipe[];
+
+    beforeEach(async () => {
+      ids = [createRecipeId(uuidv4()), createRecipeId(uuidv4())];
+      recipes = ids.map((id) => recipeFactory({ id }));
+
+      recipeRepository.findByIds = jest.fn().mockResolvedValue(recipes);
+
+      result = await recipeService.getRecipesByIds(ids);
+    });
+
+    it('queries the repository with the given ids', () => {
+      expect(recipeRepository.findByIds).toHaveBeenCalledWith(ids);
+    });
+
+    it('returns the found recipes', () => {
+      expect(result).toEqual(recipes);
     });
   });
 

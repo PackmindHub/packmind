@@ -338,6 +338,14 @@ export class RecipesAdapter
     return this._getRecipeById.getRecipeById(id);
   }
 
+  /**
+   * Get recipes by IDs without access control (internal use only).
+   * Batch sibling of getRecipeByIdInternal for cross-domain hydration.
+   */
+  public getRecipesByIdsInternal(ids: RecipeId[]): Promise<Recipe[]> {
+    return this._getRecipeById.getRecipesByIds(ids);
+  }
+
   public findRecipeBySlug(
     slug: string,
     organizationId: OrganizationId,

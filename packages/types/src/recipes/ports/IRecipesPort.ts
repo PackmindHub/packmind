@@ -70,6 +70,12 @@ export interface IRecipesPort {
   getRecipeByIdInternal(id: RecipeId): Promise<Recipe | null>;
 
   /**
+   * Get recipes by their IDs (internal use - no access control).
+   * Batch sibling of getRecipeByIdInternal for cross-domain hydration.
+   */
+  getRecipesByIdsInternal(ids: RecipeId[]): Promise<Recipe[]>;
+
+  /**
    * Find a recipe by its slug within an organization
    */
   findRecipeBySlug(

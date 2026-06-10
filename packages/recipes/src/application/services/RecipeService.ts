@@ -146,6 +146,25 @@ export class RecipeService {
     }
   }
 
+  async getRecipesByIds(ids: RecipeId[]): Promise<Recipe[]> {
+    this.logger.info('Getting recipes by IDs', { count: ids.length });
+
+    try {
+      const recipes = await this.recipeRepository.findByIds(ids);
+      this.logger.info('Recipes retrieved by IDs', {
+        requested: ids.length,
+        found: recipes.length,
+      });
+      return recipes;
+    } catch (error) {
+      this.logger.error('Failed to get recipes by IDs', {
+        count: ids.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findRecipeBySlug(
     slug: string,
     organizationId: OrganizationId,
