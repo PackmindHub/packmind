@@ -27,13 +27,21 @@ jobs:
         with:
           fetch-depth: 1
 
+      - uses: pnpm/action-setup@v4
+
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       # tsconfig.base.effective.json is git-ignored, so generate it before Nx
       # builds its project graph (the vite/vitest plugins parse every project's
@@ -46,4 +54,4 @@ jobs:
       # Generates tsconfig.arch.json and runs the dedicated `arch` Nx target.
       # PACKMIND_EDITION=oss is set by the test:arch script itself.
       - name: Run architecture tests
-        run: npm run test:arch
+        run: pnpm run test:arch
