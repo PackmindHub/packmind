@@ -1,12 +1,19 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
+  IRecipesPort,
+  ISkillsPort,
+  ISpacesPort,
+  IStandardsPort,
   Package,
   PackageId,
   PackageWithArtefacts,
+  Recipe,
   RecipeId,
-  SpaceId,
-  StandardId,
+  Skill,
   SkillId,
+  SpaceId,
+  Standard,
+  StandardId,
   UserId,
   OrganizationId,
 } from '@packmind/types';
@@ -15,6 +22,11 @@ import { IPackageRepository } from '../../domain/repositories/IPackageRepository
 const origin = 'PackageService';
 
 export class PackageService {
+  private recipesPort: IRecipesPort | null = null;
+  private standardsPort: IStandardsPort | null = null;
+  private skillsPort: ISkillsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
+
   constructor(
     private readonly packageRepository: IPackageRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -23,6 +35,23 @@ export class PackageService {
     ),
   ) {
     this.logger.info('PackageService initialized');
+  }
+
+  /**
+   * Lazily wire the cross-domain ports used to hydrate package artefacts. The
+   * adapter calls this once the HexaRegistry has resolved the ports, since they
+   * are not available when DeploymentsServices constructs this service.
+   */
+  setArtefactPorts(ports: {
+    recipesPort: IRecipesPort;
+    standardsPort: IStandardsPort;
+    skillsPort: ISkillsPort;
+    spacesPort: ISpacesPort;
+  }): void {
+    this.recipesPort = ports.recipesPort;
+    this.standardsPort = ports.standardsPort;
+    this.skillsPort = ports.skillsPort;
+    this.spacesPort = ports.spacesPort;
   }
 
   async findById(packageId: PackageId): Promise<Package | null> {
@@ -114,17 +143,22 @@ export class PackageService {
     });
 
     try {
-      const packages = await this.packageRepository.findBySlugsWithArtefacts(
+      const spacesPort = this.requirePort(this.spacesPort, 'spacesPort');
+      const spaces = await spacesPort.listSpacesByOrganization(organizationId);
+      const spaceIds = spaces.map((space) => space.id);
+
+      const packages = await this.packageRepository.findBySlugsAndSpaceIds(
         slugs,
-        organizationId,
+        spaceIds,
       );
+      const result = await this.enrichWithArtefacts(packages);
 
       this.logger.info('Packages found by slugs with artefacts successfully', {
         requestedCount: slugs.length,
-        foundCount: packages.length,
+        foundCount: result.length,
       });
 
-      return packages;
+      return result;
     } catch (error) {
       this.logger.error('Failed to get packages by slugs with artefacts', {
         slugs,
@@ -145,21 +179,21 @@ export class PackageService {
     });
 
     try {
-      const packages =
-        await this.packageRepository.findBySlugsAndSpaceWithArtefacts(
-          slugs,
-          spaceId,
-        );
+      const packages = await this.packageRepository.findBySlugsAndSpaceIds(
+        slugs,
+        [spaceId],
+      );
+      const result = await this.enrichWithArtefacts(packages);
 
       this.logger.info(
         'Packages found by slugs and space with artefacts successfully',
         {
           requestedCount: slugs.length,
-          foundCount: packages.length,
+          foundCount: result.length,
         },
       );
 
-      return packages;
+      return result;
     } catch (error) {
       this.logger.error(
         'Failed to get packages by slugs and space with artefacts',
@@ -171,6 +205,106 @@ export class PackageService {
       );
       throw error;
     }
+  }
+
+  private requirePort<T>(port: T | null, name: string): T {
+    if (port == null) {
+      throw new Error(
+        `PackageService: ${name} is not set. Call setArtefactPorts() before hydrating package artefacts.`,
+      );
+    }
+    return port;
+  }
+
+  /**
+   * Hydrate packages that carry only artefact IDs into full
+   * `PackageWithArtefacts` by fetching each recipe/standard/skill through its
+   * domain port. Cross-domain reads stay in the application layer (never the
+   * repository), wired via `@packmind/types` ports.
+   */
+  private async enrichWithArtefacts(
+    packages: Package[],
+  ): Promise<PackageWithArtefacts[]> {
+    if (packages.length === 0) {
+      return [];
+    }
+
+    const recipesPort = this.requirePort(this.recipesPort, 'recipesPort');
+    const standardsPort = this.requirePort(this.standardsPort, 'standardsPort');
+    const skillsPort = this.requirePort(this.skillsPort, 'skillsPort');
+
+    const uniqueRecipeIds = [...new Set(packages.flatMap((p) => p.recipes))];
+    const uniqueStandardIds = [
+      ...new Set(packages.flatMap((p) => p.standards)),
+    ];
+    const uniqueSkillIds = [...new Set(packages.flatMap((p) => p.skills))];
+
+    const [recipeEntries, standardEntries, skillEntries] = await Promise.all([
+      Promise.all(
+        uniqueRecipeIds.map(
+          async (id) =>
+            [id, await recipesPort.getRecipeByIdInternal(id)] as const,
+        ),
+      ),
+      Promise.all(
+        uniqueStandardIds.map(
+          async (id) =>
+            [
+              id,
+              await this.loadStandardWithSummary(standardsPort, id),
+            ] as const,
+        ),
+      ),
+      Promise.all(
+        uniqueSkillIds.map(
+          async (id) => [id, await skillsPort.getSkill(id)] as const,
+        ),
+      ),
+    ]);
+
+    const recipesMap = new Map<string, Recipe>();
+    for (const [id, recipe] of recipeEntries) {
+      if (recipe) recipesMap.set(id, recipe);
+    }
+    const standardsMap = new Map<string, Standard>();
+    for (const [id, standard] of standardEntries) {
+      if (standard) standardsMap.set(id, standard);
+    }
+    const skillsMap = new Map<string, Skill>();
+    for (const [id, skill] of skillEntries) {
+      if (skill) skillsMap.set(id, skill);
+    }
+
+    return packages.map((pkg) => ({
+      ...pkg,
+      recipes: pkg.recipes
+        .map((id) => recipesMap.get(id))
+        .filter((r): r is Recipe => r != null),
+      standards: pkg.standards
+        .map((id) => standardsMap.get(id))
+        .filter((s): s is Standard => s != null),
+      skills: pkg.skills
+        .map((id) => skillsMap.get(id))
+        .filter((s): s is Skill => s != null),
+    }));
+  }
+
+  /**
+   * Fetch a standard and attach the summary of its current version, mirroring
+   * the previous repository behaviour (summary taken from the StandardVersion
+   * matching the standard's `version`).
+   */
+  private async loadStandardWithSummary(
+    standardsPort: IStandardsPort,
+    id: StandardId,
+  ): Promise<Standard | null> {
+    const standard = await standardsPort.getStandard(id);
+    if (!standard) {
+      return null;
+    }
+    const versions = await standardsPort.listStandardVersions(id);
+    const currentVersion = versions.find((v) => v.version === standard.version);
+    return { ...standard, summary: currentVersion?.summary ?? undefined };
   }
 
   async createPackage(

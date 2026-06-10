@@ -9,6 +9,8 @@ import {
   GenerateRemovalUpdatesResponse,
   PreviewArtifactRenderingCommand,
   PreviewArtifactRenderingResponse,
+  RenderPackageAsClaudePluginCommand,
+  RenderPackageAsClaudePluginResponse,
 } from '../contracts';
 import { ICodingAgentDeployerRegistry } from '../ICodingAgentDeployerRegistry';
 import { CodingAgent } from '../CodingAgent';
@@ -67,4 +69,14 @@ export interface ICodingAgentPort {
   previewArtifactRendering(
     command: PreviewArtifactRenderingCommand,
   ): Promise<PreviewArtifactRenderingResponse>;
+
+  /**
+   * Render a single Packmind package as a Claude plugin (manifest, commands and
+   * skills). Standards are intentionally skipped; the count is surfaced in the
+   * response. Encapsulates the plugin deployer so callers in other domains never
+   * import coding-agent source directly.
+   */
+  renderPackageAsClaudePlugin(
+    command: RenderPackageAsClaudePluginCommand,
+  ): Promise<RenderPackageAsClaudePluginResponse>;
 }

@@ -1,7 +1,6 @@
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import {
   CodingAgent,
   DownloadSkillZipForAgentCommand,
@@ -59,9 +58,7 @@ export class DownloadSkillZipForAgentUseCase implements IDownloadSkillZipForAgen
     const skillVersionWithFiles = { ...latestVersion, files };
 
     const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
-    const deployer = deployerRegistry.getDeployer(
-      agent,
-    ) as ICodingAgentDeployer;
+    const deployer = deployerRegistry.getDeployer(agent);
 
     const fileUpdates = await deployer.generateFileUpdatesForSkills([
       skillVersionWithFiles,

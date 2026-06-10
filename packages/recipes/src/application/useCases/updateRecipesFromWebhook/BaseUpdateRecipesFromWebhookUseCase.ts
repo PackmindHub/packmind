@@ -6,7 +6,7 @@ import {
   OrganizationId,
   Recipe,
 } from '@packmind/types';
-import { IRecipesDelayedJobs } from '../../../domain/jobs/IRecipesDelayedJobs';
+import { IRecipesDelayedJobs } from '../../jobs/IRecipesDelayedJobs';
 import { RecipeService } from '../../services/RecipeService';
 
 export interface CommonRepoData {

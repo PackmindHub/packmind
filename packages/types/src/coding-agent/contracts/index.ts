@@ -3,3 +3,4 @@ export * from './IDeployArtifactsForAgents';
 export * from './IGenerateRemovalUpdates';
 export * from './IGenerateAgentCleanupUpdates';
 export * from './IPreviewArtifactRendering';
+export * from './IRenderPackageAsClaudePlugin';

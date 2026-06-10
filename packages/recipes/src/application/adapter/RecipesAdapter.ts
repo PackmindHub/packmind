@@ -35,7 +35,7 @@ import {
   UserId,
   UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
-import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
+import { IRecipesDelayedJobs } from '../jobs/IRecipesDelayedJobs';
 import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactory';
 import { UpdateRecipesAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesServices } from '../services/RecipesServices';

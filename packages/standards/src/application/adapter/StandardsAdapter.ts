@@ -45,7 +45,7 @@ import {
   UpdateStandardCommand,
   UserId,
 } from '@packmind/types';
-import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
+import { IStandardDelayedJobs } from '../jobs/IStandardDelayedJobs';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { GetRuleExamplesCommand } from '../../domain/useCases';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';

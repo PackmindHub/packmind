@@ -37,7 +37,7 @@ import {
   QueryOption,
   UserId,
 } from '@packmind/types';
-import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
+import { IGitDelayedJobs } from '../jobs/IGitDelayedJobs';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
 import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/AddGitProviderUseCase';
