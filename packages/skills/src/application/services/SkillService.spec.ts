@@ -31,6 +31,7 @@ describe('SkillService', () => {
       add: jest.fn(),
       addMany: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       findBySlug: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -154,6 +155,29 @@ describe('SkillService', () => {
       it('returns null', () => {
         expect(result).toBeNull();
       });
+    });
+  });
+
+  describe('getSkillsByIds', () => {
+    let ids: SkillId[];
+    let skills: Skill[];
+    let result: Skill[];
+
+    beforeEach(async () => {
+      ids = [createSkillId(uuidv4()), createSkillId(uuidv4())];
+      skills = ids.map((id) => skillFactory({ id }));
+
+      skillRepository.findByIds = jest.fn().mockResolvedValue(skills);
+
+      result = await skillService.getSkillsByIds(ids);
+    });
+
+    it('queries the repository with the given ids', () => {
+      expect(skillRepository.findByIds).toHaveBeenCalledWith(ids);
+    });
+
+    it('returns the found skills', () => {
+      expect(result).toEqual(skills);
     });
   });
 

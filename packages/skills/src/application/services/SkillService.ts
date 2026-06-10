@@ -116,6 +116,25 @@ export class SkillService {
     }
   }
 
+  async getSkillsByIds(ids: SkillId[]): Promise<Skill[]> {
+    this.logger.info('Getting skills by IDs', { count: ids.length });
+
+    try {
+      const skills = await this.skillRepository.findByIds(ids);
+      this.logger.info('Skills retrieved by IDs', {
+        requested: ids.length,
+        found: skills.length,
+      });
+      return skills;
+    } catch (error) {
+      this.logger.error('Failed to get skills by IDs', {
+        count: ids.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findSkillBySlug(
     slug: string,
     organizationId: OrganizationId,
