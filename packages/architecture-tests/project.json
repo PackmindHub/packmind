@@ -7,7 +7,21 @@
   "targets": {
     "arch": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/packages/*/src/**/*.ts",
+        "{workspaceRoot}/apps/api/src/**/*.ts",
+        "{workspaceRoot}/packages/architecture-tests/src/**/*.ts",
+        "{workspaceRoot}/packages/architecture-tests/jest.arch.config.ts",
+        "{workspaceRoot}/scripts/build-arch-tsconfig.mjs",
+        "{workspaceRoot}/scripts/select-tsconfig.mjs",
+        "{workspaceRoot}/tsconfig.base.json",
+        "{workspaceRoot}/jest.preset.ts",
+        "{workspaceRoot}/jest-utils.ts",
+        { "env": "PACKMIND_EDITION" },
+        { "externalDependencies": ["archunit", "jest"] }
+      ],
+      "outputs": [],
       "options": {
         "parallel": false,
         "commands": [
