@@ -5,13 +5,13 @@ import {
   GitProviderDisplayNameNotEditableError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GithubAppMode,
   IAccountsPort,
   IUpdateGitProviderUseCase,
   UpdateGitProviderCommand,
   UpdateGitProviderResponse,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 import {
   ensureDisplayNameAvailable,

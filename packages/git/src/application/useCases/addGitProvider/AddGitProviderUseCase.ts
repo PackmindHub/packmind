@@ -3,11 +3,11 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   GitProvider,
+  GithubAppMode,
   IAccountsPort,
   IAddGitProviderUseCase,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 import {
   ensureDisplayNameAvailable,

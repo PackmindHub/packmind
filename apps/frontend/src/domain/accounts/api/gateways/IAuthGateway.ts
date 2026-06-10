@@ -1,4 +1,5 @@
 import {
+  GithubAppMode,
   OrganizationId,
   UserId,
   UserOrganizationMembership,
@@ -30,7 +31,7 @@ export interface SignOutResponse {
   message: string;
 }
 
-export type GithubAppMode = 'on-prem' | 'shared';
+export type { GithubAppMode };
 
 type EditionFlag = {
   edition: 'cloud' | 'oss';

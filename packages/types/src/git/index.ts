@@ -1,3 +1,4 @@
+export * from './GithubAppMode';
 export * from './GitRepoId';
 export * from './GitCommit';
 export * from './GitProvider';
