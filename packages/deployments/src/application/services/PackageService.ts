@@ -132,6 +132,12 @@ export class PackageService {
     }
   }
 
+  /**
+   * Precondition: `setArtefactPorts()` must have been called first (done by
+   * `DeploymentsAdapter.initialize` once the HexaRegistry has resolved the
+   * cross-domain ports). Calling this before the ports are wired throws via
+   * `requirePort`.
+   */
   async getPackagesBySlugsWithArtefacts(
     slugs: string[],
     organizationId: OrganizationId,
@@ -168,6 +174,11 @@ export class PackageService {
     }
   }
 
+  /**
+   * Precondition: `setArtefactPorts()` must have been called first (see
+   * {@link getPackagesBySlugsWithArtefacts}). Calling this before the ports
+   * are wired throws via `requirePort`.
+   */
   async getPackagesBySlugsAndSpaceWithArtefacts(
     slugs: string[],
     spaceId: SpaceId,
@@ -218,9 +229,13 @@ export class PackageService {
 
   /**
    * Hydrate packages that carry only artefact IDs into full
-   * `PackageWithArtefacts` by fetching each recipe/standard/skill through its
-   * domain port. Cross-domain reads stay in the application layer (never the
+   * `PackageWithArtefacts` by fetching recipes/standards/skills through their
+   * domain ports. Cross-domain reads stay in the application layer (never the
    * repository), wired via `@packmind/types` ports.
+   *
+   * Each artefact type is resolved in a single batched port call (one query
+   * apiece, plus one for standard-version summaries) rather than per-id, so a
+   * package with many artefacts does not fan out into O(N) cross-domain reads.
    */
   private async enrichWithArtefacts(
     packages: Package[],
@@ -239,41 +254,23 @@ export class PackageService {
     ];
     const uniqueSkillIds = [...new Set(packages.flatMap((p) => p.skills))];
 
-    const [recipeEntries, standardEntries, skillEntries] = await Promise.all([
-      Promise.all(
-        uniqueRecipeIds.map(
-          async (id) =>
-            [id, await recipesPort.getRecipeByIdInternal(id)] as const,
-        ),
-      ),
-      Promise.all(
-        uniqueStandardIds.map(
-          async (id) =>
-            [
-              id,
-              await this.loadStandardWithSummary(standardsPort, id),
-            ] as const,
-        ),
-      ),
-      Promise.all(
-        uniqueSkillIds.map(
-          async (id) => [id, await skillsPort.getSkill(id)] as const,
-        ),
-      ),
+    const [recipes, standards, skills] = await Promise.all([
+      uniqueRecipeIds.length > 0
+        ? recipesPort.getRecipesByIdsInternal(uniqueRecipeIds)
+        : Promise.resolve<Recipe[]>([]),
+      uniqueStandardIds.length > 0
+        ? standardsPort.getStandardsByIds(uniqueStandardIds)
+        : Promise.resolve<Standard[]>([]),
+      uniqueSkillIds.length > 0
+        ? skillsPort.getSkillsByIds(uniqueSkillIds)
+        : Promise.resolve<Skill[]>([]),
     ]);
 
-    const recipesMap = new Map<string, Recipe>();
-    for (const [id, recipe] of recipeEntries) {
-      if (recipe) recipesMap.set(id, recipe);
-    }
-    const standardsMap = new Map<string, Standard>();
-    for (const [id, standard] of standardEntries) {
-      if (standard) standardsMap.set(id, standard);
-    }
-    const skillsMap = new Map<string, Skill>();
-    for (const [id, skill] of skillEntries) {
-      if (skill) skillsMap.set(id, skill);
-    }
+    const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
+    const standardsMap = new Map<string, Standard>(
+      standards.map((s) => [s.id, s]),
+    );
+    const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
 
     return packages.map((pkg) => ({
       ...pkg,
@@ -287,24 +284,6 @@ export class PackageService {
         .map((id) => skillsMap.get(id))
         .filter((s): s is Skill => s != null),
     }));
-  }
-
-  /**
-   * Fetch a standard and attach the summary of its current version, mirroring
-   * the previous repository behaviour (summary taken from the StandardVersion
-   * matching the standard's `version`).
-   */
-  private async loadStandardWithSummary(
-    standardsPort: IStandardsPort,
-    id: StandardId,
-  ): Promise<Standard | null> {
-    const standard = await standardsPort.getStandard(id);
-    if (!standard) {
-      return null;
-    }
-    const versions = await standardsPort.listStandardVersions(id);
-    const currentVersion = versions.find((v) => v.version === standard.version);
-    return { ...standard, summary: currentVersion?.summary ?? undefined };
   }
 
   async createPackage(
