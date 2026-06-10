@@ -25,6 +25,8 @@ allowBuilds:
 
 # Moved from .npmrc (pnpm 11 keeps only registry/auth settings in .npmrc)
 packageManagerStrict: false
+# Fail (not warn) if the active Node version doesn't satisfy package.json "engines.node"
+engineStrict: true
 autoInstallPeers: true
 strictPeerDependencies: false
 shamefullyHoist: false
