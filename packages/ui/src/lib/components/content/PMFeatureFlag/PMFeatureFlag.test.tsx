@@ -4,7 +4,6 @@ import '@testing-library/jest-dom';
 import {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
   PMFeatureFlag,
   isFeatureFlagEnabled,
 } from './PMFeatureFlag';
@@ -114,25 +113,5 @@ describe('PMFeatureFlag', () => {
     });
 
     expect(isEnabled).toBe(true);
-  });
-
-  it('enables the github-app feature for allowed domains', () => {
-    const isEnabled = isFeatureFlagEnabled({
-      featureKeys: [GITHUB_APP_FEATURE_KEY],
-      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-      userEmail: 'member@packmind.com',
-    });
-
-    expect(isEnabled).toBe(true);
-  });
-
-  it('disables the github-app feature for non-allowed domains', () => {
-    const isEnabled = isFeatureFlagEnabled({
-      featureKeys: [GITHUB_APP_FEATURE_KEY],
-      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-      userEmail: 'member@externaldomain.com',
-    });
-
-    expect(isEnabled).toBe(false);
   });
 });
