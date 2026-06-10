@@ -3,7 +3,7 @@ alwaysApply: true
 ---
 # Standard: Use Case Architecture Patterns
 
-Standardize Packmind monorepo use case contracts and implementations using hexagonal architecture with typed Command/Response interfaces, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase patterns to enforce consistent authentication/authorization, separation of concerns, and type-safe command passing. :
+Standardize Packmind monorepo hexagonal-architecture use cases with contract-per-file Command/Response/IUseCase types, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand inputs, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase execution methods to enforce consistent auth validation, separation of concerns, and type-safe command passing. :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
 * Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both
@@ -15,7 +15,9 @@ Standardize Packmind monorepo use case contracts and implementations using hexag
 * Implement IPublicUseCase interface directly with an execute method for public use cases that don't require authentication, without extending any abstract use case class
 * Never directly call Repositories in Adapter classes, repos must be called from Use Cases
 * Never spread commands as multiple arguments in hexagon or UseCase classes; always pass the complete command object to maintain type safety and reduce errors
+* Response and Commands must not be defined in the same file than the associated UseCase class
 * Restrict use case classes to expose only the execute method for public use cases or executeForMembers/executeForAdmins methods for member/admin use cases, with no other public methods
 * Reuse existing use cases through port/adapter interfaces instead of instantiating them directly within use cases
+* UseCase must be associated with a Command and Response type
 
 Full standard is available here for further request: [Use Case Architecture Patterns](../../../.packmind/standards/use-case-architecture-patterns.md)
