@@ -649,7 +649,7 @@ describe('MarketplaceDistributionRepository', () => {
   });
 
   describe('findActiveByPackageId', () => {
-    it('returns only success-state distributions for the package', async () => {
+    it('returns success and pending_merge distributions for the package', async () => {
       const liveA = await repository.add(
         marketplaceDistributionFactory({
           organizationId: organization.id,
@@ -665,10 +665,10 @@ describe('MarketplaceDistributionRepository', () => {
           marketplaceId: otherMarketplace.id,
           packageId: pkg.id,
           authorId: user.id,
-          status: DistributionStatus.success,
+          status: DistributionStatus.pending_merge,
         }),
       );
-      // Non-success row — must be excluded.
+      // Neither success nor pending_merge — must be excluded.
       await repository.add(
         marketplaceDistributionFactory({
           organizationId: organization.id,

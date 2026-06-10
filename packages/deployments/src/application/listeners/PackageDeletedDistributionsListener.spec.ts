@@ -285,6 +285,45 @@ describe('PackageDeletedDistributionsListener', () => {
     });
   });
 
+  describe('when a pending_merge distribution exists for the deleted package', () => {
+    const pendingMerge = buildSuccessDistribution({
+      status: DistributionStatus.pending_merge,
+    });
+
+    beforeEach(async () => {
+      mockMarketplaceDistributionRepository.findActiveByPackageId.mockResolvedValue(
+        [pendingMerge],
+      );
+
+      eventService.emit(
+        new PackagesDeletedEvent({
+          userId,
+          organizationId,
+          packageIds: [packageId],
+          spaceId,
+        }),
+      );
+
+      await waitForHandlers();
+    });
+
+    it('flips the pending publish to to_be_removed so the sync branch gets reverted', () => {
+      expect(
+        mockMarketplaceDistributionRepository.updateStatus,
+      ).toHaveBeenCalledWith(pendingMerge.id, {
+        status: DistributionStatus.to_be_removed,
+      });
+    });
+
+    it('enqueues the removal job for the cascaded pending publish', () => {
+      expect(mockRemovalJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          marketplaceDistributionId: pendingMerge.id,
+        }),
+      );
+    });
+  });
+
   describe('when the event carries multiple package ids', () => {
     const distFromPkg1 = buildSuccessDistribution({ packageId });
     const distFromPkg2 = buildSuccessDistribution({

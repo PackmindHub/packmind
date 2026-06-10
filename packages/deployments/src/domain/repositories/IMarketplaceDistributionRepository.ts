@@ -84,9 +84,11 @@ export interface IMarketplaceDistributionRepository extends IRepository<Marketpl
   ): Promise<MarketplaceDistribution | null>;
 
   /**
-   * Return every (non-soft-deleted) `success`-state distribution for a given
-   * package across all marketplaces. Used by the package-delete cascade
-   * listener to flip every active distribution to `to_be_removed`.
+   * Return every (non-soft-deleted) `success` or `pending_merge` distribution
+   * for a given package across all marketplaces. Used by the package-delete
+   * cascade listener to flip every active distribution to `to_be_removed` —
+   * a pending publish must be cascaded too, or deleting its package would
+   * strand the plugin on the rolling sync branch and its open PR.
    */
   findActiveByPackageId(
     packageId: PackageId,

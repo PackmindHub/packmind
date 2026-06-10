@@ -28,9 +28,9 @@ export type PackageDeletedDistributionsAdapter = {
  *
  *  - Subscribes to `PackagesDeletedEvent` (emitted by
  *    `DeletePackagesBatchUseCase`).
- *  - For each deleted package, looks up every `success`-state distribution
- *    via `findActiveByPackageId` (the `success` filter skips already
- *    `to_be_removed` rows so the listener is idempotent on retries).
+ *  - For each deleted package, looks up every `success` or `pending_merge`
+ *    distribution via `findActiveByPackageId` (the status filter skips
+ *    already `to_be_removed` rows so the listener is idempotent on retries).
  *  - Transitions each one to `to_be_removed`, emits
  *    `MarketplacePluginRemovalInitiatedEvent` with
  *    `trigger='from_packmind_package'`, and enqueues
@@ -108,9 +108,14 @@ export class PackageDeletedDistributionsListener extends PackmindListener<Packag
     const packageSlug = pkg?.slug ?? '';
 
     for (const distribution of liveDistributions) {
-      // Defensive: findActiveByPackageId already filters on success, but the
-      // contract is explicit so we double-check.
-      if (distribution.status !== DistributionStatus.success) {
+      // Defensive: findActiveByPackageId already filters on
+      // success/pending_merge, but the contract is explicit so we
+      // double-check. A pending_merge row is cascaded too — its plugin files
+      // already sit on the rolling sync branch and must be reverted.
+      if (
+        distribution.status !== DistributionStatus.success &&
+        distribution.status !== DistributionStatus.pending_merge
+      ) {
         continue;
       }
 
@@ -160,7 +165,7 @@ export class PackageDeletedDistributionsListener extends PackmindListener<Packag
         {
           distributionId: distribution.id,
           marketplaceId: distribution.marketplaceId,
-          fromStatus: DistributionStatus.success,
+          fromStatus: distribution.status,
           toStatus: DistributionStatus.to_be_removed,
         },
       );

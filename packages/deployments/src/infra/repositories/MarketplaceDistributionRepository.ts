@@ -208,7 +208,7 @@ export class MarketplaceDistributionRepository
     packageId: PackageId,
   ): Promise<MarketplaceDistribution[]> {
     this.logger.info(
-      'Finding active (success-state) marketplace distributions by package ID',
+      'Finding active (success or pending_merge) marketplace distributions by package ID',
       { packageId },
     );
 
@@ -218,8 +218,11 @@ export class MarketplaceDistributionRepository
         .where('marketplace_distribution.packageId = :packageId', {
           packageId,
         })
-        .andWhere('marketplace_distribution.status = :status', {
-          status: DistributionStatus.success,
+        .andWhere('marketplace_distribution.status IN (:...statuses)', {
+          statuses: [
+            DistributionStatus.success,
+            DistributionStatus.pending_merge,
+          ],
         })
         .orderBy('marketplace_distribution.createdAt', 'DESC')
         .getMany();
