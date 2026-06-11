@@ -3,6 +3,7 @@ import {
   camelToKebab,
   CAMEL_TO_YAML_KEY,
   CLAUDE_CODE_ADDITIONAL_FIELDS,
+  CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER,
   COPILOT_ADDITIONAL_FIELDS,
   CURSOR_ADDITIONAL_FIELDS,
   filterAdditionalProperties,
@@ -92,6 +93,21 @@ describe('CAMEL_TO_YAML_KEY', () => {
       shell: 'shell',
       disallowedTools: 'disallowed-tools',
     });
+  });
+});
+
+describe('CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER', () => {
+  it('has disallowedTools as the last element', () => {
+    const last =
+      CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER[
+        CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.length - 1
+      ];
+    expect(last).toBe('disallowedTools');
+  });
+
+  it('places shell immediately before disallowedTools', () => {
+    const idx = CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER.indexOf('disallowedTools');
+    expect(CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER[idx - 1]).toBe('shell');
   });
 });
 
