@@ -16,11 +16,34 @@
 #    Compose merges `volumes` by append, so we cannot drop the dev-node_modules
 #    mount that masks the host node_modules — hence we keep the install but make
 #    it offline-fast rather than skipping it.
+#
+# 3. Nx daemon + watcher tuning: the base gates frontend/backend/mcp-server on
+#    nx-daemon's service_healthy, so the nx-daemon healthcheck must STAY enabled
+#    (it is a trivial `test -S` socket probe, not one of the flaky exec checks
+#    concern #1 targets) — disabling it broke the gating and every app service
+#    raced the socket, fell back to "WITHOUT daemon", and cold-computed its own
+#    project graph. We also switch the file watchers from polling to native:
+#    the repo is a plain local bind mount on the Fly Machine (same kernel), so
+#    inotify works, and 1s full-tree polling over fuse-overlayfs burns CPU for
+#    nothing on a one-shot worker.
+x-michel-watch-env: &michel-watch-env
+  NX_WATCHER: native
+  CHOKIDAR_USEPOLLING: '0'
+
 services:
   nx-daemon:
     image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
+    # Wider window than the base (30x1s): a cold worker computes the project
+    # graph from scratch, and if the socket misses the window the app services'
+    # service_healthy deps ABORT the stack rather than fall back.
     healthcheck:
-      disable: true
+      test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
+      interval: 2s
+      timeout: 1s
+      retries: 90
+      start_period: 5s
   postgres:
     healthcheck:
       disable: true
@@ -29,6 +52,8 @@ services:
       disable: true
   frontend:
     image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
     healthcheck:
       disable: true
   install-dependencies:
@@ -54,11 +79,19 @@ services:
         node scripts/select-tsconfig.mjs
   backend:
     image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
+      WATCHPACK_POLLING: 'false'
     healthcheck:
       disable: true
     # Base entrypoint runs `apk add bash ca-certificates` (alpine-only). On
     # node:*-trixie-slim both ship in the image, so drop the apk lines and keep
     # the rest verbatim (same $$-escaping as base for compose interpolation).
+    # Also drop `--skip-nx-cache`: it exists to guard long-lived dev machines
+    # against stale local cache, but this worker is ephemeral (no stale state)
+    # and the repo-root bind mount shares .nx/cache with the host clone — so the
+    # serve's dependent build tasks can reuse what the host-side nx runs (agent
+    # self-checks, validate gate) already produced this run.
     entrypoint:
       - sh
       - -lc
@@ -69,14 +102,14 @@ services:
         fi
         if [ -n "${CI:-}" ]; then
           echo "[backend] CI mode -> WITHOUT daemon"
-          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development
         fi
         if [ -S /nx-sock/d.sock ]; then
           echo "[backend] Daemon OK -> WITH daemon"
-          exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+          exec ./node_modules/.bin/nx run api:serve:development
         else
           echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
-          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development
         fi
     depends_on:
       postgres:
@@ -89,6 +122,8 @@ services:
         condition: service_completed_successfully
   mcp-server:
     image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
     healthcheck:
       disable: true
     depends_on:
