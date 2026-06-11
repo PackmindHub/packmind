@@ -3,7 +3,7 @@ name: create-em-spec
 description: 'Scaffold and run a new end-to-end spec file. Use when asked to write a new e2e test or spec from scratch.'
 disallowed-tools:
   - Monitor
-  - AskUserQuestions
+  - AskUserQuestion
 ---
 
 # Create E2E Spec
