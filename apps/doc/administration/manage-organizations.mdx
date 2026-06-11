@@ -41,8 +41,127 @@ Organization administrators have access to additional settings for managing thei
 - [Managing Users](/administration/manage-users) - Invite users and manage roles
 - [Manage AI Agents](/administration/manage-ai-agents) - Configure AI agent access
 - [LLM Configuration](/administration/llm-configuration) - Configure language models
+- [Marketplace Governance](#marketplace-governance) - Curate Git repositories as Packmind-governed marketplaces
 
 <Info>
   Only users with **Admin** privileges can access organization settings. If you
   need administrative access, contact your organization administrator.
 </Info>
+
+## Marketplace Governance
+
+Marketplace governance lets organization administrators curate a trusted set of plugin sources for their members. Once a marketplace is linked, every member of the organization can browse the marketplace and the plugins it exposes; only administrators can link or unlink.
+
+### What is a marketplace? [#what-is-a-marketplace]
+
+A **marketplace** is a Git repository registered at the organization level that exposes a `marketplace.json` descriptor at its root. The descriptor declares the plugins the repository offers and the vendor format it follows (Anthropic in v1; the descriptor format is pluggable so additional vendors can be added without changing the link/unlink flow).
+
+Marketplaces are governance-only constructs:
+
+- **Admins** link and unlink marketplaces, and monitor their health.
+- **Members** browse the enrolled marketplaces and discover the plugins they expose.
+
+<Info>
+  Marketplaces are **organization-scoped**. There is no per-user marketplace
+  link — every member of the organization sees the same enrolled marketplaces.
+</Info>
+
+<Note>
+  A repository linked as a marketplace is kept separate from repositories used
+  for standard skill/command distribution. The same `(owner, repo)` pair cannot
+  be linked as both a marketplace and a standard distribution target.
+</Note>
+
+### Linking a marketplace [#linking-a-marketplace]
+
+Linking is an **admin-only** action. The denial is enforced server-side — hiding the UI is not sufficient, and non-admin API callers receive an HTTP 403.
+
+Two paths are available:
+
+#### Private path — via a connected Git provider
+
+Use this path when the marketplace repository lives behind authentication (private GitHub/GitLab/Bitbucket org, internal SCM, etc.).
+
+1. From the organization settings, open **Marketplaces** and click **Link a marketplace**.
+2. In the drawer, switch to the **Private** tab.
+3. Pick one of your organization's connected Git providers.
+4. Select the repository and branch that hosts `marketplace.json`.
+5. Give the marketplace a human-readable name and confirm.
+
+Packmind validates that the chosen repository exposes a valid `marketplace.json` descriptor before persisting the link.
+
+#### Public path — via a tokenless URL
+
+Use this path when the marketplace repository is publicly reachable and you do not want to register a dedicated Git provider for it.
+
+1. Open the **Link a marketplace** drawer.
+2. Switch to the **Public** tab.
+3. Paste the public Git URL of the repository.
+4. Packmind runs a pre-flight check (URL is reachable, repository is public, `marketplace.json` is present and parseable).
+5. Name the marketplace and confirm.
+
+<Warning>
+  Linking is restricted to organization administrators. Members who attempt to
+  link via the API receive an HTTP 403 response.
+</Warning>
+
+### Health state semantics [#health-state-semantics]
+
+Every linked marketplace carries a health **state** that Packmind refreshes via a periodic reconciliation job. The current state is visible on each row of the marketplace list.
+
+| State           | Meaning                                                                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **healthy**     | The reconciliation job successfully re-fetched and re-validated `marketplace.json`, and the descriptor still matches the one captured at link time.                     |
+| **drift**       | The reconciliation job successfully re-fetched and re-validated `marketplace.json`, but the descriptor has changed since the last run (plugins added, removed, edited). |
+| **unreachable** | The reconciliation job could not reach the repository or could not retrieve a parseable `marketplace.json` (network failure, repository removed, descriptor deleted).   |
+
+<Info>
+  The initial state at link time is **healthy**. The state is refreshed on a
+  periodic schedule (default: every 30 minutes) and the `lastValidatedAt`
+  timestamp on the marketplace row is updated on every run.
+</Info>
+
+<Tip>
+  When a marketplace appears as **drift**, review the new descriptor before
+  relying on the marketplace — plugins may have been added, removed, or modified
+  upstream.
+</Tip>
+
+### Unlinking [#unlinking]
+
+Unlinking is also an **admin-only** action. It severs Packmind governance over the marketplace but **never** touches the Git repository.
+
+When you unlink a marketplace:
+
+- The marketplace record is soft-deleted on the Packmind side.
+- The underlying marketplace-typed `GitRepo` record is soft-deleted alongside it.
+- The Git repository, its branches, and any in-flight pull requests are **left untouched** — Packmind performs no GitHub/GitLab/Bitbucket mutation.
+
+<Warning>
+  Unlinking is a Packmind-side governance action only. If you need to remove the
+  underlying repository, branches, or pull requests, do that on the Git platform
+  itself — Packmind will not do it for you.
+</Warning>
+
+To unlink:
+
+1. Open the marketplace row in the **Marketplaces** list.
+2. Click **Unlink** and confirm the action in the dialog.
+
+### Errors and resolutions [#errors-and-resolutions]
+
+The table below maps the most common errors surfaced during link/unlink to the action that resolves them.
+
+| Error                                | When it appears                                                                                | What to do                                                                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `MarketplaceAlreadyLinkedError`      | `The marketplace {owner}/{repo} has already been linked to your organization` (HTTP 409).      | Open the existing marketplace from the list instead of linking again. Unlink the existing entry first if you intend to re-link it.   |
+| `MarketplaceDescriptorNotFoundError` | `Marketplace descriptor "marketplace.json" not found in repository {owner}/{repo}` (HTTP 400). | Add a `marketplace.json` file at the root of the target repository, then retry. Verify you selected the correct branch.              |
+| `UnknownMarketplaceDescriptorError`  | `No registered marketplace descriptor parser recognised the provided content` (HTTP 400).      | The descriptor format is not supported in this version of Packmind. v1 supports the Anthropic format; check the descriptor's vendor. |
+| `MarketplaceDescriptorParseError`    | A parser claimed the descriptor but failed to parse or validate it (HTTP 400).                 | Inspect `marketplace.json` for malformed JSON or missing required fields, fix it on the repository side, then retry.                 |
+| `MarketplaceUrlNotReachableError`    | `Marketplace URL "{url}" is not reachable` (HTTP 400). Public path only.                       | Confirm the URL is publicly reachable (no auth needed) and points to a Git repository host Packmind can route to, then retry.        |
+| `MarketplaceNotFoundError`           | `Marketplace with id "{marketplaceId}" was not found` (HTTP 404).                              | The marketplace was already unlinked or never existed. Refresh the list to see the current state.                                    |
+
+<Note>
+  The contract message *"The marketplace {owner}/{repo} has already been linked
+  to your organization"* is stable and safe to surface verbatim to end users.
+</Note>

@@ -4,6 +4,8 @@
     "@testing/cli-e2e": "*",
     "@testing/unit-tests": "*",
     "@global/packmind-standards": "*",
-    "@backend/backend-standards": "*"
+    "@backend/backend-standards": "*",
+    "@global/proprietary-standards": "*",
+    "@global/packmind-proprietary": "*"
   }
 }

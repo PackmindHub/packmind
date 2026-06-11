@@ -4,6 +4,11 @@
 
 - Enable rendering packmind artifacts in `~/.claude` #332
 - Add GitHub App connection method in organization git settings
+- Org-level marketplace governance — admins can link/unlink Git repositories as Packmind-governed marketplaces and members can browse enrolled marketplaces. Includes periodic health reconciliation (`healthy | drift | unreachable`).
+- Publish a Packmind package to a linked marketplace as a managed plugin, opening a rolling pull request titled "Packmind sync" on the marketplace repository (GH-580).
+- Retire a published plugin from a marketplace through a PR-governed flow — marking a distribution for removal automatically commits the plugin deletion onto the rolling `packmind/sync` PR (symmetric to publishing), reconciliation transitions it to a terminal `removed` state once that PR is merged, and admins can cancel a pending removal (gated behind the `marketplace-plugin-removal` feature flag). The same auto-deletion runs when a Packmind package with live distributions is deleted.
+- Drift detection for marketplaces — when a published plugin disappears from the marketplace descriptor without going through the retirement flow, the marketplace details view surfaces a "Drift detected" indicator listing the affected plugin slugs.
+- Package deletion cascade for marketplace distributions — deleting a Packmind package automatically marks every live marketplace distribution of that package as "to be removed" across all affected marketplaces.
 
 ## Changed
 

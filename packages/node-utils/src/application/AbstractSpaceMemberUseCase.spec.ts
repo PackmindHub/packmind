@@ -100,6 +100,7 @@ describe('AbstractSpaceMemberUseCase', () => {
     userId,
     spaceId,
     role: UserSpaceRole.MEMBER,
+    pinned: false,
     createdBy: userId,
     updatedBy: userId,
     ...overrides,

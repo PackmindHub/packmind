@@ -1,33 +1,13 @@
 import { defineSlotRecipe } from '@chakra-ui/react';
+import { radioGroupAnatomy } from '@chakra-ui/react/anatomy';
 
 /* based on https://github.com/chakra-ui/chakra-ui/blob/main/packages/react/src/theme/recipes/radio-group.ts */
 export const pmRadioGroup = defineSlotRecipe({
-  slots: ['root', 'item', 'itemControl', 'itemIndicator', 'itemText'],
+  slots: radioGroupAnatomy.keys(),
   base: {
-    root: {
-      gap: '2',
-    },
-    item: {
-      gap: '2.5',
-    },
     itemControl: {
-      borderColor: '{colors.border.primary}',
-      borderWidth: '2px',
-      bg: 'transparent',
-      width: '5',
-      height: '5',
-      _before: {
-        display: 'none',
-      },
-      '& .dot': {
-        display: 'none',
-      },
-      _checked: {
-        bg: '{colors.blue.200}',
-        borderColor: '{colors.blue.200}',
-      },
+      _checked: {},
       '&[data-checked]': {
-        bg: '{colors.blue.200}',
         borderColor: '{colors.blue.200}',
       },
       _hover: {
@@ -37,13 +17,9 @@ export const pmRadioGroup = defineSlotRecipe({
         outlineColor: '{colors.blue.200}',
       },
     },
-    itemIndicator: {
-      _before: {
-        display: 'none',
-      },
-    },
     itemText: {
-      color: '{colors.text.primary}',
+      fontSize: 'sm',
+      color: '{colors.text.secondary}',
     },
   },
 });
