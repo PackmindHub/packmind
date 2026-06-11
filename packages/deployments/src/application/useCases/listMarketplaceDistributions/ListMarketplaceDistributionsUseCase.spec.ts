@@ -149,6 +149,131 @@ describe('ListMarketplaceDistributionsUseCase', () => {
     });
   });
 
+  describe('when a package has multiple distributions', () => {
+    const earlierFailure = {
+      id: createMarketplaceDistributionId(uuidv4()),
+      organizationId,
+      marketplaceId,
+      packageId,
+      pluginSlug: 'my-plugin',
+      authorId: userId,
+      status: DistributionStatus.failed,
+      source: 'app',
+    } as unknown as MarketplaceDistribution;
+
+    let result: Awaited<
+      ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+    >;
+
+    beforeEach(async () => {
+      // Repository contract: rows are returned ordered by `createdAt DESC`,
+      // so the latest attempt comes first and the earlier failure second.
+      mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+        [distributionA, earlierFailure],
+      );
+      result = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+      });
+    });
+
+    it('returns a single row for the package', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('keeps only the latest distribution', () => {
+      expect(result[0].id).toEqual(distributionA.id);
+    });
+
+    it('drops the earlier failed attempt', () => {
+      expect(result.map((item) => item.id)).toEqual([distributionA.id]);
+    });
+  });
+
+  describe('when two packages each have multiple distributions', () => {
+    const otherPackageId = createPackageId(uuidv4());
+
+    const latestForOtherPackage = {
+      id: createMarketplaceDistributionId(uuidv4()),
+      organizationId,
+      marketplaceId,
+      packageId: otherPackageId,
+      pluginSlug: 'other-plugin',
+      authorId: userId,
+      status: DistributionStatus.success,
+      source: 'app',
+    } as unknown as MarketplaceDistribution;
+
+    const earlierFailureForOtherPackage = {
+      id: createMarketplaceDistributionId(uuidv4()),
+      organizationId,
+      marketplaceId,
+      packageId: otherPackageId,
+      pluginSlug: 'other-plugin',
+      authorId: userId,
+      status: DistributionStatus.failed,
+      source: 'app',
+    } as unknown as MarketplaceDistribution;
+
+    const earlierFailureForFirstPackage = {
+      id: createMarketplaceDistributionId(uuidv4()),
+      organizationId,
+      marketplaceId,
+      packageId,
+      pluginSlug: 'my-plugin',
+      authorId: userId,
+      status: DistributionStatus.failed,
+      source: 'app',
+    } as unknown as MarketplaceDistribution;
+
+    let result: Awaited<
+      ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+    >;
+
+    beforeEach(async () => {
+      mockPackageService.findById = jest.fn().mockImplementation((pid) => {
+        if (pid === packageId) {
+          return Promise.resolve({
+            id: packageId,
+            name: 'My Package',
+            slug: 'my-package',
+          } as Package);
+        }
+        if (pid === otherPackageId) {
+          return Promise.resolve({
+            id: otherPackageId,
+            name: 'Other Package',
+            slug: 'other-package',
+          } as Package);
+        }
+        return Promise.resolve(null);
+      });
+
+      mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+        [
+          distributionA,
+          latestForOtherPackage,
+          earlierFailureForFirstPackage,
+          earlierFailureForOtherPackage,
+        ],
+      );
+
+      result = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+      });
+    });
+
+    it('returns one row per package', () => {
+      expect(result.map((item) => item.id)).toEqual([
+        distributionA.id,
+        latestForOtherPackage.id,
+      ]);
+    });
+  });
+
   describe('when a distribution has been removed', () => {
     let result: Awaited<
       ReturnType<ListMarketplaceDistributionsUseCase['execute']>

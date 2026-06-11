@@ -33,9 +33,13 @@ const origin = 'ListMarketplaceDistributionsUseCase';
  *     excluding terminal `removed` rows — once a plugin's deletion has landed
  *     in the repo it is no longer "on" the marketplace, so it drops out of the
  *     list.
- *  3. Hydrate `packageName` per row via `PackageService.findById`. Calls are
+ *  3. Collapse to one row per `packageId`, keeping only the latest distribution
+ *     (the repository returns rows ordered by `createdAt DESC`, so the first
+ *     occurrence of each `packageId` wins). Previous attempts — failures
+ *     superseded by a later success, or any earlier publish — are dropped.
+ *  4. Hydrate `packageName` per row via `PackageService.findById`. Calls are
  *     de-duplicated per `packageId`.
- *  4. Hydrate `authorName` per row via `IAccountsPort.getUserById`. Calls are
+ *  5. Hydrate `authorName` per row via `IAccountsPort.getUserById`. Calls are
  *     de-duplicated per `authorId`.
  */
 export class ListMarketplaceDistributionsUseCase
@@ -77,13 +81,27 @@ export class ListMarketplaceDistributionsUseCase
     // the repo is no longer part of the marketplace and must not appear in the
     // list (it lingers as `to_be_removed` only until reconciliation confirms
     // the merge).
-    const distributions = (
+    const rawDistributions = (
       await this.marketplaceDistributionRepository.findByMarketplaceId(
         marketplaceId,
       )
     ).filter(
       (distribution) => distribution.status !== DistributionStatus.removed,
     );
+
+    // One row per package — only the latest distribution is meaningful. The
+    // repository returns rows ordered by `createdAt DESC`, so the first
+    // occurrence of each `packageId` is the most recent attempt and we drop
+    // every prior one (superseded failures, earlier publishes, etc.).
+    const seenPackageIds = new Set<PackageId>();
+    const distributions = rawDistributions.filter((distribution) => {
+      if (seenPackageIds.has(distribution.packageId)) {
+        return false;
+      }
+      seenPackageIds.add(distribution.packageId);
+      return true;
+    });
+
     if (distributions.length === 0) {
       return [];
     }
