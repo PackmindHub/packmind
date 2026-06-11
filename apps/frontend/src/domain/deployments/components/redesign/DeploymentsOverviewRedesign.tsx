@@ -22,6 +22,7 @@ import {
   totalBehindInstallCount,
 } from './selectors/buildPackageDriftOverview';
 import { PackageMasterRail } from './components/PackageMasterRail';
+import { PackageDetailPane } from './components/PackageDetailPane';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
@@ -56,6 +57,12 @@ export function DeploymentsOverviewRedesign() {
     });
   };
   const handleDistributeBulk = () => {
+    // Sync surface wiring is added in a follow-up task.
+  };
+  const handleSyncPackage = (
+    _packageId: PackageId,
+    _installKeys?: string[],
+  ) => {
     // Sync surface wiring is added in a follow-up task.
   };
 
@@ -129,27 +136,19 @@ export function DeploymentsOverviewRedesign() {
                 minH={0}
                 bg="background.primary"
                 overflowY="auto"
-                padding={6}
               >
                 {selectedPackage ? (
-                  <PMVStack gap={2} align="start">
-                    <PMText fontSize="md" fontWeight="semibold">
-                      {selectedPackage.name}
-                    </PMText>
+                  <PackageDetailPane
+                    key={selectedPackage.id}
+                    pkg={selectedPackage}
+                    onSyncPackage={handleSyncPackage}
+                  />
+                ) : (
+                  <PMVStack gap={2} padding={10} align="start">
                     <PMText fontSize="sm" color="secondary">
-                      {selectedPackage.description}
-                    </PMText>
-                    <PMText fontSize="xs" color="faded">
-                      {selectedPackage.artifacts.length} artifact
-                      {selectedPackage.artifacts.length === 1 ? '' : 's'} ·{' '}
-                      {selectedPackage.installLocations.length} install
-                      {selectedPackage.installLocations.length === 1 ? '' : 's'}
+                      Select a package from the list.
                     </PMText>
                   </PMVStack>
-                ) : (
-                  <PMText fontSize="sm" color="secondary">
-                    Select a package from the list.
-                  </PMText>
                 )}
               </PMBox>
             </PMHStack>
