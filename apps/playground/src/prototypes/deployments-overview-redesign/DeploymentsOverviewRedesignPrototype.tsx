@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
-  PMButton,
   PMHStack,
   PMIcon,
   PMNativeSelect,
@@ -10,7 +9,7 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronRight, LuRotateCw } from 'react-icons/lu';
+import { LuChevronRight } from 'react-icons/lu';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
@@ -48,6 +47,9 @@ export default function DeploymentsOverviewRedesignPrototype() {
   }, [packages, selectedPackageId]);
 
   const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const selectedPackage = useMemo(
     () => packages.find((p) => p.id === selectedPackageId) ?? null,
@@ -61,8 +63,17 @@ export default function DeploymentsOverviewRedesignPrototype() {
   const handleSyncPackage = (packageId: string, installKeys?: string[]) => {
     setSyncScope({ kind: 'package', packageId, installKeys });
   };
-  const handleSyncAll = () => {
-    setSyncScope({ kind: 'all' });
+  const handleSyncBulk = (packageIds: string[]) => {
+    if (packageIds.length === 0) return;
+    setSyncScope({ kind: 'bulk', packageIds });
+  };
+  const handleToggleBulk = (packageId: string) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(packageId)) next.delete(packageId);
+      else next.add(packageId);
+      return next;
+    });
   };
 
   return (
@@ -72,43 +83,24 @@ export default function DeploymentsOverviewRedesignPrototype() {
       isFullWidth
       breadcrumbComponent={<Backlink />}
       actions={
-        <PMHStack gap={3} align="center">
-          <PMHStack gap={2} align="center">
-            <PMText fontSize="xs" color="faded">
-              Scenario
-            </PMText>
-            <PMNativeSelect
-              items={SCENARIO_ITEMS.map((s) => ({
-                label: s.label,
-                value: s.value,
-              }))}
-              value={scenario}
-              onChange={(e) => {
-                setScenario(e.target.value as Scenario);
-                setSyncScope(null);
-              }}
-              size="sm"
-              width="220px"
-            />
-          </PMHStack>
-          {syncScope === null && (
-            <PMButton
-              variant="primary"
-              size="sm"
-              disabled={!hasAnyDrift}
-              onClick={handleSyncAll}
-              title={
-                hasAnyDrift
-                  ? `Distribute all packages across ${driftedInstalls} drifted distribution${driftedInstalls === 1 ? '' : 's'}`
-                  : 'Nothing to distribute — every distribution is on the latest version.'
-              }
-            >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-              Distribute all
-            </PMButton>
-          )}
+        <PMHStack gap={2} align="center">
+          <PMText fontSize="xs" color="faded">
+            Scenario
+          </PMText>
+          <PMNativeSelect
+            items={SCENARIO_ITEMS.map((s) => ({
+              label: s.label,
+              value: s.value,
+            }))}
+            value={scenario}
+            onChange={(e) => {
+              setScenario(e.target.value as Scenario);
+              setSyncScope(null);
+              setBulkSelected(new Set());
+            }}
+            size="sm"
+            width="220px"
+          />
         </PMHStack>
       }
     >
@@ -118,7 +110,9 @@ export default function DeploymentsOverviewRedesignPrototype() {
           scope={syncScope}
           onCancel={() => setSyncScope(null)}
           onConfirm={() => {
-            /* surface handles its own success step; close happens via onCancel */
+            if (syncScope?.kind === 'bulk') {
+              setBulkSelected(new Set());
+            }
           }}
         />
       ) : (
@@ -157,6 +151,12 @@ export default function DeploymentsOverviewRedesignPrototype() {
                 packages={packages}
                 selectedPackageId={selectedPackage?.id ?? null}
                 onSelect={setSelectedPackageId}
+                bulkSelected={bulkSelected}
+                onToggleBulk={handleToggleBulk}
+                onSetBulkSelection={setBulkSelected}
+                onDistributeBulk={() =>
+                  handleSyncBulk(Array.from(bulkSelected))
+                }
               />
               <PMBox
                 flex="1"

@@ -37,7 +37,7 @@ const KIND_ICON: Record<ArtifactKind, IconType> = {
 };
 
 export type SyncScope =
-  | { kind: 'all' }
+  | { kind: 'bulk'; packageIds: string[] }
   | { kind: 'package'; packageId: string; installKeys?: string[] };
 
 type PackageBlock = {
@@ -330,7 +330,10 @@ export function SyncSurface({
 }
 
 function titleForScope(scope: SyncScope, blocks: PackageBlock[]): string {
-  if (scope.kind === 'all') return 'Distribute all packages';
+  if (scope.kind === 'bulk') {
+    const n = blocks.length;
+    return `Distribute ${n} package${n === 1 ? '' : 's'}`;
+  }
   const pkg = blocks[0]?.pkg;
   return pkg ? `Distribute ${pkg.name}` : 'Distribute package';
 }
@@ -339,9 +342,11 @@ function buildPackageBlocks(
   packages: PackageDrift[],
   scope: SyncScope,
 ): PackageBlock[] {
+  const bulkAllowed = scope.kind === 'bulk' ? new Set(scope.packageIds) : null;
   const out: PackageBlock[] = [];
   for (const pkg of packages) {
     if (scope.kind === 'package' && pkg.id !== scope.packageId) continue;
+    if (bulkAllowed && !bulkAllowed.has(pkg.id)) continue;
     const driftedEntries = installDriftEntries(pkg).filter(
       (e) => e.behindArtifacts.length > 0,
     );

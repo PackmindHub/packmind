@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import {
   PMBox,
+  PMButton,
+  PMCheckbox,
   PMHStack,
   PMIcon,
   PMInput,
@@ -8,7 +10,7 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import { LuSearch } from 'react-icons/lu';
+import { LuRotateCw, LuSearch } from 'react-icons/lu';
 import { packageBehindInstallCount, packageHasDrift } from '../data';
 import type { PackageDrift } from '../types';
 
@@ -16,6 +18,10 @@ type PackageMasterRailProps = {
   packages: PackageDrift[];
   selectedPackageId: string | null;
   onSelect: (packageId: string) => void;
+  bulkSelected: Set<string>;
+  onToggleBulk: (packageId: string) => void;
+  onSetBulkSelection: (next: Set<string>) => void;
+  onDistributeBulk: () => void;
 };
 
 type DriftFilter = 'all' | 'drift' | 'aligned';
@@ -24,6 +30,10 @@ export function PackageMasterRail({
   packages,
   selectedPackageId,
   onSelect,
+  bulkSelected,
+  onToggleBulk,
+  onSetBulkSelection,
+  onDistributeBulk,
 }: Readonly<PackageMasterRailProps>) {
   const [query, setQuery] = useState('');
   const [driftFilter, setDriftFilter] = useState<DriftFilter>('all');
@@ -43,6 +53,35 @@ export function PackageMasterRail({
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
     return list;
   }, [packages, query, driftFilter]);
+
+  const visibleDrifted = useMemo(
+    () => filtered.filter(packageHasDrift),
+    [filtered],
+  );
+
+  const bulkDistributionCount = useMemo(() => {
+    let n = 0;
+    for (const p of packages) {
+      if (bulkSelected.has(p.id)) n += packageBehindInstallCount(p);
+    }
+    return n;
+  }, [packages, bulkSelected]);
+
+  const selectionActive = bulkSelected.size > 0;
+
+  const handleSelectAllVisible = () => {
+    const next = new Set(bulkSelected);
+    for (const p of visibleDrifted) next.add(p.id);
+    onSetBulkSelection(next);
+  };
+
+  const handleClearVisible = () => {
+    const next = new Set(bulkSelected);
+    for (const p of visibleDrifted) next.delete(p.id);
+    onSetBulkSelection(next);
+  };
+
+  const handleClearAll = () => onSetBulkSelection(new Set());
 
   return (
     <PMBox
@@ -127,11 +166,27 @@ export function PackageMasterRail({
               key={p.id}
               pkg={p}
               selected={p.id === selectedPackageId}
+              bulkSelected={bulkSelected.has(p.id)}
+              selectionActive={selectionActive}
               onSelect={() => onSelect(p.id)}
+              onToggleBulk={() => onToggleBulk(p.id)}
             />
           ))
         )}
       </PMBox>
+
+      <RailActionBar
+        bulkSelectionSize={bulkSelected.size}
+        bulkDistributionCount={bulkDistributionCount}
+        visibleDrifted={visibleDrifted}
+        visibleDriftedSelectedCount={
+          visibleDrifted.filter((p) => bulkSelected.has(p.id)).length
+        }
+        onSelectAllVisible={handleSelectAllVisible}
+        onClearVisible={handleClearVisible}
+        onClearAll={handleClearAll}
+        onDistribute={onDistributeBulk}
+      />
     </PMBox>
   );
 }
@@ -139,39 +194,38 @@ export function PackageMasterRail({
 type PackageRowProps = {
   pkg: PackageDrift;
   selected: boolean;
+  bulkSelected: boolean;
+  selectionActive: boolean;
   onSelect: () => void;
+  onToggleBulk: () => void;
 };
 
-function PackageRow({ pkg, selected, onSelect }: Readonly<PackageRowProps>) {
+function PackageRow({
+  pkg,
+  selected,
+  bulkSelected,
+  selectionActive,
+  onSelect,
+  onToggleBulk,
+}: Readonly<PackageRowProps>) {
   const behindInstallCount = packageBehindInstallCount(pkg);
   const hasDrift = packageHasDrift(pkg);
   const totalInstalls = pkg.installLocations.length;
+  const [hovered, setHovered] = useState(false);
+  const showCheckbox = hasDrift && (bulkSelected || selectionActive || hovered);
 
   return (
     <PMBox
-      as="button"
-      type="button"
-      onClick={onSelect}
-      width="100%"
-      textAlign="left"
-      bg={selected ? 'background.secondary' : 'transparent'}
-      border="none"
-      cursor="pointer"
-      paddingY={2.5}
-      paddingLeft={3}
-      paddingRight={3}
       position="relative"
+      bg={selected ? 'background.secondary' : 'transparent'}
+      _hover={selected ? undefined : { bg: 'background.tertiary' }}
       borderBottom="1px solid"
       borderColor="border.tertiary"
       transition="background-color 120ms ease-out"
-      _hover={selected ? undefined : { bg: 'background.tertiary' }}
-      _focusVisible={{
-        outline: 'none',
-        bg: selected ? 'background.secondary' : 'background.tertiary',
-        boxShadow: 'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
-      }}
-      aria-pressed={selected}
-      aria-label={`Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`}
+      display="flex"
+      alignItems="stretch"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {selected && (
         <PMBox
@@ -184,50 +238,204 @@ function PackageRow({ pkg, selected, onSelect }: Readonly<PackageRowProps>) {
           aria-hidden
         />
       )}
-      <PMHStack gap={3} align="center" justify="space-between">
-        <PMText
-          fontSize="sm"
-          fontWeight={selected ? 'semibold' : 'medium'}
-          color="text.primary"
-          truncate
-          flex={1}
-          minW={0}
-        >
-          {pkg.name}
-        </PMText>
-        <PMTooltip
-          label={
-            hasDrift
-              ? `${behindInstallCount} of ${totalInstalls} distributions behind`
-              : `${totalInstalls} distributions aligned`
-          }
-          showArrow
-          openDelay={200}
-        >
+
+      <PMBox
+        width="32px"
+        flexShrink={0}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {hasDrift && (
           <PMBox
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            width="20px"
-            height="20px"
-            cursor="help"
-            flexShrink={0}
-            aria-label={
+            opacity={showCheckbox ? 1 : 0}
+            transition="opacity 100ms ease-out"
+          >
+            <PMCheckbox
+              size="sm"
+              checked={bulkSelected}
+              onCheckedChange={() => onToggleBulk()}
+              aria-label={`Select ${pkg.name} for bulk distribute`}
+            />
+          </PMBox>
+        )}
+      </PMBox>
+
+      <PMBox
+        as="button"
+        type="button"
+        onClick={onSelect}
+        bg="transparent"
+        border="none"
+        cursor="pointer"
+        flex={1}
+        minW={0}
+        textAlign="left"
+        paddingY={2.5}
+        paddingRight={3}
+        _focusVisible={{
+          outline: 'none',
+          boxShadow: 'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
+        }}
+        aria-pressed={selected}
+        aria-label={`Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`}
+      >
+        <PMHStack gap={3} align="center" justify="space-between">
+          <PMText
+            fontSize="sm"
+            fontWeight={selected ? 'semibold' : 'medium'}
+            color="text.primary"
+            truncate
+            flex={1}
+            minW={0}
+          >
+            {pkg.name}
+          </PMText>
+          <PMTooltip
+            label={
               hasDrift
                 ? `${behindInstallCount} of ${totalInstalls} distributions behind`
                 : `${totalInstalls} distributions aligned`
             }
+            showArrow
+            openDelay={200}
           >
             <PMBox
-              width="8px"
-              height="8px"
-              borderRadius="full"
-              bg={hasDrift ? 'orange.500' : 'green.500'}
-              aria-hidden
-            />
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              width="20px"
+              height="20px"
+              cursor="help"
+              flexShrink={0}
+            >
+              <PMBox
+                width="8px"
+                height="8px"
+                borderRadius="full"
+                bg={hasDrift ? 'orange.500' : 'green.500'}
+                aria-hidden
+              />
+            </PMBox>
+          </PMTooltip>
+        </PMHStack>
+      </PMBox>
+    </PMBox>
+  );
+}
+
+type RailActionBarProps = {
+  bulkSelectionSize: number;
+  bulkDistributionCount: number;
+  visibleDrifted: PackageDrift[];
+  visibleDriftedSelectedCount: number;
+  onSelectAllVisible: () => void;
+  onClearVisible: () => void;
+  onClearAll: () => void;
+  onDistribute: () => void;
+};
+
+function RailActionBar({
+  bulkSelectionSize,
+  bulkDistributionCount,
+  visibleDrifted,
+  visibleDriftedSelectedCount,
+  onSelectAllVisible,
+  onClearVisible,
+  onClearAll,
+  onDistribute,
+}: Readonly<RailActionBarProps>) {
+  if (bulkSelectionSize === 0 && visibleDrifted.length === 0) return null;
+
+  if (bulkSelectionSize === 0) {
+    return (
+      <PMBox
+        paddingX={3}
+        paddingY={2.5}
+        borderTopWidth="1px"
+        borderColor="border.tertiary"
+        bg="background.primary"
+      >
+        <PMButton
+          variant="secondary"
+          size="sm"
+          width="100%"
+          onClick={onSelectAllVisible}
+        >
+          Select all drifted ({visibleDrifted.length})
+        </PMButton>
+      </PMBox>
+    );
+  }
+
+  const allVisibleSelected =
+    visibleDrifted.length > 0 &&
+    visibleDriftedSelectedCount === visibleDrifted.length;
+  const someVisibleSelected =
+    visibleDriftedSelectedCount > 0 && !allVisibleSelected;
+
+  return (
+    <PMBox
+      paddingX={3}
+      paddingY={3}
+      borderTopWidth="1px"
+      borderColor="border.tertiary"
+      bg="background.secondary"
+    >
+      <PMVStack gap={2.5} align="stretch">
+        <PMHStack gap={2} align="center" minW={0}>
+          <PMCheckbox
+            size="sm"
+            checked={
+              allVisibleSelected
+                ? true
+                : someVisibleSelected
+                  ? 'indeterminate'
+                  : false
+            }
+            onCheckedChange={(details) => {
+              if (details.checked === true) onSelectAllVisible();
+              else onClearVisible();
+            }}
+            disabled={visibleDrifted.length === 0}
+            aria-label="Select all visible drifted packages"
+          />
+          <PMText
+            fontSize="xs"
+            color="text.secondary"
+            fontVariantNumeric="tabular-nums"
+            truncate
+            flex={1}
+            minW={0}
+          >
+            {bulkSelectionSize} selected · {bulkDistributionCount} distribution
+            {bulkDistributionCount === 1 ? '' : 's'}
+          </PMText>
+        </PMHStack>
+        <PMHStack gap={2} justify="space-between" align="center">
+          <PMBox
+            as="button"
+            type="button"
+            onClick={onClearAll}
+            fontSize="xs"
+            color="text.faded"
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            padding={0}
+            _hover={{ color: 'text.primary' }}
+          >
+            Clear
           </PMBox>
-        </PMTooltip>
-      </PMHStack>
+          <PMButton variant="primary" size="sm" onClick={onDistribute}>
+            <PMIcon fontSize="sm">
+              <LuRotateCw />
+            </PMIcon>
+            Distribute
+          </PMButton>
+        </PMHStack>
+      </PMVStack>
     </PMBox>
   );
 }
