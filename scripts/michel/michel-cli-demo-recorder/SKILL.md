@@ -71,12 +71,18 @@ A demo that captured the wrong state (server down, stale build, not logged in, e
 
 ## Embed in the PR
 
-Commit the SVG (and optionally the `.txt`) into the repo, then reference it by **relative path** in the PR body:
+Commit the SVG (and optionally the `.txt`) into the repo, then reference it by **relative path** in the PR body. Directly under the image, add a short **What the demo shows:** bullet list — the written scenario — so a reviewer who can't or won't open the image still understands what was run and what it proves:
 
 ````markdown
 ## CLI demo
 
 ![packmind-cli standards list](docs/cli-demos/standards-list.svg)
+
+**What the demo shows:**
+
+- Run `packmind-cli standards list` against a seeded org
+- Output lists the 3 active standards with their rule counts, colored by status
+- Confirms the new `--status active` flag narrows the list to active standards only
 
 <details><summary>Plain text</summary>
 
@@ -88,7 +94,7 @@ Commit the SVG (and optionally the `.txt`) into the repo, then reference it by *
 </details>
 ```
 
-The plain-text `<details>` block is a courtesy fallback for anyone whose viewer won't render the SVG, and it's searchable/diff-able in a way an image isn't.
+The **What the demo shows:** bullets follow the same rules as the UI demo scenario: synthetic, essentials only (what command runs → what the output proves), one line per bullet, readable without opening the image. The plain-text `<details>` block is a courtesy fallback for anyone whose viewer won't render the SVG, and it's searchable/diff-able in a way an image isn't.
 
 ## What "good" looks like
 

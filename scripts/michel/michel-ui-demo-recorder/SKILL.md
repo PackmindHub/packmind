@@ -169,6 +169,30 @@ Pass an empty string or `null` to hide the bar.
 
 The bar fades + slides on text change (280ms) so swaps look intentional rather than glitchy. Reinject after `location.reload()` along with the cursor.
 
+### Scenario script (written narration for the PR) — mandatory
+
+A video link alone is useless to a reviewer who can't or won't play it — typically the Product Manager the demo is for. Every recording MUST ship a short written **scenario** so the demo flow is understandable from text alone.
+
+You already have the raw material: the captions you fed to `__setSubtitle` ARE the per-step narration. After recording, distill that sequence into a concise, bullet-point scenario:
+
+- Audience: a non-technical reviewer who may never open the video. They should grasp the whole flow from the bullets.
+- Synthetic and essential only — `login → key action(s) → observable result`. Drop superficial UI steps (scrolling, opening menus, incidental clicks). Keep what proves the feature works.
+- One line per bullet. No screenshots-of-text, no implementation detail.
+
+Write it to a **sidecar file with the SAME basename as the final webm**, in the artifacts dir Michel passes you:
+
+```bash
+# video: feature-demo.webm  →  sidecar: feature-demo.scenario.md
+cat > "<ARTIFACTS_DIR>/feature-demo.scenario.md" <<'EOF'
+- Log in as a Product Manager and open the Standards page
+- Create a new standard "React naming conventions" with two rules
+- The standard appears in the list; open its detail view
+- Edit a rule inline and confirm the change persists after reload
+EOF
+```
+
+Michel's publish step finds this sidecar by basename and inlines it directly under the video link in the PR body as **What the video shows:** — you do NOT edit the PR body yourself. If the sidecar is missing or empty, the PR shows `_No scenario available — an error occurred during generation._` under the link instead — a visible defect, so always write it. For uses outside Michel (no automatic PR assembly), hand the same bullets to whoever embeds the video so they go right under the link.
+
 ### Lead-in dead air
 
 The recorder buffers for a second or two after `start_video` before useful frames appear. Combined with MCP tool round-trip latency, the first ~10–25 seconds of the WebM can show an empty page or `about:blank`. Mitigations:
@@ -180,7 +204,7 @@ The recorder buffers for a second or two after `start_video` before useful frame
 ### Typing and clicking — make it watchable
 
 - `browser_type(..., slowly=true)` types one character at a time. Use it for any text the viewer should read.
-- Before each `browser_click`, take a fresh `browser_snapshot` to get current refs (refs change after re-renders).
+- Before each `browser_click`, take a fresh `browser_snapshot` to read current UI state — but click by text/CSS (next section), not by `ref=`, so a re-render or navigation can't invalidate your target.
 - After actions that change the DOM, call `browser_wait_for(text=<expected new content>)` instead of arbitrary sleeps — recordings made of `wait_for` look like a real user; recordings made of fixed sleeps look robotic.
 - **`wait_for(text=...)` must use the label the UI actually renders, not the one you assume.** A guessed string that never appears burns the full 30s timeout. Read the real text from a fresh `browser_snapshot` first, then wait on it. If a step is flaky to wait on by text, drive it via `browser_evaluate` instead of waiting.
 
@@ -202,6 +226,30 @@ mcp__playwright__browser_evaluate(function=`() => {
 ```
 
 Using the native value setter (not `el.value = ''`) is required for React-controlled inputs — a plain assignment is silently overwritten on the next render. After clearing, `browser_type(slowly=true)` the new text so the viewer reads it.
+
+### Chakra checkboxes/radios — click the control part, not the native input
+
+Chakra UI v3 (`@packmind/ui`, on zag-js) renders a checkbox/radio as a composite: a hidden native `<input>` plus a visible control element carrying `data-part="control"`. The native `<input>` is **not interactable** — clicking it (or the row's checkbox role) is a silent no-op, and you burn snapshot/retry cycles wondering why selection never toggles. Click the visible control part instead, via `browser_evaluate`:
+
+```
+mcp__playwright__browser_evaluate(function=`() => {
+  // the visible control toggles selection; the native <input> does not
+  document.querySelector('table tbody tr:has(a:text("<name>")) [data-part="control"]').click();
+  // select-all lives in the header row:
+  // document.querySelector('table thead [data-part="control"]').click();
+}`)
+```
+
+This mirrors the e2e Page Objects, which click `[data-part="control"]` (see `apps/e2e-tests/src/infra/pages/StandardsPage.ts`). Select/combobox options follow the same idea — pick `[data-part="item"]` filtered by text.
+
+### Waiting on a Chakra dialog/drawer — target the overlay or the toast, never an inner button
+
+After opening or submitting a dialog, **do not** `wait_for` an inner button's disabled/hidden state — a condition that never settles burns the full 30s timeout. zag-js carries the open state as `data-state` **on the same node** as `role="dialog"`, so:
+
+- Wait for OPEN with one **combined** selector (a descendant search finds nothing): `[role="dialog"][data-state="open"]`.
+- Wait for the action to FINISH on the **success-toast text** the app actually renders (e.g. `moved to the selected space`), or on the dialog node detaching — not on the button you clicked.
+
+Same patterns the e2e POMs use: `AbstractPackmindAppPage.ts` for the drawer-open wait, `StandardsPage.ts` / `SkillsPage.ts` for toast waits.
 
 ### When a click doesn't propagate (drag-drop and friends)
 
@@ -303,6 +351,7 @@ If the recording has a real audio track (rare for app demos), remove `-an` and a
 Hand over:
 
 - The path of the final WebM
+- The path of the `<basename>.scenario.md` sidecar (the written scenario that lands under the video link in the PR)
 - A one-line summary of the chapters
 - Anything that was faked (e.g. "drag-drop was driven via the API because dnd-kit doesn't respond to MCP drag synth")
 - A reminder that WebM may need a modern browser or VLC to play; offer to also produce an MP4 if the client uses a tool that doesn't accept WebM

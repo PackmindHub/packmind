@@ -5,16 +5,23 @@ description: Best practices for creating GitHub pull requests that include inlin
 
 # Create PR with Screenshots
 
-GitHub PR descriptions behave differently from README files: **relative paths don't resolve** and **SVG files don't render** (sanitized for XSS). This skill codifies the two-step fix every time: convert to PNG, reference with an absolute raw URL.
+GitHub PR descriptions behave differently from README files: **relative paths don't resolve** and **SVG files don't render** (sanitized for XSS). This skill codifies the two-step fix every time: convert to PNG, reference with an absolute raw URL pinned to the commit SHA.
+
+> **Running as the Michel agent?** You do NOT build these URLs by hand. Write the PR body with the literal `<!-- ARTIFACTS_PLACEHOLDER -->` token (see the implementation prompt's `## Artifacts` section) and drop every file under `.agent/artifacts/issue-<N>/`. The publish step lists each file and injects correctly-formed, SHA-pinned image/video markup at the token. Hand-writing paths or `![](...)` there renders as dead text and the artifacts are lost. The rest of this skill is for the manual case — opening a PR yourself.
+>
+> The publish step (`fly/lib/phases/publish.sh`) **owns the entire `## Artifacts` section**: it injects the generated block at the heading and discards every line under it — any relative-path images, stray tokens, or hand-written subsections — up to the next `## ` heading. So hand-written junk there is now wiped rather than shipped (it used to survive next to the injected block — see PR #41, where a hand-written `### Screenshots` block with `![](.agent/...)` paths rendered as broken images). This is a backstop, not a license: still emit only the bare token.
 
 ## The core rule
 
-| Artifact                 | Renders in PR?             | Fix                  |
-| ------------------------ | -------------------------- | -------------------- |
-| PNG via absolute raw URL | ✅ always                  | nothing              |
-| PNG via relative path    | ❌                         | use absolute URL     |
-| SVG via raw URL          | ❌ (blocked by GitHub CSP) | convert to PNG first |
-| WebM video               | ❌ inline                  | link, don't embed    |
+| Artifact                         | Renders in PR?              | Fix                   |
+| -------------------------------- | --------------------------- | --------------------- |
+| PNG via raw URL pinned to SHA    | ✅                          | nothing               |
+| PNG via raw URL pinned to branch | ⚠️ dies when branch deleted | pin to the commit SHA |
+| PNG via relative path            | ❌                          | use absolute URL      |
+| SVG via raw URL                  | ❌ (blocked by GitHub CSP)  | convert to PNG first  |
+| WebM / MP4 video                 | ❌ inline                   | link, don't embed     |
+
+On a **private repo**, raw URLs render only for viewers who are logged-in members — fine for internal PR review (the curl-with-token test below will 404 because the `/raw/` route wants a browser session, not a PAT — that's expected, not a failure). There is no anonymous fallback short of uploading the file as a GitHub user-attachment via the web composer.
 
 ## Step-by-step
 
@@ -52,23 +59,25 @@ git push
 
 The file must be pushed before the URL resolves. GitHub serves uncommitted files as 404.
 
-### 3. Build the absolute raw URL
+### 3. Build the absolute raw URL — pinned to the commit SHA
 
 ```
-https://github.com/<owner>/<repo>/raw/<branch>/<path-to-file>
+https://github.com/<owner>/<repo>/raw/<commit-sha>/<path-to-file>
 ```
+
+Pin to the **commit SHA**, not the branch. `raw/<branch>/...` 404s the moment the branch is deleted on merge — silently breaking every image in an already-merged PR. The SHA-pinned blob lives in history forever.
 
 Example:
 
 ```
-https://github.com/PackmindHub/packmind/raw/feat/my-branch/docs/cli-demos/my-demo.png
+https://github.com/PackmindHub/packmind/raw/9f3c1ab2/docs/cli-demos/my-demo.png
 ```
 
-Get owner/repo/branch from:
+Get owner/repo/sha from:
 
 ```bash
 git remote get-url origin   # → https://github.com/PackmindHub/packmind
-git branch --show-current   # → feat/my-branch
+git rev-parse HEAD          # → 9f3c1ab2... (the pushed commit that holds the file)
 ```
 
 ### 4. Embed in the PR body
@@ -76,7 +85,7 @@ git branch --show-current   # → feat/my-branch
 ````markdown
 ## CLI demo
 
-![description](https://github.com/<owner>/<repo>/raw/<branch>/docs/cli-demos/my-demo.png)
+![description](https://github.com/<owner>/<repo>/raw/<commit-sha>/docs/cli-demos/my-demo.png)
 
 <details><summary>Plain text</summary>
 
@@ -92,16 +101,16 @@ For **multiple images**, group them logically — one caption per image, collaps
 
 ```markdown
 **Populated board:**
-![list-tasks](https://github.com/PackmindHub/packmind/raw/feat/my-branch/docs/cli-demos/list-tasks.png)
+![list-tasks](https://github.com/PackmindHub/packmind/raw/9f3c1ab2/docs/cli-demos/list-tasks.png)
 
 **Empty board:**
-![list-tasks-empty](https://github.com/PackmindHub/packmind/raw/feat/my-branch/docs/cli-demos/list-tasks-empty.png)
+![list-tasks-empty](https://github.com/PackmindHub/packmind/raw/9f3c1ab2/docs/cli-demos/list-tasks-empty.png)
 ```
 
 For **WebM videos** (from ui-demo-recorder): GitHub doesn't play video inline in PR descriptions. Link it instead:
 
 ```markdown
-[▶ demo.webm](https://github.com/<owner>/<repo>/raw/<branch>/videos/demo.webm) (click to play/download)
+[▶ demo.webm](https://github.com/<owner>/<repo>/raw/<commit-sha>/videos/demo.webm) (click to play/download)
 ```
 
 ## Quick checklist
@@ -109,9 +118,9 @@ For **WebM videos** (from ui-demo-recorder): GitHub doesn't play video inline in
 Before opening/updating the PR:
 
 - [ ] PNG committed and pushed (not just SVG)
-- [ ] URL uses `https://github.com/<owner>/<repo>/raw/<branch>/...` (absolute, not relative)
-- [ ] Branch name in URL matches the actual branch
-- [ ] Verify by opening the URL directly in a browser — if it returns 404, the file isn't pushed yet
+- [ ] URL uses `https://github.com/<owner>/<repo>/raw/<commit-sha>/...` (absolute + SHA-pinned, not relative, not branch-pinned)
+- [ ] The SHA in the URL is a commit that's been pushed (`git rev-parse HEAD` after push)
+- [ ] Verify by opening the URL in a browser **while logged in** — a 404 means the file isn't pushed (or, on a private repo via curl+PAT, just that the route needs a session — check in the browser)
 
 ## Where to store images
 
