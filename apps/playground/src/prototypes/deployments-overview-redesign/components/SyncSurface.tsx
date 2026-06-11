@@ -210,9 +210,10 @@ export function SyncSurface({
           <PMVStack align="flex-start" gap={1}>
             <PMHeading level="h3">{titleForScope(scope, blocks)}</PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Each selected distribution will receive a PR on its branch that
-              brings every bundled artifact to its Packmind version. Packages
-              are redistributed as a whole, not artifact by artifact.
+              Each selected distribution receives a direct commit on its
+              configured branch bringing every bundled artifact to its Packmind
+              version. Packages are redistributed as a whole, not artifact by
+              artifact.
             </PMText>
           </PMVStack>
           <PMBox
@@ -284,7 +285,7 @@ export function SyncSurface({
             <PMHStack gap={3} align="center">
               <PMSpinner size="sm" color="branding.primary" />
               <PMText fontSize="sm" color="secondary">
-                Opening pull requests for {stats.installCount} distribution
+                Pushing to {stats.installCount} distribution
                 {stats.installCount === 1 ? '' : 's'}…
               </PMText>
             </PMHStack>
@@ -652,16 +653,16 @@ function SuccessSurface({
           <PMIcon fontSize="xl" color="green.500">
             <LuCheck />
           </PMIcon>
-          <PMHeading level="h3">Pull requests opened</PMHeading>
+          <PMHeading level="h3">Distributions updated</PMHeading>
         </PMHStack>
         <PMText fontSize="sm" color="secondary">
           {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-          queued for redistribution on {stats.installCount} distribution
+          redistributed on {stats.installCount} distribution
           {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
           artifact update{stats.artifactUpdateCount === 1 ? '' : 's'} in total).
-          Each distribution receives a PR on its branch that brings the bundled
-          artifacts to their Packmind version. Once merged, those distributions
-          move back in line.
+          Each distribution received a direct commit on its configured branch
+          bringing the bundled artifacts to their Packmind version. Those
+          distributions are now back in line.
         </PMText>
         <PMHStack gap={2} paddingTop={2}>
           <PMButton variant="primary" size="sm" onClick={onClose}>

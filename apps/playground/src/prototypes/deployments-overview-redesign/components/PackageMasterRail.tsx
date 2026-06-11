@@ -18,18 +18,31 @@ type PackageMasterRailProps = {
   onSelect: (packageId: string) => void;
 };
 
+type DriftFilter = 'all' | 'drift' | 'aligned';
+
 export function PackageMasterRail({
   packages,
   selectedPackageId,
   onSelect,
 }: Readonly<PackageMasterRailProps>) {
   const [query, setQuery] = useState('');
+  const [driftFilter, setDriftFilter] = useState<DriftFilter>('all');
+
+  const counts = useMemo(() => {
+    let drift = 0;
+    for (const p of packages) if (packageHasDrift(p)) drift++;
+    return { all: packages.length, drift, aligned: packages.length - drift };
+  }, [packages]);
 
   const filtered = useMemo(() => {
+    let list = packages;
+    if (driftFilter === 'drift') list = list.filter(packageHasDrift);
+    else if (driftFilter === 'aligned')
+      list = list.filter((p) => !packageHasDrift(p));
     const q = query.trim().toLowerCase();
-    if (!q) return packages;
-    return packages.filter((p) => p.name.toLowerCase().includes(q));
-  }, [packages, query]);
+    if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
+    return list;
+  }, [packages, query, driftFilter]);
 
   return (
     <PMBox
@@ -91,11 +104,23 @@ export function PackageMasterRail({
             paddingLeft="32px"
           />
         </PMBox>
+        <DriftFilterControl
+          value={driftFilter}
+          counts={counts}
+          onChange={setDriftFilter}
+        />
       </PMVStack>
 
       <PMBox flex="1" overflow="auto" minH={0}>
         {filtered.length === 0 ? (
-          <FilteredZero query={query} onClear={() => setQuery('')} />
+          <FilteredZero
+            query={query}
+            driftFilter={driftFilter}
+            onClear={() => {
+              setQuery('');
+              setDriftFilter('all');
+            }}
+          />
         ) : (
           filtered.map((p) => (
             <PackageRow
@@ -209,12 +234,26 @@ function PackageRow({ pkg, selected, onSelect }: Readonly<PackageRowProps>) {
 
 function FilteredZero({
   query,
+  driftFilter,
   onClear,
-}: Readonly<{ query: string; onClear: () => void }>) {
+}: Readonly<{
+  query: string;
+  driftFilter: DriftFilter;
+  onClear: () => void;
+}>) {
+  const message = (() => {
+    if (query)
+      return driftFilter === 'all'
+        ? `No packages match “${query}”.`
+        : `No ${driftFilter === 'drift' ? 'drifted' : 'aligned'} packages match “${query}”.`;
+    if (driftFilter === 'drift') return 'No packages currently drifting.';
+    if (driftFilter === 'aligned') return 'No fully aligned packages.';
+    return 'No packages.';
+  })();
   return (
     <PMVStack gap={2} align="start" padding={4}>
       <PMText fontSize="xs" color="secondary">
-        No packages match &ldquo;{query}&rdquo;.
+        {message}
       </PMText>
       <PMBox
         as="button"
@@ -228,8 +267,98 @@ function FilteredZero({
         _hover={{ color: 'blue.300' }}
         onClick={onClear}
       >
-        Clear filter
+        Clear filters
       </PMBox>
     </PMVStack>
+  );
+}
+
+type DriftFilterControlProps = {
+  value: DriftFilter;
+  counts: { all: number; drift: number; aligned: number };
+  onChange: (value: DriftFilter) => void;
+};
+
+const FILTER_ITEMS: Array<{
+  value: DriftFilter;
+  label: string;
+  dotColor?: string;
+}> = [
+  { value: 'all', label: 'All' },
+  { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
+];
+
+function DriftFilterControl({
+  value,
+  counts,
+  onChange,
+}: Readonly<DriftFilterControlProps>) {
+  return (
+    <PMHStack
+      gap={0}
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="sm"
+      overflow="hidden"
+      role="tablist"
+      aria-label="Filter by drift state"
+    >
+      {FILTER_ITEMS.map((item, idx) => {
+        const active = value === item.value;
+        const count = counts[item.value];
+        return (
+          <PMBox
+            key={item.value}
+            as="button"
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(item.value)}
+            flex={1}
+            bg={active ? 'background.secondary' : 'transparent'}
+            border="none"
+            borderLeftWidth={idx === 0 ? 0 : '1px'}
+            borderColor="border.tertiary"
+            cursor="pointer"
+            paddingY="6px"
+            paddingX={2}
+            transition="background-color 120ms ease-out"
+            _hover={active ? undefined : { bg: 'background.tertiary' }}
+            _focusVisible={{
+              outline: 'none',
+              boxShadow:
+                'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
+            }}
+          >
+            <PMHStack gap="6px" align="center" justify="center">
+              {item.dotColor && (
+                <PMBox
+                  width="6px"
+                  height="6px"
+                  borderRadius="full"
+                  bg={item.dotColor}
+                  aria-hidden
+                />
+              )}
+              <PMText
+                fontSize="xs"
+                color={active ? 'text.primary' : 'text.secondary'}
+                fontWeight={active ? 'semibold' : 'medium'}
+              >
+                {item.label}
+              </PMText>
+              <PMText
+                fontSize="11px"
+                color="text.faded"
+                fontVariantNumeric="tabular-nums"
+              >
+                {count}
+              </PMText>
+            </PMHStack>
+          </PMBox>
+        );
+      })}
+    </PMHStack>
   );
 }
