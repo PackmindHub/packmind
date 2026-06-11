@@ -51,7 +51,7 @@ import packmind from './eslint/index.js';
 },
 ```
 
-It runs as part of `npm run lint` (`nx run-many -t lint`).
+It runs as part of `pnpm run lint` (`nx run-many -t lint`).
 
 ## Tests
 

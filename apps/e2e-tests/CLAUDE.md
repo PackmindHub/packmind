@@ -25,7 +25,7 @@ Playwright end-to-end tests for Packmind frontend and API, using Page Object Mod
 
 ## Main Commands
 
-- Run all E2E tests: `npm run e2e` (NOT via Nx)
+- Run all E2E tests: `pnpm run e2e` (NOT via Nx)
 - Run specific test file: `npx playwright test <file-name>`
 - Run in headed mode: `npx playwright test --headed`
 - Run in debug mode: `npx playwright test --debug`
