@@ -42,13 +42,12 @@ services:
         set -eu
         corepack enable
         corepack prepare pnpm@11.5.0 --activate
-        # Host store is warm by now -> offline. Degrade gracefully to
-        # --prefer-offline if a run ever skipped the host install.
-        if [ -n "$$(ls -A /root/.pnpm-store 2>/dev/null || true)" ]; then
-          pnpm install --frozen-lockfile --offline --store-dir /root/.pnpm-store
-        else
-          pnpm install --frozen-lockfile --prefer-offline --store-dir /root/.pnpm-store
-        fi
+        # Always --prefer-offline (never hard --offline). The warm store is baked
+        # from the OSS lockfile; against the proprietary repo (OSS + extra deps)
+        # a hard --offline can't resolve the additional packages and fails the
+        # whole install (e.g. ERR_PNPM_NO_OFFLINE… on async-mutex). --prefer-offline
+        # links every hit from the warm store (fast) and fetches only the delta.
+        pnpm install --frozen-lockfile --prefer-offline --store-dir /root/.pnpm-store
         chmod -R +x node_modules/.bin 2>/dev/null || true
         node scripts/select-tsconfig.mjs
   backend:
