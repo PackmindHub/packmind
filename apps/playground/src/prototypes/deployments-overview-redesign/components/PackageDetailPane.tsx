@@ -7,6 +7,7 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMInput,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -18,6 +19,7 @@ import {
   LuClock,
   LuGitBranch,
   LuRotateCw,
+  LuSearch,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
@@ -41,6 +43,8 @@ type PackageDetailPaneProps = {
   pkg: PackageDrift;
   onSyncPackage: (pkgId: string, installKeys?: string[]) => void;
 };
+
+type InstallDriftFilter = 'all' | 'drift' | 'aligned';
 
 function installKey(repoId: string, targetId: string): string {
   return `${repoId}::${targetId}`;
@@ -68,9 +72,52 @@ export function PackageDetailPane({
     () => new Set(),
   );
 
+  const [repoQuery, setRepoQuery] = useState('');
+  const [installFilter, setInstallFilter] = useState<InstallDriftFilter>('all');
+
   useEffect(() => {
     setSelectedKeys(new Set());
+    setRepoQuery('');
+    setInstallFilter('all');
   }, [pkg.id]);
+
+  const installCounts = useMemo(() => {
+    let drift = 0;
+    for (const e of entries) {
+      if (e.behindArtifacts.length > 0) drift++;
+    }
+    return {
+      all: entries.length,
+      drift,
+      aligned: entries.length - drift,
+    };
+  }, [entries]);
+
+  const filteredEntries = useMemo(() => {
+    let list = entries;
+    if (installFilter === 'drift')
+      list = list.filter((e) => e.behindArtifacts.length > 0);
+    else if (installFilter === 'aligned')
+      list = list.filter((e) => e.behindArtifacts.length === 0);
+    const q = repoQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((e) => {
+        const full = `${e.repo.owner}/${e.repo.name}`.toLowerCase();
+        return (
+          full.includes(q) ||
+          e.branch.toLowerCase().includes(q) ||
+          e.target.name.toLowerCase().includes(q)
+        );
+      });
+    }
+    return list;
+  }, [entries, installFilter, repoQuery]);
+
+  const hasActiveFilter = installFilter !== 'all' || repoQuery.length > 0;
+  const clearFilters = () => {
+    setInstallFilter('all');
+    setRepoQuery('');
+  };
 
   const toggleInstall = (key: string) => {
     setSelectedKeys((prev) => {
@@ -162,20 +209,68 @@ export function PackageDetailPane({
         </PMVStack>
       </PMBox>
 
+      <PMBox
+        paddingX={6}
+        paddingY={3}
+        borderBottomWidth="1px"
+        borderColor="border.tertiary"
+        bg="background.primary"
+      >
+        <PMHStack gap={3} align="center" wrap="wrap">
+          <PMBox position="relative" flex={1} minW="200px" maxW="320px">
+            <PMBox
+              position="absolute"
+              left="10px"
+              top="50%"
+              transform="translateY(-50%)"
+              color="text.faded"
+              pointerEvents="none"
+              display="flex"
+              alignItems="center"
+            >
+              <PMIcon fontSize="sm">
+                <LuSearch />
+              </PMIcon>
+            </PMBox>
+            <PMInput
+              placeholder="Filter by repo, branch, or target"
+              value={repoQuery}
+              onChange={(e) => setRepoQuery(e.target.value)}
+              size="sm"
+              paddingLeft="32px"
+            />
+          </PMBox>
+          <InstallFilterControl
+            value={installFilter}
+            counts={installCounts}
+            onChange={setInstallFilter}
+          />
+        </PMHStack>
+      </PMBox>
+
       <PMBox flex="1" overflow="auto" minH={0}>
-        <PMVStack gap={0} align="stretch">
-          {entries.map((entry) => {
-            const key = installKey(entry.repo.id, entry.target.id);
-            return (
-              <InstallRow
-                key={key}
-                entry={entry}
-                selected={selectedKeys.has(key)}
-                onToggle={() => toggleInstall(key)}
-              />
-            );
-          })}
-        </PMVStack>
+        {filteredEntries.length === 0 ? (
+          <InstallEmptyState
+            installFilter={installFilter}
+            repoQuery={repoQuery}
+            hasActiveFilter={hasActiveFilter}
+            onClear={clearFilters}
+          />
+        ) : (
+          <PMVStack gap={0} align="stretch">
+            {filteredEntries.map((entry) => {
+              const key = installKey(entry.repo.id, entry.target.id);
+              return (
+                <InstallRow
+                  key={key}
+                  entry={entry}
+                  selected={selectedKeys.has(key)}
+                  onToggle={() => toggleInstall(key)}
+                />
+              );
+            })}
+          </PMVStack>
+        )}
       </PMBox>
 
       {hasDrift && (
@@ -493,5 +588,143 @@ function TargetChip({ name }: Readonly<{ name: string }>) {
     >
       {name}
     </PMBox>
+  );
+}
+
+const INSTALL_FILTER_ITEMS: Array<{
+  value: InstallDriftFilter;
+  label: string;
+  dotColor?: string;
+}> = [
+  { value: 'all', label: 'All' },
+  { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
+];
+
+function InstallFilterControl({
+  value,
+  counts,
+  onChange,
+}: Readonly<{
+  value: InstallDriftFilter;
+  counts: { all: number; drift: number; aligned: number };
+  onChange: (next: InstallDriftFilter) => void;
+}>) {
+  return (
+    <PMHStack
+      gap={0}
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="sm"
+      overflow="hidden"
+      role="tablist"
+      aria-label="Filter distributions"
+    >
+      {INSTALL_FILTER_ITEMS.map((item, idx) => {
+        const active = value === item.value;
+        const count = counts[item.value];
+        const disabled = count === 0 && !active;
+        return (
+          <PMBox
+            key={item.value}
+            as="button"
+            type="button"
+            role="tab"
+            aria-selected={active}
+            disabled={disabled}
+            onClick={() => onChange(item.value)}
+            bg={active ? 'background.secondary' : 'transparent'}
+            border="none"
+            borderLeftWidth={idx === 0 ? 0 : '1px'}
+            borderColor="border.tertiary"
+            cursor={disabled ? 'not-allowed' : 'pointer'}
+            opacity={disabled ? 0.5 : 1}
+            paddingY="6px"
+            paddingX={2.5}
+            transition="background-color 120ms ease-out"
+            _hover={
+              active || disabled ? undefined : { bg: 'background.tertiary' }
+            }
+            _focusVisible={{
+              outline: 'none',
+              boxShadow:
+                'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
+            }}
+          >
+            <PMHStack gap="6px" align="center" justify="center">
+              {item.dotColor && (
+                <PMBox
+                  width="6px"
+                  height="6px"
+                  borderRadius="full"
+                  bg={item.dotColor}
+                  aria-hidden
+                />
+              )}
+              <PMText
+                fontSize="xs"
+                color={active ? 'text.primary' : 'text.secondary'}
+                fontWeight={active ? 'semibold' : 'medium'}
+              >
+                {item.label}
+              </PMText>
+              <PMText
+                fontSize="11px"
+                color="text.faded"
+                fontVariantNumeric="tabular-nums"
+              >
+                {count}
+              </PMText>
+            </PMHStack>
+          </PMBox>
+        );
+      })}
+    </PMHStack>
+  );
+}
+
+function InstallEmptyState({
+  installFilter,
+  repoQuery,
+  hasActiveFilter,
+  onClear,
+}: Readonly<{
+  installFilter: InstallDriftFilter;
+  repoQuery: string;
+  hasActiveFilter: boolean;
+  onClear: () => void;
+}>) {
+  const message = (() => {
+    if (repoQuery && installFilter !== 'all') {
+      const label = installFilter === 'drift' ? 'drifted' : 'aligned';
+      return `No ${label} distributions match “${repoQuery}”.`;
+    }
+    if (repoQuery) return `No distributions match “${repoQuery}”.`;
+    if (installFilter === 'drift') return 'No drifted distributions.';
+    if (installFilter === 'aligned') return 'No aligned distributions.';
+    return 'No distributions.';
+  })();
+  return (
+    <PMVStack gap={2} align="start" paddingX={6} paddingY={6}>
+      <PMText fontSize="sm" color="text.secondary">
+        {message}
+      </PMText>
+      {hasActiveFilter && (
+        <PMBox
+          as="button"
+          type="button"
+          fontSize="xs"
+          color="branding.primary"
+          bg="transparent"
+          border="none"
+          cursor="pointer"
+          padding={0}
+          _hover={{ color: 'blue.300' }}
+          onClick={onClear}
+        >
+          Clear filters
+        </PMBox>
+      )}
+    </PMVStack>
   );
 }

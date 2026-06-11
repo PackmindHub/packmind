@@ -14,6 +14,8 @@ import {
   LuArrowRight,
   LuBookOpen,
   LuCheck,
+  LuChevronDown,
+  LuChevronRight,
   LuCircleCheck,
   LuClock,
   LuGitBranch,
@@ -37,7 +39,7 @@ const KIND_ICON: Record<ArtifactKind, IconType> = {
 };
 
 export type SyncScope =
-  | { kind: 'all' }
+  | { kind: 'bulk'; packageIds: string[] }
   | { kind: 'package'; packageId: string; installKeys?: string[] };
 
 type PackageBlock = {
@@ -210,9 +212,9 @@ export function SyncSurface({
           <PMVStack align="flex-start" gap={1}>
             <PMHeading level="h3">{titleForScope(scope, blocks)}</PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Each selected distribution will receive a PR on its branch that
-              brings every bundled artifact to its Packmind version. Packages
-              are redistributed as a whole, not artifact by artifact.
+              Each selected distribution receives a direct commit on its
+              configured branch bringing every bundled artifact to its Packmind
+              version.
             </PMText>
           </PMVStack>
           <PMBox
@@ -284,7 +286,7 @@ export function SyncSurface({
             <PMHStack gap={3} align="center">
               <PMSpinner size="sm" color="branding.primary" />
               <PMText fontSize="sm" color="secondary">
-                Opening pull requests for {stats.installCount} distribution
+                Pushing to {stats.installCount} distribution
                 {stats.installCount === 1 ? '' : 's'}…
               </PMText>
             </PMHStack>
@@ -329,7 +331,10 @@ export function SyncSurface({
 }
 
 function titleForScope(scope: SyncScope, blocks: PackageBlock[]): string {
-  if (scope.kind === 'all') return 'Distribute all packages';
+  if (scope.kind === 'bulk') {
+    const n = blocks.length;
+    return `Distribute ${n} package${n === 1 ? '' : 's'}`;
+  }
   const pkg = blocks[0]?.pkg;
   return pkg ? `Distribute ${pkg.name}` : 'Distribute package';
 }
@@ -338,9 +343,11 @@ function buildPackageBlocks(
   packages: PackageDrift[],
   scope: SyncScope,
 ): PackageBlock[] {
+  const bulkAllowed = scope.kind === 'bulk' ? new Set(scope.packageIds) : null;
   const out: PackageBlock[] = [];
   for (const pkg of packages) {
     if (scope.kind === 'package' && pkg.id !== scope.packageId) continue;
+    if (bulkAllowed && !bulkAllowed.has(pkg.id)) continue;
     const driftedEntries = installDriftEntries(pkg).filter(
       (e) => e.behindArtifacts.length > 0,
     );
@@ -363,6 +370,7 @@ function PackageSyncBlock({
   onToggleInstall,
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
+  const [expanded, setExpanded] = useState(false);
   const total = block.driftedEntries.length;
   const selectedCount = block.driftedEntries.reduce(
     (acc, entry) =>
@@ -389,21 +397,60 @@ function PackageSyncBlock({
         paddingX={4}
         paddingY={3}
         bg="background.primary"
-        borderBottomWidth="1px"
+        borderBottomWidth={expanded ? '1px' : 0}
         borderColor="border.tertiary"
+        cursor="pointer"
+        onClick={() => onTogglePackage(!allSelected)}
+        _hover={{ bg: 'background.tertiary' }}
+        transition="background-color 120ms ease-out"
       >
         <PMHStack gap={3} align="center" justify="space-between">
-          <PMHStack gap={3} align="center" minW={0} flex={1}>
-            <PMCheckbox
-              size="sm"
-              checked={
-                allSelected ? true : noneSelected ? false : 'indeterminate'
-              }
-              onCheckedChange={(details) =>
-                onTogglePackage(details.checked === true)
-              }
-              aria-label={`Select all repos for ${block.pkg.name}`}
-            />
+          <PMHStack gap={2} align="center" minW={0} flex={1}>
+            <PMBox
+              as="button"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding="2px"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              color="text.secondary"
+              _hover={{ color: 'text.primary' }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'branding.primary',
+                outlineOffset: '2px',
+                borderRadius: 'sm',
+              }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${block.pkg.name}`}
+            >
+              <PMIcon fontSize="sm">
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            </PMBox>
+            <PMBox
+              onClick={(e) => e.stopPropagation()}
+              display="inline-flex"
+              alignItems="center"
+            >
+              <PMCheckbox
+                size="sm"
+                checked={
+                  allSelected ? true : noneSelected ? false : 'indeterminate'
+                }
+                onCheckedChange={(details) =>
+                  onTogglePackage(details.checked === true)
+                }
+                aria-label={`Select all repos for ${block.pkg.name}`}
+              />
+            </PMBox>
             <PMText
               fontSize="sm"
               fontWeight="semibold"
@@ -425,23 +472,25 @@ function PackageSyncBlock({
         </PMHStack>
       </PMBox>
 
-      <PMVStack gap={0} align="stretch">
-        {block.driftedEntries.map((entry) => {
-          const key = installSelectionKey(
-            block.pkg.id,
-            entry.repo.id,
-            entry.target.id,
-          );
-          return (
-            <InstallSyncRow
-              key={key}
-              entry={entry}
-              selected={selected.has(key)}
-              onToggle={() => onToggleInstall(key)}
-            />
-          );
-        })}
-      </PMVStack>
+      {expanded && (
+        <PMVStack gap={0} align="stretch">
+          {block.driftedEntries.map((entry) => {
+            const key = installSelectionKey(
+              block.pkg.id,
+              entry.repo.id,
+              entry.target.id,
+            );
+            return (
+              <InstallSyncRow
+                key={key}
+                entry={entry}
+                selected={selected.has(key)}
+                onToggle={() => onToggleInstall(key)}
+              />
+            );
+          })}
+        </PMVStack>
+      )}
     </PMBox>
   );
 }
@@ -457,6 +506,8 @@ function InstallSyncRow({
   selected,
   onToggle,
 }: Readonly<InstallSyncRowProps>) {
+  const [expanded, setExpanded] = useState(false);
+  const showArtifacts = selected && expanded;
   return (
     <PMVStack
       gap={0}
@@ -468,7 +519,7 @@ function InstallSyncRow({
       transition="background-color 120ms ease-out"
     >
       <PMHStack
-        gap={3}
+        gap={2}
         align="center"
         paddingX={4}
         paddingY={2.5}
@@ -482,6 +533,45 @@ function InstallSyncRow({
           onCheckedChange={() => onToggle()}
           aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
         />
+        <PMBox
+          width="18px"
+          flexShrink={0}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          {selected && (
+            <PMBox
+              as="button"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding="2px"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              color="text.secondary"
+              _hover={{ color: 'text.primary' }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'branding.primary',
+                outlineOffset: '2px',
+                borderRadius: 'sm',
+              }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} artifacts to update`}
+            >
+              <PMIcon fontSize="sm">
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            </PMBox>
+          )}
+        </PMBox>
         <PMHStack gap={2} align="center" flex={1} minW={0} wrap="wrap">
           <PMText fontSize="sm" color="text.primary" truncate>
             {entry.repo.owner}/{entry.repo.name}
@@ -549,7 +639,7 @@ function InstallSyncRow({
           )}
         </PMVStack>
       </PMHStack>
-      {selected && (
+      {showArtifacts && (
         <PMBox
           paddingLeft="44px"
           paddingRight={4}
@@ -652,16 +742,16 @@ function SuccessSurface({
           <PMIcon fontSize="xl" color="green.500">
             <LuCheck />
           </PMIcon>
-          <PMHeading level="h3">Pull requests opened</PMHeading>
+          <PMHeading level="h3">Distributions updated</PMHeading>
         </PMHStack>
         <PMText fontSize="sm" color="secondary">
           {stats.packageCount} package{stats.packageCount === 1 ? '' : 's'}{' '}
-          queued for redistribution on {stats.installCount} distribution
+          redistributed on {stats.installCount} distribution
           {stats.installCount === 1 ? '' : 's'} ({stats.artifactUpdateCount}{' '}
           artifact update{stats.artifactUpdateCount === 1 ? '' : 's'} in total).
-          Each distribution receives a PR on its branch that brings the bundled
-          artifacts to their Packmind version. Once merged, those distributions
-          move back in line.
+          Each distribution received a direct commit on its configured branch
+          bringing the bundled artifacts to their Packmind version. Those
+          distributions are now back in line.
         </PMText>
         <PMHStack gap={2} paddingTop={2}>
           <PMButton variant="primary" size="sm" onClick={onClose}>
