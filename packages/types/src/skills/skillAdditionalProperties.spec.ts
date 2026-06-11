@@ -90,6 +90,7 @@ describe('CAMEL_TO_YAML_KEY', () => {
       hooks: 'hooks',
       paths: 'paths',
       shell: 'shell',
+      disallowedTools: 'disallowed-tools',
     });
   });
 });
@@ -145,6 +146,20 @@ describe('sortAdditionalPropertiesKeys', () => {
       'arguments',
       'whenToUse',
       'shell',
+    ]);
+  });
+
+  it('places disallowedTools after shell in canonical order', () => {
+    const props = {
+      disallowedTools: ['Monitor', 'AskUserQuestions'],
+      shell: 'bash',
+      model: 'opus',
+    };
+    const result = sortAdditionalPropertiesKeys(props);
+    expect(result.map(([k]) => k)).toEqual([
+      'model',
+      'shell',
+      'disallowedTools',
     ]);
   });
 });
