@@ -109,7 +109,14 @@ mcp__playwright__browser_start_video(
 )
 ```
 
-If you still get `Error: Screencast is already started` after that, call `browser_stop_video` again, delete the stub WebMs it drops at the project root, then retry `start_video`.
+If you still get `Error: Screencast is already started` after that, the recorder is wedged to a stale browser context that a second `stop_video` won't clear on its own. Escalate — do **not** just retry stop+start in a loop:
+
+1. `mcp__playwright__browser_stop_video()` again (ignore error).
+2. `mcp__playwright__browser_close()` — this tears down the wedged context that owns the orphaned screencast.
+3. Delete the stub WebMs it drops at the project root.
+4. Retry `start_video`. The fresh context starts clean.
+
+This is the common failure mode on the fly worker / reused sprites, where a crashed prior run leaves both a screencast _and_ its browser context alive — stopping the screencast alone is not idempotent there, because the next `start_video` reattaches to the same wedged context. Closing the context is what actually resets it.
 
 If you get `Browser is already in use for ... use --isolated`, a non-recording Playwright session has the persistent profile locked. Call `mcp__playwright__browser_close` first, then start_video.
 
