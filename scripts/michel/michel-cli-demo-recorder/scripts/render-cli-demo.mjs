@@ -4,11 +4,13 @@
 // Runs a command under a real PTY (so CLIs that gate color on `isTTY` still
 // emit ANSI), captures the raw colored output, parses SGR escape codes, and
 // emits a static SVG that looks like a terminal window. The SVG is the master
-// artifact: crisp at any zoom, tiny, exact colors, and it renders inline on
-// GitHub when committed to the repo and referenced by relative path.
+// artifact: crisp at any zoom, tiny, exact colors. It is then rasterized to a
+// PNG (same basename) by default — GitHub does NOT render SVG in PR/issue
+// bodies, so the PNG is the artifact you actually embed in a PR.
 //
 // Usage:
-//   node render-cli-demo.mjs --out demo.svg [--prompt-cmd "packmind-cli standards list"] \
+//   node render-cli-demo.mjs --out demo.svg [--png demo.png] [--no-png] \
+//        [--prompt-cmd "packmind-cli standards list"] \
 //        [--title "packmind-cli"] [--cwd .] [--theme dark] -- node dist/apps/cli/main.cjs <subcommand...>
 //
 // Everything after `--` is the command actually executed (for this repo, the
@@ -19,7 +21,13 @@
 // Runs on `node render-cli-demo.mjs ...`.
 
 import { spawnSync } from 'node:child_process';
-import { writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import {
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+  renameSync,
+} from 'node:fs';
 import { hostname, userInfo, platform, tmpdir } from 'node:os';
 import { basename, resolve, join } from 'node:path';
 
@@ -30,6 +38,8 @@ function parseArgs(argv) {
   const o = {
     out: null,
     textOut: null,
+    png: null, // explicit PNG path; default derives <out>.png
+    noPng: false, // skip the SVG→PNG rasterization
     promptCmd: null,
     title: null,
     cwd: process.cwd(),
@@ -45,6 +55,10 @@ function parseArgs(argv) {
     } else if (a === '--out') o.out = argv[++i];
     else if (a === '--text-out')
       o.textOut = argv[++i]; // plain-text sidecar (ANSI stripped)
+    else if (a === '--png')
+      o.png = argv[++i]; // override PNG path
+    else if (a === '--no-png')
+      o.noPng = true; // skip PNG rasterization
     else if (a === '--prompt-cmd') o.promptCmd = argv[++i];
     else if (a === '--title') o.title = argv[++i];
     else if (a === '--cwd') o.cwd = argv[++i];
@@ -344,7 +358,52 @@ const FONT =
   "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, 'DejaVu Sans Mono', Consolas, 'Liberation Mono', monospace";
 
 // ---------------------------------------------------------------------------
-// 6. main
+// 6. SVG → PNG rasterization
+//    The SVG is the master artifact, but GitHub does NOT render SVG in PR/issue
+//    bodies (its image proxy refuses image/svg+xml), so the artifact you embed
+//    in a PR must be a PNG. We rasterize at 2x for crispness.
+//    - Primary: rsvg-convert (Linux worker bakes it in via `librsvg2-bin`;
+//      macOS dev: `brew install librsvg`). Zoom 2x, no width math needed.
+//    - macOS fallback: qlmanage (ships with macOS, no install) — used only when
+//      rsvg-convert is absent, so authoring on a bare Mac still works.
+// ---------------------------------------------------------------------------
+function convertToPng(svgPath, pngPath, svgText) {
+  const rsvg = spawnSync('rsvg-convert', ['-z', '2', svgPath, '-o', pngPath], {
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  if (!rsvg.error && rsvg.status === 0) {
+    console.error(`wrote ${pngPath} (rsvg-convert)`);
+    return;
+  }
+  if (platform() === 'darwin') {
+    // qlmanage sizes by max dimension; 2x the SVG width keeps it crisp.
+    const m = /\bwidth="(\d+)"/.exec(svgText);
+    const size = m ? Math.min(4000, parseInt(m[1], 10) * 2) : 2000;
+    const outDir = tmpdir();
+    const ql = spawnSync(
+      'qlmanage',
+      ['-t', '-s', String(size), '-o', outDir, svgPath],
+      { stdio: ['ignore', 'ignore', 'pipe'] },
+    );
+    // qlmanage writes "<svg basename>.png" into the -o dir; move it to pngPath.
+    const produced = join(outDir, `${basename(svgPath)}.png`);
+    if (!ql.error && existsSync(produced)) {
+      renameSync(produced, pngPath);
+      console.error(`wrote ${pngPath} (qlmanage)`);
+      return;
+    }
+  }
+  console.error(
+    `PNG conversion failed: rsvg-convert not found.\n` +
+      `  Linux:  apt-get install -y librsvg2-bin\n` +
+      `  macOS:  brew install librsvg  (or rely on the qlmanage fallback)\n` +
+      `Re-run with --no-png to emit the SVG only.`,
+  );
+  process.exit(1);
+}
+
+// ---------------------------------------------------------------------------
+// 7. main
 // ---------------------------------------------------------------------------
 const opts = parseArgs(process.argv.slice(2));
 const cwdAbs = resolve(opts.cwd);
@@ -370,6 +429,13 @@ const lines = parse(full, THEMES[opts.theme]?.fg);
 const svg = render(lines, opts);
 writeFileSync(opts.out, svg);
 console.error(`wrote ${opts.out} (${lines.length} lines, ${svg.length} bytes)`);
+
+// Rasterize to PNG (default): the SVG is the crisp master, but GitHub won't
+// render SVG in a PR body, so the PNG is what you actually embed. --no-png skips.
+if (!opts.noPng) {
+  const pngPath = opts.png || opts.out.replace(/\.svg$/i, '.png');
+  convertToPng(opts.out, pngPath, svg);
+}
 
 // Plain-text sidecar: ANSI-stripped flattening of every line. Useful on hosts
 // with no SVG rasterizer (verify the captured content by reading it) and as a
