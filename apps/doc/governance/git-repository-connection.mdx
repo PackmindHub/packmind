@@ -8,23 +8,77 @@ title: 'Git Repository Connection'
   administrator.
 </Info>
 
+Packmind connects to your GitHub and GitLab repositories so it can distribute your standards, commands, and skills. Before you can distribute, an administrator connects at least one Git provider from **Settings** → **Git Providers**.
+
 ## Supported Git Providers
 
-Packmind supports multiple Git providers to connect your repositories.
+Packmind supports **GitHub** and **GitLab**. You add and manage connections from **Settings** → **Git Providers**, on the **Connections** tab. Click **Add connection** to open the connection panel.
 
-### GitHub Setup
+For GitHub, you can authenticate with the **GitHub App** (recommended) or a **personal access token**. GitLab connections use a personal access token.
 
-1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens**
-2. Click **Generate new token** (classic)
-3. Permissions must include **Contents: read/write**
-4. Copy your token (starts with `ghp_` or `github_pat_`)
+## Connecting GitHub
 
-### GitLab Setup
+### GitHub App (recommended)
 
-1. Go to **GitLab User Settings** → **Access Tokens**
-2. Create a new token with these scopes:
-   - `api` - Full API access
-3. Copy your token (starts with `glpat-`)
+The GitHub App is the recommended way to connect GitHub repositories:
+
+- **Scoped access** — you choose exactly which organizations and repositories Packmind can reach. Nothing else is visible to Packmind.
+- **Automatic credential rotation** — Packmind refreshes its access on its own, so there's no token to create, store, or renew.
+
+How you connect depends on whether you use Packmind Cloud or a self-hosted instance.
+
+#### On Packmind Cloud
+
+1. Go to **Settings** → **Git** and click **Add connection**.
+2. Select **GitHub** as the vendor.
+3. (Optional) Enter a **display name** to identify this connection later.
+4. Under **Authentication**, click **Install Packmind on GitHub**.
+5. On GitHub, choose the organizations and repositories you want to grant access to, then confirm.
+6. You're returned to Packmind automatically, and the connection is ready to use.
+
+#### On self-hosted Packmind
+
+The first time you connect, you register a Packmind GitHub App for your organization. This is a one-time setup — every later GitHub connection reuses it.
+
+1. Go to **Settings** → **Git** and click **Add connection**.
+2. Select **GitHub**.
+3. Under **Authentication**, click **Register the Packmind GitHub App**. GitHub opens so you can create the app for your organization, then returns you to Packmind automatically.
+4. Once the app is registered, click **Install Packmind on GitHub**.
+5. On GitHub, choose the organizations and repositories to grant access to, then confirm.
+6. You're returned to Packmind automatically, and the connection is ready to use.
+
+<Note>
+  After the app is registered, every new GitHub connection in your organization
+  reuses it — you only register once. To remove the registration, use **Revoke
+  registration**. This is only available once no connections are still using the
+  app, so delete those connections from the **Connections** tab first.
+</Note>
+
+### Personal access token
+
+If you can't use the GitHub App, you can connect with a personal access token instead. In the **Add connection** panel, choose **Use a personal access token instead**, then:
+
+1. Go to **GitHub Settings** → **Developer settings** → **Personal access tokens**.
+2. Click **Generate new token** (classic).
+3. Permissions must include **Contents: read/write** (or the `repo` scope for classic tokens).
+4. Copy your token (it starts with `ghp_` or `github_pat_`) and paste it into Packmind.
+
+<Note>
+  Personal access tokens don't rotate automatically — you'll need to renew them
+  before they expire. Prefer the GitHub App when you can.
+</Note>
+
+## Connecting GitLab
+
+GitLab connections use a personal access token:
+
+1. Go to **GitLab User Settings** → **Access Tokens**.
+2. Create a new token with the `api` scope (full API access).
+3. Copy your token (it starts with `glpat-`) and paste it into Packmind.
+
+## Managing Repository Access
+
+To change which repositories a GitHub App connection can reach, open the connection from the **Connections** tab and use **View Packmind on GitHub**. This opens the Packmind app's page on GitHub, where you can add or remove repositories. The new access takes effect in Packmind without reconnecting.
 
 ## Adding Repositories
 

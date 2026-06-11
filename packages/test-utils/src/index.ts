@@ -6,5 +6,6 @@ export * from './factories/recipes';
 export * from './factories/standards';
 export * from './factories/deployments';
 export * from './logger/stubLogger';
+export * from './skipWhenRoot';
 export * from './repository';
 export * from './createMockInstance';

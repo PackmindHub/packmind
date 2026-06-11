@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
-  isFeatureFlagEnabled,
   PMAlert,
   PMBox,
   PMButton,
@@ -25,7 +22,6 @@ import {
   GitProviderUI,
 } from '../../types/GitProviderTypes';
 import { extractErrorMessage } from '../../utils/errorUtils';
-import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { GitHubAppConnection } from './GitHubAppConnection';
 
 interface GitProviderConnectionProps {
@@ -57,14 +53,6 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
   }>({});
   const createMutation = useCreateGitProviderMutation();
   const updateMutation = useUpdateGitProviderMutation();
-
-  const { data: me } = useGetMeQuery();
-  const userEmail = me?.authenticated ? me.user?.email : null;
-  const githubAppEnabled = isFeatureFlagEnabled({
-    featureKeys: [GITHUB_APP_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -297,8 +285,8 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
           <PMField.ErrorText>{errors.url}</PMField.ErrorText>
         </PMField.Root>
 
-        {/* Tab strip (GitHub + feature flag ON) or legacy inline form */}
-        {formData.source === 'github' && githubAppEnabled ? (
+        {/* GitHub shows the App / PAT tab strip; GitLab keeps the inline form */}
+        {formData.source === 'github' ? (
           <PMBox>
             <PMTabs
               defaultValue={githubDefaultTab}
@@ -333,9 +321,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
             />
           </PMBox>
         ) : (
-          // Non-allowlisted users (any source) and GitLab: keep the existing
-          // single-form flow — render the token block inline. This is the same UX
-          // as before this feature shipped. No tabs, no App tab, no surprise.
+          // GitLab keeps the single-form flow — render the token block inline.
           <form onSubmit={handleSubmit}>
             <PMVStack alignItems="stretch" gap={4}>
               {tokenFormContent}

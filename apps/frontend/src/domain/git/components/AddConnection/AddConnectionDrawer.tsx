@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
-  isFeatureFlagEnabled,
   PMAlert,
   PMBox,
   PMButton,
@@ -66,16 +63,10 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
   onSuccess,
 }) => {
   const { data: me } = useGetMeQuery();
-  const userEmail = me?.authenticated ? me.user?.email : null;
   const githubAppMode: 'on-prem' | 'shared' =
     me?.authenticated && me.organization
       ? me.organization.githubAppMode
       : 'on-prem';
-  const githubAppEnabled = isFeatureFlagEnabled({
-    featureKeys: [GITHUB_APP_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
 
   const [vendor, setVendor] = useState<SupportedVendor>('github');
   const [instanceUrl, setInstanceUrl] = useState<string>(
@@ -91,7 +82,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
 
   const createMutation = useCreateGitProviderMutation();
 
-  const showAppPath = vendor === 'github' && githubAppEnabled;
+  const showAppPath = vendor === 'github';
 
   const reset = useCallback(() => {
     setVendor('github');
@@ -109,20 +100,17 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
     if (!open) reset();
   }, [open, reset]);
 
-  const handleVendorChange = useCallback(
-    (next: SupportedVendor) => {
-      setVendor(next);
-      setInstanceUrl(VENDOR_DEFAULTS[next].url);
-      // GitHub keeps App-first when allowed; GitLab + non-allowlisted = PAT.
-      setAuthMethod(next === 'github' && githubAppEnabled ? 'app' : 'pat');
-      setPatValue('');
-      setPatDisclosureOpen(false);
-      setUrlError(null);
-      setPatError(null);
-      setSubmitError(null);
-    },
-    [githubAppEnabled],
-  );
+  const handleVendorChange = useCallback((next: SupportedVendor) => {
+    setVendor(next);
+    setInstanceUrl(VENDOR_DEFAULTS[next].url);
+    // GitHub is App-first; GitLab uses a personal access token.
+    setAuthMethod(next === 'github' ? 'app' : 'pat');
+    setPatValue('');
+    setPatDisclosureOpen(false);
+    setUrlError(null);
+    setPatError(null);
+    setSubmitError(null);
+  }, []);
 
   const handleInstanceUrlChange = (next: string) => {
     setInstanceUrl(next);

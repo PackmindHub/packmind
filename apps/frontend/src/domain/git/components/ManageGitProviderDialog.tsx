@@ -1,8 +1,5 @@
 import React from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
-  isFeatureFlagEnabled,
   PMDialog,
   PMButton,
   PMCloseButton,
@@ -16,7 +13,6 @@ import { GitProviderUI } from '../types/GitProviderTypes';
 import { WebHookConfig } from './WebHookConfig';
 import { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';
 import { GitProviderAdvancedPanel } from './ManageGitProvider/GitProviderAdvancedPanel';
-import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 
 interface ManageGitProviderDialogProps {
   organizationId: OrganizationId;
@@ -33,17 +29,7 @@ export const ManageGitProviderDialog: React.FC<
     'connection' | 'webhook' | 'repositories' | 'advanced'
   >('connection');
 
-  const { data: me } = useGetMeQuery();
-  const userEmail = me?.authenticated ? me.user?.email : null;
-  const githubAppEnabled = isFeatureFlagEnabled({
-    featureKeys: [GITHUB_APP_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
-  const showAdvanced =
-    !!editingProvider &&
-    editingProvider.source === 'github' &&
-    githubAppEnabled;
+  const showAdvanced = !!editingProvider && editingProvider.source === 'github';
 
   return (
     <PMDialog.Root

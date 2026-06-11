@@ -27,8 +27,8 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - Test a project: `./node_modules/.bin/nx test <project-name>`
 - Lint a project: `./node_modules/.bin/nx lint <project-name>`
 - Build a project: `./node_modules/.bin/nx build <project-name>`
-- Test affected projects: `npm run test:staged`
-- Lint affected projects: `npm run lint:staged`
+- Test affected projects: `pnpm run test:staged`
+- Lint affected projects: `pnpm run lint:staged`
 
 ## Code Quality
 

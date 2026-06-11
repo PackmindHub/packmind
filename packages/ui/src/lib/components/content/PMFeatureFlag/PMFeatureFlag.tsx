@@ -13,7 +13,6 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
 
 export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
-export const GITHUB_APP_FEATURE_KEY = 'github-app';
 export const MARKETPLACES_FEATURE_KEY = 'marketplaces';
 
 export const MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY =
@@ -25,7 +24,6 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
     '@promyze.com',
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [GITHUB_APP_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MARKETPLACES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
