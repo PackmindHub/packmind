@@ -11,6 +11,7 @@ import {
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
+import type { PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
@@ -20,6 +21,7 @@ import {
   sortPackagesByDriftFirst,
   totalBehindInstallCount,
 } from './selectors/buildPackageDriftOverview';
+import { PackageMasterRail } from './components/PackageMasterRail';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
@@ -34,13 +36,28 @@ export function DeploymentsOverviewRedesign() {
     [data],
   );
 
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
+  const [selectedPackageId, setSelectedPackageId] = useState<PackageId | null>(
     null,
+  );
+  const [bulkSelected, setBulkSelected] = useState<Set<PackageId>>(
+    () => new Set(),
   );
   const selectedPackage = useMemo(
     () => packages.find((p) => p.id === selectedPackageId) ?? packages[0],
     [packages, selectedPackageId],
   );
+
+  const handleToggleBulk = (packageId: PackageId) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(packageId)) next.delete(packageId);
+      else next.add(packageId);
+      return next;
+    });
+  };
+  const handleDistributeBulk = () => {
+    // Sync surface wiring is added in a follow-up task.
+  };
 
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
@@ -97,40 +114,15 @@ export function DeploymentsOverviewRedesign() {
             minHeight="480px"
           >
             <PMHStack gap={0} align="stretch" height="100%">
-              <PMBox
-                width="320px"
-                borderRightWidth="1px"
-                borderColor="border.tertiary"
-                overflowY="auto"
-                padding={4}
-              >
-                <PMVStack gap={2} align="stretch">
-                  {packages.map((pkg) => (
-                    <PMBox
-                      as="button"
-                      key={pkg.id}
-                      onClick={() => setSelectedPackageId(pkg.id)}
-                      textAlign="left"
-                      padding={2}
-                      borderRadius="sm"
-                      bg={
-                        selectedPackage?.id === pkg.id
-                          ? 'background.secondary'
-                          : 'transparent'
-                      }
-                      _hover={{ bg: 'background.secondary' }}
-                      cursor="pointer"
-                    >
-                      <PMText fontSize="sm" fontWeight="medium">
-                        {pkg.name}
-                      </PMText>
-                      <PMText fontSize="xs" color="faded">
-                        {packageHasDrift(pkg) ? 'Drift' : 'Aligned'}
-                      </PMText>
-                    </PMBox>
-                  ))}
-                </PMVStack>
-              </PMBox>
+              <PackageMasterRail
+                packages={packages}
+                selectedPackageId={selectedPackage?.id ?? null}
+                onSelect={setSelectedPackageId}
+                bulkSelected={bulkSelected}
+                onToggleBulk={handleToggleBulk}
+                onSetBulkSelection={setBulkSelected}
+                onDistributeBulk={handleDistributeBulk}
+              />
               <PMBox
                 flex="1"
                 minW={0}

@@ -250,6 +250,18 @@ export function packageHasDrift(pkg: PackageDrift): boolean {
   );
 }
 
+export function packageBehindInstallCount(pkg: PackageDrift): number {
+  const behind = new Set<string>();
+  for (const a of pkg.artifacts) {
+    for (const i of a.installs) {
+      if (i.deployedVersion < a.packmindVersion) {
+        behind.add(`${i.repo.id}:${i.target.id}`);
+      }
+    }
+  }
+  return behind.size;
+}
+
 export function totalBehindInstallCount(packages: PackageDrift[]): number {
   let total = 0;
   for (const pkg of packages) {
