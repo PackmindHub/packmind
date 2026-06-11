@@ -23,6 +23,7 @@ import {
 } from './selectors/buildPackageDriftOverview';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
+import { SyncSurface, type SyncScope } from './components/SyncSurface';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
@@ -48,6 +49,8 @@ export function DeploymentsOverviewRedesign() {
     [packages, selectedPackageId],
   );
 
+  const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
+
   const handleToggleBulk = (packageId: PackageId) => {
     setBulkSelected((prev) => {
       const next = new Set(prev);
@@ -57,13 +60,11 @@ export function DeploymentsOverviewRedesign() {
     });
   };
   const handleDistributeBulk = () => {
-    // Sync surface wiring is added in a follow-up task.
+    if (bulkSelected.size === 0) return;
+    setSyncScope({ kind: 'bulk', packageIds: Array.from(bulkSelected) });
   };
-  const handleSyncPackage = (
-    _packageId: PackageId,
-    _installKeys?: string[],
-  ) => {
-    // Sync surface wiring is added in a follow-up task.
+  const handleSyncPackage = (packageId: PackageId, installKeys?: string[]) => {
+    setSyncScope({ kind: 'package', packageId, installKeys });
   };
 
   const driftPackagesCount = packages.filter(packageHasDrift).length;
@@ -89,6 +90,17 @@ export function DeploymentsOverviewRedesign() {
         <ErrorState />
       ) : packages.length === 0 ? (
         <EmptyState />
+      ) : syncScope !== null ? (
+        <SyncSurface
+          packages={packages}
+          scope={syncScope}
+          onCancel={() => setSyncScope(null)}
+          onConfirm={() => {
+            if (syncScope?.kind === 'bulk') {
+              setBulkSelected(new Set());
+            }
+          }}
+        />
       ) : (
         <PMVStack gap={5} align="stretch">
           {hasAnyDrift ? (
