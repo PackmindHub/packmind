@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { useParams } from 'react-router';
-import { PMBox, PMPage, PMVStack } from '@packmind/ui';
+import { PMPage, PMVStack } from '@packmind/ui';
 import type { MarketplaceId } from '@packmind/types';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
@@ -9,8 +9,10 @@ import {
   useMarketplaces,
 } from '../../src/domain/marketplaces/api/queries';
 import {
-  MarketplaceDetailsHeader,
-  MarketplaceDistributionsTable,
+  MarketplaceDetailAlerts,
+  MarketplaceDetailBacklink,
+  MarketplaceDetailHeaderActions,
+  MarketplaceDetailLayout,
 } from '../../src/domain/marketplaces/components';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 
@@ -56,11 +58,14 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export default function MarketplaceDetailsRouteModule() {
   const { organization } = useAuthContext();
-  const { marketplaceId } = useParams<{ marketplaceId: string }>();
+  const { orgSlug, marketplaceId } = useParams<{
+    orgSlug: string;
+    marketplaceId: string;
+  }>();
   const orgId = organization?.id ?? '';
   const { data: marketplaces } = useMarketplaces(orgId);
 
-  if (!organization || !marketplaceId) {
+  if (!organization || !marketplaceId || !orgSlug) {
     return null;
   }
 
@@ -70,23 +75,31 @@ export default function MarketplaceDetailsRouteModule() {
     <PMPage
       title={marketplace?.name ?? 'Marketplace'}
       subtitle="Manage the plugin distributions published to this marketplace."
-    >
-      <PMVStack align="stretch" gap={6}>
-        {marketplace && (
-          <MarketplaceDetailsHeader
+      isFullWidth
+      breadcrumbComponent={
+        <MarketplaceDetailBacklink to={`/org/${orgSlug}/marketplaces`} />
+      }
+      actions={
+        marketplace ? (
+          <MarketplaceDetailHeaderActions
             organizationId={orgId}
             marketplace={marketplace}
           />
-        )}
-        <PMBox>
-          <MarketplaceDistributionsTable
+        ) : undefined
+      }
+    >
+      {marketplace && (
+        <PMVStack align="stretch" gap={4}>
+          <MarketplaceDetailAlerts
             organizationId={orgId}
-            marketplaceId={marketplaceId as MarketplaceId}
-            marketplaceName={marketplace?.name}
-            outdatedPluginSlugs={marketplace?.outdatedPluginSlugs}
+            marketplace={marketplace}
           />
-        </PMBox>
-      </PMVStack>
+          <MarketplaceDetailLayout
+            organizationId={orgId}
+            marketplace={marketplace}
+          />
+        </PMVStack>
+      )}
     </PMPage>
   );
 }

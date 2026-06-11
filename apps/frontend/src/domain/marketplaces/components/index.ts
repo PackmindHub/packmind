@@ -16,3 +16,5 @@ export * from './RemovePluginButton';
 export * from './CancelRemovalButton';
 export * from './MarketplaceDistributionsTable';
 export * from './MarketplaceDetailsHeader';
+export * from './MarketplaceDetailAlerts';
+export * from './MarketplaceDetailLayout';
