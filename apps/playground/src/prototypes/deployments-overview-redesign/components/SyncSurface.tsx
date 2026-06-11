@@ -14,6 +14,8 @@ import {
   LuArrowRight,
   LuBookOpen,
   LuCheck,
+  LuChevronDown,
+  LuChevronRight,
   LuCircleCheck,
   LuClock,
   LuGitBranch,
@@ -212,8 +214,7 @@ export function SyncSurface({
             <PMText fontSize="sm" color="secondary" maxW="68ch">
               Each selected distribution receives a direct commit on its
               configured branch bringing every bundled artifact to its Packmind
-              version. Packages are redistributed as a whole, not artifact by
-              artifact.
+              version.
             </PMText>
           </PMVStack>
           <PMBox
@@ -369,6 +370,7 @@ function PackageSyncBlock({
   onToggleInstall,
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
+  const [expanded, setExpanded] = useState(false);
   const total = block.driftedEntries.length;
   const selectedCount = block.driftedEntries.reduce(
     (acc, entry) =>
@@ -395,21 +397,60 @@ function PackageSyncBlock({
         paddingX={4}
         paddingY={3}
         bg="background.primary"
-        borderBottomWidth="1px"
+        borderBottomWidth={expanded ? '1px' : 0}
         borderColor="border.tertiary"
+        cursor="pointer"
+        onClick={() => onTogglePackage(!allSelected)}
+        _hover={{ bg: 'background.tertiary' }}
+        transition="background-color 120ms ease-out"
       >
         <PMHStack gap={3} align="center" justify="space-between">
-          <PMHStack gap={3} align="center" minW={0} flex={1}>
-            <PMCheckbox
-              size="sm"
-              checked={
-                allSelected ? true : noneSelected ? false : 'indeterminate'
-              }
-              onCheckedChange={(details) =>
-                onTogglePackage(details.checked === true)
-              }
-              aria-label={`Select all repos for ${block.pkg.name}`}
-            />
+          <PMHStack gap={2} align="center" minW={0} flex={1}>
+            <PMBox
+              as="button"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding="2px"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              color="text.secondary"
+              _hover={{ color: 'text.primary' }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'branding.primary',
+                outlineOffset: '2px',
+                borderRadius: 'sm',
+              }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${block.pkg.name}`}
+            >
+              <PMIcon fontSize="sm">
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            </PMBox>
+            <PMBox
+              onClick={(e) => e.stopPropagation()}
+              display="inline-flex"
+              alignItems="center"
+            >
+              <PMCheckbox
+                size="sm"
+                checked={
+                  allSelected ? true : noneSelected ? false : 'indeterminate'
+                }
+                onCheckedChange={(details) =>
+                  onTogglePackage(details.checked === true)
+                }
+                aria-label={`Select all repos for ${block.pkg.name}`}
+              />
+            </PMBox>
             <PMText
               fontSize="sm"
               fontWeight="semibold"
@@ -431,23 +472,25 @@ function PackageSyncBlock({
         </PMHStack>
       </PMBox>
 
-      <PMVStack gap={0} align="stretch">
-        {block.driftedEntries.map((entry) => {
-          const key = installSelectionKey(
-            block.pkg.id,
-            entry.repo.id,
-            entry.target.id,
-          );
-          return (
-            <InstallSyncRow
-              key={key}
-              entry={entry}
-              selected={selected.has(key)}
-              onToggle={() => onToggleInstall(key)}
-            />
-          );
-        })}
-      </PMVStack>
+      {expanded && (
+        <PMVStack gap={0} align="stretch">
+          {block.driftedEntries.map((entry) => {
+            const key = installSelectionKey(
+              block.pkg.id,
+              entry.repo.id,
+              entry.target.id,
+            );
+            return (
+              <InstallSyncRow
+                key={key}
+                entry={entry}
+                selected={selected.has(key)}
+                onToggle={() => onToggleInstall(key)}
+              />
+            );
+          })}
+        </PMVStack>
+      )}
     </PMBox>
   );
 }
@@ -463,6 +506,8 @@ function InstallSyncRow({
   selected,
   onToggle,
 }: Readonly<InstallSyncRowProps>) {
+  const [expanded, setExpanded] = useState(false);
+  const showArtifacts = selected && expanded;
   return (
     <PMVStack
       gap={0}
@@ -474,7 +519,7 @@ function InstallSyncRow({
       transition="background-color 120ms ease-out"
     >
       <PMHStack
-        gap={3}
+        gap={2}
         align="center"
         paddingX={4}
         paddingY={2.5}
@@ -488,6 +533,45 @@ function InstallSyncRow({
           onCheckedChange={() => onToggle()}
           aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
         />
+        <PMBox
+          width="18px"
+          flexShrink={0}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          {selected && (
+            <PMBox
+              as="button"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              bg="transparent"
+              border="none"
+              cursor="pointer"
+              padding="2px"
+              display="inline-flex"
+              alignItems="center"
+              justifyContent="center"
+              color="text.secondary"
+              _hover={{ color: 'text.primary' }}
+              _focusVisible={{
+                outline: '2px solid',
+                outlineColor: 'branding.primary',
+                outlineOffset: '2px',
+                borderRadius: 'sm',
+              }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} artifacts to update`}
+            >
+              <PMIcon fontSize="sm">
+                {expanded ? <LuChevronDown /> : <LuChevronRight />}
+              </PMIcon>
+            </PMBox>
+          )}
+        </PMBox>
         <PMHStack gap={2} align="center" flex={1} minW={0} wrap="wrap">
           <PMText fontSize="sm" color="text.primary" truncate>
             {entry.repo.owner}/{entry.repo.name}
@@ -555,7 +639,7 @@ function InstallSyncRow({
           )}
         </PMVStack>
       </PMHStack>
-      {selected && (
+      {showArtifacts && (
         <PMBox
           paddingLeft="44px"
           paddingRight={4}

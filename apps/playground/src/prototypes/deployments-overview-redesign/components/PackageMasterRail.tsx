@@ -223,7 +223,8 @@ function PackageRow({
       borderColor="border.tertiary"
       transition="background-color 120ms ease-out"
       display="flex"
-      alignItems="stretch"
+      alignItems="center"
+      paddingLeft={3}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -240,9 +241,10 @@ function PackageRow({
       )}
 
       <PMBox
-        width="32px"
+        width="16px"
+        height="16px"
         flexShrink={0}
-        display="flex"
+        display="inline-flex"
         alignItems="center"
         justifyContent="center"
         onClick={(e) => e.stopPropagation()}
@@ -251,6 +253,8 @@ function PackageRow({
           <PMBox
             opacity={showCheckbox ? 1 : 0}
             transition="opacity 100ms ease-out"
+            display="inline-flex"
+            alignItems="center"
           >
             <PMCheckbox
               size="sm"
@@ -273,6 +277,7 @@ function PackageRow({
         minW={0}
         textAlign="left"
         paddingY={2.5}
+        paddingLeft={2}
         paddingRight={3}
         _focusVisible={{
           outline: 'none',
