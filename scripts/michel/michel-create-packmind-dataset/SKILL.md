@@ -54,7 +54,7 @@ A fresh instance has no account; the first org is created through sign-up. Drive
 1. Open `http://localhost:4200` → lands on `/sign-in`.
 2. **Sign up** → `/sign-up/create-account`.
 3. Work email (e.g. `michel@packmind-demo.com`) → **Continue with email**.
-4. Password — **8+ chars, at least 2 non-alphanumeric** (e.g. `Packmind!Demo#2026`) — confirm → **Create Account**.
+4. Password — must be **8+ chars with at least 2 non-alphanumeric characters** (e.g. `Packmind!Demo#2026`). The signup API rejects anything weaker with a raw error, not a hint, so a weak password reads as a silent failure. Confirm → **Create Account**. (Same policy applies to scripted signup via `POST /api/v0/auth/signup` — see `michel-run-local-dev-stack` → "Creating the first account".)
 5. Name the org (e.g. `Packmind Demo`) → **Continue**. Slug is derived (`packmind-demo`).
 6. Pick an onboarding reason (_I'm just exploring_) → **Continue**; dismiss the welcome dialog.
 

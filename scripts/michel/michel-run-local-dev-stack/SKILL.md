@@ -114,6 +114,27 @@ PACKMIND_EDITION=oss docker compose --profile dev up -d
 
 Plain `docker compose --profile dev down` (no `-v`) is correct when you _want_ existing data — e.g. resuming work where you left off, or avoiding a slow re-install.
 
+## Creating the first account — mind the password policy
+
+A fresh instance has no account; the first user **and** its organization are created by signing up — through the UI (`/sign-up`) or by `POST`ing the signup endpoint. Both paths run the same server-side password check, and that check is the #1 reason an auth-setup script fails on its first run: a too-weak password is **rejected with a raw error, not a friendly hint**, so the script looks like it "silently" did nothing.
+
+The password must be:
+
+- **at least 8 characters**, AND
+- **at least 2 non-alphanumeric characters** — anything outside `a-z A-Z 0-9` (`!`, `#`, `@`, `.`, `-`, …).
+
+Enforced in `SignUpWithOrganizationUseCase.validatePassword()`; violations throw `Password must be at least 8 characters` or `Password must contain at least 2 non-alphanumerical characters`. So `Password1` (zero non-alphanumeric chars) is rejected; `Packmind!Demo#2026` (two non-alphanumeric chars, 18 long) passes.
+
+Create the account + org in one call from a script — the signup endpoint is public and the org name is derived from the email:
+
+```bash
+curl -s -X POST localhost:4200/api/v0/auth/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"michel@packmind-demo.com","password":"Packmind!Demo#2026","method":"password"}'
+```
+
+Driving the full UI sign-up flow (org name, onboarding reason, welcome dialog) is covered by `michel-create-packmind-dataset` §2.
+
 ## Building the CLI (when you need the binary, not the server)
 
 The API and frontend need no build step — they serve from source inside the containers. The CLI does:
@@ -162,4 +183,5 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 - **Frontend can die on its own after a clean boot.** `Failed to reconnect to daemon` kills the continuous `frontend:dev` task → container `Exited (1)`, `localhost:4200` refuses. Restart just that service: `docker compose --profile dev up -d frontend`.
 - **"Loading Packmind…" forever + `ERR_NETWORK_CHANGED` spam = transient cold-Vite hiccup, not a bug.** Reload the page after the optimizer finishes bundling. Don't go debugging the app.
 - **The API base is `/api/v0`**, not `/api`. Health check and all calls hang off that prefix.
+- **Sign-up password policy is enforced server-side.** The signup API rejects any password under 8 chars or with fewer than 2 non-alphanumeric chars — with a raw error, not a hint, so a weak password looks like a silent failure. Use one like `Packmind!Demo#2026`. See "Creating the first account".
 - **Never leave it running.** If you brought it up, `docker compose --profile dev down` before finishing — lingering containers block completion.
