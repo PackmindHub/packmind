@@ -1,7 +1,22 @@
-# Sprite sandbox override: docker exec (setns) is blocked — disable all
-# exec-based healthchecks and relax service_healthy deps to service_started.
+# Michel dev-stack override. Two concerns:
+#
+# 1. Sprite sandbox: docker exec (setns) is blocked — disable all exec-based
+#    healthchecks and relax service_healthy deps to service_started.
+#
+# 2. Warm-store install: a Michel run installs deps twice — once on the host
+#    (scripts/michel/setup.sh -> /root/.pnpm-store, glibc) and again in the
+#    install-dependencies container. The container used node:alpine (musl) with
+#    an empty dev-pnpm-store volume, so it re-downloaded everything (~10 min on a
+#    fresh Fly machine). Here we flip every node service that shares the
+#    dev-node_modules volume to a glibc image (node:*-trixie-slim) matching the
+#    host ABI, and point install-dependencies at the already-warm host store via
+#    a bind mount so the install resolves OFFLINE (link/copy, no download).
+#    Compose merges `volumes` by append, so we cannot drop the dev-node_modules
+#    mount that masks the host node_modules — hence we keep the install but make
+#    it offline-fast rather than skipping it.
 services:
   nx-daemon:
+    image: node:24.15.0-trixie-slim
     healthcheck:
       disable: true
   postgres:
@@ -11,11 +26,57 @@ services:
     healthcheck:
       disable: true
   frontend:
+    image: node:24.15.0-trixie-slim
     healthcheck:
       disable: true
+  install-dependencies:
+    image: node:24.15.0-trixie-slim
+    volumes:
+      # Worker's warm glibc store (populated by scripts/michel/setup.sh before
+      # the dev stack starts). Appended to the base volume list.
+      - /root/.pnpm-store:/root/.pnpm-store
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -eu
+        corepack enable
+        corepack prepare pnpm@11.5.0 --activate
+        # Host store is warm by now -> offline. Degrade gracefully to
+        # --prefer-offline if a run ever skipped the host install.
+        if [ -n "$$(ls -A /root/.pnpm-store 2>/dev/null || true)" ]; then
+          pnpm install --frozen-lockfile --offline --store-dir /root/.pnpm-store
+        else
+          pnpm install --frozen-lockfile --prefer-offline --store-dir /root/.pnpm-store
+        fi
+        chmod -R +x node_modules/.bin 2>/dev/null || true
+        node scripts/select-tsconfig.mjs
   backend:
+    image: node:24.15.0-trixie-slim
     healthcheck:
       disable: true
+    # Base entrypoint runs `apk add bash ca-certificates` (alpine-only). On
+    # node:*-trixie-slim both ship in the image, so drop the apk lines and keep
+    # the rest verbatim (same $$-escaping as base for compose interpolation).
+    entrypoint:
+      - sh
+      - -lc
+      - |
+        set -eu
+        if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then
+          cp -R packages/linter/js-playground "$$JS_PLAYGROUND_PATH" || true
+        fi
+        if [ -n "${CI:-}" ]; then
+          echo "[backend] CI mode -> WITHOUT daemon"
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+        fi
+        if [ -S /nx-sock/d.sock ]; then
+          echo "[backend] Daemon OK -> WITH daemon"
+          exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+        else
+          echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development --skip-nx-cache
+        fi
     depends_on:
       postgres:
         condition: service_started
@@ -26,6 +87,7 @@ services:
       run-migrations:
         condition: service_completed_successfully
   mcp-server:
+    image: node:24.15.0-trixie-slim
     healthcheck:
       disable: true
     depends_on:
@@ -46,6 +108,7 @@ services:
       backend:
         condition: service_started
   run-migrations:
+    image: node:24.15.0-trixie-slim
     depends_on:
       postgres:
         condition: service_started
