@@ -246,6 +246,25 @@ shell: powershell
       });
     });
 
+    it('extracts disallowed-tools as an array into additionalProperties', () => {
+      const content = `---
+name: my-skill
+description: A sample skill.
+disallowed-tools:
+  - Monitor
+  - AskUserQuestion
+---
+
+# My Skill
+`;
+
+      const result = parser.parse(content);
+
+      expect(result.metadata.additionalProperties).toEqual({
+        disallowedTools: ['Monitor', 'AskUserQuestion'],
+      });
+    });
+
     describe('when no Claude fields are present', () => {
       it('does not include additionalProperties', () => {
         const content = `---
