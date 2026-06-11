@@ -119,15 +119,15 @@ git -C <WORKDIR> add <changed-files>
 git -C <WORKDIR> commit -m "🐛 fix(ci): <short description>"
 ```
 
-You do not need to run `nx test` or `nx lint` by hand before pushing — the pre-push hook runs `nx affected` automatically on push, and CI re-runs the full gate on the PR. If the hook fails, fix what it reports and push again.
+Validate the projects you touched with targeted `nx test <project>` / `nx lint <project>` before pushing, then let CI confirm — CI re-runs the full `nx affected` gate on the PR as the authoritative check (that is what you are monitoring).
 
 ### Push
 
 ```bash
-git push -u origin <BRANCH> --force-with-lease
+git push -u origin <BRANCH> --force-with-lease --no-verify
 ```
 
-`--force-with-lease` only overwrites the remote tip if it matches the last-known ref, so it is safe for force-push. The pre-push hook (`nx affected`) runs as the local gate before the push; CI re-runs the full gate on the PR as the authoritative check.
+`--force-with-lease` only overwrites the remote tip if it matches the last-known ref, so it is safe for force-push. Push with `--no-verify`: the full gate already ran in the validation phase before the first push and CI re-runs it as the authoritative check, so re-running the local pre-push hook here only duplicates CI's work (and a non-zero exit risks losing the run).
 
 ## 4. Single running PR comment
 
