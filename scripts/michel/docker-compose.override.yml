@@ -1,7 +1,8 @@
 # Michel dev-stack override. Two concerns:
 #
-# 1. Sprite sandbox: docker exec (setns) is blocked — disable all exec-based
-#    healthchecks and relax service_healthy deps to service_started.
+# 1. Health gating: disable the exec-based healthchecks and relax service_healthy
+#    deps to service_started — the worker boots a known-good stack once per run,
+#    so the extra gating only adds latency and flake surface.
 #
 # 2. Warm-store install: a Michel run installs deps twice — once on the host
 #    (scripts/michel/setup.sh -> /root/.pnpm-store, glibc) and again in the
@@ -10,7 +11,8 @@
 #    fresh Fly machine). Here we flip every node service that shares the
 #    dev-node_modules volume to a glibc image (node:*-trixie-slim) matching the
 #    host ABI, and point install-dependencies at the already-warm host store via
-#    a bind mount so the install resolves OFFLINE (link/copy, no download).
+#    a bind mount so the install resolves with --prefer-offline (link from the
+#    warm store, fetch only the delta — see the entrypoint note below).
 #    Compose merges `volumes` by append, so we cannot drop the dev-node_modules
 #    mount that masks the host node_modules — hence we keep the install but make
 #    it offline-fast rather than skipping it.

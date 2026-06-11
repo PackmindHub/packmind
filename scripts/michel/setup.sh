@@ -9,7 +9,7 @@
 #      fresh clone has none and lint/test/build fail with
 #      "Cannot find base config file ../../tsconfig.base.effective.json"
 #      until this runs.
-#   3. Install the Michel skills + sprite compose overrides.
+#   3. Install the Michel skills + compose overrides.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -66,20 +66,18 @@ fi
 echo "📝 Generating tsconfig.base.effective.json (PACKMIND_EDITION=${PACKMIND_EDITION})..."
 node scripts/select-tsconfig.mjs
 
-# 3. Michel skills + sprite compose overrides
+# 3. Michel skills + compose overrides
 if [ -f scripts/install-michel-skills.sh ]; then
   bash scripts/install-michel-skills.sh
 else
   echo "No scripts/install-michel-skills.sh — skipping skill install."
 fi
 
-# 4. Make the repo's git hooks survivable on the memory-constrained worker:
-#    drop the pre-push `nx affected` parallelism 6 -> 2 (OOM survival) and
-#    disable the packmind-cli pre-commit lint (needs an API key the worker may
-#    lack). Idempotent. This is the ONLY caller on the Fly path — without it the
-#    pre-push hook runs full and unmodified.
-if [ -f scripts/michel/patch-hooks.sh ]; then
-  bash scripts/michel/patch-hooks.sh
-fi
+# Note: git hooks run UNMODIFIED on the Fly worker (performance-8x / 32 GB) —
+# it has the cores and RAM to run the full pre-push `nx affected` gate at its
+# native --parallel=6, like a developer's machine. The old hook-patcher that
+# de-fanged parallelism for the prior 16 GB box is gone. The packmind-cli
+# pre-commit lint self-skips when no PACKMIND_API_KEY is present (its `whoami`
+# fails → exit 0), so it needs no patching either.
 
 echo "✅ Michel setup complete."

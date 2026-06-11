@@ -100,7 +100,7 @@ The recipe in plain English:
 
 ### Starting the video (with the common pitfall)
 
-**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. A prior session (or a crashed run on the same sprite) frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
+**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. An earlier browser session in this run frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
 
 ```
 mcp__playwright__browser_stop_video()   # ignore any error; deletes/returns stub WebMs at project root
@@ -117,7 +117,7 @@ If you still get `Error: Screencast is already started` after that, the recorder
 3. Delete the stub WebMs it drops at the project root.
 4. Retry `start_video`. The fresh context starts clean.
 
-This is the common failure mode on the fly worker / reused sprites, where a crashed prior run leaves both a screencast _and_ its browser context alive — stopping the screencast alone is not idempotent there, because the next `start_video` reattaches to the same wedged context. Closing the context is what actually resets it.
+This is the common failure mode on the fly worker, where an earlier browser session in the same run left both a screencast _and_ its browser context alive — stopping the screencast alone is not idempotent there, because the next `start_video` reattaches to the same wedged context. Closing the context is what actually resets it.
 
 If you get `Browser is already in use for ... use --isolated`, a non-recording Playwright session has the persistent profile locked. Call `mcp__playwright__browser_close` first, then start_video.
 
