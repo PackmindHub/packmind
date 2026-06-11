@@ -38,19 +38,21 @@ Two **init services** run once on each `up` and then exit — the long-running s
 
 ### The edition variable
 
-`PACKMIND_EDITION` **must be `oss`**. It defaults to `oss` in the compose file, but set it explicitly so container names and behavior are correct:
+`PACKMIND_EDITION` is **resolved from the git remote** — `oss` for the OSS repo, `proprietary` for `packmind-proprietary` (which is OSS + extra packages). Do not hardcode it: export the resolved value once and every compose command (and the matching teardown) inherits it.
 
 ```bash
-export PACKMIND_EDITION=oss
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"
 ```
+
+The base compose file defaults to `oss` when unset, but the project/container names embed the edition — so `up` and `down` MUST use the same value, and the proprietary repo MUST come up as `proprietary` or its edition-gated packages resolve to OSS stubs.
 
 ## Bringing it up
 
 Use the `dev` profile so the nx-daemon (faster rebuilds) and pgAdmin come up too:
 
 ```bash
-PACKMIND_EDITION=oss docker compose --profile dev up -d   # background — the usual choice for agents
-PACKMIND_EDITION=oss docker compose --profile dev up      # foreground — logs stream, Ctrl-C stops
+docker compose --profile dev up -d   # background — the usual choice for agents (PACKMIND_EDITION already exported)
+docker compose --profile dev up      # foreground — logs stream, Ctrl-C stops
 ```
 
 Plain `docker compose up -d` (no profile) also works — it skips nx-daemon and pgAdmin and the app services fall back to daemonless serve.
@@ -80,7 +82,7 @@ The frontend is the flakiest service on first boot. Two failure modes seen in pr
   up. Check with `docker compose ps -a | grep front` (look for `Exited (1)`), then just restart it:
 
   ```bash
-  PACKMIND_EDITION=oss docker compose --profile dev up -d frontend
+  docker compose --profile dev up -d frontend
   until curl -sf localhost:4200 >/dev/null; do sleep 2; done
   ```
 
@@ -107,7 +109,7 @@ The `dev-postgres-data` volume **persists across `down`**, so a prior run — in
 
 ```bash
 docker compose --profile dev down -v
-PACKMIND_EDITION=oss docker compose --profile dev up -d
+docker compose --profile dev up -d
 ```
 
 `-v` drops **all** dev volumes — `dev-postgres-data`, `dev-redis-data`, `dev-node_modules`, `dev-dist`, `dev-tmp`, `dev-nx-sock`, `dev-pgadmin`. The next `up` re-installs dependencies and re-runs every migration from scratch, so it's a full first-boot again (slow). Seed data via the API (`POST` to `/api/v0/...`) after the stack is up — don't record or verify over leftover state.
@@ -160,20 +162,21 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 
 ## Quick reference
 
-| Goal                            | Command                                                             |
-| ------------------------------- | ------------------------------------------------------------------- |
-| Start in background             | `PACKMIND_EDITION=oss docker compose --profile dev up -d`           |
-| Watch boot logs                 | `docker compose logs -f backend frontend`                           |
-| Confirm frontend serving        | `until curl -sf localhost:4200 >/dev/null; do sleep 1; done`        |
-| Confirm API serving (via proxy) | `until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done` |
-| Re-run migrations               | `docker compose up run-migrations`                                  |
-| Build the CLI                   | `npm run packmind-cli:build`                                        |
-| Stop (keep data)                | `docker compose --profile dev down`                                 |
-| Stop + wipe all volumes         | `docker compose --profile dev down -v`                              |
+| Goal                            | Command                                                               |
+| ------------------------------- | --------------------------------------------------------------------- |
+| Resolve + export the edition    | `export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"` |
+| Start in background             | `docker compose --profile dev up -d`                                  |
+| Watch boot logs                 | `docker compose logs -f backend frontend`                             |
+| Confirm frontend serving        | `until curl -sf localhost:4200 >/dev/null; do sleep 1; done`          |
+| Confirm API serving (via proxy) | `until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done`   |
+| Re-run migrations               | `docker compose up run-migrations`                                    |
+| Build the CLI                   | `npm run packmind-cli:build`                                          |
+| Stop (keep data)                | `docker compose --profile dev down`                                   |
+| Stop + wipe all volumes         | `docker compose --profile dev down -v`                                |
 
 ## Gotchas, condensed
 
-- **`PACKMIND_EDITION=oss`** — export it before any compose command.
+- **`export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"`** — resolve it from the git remote once, before any compose command. Never hardcode `oss`; the proprietary repo must come up as `proprietary`, and `up`/`down` must agree.
 - **Port 3000 is NOT exposed to the host.** `curl localhost:3000` always refuses the connection — the `backend` container has no `ports:` mapping. From the host, reach the API at **`localhost:4200/api/v0`** (Vite proxy) or via nginx `https://localhost:443`. Likewise the MCP server is only at `localhost:4200/mcp`, never `localhost:3001`. Use `:3000`/`:3001` only from inside a container on the compose network.
 - **`up -d` ≠ ready.** Poll `:4200` (frontend) and `:4200/api/v0` (API via proxy) before depending on the stack. First boot takes minutes (install + migrate + cold build).
 - **No app image build.** Source is bind-mounted and hot-reloads; `--build` is almost never needed. Don't reach for it the way you would on an image-based stack.

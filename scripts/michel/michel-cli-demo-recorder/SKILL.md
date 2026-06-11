@@ -30,7 +30,7 @@ Capturing colored CLI output correctly has several non-obvious traps that waste 
 ## The one command you run
 
 ```bash
-PACKMIND_EDITION=oss node .claude/skills/michel-cli-demo-recorder/scripts/render-cli-demo.mjs \
+PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)" node .claude/skills/michel-cli-demo-recorder/scripts/render-cli-demo.mjs \
   --out docs/cli-demos/standards-list.svg \
   --text-out docs/cli-demos/standards-list.txt \
   --title "packmind-cli — standards list" \
@@ -57,7 +57,7 @@ Runs under `node`. The PNG step needs `rsvg-convert` (`librsvg2-bin`) — baked 
 ## Recipe
 
 1. **Build the CLI first.** This repo's CLI runs from `dist/`, so build it with `npm run packmind-cli:build`. It produces `dist/apps/cli/main.cjs`, which you then run with `node dist/apps/cli/main.cjs`. A demo of stale `dist/` proves nothing about your change.
-2. **Set the edition.** Always run with `PACKMIND_EDITION=oss` (per the repo's CLAUDE.md), or the CLI may behave differently than expected.
+2. **Set the edition.** Resolve it from the git remote — `export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"` (`oss` for the OSS repo, `proprietary` for packmind-proprietary) — or the CLI may behave differently than expected.
 3. **Start anything the CLI talks to.** Commands that hit the Packmind API (`login`, `whoami`, `standards`/`commands`/`skills` pulls, `playbook`) need the local stack up, or they only print the error/unauthenticated path. If you want populated, colorful output, bring the stack up and confirm it's serving before recording — see the **`michel-run-local-dev-stack`** skill (`docker compose up -d`). Local-only commands (`--help`, `--version`, `lint`, `diff`, `config`) need no server. If the _point_ of the demo is the error message, skip the server deliberately.
 4. **Pick representative commands.** Choose the invocations that show off the change. Good defaults: the headline command (populated output), `--help`, and any new/changed flag. One demo per invocation — small focused images beat one giant scroll.
 5. **Render** each with the command above, writing into a stable folder (`docs/cli-demos/` is a good home; create it). Each render produces both the `.svg` master and the `.png` you'll embed.

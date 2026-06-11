@@ -30,7 +30,7 @@ The `packmind-user-docs` MCP server (configured in `.mcp.json`, served from `htt
 That skill is the single source of truth for the lifecycle. The essentials:
 
 ```bash
-export PACKMIND_EDITION=oss
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
 docker compose --profile dev up -d
 until curl -sf localhost:4200 >/dev/null; do sleep 2; done   # frontend ready
 curl -s -o /dev/null -w "%{http_code}\n" localhost:4200/api/v0   # API via Vite proxy -> 200
@@ -44,7 +44,7 @@ If the frontend exits on its own or sticks on "Loading Packmind…", that is a k
 
 ```bash
 docker compose --profile dev down -v
-PACKMIND_EDITION=oss docker compose --profile dev up -d
+docker compose --profile dev up -d   # PACKMIND_EDITION already exported above
 ```
 
 ### 2. Create the organization (UI, via Playwright MCP)
@@ -127,7 +127,7 @@ docker compose --profile dev down -v     # also wipes it
 
 ```bash
 # Stack
-export PACKMIND_EDITION=oss
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary
 docker compose --profile dev up -d
 until curl -sf localhost:4200 >/dev/null; do sleep 2; done
 curl -s -o /dev/null -w "%{http_code}\n" localhost:4200/api/v0   # -> 200

@@ -21,7 +21,7 @@ done
 echo "✅ Michel skills installed into .claude/skills/"
 
 # Place the compose override at the repo root so docker compose picks it up
-# automatically. Disables exec-based healthchecks blocked by the sprite sandbox.
+# automatically (disabled exec-based healthchecks + the warm-store offline install).
 if [ -f "${SRC}/docker-compose.override.yml" ]; then
   cp "${SRC}/docker-compose.override.yml" "${ROOT}/docker-compose.override.yml"
   echo "✅ docker-compose.override.yml installed at repo root"
