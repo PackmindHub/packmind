@@ -72,6 +72,11 @@ until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done   # API ready 
 
 Connection-refused = not up yet (still installing/migrating/building). Give first boot several minutes.
 
+**How to wait, for autonomous agents — this has lost real runs:**
+
+- A long bare `sleep` (e.g. `sleep 30 && curl …`) is **blocked by the agent harness**. Wait with a condition-gated loop instead — a short `sleep` _inside_ an `until` loop is allowed: `until curl -sf localhost:4200 >/dev/null; do sleep 2; done`.
+- Run that readiness loop **in the foreground and stay in your turn until it completes**. If you run it as a background task and then end your turn "waiting to be notified", a one-shot headless session (e.g. a Michel run via `claude --print`) **terminates at your final message** — the notification never arrives, and whatever you postponed until "the stack is ready" (screenshots, verification, teardown) silently never happens. A real run shipped a PR with zero of its required screenshots exactly this way. Slow cold build = keep looping, not yield.
+
 ### Frontend troubleshooting (two real frictions)
 
 The frontend is the flakiest service on first boot. Two failure modes seen in practice:
@@ -179,6 +184,7 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 - **`export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"`** — resolve it from the git remote once, before any compose command. Never hardcode `oss`; the proprietary repo must come up as `proprietary`, and `up`/`down` must agree.
 - **Port 3000 is NOT exposed to the host.** `curl localhost:3000` always refuses the connection — the `backend` container has no `ports:` mapping. From the host, reach the API at **`localhost:4200/api/v0`** (Vite proxy) or via nginx `https://localhost:443`. Likewise the MCP server is only at `localhost:4200/mcp`, never `localhost:3001`. Use `:3000`/`:3001` only from inside a container on the compose network.
 - **`up -d` ≠ ready.** Poll `:4200` (frontend) and `:4200/api/v0` (API via proxy) before depending on the stack. First boot takes minutes (install + migrate + cold build).
+- **Wait in the foreground, inside your turn.** Bare long `sleep`s are harness-blocked; use `until curl -sf …; do sleep 2; done` and stay in the loop until it exits. Never end your turn expecting a background readiness task to wake you — in a one-shot headless session it won't, and everything you postponed is lost. See "How to wait" above.
 - **No app image build.** Source is bind-mounted and hot-reloads; `--build` is almost never needed. Don't reach for it the way you would on an image-based stack.
 - **`dev-postgres-data` outlives `down`.** Stale rows and applied-migration state from a prior run cause phantom data during verification. `down -v` for a true clean slate (and a slow re-boot).
 - **`dev-node_modules` is a volume too.** Dependency changes are picked up by re-running `install-dependencies` (re-`up`); a `down -v` forces a full reinstall.
