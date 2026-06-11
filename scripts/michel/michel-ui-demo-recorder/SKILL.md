@@ -70,7 +70,8 @@ Use `ToolSearch` for `mcp__playwright__browser_start_video`. The video tools bel
 See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on **:3000**, React/Vite frontend on **:4200**, MCP server). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
 
 ```bash
-PACKMIND_EDITION=oss docker compose down -v && PACKMIND_EDITION=oss docker compose up -d --build
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
+docker compose down -v && docker compose up -d --build
 # wait for the API (it runs migrations on boot — this can take a minute on a cold build)
 until curl -sf localhost:3000/api/v0 >/dev/null; do sleep 1; done
 # then wait for the frontend you'll actually record

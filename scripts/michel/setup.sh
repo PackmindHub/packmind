@@ -14,7 +14,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
-export PACKMIND_EDITION="${PACKMIND_EDITION:-oss}"
+# Resolve the edition from the git remote (packmind-proprietary -> proprietary,
+# else oss), honoring an explicit PACKMIND_EDITION override. Keeps a direct or
+# local `setup.sh` run edition-correct without the caller knowing the edition.
+export PACKMIND_EDITION="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-edition.sh")"
 
 # Pinned pnpm version — keep in sync with package.json `packageManager` (pnpm@11.5.0).
 # Overridable via env; the default satisfies `set -u` (nounset) below.
@@ -68,6 +71,15 @@ if [ -f scripts/install-michel-skills.sh ]; then
   bash scripts/install-michel-skills.sh
 else
   echo "No scripts/install-michel-skills.sh — skipping skill install."
+fi
+
+# 4. Make the repo's git hooks survivable on the memory-constrained worker:
+#    drop the pre-push `nx affected` parallelism 6 -> 2 (OOM survival) and
+#    disable the packmind-cli pre-commit lint (needs an API key the worker may
+#    lack). Idempotent. This is the ONLY caller on the Fly path — without it the
+#    pre-push hook runs full and unmodified.
+if [ -f scripts/michel/patch-hooks.sh ]; then
+  bash scripts/michel/patch-hooks.sh
 fi
 
 echo "✅ Michel setup complete."
