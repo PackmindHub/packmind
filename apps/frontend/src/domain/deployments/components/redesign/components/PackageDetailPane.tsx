@@ -29,7 +29,11 @@ import {
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { format } from 'date-fns';
-import { DistributionStatus, type PackageId } from '@packmind/types';
+import {
+  DistributionStatus,
+  type GitProviderId,
+  type PackageId,
+} from '@packmind/types';
 import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
@@ -39,6 +43,10 @@ import {
   type DriftArtifactEntry,
   type InstallDriftEntry,
 } from '../selectors/installDriftEntries';
+import {
+  installLockReason,
+  type InstallLockReason,
+} from '../selectors/installLock';
 import type { ArtifactKind, PackageDrift } from '../types';
 
 const KIND_ICON: Record<ArtifactKind, IconType> = {
@@ -77,6 +85,8 @@ function formatAbsoluteDate(iso: string): string {
 
 type PackageDetailPaneProps = {
   pkg: PackageDrift;
+  providersWithToken: Set<GitProviderId>;
+  isProvidersLoading: boolean;
   onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
 };
 
@@ -88,6 +98,8 @@ function installKey(repoId: string, targetId: string): string {
 
 export function PackageDetailPane({
   pkg,
+  providersWithToken,
+  isProvidersLoading,
   onSyncPackage,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
@@ -96,6 +108,16 @@ export function PackageDetailPane({
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
+  const lockByKey = useMemo(() => {
+    const map = new Map<string, InstallLockReason | null>();
+    for (const e of entries) {
+      map.set(
+        installKey(e.repo.id, e.target.id),
+        installLockReason(e, providersWithToken, isProvidersLoading),
+      );
+    }
+    return map;
+  }, [entries, providersWithToken, isProvidersLoading]);
   const driftedKeys = useMemo(
     () =>
       entries
@@ -103,17 +125,32 @@ export function PackageDetailPane({
         .map((e) => installKey(e.repo.id, e.target.id)),
     [entries],
   );
-  const driftedInProgressCount = useMemo(
-    () =>
-      entries.filter(
-        (e) =>
-          e.behindArtifacts.length > 0 &&
-          e.lastDistributionStatus === DistributionStatus.in_progress,
-      ).length,
-    [entries],
-  );
-  const allDriftedInProgress =
-    driftedKeys.length > 0 && driftedInProgressCount === driftedKeys.length;
+  const driftedLockCounts = useMemo(() => {
+    let inProgress = 0;
+    let noAppToken = 0;
+    for (const key of driftedKeys) {
+      const reason = lockByKey.get(key) ?? null;
+      if (reason === 'in-progress') inProgress++;
+      else if (reason === 'no-app-token') noAppToken++;
+    }
+    return {
+      inProgress,
+      noAppToken,
+      locked: inProgress + noAppToken,
+    };
+  }, [driftedKeys, lockByKey]);
+  const allDriftedLocked =
+    driftedKeys.length > 0 && driftedLockCounts.locked === driftedKeys.length;
+  const headerLockTooltip = (() => {
+    if (!allDriftedLocked) return null;
+    if (driftedLockCounts.inProgress === driftedKeys.length) {
+      return 'A distribution is already in progress for every drifted target.';
+    }
+    if (driftedLockCounts.noAppToken === driftedKeys.length) {
+      return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
+    }
+    return 'Every drifted target is either in progress or requires `packmind-cli install`.';
+  })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
     () => new Set(),
@@ -178,10 +215,10 @@ export function PackageDetailPane({
   const selectedDriftedCount = useMemo(() => {
     let count = 0;
     for (const key of driftedKeys) {
-      if (selectedKeys.has(key)) count += 1;
+      if (selectedKeys.has(key) && !lockByKey.get(key)) count += 1;
     }
     return count;
-  }, [driftedKeys, selectedKeys]);
+  }, [driftedKeys, selectedKeys, lockByKey]);
 
   return (
     <PMVStack gap={0} align="stretch" minH={0}>
@@ -203,19 +240,12 @@ export function PackageDetailPane({
               </PMText>
             </PMVStack>
             {hasDrift && (
-              <PMTooltip
-                label={
-                  allDriftedInProgress
-                    ? 'A distribution is already in progress for every drifted target.'
-                    : null
-                }
-                placement="top"
-              >
+              <PMTooltip label={headerLockTooltip} placement="top">
                 <PMButton
                   variant="secondary"
                   size="sm"
                   onClick={() => onSyncPackage(pkg.id)}
-                  disabled={allDriftedInProgress}
+                  disabled={allDriftedLocked}
                   title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
                 >
                   <PMIcon fontSize="sm">
@@ -322,6 +352,7 @@ export function PackageDetailPane({
                   key={key}
                   entry={entry}
                   selected={selectedKeys.has(key)}
+                  lockReason={lockByKey.get(key) ?? null}
                   onToggle={() => toggleInstall(key)}
                 />
               );
@@ -408,17 +439,27 @@ function SummaryStat({
 type InstallRowProps = {
   entry: InstallDriftEntry;
   selected: boolean;
+  lockReason: InstallLockReason | null;
   onToggle: () => void;
 };
 
-function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
+const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
+  'in-progress': 'Distribution in progress for this target.',
+  'no-app-token':
+    'This provider has no token — use `packmind-cli install` to update this distribution.',
+};
+
+function InstallRow({
+  entry,
+  selected,
+  lockReason,
+  onToggle,
+}: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
-  const isInProgress =
-    entry.lastDistributionStatus === DistributionStatus.in_progress;
   const [expanded, setExpanded] = useState(false);
   const totalArtifactsOnInstall = behindCount + entry.alignedArtifactCount;
-  const checkboxDisabled = isInProgress;
+  const checkboxDisabled = lockReason !== null;
 
   return (
     <PMBox
@@ -431,11 +472,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
         <PMBox flexShrink={0} display="flex" alignItems="center" width="20px">
           {hasDrift ? (
             <PMTooltip
-              label={
-                checkboxDisabled
-                  ? 'Distribution in progress for this target.'
-                  : null
-              }
+              label={lockReason ? LOCK_CHECKBOX_TOOLTIP[lockReason] : null}
               placement="top"
             >
               <PMBox display="inline-flex" alignItems="center">

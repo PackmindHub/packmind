@@ -11,9 +11,10 @@ import {
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
 import { useNavigate, useSearchParams } from 'react-router';
-import type { PackageId } from '@packmind/types';
+import type { GitProviderId, PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import {
   buildPackageDriftOverview,
@@ -22,10 +23,11 @@ import {
   totalBehindInstallCount,
   totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
+import { providersWithTokenSet } from './selectors/providerAuth';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
-import { STUB_PACKAGES } from './stubPackages';
+import { STUB_PACKAGES, STUB_PROVIDER_OK } from './stubPackages';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
@@ -37,6 +39,13 @@ export function DeploymentsOverviewRedesign() {
     useListActiveDistributedPackagesBySpaceQuery(
       isStubMode ? undefined : spaceId,
     );
+  const { data: providersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+
+  const providersWithToken = useMemo<Set<GitProviderId>>(() => {
+    if (isStubMode) return new Set([STUB_PROVIDER_OK]);
+    return providersWithTokenSet(providersResponse);
+  }, [providersResponse, isStubMode]);
 
   const packages = useMemo<PackageDrift[]>(() => {
     if (isStubMode) return sortPackagesByDriftFirst(STUB_PACKAGES);
@@ -102,6 +111,8 @@ export function DeploymentsOverviewRedesign() {
         <SyncSurface
           packages={packages}
           scope={syncScope}
+          providersWithToken={providersWithToken}
+          isProvidersLoading={isProvidersLoading && !isStubMode}
           onCancel={() => setSyncScope(null)}
           onConfirm={() => {
             if (syncScope?.kind === 'bulk') {
@@ -186,6 +197,8 @@ export function DeploymentsOverviewRedesign() {
                     key={selectedPackage.id}
                     pkg={selectedPackage}
                     onSyncPackage={handleSyncPackage}
+                    providersWithToken={providersWithToken}
+                    isProvidersLoading={isProvidersLoading && !isStubMode}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">
