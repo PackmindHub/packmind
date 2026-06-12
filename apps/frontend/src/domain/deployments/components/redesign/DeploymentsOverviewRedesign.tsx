@@ -5,7 +5,6 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
-  PMLink,
   PMPage,
   PMSpinner,
   PMText,
@@ -26,7 +25,10 @@ import {
   totalBehindInstallCount,
   totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
-import { providersWithTokenSet } from './selectors/providerAuth';
+import {
+  behindInstallsRequiringCliCount,
+  providersWithTokenSet,
+} from './selectors/providerAuth';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
@@ -95,7 +97,12 @@ export function DeploymentsOverviewRedesign() {
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
   const failedInstalls = totalFailedInstallCount(packages);
+  const cliRequiredInstalls = useMemo(
+    () => behindInstallsRequiringCliCount(packages, providersWithToken),
+    [packages, providersWithToken],
+  );
   const hasAnyDrift = driftPackagesCount > 0;
+  const hasAnySignal = hasAnyDrift || failedInstalls > 0;
   const deploymentsHref =
     organization && spaceSlug
       ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
@@ -103,6 +110,7 @@ export function DeploymentsOverviewRedesign() {
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
+  const navigate = useNavigate();
 
   return (
     <PMPage
@@ -143,76 +151,49 @@ export function DeploymentsOverviewRedesign() {
               </PMAlert.Title>
             </PMAlert.Root>
           )}
-          {hasAnyDrift && (
-            <PMAlert.Root status="info">
-              <PMHStack
-                justify="space-between"
-                align="center"
-                width="full"
-                gap={4}
-              >
-                <PMHStack align="start" gap={3}>
-                  <PMAlert.Indicator />
-                  <PMVStack align="start" gap={1}>
-                    <PMAlert.Title>
-                      Distributions drift over time as packages evolve.
-                    </PMAlert.Title>
-                    {autoUpdateHref && (
-                      <PMAlert.Description>
-                        Keep distributions in sync automatically —{' '}
-                        <PMLink href={autoUpdateHref}>
-                          set up Auto-update
-                        </PMLink>
-                        .
-                      </PMAlert.Description>
-                    )}
-                  </PMVStack>
-                </PMHStack>
-                <PMButton
-                  variant="primary"
-                  size="sm"
-                  onClick={handleDistributeAllDrifted}
-                >
-                  Distribute all drifted
-                </PMButton>
+          <PMHStack
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+            rowGap={2}
+            columnGap={4}
+            paddingX={1}
+            paddingY={1}
+            borderBottomWidth="1px"
+            borderColor="border.tertiary"
+            paddingBottom={4}
+          >
+            <SummaryLine
+              hasAnyDrift={hasAnyDrift}
+              driftedInstalls={driftedInstalls}
+              driftPackagesCount={driftPackagesCount}
+              totalPackagesCount={packages.length}
+              failedInstalls={failedInstalls}
+              cliRequiredInstalls={cliRequiredInstalls}
+            />
+            {hasAnySignal && (
+              <PMHStack gap={2} flexShrink={0}>
+                {hasAnyDrift && (
+                  <PMButton
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDistributeAllDrifted}
+                  >
+                    {`Distribute drifted (${driftPackagesCount})`}
+                  </PMButton>
+                )}
+                {autoUpdateHref && (
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => navigate(autoUpdateHref)}
+                  >
+                    Set up Auto-update
+                  </PMButton>
+                )}
               </PMHStack>
-            </PMAlert.Root>
-          )}
-          {hasAnyDrift ? (
-            <PMHStack gap={10} align="baseline" wrap="wrap" paddingX={1}>
-              <DriftKpi
-                value={driftedInstalls}
-                label={`drifted distribution${driftedInstalls === 1 ? '' : 's'}`}
-                tone="warn"
-              />
-              <DriftKpi
-                value={driftPackagesCount}
-                label={`of ${packages.length} package${packages.length === 1 ? '' : 's'} affected`}
-              />
-              {failedInstalls > 0 && (
-                <DriftKpi
-                  value={failedInstalls}
-                  label={`distribution${failedInstalls === 1 ? '' : 's'} failed`}
-                  tone="fail"
-                />
-              )}
-            </PMHStack>
-          ) : failedInstalls > 0 ? (
-            <PMHStack gap={10} align="baseline" wrap="wrap" paddingX={1}>
-              <DriftKpi
-                value={failedInstalls}
-                label={`distribution${failedInstalls === 1 ? '' : 's'} failed`}
-                tone="fail"
-              />
-            </PMHStack>
-          ) : (
-            <PMAlert.Root status="success">
-              <PMAlert.Indicator />
-              <PMAlert.Title>
-                Every distribution is on the latest version of every artifact.
-              </PMAlert.Title>
-            </PMAlert.Root>
-          )}
+            )}
+          </PMHStack>
           <PMBox
             bg="background.primary"
             borderWidth="1px"
@@ -263,33 +244,98 @@ export function DeploymentsOverviewRedesign() {
   );
 }
 
-function DriftKpi({
-  value,
-  label,
-  tone = 'neutral',
+function SummaryLine({
+  hasAnyDrift,
+  driftedInstalls,
+  driftPackagesCount,
+  totalPackagesCount,
+  failedInstalls,
+  cliRequiredInstalls,
 }: Readonly<{
-  value: number;
-  label: string;
-  tone?: 'neutral' | 'warn' | 'fail';
+  hasAnyDrift: boolean;
+  driftedInstalls: number;
+  driftPackagesCount: number;
+  totalPackagesCount: number;
+  failedInstalls: number;
+  cliRequiredInstalls: number;
 }>) {
-  const valueColor =
-    tone === 'fail' ? 'error' : tone === 'warn' ? 'warning' : 'primary';
+  if (!hasAnyDrift && failedInstalls === 0) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="green.500"
+          flexShrink={0}
+        />
+        <PMText fontSize="sm" color="secondary">
+          Every distribution is on the latest version.
+        </PMText>
+      </PMHStack>
+    );
+  }
+
+  const pluralize = (n: number, word: string) => `${word}${n === 1 ? '' : 's'}`;
+
   return (
-    <PMHStack gap={2} align="baseline">
-      <PMText
-        fontSize="2xl"
-        fontWeight="semibold"
-        color={valueColor}
-        fontVariantNumeric="tabular-nums"
-        lineHeight="1"
-        letterSpacing="-0.02em"
-      >
-        {value}
-      </PMText>
-      <PMText fontSize="sm" color="secondary">
-        {label}
-      </PMText>
-    </PMHStack>
+    <PMText fontSize="sm" color="secondary" lineHeight="1.6">
+      {hasAnyDrift ? (
+        <>
+          <Metric value={driftedInstalls} tone="primary" />
+          {` drifted ${pluralize(driftedInstalls, 'distribution')} in `}
+          <Metric value={driftPackagesCount} tone="primary" />
+          {` of ${totalPackagesCount} ${pluralize(totalPackagesCount, 'package')}`}
+        </>
+      ) : (
+        <>
+          <Metric value={failedInstalls} tone="error" />
+          {` ${pluralize(failedInstalls, 'distribution')} failed`}
+        </>
+      )}
+      {hasAnyDrift && failedInstalls > 0 && (
+        <>
+          {' · '}
+          <Metric value={failedInstalls} tone="error" />
+          {' failed'}
+        </>
+      )}
+      {cliRequiredInstalls > 0 && (
+        <>
+          {' · '}
+          <Metric value={cliRequiredInstalls} tone="warning" />
+          {' require '}
+          <PMText
+            as="span"
+            fontFamily="mono"
+            fontSize="xs"
+            color="warning"
+            paddingX={1}
+            paddingY="1px"
+            bg="background.tertiary"
+            borderRadius="sm"
+          >
+            packmind-cli install
+          </PMText>
+        </>
+      )}
+    </PMText>
+  );
+}
+
+function Metric({
+  value,
+  tone,
+}: Readonly<{ value: number; tone: 'primary' | 'warning' | 'error' }>) {
+  return (
+    <PMText
+      as="span"
+      fontWeight="semibold"
+      color={tone}
+      fontVariantNumeric="tabular-nums"
+    >
+      {value}
+    </PMText>
   );
 }
 
