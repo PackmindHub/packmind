@@ -1,14 +1,17 @@
-# Sprite sandbox override for the LOCAL production-like stack
+# Nested-docker worker override for the LOCAL production-like stack
 # (dockerfile/local/docker-compose.yaml, built and started by docker-local.sh).
 # Installed at runtime by scripts/install-michel-skills.sh into
 # dockerfile/local/docker-compose.override.yaml — NOT committed (gitignored).
 #
-# Two sandbox constraints this works around:
+# Three nested-docker constraints this works around:
 #   1. docker exec (setns) is blocked, so exec-based healthchecks never pass —
 #      disable them and relax service_healthy deps to service_started.
 #   2. UID 1000 (the `node`/nginx user baked into the custom images) cannot
 #      attach to the bridge network ("bind-mount /proc/PID/ns/net: permission
 #      denied") — run the three custom-image services as root.
+#   3. The nested docker bridge can't reach the internet, so build-time `apk add`
+#      in the Dockerfiles fails — docker-local.sh passes `--network=host` on each
+#      `docker build` to work around it (build-time only, not configurable here).
 services:
   postgres:
     healthcheck:

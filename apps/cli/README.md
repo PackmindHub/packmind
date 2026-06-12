@@ -4,7 +4,7 @@ A command-line interface for Packmind linting and code quality checks.
 
 ## Requirements
 
-**For npm installation only:**
+**For pnpm installation only:**
 
 - **Node.js 22 or higher**
 
@@ -25,13 +25,13 @@ A command-line interface for Packmind linting and code quality checks.
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run the CLI in development
 nx run packmind-cli:run -- lint <path>
 
-# Or use npm script
-npm run packmind-cli:lint
+# Or use pnpm script
+pnpm run packmind-cli:lint
 ```
 
 ### Building
@@ -294,7 +294,7 @@ When modifying the CLI:
 2. Test with bundle: `nx run packmind-cli:bundle`
 3. Test with executable: `nx run packmind-cli:build-executable`
 4. Verify all output formats work correctly
-5. Run quality checks: `npm run quality-gate`
+5. Run quality checks: `pnpm run quality-gate`
 
 ### Run locally
 

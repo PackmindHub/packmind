@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { skipWhenRoot } from '@packmind/test-utils';
 import { PackmindIgnoreReader } from './PackmindIgnoreReader';
 
 describe('PackmindIgnoreReader', () => {
@@ -98,7 +99,10 @@ describe('PackmindIgnoreReader', () => {
   });
 
   describe('when .packmindignore exists but is unreadable', () => {
-    it('throws the underlying error', async () => {
+    // chmod 0o000 is a no-op under root (uid 0), which bypasses permission
+    // bits, so this assertion fails spuriously in container/CI environments
+    // that run as root. Skip there; runs normally for non-root local dev.
+    (skipWhenRoot() ? it.skip : it)('throws the underlying error', async () => {
       const ignoreFile = path.join(tmpDir, '.packmindignore');
       await fs.writeFile(ignoreFile, 'some-pattern\n');
       await fs.chmod(ignoreFile, 0o000);

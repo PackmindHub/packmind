@@ -38,19 +38,21 @@ Two **init services** run once on each `up` and then exit — the long-running s
 
 ### The edition variable
 
-`PACKMIND_EDITION` **must be `oss`**. It defaults to `oss` in the compose file, but set it explicitly so container names and behavior are correct:
+`PACKMIND_EDITION` is **resolved from the git remote** — `oss` for the OSS repo, `proprietary` for `packmind-proprietary` (which is OSS + extra packages). Do not hardcode it: export the resolved value once and every compose command (and the matching teardown) inherits it.
 
 ```bash
-export PACKMIND_EDITION=oss
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"
 ```
+
+The base compose file defaults to `oss` when unset, but the project/container names embed the edition — so `up` and `down` MUST use the same value, and the proprietary repo MUST come up as `proprietary` or its edition-gated packages resolve to OSS stubs.
 
 ## Bringing it up
 
 Use the `dev` profile so the nx-daemon (faster rebuilds) and pgAdmin come up too:
 
 ```bash
-PACKMIND_EDITION=oss docker compose --profile dev up -d   # background — the usual choice for agents
-PACKMIND_EDITION=oss docker compose --profile dev up      # foreground — logs stream, Ctrl-C stops
+docker compose --profile dev up -d   # background — the usual choice for agents (PACKMIND_EDITION already exported)
+docker compose --profile dev up      # foreground — logs stream, Ctrl-C stops
 ```
 
 Plain `docker compose up -d` (no profile) also works — it skips nx-daemon and pgAdmin and the app services fall back to daemonless serve.
@@ -70,6 +72,11 @@ until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done   # API ready 
 
 Connection-refused = not up yet (still installing/migrating/building). Give first boot several minutes.
 
+**How to wait, for autonomous agents — this has lost real runs:**
+
+- A long bare `sleep` (e.g. `sleep 30 && curl …`) is **blocked by the agent harness**. Wait with a condition-gated loop instead — a short `sleep` _inside_ an `until` loop is allowed: `until curl -sf localhost:4200 >/dev/null; do sleep 2; done`.
+- Run that readiness loop **in the foreground and stay in your turn until it completes**. If you run it as a background task and then end your turn "waiting to be notified", a one-shot headless session (e.g. a Michel run via `claude --print`) **terminates at your final message** — the notification never arrives, and whatever you postponed until "the stack is ready" (screenshots, verification, teardown) silently never happens. A real run shipped a PR with zero of its required screenshots exactly this way. Slow cold build = keep looping, not yield.
+
 ### Frontend troubleshooting (two real frictions)
 
 The frontend is the flakiest service on first boot. Two failure modes seen in practice:
@@ -80,7 +87,7 @@ The frontend is the flakiest service on first boot. Two failure modes seen in pr
   up. Check with `docker compose ps -a | grep front` (look for `Exited (1)`), then just restart it:
 
   ```bash
-  PACKMIND_EDITION=oss docker compose --profile dev up -d frontend
+  docker compose --profile dev up -d frontend
   until curl -sf localhost:4200 >/dev/null; do sleep 2; done
   ```
 
@@ -107,12 +114,33 @@ The `dev-postgres-data` volume **persists across `down`**, so a prior run — in
 
 ```bash
 docker compose --profile dev down -v
-PACKMIND_EDITION=oss docker compose --profile dev up -d
+docker compose --profile dev up -d
 ```
 
 `-v` drops **all** dev volumes — `dev-postgres-data`, `dev-redis-data`, `dev-node_modules`, `dev-dist`, `dev-tmp`, `dev-nx-sock`, `dev-pgadmin`. The next `up` re-installs dependencies and re-runs every migration from scratch, so it's a full first-boot again (slow). Seed data via the API (`POST` to `/api/v0/...`) after the stack is up — don't record or verify over leftover state.
 
 Plain `docker compose --profile dev down` (no `-v`) is correct when you _want_ existing data — e.g. resuming work where you left off, or avoiding a slow re-install.
+
+## Creating the first account — mind the password policy
+
+A fresh instance has no account; the first user **and** its organization are created by signing up — through the UI (`/sign-up`) or by `POST`ing the signup endpoint. Both paths run the same server-side password check, and that check is the #1 reason an auth-setup script fails on its first run: a too-weak password is **rejected with a raw error, not a friendly hint**, so the script looks like it "silently" did nothing.
+
+The password must be:
+
+- **at least 8 characters**, AND
+- **at least 2 non-alphanumeric characters** — anything outside `a-z A-Z 0-9` (`!`, `#`, `@`, `.`, `-`, …).
+
+Enforced in `SignUpWithOrganizationUseCase.validatePassword()`; violations throw `Password must be at least 8 characters` or `Password must contain at least 2 non-alphanumerical characters`. So `Password1` (zero non-alphanumeric chars) is rejected; `Packmind!Demo#2026` (two non-alphanumeric chars, 18 long) passes.
+
+Create the account + org in one call from a script — the signup endpoint is public and the org name is derived from the email:
+
+```bash
+curl -s -X POST localhost:4200/api/v0/auth/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"michel@packmind-demo.com","password":"Packmind!Demo#2026","method":"password"}'
+```
+
+Driving the full UI sign-up flow (org name, onboarding reason, welcome dialog) is covered by `michel-create-packmind-dataset` §2.
 
 ## Building the CLI (when you need the binary, not the server)
 
@@ -139,22 +167,24 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 
 ## Quick reference
 
-| Goal                            | Command                                                             |
-| ------------------------------- | ------------------------------------------------------------------- |
-| Start in background             | `PACKMIND_EDITION=oss docker compose --profile dev up -d`           |
-| Watch boot logs                 | `docker compose logs -f backend frontend`                           |
-| Confirm frontend serving        | `until curl -sf localhost:4200 >/dev/null; do sleep 1; done`        |
-| Confirm API serving (via proxy) | `until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done` |
-| Re-run migrations               | `docker compose up run-migrations`                                  |
-| Build the CLI                   | `npm run packmind-cli:build`                                        |
-| Stop (keep data)                | `docker compose --profile dev down`                                 |
-| Stop + wipe all volumes         | `docker compose --profile dev down -v`                              |
+| Goal                            | Command                                                               |
+| ------------------------------- | --------------------------------------------------------------------- |
+| Resolve + export the edition    | `export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"` |
+| Start in background             | `docker compose --profile dev up -d`                                  |
+| Watch boot logs                 | `docker compose logs -f backend frontend`                             |
+| Confirm frontend serving        | `until curl -sf localhost:4200 >/dev/null; do sleep 1; done`          |
+| Confirm API serving (via proxy) | `until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done`   |
+| Re-run migrations               | `docker compose up run-migrations`                                    |
+| Build the CLI                   | `npm run packmind-cli:build`                                          |
+| Stop (keep data)                | `docker compose --profile dev down`                                   |
+| Stop + wipe all volumes         | `docker compose --profile dev down -v`                                |
 
 ## Gotchas, condensed
 
-- **`PACKMIND_EDITION=oss`** — export it before any compose command.
+- **`export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"`** — resolve it from the git remote once, before any compose command. Never hardcode `oss`; the proprietary repo must come up as `proprietary`, and `up`/`down` must agree.
 - **Port 3000 is NOT exposed to the host.** `curl localhost:3000` always refuses the connection — the `backend` container has no `ports:` mapping. From the host, reach the API at **`localhost:4200/api/v0`** (Vite proxy) or via nginx `https://localhost:443`. Likewise the MCP server is only at `localhost:4200/mcp`, never `localhost:3001`. Use `:3000`/`:3001` only from inside a container on the compose network.
 - **`up -d` ≠ ready.** Poll `:4200` (frontend) and `:4200/api/v0` (API via proxy) before depending on the stack. First boot takes minutes (install + migrate + cold build).
+- **Wait in the foreground, inside your turn.** Bare long `sleep`s are harness-blocked; use `until curl -sf …; do sleep 2; done` and stay in the loop until it exits. Never end your turn expecting a background readiness task to wake you — in a one-shot headless session it won't, and everything you postponed is lost. See "How to wait" above.
 - **No app image build.** Source is bind-mounted and hot-reloads; `--build` is almost never needed. Don't reach for it the way you would on an image-based stack.
 - **`dev-postgres-data` outlives `down`.** Stale rows and applied-migration state from a prior run cause phantom data during verification. `down -v` for a true clean slate (and a slow re-boot).
 - **`dev-node_modules` is a volume too.** Dependency changes are picked up by re-running `install-dependencies` (re-`up`); a `down -v` forces a full reinstall.
@@ -162,4 +192,5 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 - **Frontend can die on its own after a clean boot.** `Failed to reconnect to daemon` kills the continuous `frontend:dev` task → container `Exited (1)`, `localhost:4200` refuses. Restart just that service: `docker compose --profile dev up -d frontend`.
 - **"Loading Packmind…" forever + `ERR_NETWORK_CHANGED` spam = transient cold-Vite hiccup, not a bug.** Reload the page after the optimizer finishes bundling. Don't go debugging the app.
 - **The API base is `/api/v0`**, not `/api`. Health check and all calls hang off that prefix.
+- **Sign-up password policy is enforced server-side.** The signup API rejects any password under 8 chars or with fewer than 2 non-alphanumeric chars — with a raw error, not a hint, so a weak password looks like a silent failure. Use one like `Packmind!Demo#2026`. See "Creating the first account".
 - **Never leave it running.** If you brought it up, `docker compose --profile dev down` before finishing — lingering containers block completion.

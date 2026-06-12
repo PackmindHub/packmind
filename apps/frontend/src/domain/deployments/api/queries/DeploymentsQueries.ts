@@ -90,31 +90,37 @@ export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
   });
 };
 
+export const getListActiveDistributedPackagesBySpaceOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+) => ({
+  queryKey: [...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY, spaceId],
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error(
+        'Organization ID is required to fetch active distributed packages',
+      );
+    }
+    if (!spaceId) {
+      throw new Error(
+        'Space ID is required to fetch active distributed packages',
+      );
+    }
+    return deploymentsGateways.listActiveDistributedPackagesBySpace({
+      organizationId,
+      spaceId,
+    });
+  },
+  enabled: !!organizationId && !!spaceId,
+});
+
 export const useListActiveDistributedPackagesBySpaceQuery = (
   spaceId: SpaceId | undefined,
 ) => {
   const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: [...LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY, spaceId],
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch active distributed packages',
-        );
-      }
-      if (!spaceId) {
-        throw new Error(
-          'Space ID is required to fetch active distributed packages',
-        );
-      }
-      return deploymentsGateways.listActiveDistributedPackagesBySpace({
-        organizationId: organization.id,
-        spaceId,
-      });
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
+  return useQuery(
+    getListActiveDistributedPackagesBySpaceOptions(organization?.id, spaceId),
+  );
 };
 
 export const useListRecipeDistributionsQuery = (recipeId: RecipeId) => {

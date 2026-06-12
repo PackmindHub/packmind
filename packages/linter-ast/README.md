@@ -144,7 +144,7 @@ pyenv global 3.11.0
 nvm use 20  # Uses Node 20's bundled Python
 
 # Then reinstall
-npm install
+pnpm install
 ```
 
 ### Fallback Behavior
