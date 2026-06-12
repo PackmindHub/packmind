@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  PMBadge,
   PMBox,
   PMButton,
   PMCheckbox,
@@ -8,6 +9,7 @@ import {
   PMIcon,
   PMSpinner,
   PMText,
+  PMTooltip,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
@@ -27,7 +29,11 @@ import {
   LuX,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
-import type { PackageId, TargetId } from '@packmind/types';
+import {
+  DistributionStatus,
+  type PackageId,
+  type TargetId,
+} from '@packmind/types';
 import { useDeployPackagesMutation } from '../../../api/queries/DeploymentsQueries';
 import {
   installDriftEntries,
@@ -68,6 +74,10 @@ function localInstallKey(repoId: string, targetId: TargetId): string {
   return `${repoId}::${targetId}`;
 }
 
+function isInProgress(entry: InstallDriftEntry): boolean {
+  return entry.lastDistributionStatus === DistributionStatus.in_progress;
+}
+
 type SyncStep = 'review' | 'syncing' | 'success' | 'error';
 
 type SyncSurfaceProps = {
@@ -96,6 +106,7 @@ export function SyncSurface({
         : null;
     for (const block of blocks) {
       for (const entry of block.driftedEntries) {
+        if (isInProgress(entry)) continue;
         if (explicitKeys) {
           const local = localInstallKey(entry.repo.id, entry.target.id);
           if (!explicitKeys.has(local)) continue;
@@ -107,6 +118,24 @@ export function SyncSurface({
     }
     return next;
   }, [blocks, scope]);
+
+  const lockedCount = useMemo(() => {
+    let n = 0;
+    for (const block of blocks) {
+      for (const entry of block.driftedEntries) if (isInProgress(entry)) n++;
+    }
+    return n;
+  }, [blocks]);
+
+  const selectableCount = useMemo(() => {
+    let n = 0;
+    for (const block of blocks) {
+      for (const entry of block.driftedEntries) if (!isInProgress(entry)) n++;
+    }
+    return n;
+  }, [blocks]);
+
+  const allLocked = blocks.length > 0 && selectableCount === 0;
 
   const [selected, setSelected] = useState<Set<string>>(initialSelection);
   const [step, setStep] = useState<SyncStep>('review');
@@ -127,6 +156,7 @@ export function SyncSurface({
     setSelected((prev) => {
       const next = new Set(prev);
       for (const entry of block.driftedEntries) {
+        if (isInProgress(entry)) continue;
         const k = installSelectionKey(
           block.pkg.id,
           entry.repo.id,
@@ -321,8 +351,11 @@ export function SyncSurface({
       >
         {blocks.length === 0 ? (
           <NothingToSync />
+        ) : allLocked ? (
+          <AllInProgressState count={lockedCount} />
         ) : (
           <PMVStack gap={4} align="stretch">
+            {lockedCount > 0 && <InProgressWarning count={lockedCount} />}
             {blocks.map((block) => (
               <PackageSyncBlock
                 key={block.pkg.id}
@@ -379,13 +412,15 @@ export function SyncSurface({
               </PMIcon>
               {isSyncing
                 ? 'Redistributing…'
-                : stats.installCount === 0
-                  ? 'Select at least one distribution'
-                  : `Redistribute ${stats.packageCount} package${
-                      stats.packageCount === 1 ? '' : 's'
-                    } to ${stats.installCount} distribution${
-                      stats.installCount === 1 ? '' : 's'
-                    }`}
+                : allLocked
+                  ? 'Waiting on in-progress distributions'
+                  : stats.installCount === 0
+                    ? 'Select at least one distribution'
+                    : `Redistribute ${stats.packageCount} package${
+                        stats.packageCount === 1 ? '' : 's'
+                      } to ${stats.installCount} distribution${
+                        stats.installCount === 1 ? '' : 's'
+                      }`}
             </PMButton>
           </PMHStack>
         </PMHStack>
@@ -436,8 +471,12 @@ function PackageSyncBlock({
   onTogglePackage,
 }: Readonly<PackageSyncBlockProps>) {
   const [expanded, setExpanded] = useState(false);
-  const total = block.driftedEntries.length;
-  const selectedCount = block.driftedEntries.reduce(
+  const selectableEntries = block.driftedEntries.filter(
+    (e) => !isInProgress(e),
+  );
+  const total = selectableEntries.length;
+  const lockedInBlock = block.driftedEntries.length - total;
+  const selectedCount = selectableEntries.reduce(
     (acc, entry) =>
       acc +
       (selected.has(
@@ -447,8 +486,9 @@ function PackageSyncBlock({
         : 0),
     0,
   );
-  const allSelected = selectedCount === total;
+  const allSelected = total > 0 && selectedCount === total;
   const noneSelected = selectedCount === 0;
+  const headerCheckboxDisabled = total === 0;
 
   return (
     <PMBox
@@ -464,9 +504,14 @@ function PackageSyncBlock({
         bg="background.primary"
         borderBottomWidth={expanded ? '1px' : 0}
         borderColor="border.tertiary"
-        cursor="pointer"
-        onClick={() => onTogglePackage(!allSelected)}
-        _hover={{ bg: 'background.tertiary' }}
+        cursor={headerCheckboxDisabled ? 'default' : 'pointer'}
+        onClick={() => {
+          if (headerCheckboxDisabled) return;
+          onTogglePackage(!allSelected);
+        }}
+        _hover={
+          headerCheckboxDisabled ? undefined : { bg: 'background.tertiary' }
+        }
         transition="background-color 120ms ease-out"
       >
         <PMHStack gap={3} align="center" justify="space-between">
@@ -512,6 +557,7 @@ function PackageSyncBlock({
                 onCheckedChange={(details) =>
                   onTogglePackage(details.checked === true)
                 }
+                disabled={headerCheckboxDisabled}
                 aria-label={`Select all repos for ${block.pkg.name}`}
               />
             </PMBox>
@@ -524,15 +570,28 @@ function PackageSyncBlock({
               {block.pkg.name}
             </PMText>
           </PMHStack>
-          <PMText
-            fontSize="xs"
-            color="faded"
-            fontVariantNumeric="tabular-nums"
+          <PMHStack
+            gap={2}
+            align="center"
             flexShrink={0}
+            fontVariantNumeric="tabular-nums"
           >
-            {selectedCount} of {total} distribution{total === 1 ? '' : 's'}{' '}
-            selected
-          </PMText>
+            {lockedInBlock > 0 && (
+              <PMTooltip
+                label={`${lockedInBlock} distribution${lockedInBlock === 1 ? '' : 's'} currently in progress — excluded from this run.`}
+                showArrow
+                openDelay={200}
+              >
+                <PMBadge size="xs" colorPalette="blue" variant="subtle">
+                  {lockedInBlock} in progress
+                </PMBadge>
+              </PMTooltip>
+            )}
+            <PMText fontSize="xs" color="faded">
+              {selectedCount} of {total} distribution{total === 1 ? '' : 's'}{' '}
+              selected
+            </PMText>
+          </PMHStack>
         </PMHStack>
       </PMBox>
 
@@ -544,12 +603,17 @@ function PackageSyncBlock({
               entry.repo.id,
               entry.target.id,
             );
+            const locked = isInProgress(entry);
             return (
               <InstallSyncRow
                 key={key}
                 entry={entry}
                 selected={selected.has(key)}
-                onToggle={() => onToggleInstall(key)}
+                locked={locked}
+                onToggle={() => {
+                  if (locked) return;
+                  onToggleInstall(key);
+                }}
               />
             );
           })}
@@ -562,16 +626,30 @@ function PackageSyncBlock({
 type InstallSyncRowProps = {
   entry: InstallDriftEntry;
   selected: boolean;
+  locked: boolean;
   onToggle: () => void;
 };
 
 function InstallSyncRow({
   entry,
   selected,
+  locked,
   onToggle,
 }: Readonly<InstallSyncRowProps>) {
   const [expanded, setExpanded] = useState(false);
   const showArtifacts = selected && expanded;
+  const checkbox = (
+    <PMCheckbox
+      size="sm"
+      checked={selected}
+      onCheckedChange={() => {
+        if (locked) return;
+        onToggle();
+      }}
+      disabled={locked}
+      aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
+    />
+  );
   return (
     <PMVStack
       gap={0}
@@ -580,23 +658,34 @@ function InstallSyncRow({
       borderBottomWidth="1px"
       borderColor="border.tertiary"
       _last={{ borderBottom: 'none' }}
-      transition="background-color 120ms ease-out"
+      opacity={locked ? 0.6 : 1}
+      transition="background-color 120ms ease-out, opacity 120ms ease-out"
     >
       <PMHStack
         gap={2}
         align="center"
         paddingX={4}
         paddingY={2.5}
-        cursor="pointer"
-        onClick={onToggle}
-        _hover={{ bg: 'background.tertiary' }}
+        cursor={locked ? 'not-allowed' : 'pointer'}
+        onClick={() => {
+          if (locked) return;
+          onToggle();
+        }}
+        _hover={locked ? undefined : { bg: 'background.tertiary' }}
       >
-        <PMCheckbox
-          size="sm"
-          checked={selected}
-          onCheckedChange={() => onToggle()}
-          aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
-        />
+        {locked ? (
+          <PMTooltip
+            label="Distribution currently in progress — wait for it to finish before redistributing."
+            showArrow
+            openDelay={200}
+          >
+            <PMBox display="inline-flex" alignItems="center">
+              {checkbox}
+            </PMBox>
+          </PMTooltip>
+        ) : (
+          checkbox
+        )}
         <PMBox
           width="18px"
           flexShrink={0}
@@ -674,6 +763,11 @@ function InstallSyncRow({
           )}
         </PMHStack>
         <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
+          {locked && (
+            <PMBadge size="xs" colorPalette="blue" variant="subtle">
+              In progress
+            </PMBadge>
+          )}
           <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
             {entry.behindArtifacts.length} artifact
             {entry.behindArtifacts.length === 1 ? '' : 's'} to update
@@ -755,6 +849,49 @@ function InstallSyncRow({
           </PMVStack>
         </PMBox>
       )}
+    </PMVStack>
+  );
+}
+
+function InProgressWarning({ count }: Readonly<{ count: number }>) {
+  return (
+    <PMBox
+      paddingX={4}
+      paddingY={3}
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      bg="background.secondary"
+    >
+      <PMHStack gap={2} align="center">
+        <PMIcon fontSize="sm" color="blue.500">
+          <LuClock />
+        </PMIcon>
+        <PMText fontSize="sm" color="secondary">
+          {count} distribution{count === 1 ? ' is' : 's are'} currently in
+          progress and will be skipped from this run.
+        </PMText>
+      </PMHStack>
+    </PMBox>
+  );
+}
+
+function AllInProgressState({ count }: Readonly<{ count: number }>) {
+  return (
+    <PMVStack gap={2} align="center" paddingY={10}>
+      <PMIcon fontSize="2xl" color="blue.500">
+        <LuClock />
+      </PMIcon>
+      <PMText fontSize="sm" color="primary" fontWeight="medium">
+        Nothing to redistribute right now.
+      </PMText>
+      <PMText fontSize="xs" color="secondary" textAlign="center" maxW="48ch">
+        {count === 1
+          ? 'The only drifted distribution is'
+          : `All ${count} drifted distributions are`}{' '}
+        currently in progress. Wait for {count === 1 ? 'it' : 'them'} to finish,
+        then come back to redistribute.
+      </PMText>
     </PMVStack>
   );
 }

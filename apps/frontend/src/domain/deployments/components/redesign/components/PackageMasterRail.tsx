@@ -14,7 +14,9 @@ import { LuRotateCw, LuSearch } from 'react-icons/lu';
 import type { PackageId } from '@packmind/types';
 import {
   packageBehindInstallCount,
+  packageFailedInstallCount,
   packageHasDrift,
+  packageHasFailedDistribution,
 } from '../selectors/buildPackageDriftOverview';
 import type { PackageDrift } from '../types';
 
@@ -214,9 +216,25 @@ function PackageRow({
 }: Readonly<PackageRowProps>) {
   const behindInstallCount = packageBehindInstallCount(pkg);
   const hasDrift = packageHasDrift(pkg);
+  const hasFailure = packageHasFailedDistribution(pkg);
+  const failedInstallCount = packageFailedInstallCount(pkg);
   const totalInstalls = pkg.installLocations.length;
   const [hovered, setHovered] = useState(false);
   const showCheckbox = hasDrift && (bulkSelected || selectionActive || hovered);
+
+  const dotColor = hasFailure
+    ? 'red.500'
+    : hasDrift
+      ? 'orange.500'
+      : 'green.500';
+  const tooltipLabel = hasFailure
+    ? `${failedInstallCount} of ${totalInstalls} distribution${totalInstalls === 1 ? '' : 's'} failed`
+    : hasDrift
+      ? `${behindInstallCount} of ${totalInstalls} distributions behind`
+      : `${totalInstalls} distributions aligned`;
+  const ariaLabel = hasFailure
+    ? `Package ${pkg.name}, ${failedInstallCount} of ${totalInstalls} distributions failed`
+    : `Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`;
 
   return (
     <PMBox
@@ -287,7 +305,7 @@ function PackageRow({
           boxShadow: 'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
         }}
         aria-pressed={selected}
-        aria-label={`Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`}
+        aria-label={ariaLabel}
       >
         <PMHStack gap={3} align="center" justify="space-between">
           <PMText
@@ -300,15 +318,7 @@ function PackageRow({
           >
             {pkg.name}
           </PMText>
-          <PMTooltip
-            label={
-              hasDrift
-                ? `${behindInstallCount} of ${totalInstalls} distributions behind`
-                : `${totalInstalls} distributions aligned`
-            }
-            showArrow
-            openDelay={200}
-          >
+          <PMTooltip label={tooltipLabel} showArrow openDelay={200}>
             <PMBox
               display="flex"
               alignItems="center"
@@ -322,7 +332,7 @@ function PackageRow({
                 width="8px"
                 height="8px"
                 borderRadius="full"
-                bg={hasDrift ? 'orange.500' : 'green.500'}
+                bg={dotColor}
                 aria-hidden
               />
             </PMBox>
