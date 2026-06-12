@@ -10,14 +10,18 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import { LuRotateCw, LuSearch } from 'react-icons/lu';
-import type { PackageId } from '@packmind/types';
+import { LuClock, LuRotateCw, LuSearch } from 'react-icons/lu';
+import type { GitProviderId, PackageId } from '@packmind/types';
 import {
   packageBehindInstallCount,
   packageFailedInstallCount,
   packageHasDrift,
   packageHasFailedDistribution,
 } from '../selectors/buildPackageDriftOverview';
+import {
+  packageLockProfile,
+  type PackageLockProfile,
+} from '../selectors/installLock';
 import type { PackageDrift } from '../types';
 
 type PackageMasterRailProps = {
@@ -28,6 +32,8 @@ type PackageMasterRailProps = {
   onToggleBulk: (packageId: PackageId) => void;
   onSetBulkSelection: (next: Set<PackageId>) => void;
   onDistributeBulk: () => void;
+  providersWithToken: Set<GitProviderId>;
+  isProvidersLoading: boolean;
 };
 
 type DriftFilter = 'all' | 'drift' | 'aligned';
@@ -40,6 +46,8 @@ export function PackageMasterRail({
   onToggleBulk,
   onSetBulkSelection,
   onDistributeBulk,
+  providersWithToken,
+  isProvidersLoading,
 }: Readonly<PackageMasterRailProps>) {
   const [query, setQuery] = useState('');
   const [driftFilter, setDriftFilter] = useState<DriftFilter>('all');
@@ -174,6 +182,11 @@ export function PackageMasterRail({
               selected={p.id === selectedPackageId}
               bulkSelected={bulkSelected.has(p.id)}
               selectionActive={selectionActive}
+              lockProfile={packageLockProfile(
+                p,
+                providersWithToken,
+                isProvidersLoading,
+              )}
               onSelect={() => onSelect(p.id)}
               onToggleBulk={() => onToggleBulk(p.id)}
             />
@@ -202,6 +215,7 @@ type PackageRowProps = {
   selected: boolean;
   bulkSelected: boolean;
   selectionActive: boolean;
+  lockProfile: PackageLockProfile;
   onSelect: () => void;
   onToggleBulk: () => void;
 };
@@ -211,6 +225,7 @@ function PackageRow({
   selected,
   bulkSelected,
   selectionActive,
+  lockProfile,
   onSelect,
   onToggleBulk,
 }: Readonly<PackageRowProps>) {
@@ -225,16 +240,29 @@ function PackageRow({
   const dotColor = hasFailure
     ? 'red.500'
     : hasDrift
-      ? 'orange.500'
+      ? lockProfile === 'all-in-progress'
+        ? 'blue.300'
+        : 'orange.500'
       : 'green.500';
   const tooltipLabel = hasFailure
     ? `${failedInstallCount} of ${totalInstalls} distribution${totalInstalls === 1 ? '' : 's'} failed`
     : hasDrift
-      ? `${behindInstallCount} of ${totalInstalls} distributions behind`
+      ? lockProfile === 'all-no-app-token'
+        ? `${behindInstallCount} drifted, all require packmind-cli install`
+        : lockProfile === 'all-in-progress'
+          ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} in progress`
+          : `${behindInstallCount} of ${totalInstalls} distributions behind`
       : `${totalInstalls} distributions aligned`;
   const ariaLabel = hasFailure
     ? `Package ${pkg.name}, ${failedInstallCount} of ${totalInstalls} distributions failed`
-    : `Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`;
+    : hasDrift
+      ? lockProfile === 'all-no-app-token'
+        ? `Package ${pkg.name}, ${behindInstallCount} drifted, requires packmind-cli`
+        : lockProfile === 'all-in-progress'
+          ? `Package ${pkg.name}, ${behindInstallCount} in progress`
+          : `Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`
+      : `Package ${pkg.name}, aligned`;
+  const showLockTag = hasDrift && !hasFailure && lockProfile !== 'none';
 
   return (
     <PMBox
@@ -307,7 +335,7 @@ function PackageRow({
         aria-pressed={selected}
         aria-label={ariaLabel}
       >
-        <PMHStack gap={3} align="center" justify="space-between">
+        <PMHStack gap={2} align="center" justify="space-between">
           <PMText
             fontSize="sm"
             fontWeight={selected ? 'semibold' : 'medium'}
@@ -318,6 +346,31 @@ function PackageRow({
           >
             {pkg.name}
           </PMText>
+          {showLockTag && (
+            <PMBox flexShrink={0} display="inline-flex" alignItems="center">
+              {lockProfile === 'all-no-app-token' ? (
+                <PMText
+                  as="span"
+                  fontFamily="mono"
+                  fontSize="10px"
+                  fontWeight="medium"
+                  color="warning"
+                  bg="background.tertiary"
+                  paddingX={1}
+                  paddingY="1px"
+                  borderRadius="sm"
+                  letterSpacing="0.04em"
+                  textTransform="uppercase"
+                >
+                  CLI
+                </PMText>
+              ) : (
+                <PMIcon fontSize="xs" color="blue.300" aria-hidden>
+                  <LuClock />
+                </PMIcon>
+              )}
+            </PMBox>
+          )}
           <PMTooltip label={tooltipLabel} showArrow openDelay={200}>
             <PMBox
               display="flex"

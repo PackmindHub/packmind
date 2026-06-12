@@ -1,5 +1,6 @@
 import type { GitProviderId } from '@packmind/types';
-import type { RepoRef } from '../types';
+import type { PackageDrift, RepoRef } from '../types';
+import { installDriftEntries } from './installDriftEntries';
 
 type ProvidersResponse = {
   providers: Array<{ id: GitProviderId; hasAuth: boolean }>;
@@ -21,4 +22,18 @@ export function isAppDistributable(
   providersWithToken: Set<GitProviderId>,
 ): boolean {
   return providersWithToken.has(repo.providerId);
+}
+
+export function behindInstallsRequiringCliCount(
+  packages: PackageDrift[],
+  providersWithToken: Set<GitProviderId>,
+): number {
+  let count = 0;
+  for (const pkg of packages) {
+    for (const entry of installDriftEntries(pkg)) {
+      if (entry.behindArtifacts.length === 0) continue;
+      if (!providersWithToken.has(entry.repo.providerId)) count++;
+    }
+  }
+  return count;
 }
