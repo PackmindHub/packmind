@@ -503,7 +503,7 @@ export const SidebarNavigation: React.FunctionComponent<
 
             <PMVStack
               alignItems="stretch"
-              gap={0}
+              gap={isCollapsed ? 2 : 0}
               scrollbarColor="{colors.background.tertiary} transparent"
               minHeight={0}
               overflowY="auto"
@@ -514,11 +514,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 orgSlug={orgSlug}
                 isActive={defaultSpace.slug === currentSpaceSlug}
                 isSelected={activeSpacePanel === defaultSpace.id}
-                onSpaceClick={() => {
-                  if (defaultSpace.slug !== currentSpaceSlug) {
-                    setActiveSpacePanel(defaultSpace.id);
-                  }
-                }}
+                onSpaceClick={() => setActiveSpacePanel(defaultSpace.id)}
                 dataTestId={SidebarNavigationDataTestId.DefaultSpaceRow}
               />
 
@@ -528,11 +524,7 @@ export const SidebarNavigation: React.FunctionComponent<
                   orgSlug={orgSlug}
                   currentSpaceSlug={currentSpaceSlug}
                   selectedSpaceId={activeSpacePanel}
-                  onSpaceClick={(space) => {
-                    if (space.slug !== currentSpaceSlug) {
-                      setActiveSpacePanel(space.id);
-                    }
-                  }}
+                  onSpaceClick={(space) => setActiveSpacePanel(space.id)}
                   onBrowseMySpaces={() =>
                     openBrowseDrawer(BrowseSpacesTab.MY_SPACES)
                   }

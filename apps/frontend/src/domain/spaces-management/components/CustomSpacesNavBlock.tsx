@@ -1,5 +1,5 @@
 import type { UserSpaceWithRole } from '@packmind/types';
-import { PMBox, PMSeparator, PMText, PMTooltip } from '@packmind/ui';
+import { PMBox, PMText, PMTooltip } from '@packmind/ui';
 import { SpaceNavBlock } from '../../organizations/components/sidebar/SpaceNavBlock';
 import { useSidebarCollapse } from '../../organizations/components/SidebarCollapseContext';
 import { sortSpacesByName } from '../utils/sortSpacesByName';
@@ -42,9 +42,16 @@ export function CustomSpacesNavBlock({
     ? sortedUnpinned.find((s) => s.slug === currentSpaceSlug)
     : undefined;
 
-  const unpinnedSpaces = hiddenActiveSpace
+  const expandedUnpinned = hiddenActiveSpace
     ? [...visibleUnpinned, hiddenActiveSpace]
     : visibleUnpinned;
+
+  // Collapsed sidebar shows the default space (rendered separately), pinned
+  // spaces, and the current space (kept visible even when not pinned). Other
+  // joined spaces are hidden to keep the rail compact.
+  const unpinnedSpaces = isCollapsed
+    ? expandedUnpinned.filter((space) => space.slug === currentSpaceSlug)
+    : expandedUnpinned;
 
   const hasNoCustomSpaces = customSpaces.length === 0;
 
@@ -71,12 +78,7 @@ export function CustomSpacesNavBlock({
           ))}
         </>
       )}
-      {isCollapsed ? (
-        pinnedSpaces.length > 0 &&
-        unpinnedSpaces.length > 0 && (
-          <PMSeparator borderColor="border.primary" my={2} mx={2} />
-        )
-      ) : (
+      {!isCollapsed && (
         <PMBox
           px={3}
           pt={3}
