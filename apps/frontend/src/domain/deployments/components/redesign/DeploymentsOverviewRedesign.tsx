@@ -212,6 +212,8 @@ export function DeploymentsOverviewRedesign() {
                 onToggleBulk={handleToggleBulk}
                 onSetBulkSelection={setBulkSelected}
                 onDistributeBulk={handleDistributeBulk}
+                providersWithToken={providersWithToken}
+                isProvidersLoading={isProvidersLoading && !isStubMode}
               />
               <PMBox
                 flex="1"
