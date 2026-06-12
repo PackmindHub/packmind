@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   PMBadge,
   PMBox,
@@ -374,12 +380,11 @@ export function SyncSurface({
           />
         ) : (
           <PMVStack gap={4} align="stretch">
-            {lockCounts.inProgress > 0 && (
-              <InProgressWarning count={lockCounts.inProgress} />
-            )}
-            {lockCounts.noAppToken > 0 && (
-              <NoAppTokenWarning count={lockCounts.noAppToken} />
-            )}
+            <LockSummary
+              ready={lockCounts.selectable}
+              inProgress={lockCounts.inProgress}
+              noAppToken={lockCounts.noAppToken}
+            />
             {blocks.map((block) => (
               <PackageSyncBlock
                 key={block.pkg.id}
@@ -509,12 +514,7 @@ function PackageSyncBlock({
     .filter((e) => !e.lock)
     .map((e) => e.entry);
   const total = selectableEntries.length;
-  const inProgressInBlock = entriesWithLock.filter(
-    (e) => e.lock === 'in-progress',
-  ).length;
-  const noTokenInBlock = entriesWithLock.filter(
-    (e) => e.lock === 'no-app-token',
-  ).length;
+  const lockedInBlock = entriesWithLock.filter((e) => e.lock !== null).length;
   const selectedCount = selectableEntries.reduce(
     (acc, entry) =>
       acc +
@@ -615,31 +615,9 @@ function PackageSyncBlock({
             flexShrink={0}
             fontVariantNumeric="tabular-nums"
           >
-            {inProgressInBlock > 0 && (
-              <PMTooltip
-                label={`${inProgressInBlock} distribution${inProgressInBlock === 1 ? '' : 's'} currently in progress — excluded from this run.`}
-                showArrow
-                openDelay={200}
-              >
-                <PMBadge size="xs" colorPalette="blue" variant="subtle">
-                  {inProgressInBlock} in progress
-                </PMBadge>
-              </PMTooltip>
-            )}
-            {noTokenInBlock > 0 && (
-              <PMTooltip
-                label={`${noTokenInBlock} distribution${noTokenInBlock === 1 ? '' : 's'} require packmind-cli install — provider has no token.`}
-                showArrow
-                openDelay={200}
-              >
-                <PMBadge size="xs" colorPalette="orange" variant="subtle">
-                  {noTokenInBlock} require CLI
-                </PMBadge>
-              </PMTooltip>
-            )}
             <PMText fontSize="xs" color="faded">
-              {selectedCount} of {total} distribution{total === 1 ? '' : 's'}{' '}
-              selected
+              {selectedCount} of {total} selected
+              {lockedInBlock > 0 && ` · ${lockedInBlock} locked`}
             </PMText>
           </PMHStack>
         </PMHStack>
@@ -922,53 +900,118 @@ function InstallSyncRow({
   );
 }
 
-function InProgressWarning({ count }: Readonly<{ count: number }>) {
-  return (
-    <PMBox
-      paddingX={4}
-      paddingY={3}
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="md"
-      bg="background.secondary"
-    >
-      <PMHStack gap={2} align="center">
-        <PMIcon fontSize="sm" color="blue.500">
-          <LuClock />
-        </PMIcon>
-        <PMText fontSize="sm" color="secondary">
-          {count} distribution{count === 1 ? ' is' : 's are'} currently in
-          progress and will be skipped from this run.
+function LockSummary({
+  ready,
+  inProgress,
+  noAppToken,
+}: Readonly<{
+  ready: number;
+  inProgress: number;
+  noAppToken: number;
+}>) {
+  const segments: Array<{
+    key: string;
+    dot: string;
+    label: ReactNode;
+  }> = [];
+  segments.push({
+    key: 'ready',
+    dot: 'green.500',
+    label: (
+      <>
+        <PMText
+          as="span"
+          fontWeight="semibold"
+          color="primary"
+          fontVariantNumeric="tabular-nums"
+        >
+          {ready}
         </PMText>
-      </PMHStack>
-    </PMBox>
-  );
-}
-
-function NoAppTokenWarning({ count }: Readonly<{ count: number }>) {
-  return (
-    <PMBox
-      paddingX={4}
-      paddingY={3}
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="md"
-      bg="background.secondary"
-    >
-      <PMHStack gap={2} align="center">
-        <PMIcon fontSize="sm" color="orange.500">
-          <LuTriangleAlert />
-        </PMIcon>
-        <PMText fontSize="sm" color="secondary">
-          {count} distribution{count === 1 ? '' : 's'} require
-          {count === 1 ? 's' : ''}{' '}
-          <PMText as="span" fontFamily="mono" fontSize="xs">
+        {' ready to distribute'}
+      </>
+    ),
+  });
+  if (inProgress > 0) {
+    segments.push({
+      key: 'in-progress',
+      dot: 'blue.300',
+      label: (
+        <>
+          <PMText
+            as="span"
+            fontWeight="semibold"
+            color="primary"
+            fontVariantNumeric="tabular-nums"
+          >
+            {inProgress}
+          </PMText>
+          {` in progress`}
+        </>
+      ),
+    });
+  }
+  if (noAppToken > 0) {
+    segments.push({
+      key: 'no-app-token',
+      dot: 'orange.500',
+      label: (
+        <>
+          <PMText
+            as="span"
+            fontWeight="semibold"
+            color="primary"
+            fontVariantNumeric="tabular-nums"
+          >
+            {noAppToken}
+          </PMText>
+          {' require '}
+          <PMText
+            as="span"
+            fontFamily="mono"
+            fontSize="xs"
+            color="warning"
+            paddingX={1}
+            paddingY="1px"
+            bg="background.tertiary"
+            borderRadius="sm"
+          >
             packmind-cli install
-          </PMText>{' '}
-          — the git provider has no token. Excluded from this run.
-        </PMText>
-      </PMHStack>
-    </PMBox>
+          </PMText>
+        </>
+      ),
+    });
+  }
+
+  return (
+    <PMHStack
+      gap={4}
+      align="center"
+      wrap="wrap"
+      rowGap={2}
+      paddingX={1}
+      paddingY={1}
+    >
+      {segments.map((seg, idx) => (
+        <PMHStack key={seg.key} gap={2} align="center">
+          <PMBox
+            width="6px"
+            height="6px"
+            borderRadius="full"
+            bg={seg.dot}
+            flexShrink={0}
+            aria-hidden
+          />
+          <PMText fontSize="sm" color="secondary">
+            {seg.label}
+          </PMText>
+          {idx < segments.length - 1 && (
+            <PMText fontSize="sm" color="faded" aria-hidden>
+              ·
+            </PMText>
+          )}
+        </PMHStack>
+      ))}
+    </PMHStack>
   );
 }
 
