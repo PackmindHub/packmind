@@ -49,6 +49,7 @@ function toRepoRef(gitRepo: GitRepo): RepoRef {
     id: gitRepo.id,
     owner: gitRepo.owner,
     name: gitRepo.repo,
+    providerId: gitRepo.providerId,
   };
 }
 

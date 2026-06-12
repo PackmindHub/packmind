@@ -1,5 +1,6 @@
 import type {
   DistributionStatus,
+  GitProviderId,
   GitRepoId,
   PackageId,
   RecipeId,
@@ -16,6 +17,7 @@ export type RepoRef = {
   id: GitRepoId;
   owner: string;
   name: string;
+  providerId: GitProviderId;
 };
 
 export type TargetRef = {
