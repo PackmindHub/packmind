@@ -302,11 +302,11 @@ function SummaryLine({
           {' failed'}
         </>
       )}
-      {cliRequiredInstalls > 0 && (
+      {cliRequiredInstalls > 0 && hasAnyDrift && (
         <>
-          {' · '}
+          {', '}
           <Metric value={cliRequiredInstalls} tone="warning" />
-          {' require '}
+          {' of which via '}
           <PMText
             as="span"
             fontFamily="mono"

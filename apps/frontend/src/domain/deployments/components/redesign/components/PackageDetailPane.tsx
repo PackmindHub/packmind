@@ -149,7 +149,7 @@ export function PackageDetailPane({
     if (driftedLockCounts.noAppToken === driftedKeys.length) {
       return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
     }
-    return 'Every drifted target is either in progress or requires `packmind-cli install`.';
+    return 'Every drifted target is either in progress or distributed via `packmind-cli install`.';
   })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(

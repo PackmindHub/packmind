@@ -964,7 +964,7 @@ function LockSummary({
           >
             {noAppToken}
           </PMText>
-          {' require '}
+          {' via '}
           <PMText
             as="span"
             fontFamily="mono"
