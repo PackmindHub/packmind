@@ -45,6 +45,11 @@ services:
       retries: 90
       start_period: 5s
   postgres:
+    # Throwaway per-run DB on a self-destroying machine: trade ALL crash
+    # durability for commit latency. fsync/synchronous_commit/full_page_writes
+    # off = no WAL fsync stalls through the container fs; autovacuum off = no
+    # mid-run background I/O on a DB that lives ~1 hour.
+    command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c autovacuum=off
     healthcheck:
       disable: true
   redis:
