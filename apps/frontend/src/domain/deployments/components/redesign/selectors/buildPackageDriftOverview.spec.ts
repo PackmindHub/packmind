@@ -18,6 +18,9 @@ import {
   DistributionStatus,
   GitRepo,
   Package,
+  PendingRecipeInfo,
+  PendingSkillInfo,
+  PendingStandardInfo,
   Target,
 } from '@packmind/types';
 
@@ -204,6 +207,39 @@ function makeSkillInfo(opts: {
   };
 }
 
+function makePendingStandard(opts: {
+  id?: string;
+  name?: string;
+}): PendingStandardInfo {
+  return {
+    id: createStandardId(opts.id ?? 'std-pending'),
+    name: opts.name ?? 'Pending standard',
+    slug: 'pending-standard',
+  };
+}
+
+function makePendingRecipe(opts: {
+  id?: string;
+  name?: string;
+}): PendingRecipeInfo {
+  return {
+    id: createRecipeId(opts.id ?? 'rcp-pending'),
+    name: opts.name ?? 'Pending recipe',
+    slug: 'pending-recipe',
+  };
+}
+
+function makePendingSkill(opts: {
+  id?: string;
+  name?: string;
+}): PendingSkillInfo {
+  return {
+    id: createSkillId(opts.id ?? 'skl-pending'),
+    name: opts.name ?? 'Pending skill',
+    slug: 'pending-skill',
+  };
+}
+
 function makeByTarget(
   overrides: Partial<ActiveDistributedPackagesByTarget>,
 ): ActiveDistributedPackagesByTarget {
@@ -219,22 +255,28 @@ function makeByTarget(
 function distributedPackage(opts: {
   packageId?: string;
   packageOverrides?: Partial<Package>;
+  lastDistributionStatus?: DistributionStatus;
+  lastDistributedAt?: string;
   standards?: DeployedStandardTargetInfo[];
   recipes?: DeployedRecipeTargetInfo[];
   skills?: DeployedSkillTargetInfo[];
+  pendingStandards?: PendingStandardInfo[];
+  pendingRecipes?: PendingRecipeInfo[];
+  pendingSkills?: PendingSkillInfo[];
 }) {
   const packageId = createPackageId(opts.packageId ?? 'pkg-1');
   return {
     packageId,
     package: makePackage({ id: packageId, ...opts.packageOverrides }),
-    lastDistributionStatus: DistributionStatus.success,
-    lastDistributedAt: '2026-01-01T00:00:00Z',
+    lastDistributionStatus:
+      opts.lastDistributionStatus ?? DistributionStatus.success,
+    lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
     deployedStandards: opts.standards ?? [],
     deployedRecipes: opts.recipes ?? [],
     deployedSkills: opts.skills ?? [],
-    pendingRecipes: [],
-    pendingStandards: [],
-    pendingSkills: [],
+    pendingRecipes: opts.pendingRecipes ?? [],
+    pendingStandards: opts.pendingStandards ?? [],
+    pendingSkills: opts.pendingSkills ?? [],
   };
 }
 
@@ -287,6 +329,10 @@ describe('buildPackageDriftOverview', () => {
 
     it('records the deployed version per install', () => {
       expect(pkg.artifacts[0].installs[0].deployedVersion).toBe(2);
+    });
+
+    it('flags the install as behind', () => {
+      expect(pkg.artifacts[0].installs[0].driftReason).toBe('behind');
     });
 
     it('records the install location', () => {
@@ -366,6 +412,7 @@ describe('buildPackageDriftOverview', () => {
 
   describe('when an artifact is marked as deleted', () => {
     let pkg: PackageDrift;
+    let dead: PackageDrift['artifacts'][number];
 
     beforeEach(() => {
       const [first] = buildPackageDriftOverview([
@@ -386,14 +433,61 @@ describe('buildPackageDriftOverview', () => {
         }),
       ]);
       pkg = first;
+      const found = pkg.artifacts.find((a) => a.id === 'dead');
+      if (!found) throw new Error('deleted artifact missing from output');
+      dead = found;
     });
 
-    it('keeps only non-deleted artifacts', () => {
-      expect(pkg.artifacts).toHaveLength(1);
+    it('keeps the deleted artifact in the result', () => {
+      expect(pkg.artifacts).toHaveLength(2);
     });
 
-    it('exposes the surviving artifact id', () => {
-      expect(pkg.artifacts[0].id).toBe('alive');
+    it('flags the deleted artifact', () => {
+      expect(dead.isDeleted).toBe(true);
+    });
+
+    it('marks the install as needs-removal', () => {
+      expect(dead.installs[0].driftReason).toBe('needs-removal');
+    });
+  });
+
+  describe('when an artifact is pending distribution', () => {
+    let pkg: PackageDrift;
+    let pending: PackageDrift['artifacts'][number];
+
+    beforeEach(() => {
+      const [first] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+              pendingRecipes: [
+                makePendingRecipe({ id: 'pend-rcp', name: 'New recipe' }),
+              ],
+            }),
+          ],
+        }),
+      ]);
+      pkg = first;
+      const found = pkg.artifacts.find((a) => a.id === 'pend-rcp');
+      if (!found) throw new Error('pending artifact missing from output');
+      pending = found;
+    });
+
+    it('adds an artifact entry for the pending recipe', () => {
+      expect(pending.kind).toBe('command');
+    });
+
+    it('flags the artifact as pending', () => {
+      expect(pending.isPending).toBe(true);
+    });
+
+    it('records one install per package location with not-distributed reason', () => {
+      expect(pending.installs[0].driftReason).toBe('not-distributed');
+    });
+
+    it('leaves the deployed version at zero for the pending install', () => {
+      expect(pending.installs[0].deployedVersion).toBe(0);
     });
   });
 
@@ -434,6 +528,43 @@ describe('buildPackageDriftOverview', () => {
       ]);
     });
   });
+
+  describe('when the package distribution status is failure', () => {
+    it('captures the status on the install location', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              lastDistributedAt: '2026-05-01T10:00:00Z',
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+      expect(pkg.installLocations[0].lastDistributionStatus).toBe(
+        DistributionStatus.failure,
+      );
+    });
+  });
+
+  describe('when the package distribution timestamp is captured', () => {
+    it('exposes the distribution date on the install location', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributedAt: '2026-05-01T10:00:00Z',
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+      expect(pkg.installLocations[0].lastDistributedAt).toBe(
+        '2026-05-01T10:00:00Z',
+      );
+    });
+  });
 });
 
 describe('packageHasDrift', () => {
@@ -466,6 +597,43 @@ describe('packageHasDrift', () => {
       expect(packageHasDrift(pkg)).toBe(false);
     });
   });
+
+  describe('when only a deleted artifact remains on the repo', () => {
+    it('reports drift so the removal can be propagated', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              standards: [
+                makeStandardInfo({
+                  latest: 2,
+                  deployed: 2,
+                  isDeleted: true,
+                }),
+              ],
+            }),
+          ],
+        }),
+      ]);
+      expect(packageHasDrift(pkg)).toBe(true);
+    });
+  });
+
+  describe('when a pending artifact has never been distributed', () => {
+    it('reports drift so the artifact can be pushed', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+              pendingSkills: [makePendingSkill({ id: 'p-sk' })],
+            }),
+          ],
+        }),
+      ]);
+      expect(packageHasDrift(pkg)).toBe(true);
+    });
+  });
 });
 
 describe('totalBehindInstallCount', () => {
@@ -477,6 +645,23 @@ describe('totalBehindInstallCount', () => {
             distributedPackage({
               standards: [makeStandardInfo({ latest: 3, deployed: 2 })],
               recipes: [makeRecipeInfo({ latest: 2, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(totalBehindInstallCount(packages)).toBe(1);
+    });
+  });
+
+  describe('when a pending artifact drifts on the only install', () => {
+    it('counts the install once', () => {
+      const packages = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+              pendingStandards: [makePendingStandard({ id: 'p-st' })],
             }),
           ],
         }),

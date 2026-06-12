@@ -1,4 +1,5 @@
 import type {
+  DistributionStatus,
   GitRepoId,
   PackageId,
   RecipeId,
@@ -24,12 +25,21 @@ export type TargetRef = {
   isDefault?: boolean;
 };
 
+/**
+ * Why an install row is flagged as drifting:
+ * - `behind`: the install has an older artifact version than Packmind exposes.
+ * - `needs-removal`: the artifact was soft-deleted on Packmind but still lives on the repo.
+ * - `not-distributed`: the artifact was added to the package but never pushed to this install.
+ */
+export type InstallDriftReason = 'behind' | 'needs-removal' | 'not-distributed';
+
 export type RepoInstall = {
   repo: RepoRef;
   target: TargetRef;
   branch: string;
   deployedVersion: number;
   lastDeployedAt: string;
+  driftReason: InstallDriftReason | 'aligned';
 };
 
 export type ArtifactDrift = {
@@ -37,6 +47,8 @@ export type ArtifactDrift = {
   kind: ArtifactKind;
   name: string;
   packmindVersion: number;
+  isDeleted: boolean;
+  isPending: boolean;
   installs: RepoInstall[];
 };
 
@@ -44,6 +56,8 @@ export type InstallLocation = {
   repo: RepoRef;
   target: TargetRef;
   branch: string;
+  lastDistributionStatus: DistributionStatus | null;
+  lastDistributedAt: string | null;
 };
 
 export type PackageDrift = {

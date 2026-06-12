@@ -1,6 +1,8 @@
 import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
+import type { DistributionStatus } from '@packmind/types';
 import type {
   ArtifactDrift,
+  InstallDriftReason,
   InstallLocation,
   PackageDrift,
   RepoInstall,
@@ -11,6 +13,7 @@ import type {
 export const STALE_DAYS_THRESHOLD = 60;
 
 export function relativeDaysAgo(iso: string): number {
+  if (!iso) return Number.POSITIVE_INFINITY;
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return Number.POSITIVE_INFINITY;
   return Math.max(0, differenceInDays(new Date(), parsed));
@@ -22,17 +25,21 @@ export function formatRelativeDate(iso: string): string {
   return formatDistanceToNowStrict(parsed, { addSuffix: true });
 }
 
-export function isInstallBehind(
-  install: RepoInstall,
-  packmindVersion: number,
-): boolean {
-  return install.deployedVersion < packmindVersion;
+export function isInstallBehind(install: RepoInstall): boolean {
+  return install.driftReason !== 'aligned';
 }
 
 export function artifactBehindCount(art: ArtifactDrift): number {
-  return art.installs.filter((i) => isInstallBehind(i, art.packmindVersion))
-    .length;
+  return art.installs.filter(isInstallBehind).length;
 }
+
+export type DriftArtifactEntry = {
+  artifact: ArtifactDrift;
+  reason: InstallDriftReason;
+  deployedVersion: number;
+  /** Empty string when the artifact was never distributed on this install. */
+  lastDeployedAt: string;
+};
 
 export type InstallDriftEntry = {
   repo: RepoRef;
@@ -40,11 +47,9 @@ export type InstallDriftEntry = {
   branch: string;
   mostRecentDeployedAt: string | null;
   mostRecentDeployedAtDays: number;
-  behindArtifacts: Array<{
-    artifact: ArtifactDrift;
-    deployedVersion: number;
-    lastDeployedAt: string;
-  }>;
+  lastDistributionStatus: DistributionStatus | null;
+  lastDistributedAt: string | null;
+  behindArtifacts: DriftArtifactEntry[];
   alignedArtifactCount: number;
 };
 
@@ -59,6 +64,8 @@ function emptyEntry(location: InstallLocation): InstallDriftEntry {
     branch: location.branch,
     mostRecentDeployedAt: null,
     mostRecentDeployedAtDays: Number.POSITIVE_INFINITY,
+    lastDistributionStatus: location.lastDistributionStatus,
+    lastDistributedAt: location.lastDistributedAt,
     behindArtifacts: [],
     alignedArtifactCount: 0,
   };
@@ -76,19 +83,24 @@ export function installDriftEntries(pkg: PackageDrift): InstallDriftEntry[] {
     for (const inst of artifact.installs) {
       const entry = byLocation.get(locationKey(inst.repo.id, inst.target.id));
       if (!entry) continue;
-      const days = relativeDaysAgo(inst.lastDeployedAt);
-      if (days < entry.mostRecentDeployedAtDays) {
-        entry.mostRecentDeployedAtDays = days;
-        entry.mostRecentDeployedAt = inst.lastDeployedAt;
+      // Only deployed installs feed the "latest push" indicator — pending installs
+      // have an empty lastDeployedAt because nothing ever shipped there.
+      if (inst.lastDeployedAt) {
+        const days = relativeDaysAgo(inst.lastDeployedAt);
+        if (days < entry.mostRecentDeployedAtDays) {
+          entry.mostRecentDeployedAtDays = days;
+          entry.mostRecentDeployedAt = inst.lastDeployedAt;
+        }
       }
-      if (isInstallBehind(inst, artifact.packmindVersion)) {
+      if (inst.driftReason === 'aligned') {
+        entry.alignedArtifactCount += 1;
+      } else {
         entry.behindArtifacts.push({
           artifact,
+          reason: inst.driftReason,
           deployedVersion: inst.deployedVersion,
           lastDeployedAt: inst.lastDeployedAt,
         });
-      } else {
-        entry.alignedArtifactCount += 1;
       }
     }
   }
@@ -145,6 +157,7 @@ export function packageMostRecentPush(
   let best: { iso: string; days: number } | null = null;
   for (const art of pkg.artifacts) {
     for (const inst of art.installs) {
+      if (!inst.lastDeployedAt) continue;
       const days = relativeDaysAgo(inst.lastDeployedAt);
       if (!best || days < best.days) {
         best = { iso: inst.lastDeployedAt, days };
