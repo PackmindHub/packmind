@@ -19,7 +19,6 @@ import {
   LuBookOpen,
   LuChevronDown,
   LuChevronRight,
-  LuClock,
   LuGitBranch,
   LuRotateCw,
   LuSearch,
@@ -61,20 +60,11 @@ const KIND_NOUN: Record<ArtifactKind, string> = {
   skill: 'skill',
 };
 
-const DISTRIBUTION_STATUS_BADGE: Record<
-  DistributionStatus,
-  { label: string; colorPalette: 'green' | 'red' | 'blue' | 'gray' }
-> = {
-  [DistributionStatus.success]: { label: 'Success', colorPalette: 'green' },
-  [DistributionStatus.failure]: { label: 'Failed', colorPalette: 'red' },
-  [DistributionStatus.in_progress]: {
-    label: 'In progress',
-    colorPalette: 'blue',
-  },
-  [DistributionStatus.no_changes]: {
-    label: 'No changes',
-    colorPalette: 'gray',
-  },
+const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
+  [DistributionStatus.success]: 'Distributed',
+  [DistributionStatus.failure]: 'Failed',
+  [DistributionStatus.in_progress]: 'Started',
+  [DistributionStatus.no_changes]: 'Checked',
 };
 
 function formatAbsoluteDate(iso: string): string {
@@ -149,7 +139,7 @@ export function PackageDetailPane({
     if (driftedLockCounts.noAppToken === driftedKeys.length) {
       return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
     }
-    return 'Every drifted target is either in progress or requires `packmind-cli install`.';
+    return 'Every drifted target is either in progress or distributed via `packmind-cli install`.';
   })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
@@ -526,37 +516,14 @@ function InstallRow({
         </PMBox>
 
         <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
-          <PMHStack gap={2} align="center">
-            <DistributionStatusBadge
-              status={entry.lastDistributionStatus}
-              lastDistributedAt={entry.lastDistributedAt}
-            />
-            <PMBox
-              width="6px"
-              height="6px"
-              borderRadius="full"
-              bg={hasDrift ? 'orange.500' : 'green.500'}
-              aria-hidden
-            />
-            {hasDrift ? (
-              <PMText
-                fontSize="xs"
-                color="warning"
-                fontVariantNumeric="tabular-nums"
-              >
-                {behindCount} of {totalArtifactsOnInstall} artifact
-                {totalArtifactsOnInstall === 1 ? '' : 's'} behind
-              </PMText>
-            ) : (
-              <PMText fontSize="xs" color="faded">
-                All aligned
-              </PMText>
-            )}
-          </PMHStack>
-          <LastPushLabel
-            value={entry.mostRecentDeployedAt}
-            days={entry.mostRecentDeployedAtDays}
+          <RowStateLine
+            entry={entry}
+            hasDrift={hasDrift}
+            behindCount={behindCount}
+            totalArtifactsOnInstall={totalArtifactsOnInstall}
+            lockReason={lockReason}
           />
+          <DistributionEventLine entry={entry} />
         </PMVStack>
       </PMHStack>
 
@@ -688,51 +655,136 @@ function BranchChip({ branch }: Readonly<{ branch: string }>) {
   );
 }
 
-function LastPushLabel({
-  value,
-  days,
-}: Readonly<{ value: string | null; days: number }>) {
-  if (!value) return null;
-  const stale = days >= STALE_DAYS_THRESHOLD;
-  return (
-    <PMTooltip label={formatAbsoluteDate(value)} placement="top">
-      <PMHStack
-        gap="4px"
-        align="center"
-        color={stale ? 'orange.500' : 'text.faded'}
-        aria-label={`Last push ${value}`}
-        cursor="help"
-      >
-        <PMIcon fontSize="11px">
-          <LuClock />
-        </PMIcon>
-        <PMText fontSize="11px" fontVariantNumeric="tabular-nums">
-          Last push {formatRelativeDate(value)}
+type RowStateLineProps = {
+  entry: InstallDriftEntry;
+  hasDrift: boolean;
+  behindCount: number;
+  totalArtifactsOnInstall: number;
+  lockReason: InstallLockReason | null;
+};
+
+function RowStateLine({
+  entry,
+  hasDrift,
+  behindCount,
+  totalArtifactsOnInstall,
+  lockReason,
+}: Readonly<RowStateLineProps>) {
+  const inProgress =
+    entry.lastDistributionStatus === DistributionStatus.in_progress;
+
+  if (inProgress) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="blue.300"
+          aria-hidden
+        />
+        <PMHStack gap={1.5} align="center" color="blue.300">
+          <PMSpinner size="xs" />
+          <PMText fontSize="xs">Distributing…</PMText>
+        </PMHStack>
+      </PMHStack>
+    );
+  }
+
+  if (hasDrift) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="orange.500"
+          aria-hidden
+        />
+        <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
+          {behindCount} of {totalArtifactsOnInstall} behind
+          {lockReason === 'no-app-token' && (
+            <>
+              {', via '}
+              <PMText
+                as="span"
+                fontFamily="mono"
+                fontSize="11px"
+                color="warning"
+                paddingX={1}
+                paddingY="1px"
+                bg="background.tertiary"
+                borderRadius="sm"
+              >
+                packmind-cli install
+              </PMText>
+            </>
+          )}
         </PMText>
       </PMHStack>
-    </PMTooltip>
+    );
+  }
+
+  if (!entry.lastDistributionStatus && !entry.mostRecentDeployedAt) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          borderWidth="1px"
+          borderColor="border.tertiary"
+          aria-hidden
+        />
+        <PMText fontSize="xs" color="faded">
+          Never distributed
+        </PMText>
+      </PMHStack>
+    );
+  }
+
+  return (
+    <PMHStack gap={2} align="center">
+      <PMBox
+        width="6px"
+        height="6px"
+        borderRadius="full"
+        bg="green.500"
+        aria-hidden
+      />
+      <PMText fontSize="xs" color="faded">
+        Aligned
+      </PMText>
+    </PMHStack>
   );
 }
 
-function DistributionStatusBadge({
-  status,
-  lastDistributedAt,
-}: Readonly<{
-  status: DistributionStatus | null;
-  lastDistributedAt: string | null;
-}>) {
-  if (!status) return null;
-  const meta = DISTRIBUTION_STATUS_BADGE[status];
-  const tooltipLabel = lastDistributedAt
-    ? `Last distribution ${formatRelativeDate(lastDistributedAt)} — ${formatAbsoluteDate(lastDistributedAt)}`
-    : `Last distribution status: ${meta.label}`;
+function DistributionEventLine({
+  entry,
+}: Readonly<{ entry: InstallDriftEntry }>) {
+  const anchorIso = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
+  if (!anchorIso) return null;
+  const verb = entry.lastDistributionStatus
+    ? DISTRIBUTION_VERB[entry.lastDistributionStatus]
+    : 'Pushed';
+  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
+  const stale =
+    !failed &&
+    entry.lastDistributionStatus !== DistributionStatus.in_progress &&
+    entry.mostRecentDeployedAtDays >= STALE_DAYS_THRESHOLD;
+  const color = failed ? 'red.500' : stale ? 'orange.500' : 'text.faded';
   return (
-    <PMTooltip label={tooltipLabel} placement="top">
-      <PMHStack gap={1} align="center" cursor="help">
-        {status === DistributionStatus.in_progress && <PMSpinner size="xs" />}
-        <PMBadge colorPalette={meta.colorPalette} size="sm">
-          {meta.label}
-        </PMBadge>
+    <PMTooltip label={formatAbsoluteDate(anchorIso)} placement="top">
+      <PMHStack
+        gap="4px"
+        align="center"
+        color={color}
+        aria-label={`${verb} ${anchorIso}`}
+        cursor="help"
+      >
+        <PMText fontSize="11px" fontVariantNumeric="tabular-nums">
+          {verb} {formatRelativeDate(anchorIso)}
+        </PMText>
       </PMHStack>
     </PMTooltip>
   );
