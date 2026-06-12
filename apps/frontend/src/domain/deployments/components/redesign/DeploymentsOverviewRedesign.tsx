@@ -10,7 +10,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import type { PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -20,23 +20,30 @@ import {
   packageHasDrift,
   sortPackagesByDriftFirst,
   totalBehindInstallCount,
+  totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
+import { STUB_PACKAGES } from './stubPackages';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
   const { organization } = useAuthContext();
   const { spaceId, spaceSlug, isReady } = useCurrentSpace();
+  const [searchParams] = useSearchParams();
+  const isStubMode = import.meta.env.DEV && searchParams.get('stub') === '1';
   const { data, isLoading, isError } =
-    useListActiveDistributedPackagesBySpaceQuery(spaceId);
+    useListActiveDistributedPackagesBySpaceQuery(
+      isStubMode ? undefined : spaceId,
+    );
 
-  const packages = useMemo<PackageDrift[]>(
-    () =>
-      data ? sortPackagesByDriftFirst(buildPackageDriftOverview(data)) : [],
-    [data],
-  );
+  const packages = useMemo<PackageDrift[]>(() => {
+    if (isStubMode) return sortPackagesByDriftFirst(STUB_PACKAGES);
+    return data
+      ? sortPackagesByDriftFirst(buildPackageDriftOverview(data))
+      : [];
+  }, [data, isStubMode]);
 
   const [selectedPackageId, setSelectedPackageId] = useState<PackageId | null>(
     null,
@@ -69,6 +76,7 @@ export function DeploymentsOverviewRedesign() {
 
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
+  const failedInstalls = totalFailedInstallCount(packages);
   const hasAnyDrift = driftPackagesCount > 0;
   const deploymentsHref =
     organization && spaceSlug
@@ -84,11 +92,11 @@ export function DeploymentsOverviewRedesign() {
         deploymentsHref ? <Backlink href={deploymentsHref} /> : undefined
       }
     >
-      {!isReady || isLoading ? (
+      {!isStubMode && (!isReady || isLoading) ? (
         <LoadingState />
-      ) : isError ? (
+      ) : !isStubMode && isError ? (
         <ErrorState />
-      ) : packages.length === 0 ? (
+      ) : !isStubMode && packages.length === 0 ? (
         <EmptyState />
       ) : syncScope !== null ? (
         <SyncSurface
@@ -103,6 +111,15 @@ export function DeploymentsOverviewRedesign() {
         />
       ) : (
         <PMVStack gap={5} align="stretch">
+          {isStubMode && (
+            <PMAlert.Root status="warning">
+              <PMAlert.Indicator />
+              <PMAlert.Title>
+                Stub mode — fictional data. Clicking Distribute will hit the
+                real backend with non-existent IDs and fail.
+              </PMAlert.Title>
+            </PMAlert.Root>
+          )}
           {hasAnyDrift ? (
             <PMHStack gap={10} align="baseline" wrap="wrap" paddingX={1}>
               <DriftKpi
@@ -113,6 +130,21 @@ export function DeploymentsOverviewRedesign() {
               <DriftKpi
                 value={driftPackagesCount}
                 label={`of ${packages.length} package${packages.length === 1 ? '' : 's'} affected`}
+              />
+              {failedInstalls > 0 && (
+                <DriftKpi
+                  value={failedInstalls}
+                  label={`distribution${failedInstalls === 1 ? '' : 's'} failed`}
+                  tone="fail"
+                />
+              )}
+            </PMHStack>
+          ) : failedInstalls > 0 ? (
+            <PMHStack gap={10} align="baseline" wrap="wrap" paddingX={1}>
+              <DriftKpi
+                value={failedInstalls}
+                label={`distribution${failedInstalls === 1 ? '' : 's'} failed`}
+                tone="fail"
               />
             </PMHStack>
           ) : (
@@ -178,14 +210,16 @@ function DriftKpi({
 }: Readonly<{
   value: number;
   label: string;
-  tone?: 'neutral' | 'warn';
+  tone?: 'neutral' | 'warn' | 'fail';
 }>) {
+  const valueColor =
+    tone === 'fail' ? 'error' : tone === 'warn' ? 'warning' : 'primary';
   return (
     <PMHStack gap={2} align="baseline">
       <PMText
         fontSize="2xl"
         fontWeight="semibold"
-        color={tone === 'warn' ? 'warning' : 'primary'}
+        color={valueColor}
         fontVariantNumeric="tabular-nums"
         lineHeight="1"
         letterSpacing="-0.02em"

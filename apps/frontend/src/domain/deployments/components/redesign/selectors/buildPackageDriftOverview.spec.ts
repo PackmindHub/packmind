@@ -26,9 +26,12 @@ import {
 
 import {
   buildPackageDriftOverview,
+  packageFailedInstallCount,
   packageHasDrift,
+  packageHasFailedDistribution,
   sortPackagesByDriftFirst,
   totalBehindInstallCount,
+  totalFailedInstallCount,
 } from './buildPackageDriftOverview';
 import type { PackageDrift } from '../types';
 
@@ -668,6 +671,136 @@ describe('totalBehindInstallCount', () => {
       ]);
 
       expect(totalBehindInstallCount(packages)).toBe(1);
+    });
+  });
+});
+
+describe('packageHasFailedDistribution', () => {
+  describe('when no install has a failure status', () => {
+    it('returns false', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageHasFailedDistribution(pkg)).toBe(false);
+    });
+  });
+
+  describe('when at least one install has failure status', () => {
+    it('returns true', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-a') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-b') }),
+          target: makeTarget({ id: createTargetId('target-b') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageHasFailedDistribution(pkg)).toBe(true);
+    });
+  });
+});
+
+describe('packageFailedInstallCount', () => {
+  describe('when multiple installs failed', () => {
+    it('counts each failed install location', () => {
+      const [pkg] = buildPackageDriftOverview([
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-a') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-b') }),
+          target: makeTarget({ id: createTargetId('target-b') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-c') }),
+          target: makeTarget({ id: createTargetId('target-c') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageFailedInstallCount(pkg)).toBe(2);
+    });
+  });
+});
+
+describe('totalFailedInstallCount', () => {
+  describe('when packages have a mix of statuses', () => {
+    it('sums failed installs across every package', () => {
+      const packages = buildPackageDriftOverview([
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-a') }),
+          packages: [
+            distributedPackage({
+              packageId: 'pkg-a',
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-b') }),
+          target: makeTarget({ id: createTargetId('target-b') }),
+          packages: [
+            distributedPackage({
+              packageId: 'pkg-b',
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-c') }),
+          target: makeTarget({ id: createTargetId('target-c') }),
+          packages: [
+            distributedPackage({
+              packageId: 'pkg-c',
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(totalFailedInstallCount(packages)).toBe(2);
     });
   });
 });

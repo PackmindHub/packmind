@@ -1,16 +1,16 @@
-import type {
-  ActiveDistributedPackage,
-  ActiveDistributedPackagesByTarget,
-  DeployedRecipeTargetInfo,
-  DeployedSkillTargetInfo,
-  DeployedStandardTargetInfo,
+import {
   DistributionStatus,
-  GitRepo,
-  PackageId,
-  PendingRecipeInfo,
-  PendingSkillInfo,
-  PendingStandardInfo,
-  Target,
+  type ActiveDistributedPackage,
+  type ActiveDistributedPackagesByTarget,
+  type DeployedRecipeTargetInfo,
+  type DeployedSkillTargetInfo,
+  type DeployedStandardTargetInfo,
+  type GitRepo,
+  type PackageId,
+  type PendingRecipeInfo,
+  type PendingSkillInfo,
+  type PendingStandardInfo,
+  type Target,
 } from '@packmind/types';
 
 import type {
@@ -398,6 +398,26 @@ export function totalBehindInstallCount(packages: PackageDrift[]): number {
   for (const pkg of packages) {
     total += packageBehindInstallCount(pkg);
   }
+  return total;
+}
+
+export function packageHasFailedDistribution(pkg: PackageDrift): boolean {
+  return pkg.installLocations.some(
+    (loc) => loc.lastDistributionStatus === DistributionStatus.failure,
+  );
+}
+
+export function packageFailedInstallCount(pkg: PackageDrift): number {
+  let n = 0;
+  for (const loc of pkg.installLocations) {
+    if (loc.lastDistributionStatus === DistributionStatus.failure) n++;
+  }
+  return n;
+}
+
+export function totalFailedInstallCount(packages: PackageDrift[]): number {
+  let total = 0;
+  for (const pkg of packages) total += packageFailedInstallCount(pkg);
   return total;
 }
 
