@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
+  PMButton,
   PMHStack,
   PMIcon,
+  PMLink,
   PMPage,
   PMSpinner,
   PMText,
@@ -11,10 +13,12 @@ import {
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
 import { useNavigate, useSearchParams } from 'react-router';
-import type { PackageId } from '@packmind/types';
+import type { GitProviderId, PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import { routes } from '../../../../shared/utils/routes';
 import {
   buildPackageDriftOverview,
   packageHasDrift,
@@ -22,10 +26,11 @@ import {
   totalBehindInstallCount,
   totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
+import { providersWithTokenSet } from './selectors/providerAuth';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
-import { STUB_PACKAGES } from './stubPackages';
+import { STUB_PACKAGES, STUB_PROVIDER_OK } from './stubPackages';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
@@ -37,6 +42,13 @@ export function DeploymentsOverviewRedesign() {
     useListActiveDistributedPackagesBySpaceQuery(
       isStubMode ? undefined : spaceId,
     );
+  const { data: providersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+
+  const providersWithToken = useMemo<Set<GitProviderId>>(() => {
+    if (isStubMode) return new Set([STUB_PROVIDER_OK]);
+    return providersWithTokenSet(providersResponse);
+  }, [providersResponse, isStubMode]);
 
   const packages = useMemo<PackageDrift[]>(() => {
     if (isStubMode) return sortPackagesByDriftFirst(STUB_PACKAGES);
@@ -73,6 +85,12 @@ export function DeploymentsOverviewRedesign() {
   const handleSyncPackage = (packageId: PackageId, installKeys?: string[]) => {
     setSyncScope({ kind: 'package', packageId, installKeys });
   };
+  const handleDistributeAllDrifted = () => {
+    const driftedIds = packages.filter(packageHasDrift).map((p) => p.id);
+    if (driftedIds.length === 0) return;
+    setBulkSelected(new Set(driftedIds));
+    setSyncScope({ kind: 'bulk', packageIds: driftedIds });
+  };
 
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
@@ -82,6 +100,9 @@ export function DeploymentsOverviewRedesign() {
     organization && spaceSlug
       ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
       : null;
+  const autoUpdateHref = organization
+    ? routes.org.toSetupAutoUpdate(organization.slug)
+    : null;
 
   return (
     <PMPage
@@ -102,6 +123,8 @@ export function DeploymentsOverviewRedesign() {
         <SyncSurface
           packages={packages}
           scope={syncScope}
+          providersWithToken={providersWithToken}
+          isProvidersLoading={isProvidersLoading && !isStubMode}
           onCancel={() => setSyncScope(null)}
           onConfirm={() => {
             if (syncScope?.kind === 'bulk') {
@@ -118,6 +141,41 @@ export function DeploymentsOverviewRedesign() {
                 Stub mode — fictional data. Clicking Distribute will hit the
                 real backend with non-existent IDs and fail.
               </PMAlert.Title>
+            </PMAlert.Root>
+          )}
+          {hasAnyDrift && (
+            <PMAlert.Root status="info">
+              <PMHStack
+                justify="space-between"
+                align="center"
+                width="full"
+                gap={4}
+              >
+                <PMHStack align="start" gap={3}>
+                  <PMAlert.Indicator />
+                  <PMVStack align="start" gap={1}>
+                    <PMAlert.Title>
+                      Distributions drift over time as packages evolve.
+                    </PMAlert.Title>
+                    {autoUpdateHref && (
+                      <PMAlert.Description>
+                        Keep distributions in sync automatically —{' '}
+                        <PMLink href={autoUpdateHref}>
+                          set up Auto-update
+                        </PMLink>
+                        .
+                      </PMAlert.Description>
+                    )}
+                  </PMVStack>
+                </PMHStack>
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleDistributeAllDrifted}
+                >
+                  Distribute all drifted
+                </PMButton>
+              </PMHStack>
             </PMAlert.Root>
           )}
           {hasAnyDrift ? (
@@ -186,6 +244,8 @@ export function DeploymentsOverviewRedesign() {
                     key={selectedPackage.id}
                     pkg={selectedPackage}
                     onSyncPackage={handleSyncPackage}
+                    providersWithToken={providersWithToken}
+                    isProvidersLoading={isProvidersLoading && !isStubMode}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">
