@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
+  PMButton,
   PMHStack,
   PMIcon,
+  PMLink,
   PMPage,
   PMSpinner,
   PMText,
@@ -16,6 +18,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import { routes } from '../../../../shared/utils/routes';
 import {
   buildPackageDriftOverview,
   packageHasDrift,
@@ -82,6 +85,12 @@ export function DeploymentsOverviewRedesign() {
   const handleSyncPackage = (packageId: PackageId, installKeys?: string[]) => {
     setSyncScope({ kind: 'package', packageId, installKeys });
   };
+  const handleDistributeAllDrifted = () => {
+    const driftedIds = packages.filter(packageHasDrift).map((p) => p.id);
+    if (driftedIds.length === 0) return;
+    setBulkSelected(new Set(driftedIds));
+    setSyncScope({ kind: 'bulk', packageIds: driftedIds });
+  };
 
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
@@ -91,6 +100,9 @@ export function DeploymentsOverviewRedesign() {
     organization && spaceSlug
       ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
       : null;
+  const autoUpdateHref = organization
+    ? routes.org.toSetupAutoUpdate(organization.slug)
+    : null;
 
   return (
     <PMPage
@@ -129,6 +141,41 @@ export function DeploymentsOverviewRedesign() {
                 Stub mode — fictional data. Clicking Distribute will hit the
                 real backend with non-existent IDs and fail.
               </PMAlert.Title>
+            </PMAlert.Root>
+          )}
+          {hasAnyDrift && (
+            <PMAlert.Root status="info">
+              <PMHStack
+                justify="space-between"
+                align="center"
+                width="full"
+                gap={4}
+              >
+                <PMHStack align="start" gap={3}>
+                  <PMAlert.Indicator />
+                  <PMVStack align="start" gap={1}>
+                    <PMAlert.Title>
+                      Distributions drift over time as packages evolve.
+                    </PMAlert.Title>
+                    {autoUpdateHref && (
+                      <PMAlert.Description>
+                        Keep distributions in sync automatically —{' '}
+                        <PMLink href={autoUpdateHref}>
+                          set up Auto-update
+                        </PMLink>
+                        .
+                      </PMAlert.Description>
+                    )}
+                  </PMVStack>
+                </PMHStack>
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleDistributeAllDrifted}
+                >
+                  Distribute all drifted
+                </PMButton>
+              </PMHStack>
             </PMAlert.Root>
           )}
           {hasAnyDrift ? (
