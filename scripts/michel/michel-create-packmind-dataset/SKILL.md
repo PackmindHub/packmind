@@ -32,11 +32,12 @@ That skill is the single source of truth for the lifecycle. The essentials:
 ```bash
 export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
 docker compose --profile dev up -d
-until curl -sf localhost:4200 >/dev/null; do sleep 2; done   # frontend ready
-curl -s -o /dev/null -w "%{http_code}\n" localhost:4200/api/v0   # API via Vite proxy -> 200
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # host port: 4200 oss / 4201 proprietary
+until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 2; done   # frontend ready
+curl -s -o /dev/null -w "%{http_code}\n" "localhost:$PM_WEB/api/v0"   # API via Vite proxy -> 200
 ```
 
-**Host-port trap:** the NestJS API is on container port `3000`, which is **not** published to the host. Never poll `localhost:3000`. Reach the API through the frontend's Vite proxy at `http://localhost:4200/api/v0` — and that same base URL (`http://localhost:4200`) is what the CLI must point at.
+**Host-port trap:** the NestJS API is on container port `3000`, which is **not** published to the host. Never poll `localhost:3000`. Reach the API through the frontend's Vite proxy at `http://localhost:$PM_WEB/api/v0` — and that same base URL (`http://localhost:$PM_WEB`) is what the CLI must point at. The host frontend port is **edition-dependent** (`4200` OSS / `4201` proprietary) — resolve `PM_WEB` as above, never hardcode `4200`.
 
 If the frontend exits on its own or sticks on "Loading Packmind…", that is a known cosmetic flake — restart just `frontend` or reload the page. See `michel-run-local-dev-stack` ("Frontend troubleshooting"); don't debug the app.
 
@@ -51,7 +52,7 @@ docker compose --profile dev up -d   # PACKMIND_EDITION already exported above
 
 A fresh instance has no account; the first org is created through sign-up. Drive the browser with the Playwright MCP:
 
-1. Open `http://localhost:4200` → lands on `/sign-in`.
+1. Open `http://localhost:$PM_WEB` (4200 OSS / 4201 proprietary — see the host-port trap above) → lands on `/sign-in`.
 2. **Sign up** → `/sign-up/create-account`.
 3. Work email (e.g. `michel@packmind-demo.com`) → **Continue with email**.
 4. Password — must be **8+ chars with at least 2 non-alphanumeric characters** (e.g. `Packmind!Demo#2026`). The signup API rejects anything weaker with a raw error, not a hint, so a weak password reads as a silent failure. Confirm → **Create Account**. (Same policy applies to scripted signup via `POST /api/v0/auth/signup` — see `michel-run-local-dev-stack` → "Creating the first account".)
@@ -99,7 +100,7 @@ Build from source and run as `node ./dist/apps/cli/main.cjs` — do **not** use 
 
 ```bash
 npm run packmind-cli:build                                          # -> dist/apps/cli/main.cjs
-node ./dist/apps/cli/main.cjs login --host http://localhost:4200    # MUST pass --host; defaults to prod
+node ./dist/apps/cli/main.cjs login --host "http://localhost:$PM_WEB"   # MUST pass --host (4200 oss / 4201 prop); defaults to prod
 ```
 
 Login starts a callback server (`http://127.0.0.1:19284`) and prints a `/cli-login?...` URL. Open it in a browser session already logged in to the local org (the §2 account); it hands the code back and the CLI stores an API key at `~/.packmind/credentials.json`.
@@ -129,12 +130,13 @@ docker compose --profile dev down -v     # also wipes it
 # Stack
 export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary
 docker compose --profile dev up -d
-until curl -sf localhost:4200 >/dev/null; do sleep 2; done
-curl -s -o /dev/null -w "%{http_code}\n" localhost:4200/api/v0   # -> 200
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # host port: 4200 oss / 4201 proprietary
+until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 2; done
+curl -s -o /dev/null -w "%{http_code}\n" "localhost:$PM_WEB/api/v0"   # -> 200
 
 # CLI: build + connect to local
 npm run packmind-cli:build
-node ./dist/apps/cli/main.cjs login --host http://localhost:4200
+node ./dist/apps/cli/main.cjs login --host "http://localhost:$PM_WEB"
 node ./dist/apps/cli/main.cjs whoami
 
 # Seed a skill (org + standards + commands done in the UI per §2–4)
