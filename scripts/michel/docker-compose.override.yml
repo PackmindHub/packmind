@@ -81,6 +81,13 @@ services:
         # links every hit from the warm store (fast) and fetches only the delta.
         pnpm install --frozen-lockfile --prefer-offline --store-dir /root/.pnpm-store
         chmod -R +x node_modules/.bin 2>/dev/null || true
+        # Assert the native addons just linked into dev-node_modules load under
+        # THIS container's libc (glibc here). A wrong-libc volume — musl binaries
+        # under glibc or vice-versa — otherwise dies silently ~40 min later inside
+        # run-migrations/backend with a cryptic swc/nx binding error. Fail fast at
+        # this clearly-named init service instead, with a greppable, actionable msg.
+        node -e "require('@swc/core').transformSync('const x=1;'); require('nx/src/native/native-bindings.js')" \
+          || { echo "[deps] FATAL: native addon failed to load (libc mismatch in dev-node_modules). Reset with: docker compose --profile dev down -v && docker compose --profile dev up -d" >&2; exit 1; }
         node scripts/select-tsconfig.mjs
   backend:
     image: node:24.15.0-trixie-slim
