@@ -109,6 +109,30 @@ The frontend is the flakiest service on first boot. Two failure modes seen in pr
   (`docker compose logs frontend` shows `[optimizer] bundling dependencies...` → done). A hard
   reload / re-navigate clears it.
 
+### When a native addon won't load (libc) — reset, don't dissect
+
+A `run-migrations`/`backend` crash citing `@swc/core`, an `nx` native binding, a
+`*.node` file, `GLIBC_`, `Error relocating`, or `musl` is a **dependency/libc
+problem, not a code bug** — and it has a one-line fix. Do **not** go spelunking
+in the binaries; a real run once burned ~90 minutes doing exactly that.
+
+```bash
+docker compose --profile dev down -v && docker compose --profile dev up -d
+```
+
+- **Reset first.** `down -v` drops the `dev-node_modules` volume; the next `up`
+  re-installs every native addon for the running container's libc. This is the fix.
+- **Never `readelf`/`ldd`/`od`/grep `binding.js`** to "diagnose" the `.node` file. It
+  tells you nothing actionable here.
+- **Never hand-roll `docker run` to replace a compose service.** Under the Michel
+  override the stack runs on **glibc** (`node:24.15.0-trixie-slim`); a manual
+  `node:*-alpine` (musl) container is the **wrong libc** and fails to load every
+  native addon — that error is self-inflicted, not the stack's. If you truly need a
+  one-off, use `node:24.15.0-trixie-slim` with the same volumes/env as compose.
+- **Never edit application source to make the stack boot.** A DI error / missing
+  provider that shows up only under a hand-rolled or half-started boot is an artifact
+  of the wrong boot path — the reset above makes it disappear. Don't "fix" it in code.
+
 ### Re-running migrations
 
 When you add or change a migration, re-run just that init service against the running Postgres:
@@ -204,6 +228,7 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 - **MCP server has no host port.** It's reachable only from inside the compose network (e.g. by the frontend), not from your host via `localhost`.
 - **Frontend can die on its own after a clean boot.** `Failed to reconnect to daemon` kills the continuous `frontend:dev` task → container `Exited (1)`, `localhost:$PM_WEB` refuses. Restart just that service: `docker compose --profile dev up -d frontend`.
 - **"Loading Packmind…" forever + `ERR_NETWORK_CHANGED` spam = transient cold-Vite hiccup, not a bug.** Reload the page after the optimizer finishes bundling. Don't go debugging the app.
+- **Native-addon / libc errors (`@swc/core`, `nx` native, `*.node`, `GLIBC_`, `musl`) → reset, don't dissect.** `docker compose --profile dev down -v && docker compose --profile dev up -d`. The stack is glibc (`trixie-slim`); never reproduce in a manual `node:*-alpine` container (wrong libc), and never edit app code to make it boot. See "When a native addon won't load" above.
 - **The API base is `/api/v0`**, not `/api`. Health check and all calls hang off that prefix.
 - **Sign-up password policy is enforced server-side.** The signup API rejects any password under 8 chars or with fewer than 2 non-alphanumeric chars — with a raw error, not a hint, so a weak password looks like a silent failure. Use one like `Packmind!Demo#2026`. See "Creating the first account".
 - **Never leave it running.** If you brought it up, `docker compose --profile dev down` before finishing — lingering containers block completion.
