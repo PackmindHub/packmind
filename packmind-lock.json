@@ -1949,6 +1949,21 @@
           "isSkillDefinition": true
         }
       ]
+    },
+    "user:skill:create-em-spec": {
+      "name": "create-em-spec",
+      "type": "skill",
+      "id": "78e3969b-9d56-480a-8853-5d7cfc8702a4",
+      "version": 1,
+      "spaceId": "01047020-5b23-4aae-91b8-ec74267563ae",
+      "packageIds": [],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/skills/create-em-spec/SKILL.md",
+          "agent": "claude"
+        }
+      ]
     }
   },
   "cliVersion": "0.30.0"
