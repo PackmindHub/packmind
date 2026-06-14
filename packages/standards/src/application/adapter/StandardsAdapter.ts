@@ -45,7 +45,7 @@ import {
   UpdateStandardCommand,
   UserId,
 } from '@packmind/types';
-import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
+import { IStandardDelayedJobs } from '../jobs/IStandardDelayedJobs';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { GetRuleExamplesCommand } from '../../domain/useCases';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
@@ -392,6 +392,42 @@ export class StandardsAdapter
 
   getStandard(id: StandardId): Promise<Standard | null> {
     return this.services.getStandardService().getStandardById(id);
+  }
+
+  /**
+   * Batch read of standards by IDs, each enriched with the summary of its
+   * current version. Resolves both the standards and their versions in a
+   * single query apiece so cross-domain package hydration avoids per-id
+   * fan-out.
+   */
+  async getStandardsByIds(ids: StandardId[]): Promise<Standard[]> {
+    const standards = await this.services
+      .getStandardService()
+      .getStandardsByIds(ids);
+
+    if (standards.length === 0) {
+      return [];
+    }
+
+    const versions = await this.services
+      .getStandardVersionService()
+      .listStandardVersionsByStandardIds(standards.map((s) => s.id));
+
+    const summaryMap = new Map<string, string>();
+    for (const version of versions) {
+      if (version.summary) {
+        summaryMap.set(
+          `${version.standardId}:${version.version}`,
+          version.summary,
+        );
+      }
+    }
+
+    return standards.map((standard) => ({
+      ...standard,
+      summary:
+        summaryMap.get(`${standard.id}:${standard.version}`) ?? undefined,
+    }));
   }
 
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null> {

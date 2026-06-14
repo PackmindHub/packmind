@@ -38,7 +38,7 @@ describe('DeploymentsListener', () => {
       findBySpaceId: jest.fn(),
       findByOrganizationId: jest.fn(),
       findById: jest.fn(),
-      findBySlugsWithArtefacts: jest.fn(),
+      findBySlugsAndSpaceIds: jest.fn(),
       addRecipes: jest.fn(),
       addStandards: jest.fn(),
       updatePackageDetails: jest.fn(),

@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
-import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createRecipeId,
@@ -40,7 +39,7 @@ export type UpdateRecipeData = {
 
 export class RecipeService {
   constructor(
-    private readonly recipeRepository: IRecipeRepository = new RecipeRepository(),
+    private readonly recipeRepository: IRecipeRepository,
     private readonly recipeVersionRepository: IRecipeVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -141,6 +140,25 @@ export class RecipeService {
     } catch (error) {
       this.logger.error('Failed to get recipe by ID', {
         id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getRecipesByIds(ids: RecipeId[]): Promise<Recipe[]> {
+    this.logger.info('Getting recipes by IDs', { count: ids.length });
+
+    try {
+      const recipes = await this.recipeRepository.findByIds(ids);
+      this.logger.info('Recipes retrieved by IDs', {
+        requested: ids.length,
+        found: recipes.length,
+      });
+      return recipes;
+    } catch (error) {
+      this.logger.error('Failed to get recipes by IDs', {
+        count: ids.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

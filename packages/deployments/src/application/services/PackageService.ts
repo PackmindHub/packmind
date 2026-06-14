@@ -1,12 +1,19 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
+  IRecipesPort,
+  ISkillsPort,
+  ISpacesPort,
+  IStandardsPort,
   Package,
   PackageId,
   PackageWithArtefacts,
+  Recipe,
   RecipeId,
-  SpaceId,
-  StandardId,
+  Skill,
   SkillId,
+  SpaceId,
+  Standard,
+  StandardId,
   UserId,
   OrganizationId,
 } from '@packmind/types';
@@ -15,6 +22,11 @@ import { IPackageRepository } from '../../domain/repositories/IPackageRepository
 const origin = 'PackageService';
 
 export class PackageService {
+  private recipesPort: IRecipesPort | null = null;
+  private standardsPort: IStandardsPort | null = null;
+  private skillsPort: ISkillsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
+
   constructor(
     private readonly packageRepository: IPackageRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -23,6 +35,23 @@ export class PackageService {
     ),
   ) {
     this.logger.info('PackageService initialized');
+  }
+
+  /**
+   * Lazily wire the cross-domain ports used to hydrate package artefacts. The
+   * adapter calls this once the HexaRegistry has resolved the ports, since they
+   * are not available when DeploymentsServices constructs this service.
+   */
+  setArtefactPorts(ports: {
+    recipesPort: IRecipesPort;
+    standardsPort: IStandardsPort;
+    skillsPort: ISkillsPort;
+    spacesPort: ISpacesPort;
+  }): void {
+    this.recipesPort = ports.recipesPort;
+    this.standardsPort = ports.standardsPort;
+    this.skillsPort = ports.skillsPort;
+    this.spacesPort = ports.spacesPort;
   }
 
   async findById(packageId: PackageId): Promise<Package | null> {
@@ -103,6 +132,12 @@ export class PackageService {
     }
   }
 
+  /**
+   * Precondition: `setArtefactPorts()` must have been called first (done by
+   * `DeploymentsAdapter.initialize` once the HexaRegistry has resolved the
+   * cross-domain ports). Calling this before the ports are wired throws via
+   * `requirePort`.
+   */
   async getPackagesBySlugsWithArtefacts(
     slugs: string[],
     organizationId: OrganizationId,
@@ -114,17 +149,22 @@ export class PackageService {
     });
 
     try {
-      const packages = await this.packageRepository.findBySlugsWithArtefacts(
+      const spacesPort = this.requirePort(this.spacesPort, 'spacesPort');
+      const spaces = await spacesPort.listSpacesByOrganization(organizationId);
+      const spaceIds = spaces.map((space) => space.id);
+
+      const packages = await this.packageRepository.findBySlugsAndSpaceIds(
         slugs,
-        organizationId,
+        spaceIds,
       );
+      const result = await this.enrichWithArtefacts(packages);
 
       this.logger.info('Packages found by slugs with artefacts successfully', {
         requestedCount: slugs.length,
-        foundCount: packages.length,
+        foundCount: result.length,
       });
 
-      return packages;
+      return result;
     } catch (error) {
       this.logger.error('Failed to get packages by slugs with artefacts', {
         slugs,
@@ -134,6 +174,11 @@ export class PackageService {
     }
   }
 
+  /**
+   * Precondition: `setArtefactPorts()` must have been called first (see
+   * {@link getPackagesBySlugsWithArtefacts}). Calling this before the ports
+   * are wired throws via `requirePort`.
+   */
   async getPackagesBySlugsAndSpaceWithArtefacts(
     slugs: string[],
     spaceId: SpaceId,
@@ -145,21 +190,21 @@ export class PackageService {
     });
 
     try {
-      const packages =
-        await this.packageRepository.findBySlugsAndSpaceWithArtefacts(
-          slugs,
-          spaceId,
-        );
+      const packages = await this.packageRepository.findBySlugsAndSpaceIds(
+        slugs,
+        [spaceId],
+      );
+      const result = await this.enrichWithArtefacts(packages);
 
       this.logger.info(
         'Packages found by slugs and space with artefacts successfully',
         {
           requestedCount: slugs.length,
-          foundCount: packages.length,
+          foundCount: result.length,
         },
       );
 
-      return packages;
+      return result;
     } catch (error) {
       this.logger.error(
         'Failed to get packages by slugs and space with artefacts',
@@ -171,6 +216,74 @@ export class PackageService {
       );
       throw error;
     }
+  }
+
+  private requirePort<T>(port: T | null, name: string): T {
+    if (port == null) {
+      throw new Error(
+        `PackageService: ${name} is not set. Call setArtefactPorts() before hydrating package artefacts.`,
+      );
+    }
+    return port;
+  }
+
+  /**
+   * Hydrate packages that carry only artefact IDs into full
+   * `PackageWithArtefacts` by fetching recipes/standards/skills through their
+   * domain ports. Cross-domain reads stay in the application layer (never the
+   * repository), wired via `@packmind/types` ports.
+   *
+   * Each artefact type is resolved in a single batched port call (one query
+   * apiece, plus one for standard-version summaries) rather than per-id, so a
+   * package with many artefacts does not fan out into O(N) cross-domain reads.
+   */
+  private async enrichWithArtefacts(
+    packages: Package[],
+  ): Promise<PackageWithArtefacts[]> {
+    if (packages.length === 0) {
+      return [];
+    }
+
+    const recipesPort = this.requirePort(this.recipesPort, 'recipesPort');
+    const standardsPort = this.requirePort(this.standardsPort, 'standardsPort');
+    const skillsPort = this.requirePort(this.skillsPort, 'skillsPort');
+
+    const uniqueRecipeIds = [...new Set(packages.flatMap((p) => p.recipes))];
+    const uniqueStandardIds = [
+      ...new Set(packages.flatMap((p) => p.standards)),
+    ];
+    const uniqueSkillIds = [...new Set(packages.flatMap((p) => p.skills))];
+
+    const [recipes, standards, skills] = await Promise.all([
+      uniqueRecipeIds.length > 0
+        ? recipesPort.getRecipesByIdsInternal(uniqueRecipeIds)
+        : Promise.resolve<Recipe[]>([]),
+      uniqueStandardIds.length > 0
+        ? standardsPort.getStandardsByIds(uniqueStandardIds)
+        : Promise.resolve<Standard[]>([]),
+      uniqueSkillIds.length > 0
+        ? skillsPort.getSkillsByIds(uniqueSkillIds)
+        : Promise.resolve<Skill[]>([]),
+    ]);
+
+    const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
+    const standardsMap = new Map<string, Standard>(
+      standards.map((s) => [s.id, s]),
+    );
+    const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
+
+    return packages.map((pkg) => ({
+      ...pkg,
+      recipes: pkg.recipes
+        .map((id) => recipesMap.get(id))
+        .filter((r): r is Recipe => r != null),
+      standards: pkg.standards
+        .map((id) => standardsMap.get(id))
+        .filter((s): s is Standard => s != null),
+      skills: pkg.skills
+        .map((id) => skillsMap.get(id))
+        .filter((s): s is Skill => s != null),
+    }));
   }
 
   async createPackage(

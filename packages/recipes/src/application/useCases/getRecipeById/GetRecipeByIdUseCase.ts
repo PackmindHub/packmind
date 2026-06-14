@@ -102,4 +102,15 @@ export class GetRecipeByIdUseCase
     this.logger.info('Getting recipe by ID (internal)', { id });
     return this.recipeService.getRecipeById(id);
   }
+
+  /**
+   * Internal batch read (no access control). Used for cross-domain
+   * hydration where the caller already owns the recipe IDs.
+   */
+  public async getRecipesByIds(ids: RecipeId[]): Promise<Recipe[]> {
+    this.logger.info('Getting recipes by IDs (internal)', {
+      count: ids.length,
+    });
+    return this.recipeService.getRecipesByIds(ids);
+  }
 }

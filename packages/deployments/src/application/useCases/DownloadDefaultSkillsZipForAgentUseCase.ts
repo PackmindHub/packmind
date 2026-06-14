@@ -1,7 +1,6 @@
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import {
   CodingAgent,
   DownloadDefaultSkillsZipForAgentCommand,
@@ -75,9 +74,7 @@ export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefault
     this.logger.info('Downloading default skills zip for agent', { agent });
 
     const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
-    const deployer = deployerRegistry.getDeployer(
-      agent,
-    ) as ICodingAgentDeployer;
+    const deployer = deployerRegistry.getDeployer(agent);
 
     if (!deployer.deployDefaultSkills) {
       this.logger.info('Agent does not support default skills', { agent });

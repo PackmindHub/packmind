@@ -13,7 +13,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { LuCheck, LuGithub, LuShieldCheck } from 'react-icons/lu';
-import { OrganizationId } from '@packmind/types';
+import { GithubAppMode, OrganizationId } from '@packmind/types';
 import {
   useGetGithubAppManifestMutation,
   useGetGithubAppStatusQuery,
@@ -22,8 +22,6 @@ import {
 } from '../../api/queries/GitProviderQueries';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { redirectTo } from '../../../../shared/utils/navigation';
-
-type GithubAppMode = 'on-prem' | 'shared';
 
 type GitHubAppAuthBlockProps = {
   organizationId: OrganizationId;

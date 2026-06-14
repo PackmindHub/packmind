@@ -1,6 +1,6 @@
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
@@ -77,6 +77,38 @@ export class StandardVersionRepository
     } catch (error) {
       this.logger.error('Failed to find standard versions by standard ID', {
         standardId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByStandardIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersion[]> {
+    if (standardIds.length === 0) {
+      return [];
+    }
+
+    this.logger.info('Finding standard versions by standard IDs', {
+      count: standardIds.length,
+    });
+
+    try {
+      // Lean read (no gitCommit/rules relations): used only to resolve the
+      // summary of each standard's current version during cross-domain
+      // package hydration.
+      const versions = await this.repository.find({
+        where: { standardId: In(standardIds) },
+      });
+      this.logger.info('Standard versions found by standard IDs', {
+        requested: standardIds.length,
+        count: versions.length,
+      });
+      return versions;
+    } catch (error) {
+      this.logger.error('Failed to find standard versions by standard IDs', {
+        count: standardIds.length,
         error: getErrorMessage(error),
       });
       throw error;

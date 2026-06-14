@@ -231,6 +231,15 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this.services.getSkillService().getSkillById(id);
   }
 
+  /**
+   * Batch read of skills by IDs (mirrors getSkill for a set of IDs) so
+   * cross-domain package hydration avoids per-id fan-out.
+   */
+  async getSkillsByIds(ids: SkillId[]): Promise<Skill[]> {
+    this.logger.info('getSkillsByIds called via port', { count: ids.length });
+    return this.services.getSkillService().getSkillsByIds(ids);
+  }
+
   async getSkillVersion(id: SkillVersionId): Promise<SkillVersion | null> {
     this.logger.info('getSkillVersion called via port', { versionId: id });
     return this.services.getSkillVersionService().getSkillVersionById(id);

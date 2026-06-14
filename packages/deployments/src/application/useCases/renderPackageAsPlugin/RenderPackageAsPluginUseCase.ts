@@ -4,14 +4,12 @@ import {
   MemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { ClaudePluginDeployer } from '@packmind/coding-agent';
 import {
   Distribution,
   DistributedPackage,
   DistributionStatus,
-  FileUpdates,
-  GitRepo,
   IAccountsPort,
+  ICodingAgentPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -26,12 +24,9 @@ import {
   SkillVersion,
   SpaceId,
   StandardVersion,
-  Target,
   UserId,
   createDistributedPackageId,
   createDistributionId,
-  createGitRepoId,
-  createTargetId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { parsePackageSlug } from '../../services/packageSlugHelpers';
@@ -51,8 +46,9 @@ const DEFAULT_GIT_BRANCH = 'main';
  * Renders a single Packmind package as a Claude plugin.
  *
  * The use case finds and validates the package, fetches the latest version of
- * each artefact, then delegates rendering to {@link ClaudePluginDeployer}.
- * Standards are intentionally skipped; the count is surfaced to the caller.
+ * each artefact, then delegates rendering to the coding-agent domain through
+ * `ICodingAgentPort.renderPackageAsClaudePlugin`. Standards are intentionally
+ * skipped; the count is surfaced to the caller.
  */
 export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
   RenderPackageAsPluginCommand,
@@ -63,6 +59,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
+    private readonly codingAgentPort: ICodingAgentPort,
     private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly targetResolutionService: TargetResolutionService,
@@ -93,42 +90,21 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     const skillVersions = await this.fetchSkillVersions(pkg);
     const standardVersions = await this.fetchStandardVersions(pkg);
 
-    const deployer = new ClaudePluginDeployer();
-    const target = this.buildSyntheticTarget(command.pluginRoot);
-    // ClaudePluginDeployer does not read repository contents; only the id is
-    // referenced in logs. A minimal synthetic repo keeps the contract honest.
-    const gitRepo = { id: target.gitRepoId } as GitRepo;
-
-    const manifestUpdate = deployer.deployPluginManifest(
-      {
-        name: command.pluginName,
-        description: pkg.description || undefined,
-        version: PLUGIN_VERSION,
-      },
-      target,
-    );
-    const commandsUpdate = await deployer.deployRecipes(
-      recipeVersions,
-      gitRepo,
-      target,
-    );
-    const skillsUpdate = await deployer.deploySkills(
-      skillVersions,
-      gitRepo,
-      target,
-    );
-    await deployer.deployStandards(standardVersions, gitRepo, target);
-
-    const files = this.toRenderedFiles([
-      manifestUpdate,
-      commandsUpdate,
-      skillsUpdate,
-    ]);
+    const { files, skippedStandardsCount } =
+      await this.codingAgentPort.renderPackageAsClaudePlugin({
+        pluginName: command.pluginName,
+        pluginDescription: pkg.description || undefined,
+        pluginVersion: PLUGIN_VERSION,
+        pluginRoot: command.pluginRoot,
+        recipeVersions,
+        skillVersions,
+        standardVersions,
+      });
 
     this.logger.info('Rendered package as Claude plugin', {
       packageSlug: command.packageSlug,
       fileCount: files.length,
-      skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
+      skippedStandardsCount,
     });
 
     const distributionId = await this.trackRender({
@@ -141,7 +117,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
 
     return {
       files,
-      skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
+      skippedStandardsCount,
       pluginName: command.pluginName,
       pluginDescription: pkg.description || undefined,
       pluginVersion: PLUGIN_VERSION,
@@ -374,30 +350,5 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       ),
     );
     return versions.filter((v): v is StandardVersion => v != null);
-  }
-
-  private buildSyntheticTarget(pluginRoot: string): Target {
-    return {
-      id: createTargetId('cli-plugin'),
-      name: 'cli-plugin',
-      path: pluginRoot,
-      gitRepoId: createGitRepoId('cli-plugin'),
-    };
-  }
-
-  private toRenderedFiles(
-    updates: FileUpdates[],
-  ): RenderPackageAsPluginResponse['files'] {
-    return updates.flatMap((update) =>
-      update.createOrUpdate
-        .filter(
-          (file): file is typeof file & { content: string } =>
-            typeof file.content === 'string',
-        )
-        .map((file) => ({
-          path: file.path,
-          content: file.content,
-        })),
-    );
   }
 }

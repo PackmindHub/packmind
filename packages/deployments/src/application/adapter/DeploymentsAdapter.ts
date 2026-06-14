@@ -97,7 +97,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
-import { IDeploymentsDelayedJobs } from '../../domain/jobs';
+import { IDeploymentsDelayedJobs } from '../jobs/IDeploymentsDelayedJobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
@@ -252,6 +252,16 @@ export class DeploymentsAdapter
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
+    // Wire cross-domain ports into PackageService so it can hydrate package
+    // artefacts (recipes/standards/skills) through ports instead of the
+    // repository reaching into other domains' tables.
+    this.deploymentsServices.getPackageService().setArtefactPorts({
+      recipesPort: this.recipesPort,
+      standardsPort: this.standardsPort,
+      skillsPort: this.skillsPort,
+      spacesPort: this.spacesPort,
+    });
+
     // Step 4: Create all use cases with non-null ports
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
     this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
@@ -399,6 +409,7 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
       this.skillsPort,
+      this.codingAgentPort,
       this.spacesPort,
       this.accountsPort,
       targetResolutionService,

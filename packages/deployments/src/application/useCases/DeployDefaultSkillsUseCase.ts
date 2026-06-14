@@ -1,11 +1,8 @@
-import {
-  DefaultSkillMetadata,
-  ICodingAgentDeployer,
-} from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CodingAgent,
+  DefaultSkillMetadata,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
   FileUpdates,
@@ -90,9 +87,7 @@ export class DeployDefaultSkillsUseCase
     const deployedSkills: DefaultSkillMetadata[] = [];
 
     for (const codingAgent of codingAgents) {
-      const deployer = deployerRegistry.getDeployer(
-        codingAgent,
-      ) as ICodingAgentDeployer;
+      const deployer = deployerRegistry.getDeployer(codingAgent);
 
       if (deployer.deployDefaultSkills) {
         this.logger.info('Deploying default skills for coding agent', {
