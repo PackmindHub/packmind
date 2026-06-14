@@ -2,6 +2,8 @@
 
 ## Added
 
+- Support for Claude Code skill frontmatter property `disallowed-tools`
+
 ## Changed
 
 ## Fixed
