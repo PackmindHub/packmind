@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   PMAlert,
+  PMBadge,
   PMBox,
   PMButton,
   PMCheckbox,
@@ -8,7 +9,9 @@ import {
   PMHeading,
   PMIcon,
   PMInput,
+  PMSpinner,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -16,21 +19,33 @@ import {
   LuBookOpen,
   LuChevronDown,
   LuChevronRight,
-  LuClock,
   LuGitBranch,
   LuRotateCw,
   LuSearch,
   LuTerminal,
+  LuTrash2,
   LuWandSparkles,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
+import { format } from 'date-fns';
+import {
+  DistributionStatus,
+  type GitProviderId,
+  type PackageId,
+} from '@packmind/types';
+import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
-  packageBehindInstallCount,
   packageMostRecentPush,
   STALE_DAYS_THRESHOLD,
+  formatRelativeDate,
+  type DriftArtifactEntry,
   type InstallDriftEntry,
-} from '../data';
+} from '../selectors/installDriftEntries';
+import {
+  installLockReason,
+  type InstallLockReason,
+} from '../selectors/installLock';
 import type { ArtifactKind, PackageDrift } from '../types';
 
 const KIND_ICON: Record<ArtifactKind, IconType> = {
@@ -39,9 +54,30 @@ const KIND_ICON: Record<ArtifactKind, IconType> = {
   skill: LuWandSparkles,
 };
 
+const KIND_NOUN: Record<ArtifactKind, string> = {
+  standard: 'standard',
+  command: 'command',
+  skill: 'skill',
+};
+
+const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
+  [DistributionStatus.success]: 'Distributed',
+  [DistributionStatus.failure]: 'Failed',
+  [DistributionStatus.in_progress]: 'Started',
+  [DistributionStatus.no_changes]: 'Checked',
+};
+
+function formatAbsoluteDate(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return format(parsed, 'yyyy-MM-dd h:mm a');
+}
+
 type PackageDetailPaneProps = {
   pkg: PackageDrift;
-  onSyncPackage: (pkgId: string, installKeys?: string[]) => void;
+  providersWithToken: Set<GitProviderId>;
+  isProvidersLoading: boolean;
+  onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'aligned';
@@ -52,6 +88,8 @@ function installKey(repoId: string, targetId: string): string {
 
 export function PackageDetailPane({
   pkg,
+  providersWithToken,
+  isProvidersLoading,
   onSyncPackage,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
@@ -60,6 +98,16 @@ export function PackageDetailPane({
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
+  const lockByKey = useMemo(() => {
+    const map = new Map<string, InstallLockReason | null>();
+    for (const e of entries) {
+      map.set(
+        installKey(e.repo.id, e.target.id),
+        installLockReason(e, providersWithToken, isProvidersLoading),
+      );
+    }
+    return map;
+  }, [entries, providersWithToken, isProvidersLoading]);
   const driftedKeys = useMemo(
     () =>
       entries
@@ -67,6 +115,32 @@ export function PackageDetailPane({
         .map((e) => installKey(e.repo.id, e.target.id)),
     [entries],
   );
+  const driftedLockCounts = useMemo(() => {
+    let inProgress = 0;
+    let noAppToken = 0;
+    for (const key of driftedKeys) {
+      const reason = lockByKey.get(key) ?? null;
+      if (reason === 'in-progress') inProgress++;
+      else if (reason === 'no-app-token') noAppToken++;
+    }
+    return {
+      inProgress,
+      noAppToken,
+      locked: inProgress + noAppToken,
+    };
+  }, [driftedKeys, lockByKey]);
+  const allDriftedLocked =
+    driftedKeys.length > 0 && driftedLockCounts.locked === driftedKeys.length;
+  const headerLockTooltip = (() => {
+    if (!allDriftedLocked) return null;
+    if (driftedLockCounts.inProgress === driftedKeys.length) {
+      return 'A distribution is already in progress for every drifted target.';
+    }
+    if (driftedLockCounts.noAppToken === driftedKeys.length) {
+      return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
+    }
+    return 'Every drifted target is either in progress or distributed via `packmind-cli install`.';
+  })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
     () => new Set(),
@@ -131,10 +205,10 @@ export function PackageDetailPane({
   const selectedDriftedCount = useMemo(() => {
     let count = 0;
     for (const key of driftedKeys) {
-      if (selectedKeys.has(key)) count += 1;
+      if (selectedKeys.has(key) && !lockByKey.get(key)) count += 1;
     }
     return count;
-  }, [driftedKeys, selectedKeys]);
+  }, [driftedKeys, selectedKeys, lockByKey]);
 
   return (
     <PMVStack gap={0} align="stretch" minH={0}>
@@ -148,25 +222,28 @@ export function PackageDetailPane({
         <PMVStack gap={3} align="stretch">
           <PMHStack gap={3} align="start" justify="space-between">
             <PMVStack gap={1.5} align="start" flex={1} minW={0}>
-              <PMHeading size="md" color="text.primary" letterSpacing="-0.01em">
+              <PMHeading level="h2" color="primary">
                 {pkg.name}
               </PMHeading>
-              <PMText fontSize="sm" color="text.secondary" maxW="68ch">
+              <PMText fontSize="sm" color="secondary" maxW="68ch">
                 {pkg.description}
               </PMText>
             </PMVStack>
             {hasDrift && (
-              <PMButton
-                variant="secondary"
-                size="sm"
-                onClick={() => onSyncPackage(pkg.id)}
-                title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
-              >
-                <PMIcon fontSize="sm">
-                  <LuRotateCw />
-                </PMIcon>
-                Distribute package
-              </PMButton>
+              <PMTooltip label={headerLockTooltip} placement="top">
+                <PMButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onSyncPackage(pkg.id)}
+                  disabled={allDriftedLocked}
+                  title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
+                >
+                  <PMIcon fontSize="sm">
+                    <LuRotateCw />
+                  </PMIcon>
+                  Distribute package
+                </PMButton>
+              </PMTooltip>
             )}
           </PMHStack>
           <PMHStack gap={5} align="center" wrap="wrap">
@@ -265,6 +342,7 @@ export function PackageDetailPane({
                   key={key}
                   entry={entry}
                   selected={selectedKeys.has(key)}
+                  lockReason={lockByKey.get(key) ?? null}
                   onToggle={() => toggleInstall(key)}
                 />
               );
@@ -284,7 +362,7 @@ export function PackageDetailPane({
           bottom={0}
         >
           <PMHStack gap={3} align="center" justify="space-between">
-            <PMText fontSize="xs" color="text.secondary">
+            <PMText fontSize="xs" color="secondary">
               {selectedDriftedCount === 0
                 ? 'Select distributions to redistribute the package.'
                 : `${selectedDriftedCount} of ${behindInstallCount} drifted distribution${behindInstallCount === 1 ? '' : 's'} selected.`}
@@ -324,18 +402,14 @@ function SummaryStat({
   tone?: 'neutral' | 'ok' | 'warn';
 }>) {
   const color =
-    tone === 'warn'
-      ? 'orange.500'
-      : tone === 'ok'
-        ? 'green.500'
-        : 'text.primary';
+    tone === 'warn' ? 'warning' : tone === 'ok' ? 'success' : 'primary';
   return (
     <PMHStack gap={1.5} align="baseline">
       <PMText
         fontSize="11px"
         textTransform="uppercase"
         letterSpacing="wider"
-        color="text.faded"
+        color="faded"
         fontWeight="semibold"
       >
         {label}
@@ -355,14 +429,27 @@ function SummaryStat({
 type InstallRowProps = {
   entry: InstallDriftEntry;
   selected: boolean;
+  lockReason: InstallLockReason | null;
   onToggle: () => void;
 };
 
-function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
+const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
+  'in-progress': 'Distribution in progress for this target.',
+  'no-app-token':
+    'This provider has no token — use `packmind-cli install` to update this distribution.',
+};
+
+function InstallRow({
+  entry,
+  selected,
+  lockReason,
+  onToggle,
+}: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
   const [expanded, setExpanded] = useState(false);
   const totalArtifactsOnInstall = behindCount + entry.alignedArtifactCount;
+  const checkboxDisabled = lockReason !== null;
 
   return (
     <PMBox
@@ -374,25 +461,32 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
       <PMHStack gap={3} align="center" paddingX={6} paddingY={3}>
         <PMBox flexShrink={0} display="flex" alignItems="center" width="20px">
           {hasDrift ? (
-            <PMCheckbox
-              size="sm"
-              checked={selected}
-              onCheckedChange={(details) => {
-                void details;
-                onToggle();
-              }}
-              aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
-            />
+            <PMTooltip
+              label={lockReason ? LOCK_CHECKBOX_TOOLTIP[lockReason] : null}
+              placement="top"
+            >
+              <PMBox display="inline-flex" alignItems="center">
+                <PMCheckbox
+                  size="sm"
+                  checked={selected}
+                  disabled={checkboxDisabled}
+                  onCheckedChange={() => onToggle()}
+                  aria-label={`Select ${entry.repo.owner}/${entry.repo.name}${entry.target.isDefault ? '' : ' (' + entry.target.name + ')'}`}
+                />
+              </PMBox>
+            </PMTooltip>
           ) : null}
         </PMBox>
 
         <PMBox
           as="button"
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => {
+            if (!hasDrift) return;
+            setExpanded((v) => !v);
+          }}
           bg="transparent"
           border="none"
-          cursor="pointer"
+          cursor={hasDrift ? 'pointer' : 'default'}
           flex={1}
           minW={0}
           textAlign="left"
@@ -405,7 +499,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
             borderRadius: 'sm',
           }}
           aria-expanded={expanded}
-          disabled={!hasDrift}
+          aria-disabled={!hasDrift}
         >
           <PMHStack gap={2} align="center" wrap="wrap">
             {hasDrift && (
@@ -413,12 +507,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
                 {expanded ? <LuChevronDown /> : <LuChevronRight />}
               </PMIcon>
             )}
-            <PMText
-              fontSize="sm"
-              fontWeight="medium"
-              color="text.primary"
-              truncate
-            >
+            <PMText fontSize="sm" fontWeight="medium" color="primary" truncate>
               {entry.repo.owner}/{entry.repo.name}
             </PMText>
             <BranchChip branch={entry.branch} />
@@ -427,33 +516,14 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
         </PMBox>
 
         <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
-          <PMHStack gap={1.5} align="center">
-            <PMBox
-              width="6px"
-              height="6px"
-              borderRadius="full"
-              bg={hasDrift ? 'orange.500' : 'green.500'}
-              aria-hidden
-            />
-            {hasDrift ? (
-              <PMText
-                fontSize="xs"
-                color="orange.500"
-                fontVariantNumeric="tabular-nums"
-              >
-                {behindCount} of {totalArtifactsOnInstall} artifact
-                {totalArtifactsOnInstall === 1 ? '' : 's'} behind
-              </PMText>
-            ) : (
-              <PMText fontSize="xs" color="text.faded">
-                All aligned
-              </PMText>
-            )}
-          </PMHStack>
-          <LastPushLabel
-            value={entry.mostRecentDeployedAt}
-            days={entry.mostRecentDeployedAtDays}
+          <RowStateLine
+            entry={entry}
+            hasDrift={hasDrift}
+            behindCount={behindCount}
+            totalArtifactsOnInstall={totalArtifactsOnInstall}
+            lockReason={lockReason}
           />
+          <DistributionEventLine entry={entry} />
         </PMVStack>
       </PMHStack>
 
@@ -465,61 +535,98 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
           paddingTop={1}
         >
           <PMVStack gap={0} align="stretch">
-            {entry.behindArtifacts.map((b) => {
-              const Icon = KIND_ICON[b.artifact.kind];
-              return (
-                <PMHStack
-                  key={b.artifact.id}
-                  gap={3}
-                  align="center"
-                  paddingY={1.5}
-                  paddingX={2}
-                  borderBottomWidth="1px"
-                  borderColor="border.tertiary"
-                  _last={{ borderBottom: 'none' }}
-                >
-                  <PMIcon fontSize="sm" color="text.faded">
-                    <Icon />
-                  </PMIcon>
-                  <PMText
-                    fontSize="sm"
-                    color="text.secondary"
-                    fontFamily={
-                      b.artifact.kind === 'command' ? 'mono' : undefined
-                    }
-                    flex={1}
-                    minW={0}
-                    truncate
-                  >
-                    {b.artifact.name}
-                  </PMText>
-                  <PMHStack gap={2} align="center">
-                    <PMText
-                      fontSize="xs"
-                      color="orange.500"
-                      fontVariantNumeric="tabular-nums"
-                    >
-                      v{b.deployedVersion}
-                    </PMText>
-                    <PMIcon fontSize="xs" color="text.faded">
-                      <LuArrowRight />
-                    </PMIcon>
-                    <PMText
-                      fontSize="xs"
-                      color="text.primary"
-                      fontWeight="medium"
-                      fontVariantNumeric="tabular-nums"
-                    >
-                      v{b.artifact.packmindVersion}
-                    </PMText>
-                  </PMHStack>
-                </PMHStack>
-              );
-            })}
+            {entry.behindArtifacts.map((b) => (
+              <DriftArtifactRow
+                key={`${b.artifact.id}-${b.reason}`}
+                entry={b}
+              />
+            ))}
           </PMVStack>
         </PMBox>
       )}
     </PMBox>
+  );
+}
+
+function DriftArtifactRow({ entry }: Readonly<{ entry: DriftArtifactEntry }>) {
+  const Icon = KIND_ICON[entry.artifact.kind];
+  return (
+    <PMHStack
+      gap={3}
+      align="center"
+      paddingY={1.5}
+      paddingX={2}
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      _last={{ borderBottom: 'none' }}
+    >
+      <PMIcon fontSize="sm" color="text.faded">
+        <Icon />
+      </PMIcon>
+      <PMText
+        fontSize="sm"
+        color="secondary"
+        fontFamily={entry.artifact.kind === 'command' ? 'mono' : undefined}
+        flex={1}
+        minW={0}
+        truncate
+      >
+        {entry.artifact.name}
+      </PMText>
+      <DriftReasonIndicator entry={entry} />
+    </PMHStack>
+  );
+}
+
+function DriftReasonIndicator({
+  entry,
+}: Readonly<{ entry: DriftArtifactEntry }>) {
+  if (entry.reason === 'needs-removal') {
+    return (
+      <PMTooltip
+        label={`The ${KIND_NOUN[entry.artifact.kind]} deletion will be effective on the repository after redistribution.`}
+        placement="top"
+      >
+        <PMHStack gap={1.5} align="center" cursor="help">
+          <PMIcon fontSize="xs" color="red.500">
+            <LuTrash2 />
+          </PMIcon>
+          <PMBadge colorPalette="red" size="sm">
+            Needs removal
+          </PMBadge>
+        </PMHStack>
+      </PMTooltip>
+    );
+  }
+  if (entry.reason === 'not-distributed') {
+    return (
+      <PMTooltip
+        label="Added to the package — will be pushed on next distribution."
+        placement="top"
+      >
+        <PMBadge colorPalette="red" size="sm">
+          Not distributed
+        </PMBadge>
+      </PMTooltip>
+    );
+  }
+  return (
+    <PMHStack gap={2} align="center">
+      <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
+        v{entry.deployedVersion}
+      </PMText>
+      <PMIcon fontSize="xs" color="text.faded">
+        <LuArrowRight />
+      </PMIcon>
+      <PMText
+        fontSize="xs"
+        color="primary"
+        fontWeight="medium"
+        fontVariantNumeric="tabular-nums"
+      >
+        v{entry.artifact.packmindVersion}
+      </PMText>
+    </PMHStack>
   );
 }
 
@@ -548,26 +655,138 @@ function BranchChip({ branch }: Readonly<{ branch: string }>) {
   );
 }
 
-function LastPushLabel({
-  value,
-  days,
-}: Readonly<{ value: string | null; days: number }>) {
-  if (!value) return null;
-  const stale = days >= STALE_DAYS_THRESHOLD;
+type RowStateLineProps = {
+  entry: InstallDriftEntry;
+  hasDrift: boolean;
+  behindCount: number;
+  totalArtifactsOnInstall: number;
+  lockReason: InstallLockReason | null;
+};
+
+function RowStateLine({
+  entry,
+  hasDrift,
+  behindCount,
+  totalArtifactsOnInstall,
+  lockReason,
+}: Readonly<RowStateLineProps>) {
+  const inProgress =
+    entry.lastDistributionStatus === DistributionStatus.in_progress;
+
+  if (inProgress) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="blue.300"
+          aria-hidden
+        />
+        <PMHStack gap={1.5} align="center" color="blue.300">
+          <PMSpinner size="xs" />
+          <PMText fontSize="xs">Distributing…</PMText>
+        </PMHStack>
+      </PMHStack>
+    );
+  }
+
+  if (hasDrift) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="orange.500"
+          aria-hidden
+        />
+        <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
+          {behindCount} of {totalArtifactsOnInstall} behind
+          {lockReason === 'no-app-token' && (
+            <>
+              {', via '}
+              <PMText
+                as="span"
+                fontFamily="mono"
+                fontSize="11px"
+                color="warning"
+                paddingX={1}
+                paddingY="1px"
+                bg="background.tertiary"
+                borderRadius="sm"
+              >
+                packmind-cli install
+              </PMText>
+            </>
+          )}
+        </PMText>
+      </PMHStack>
+    );
+  }
+
+  if (!entry.lastDistributionStatus && !entry.mostRecentDeployedAt) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          borderWidth="1px"
+          borderColor="border.tertiary"
+          aria-hidden
+        />
+        <PMText fontSize="xs" color="faded">
+          Never distributed
+        </PMText>
+      </PMHStack>
+    );
+  }
+
   return (
-    <PMHStack
-      gap="4px"
-      align="center"
-      color={stale ? 'orange.500' : 'text.faded'}
-      aria-label={`Last push ${value}`}
-    >
-      <PMIcon fontSize="11px">
-        <LuClock />
-      </PMIcon>
-      <PMText fontSize="11px" fontVariantNumeric="tabular-nums">
-        Last push {value}
+    <PMHStack gap={2} align="center">
+      <PMBox
+        width="6px"
+        height="6px"
+        borderRadius="full"
+        bg="green.500"
+        aria-hidden
+      />
+      <PMText fontSize="xs" color="faded">
+        Aligned
       </PMText>
     </PMHStack>
+  );
+}
+
+function DistributionEventLine({
+  entry,
+}: Readonly<{ entry: InstallDriftEntry }>) {
+  const anchorIso = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
+  if (!anchorIso) return null;
+  const verb = entry.lastDistributionStatus
+    ? DISTRIBUTION_VERB[entry.lastDistributionStatus]
+    : 'Pushed';
+  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
+  const stale =
+    !failed &&
+    entry.lastDistributionStatus !== DistributionStatus.in_progress &&
+    entry.mostRecentDeployedAtDays >= STALE_DAYS_THRESHOLD;
+  const color = failed ? 'red.500' : stale ? 'orange.500' : 'text.faded';
+  return (
+    <PMTooltip label={formatAbsoluteDate(anchorIso)} placement="top">
+      <PMHStack
+        gap="4px"
+        align="center"
+        color={color}
+        aria-label={`${verb} ${anchorIso}`}
+        cursor="help"
+      >
+        <PMText fontSize="11px" fontVariantNumeric="tabular-nums">
+          {verb} {formatRelativeDate(anchorIso)}
+        </PMText>
+      </PMHStack>
+    </PMTooltip>
   );
 }
 
@@ -628,11 +847,13 @@ function InstallFilterControl({
           <PMBox
             key={item.value}
             as="button"
-            type="button"
             role="tab"
             aria-selected={active}
-            disabled={disabled}
-            onClick={() => onChange(item.value)}
+            aria-disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onChange(item.value);
+            }}
             bg={active ? 'background.secondary' : 'transparent'}
             border="none"
             borderLeftWidth={idx === 0 ? 0 : '1px'}
@@ -663,14 +884,14 @@ function InstallFilterControl({
               )}
               <PMText
                 fontSize="xs"
-                color={active ? 'text.primary' : 'text.secondary'}
+                color={active ? 'primary' : 'secondary'}
                 fontWeight={active ? 'semibold' : 'medium'}
               >
                 {item.label}
               </PMText>
               <PMText
                 fontSize="11px"
-                color="text.faded"
+                color="faded"
                 fontVariantNumeric="tabular-nums"
               >
                 {count}
@@ -706,13 +927,12 @@ function InstallEmptyState({
   })();
   return (
     <PMVStack gap={2} align="start" paddingX={6} paddingY={6}>
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         {message}
       </PMText>
       {hasActiveFilter && (
         <PMBox
           as="button"
-          type="button"
           fontSize="xs"
           color="branding.primary"
           bg="transparent"

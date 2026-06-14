@@ -67,17 +67,19 @@ Use `ToolSearch` for `mcp__playwright__browser_start_video`. The video tools bel
 
 ### 3. Get the app running — from a clean volume
 
-See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on **:3000**, React/Vite frontend on **:4200**, MCP server). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
+See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on container port **:3000**, React/Vite frontend on container port **:4200**, MCP server). Those are **container-internal** ports — from the host the API is reached only through the frontend's Vite proxy, and the frontend's **host** port is edition-dependent (`4200` OSS / `4201` proprietary). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
 
 ```bash
-PACKMIND_EDITION=oss docker compose down -v && PACKMIND_EDITION=oss docker compose up -d --build
-# wait for the API (it runs migrations on boot — this can take a minute on a cold build)
-until curl -sf localhost:3000/api/v0 >/dev/null; do sleep 1; done
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
+docker compose down -v && docker compose up -d --build
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # host port: 4200 oss / 4201 proprietary
+# wait for the API via the Vite proxy (NOT :3000 — that container port is not host-exposed)
+until curl -sf "localhost:$PM_WEB/api/v0" >/dev/null; do sleep 1; done
 # then wait for the frontend you'll actually record
-until curl -sf localhost:4200/ >/dev/null; do sleep 1; done
+until curl -sf "localhost:$PM_WEB/" >/dev/null; do sleep 1; done
 ```
 
-The frontend you record lives at **<http://localhost:4200>** — navigate there, not at the API port.
+The frontend you record lives at **`http://localhost:$PM_WEB`** (4200 OSS / 4201 proprietary) — navigate there, not at the API port.
 
 On a freshly wiped database there is no account, so the first screen is the **sign-up / login** page. Create an account (or seed via the API) before recording the feature, otherwise the demo is just the auth screen. If a populated workspace matters, seed it via the UI or the API after the stack is up — do not record over stale state.
 
@@ -99,7 +101,7 @@ The recipe in plain English:
 
 ### Starting the video (with the common pitfall)
 
-**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. A prior session (or a crashed run on the same sprite) frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
+**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. An earlier browser session in this run frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
 
 ```
 mcp__playwright__browser_stop_video()   # ignore any error; deletes/returns stub WebMs at project root
@@ -109,7 +111,14 @@ mcp__playwright__browser_start_video(
 )
 ```
 
-If you still get `Error: Screencast is already started` after that, call `browser_stop_video` again, delete the stub WebMs it drops at the project root, then retry `start_video`.
+If you still get `Error: Screencast is already started` after that, the recorder is wedged to a stale browser context that a second `stop_video` won't clear on its own. Escalate — do **not** just retry stop+start in a loop:
+
+1. `mcp__playwright__browser_stop_video()` again (ignore error).
+2. `mcp__playwright__browser_close()` — this tears down the wedged context that owns the orphaned screencast.
+3. Delete the stub WebMs it drops at the project root.
+4. Retry `start_video`. The fresh context starts clean.
+
+This is the common failure mode on the fly worker, where an earlier browser session in the same run left both a screencast _and_ its browser context alive — stopping the screencast alone is not idempotent there, because the next `start_video` reattaches to the same wedged context. Closing the context is what actually resets it.
 
 If you get `Browser is already in use for ... use --isolated`, a non-recording Playwright session has the persistent profile locked. Call `mcp__playwright__browser_close` first, then start_video.
 

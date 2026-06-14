@@ -1,21 +1,128 @@
-# Sprite sandbox override: docker exec (setns) is blocked — disable all
-# exec-based healthchecks and relax service_healthy deps to service_started.
+# Michel dev-stack override. Two concerns:
+#
+# 1. Health gating: disable the exec-based healthchecks and relax service_healthy
+#    deps to service_started — the worker boots a known-good stack once per run,
+#    so the extra gating only adds latency and flake surface.
+#
+# 2. Warm-store install: a Michel run installs deps twice — once on the host
+#    (scripts/michel/setup.sh -> /root/.pnpm-store, glibc) and again in the
+#    install-dependencies container. The container used node:alpine (musl) with
+#    an empty dev-pnpm-store volume, so it re-downloaded everything (~10 min on a
+#    fresh Fly machine). Here we flip every node service that shares the
+#    dev-node_modules volume to a glibc image (node:*-trixie-slim) matching the
+#    host ABI, and point install-dependencies at the already-warm host store via
+#    a bind mount so the install resolves with --prefer-offline (link from the
+#    warm store, fetch only the delta — see the entrypoint note below).
+#    Compose merges `volumes` by append, so we cannot drop the dev-node_modules
+#    mount that masks the host node_modules — hence we keep the install but make
+#    it offline-fast rather than skipping it.
+#
+# 3. Nx daemon + watcher tuning: the base gates frontend/backend/mcp-server on
+#    nx-daemon's service_healthy, so the nx-daemon healthcheck must STAY enabled
+#    (it is a trivial `test -S` socket probe, not one of the flaky exec checks
+#    concern #1 targets) — disabling it broke the gating and every app service
+#    raced the socket, fell back to "WITHOUT daemon", and cold-computed its own
+#    project graph. We also switch the file watchers from polling to native:
+#    the repo is a plain local bind mount on the Fly Machine (same kernel), so
+#    inotify works, and 1s full-tree polling over fuse-overlayfs burns CPU for
+#    nothing on a one-shot worker.
+x-michel-watch-env: &michel-watch-env
+  NX_WATCHER: native
+  CHOKIDAR_USEPOLLING: '0'
+
 services:
   nx-daemon:
+    image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
+    # Wider window than the base (30x1s): a cold worker computes the project
+    # graph from scratch, and if the socket misses the window the app services'
+    # service_healthy deps ABORT the stack rather than fall back.
     healthcheck:
-      disable: true
+      test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
+      interval: 2s
+      timeout: 1s
+      retries: 90
+      start_period: 5s
   postgres:
+    # Throwaway per-run DB on a self-destroying machine: trade ALL crash
+    # durability for commit latency. fsync/synchronous_commit/full_page_writes
+    # off = no WAL fsync stalls through the container fs; autovacuum off = no
+    # mid-run background I/O on a DB that lives ~1 hour.
+    command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c autovacuum=off
     healthcheck:
       disable: true
   redis:
     healthcheck:
       disable: true
   frontend:
+    image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
     healthcheck:
       disable: true
+  install-dependencies:
+    image: node:24.15.0-trixie-slim
+    volumes:
+      # Worker's warm glibc store (populated by scripts/michel/setup.sh before
+      # the dev stack starts). Appended to the base volume list.
+      - /root/.pnpm-store:/root/.pnpm-store
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -eu
+        corepack enable
+        corepack prepare pnpm@11.5.0 --activate
+        # Always --prefer-offline (never hard --offline). The warm store is baked
+        # from the OSS lockfile; against the proprietary repo (OSS + extra deps)
+        # a hard --offline can't resolve the additional packages and fails the
+        # whole install (e.g. ERR_PNPM_NO_OFFLINE… on async-mutex). --prefer-offline
+        # links every hit from the warm store (fast) and fetches only the delta.
+        pnpm install --frozen-lockfile --prefer-offline --store-dir /root/.pnpm-store
+        chmod -R +x node_modules/.bin 2>/dev/null || true
+        # Assert the native addons just linked into dev-node_modules load under
+        # THIS container's libc (glibc here). A wrong-libc volume — musl binaries
+        # under glibc or vice-versa — otherwise dies silently ~40 min later inside
+        # run-migrations/backend with a cryptic swc/nx binding error. Fail fast at
+        # this clearly-named init service instead, with a greppable, actionable msg.
+        node -e "require('@swc/core').transformSync('const x=1;'); require('nx/src/native/native-bindings.js')" \
+          || { echo "[deps] FATAL: native addon failed to load (libc mismatch in dev-node_modules). Reset with: docker compose --profile dev down -v && docker compose --profile dev up -d" >&2; exit 1; }
+        node scripts/select-tsconfig.mjs
   backend:
+    image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
+      WATCHPACK_POLLING: 'false'
     healthcheck:
       disable: true
+    # Base entrypoint runs `apk add bash ca-certificates` (alpine-only). On
+    # node:*-trixie-slim both ship in the image, so drop the apk lines and keep
+    # the rest verbatim (same $$-escaping as base for compose interpolation).
+    # Also drop `--skip-nx-cache`: it exists to guard long-lived dev machines
+    # against stale local cache, but this worker is ephemeral (no stale state)
+    # and the repo-root bind mount shares .nx/cache with the host clone — so the
+    # serve's dependent build tasks can reuse what the host-side nx runs (agent
+    # self-checks, validate gate) already produced this run.
+    entrypoint:
+      - sh
+      - -lc
+      - |
+        set -eu
+        if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then
+          cp -R packages/linter/js-playground "$$JS_PLAYGROUND_PATH" || true
+        fi
+        if [ -n "${CI:-}" ]; then
+          echo "[backend] CI mode -> WITHOUT daemon"
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development
+        fi
+        if [ -S /nx-sock/d.sock ]; then
+          echo "[backend] Daemon OK -> WITH daemon"
+          exec ./node_modules/.bin/nx run api:serve:development
+        else
+          echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
+          export NX_DAEMON=false; exec ./node_modules/.bin/nx run api:serve:development
+        fi
     depends_on:
       postgres:
         condition: service_started
@@ -26,6 +133,9 @@ services:
       run-migrations:
         condition: service_completed_successfully
   mcp-server:
+    image: node:24.15.0-trixie-slim
+    environment:
+      <<: *michel-watch-env
     healthcheck:
       disable: true
     depends_on:
@@ -46,6 +156,7 @@ services:
       backend:
         condition: service_started
   run-migrations:
+    image: node:24.15.0-trixie-slim
     depends_on:
       postgres:
         condition: service_started

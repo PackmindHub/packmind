@@ -9,12 +9,15 @@
 #      fresh clone has none and lint/test/build fail with
 #      "Cannot find base config file ../../tsconfig.base.effective.json"
 #      until this runs.
-#   3. Install the Michel skills + sprite compose overrides.
+#   3. Install the Michel skills + compose overrides.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
-export PACKMIND_EDITION="${PACKMIND_EDITION:-oss}"
+# Resolve the edition from the git remote (packmind-proprietary -> proprietary,
+# else oss), honoring an explicit PACKMIND_EDITION override. Keeps a direct or
+# local `setup.sh` run edition-correct without the caller knowing the edition.
+export PACKMIND_EDITION="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-edition.sh")"
 
 # Pinned pnpm version — keep in sync with package.json `packageManager` (pnpm@11.5.0).
 # Overridable via env; the default satisfies `set -u` (nounset) below.
@@ -63,11 +66,18 @@ fi
 echo "📝 Generating tsconfig.base.effective.json (PACKMIND_EDITION=${PACKMIND_EDITION})..."
 node scripts/select-tsconfig.mjs
 
-# 3. Michel skills + sprite compose overrides
+# 3. Michel skills + compose overrides
 if [ -f scripts/install-michel-skills.sh ]; then
   bash scripts/install-michel-skills.sh
 else
   echo "No scripts/install-michel-skills.sh — skipping skill install."
 fi
+
+# Note: git hooks run UNMODIFIED on the Fly worker (performance-8x / 32 GB) —
+# it has the cores and RAM to run the full pre-push `nx affected` gate at its
+# native --parallel=6, like a developer's machine. The old hook-patcher that
+# de-fanged parallelism for the prior 16 GB box is gone. The packmind-cli
+# pre-commit lint self-skips when no PACKMIND_API_KEY is present (its `whoami`
+# fails → exit 0), so it needs no patching either.
 
 echo "✅ Michel setup complete."
