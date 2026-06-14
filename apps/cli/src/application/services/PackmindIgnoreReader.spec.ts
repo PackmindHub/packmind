@@ -99,10 +99,10 @@ describe('PackmindIgnoreReader', () => {
   });
 
   describe('when .packmindignore exists but is unreadable', () => {
-    // chmod 0o000 is a no-op under root (uid 0), which bypasses permission
-    // bits, so this assertion fails spuriously in container/CI environments
-    // that run as root. Skip there; runs normally for non-root local dev.
-    (skipWhenRoot() ? it.skip : it)('throws the underlying error', async () => {
+    // chmod 000 is a no-op when running as root, so this test cannot be
+    // meaningfully executed in root-privileged environments (e.g. CI containers).
+    const itUnlessRoot = process.getuid?.() === 0 ? it.skip : it;
+    itUnlessRoot('throws the underlying error', async () => {
       const ignoreFile = path.join(tmpDir, '.packmindignore');
       await fs.writeFile(ignoreFile, 'some-pattern\n');
       await fs.chmod(ignoreFile, 0o000);

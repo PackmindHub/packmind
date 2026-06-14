@@ -64,6 +64,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS: Record<string, string> = {
   hooks: 'hooks',
   paths: 'paths',
   shell: 'shell',
+  'disallowed-tools': 'disallowedTools',
 };
 
 /**
@@ -83,6 +84,7 @@ export const CLAUDE_CODE_ADDITIONAL_FIELDS_ORDER: string[] = [
   'hooks',
   'paths',
   'shell',
+  'disallowedTools',
 ];
 
 /**
