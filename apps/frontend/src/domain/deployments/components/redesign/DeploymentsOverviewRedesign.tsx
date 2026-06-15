@@ -25,10 +25,7 @@ import {
   totalBehindInstallCount,
   totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
-import {
-  behindInstallsRequiringCliCount,
-  providersWithTokenSet,
-} from './selectors/providerAuth';
+import { providersWithTokenSet } from './selectors/providerAuth';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
@@ -97,10 +94,6 @@ export function DeploymentsOverviewRedesign() {
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
   const failedInstalls = totalFailedInstallCount(packages);
-  const cliRequiredInstalls = useMemo(
-    () => behindInstallsRequiringCliCount(packages, providersWithToken),
-    [packages, providersWithToken],
-  );
   const hasAnyDrift = driftPackagesCount > 0;
   const hasAnySignal = hasAnyDrift || failedInstalls > 0;
   const deploymentsHref =
@@ -169,7 +162,6 @@ export function DeploymentsOverviewRedesign() {
               driftPackagesCount={driftPackagesCount}
               totalPackagesCount={packages.length}
               failedInstalls={failedInstalls}
-              cliRequiredInstalls={cliRequiredInstalls}
             />
             {hasAnySignal && (
               <PMHStack gap={2} flexShrink={0}>
@@ -179,7 +171,7 @@ export function DeploymentsOverviewRedesign() {
                     size="sm"
                     onClick={handleDistributeAllDrifted}
                   >
-                    {`Distribute drifted (${driftPackagesCount})`}
+                    Distribute drifted
                   </PMButton>
                 )}
                 {autoUpdateHref && (
@@ -252,14 +244,12 @@ function SummaryLine({
   driftPackagesCount,
   totalPackagesCount,
   failedInstalls,
-  cliRequiredInstalls,
 }: Readonly<{
   hasAnyDrift: boolean;
   driftedInstalls: number;
   driftPackagesCount: number;
   totalPackagesCount: number;
   failedInstalls: number;
-  cliRequiredInstalls: number;
 }>) {
   if (!hasAnyDrift && failedInstalls === 0) {
     return (
@@ -300,25 +290,6 @@ function SummaryLine({
           {' · '}
           <Metric value={failedInstalls} tone="error" />
           {' failed'}
-        </>
-      )}
-      {cliRequiredInstalls > 0 && hasAnyDrift && (
-        <>
-          {', '}
-          <Metric value={cliRequiredInstalls} tone="warning" />
-          {' of which via '}
-          <PMText
-            as="span"
-            fontFamily="mono"
-            fontSize="xs"
-            color="warning"
-            paddingX={1}
-            paddingY="1px"
-            bg="background.tertiary"
-            borderRadius="sm"
-          >
-            packmind-cli install
-          </PMText>
         </>
       )}
     </PMText>
