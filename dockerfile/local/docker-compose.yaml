@@ -93,7 +93,7 @@ services:
     image: packmind-frontend-local
     container_name: packmind-local-frontend
     ports:
-      - '8091:80'
+      - '8091:8080'
     depends_on:
       - api
       - mcp-server
