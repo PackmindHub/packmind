@@ -103,6 +103,10 @@ export function DeploymentsOverviewRedesign() {
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
+  const selectedPackageHistoryHref =
+    organization && spaceSlug && selectedPackage
+      ? `${routes.space.toPackage(organization.slug, spaceSlug, selectedPackage.id)}?tab=distributions`
+      : null;
   const navigate = useNavigate();
 
   return (
@@ -221,6 +225,7 @@ export function DeploymentsOverviewRedesign() {
                     onSyncPackage={handleSyncPackage}
                     providersWithToken={providersWithToken}
                     isProvidersLoading={isProvidersLoading && !isStubMode}
+                    distributionHistoryHref={selectedPackageHistoryHref}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">
