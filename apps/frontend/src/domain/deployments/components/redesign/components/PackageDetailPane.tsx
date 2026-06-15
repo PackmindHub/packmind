@@ -554,7 +554,6 @@ function InstallRow({
 }: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
-  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
   const [expanded, setExpanded] = useState(false);
   const totalArtifactsOnInstall = behindCount + entry.alignedArtifactCount;
   const checkboxDisabled = lockReason !== null;
@@ -562,9 +561,7 @@ function InstallRow({
   return (
     <PMBox
       borderBottomWidth="1px"
-      borderColor={failed ? 'red.500' : 'border.tertiary'}
-      borderLeftWidth={failed ? '2px' : 0}
-      borderLeftColor={failed ? 'red.500' : 'transparent'}
+      borderColor="border.tertiary"
       bg={hasDrift && selected ? 'background.secondary' : 'background.primary'}
       transition="background-color 120ms ease-out"
     >
@@ -805,25 +802,19 @@ function RowStateLine({
   if (failed) {
     return (
       <PMHStack gap={2} align="center">
-        <PMIcon fontSize="xs" color="red.500" aria-hidden>
-          <LuTriangleAlert />
-        </PMIcon>
-        <PMText
-          fontSize="xs"
-          color="error"
-          fontWeight="semibold"
-          textTransform="uppercase"
-          letterSpacing="0.04em"
-        >
+        <PMBadge colorPalette="red" size="sm">
+          <PMIcon fontSize="xs">
+            <LuTriangleAlert />
+          </PMIcon>
           Failed
-        </PMText>
+        </PMBadge>
         {hasDrift && (
           <PMText
             fontSize="xs"
             color="warning"
             fontVariantNumeric="tabular-nums"
           >
-            · {behindCount} of {totalArtifactsOnInstall} behind
+            {behindCount} of {totalArtifactsOnInstall} behind
           </PMText>
         )}
       </PMHStack>
