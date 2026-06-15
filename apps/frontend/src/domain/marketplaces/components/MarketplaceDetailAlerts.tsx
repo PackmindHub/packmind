@@ -12,18 +12,20 @@ export interface MarketplaceDetailAlertsProps {
 }
 
 /**
- * Inline alert strip for the marketplace detail page: drift, pending sync PR,
- * missing sync PR, and outdated plugins. Returns `null` when nothing applies.
+ * Inline alert strip for the marketplace detail page. Surfaces only the two
+ * sync-PR conditions a user must act on:
+ *  - an open Packmind sync PR awaiting review (info),
+ *  - pending publishes/removals with no open sync PR (warning).
+ *
+ * Drift and outdated-plugin signals live elsewhere (state badge tooltip and
+ * per-row indicators in the rail/detail pane), so they do not appear here.
+ * Returns `null` when nothing applies.
  */
 export const MarketplaceDetailAlerts = ({
   organizationId,
   marketplace,
 }: Readonly<MarketplaceDetailAlertsProps>) => {
-  const driftedSlugs = marketplace.descriptor?.driftedPluginSlugs ?? [];
-  const showDriftPanel =
-    marketplace.state === 'drift' && driftedSlugs.length > 0;
   const pendingPrUrl = marketplace.pendingPrUrl;
-  const outdatedSlugs = marketplace.outdatedPluginSlugs ?? [];
 
   const { data: distributions } = useMarketplaceDistributions(
     organizationId,
@@ -36,44 +38,10 @@ export const MarketplaceDetailAlerts = ({
   );
   const showNoSyncPrPanel = hasPendingSyncChanges && !pendingPrUrl;
 
-  const nothingToShow =
-    !showDriftPanel &&
-    !pendingPrUrl &&
-    !showNoSyncPrPanel &&
-    outdatedSlugs.length === 0;
-
-  if (nothingToShow) return null;
+  if (!pendingPrUrl && !showNoSyncPrPanel) return null;
 
   return (
     <PMVStack align="stretch" gap={3}>
-      {showDriftPanel && (
-        <PMAlert.Root status="warning" data-testid="marketplace-drift-panel">
-          <PMAlert.Indicator />
-          <PMBox>
-            <PMAlert.Title>Drift detected</PMAlert.Title>
-            <PMAlert.Description>
-              <PMVStack align="start" gap={1}>
-                <PMText variant="small">
-                  The following plugin slugs are listed as published on Packmind
-                  but are missing from the marketplace descriptor:
-                </PMText>
-                <PMVStack align="start" gap={0}>
-                  {driftedSlugs.map((slug) => (
-                    <PMText
-                      key={slug}
-                      variant="small"
-                      fontFamily="mono"
-                      data-testid={`marketplace-drift-slug-${slug}`}
-                    >
-                      {slug}
-                    </PMText>
-                  ))}
-                </PMVStack>
-              </PMVStack>
-            </PMAlert.Description>
-          </PMBox>
-        </PMAlert.Root>
-      )}
       {pendingPrUrl && (
         <PMAlert.Root status="info" data-testid="marketplace-pending-pr-panel">
           <PMAlert.Indicator />
@@ -112,34 +80,6 @@ export const MarketplaceDetailAlerts = ({
                 been closed without merging, or failed to open. Publishing again
                 reopens it.
               </PMText>
-            </PMAlert.Description>
-          </PMBox>
-        </PMAlert.Root>
-      )}
-      {outdatedSlugs.length > 0 && (
-        <PMAlert.Root status="warning" data-testid="marketplace-outdated-panel">
-          <PMAlert.Indicator />
-          <PMBox>
-            <PMAlert.Title>Outdated plugins</PMAlert.Title>
-            <PMAlert.Description>
-              <PMVStack align="start" gap={1}>
-                <PMText variant="small">
-                  These plugins were built from packages that changed since they
-                  were last published:
-                </PMText>
-                <PMVStack align="start" gap={0}>
-                  {outdatedSlugs.map((slug) => (
-                    <PMText
-                      key={slug}
-                      variant="small"
-                      fontFamily="mono"
-                      data-testid={`marketplace-outdated-slug-${slug}`}
-                    >
-                      {slug}
-                    </PMText>
-                  ))}
-                </PMVStack>
-              </PMVStack>
             </PMAlert.Description>
           </PMBox>
         </PMAlert.Root>
