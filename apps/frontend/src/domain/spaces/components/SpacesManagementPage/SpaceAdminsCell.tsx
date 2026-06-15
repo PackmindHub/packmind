@@ -1,7 +1,7 @@
 import React from 'react';
-import { PMHStack, PMText } from '@packmind/ui';
-import { UserAvatarWithInitials } from '../../../accounts/components/UserAvatarWithInitials';
+import { PMText } from '@packmind/ui';
 import { SpaceAdminAvatar } from './types';
+import { UserAvatarStack } from '@packmind/proprietary/frontend/domain/accounts/components/UserAvatarStack';
 
 interface SpaceAdminsCellProps {
   admins: SpaceAdminAvatar[];
@@ -14,22 +14,11 @@ export const SpaceAdminsCell: React.FC<SpaceAdminsCellProps> = ({ admins }) => {
     return <PMText color="faded">—</PMText>;
   }
 
-  const visible = admins.slice(0, MAX_VISIBLE_AVATARS);
-  const isSingle = admins.length === 1;
-  const label = isSingle ? admins[0].displayName : `${admins.length} admins`;
-
   return (
-    <PMHStack gap={2} align="center">
-      <PMHStack gap={-2}>
-        {visible.map((admin) => (
-          <UserAvatarWithInitials
-            key={admin.id}
-            displayName={admin.displayName}
-            size="sm"
-          />
-        ))}
-      </PMHStack>
-      <PMText color="secondary">{label}</PMText>
-    </PMHStack>
+    <UserAvatarStack
+      users={admins}
+      maxVisibleAvatars={MAX_VISIBLE_AVATARS}
+      size={'xs'}
+    />
   );
 };

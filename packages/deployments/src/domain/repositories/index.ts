@@ -4,3 +4,7 @@ export { IPackageRepository } from './IPackageRepository';
 export { IDeploymentsRepositories } from './IDeploymentsRepositories';
 export { IDistributionRepository } from './IDistributionRepository';
 export { IDistributedPackageRepository } from './IDistributedPackageRepository';
+export {
+  IMarketplaceRepository,
+  MarketplaceStateUpdate,
+} from './IMarketplaceRepository';
