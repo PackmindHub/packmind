@@ -4,11 +4,14 @@ import {
   DistributionStatus,
   IAccountsPort,
   IListMarketplaceDistributionsUseCase,
+  ISpacesPort,
   ListMarketplaceDistributionsCommand,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionListItem,
   MarketplaceNotFoundError,
   PackageId,
+  SpaceColor,
+  SpaceId,
   UserId,
 } from '@packmind/types';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
@@ -38,9 +41,14 @@ const origin = 'ListMarketplaceDistributionsUseCase';
  *     occurrence of each `packageId` wins). Previous attempts — failures
  *     superseded by a later success, or any earlier publish — are dropped.
  *  4. Hydrate `packageName` per row via `PackageService.findById`. Calls are
- *     de-duplicated per `packageId`.
+ *     de-duplicated per `packageId`. Each loaded package also yields the
+ *     `spaceId` used to resolve the owning Space (step 6).
  *  5. Hydrate `authorName` per row via `IAccountsPort.getUserById`. Calls are
  *     de-duplicated per `authorId`.
+ *  6. Hydrate the owning `space` (`id`, `name`, `color`) per row via
+ *     `ISpacesPort.getSpaceById`. Calls are de-duplicated per `spaceId`. Rows
+ *     whose source package has been hard-deleted (or whose space has) carry a
+ *     `null` space so the UI can either fall back gracefully or hide the chip.
  */
 export class ListMarketplaceDistributionsUseCase
   extends AbstractMemberUseCase<
@@ -53,6 +61,7 @@ export class ListMarketplaceDistributionsUseCase
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly packageService: PackageService,
+    private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -110,11 +119,13 @@ export class ListMarketplaceDistributionsUseCase
       new Set<PackageId>(distributions.map((d) => d.packageId)),
     );
     const packageNameById = new Map<PackageId, string>();
+    const packageSpaceIdById = new Map<PackageId, SpaceId>();
     await Promise.all(
       uniquePackageIds.map(async (pid) => {
         const pkg = await this.packageService.findById(pid);
         if (pkg) {
           packageNameById.set(pid, pkg.name);
+          packageSpaceIdById.set(pid, pkg.spaceId);
         }
       }),
     );
@@ -132,12 +143,37 @@ export class ListMarketplaceDistributionsUseCase
       }),
     );
 
-    const items: MarketplaceDistributionListItem[] = distributions.map(
-      (distribution) => ({
-        ...distribution,
-        packageName: packageNameById.get(distribution.packageId) ?? '',
-        authorName: authorNameById.get(distribution.authorId) ?? '',
+    const uniqueSpaceIds = Array.from(
+      new Set<SpaceId>(packageSpaceIdById.values()),
+    );
+    const spaceById = new Map<
+      SpaceId,
+      { id: SpaceId; name: string; color: SpaceColor }
+    >();
+    await Promise.all(
+      uniqueSpaceIds.map(async (sid) => {
+        const space = await this.spacesPort.getSpaceById(sid);
+        if (space) {
+          spaceById.set(sid, {
+            id: space.id,
+            name: space.name,
+            color: space.color,
+          });
+        }
       }),
+    );
+
+    const items: MarketplaceDistributionListItem[] = distributions.map(
+      (distribution) => {
+        const sid = packageSpaceIdById.get(distribution.packageId);
+        const space = sid ? (spaceById.get(sid) ?? null) : null;
+        return {
+          ...distribution,
+          packageName: packageNameById.get(distribution.packageId) ?? '',
+          authorName: authorNameById.get(distribution.authorId) ?? '',
+          space,
+        };
+      },
     );
 
     return items;

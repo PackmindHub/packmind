@@ -16,6 +16,7 @@ import {
   PMMenu,
   PMPortal,
   PMSpinner,
+  PMStatus,
   PMText,
   PMTooltip,
   PMVStack,
@@ -81,6 +82,17 @@ export const MarketplaceDetailLayout = ({
     () => new Set(marketplace.outdatedPluginSlugs ?? []),
     [marketplace.outdatedPluginSlugs],
   );
+  // `version` lives on each PluginRef inside the descriptor, keyed by slug.
+  // Older descriptors may omit it — callers default to '—' when missing.
+  const versionBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const plugin of marketplace.descriptor?.plugins ?? []) {
+      if (plugin.version) {
+        map.set(plugin.slug, plugin.version);
+      }
+    }
+    return map;
+  }, [marketplace.descriptor?.plugins]);
 
   return (
     <PMVStack gap={4} align="stretch">
@@ -99,6 +111,7 @@ export const MarketplaceDetailLayout = ({
             distributions={items}
             isLoading={isLoading}
             outdatedSlugSet={outdatedSlugSet}
+            versionBySlug={versionBySlug}
           />
         ) : (
           <SuggestionsPlaceholder />
@@ -114,6 +127,7 @@ interface PluginsSurfaceProps {
   distributions: MarketplaceDistributionListItem[];
   isLoading: boolean;
   outdatedSlugSet: Set<string>;
+  versionBySlug: Map<string, string>;
 }
 
 function PluginsSurface({
@@ -122,6 +136,7 @@ function PluginsSurface({
   distributions,
   isLoading,
   outdatedSlugSet,
+  versionBySlug,
 }: Readonly<PluginsSurfaceProps>) {
   const [selectedId, setSelectedId] =
     useState<MarketplaceDistributionId | null>(null);
@@ -163,6 +178,7 @@ function PluginsSurface({
         selectedId={selectedDistribution.id}
         onSelect={setSelectedId}
         outdatedSlugSet={outdatedSlugSet}
+        versionBySlug={versionBySlug}
       />
       <PMBox flex="1" minW={0} bg="background.primary">
         <PluginDetailPane
@@ -183,6 +199,7 @@ interface PluginMasterRailProps {
   selectedId: MarketplaceDistributionId;
   onSelect: (id: MarketplaceDistributionId) => void;
   outdatedSlugSet: Set<string>;
+  versionBySlug: Map<string, string>;
 }
 
 function PluginMasterRail({
@@ -190,6 +207,7 @@ function PluginMasterRail({
   selectedId,
   onSelect,
   outdatedSlugSet,
+  versionBySlug,
 }: Readonly<PluginMasterRailProps>) {
   const [query, setQuery] = useState('');
 
@@ -200,7 +218,8 @@ function PluginMasterRail({
       (d) =>
         d.packageName.toLowerCase().includes(q) ||
         d.pluginSlug.toLowerCase().includes(q) ||
-        d.authorName.toLowerCase().includes(q),
+        d.authorName.toLowerCase().includes(q) ||
+        (d.space?.name.toLowerCase().includes(q) ?? false),
     );
   }, [distributions, query]);
 
@@ -292,6 +311,7 @@ function PluginMasterRail({
               distribution={d}
               selected={d.id === selectedId}
               outdated={outdatedSlugSet.has(d.pluginSlug)}
+              version={versionBySlug.get(d.pluginSlug) ?? null}
               onSelect={() => onSelect(d.id)}
             />
           ))
@@ -305,6 +325,7 @@ interface PluginRailRowProps {
   distribution: MarketplaceDistributionListItem;
   selected: boolean;
   outdated: boolean;
+  version: string | null;
   onSelect: () => void;
 }
 
@@ -312,6 +333,7 @@ function PluginRailRow({
   distribution,
   selected,
   outdated,
+  version,
   onSelect,
 }: Readonly<PluginRailRowProps>) {
   return (
@@ -332,7 +354,11 @@ function PluginRailRow({
       transition="background-color 120ms ease-out"
       _hover={selected ? undefined : { bg: 'background.tertiary' }}
       aria-pressed={selected}
-      aria-label={`Plugin ${distribution.packageName}`}
+      aria-label={
+        version
+          ? `Plugin ${distribution.packageName} version ${version}`
+          : `Plugin ${distribution.packageName}`
+      }
     >
       {selected && (
         <PMBox
@@ -355,35 +381,47 @@ function PluginRailRow({
           >
             {distribution.packageName || distribution.pluginSlug}
           </PMText>
-          {outdated && (
-            <PMTooltip label="Built from a package that changed since it was last published. Republish to update.">
-              <PMBox
-                width="6px"
-                height="6px"
-                borderRadius="full"
-                bg="orange.500"
-                cursor="help"
-                aria-label="Outdated"
-                flexShrink={0}
-              />
-            </PMTooltip>
-          )}
+          <PMHStack gap={1.5} align="center" flexShrink={0}>
+            {outdated && (
+              <PMTooltip label="Built from a package that changed since it was last published. Republish to update.">
+                <PMBox
+                  width="6px"
+                  height="6px"
+                  borderRadius="full"
+                  bg="orange.500"
+                  cursor="help"
+                  aria-label="Update available"
+                  flexShrink={0}
+                />
+              </PMTooltip>
+            )}
+            <PMText
+              fontSize="xs"
+              color="faded"
+              fontVariantNumeric="tabular-nums"
+            >
+              {version ? `v${version}` : 'v—'}
+            </PMText>
+          </PMHStack>
         </PMHStack>
-        <PMHStack gap={2} align="center" justify="space-between">
-          <PMText
-            fontSize="xs"
-            color="faded"
-            fontFamily="mono"
-            truncate
-            flex={1}
-            minW={0}
-          >
-            {distribution.pluginSlug}
-          </PMText>
-          <DistributionStatusBadge
-            status={distribution.status}
-            removalRequestedAt={distribution.removalRequestedAt}
-          />
+        <PMHStack gap={2} align="center">
+          {distribution.space ? (
+            <PMBadge size="sm" maxW="100%" minW={0}>
+              <PMStatus.Root
+                colorPalette={distribution.space.color}
+                flexShrink={0}
+              >
+                <PMStatus.Indicator />
+              </PMStatus.Root>
+              <PMBox as="span" truncate>
+                {distribution.space.name}
+              </PMBox>
+            </PMBadge>
+          ) : (
+            <PMText fontSize="xs" color="faded">
+              space removed
+            </PMText>
+          )}
         </PMHStack>
       </PMVStack>
     </PMBox>

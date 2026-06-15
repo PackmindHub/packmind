@@ -8,12 +8,17 @@ import {
   createUserId,
   DistributionStatus,
   IAccountsPort,
+  ISpacesPort,
   Marketplace,
   MarketplaceDistribution,
   MarketplaceNotFoundError,
   Organization,
   Package,
+  Space,
+  SpaceId,
+  SpaceType,
   User,
+  createSpaceId,
 } from '@packmind/types';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { IMarketplaceDistributionRepository } from '../../../domain/repositories/IMarketplaceDistributionRepository';
@@ -25,12 +30,23 @@ describe('ListMarketplaceDistributionsUseCase', () => {
   const userId = createUserId(uuidv4());
   const marketplaceId = createMarketplaceId(uuidv4());
   const packageId = createPackageId(uuidv4());
+  const spaceId: SpaceId = createSpaceId(uuidv4());
 
   const existingMarketplace = {
     id: marketplaceId,
     organizationId,
     name: 'ACME Plugins',
   } as unknown as Marketplace;
+
+  const memberSpace: Space = {
+    id: spaceId,
+    name: 'Platform',
+    slug: 'platform',
+    type: SpaceType.open,
+    organizationId,
+    isDefaultSpace: false,
+    color: 'teal',
+  };
 
   const memberUser = {
     id: userId,
@@ -74,6 +90,7 @@ describe('ListMarketplaceDistributionsUseCase', () => {
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let useCase: ListMarketplaceDistributionsUseCase;
 
   beforeEach(() => {
@@ -90,6 +107,7 @@ describe('ListMarketplaceDistributionsUseCase', () => {
         id: packageId,
         name: 'My Package',
         slug: 'my-package',
+        spaceId,
       } as Package),
     } as unknown as jest.Mocked<PackageService>;
 
@@ -98,10 +116,15 @@ describe('ListMarketplaceDistributionsUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    mockSpacesPort = {
+      getSpaceById: jest.fn().mockResolvedValue(memberSpace),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     useCase = new ListMarketplaceDistributionsUseCase(
       mockMarketplaceRepository,
       mockMarketplaceDistributionRepository,
       mockPackageService,
+      mockSpacesPort,
       mockAccountsPort,
       stubLogger(),
     );
@@ -146,6 +169,33 @@ describe('ListMarketplaceDistributionsUseCase', () => {
 
     it('preserves the distribution status', () => {
       expect(result[0].status).toBe(DistributionStatus.success);
+    });
+
+    it('enriches the row with the owning space', () => {
+      expect(result[0].space).toEqual({
+        id: spaceId,
+        name: 'Platform',
+        color: 'teal',
+      });
+    });
+  });
+
+  describe('when the owning space has been removed', () => {
+    let result: Awaited<
+      ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+    >;
+
+    beforeEach(async () => {
+      mockSpacesPort.getSpaceById = jest.fn().mockResolvedValue(null);
+      result = await useCase.execute({
+        userId,
+        organizationId,
+        marketplaceId,
+      });
+    });
+
+    it('returns a null space rather than guessing', () => {
+      expect(result[0].space).toBeNull();
     });
   });
 
@@ -238,6 +288,7 @@ describe('ListMarketplaceDistributionsUseCase', () => {
             id: packageId,
             name: 'My Package',
             slug: 'my-package',
+            spaceId,
           } as Package);
         }
         if (pid === otherPackageId) {
@@ -245,6 +296,7 @@ describe('ListMarketplaceDistributionsUseCase', () => {
             id: otherPackageId,
             name: 'Other Package',
             slug: 'other-package',
+            spaceId,
           } as Package);
         }
         return Promise.resolve(null);
@@ -340,7 +392,7 @@ describe('ListMarketplaceDistributionsUseCase', () => {
     });
   });
 
-  describe('missing package gracefully falls back to empty name', () => {
+  describe('when the source package has been removed', () => {
     let result: Awaited<
       ReturnType<ListMarketplaceDistributionsUseCase['execute']>
     >;
@@ -360,6 +412,14 @@ describe('ListMarketplaceDistributionsUseCase', () => {
 
     it('falls back to an empty package name without throwing', () => {
       expect(result[0].packageName).toBe('');
+    });
+
+    it('falls back to a null space rather than guessing', () => {
+      expect(result[0].space).toBeNull();
+    });
+
+    it('does not call the spaces port', () => {
+      expect(mockSpacesPort.getSpaceById).not.toHaveBeenCalled();
     });
   });
 });

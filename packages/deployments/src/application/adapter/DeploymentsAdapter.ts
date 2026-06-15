@@ -711,6 +711,7 @@ export class DeploymentsAdapter
         this.marketplaceRepository,
         this.marketplaceDistributionRepository,
         this.deploymentsServices.getPackageService(),
+        this.spacesPort,
         this.accountsPort,
       );
   }
