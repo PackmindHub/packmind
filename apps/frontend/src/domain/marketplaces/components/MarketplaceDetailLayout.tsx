@@ -38,6 +38,7 @@ import {
   LuRotateCw,
   LuSearch,
   LuTrash2,
+  LuTriangleAlert,
 } from 'react-icons/lu';
 import {
   useCancelPluginRemoval,
@@ -46,7 +47,6 @@ import {
   useSyncMarketplaceNow,
 } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
-import { DistributionStatusBadge } from './DistributionStatusBadge';
 import { RemovePluginButton } from './RemovePluginButton';
 import { CancelRemovalButton } from './CancelRemovalButton';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
@@ -188,6 +188,7 @@ function PluginsSurface({
           organizationId={organizationId}
           marketplaceId={marketplace.id}
           isOutdated={outdatedSlugSet.has(selectedDistribution.pluginSlug)}
+          version={versionBySlug.get(selectedDistribution.pluginSlug) ?? null}
         />
       </PMBox>
     </PMHStack>
@@ -434,6 +435,7 @@ interface PluginDetailPaneProps {
   organizationId: OrganizationId | string;
   marketplaceId: MarketplaceListItem['id'];
   isOutdated: boolean;
+  version: string | null;
 }
 
 function PluginDetailPane({
@@ -442,6 +444,7 @@ function PluginDetailPane({
   organizationId,
   marketplaceId,
   isOutdated,
+  version,
 }: Readonly<PluginDetailPaneProps>) {
   const { user } = useAuthContext();
   const markMutation = useMarkPluginForRemovalByDistribution(
@@ -461,53 +464,36 @@ function PluginDetailPane({
     <PMBox paddingX={8} paddingY={6} maxW="960px">
       <PMVStack gap={5} align="stretch">
         <PMVStack gap={2} align="start">
-          <PMHStack gap={3} align="center" wrap="wrap">
-            <PMHeading size="lg" color="primary">
-              {distribution.packageName || distribution.pluginSlug}
-            </PMHeading>
-            {/*
-              Steady-state (`success` with no removal requested) is the
-              default for the vast majority of rows; surfacing a chip there
-              would be visual noise. The badge only renders when the row
-              has something to act on or wait through.
-            */}
-            {(distribution.status !== DistributionStatus.success ||
-              distribution.removalRequestedAt) && (
-              <DistributionStatusBadge
-                status={distribution.status}
-                removalRequestedAt={distribution.removalRequestedAt}
-              />
-            )}
-            {isOutdated && (
-              <PMTooltip label="Built from a package that changed since it was last published. Republish to update.">
-                <PMBadge
-                  size="sm"
-                  colorPalette="yellow"
-                  data-testid={`distribution-outdated-badge-${distribution.pluginSlug}`}
-                >
-                  Outdated
-                </PMBadge>
-              </PMTooltip>
-            )}
-          </PMHStack>
+          <PMHeading size="lg" color="primary">
+            {distribution.packageName || distribution.pluginSlug}
+          </PMHeading>
           <PMHStack gap={2} align="center" wrap="wrap">
-            <PMText fontSize="xs" color="faded" fontFamily="mono">
-              {distribution.pluginSlug}
-            </PMText>
+            {distribution.space ? (
+              <PMBadge size="md">
+                <PMStatus.Root
+                  colorPalette={distribution.space.color}
+                  flexShrink={0}
+                >
+                  <PMStatus.Indicator />
+                </PMStatus.Root>
+                {distribution.space.name}
+              </PMBadge>
+            ) : (
+              <PMText fontSize="xs" color="faded">
+                space removed
+              </PMText>
+            )}
             <PMText fontSize="xs" color="faded" aria-hidden>
               &middot;
             </PMText>
             <PMText fontSize="xs" color="faded">
-              by {distribution.authorName}
-            </PMText>
-            <PMText fontSize="xs" color="faded" aria-hidden>
-              &middot;
-            </PMText>
-            <PMText fontSize="xs" color="faded">
-              published {formatPublishedAt(distribution.publishConfirmedAt)}
+              last published{' '}
+              {formatPublishedAt(distribution.publishConfirmedAt)}
             </PMText>
           </PMHStack>
         </PMVStack>
+
+        <VersionTrail version={version} isOutdated={isOutdated} />
 
         <PMFeatureFlag
           featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
@@ -545,11 +531,119 @@ function PluginDetailPane({
         </PMFeatureFlag>
 
         <PlaceholderBlock>
-          Plugin version, curated-vs-published drift, repo adoption, and bundled
-          artifacts will land here as the backend exposes them.
+          Curated version, repo adoption, and bundled artifacts will land here
+          as the backend exposes them.
         </PlaceholderBlock>
       </PMVStack>
     </PMBox>
+  );
+}
+
+interface VersionTrailProps {
+  version: string | null;
+  isOutdated: boolean;
+}
+
+/**
+ * Simplified version trail: a "changes ready" drift indicator on the left and
+ * the marketplace-published tier on the right. The prototype also ships a
+ * Curated tier (source-package version) and an Installed tier (repo adoption)
+ * with a second connector; both are gated on backend data we do not have yet
+ * and will join the trail later.
+ */
+function VersionTrail({ version, isOutdated }: Readonly<VersionTrailProps>) {
+  return (
+    <PMBox
+      display="grid"
+      gridTemplateColumns="minmax(140px, auto) 1fr"
+      alignItems="start"
+      columnGap={4}
+      paddingY={5}
+      borderTopWidth="1px"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+    >
+      <TrailConnector isOutdated={isOutdated} />
+      <TrailTier
+        label="Published"
+        value={version ? `v${version}` : 'v—'}
+        sub="in marketplace"
+      />
+    </PMBox>
+  );
+}
+
+interface TrailTierProps {
+  label: string;
+  value: string;
+  sub: string;
+}
+
+function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
+  return (
+    <PMVStack gap={1} align="start" minW="100px">
+      <PMText
+        fontSize="11px"
+        color="faded"
+        textTransform="uppercase"
+        letterSpacing="wider"
+        fontWeight="semibold"
+      >
+        {label}
+      </PMText>
+      <PMText
+        fontSize="md"
+        color="primary"
+        fontWeight="medium"
+        fontVariantNumeric="tabular-nums"
+      >
+        {value}
+      </PMText>
+      <PMText fontSize="11px" color="faded">
+        {sub}
+      </PMText>
+    </PMVStack>
+  );
+}
+
+interface TrailConnectorProps {
+  isOutdated: boolean;
+}
+
+function TrailConnector({ isOutdated }: Readonly<TrailConnectorProps>) {
+  return (
+    <PMVStack gap={2} align="center" minW="120px" paddingTop="18px">
+      <PMIcon
+        fontSize="lg"
+        color={isOutdated ? 'orange.500' : 'text.faded'}
+        aria-hidden
+      >
+        <LuChevronRight />
+      </PMIcon>
+      {isOutdated ? (
+        <PMHStack gap={1.5} align="center">
+          <PMIcon fontSize="xs" color="orange.500">
+            <LuTriangleAlert />
+          </PMIcon>
+          <PMText fontSize="xs" color="warning" fontWeight="medium">
+            Changes ready to publish
+          </PMText>
+        </PMHStack>
+      ) : (
+        <PMHStack gap={1.5} align="center">
+          <PMBox
+            width="6px"
+            height="6px"
+            borderRadius="full"
+            bg="green.500"
+            aria-hidden
+          />
+          <PMText fontSize="xs" color="faded">
+            in sync
+          </PMText>
+        </PMHStack>
+      )}
+    </PMVStack>
   );
 }
 
