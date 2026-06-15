@@ -465,10 +465,19 @@ function PluginDetailPane({
             <PMHeading size="lg" color="primary">
               {distribution.packageName || distribution.pluginSlug}
             </PMHeading>
-            <DistributionStatusBadge
-              status={distribution.status}
-              removalRequestedAt={distribution.removalRequestedAt}
-            />
+            {/*
+              Steady-state (`success` with no removal requested) is the
+              default for the vast majority of rows; surfacing a chip there
+              would be visual noise. The badge only renders when the row
+              has something to act on or wait through.
+            */}
+            {(distribution.status !== DistributionStatus.success ||
+              distribution.removalRequestedAt) && (
+              <DistributionStatusBadge
+                status={distribution.status}
+                removalRequestedAt={distribution.removalRequestedAt}
+              />
+            )}
             {isOutdated && (
               <PMTooltip label="Built from a package that changed since it was last published. Republish to update.">
                 <PMBadge
