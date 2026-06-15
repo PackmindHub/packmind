@@ -789,15 +789,20 @@ export function MarketplaceDetailHeaderActions({
   const syncMarketplace = useSyncMarketplaceNow(organizationId, marketplace.id);
   const repoUrl = marketplace.repository?.url ?? null;
 
+  // State chip surfaces only when the marketplace needs attention. The healthy
+  // case is the default and adds no information; outdated/drift duplicate the
+  // per-row rail indicators, so we omit `outdatedPluginSlugs` here to keep the
+  // chip single-purpose.
   return (
     <PMHStack gap={3} align="center">
-      <MarketplaceStateBadge
-        state={marketplace.state}
-        errorKind={marketplace.errorKind}
-        errorDetail={marketplace.errorDetail}
-        driftedPluginSlugs={marketplace.descriptor?.driftedPluginSlugs ?? []}
-        outdatedPluginSlugs={marketplace.outdatedPluginSlugs}
-      />
+      {marketplace.state !== 'healthy' && (
+        <MarketplaceStateBadge
+          state={marketplace.state}
+          errorKind={marketplace.errorKind}
+          errorDetail={marketplace.errorDetail}
+          driftedPluginSlugs={marketplace.descriptor?.driftedPluginSlugs ?? []}
+        />
+      )}
       <PMButton
         variant="primary"
         size="sm"
