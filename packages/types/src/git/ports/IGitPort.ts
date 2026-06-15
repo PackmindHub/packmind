@@ -270,10 +270,9 @@ export interface IGitPort {
   /**
    * Queue a job to fetch file content from a git repository asynchronously
    *
-   * Takes the output from handleWebHookWithoutContent and enriches it with file content,
-   * producing the same format as handleWebHook.
+   * Takes a list of files (without content) and enriches each with its file content.
    *
-   * @param input - Parameters containing repository ID and files from handleWebHookWithoutContent
+   * @param input - Parameters containing repository ID and files to enrich
    * @param onComplete - Optional callback to execute when the job completes successfully
    * @returns Job ID that can be used to track the job status
    */
