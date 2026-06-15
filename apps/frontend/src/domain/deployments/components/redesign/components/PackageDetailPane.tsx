@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import {
   PMAlert,
   PMBadge,
@@ -9,6 +10,7 @@ import {
   PMHeading,
   PMIcon,
   PMInput,
+  PMLink,
   PMSpinner,
   PMText,
   PMTooltip,
@@ -16,6 +18,7 @@ import {
 } from '@packmind/ui';
 import {
   LuArrowRight,
+  LuArrowUpRight,
   LuBookOpen,
   LuChevronDown,
   LuChevronRight,
@@ -24,6 +27,7 @@ import {
   LuSearch,
   LuTerminal,
   LuTrash2,
+  LuTriangleAlert,
   LuWandSparkles,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
@@ -33,7 +37,10 @@ import {
   type GitProviderId,
   type PackageId,
 } from '@packmind/types';
-import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
+import {
+  packageBehindInstallCount,
+  packageFailedInstallCount,
+} from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
   packageMostRecentPush,
@@ -78,6 +85,8 @@ type PackageDetailPaneProps = {
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
+  /** Link to the package's distribution history (failure details live there). */
+  distributionHistoryHref: string | null;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'aligned';
@@ -91,10 +100,13 @@ export function PackageDetailPane({
   providersWithToken,
   isProvidersLoading,
   onSyncPackage,
+  distributionHistoryHref,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
+  const failedInstallCount = packageFailedInstallCount(pkg);
   const hasDrift = behindInstallCount > 0;
+  const hasFailure = failedInstallCount > 0;
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
@@ -284,8 +296,43 @@ export function PackageDetailPane({
                 }
               />
             )}
+            {hasFailure && (
+              <SummaryStat
+                label="Failed"
+                value={`${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'}`}
+                tone="error"
+              />
+            )}
           </PMHStack>
-          {!hasDrift && (
+          {hasFailure && (
+            <PMAlert.Root status="error">
+              <PMAlert.Indicator>
+                <PMIcon>
+                  <LuTriangleAlert />
+                </PMIcon>
+              </PMAlert.Indicator>
+              <PMAlert.Content>
+                <PMAlert.Title>
+                  {failedInstallCount === 1
+                    ? 'The last distribution attempt failed on 1 target.'
+                    : `The last distribution attempt failed on ${failedInstallCount} targets.`}
+                </PMAlert.Title>
+                {distributionHistoryHref && (
+                  <PMAlert.Description>
+                    <PMLink asChild variant="underline" fontSize="sm">
+                      <Link to={distributionHistoryHref}>
+                        View distribution history for error details
+                        <PMIcon fontSize="xs" marginLeft="4px">
+                          <LuArrowUpRight />
+                        </PMIcon>
+                      </Link>
+                    </PMLink>
+                  </PMAlert.Description>
+                )}
+              </PMAlert.Content>
+            </PMAlert.Root>
+          )}
+          {!hasDrift && !hasFailure && (
             <PMAlert.Root status="success">
               <PMAlert.Indicator />
               <PMAlert.Title>
@@ -362,6 +409,7 @@ export function PackageDetailPane({
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
+                      distributionHistoryHref={distributionHistoryHref}
                     />
                   );
                 })}
@@ -382,6 +430,7 @@ export function PackageDetailPane({
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
+                      distributionHistoryHref={distributionHistoryHref}
                     />
                   );
                 })}
@@ -439,10 +488,16 @@ function SummaryStat({
 }: Readonly<{
   label: string;
   value: string;
-  tone?: 'neutral' | 'ok' | 'warn';
+  tone?: 'neutral' | 'ok' | 'warn' | 'error';
 }>) {
   const color =
-    tone === 'warn' ? 'warning' : tone === 'ok' ? 'success' : 'primary';
+    tone === 'error'
+      ? 'error'
+      : tone === 'warn'
+        ? 'warning'
+        : tone === 'ok'
+          ? 'success'
+          : 'primary';
   return (
     <PMHStack gap={1.5} align="baseline">
       <PMText
@@ -471,6 +526,7 @@ type InstallRowProps = {
   selected: boolean;
   lockReason: InstallLockReason | null;
   onToggle: () => void;
+  distributionHistoryHref: string | null;
 };
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
@@ -484,9 +540,11 @@ function InstallRow({
   selected,
   lockReason,
   onToggle,
+  distributionHistoryHref,
 }: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
+  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
   const [expanded, setExpanded] = useState(false);
   const totalArtifactsOnInstall = behindCount + entry.alignedArtifactCount;
   const checkboxDisabled = lockReason !== null;
@@ -494,7 +552,9 @@ function InstallRow({
   return (
     <PMBox
       borderBottomWidth="1px"
-      borderColor="border.tertiary"
+      borderColor={failed ? 'red.500' : 'border.tertiary'}
+      borderLeftWidth={failed ? '2px' : 0}
+      borderLeftColor={failed ? 'red.500' : 'transparent'}
       bg={hasDrift && selected ? 'background.secondary' : 'background.primary'}
       transition="background-color 120ms ease-out"
     >
@@ -562,7 +622,10 @@ function InstallRow({
             behindCount={behindCount}
             totalArtifactsOnInstall={totalArtifactsOnInstall}
           />
-          <DistributionEventLine entry={entry} />
+          <DistributionEventLine
+            entry={entry}
+            distributionHistoryHref={distributionHistoryHref}
+          />
         </PMVStack>
       </PMHStack>
 
@@ -709,6 +772,7 @@ function RowStateLine({
 }: Readonly<RowStateLineProps>) {
   const inProgress =
     entry.lastDistributionStatus === DistributionStatus.in_progress;
+  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
 
   if (inProgress) {
     return (
@@ -724,6 +788,34 @@ function RowStateLine({
           <PMSpinner size="xs" />
           <PMText fontSize="xs">Distributing…</PMText>
         </PMHStack>
+      </PMHStack>
+    );
+  }
+
+  if (failed) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMIcon fontSize="xs" color="red.500" aria-hidden>
+          <LuTriangleAlert />
+        </PMIcon>
+        <PMText
+          fontSize="xs"
+          color="error"
+          fontWeight="semibold"
+          textTransform="uppercase"
+          letterSpacing="0.04em"
+        >
+          Failed
+        </PMText>
+        {hasDrift && (
+          <PMText
+            fontSize="xs"
+            color="warning"
+            fontVariantNumeric="tabular-nums"
+          >
+            · {behindCount} of {totalArtifactsOnInstall} behind
+          </PMText>
+        )}
       </PMHStack>
     );
   }
@@ -781,7 +873,11 @@ function RowStateLine({
 
 function DistributionEventLine({
   entry,
-}: Readonly<{ entry: InstallDriftEntry }>) {
+  distributionHistoryHref,
+}: Readonly<{
+  entry: InstallDriftEntry;
+  distributionHistoryHref: string | null;
+}>) {
   const anchorIso = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
   if (!anchorIso) return null;
   const verb = entry.lastDistributionStatus
@@ -793,6 +889,37 @@ function DistributionEventLine({
     entry.lastDistributionStatus !== DistributionStatus.in_progress &&
     entry.mostRecentDeployedAtDays >= STALE_DAYS_THRESHOLD;
   const color = failed ? 'red.500' : stale ? 'orange.500' : 'text.faded';
+
+  if (failed && distributionHistoryHref) {
+    return (
+      <PMTooltip
+        label={`Failed ${formatAbsoluteDate(anchorIso)} — view error details`}
+        placement="top"
+      >
+        <PMLink asChild>
+          <Link
+            to={distributionHistoryHref}
+            aria-label={`View distribution history (failed ${anchorIso})`}
+          >
+            <PMHStack gap="4px" align="center" color={color}>
+              <PMText
+                fontSize="11px"
+                fontVariantNumeric="tabular-nums"
+                textDecoration="underline"
+                textUnderlineOffset="2px"
+              >
+                Failed {formatRelativeDate(anchorIso)}
+              </PMText>
+              <PMIcon fontSize="10px">
+                <LuArrowUpRight />
+              </PMIcon>
+            </PMHStack>
+          </Link>
+        </PMLink>
+      </PMTooltip>
+    );
+  }
+
   return (
     <PMTooltip label={formatAbsoluteDate(anchorIso)} placement="top">
       <PMHStack
