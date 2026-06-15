@@ -1,5 +1,4 @@
 import {
-  CancelPluginRemovalResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionId,
@@ -103,16 +102,6 @@ export class MarketplaceGatewayApi
     return this._api.post<MarkPluginForRemovalResponse>(
       `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/packages/${packageId}/removal`,
       {},
-    );
-  }
-
-  async cancelPluginRemoval(
-    organizationId: OrganizationId,
-    marketplaceId: MarketplaceId,
-    distributionId: MarketplaceDistributionId,
-  ): Promise<CancelPluginRemovalResponse> {
-    return this._api.delete<CancelPluginRemovalResponse>(
-      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions/${distributionId}/removal`,
     );
   }
 

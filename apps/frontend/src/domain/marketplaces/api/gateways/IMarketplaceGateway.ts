@@ -1,5 +1,4 @@
 import {
-  CancelPluginRemovalResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionId,
@@ -92,16 +91,6 @@ export interface IMarketplaceGateway {
     marketplaceId: MarketplaceId,
     packageId: PackageId,
   ): Promise<MarkPluginForRemovalResponse>;
-
-  /**
-   * Cancels a previously initiated plugin removal, reverting the target
-   * distribution from `to_be_removed` back to `success`.
-   */
-  cancelPluginRemoval(
-    organizationId: OrganizationId,
-    marketplaceId: MarketplaceId,
-    distributionId: MarketplaceDistributionId,
-  ): Promise<CancelPluginRemovalResponse>;
 
   /**
    * Triggers an immediate, on-demand reconciliation of the marketplace and

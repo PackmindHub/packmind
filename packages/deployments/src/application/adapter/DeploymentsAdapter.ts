@@ -7,8 +7,6 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
-  CancelPluginRemovalCommand,
-  CancelPluginRemovalResponse,
   ListMarketplaceDistributionsCommand,
   ListMarketplaceDistributionsResponse,
   MarkPluginForRemovalCommand,
@@ -147,7 +145,6 @@ import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDef
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUseCase } from '../useCases/getPackageById/GetPackageByIdUseCase';
-import { CancelPluginRemovalUseCase } from '../useCases/cancelPluginRemoval';
 import { FindMarketplaceDistributionByIdUseCase } from '../useCases/findMarketplaceDistributionById';
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
 import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
@@ -252,7 +249,6 @@ export class DeploymentsAdapter
   private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
   private _findMarketplaceDistributionByIdUseCase!: FindMarketplaceDistributionByIdUseCase;
   private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
-  private _cancelPluginRemovalUseCase!: CancelPluginRemovalUseCase;
   private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
   private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
 
@@ -689,12 +685,6 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       ports.eventEmitterService,
       this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob,
-      this.accountsPort,
-    );
-
-    this._cancelPluginRemovalUseCase = new CancelPluginRemovalUseCase(
-      this.marketplaceRepository,
-      this.marketplaceDistributionRepository,
       this.accountsPort,
     );
 
@@ -1213,12 +1203,6 @@ export class DeploymentsAdapter
     command: MarkPluginForRemovalCommand,
   ): Promise<MarkPluginForRemovalResponse> {
     return this._markPluginForRemovalUseCase.execute(command);
-  }
-
-  async cancelPluginRemoval(
-    command: CancelPluginRemovalCommand,
-  ): Promise<CancelPluginRemovalResponse> {
-    return this._cancelPluginRemovalUseCase.execute(command);
   }
 
   async syncMarketplaceNow(

@@ -4,8 +4,8 @@ import { MarketplaceDistributionId } from '../MarketplaceDistributionId';
 /**
  * Error thrown when an attempted state transition on a `MarketplaceDistribution`
  * is rejected because the current status is not one of the allowed source
- * statuses for that transition (e.g. cancelling a removal on a distribution
- * that is not in `to_be_removed`).
+ * statuses for that transition (e.g. marking a distribution for removal when it
+ * is not in `success`/`pending_merge`).
  */
 export class PluginDistributionInvalidStateError extends Error {
   constructor(

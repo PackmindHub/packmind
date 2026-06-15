@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  CancelPluginRemovalResponse,
   createGitProviderId,
   createGitRepoId,
   createMarketplaceDistributionId,
@@ -124,7 +123,6 @@ describe('MarketplacesController', () => {
       publishPackageOnMarketplace: jest.fn(),
       listMarketplaceDistributions: jest.fn(),
       markPluginForRemoval: jest.fn(),
-      cancelPluginRemoval: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new MarketplacesController(
@@ -1039,130 +1037,6 @@ describe('MarketplacesController', () => {
             baseRequest,
           ),
         ).rejects.toBeInstanceOf(ForbiddenException);
-      });
-    });
-  });
-
-  describe('DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal (cancelPluginRemoval)', () => {
-    const cancelledDistribution: MarketplaceDistribution = {
-      id: distributionId,
-      organizationId,
-      marketplaceId,
-      packageId,
-      pluginSlug: 'sample-plugin',
-      authorId: userId,
-      status: DistributionStatus.success,
-      source: 'app',
-      createdAt: new Date('2026-05-29T10:00:00.000Z'),
-      updatedAt: new Date('2026-05-29T10:00:00.000Z'),
-      deletedAt: null,
-    } as MarketplaceDistribution;
-
-    const cancelResponse: CancelPluginRemovalResponse = {
-      distribution: cancelledDistribution,
-    };
-
-    describe('on successful cancellation', () => {
-      let result: CancelPluginRemovalResponse;
-
-      beforeEach(async () => {
-        mockDeploymentAdapter.cancelPluginRemoval.mockResolvedValue(
-          cancelResponse,
-        );
-
-        result = await controller.cancelPluginRemoval(
-          organizationId,
-          marketplaceId,
-          distributionId,
-          baseRequest,
-        );
-      });
-
-      it('returns the response from the deployment adapter', () => {
-        expect(result).toEqual(cancelResponse);
-      });
-
-      it('forwards the command to the deployment adapter', () => {
-        expect(mockDeploymentAdapter.cancelPluginRemoval).toHaveBeenCalledWith({
-          userId,
-          organizationId,
-          marketplaceId,
-          distributionId,
-          source: 'ui',
-        });
-      });
-    });
-
-    describe('error mapping', () => {
-      it('maps PluginDistributionNotFoundError to NotFoundException (404) without leaking the distribution UUID', async () => {
-        mockDeploymentAdapter.cancelPluginRemoval.mockRejectedValue(
-          new PluginDistributionNotFoundError({ distributionId }),
-        );
-
-        await expect(
-          controller.cancelPluginRemoval(
-            organizationId,
-            marketplaceId,
-            distributionId,
-            baseRequest,
-          ),
-        ).rejects.toMatchObject({
-          constructor: NotFoundException,
-          message:
-            'The marketplace plugin distribution "666666*" could not be found. It may have already been removed.',
-        });
-      });
-
-      it('maps PluginDistributionInvalidStateError to ConflictException (409) without leaking the distribution UUID', async () => {
-        mockDeploymentAdapter.cancelPluginRemoval.mockRejectedValue(
-          new PluginDistributionInvalidStateError(
-            distributionId,
-            DistributionStatus.success,
-            [DistributionStatus.to_be_removed],
-          ),
-        );
-
-        await expect(
-          controller.cancelPluginRemoval(
-            organizationId,
-            marketplaceId,
-            distributionId,
-            baseRequest,
-          ),
-        ).rejects.toMatchObject({
-          constructor: ConflictException,
-          message:
-            'The marketplace plugin distribution "666666*" is in status "success" but the operation requires one of [to_be_removed].',
-        });
-      });
-
-      it('maps OrganizationAdminRequiredError to ForbiddenException (403) for non-admin cancel attempts', async () => {
-        mockDeploymentAdapter.cancelPluginRemoval.mockRejectedValue(
-          new OrganizationAdminRequiredError({ userId, organizationId }),
-        );
-
-        await expect(
-          controller.cancelPluginRemoval(
-            organizationId,
-            marketplaceId,
-            distributionId,
-            baseRequest,
-          ),
-        ).rejects.toBeInstanceOf(ForbiddenException);
-      });
-
-      it('rethrows unknown errors unchanged', async () => {
-        const original = new Error('boom');
-        mockDeploymentAdapter.cancelPluginRemoval.mockRejectedValue(original);
-
-        await expect(
-          controller.cancelPluginRemoval(
-            organizationId,
-            marketplaceId,
-            distributionId,
-            baseRequest,
-          ),
-        ).rejects.toBe(original);
       });
     });
   });

@@ -116,26 +116,6 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
 
     const { distribution, marketplace } = await this.loadContext(input);
 
-    // A removal cancelled before the commit landed clears `removalRequestedAt`
-    // while the status is still `success`/`pending_merge` (the manual flow
-    // never flips the status — this job does, once the commit lands). Detect
-    // that race and abort without committing so a cancelled removal never
-    // reaches the repo. Scoped to those statuses: the package-deletion cascade
-    // pre-flips its rows to `to_be_removed` before enqueuing, so this guard
-    // never short-circuits a cascade-driven removal (which carries no
-    // `removalRequestedAt` marker).
-    if (
-      (distribution.status === DistributionStatus.success ||
-        distribution.status === DistributionStatus.pending_merge) &&
-      !distribution.removalRequestedAt
-    ) {
-      this.logger.info(
-        `[${this.origin}] Removal for distribution ${input.marketplaceDistributionId} was cancelled before the commit landed — skipping`,
-        { marketplaceId: input.marketplaceId },
-      );
-      return;
-    }
-
     // The distribution stores the plugin slug captured at publish time
     // (`pluginSlug === package.slug`), so we never need the package itself —
     // critical for the package-deletion cascade where the package is gone.

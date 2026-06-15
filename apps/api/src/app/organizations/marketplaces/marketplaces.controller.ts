@@ -21,8 +21,6 @@ import {
   OrganizationAdminRequiredError,
 } from '@packmind/node-utils';
 import {
-  CancelPluginRemovalCommand,
-  CancelPluginRemovalResponse,
   GitProviderId,
   GitProviderMissingTokenError,
   GitProviderNotFoundError,
@@ -573,63 +571,6 @@ export class MarketplacesController {
           organizationId,
           marketplaceId,
           packageId,
-          error: errorMessage,
-        },
-      );
-      throw this.mapError(error);
-    }
-  }
-
-  @Delete(':marketplaceId/distributions/:distributionId/removal')
-  async cancelPluginRemoval(
-    @Param('orgId') organizationId: OrganizationId,
-    @Param('marketplaceId') marketplaceId: MarketplaceId,
-    @Param('distributionId') distributionId: MarketplaceDistributionId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<CancelPluginRemovalResponse> {
-    const userId = request.user.userId;
-
-    this.logger.info(
-      'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Cancelling plugin removal',
-      {
-        organizationId,
-        marketplaceId,
-        distributionId,
-        addedBy: maskIdentifier(userId),
-      },
-    );
-
-    try {
-      const command: CancelPluginRemovalCommand = {
-        userId,
-        organizationId,
-        marketplaceId,
-        distributionId,
-        source: request.clientSource,
-      };
-
-      const response =
-        await this.deploymentAdapter.cancelPluginRemoval(command);
-
-      this.logger.info(
-        'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Plugin removal cancelled',
-        {
-          organizationId,
-          marketplaceId,
-          distributionId,
-        },
-      );
-
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/removal - Failed to cancel plugin removal',
-        {
-          organizationId,
-          marketplaceId,
-          distributionId,
           error: errorMessage,
         },
       );

@@ -41,14 +41,12 @@ import {
   LuTriangleAlert,
 } from 'react-icons/lu';
 import {
-  useCancelPluginRemoval,
   useMarkPluginForRemovalByDistribution,
   useMarketplaceDistributions,
   useSyncMarketplaceNow,
 } from '../api/queries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { RemovePluginButton } from './RemovePluginButton';
-import { CancelRemovalButton } from './CancelRemovalButton';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
 import { PluginOverviewTab } from './PluginOverviewTab';
 
@@ -454,7 +452,6 @@ function PluginDetailPane({
     organizationId,
     marketplaceId,
   );
-  const cancelMutation = useCancelPluginRemoval(organizationId, marketplaceId);
   const [tab, setTab] = useState<DetailTabId>('overview');
 
   const pendingRemoval =
@@ -522,19 +519,6 @@ function PluginDetailPane({
                     isMarking={
                       markMutation.isPending &&
                       (markMutation.variables as MarketplaceDistributionId) ===
-                        distribution.id
-                    }
-                  />
-                )}
-                {pendingRemoval && (
-                  <CancelRemovalButton
-                    pluginSlug={distribution.pluginSlug}
-                    packageName={distribution.packageName}
-                    marketplaceName={marketplaceName}
-                    onCancel={() => cancelMutation.mutate(distribution.id)}
-                    isCancelling={
-                      cancelMutation.isPending &&
-                      (cancelMutation.variables as MarketplaceDistributionId) ===
                         distribution.id
                     }
                   />

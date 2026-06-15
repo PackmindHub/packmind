@@ -26,8 +26,7 @@ const origin = 'ListMarketplaceDistributionsUseCase';
  * display name of the author who originally published the plugin.
  *
  * Open to any organization member — admin permissions are not required for
- * reads (admin-only mutations live in `MarkPluginForRemovalUseCase` /
- * `CancelPluginRemovalUseCase`).
+ * reads (admin-only mutations live in `MarkPluginForRemovalUseCase`).
  *
  * Flow:
  *  1. Validate the marketplace belongs to the caller's organization.

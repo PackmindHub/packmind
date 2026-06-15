@@ -251,29 +251,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
     });
   });
 
-  describe('when the removal was cancelled before the commit landed', () => {
-    beforeEach(async () => {
-      // Cancel in the pending window clears removalRequestedAt while the status
-      // is still `success` (the deletion never reached the sync branch).
-      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
-        ...distribution,
-        status: DistributionStatus.success,
-        removalRequestedAt: null,
-      });
-      await job.runJob('job-cancelled', input, new AbortController());
-    });
-
-    it('does not commit the deletion to the sync branch', () => {
-      expect(mockGitPort.commitToGit).not.toHaveBeenCalled();
-    });
-
-    it('does not flip the status', () => {
-      expect(
-        mockMarketplaceDistributionRepository.updateStatus,
-      ).not.toHaveBeenCalled();
-    });
-  });
-
   describe('when the distribution is a pending_merge publish marked for removal', () => {
     beforeEach(async () => {
       mockMarketplaceDistributionRepository.findById.mockResolvedValue({
@@ -298,27 +275,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       ).toHaveBeenCalledWith(marketplaceDistributionId, {
         status: DistributionStatus.to_be_removed,
       });
-    });
-  });
-
-  describe('when a pending_merge removal was cancelled before the commit landed', () => {
-    beforeEach(async () => {
-      mockMarketplaceDistributionRepository.findById.mockResolvedValue({
-        ...distribution,
-        status: DistributionStatus.pending_merge,
-        removalRequestedAt: null,
-      });
-      await job.runJob('job-pending-cancelled', input, new AbortController());
-    });
-
-    it('does not commit the deletion to the sync branch', () => {
-      expect(mockGitPort.commitToGit).not.toHaveBeenCalled();
-    });
-
-    it('does not flip the status', () => {
-      expect(
-        mockMarketplaceDistributionRepository.updateStatus,
-      ).not.toHaveBeenCalled();
     });
   });
 

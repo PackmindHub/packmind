@@ -44,8 +44,6 @@ import {
   IListActiveDistributedPackagesBySpaceUseCase,
   FindMarketplaceDistributionByIdCommand,
   FindMarketplaceDistributionByIdResponse,
-  CancelPluginRemovalCommand,
-  CancelPluginRemovalResponse,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListActiveDistributedPackagesBySpaceCommand,
@@ -728,19 +726,6 @@ export interface IDeploymentPort {
   markPluginForRemoval(
     command: MarkPluginForRemovalCommand,
   ): Promise<MarkPluginForRemovalResponse>;
-
-  /**
-   * Cancels a previously initiated plugin removal, reverting the target
-   * distribution from `to_be_removed` back to `success`.
-   *
-   * Admin-only. No domain event is emitted.
-   *
-   * @param command - Command containing the marketplace id and distribution id
-   * @returns Promise resolving to the mutated distribution row
-   */
-  cancelPluginRemoval(
-    command: CancelPluginRemovalCommand,
-  ): Promise<CancelPluginRemovalResponse>;
 
   /**
    * Runs an immediate, on-demand reconciliation of a single marketplace and

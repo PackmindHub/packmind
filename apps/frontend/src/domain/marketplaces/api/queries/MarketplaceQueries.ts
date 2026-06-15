@@ -311,40 +311,6 @@ export const useMarkPluginForRemovalByPackage = (
   });
 };
 
-// Mutation hook: cancels a pending plugin removal, reverting the distribution
-// back to `success`.
-export const useCancelPluginRemoval = (
-  organizationId: OrganizationId | string,
-  marketplaceId: MarketplaceId | string,
-) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (distributionId: MarketplaceDistributionId) =>
-      marketplaceGateway.cancelPluginRemoval(
-        organizationId as OrganizationId,
-        marketplaceId as MarketplaceId,
-        distributionId,
-      ),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: marketplaceQueryKeys.distributions(),
-      });
-      pmToaster.success({
-        title: 'Removal cancelled',
-        description: 'The plugin stays published on the marketplace.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error cancelling plugin removal:', error);
-      pmToaster.error({
-        title: 'Could not cancel removal',
-        description: 'Please refresh the list and try again.',
-      });
-    },
-  });
-};
-
 // Mutation hook: triggers an immediate marketplace reconciliation ("Sync now").
 // Refreshes both the marketplace list (state badge + drift panel) and the
 // distributions list (so merged deletions flip `to_be_removed` → `removed`

@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import type {
-  CancelPluginRemovalResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistribution,
   MarketplaceDistributionId,
@@ -15,7 +14,6 @@ import { marketplaceGateway } from '../gateways';
 import {
   marketplaceQueries,
   marketplaceQueryKeys,
-  useCancelPluginRemoval,
   useMarkPluginForRemovalByDistribution,
   useMarkPluginForRemovalByPackage,
 } from './MarketplaceQueries';
@@ -29,7 +27,6 @@ jest.mock('../gateways', () => ({
     listDistributions: jest.fn(),
     markPluginForRemovalByDistribution: jest.fn(),
     markPluginForRemovalByPackage: jest.fn(),
-    cancelPluginRemoval: jest.fn(),
   },
 }));
 
@@ -41,7 +38,6 @@ const mockGateway = marketplaceGateway as unknown as {
   listDistributions: jest.Mock;
   markPluginForRemovalByDistribution: jest.Mock;
   markPluginForRemovalByPackage: jest.Mock;
-  cancelPluginRemoval: jest.Mock;
 };
 
 const orgId = 'org-1' as OrganizationId;
@@ -65,10 +61,6 @@ const stubDistribution: MarketplaceDistribution = {
 
 const stubMarkResponse: MarkPluginForRemovalResponse = {
   distribution: stubDistribution,
-};
-
-const stubCancelResponse: CancelPluginRemovalResponse = {
-  distribution: { ...stubDistribution, status: 'success' as never },
 };
 
 const stubListResponse: ListMarketplaceDistributionsResponse = [];
@@ -222,41 +214,6 @@ describe('useMarkPluginForRemovalByPackage', () => {
       });
       expect(hasDistributions).toBe(true);
       expect(hasPackageDetailInvalidation).toBe(true);
-    });
-  });
-});
-
-describe('useCancelPluginRemoval', () => {
-  beforeEach(() => {
-    mockGateway.cancelPluginRemoval.mockResolvedValue(stubCancelResponse);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('calls the gateway and invalidates distributions on success', async () => {
-    const client = createClient();
-    const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
-
-    const { result } = renderHook(
-      () => useCancelPluginRemoval(orgId, marketplaceId),
-      { wrapper: createWrapper(client) },
-    );
-
-    await act(async () => {
-      await result.current.mutateAsync(distributionId);
-    });
-
-    expect(mockGateway.cancelPluginRemoval).toHaveBeenCalledWith(
-      orgId,
-      marketplaceId,
-      distributionId,
-    );
-    await waitFor(() => {
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: marketplaceQueryKeys.distributions(),
-      });
     });
   });
 });

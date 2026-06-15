@@ -1,5 +1,4 @@
 import {
-  CancelPluginRemovalCommand,
   ListMarketplaceDistributionsCommand,
   MarkPluginForRemovalCommand,
   RenderPackageAsPluginCommand,
@@ -138,50 +137,6 @@ describe('DeploymentsAdapter', () => {
     });
 
     it('delegates to MarkPluginForRemovalUseCase with the command', () => {
-      expect(execute).toHaveBeenCalledWith(command);
-    });
-
-    it('returns the use case response', () => {
-      expect(result).toBe(response);
-    });
-  });
-
-  describe('cancelPluginRemoval', () => {
-    const response = { distribution: { id: 'd1' } } as never;
-    let execute: jest.Mock;
-    let adapter: DeploymentsAdapter;
-    let command: CancelPluginRemovalCommand;
-    let result: typeof response;
-
-    beforeEach(async () => {
-      execute = jest.fn().mockResolvedValue(response);
-
-      adapter = new DeploymentsAdapter(
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-      );
-      (
-        adapter as unknown as {
-          _cancelPluginRemovalUseCase: { execute: typeof execute };
-        }
-      )._cancelPluginRemovalUseCase = { execute };
-
-      command = {
-        userId: 'u',
-        organizationId: 'o',
-        marketplaceId: 'm',
-        distributionId: 'd1',
-      } as CancelPluginRemovalCommand;
-
-      result = await adapter.cancelPluginRemoval(command);
-    });
-
-    it('delegates to CancelPluginRemovalUseCase with the command', () => {
       expect(execute).toHaveBeenCalledWith(command);
     });
 
