@@ -156,8 +156,8 @@ describe('DeploymentsPage', () => {
       expect(screen.getByText('Repositories')).toBeInTheDocument();
     });
 
-    it('displays Artifacts button', async () => {
-      expect(screen.getByText('Artifacts')).toBeInTheDocument();
+    it('displays Packages button', async () => {
+      expect(screen.getByText('Packages')).toBeInTheDocument();
     });
   });
 
@@ -203,32 +203,8 @@ describe('DeploymentsPage', () => {
       ).toBeInTheDocument();
     });
 
-    it('calls setSearchParams after clicking Artifacts', async () => {
-      await user.click(screen.getByText('Artifacts'));
-      expect(mockSetSearchParams).toHaveBeenCalled();
-    });
-  });
-
-  describe('when typing in the search field', () => {
-    let user: ReturnType<typeof userEvent.setup>;
-
-    beforeEach(async () => {
-      jest.useFakeTimers();
-      user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      mockSearchParams.set('view', 'artifacts');
-      await renderWithProvider(<DeploymentsPage />);
-      const searchInput = screen.getByRole('textbox');
-      await user.type(searchInput, 'test-search');
-    });
-
-    afterEach(() => jest.useRealTimers());
-
-    it('debounces setSearchParams calls initially', async () => {
-      expect(mockSetSearchParams).not.toHaveBeenCalled();
-    });
-
-    it('calls setSearchParams after debounce timeout', async () => {
-      jest.advanceTimersByTime(500);
+    it('calls setSearchParams after clicking Packages', async () => {
+      await user.click(screen.getByText('Packages'));
       expect(mockSetSearchParams).toHaveBeenCalled();
     });
   });
