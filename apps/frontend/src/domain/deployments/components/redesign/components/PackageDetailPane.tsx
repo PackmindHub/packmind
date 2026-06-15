@@ -226,7 +226,7 @@ export function PackageDetailPane({
   }, [driftedKeys, selectedKeys, lockByKey]);
 
   return (
-    <PMVStack gap={0} align="stretch" minH={0}>
+    <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
         paddingX={6}
         paddingY={5}
