@@ -13,21 +13,31 @@ Defined by `docker-compose.yml` at the repo root. Every service runs from the ba
 
 ### What is reachable from the host — read this before you `curl` anything
 
-**Only these ports are published to the host:** `4200` (frontend), `443` (nginx), `5432` (postgres), `6379` (redis), `2345` (pgAdmin). The `backend` and `mcp-server` containers have **no `ports:` mapping** — their ports (`3000` and `3001`) exist only inside the compose network. **`curl localhost:3000` always fails from the host. This is the #1 runtime trap — do not fall into it.**
+**Only these ports are published to the host:** the **frontend** (`4200` in OSS, **`4201` in proprietary** — see below), `443` (nginx), `5432` (postgres), `6379` (redis), `2345` (pgAdmin). The `backend` and `mcp-server` containers have **no `ports:` mapping** — their ports (`3000` and `3001`) exist only inside the compose network. **`curl localhost:3000` always fails from the host. This is the #1 runtime trap — do not fall into it.**
 
-You reach the API and MCP from the host **through the frontend**: the Vite dev server on `:4200` proxies `/api` → `backend:3000` and `/mcp` → `mcp-server:3001` (see `apps/frontend/vite.config.ts`). nginx on `:443` proxies everything to the frontend, so it works through `:443` too.
+#### Resolve the frontend host port — never hardcode `4200`
 
-| Service                      | How to reach it from the host                                   | Notes                                                             |
-| ---------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `frontend` (React/Vite)      | <http://localhost:4200>                                         | the dev UI                                                        |
-| `backend` (NestJS API)       | <http://localhost:4200/api/v0> (Vite proxy) — **never** `:3000` | container-internal port is `3000`; API base path is `/api/v0`     |
-| `mcp-server`                 | <http://localhost:4200/mcp> (Vite proxy) — **never** `:3001`    | container-internal port is `3001`                                 |
-| `nginx` (HTTPS, self-signed) | <https://localhost:443>                                         | TLS front for the frontend; `/api` and `/mcp` work through it too |
-| `postgres`                   | `localhost:5432`                                                | `postgres` / `postgres`, db `packmind`                            |
-| `redis`                      | `localhost:6379`                                                | BullMQ + cache                                                    |
-| `pgadmin` (`dev` profile)    | <http://localhost:2345>                                         | `admin@pgadmin.com` / `password`                                  |
+The host-published frontend port **differs by edition**: `4200` for OSS, **`4201` for proprietary** (`docker-compose.yml` maps `4201:4200` there so a proprietary stack can run beside an OSS one without a clash). The **container-internal port is always `4200`** — so the Vite proxy, healthchecks, and e2e (`frontend:4200`) inside the compose network never change. Only the host port does. Ask compose for the real mapping instead of assuming; this is correct for either edition:
 
-In short: **from the host, hit the API at `localhost:4200/api/v0`, not `localhost:3000`.** Use `localhost:3000` / `backend:3000` only from _inside_ a container on the compose network.
+```bash
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # → 4200 (oss) or 4201 (proprietary)
+```
+
+**Every host-side `curl`/URL below uses `localhost:$PM_WEB`.** Resolve `PM_WEB` once after `up -d` (the container must exist for `port` to report the mapping) and reuse it.
+
+You reach the API and MCP from the host **through the frontend**: the Vite dev server (container port `:4200`) proxies `/api` → `backend:3000` and `/mcp` → `mcp-server:3001` (see `apps/frontend/vite.config.ts`). nginx on `:443` proxies everything to the frontend, so it works through `:443` too.
+
+| Service                      | How to reach it from the host                                      | Notes                                                             |
+| ---------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `frontend` (React/Vite)      | `http://localhost:$PM_WEB`                                         | the dev UI (`$PM_WEB` = 4200 oss / 4201 proprietary)              |
+| `backend` (NestJS API)       | `http://localhost:$PM_WEB/api/v0` (Vite proxy) — **never** `:3000` | container-internal port is `3000`; API base path is `/api/v0`     |
+| `mcp-server`                 | `http://localhost:$PM_WEB/mcp` (Vite proxy) — **never** `:3001`    | container-internal port is `3001`                                 |
+| `nginx` (HTTPS, self-signed) | <https://localhost:443>                                            | TLS front for the frontend; `/api` and `/mcp` work through it too |
+| `postgres`                   | `localhost:5432`                                                   | `postgres` / `postgres`, db `packmind`                            |
+| `redis`                      | `localhost:6379`                                                   | BullMQ + cache                                                    |
+| `pgadmin` (`dev` profile)    | <http://localhost:2345>                                            | `admin@pgadmin.com` / `password`                                  |
+
+In short: **from the host, hit the API at `localhost:$PM_WEB/api/v0`, not `localhost:3000`.** Use `localhost:3000` / `backend:3000` only from _inside_ a container on the compose network.
 
 Two **init services** run once on each `up` and then exit — the long-running services wait on them:
 
@@ -63,18 +73,19 @@ Plain `docker compose up -d` (no profile) also works — it skips nx-daemon and 
 docker compose logs -f backend frontend
 ```
 
-**`up -d` returns before anything is serving.** Always poll readiness before depending on the stack — and poll the API **through the frontend proxy on `:4200`**, never `:3000` (not host-exposed):
+**`up -d` returns before anything is serving.** Always poll readiness before depending on the stack — and poll the API **through the frontend proxy** (host port `$PM_WEB`), never `:3000` (not host-exposed):
 
 ```bash
-until curl -sf localhost:4200 >/dev/null; do sleep 1; done          # frontend ready
-until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done   # API ready (Vite proxy → backend:3000)
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"            # 4200 oss / 4201 proprietary
+until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 1; done          # frontend ready
+until curl -sf "localhost:$PM_WEB/api/v0" >/dev/null; do sleep 1; done   # API ready (Vite proxy → backend:3000)
 ```
 
 Connection-refused = not up yet (still installing/migrating/building). Give first boot several minutes.
 
 **How to wait, for autonomous agents — this has lost real runs:**
 
-- A long bare `sleep` (e.g. `sleep 30 && curl …`) is **blocked by the agent harness**. Wait with a condition-gated loop instead — a short `sleep` _inside_ an `until` loop is allowed: `until curl -sf localhost:4200 >/dev/null; do sleep 2; done`.
+- A long bare `sleep` (e.g. `sleep 30 && curl …`) is **blocked by the agent harness**. Wait with a condition-gated loop instead — a short `sleep` _inside_ an `until` loop is allowed: `until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 2; done`.
 - Run that readiness loop **in the foreground and stay in your turn until it completes**. If you run it as a background task and then end your turn "waiting to be notified", a one-shot headless session (e.g. a Michel run via `claude --print`) **terminates at your final message** — the notification never arrives, and whatever you postponed until "the stack is ready" (screenshots, verification, teardown) silently never happens. A real run shipped a PR with zero of its required screenshots exactly this way. Slow cold build = keep looping, not yield.
 
 ### Frontend troubleshooting (two real frictions)
@@ -83,12 +94,12 @@ The frontend is the flakiest service on first boot. Two failure modes seen in pr
 
 - **`frontend` exits with `Failed to reconnect to daemon after multiple attempts` (status 1).**
   The `nx-daemon` socket dropped and the `frontend:dev` task — being "continuous" — died with it,
-  so the container leaves the `ps` list and `curl localhost:4200` refuses. The other services stay
+  so the container leaves the `ps` list and `curl localhost:$PM_WEB` refuses. The other services stay
   up. Check with `docker compose ps -a | grep front` (look for `Exited (1)`), then just restart it:
 
   ```bash
   docker compose --profile dev up -d frontend
-  until curl -sf localhost:4200 >/dev/null; do sleep 2; done
+  until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 2; done
   ```
 
 - **Page stuck on "Loading Packmind…", console flooded with `net::ERR_NETWORK_CHANGED`.**
@@ -97,6 +108,30 @@ The frontend is the flakiest service on first boot. Two failure modes seen in pr
   It is transient and not a code error. **Just reload the page** once Vite has finished optimizing
   (`docker compose logs frontend` shows `[optimizer] bundling dependencies...` → done). A hard
   reload / re-navigate clears it.
+
+### When a native addon won't load (libc) — reset, don't dissect
+
+A `run-migrations`/`backend` crash citing `@swc/core`, an `nx` native binding, a
+`*.node` file, `GLIBC_`, `Error relocating`, or `musl` is a **dependency/libc
+problem, not a code bug** — and it has a one-line fix. Do **not** go spelunking
+in the binaries; a real run once burned ~90 minutes doing exactly that.
+
+```bash
+docker compose --profile dev down -v && docker compose --profile dev up -d
+```
+
+- **Reset first.** `down -v` drops the `dev-node_modules` volume; the next `up`
+  re-installs every native addon for the running container's libc. This is the fix.
+- **Never `readelf`/`ldd`/`od`/grep `binding.js`** to "diagnose" the `.node` file. It
+  tells you nothing actionable here.
+- **Never hand-roll `docker run` to replace a compose service.** Under the Michel
+  override the stack runs on **glibc** (`node:24.15.0-trixie-slim`); a manual
+  `node:*-alpine` (musl) container is the **wrong libc** and fails to load every
+  native addon — that error is self-inflicted, not the stack's. If you truly need a
+  one-off, use `node:24.15.0-trixie-slim` with the same volumes/env as compose.
+- **Never edit application source to make the stack boot.** A DI error / missing
+  provider that shows up only under a hand-rolled or half-started boot is an artifact
+  of the wrong boot path — the reset above makes it disappear. Don't "fix" it in code.
 
 ### Re-running migrations
 
@@ -135,7 +170,7 @@ Enforced in `SignUpWithOrganizationUseCase.validatePassword()`; violations throw
 Create the account + org in one call from a script — the signup endpoint is public and the org name is derived from the email:
 
 ```bash
-curl -s -X POST localhost:4200/api/v0/auth/signup \
+curl -s -X POST "localhost:$PM_WEB/api/v0/auth/signup" \
   -H 'Content-Type: application/json' \
   -d '{"email":"michel@packmind-demo.com","password":"Packmind!Demo#2026","method":"password"}'
 ```
@@ -167,30 +202,33 @@ Use `down` (volumes preserved) by default. Reach for `down -v` only when you spe
 
 ## Quick reference
 
-| Goal                            | Command                                                               |
-| ------------------------------- | --------------------------------------------------------------------- |
-| Resolve + export the edition    | `export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"` |
-| Start in background             | `docker compose --profile dev up -d`                                  |
-| Watch boot logs                 | `docker compose logs -f backend frontend`                             |
-| Confirm frontend serving        | `until curl -sf localhost:4200 >/dev/null; do sleep 1; done`          |
-| Confirm API serving (via proxy) | `until curl -sf localhost:4200/api/v0 >/dev/null; do sleep 1; done`   |
-| Re-run migrations               | `docker compose up run-migrations`                                    |
-| Build the CLI                   | `npm run packmind-cli:build`                                          |
-| Stop (keep data)                | `docker compose --profile dev down`                                   |
-| Stop + wipe all volumes         | `docker compose --profile dev down -v`                                |
+| Goal                            | Command                                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Resolve + export the edition    | `export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"`                          |
+| Start in background             | `docker compose --profile dev up -d`                                                           |
+| Watch boot logs                 | `docker compose logs -f backend frontend`                                                      |
+| Resolve the frontend host port  | `PM_WEB="$(docker compose port frontend 4200 \| sed 's#.*:##')"` (4200 oss / 4201 proprietary) |
+| Confirm frontend serving        | `until curl -sf "localhost:$PM_WEB" >/dev/null; do sleep 1; done`                              |
+| Confirm API serving (via proxy) | `until curl -sf "localhost:$PM_WEB/api/v0" >/dev/null; do sleep 1; done`                       |
+| Re-run migrations               | `docker compose up run-migrations`                                                             |
+| Build the CLI                   | `npm run packmind-cli:build`                                                                   |
+| Stop (keep data)                | `docker compose --profile dev down`                                                            |
+| Stop + wipe all volumes         | `docker compose --profile dev down -v`                                                         |
 
 ## Gotchas, condensed
 
 - **`export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"`** — resolve it from the git remote once, before any compose command. Never hardcode `oss`; the proprietary repo must come up as `proprietary`, and `up`/`down` must agree.
-- **Port 3000 is NOT exposed to the host.** `curl localhost:3000` always refuses the connection — the `backend` container has no `ports:` mapping. From the host, reach the API at **`localhost:4200/api/v0`** (Vite proxy) or via nginx `https://localhost:443`. Likewise the MCP server is only at `localhost:4200/mcp`, never `localhost:3001`. Use `:3000`/`:3001` only from inside a container on the compose network.
-- **`up -d` ≠ ready.** Poll `:4200` (frontend) and `:4200/api/v0` (API via proxy) before depending on the stack. First boot takes minutes (install + migrate + cold build).
+- **Frontend host port is edition-dependent — never hardcode `4200`.** `4200` (OSS) vs **`4201` (proprietary)**; container-internal is always `4200`. Resolve it once: `PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"`, then use `localhost:$PM_WEB`. A run probing `:4200` on proprietary waits on a port nothing serves.
+- **Port 3000 is NOT exposed to the host.** `curl localhost:3000` always refuses the connection — the `backend` container has no `ports:` mapping. From the host, reach the API at **`localhost:$PM_WEB/api/v0`** (Vite proxy) or via nginx `https://localhost:443`. Likewise the MCP server is only at `localhost:$PM_WEB/mcp`, never `localhost:3001`. Use `:3000`/`:3001` only from inside a container on the compose network.
+- **`up -d` ≠ ready.** Poll `:$PM_WEB` (frontend) and `:$PM_WEB/api/v0` (API via proxy) before depending on the stack. First boot takes minutes (install + migrate + cold build).
 - **Wait in the foreground, inside your turn.** Bare long `sleep`s are harness-blocked; use `until curl -sf …; do sleep 2; done` and stay in the loop until it exits. Never end your turn expecting a background readiness task to wake you — in a one-shot headless session it won't, and everything you postponed is lost. See "How to wait" above.
 - **No app image build.** Source is bind-mounted and hot-reloads; `--build` is almost never needed. Don't reach for it the way you would on an image-based stack.
 - **`dev-postgres-data` outlives `down`.** Stale rows and applied-migration state from a prior run cause phantom data during verification. `down -v` for a true clean slate (and a slow re-boot).
 - **`dev-node_modules` is a volume too.** Dependency changes are picked up by re-running `install-dependencies` (re-`up`); a `down -v` forces a full reinstall.
 - **MCP server has no host port.** It's reachable only from inside the compose network (e.g. by the frontend), not from your host via `localhost`.
-- **Frontend can die on its own after a clean boot.** `Failed to reconnect to daemon` kills the continuous `frontend:dev` task → container `Exited (1)`, `localhost:4200` refuses. Restart just that service: `docker compose --profile dev up -d frontend`.
+- **Frontend can die on its own after a clean boot.** `Failed to reconnect to daemon` kills the continuous `frontend:dev` task → container `Exited (1)`, `localhost:$PM_WEB` refuses. Restart just that service: `docker compose --profile dev up -d frontend`.
 - **"Loading Packmind…" forever + `ERR_NETWORK_CHANGED` spam = transient cold-Vite hiccup, not a bug.** Reload the page after the optimizer finishes bundling. Don't go debugging the app.
+- **Native-addon / libc errors (`@swc/core`, `nx` native, `*.node`, `GLIBC_`, `musl`) → reset, don't dissect.** `docker compose --profile dev down -v && docker compose --profile dev up -d`. The stack is glibc (`trixie-slim`); never reproduce in a manual `node:*-alpine` container (wrong libc), and never edit app code to make it boot. See "When a native addon won't load" above.
 - **The API base is `/api/v0`**, not `/api`. Health check and all calls hang off that prefix.
 - **Sign-up password policy is enforced server-side.** The signup API rejects any password under 8 chars or with fewer than 2 non-alphanumeric chars — with a raw error, not a hint, so a weak password looks like a silent failure. Use one like `Packmind!Demo#2026`. See "Creating the first account".
 - **Never leave it running.** If you brought it up, `docker compose --profile dev down` before finishing — lingering containers block completion.

@@ -67,18 +67,19 @@ Use `ToolSearch` for `mcp__playwright__browser_start_video`. The video tools bel
 
 ### 3. Get the app running — from a clean volume
 
-See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on **:3000**, React/Vite frontend on **:4200**, MCP server). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
+See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on container port **:3000**, React/Vite frontend on container port **:4200**, MCP server). Those are **container-internal** ports — from the host the API is reached only through the frontend's Vite proxy, and the frontend's **host** port is edition-dependent (`4200` OSS / `4201` proprietary). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
 
 ```bash
 export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
 docker compose down -v && docker compose up -d --build
-# wait for the API (it runs migrations on boot — this can take a minute on a cold build)
-until curl -sf localhost:3000/api/v0 >/dev/null; do sleep 1; done
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # host port: 4200 oss / 4201 proprietary
+# wait for the API via the Vite proxy (NOT :3000 — that container port is not host-exposed)
+until curl -sf "localhost:$PM_WEB/api/v0" >/dev/null; do sleep 1; done
 # then wait for the frontend you'll actually record
-until curl -sf localhost:4200/ >/dev/null; do sleep 1; done
+until curl -sf "localhost:$PM_WEB/" >/dev/null; do sleep 1; done
 ```
 
-The frontend you record lives at **<http://localhost:4200>** — navigate there, not at the API port.
+The frontend you record lives at **`http://localhost:$PM_WEB`** (4200 OSS / 4201 proprietary) — navigate there, not at the API port.
 
 On a freshly wiped database there is no account, so the first screen is the **sign-up / login** page. Create an account (or seed via the API) before recording the feature, otherwise the demo is just the auth screen. If a populated workspace matters, seed it via the UI or the API after the stack is up — do not record over stale state.
 

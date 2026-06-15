@@ -1,12 +1,16 @@
-import type {
-  ActiveDistributedPackage,
-  ActiveDistributedPackagesByTarget,
-  DeployedRecipeTargetInfo,
-  DeployedSkillTargetInfo,
-  DeployedStandardTargetInfo,
-  GitRepo,
-  PackageId,
-  Target,
+import {
+  DistributionStatus,
+  type ActiveDistributedPackage,
+  type ActiveDistributedPackagesByTarget,
+  type DeployedRecipeTargetInfo,
+  type DeployedSkillTargetInfo,
+  type DeployedStandardTargetInfo,
+  type GitRepo,
+  type PackageId,
+  type PendingRecipeInfo,
+  type PendingSkillInfo,
+  type PendingStandardInfo,
+  type Target,
 } from '@packmind/types';
 
 import type {
@@ -25,6 +29,8 @@ type ArtifactAccumulator = {
   kind: ArtifactKind;
   name: string;
   packmindVersion: number;
+  isDeleted: boolean;
+  isPending: boolean;
   installs: RepoInstall[];
 };
 
@@ -43,6 +49,7 @@ function toRepoRef(gitRepo: GitRepo): RepoRef {
     id: gitRepo.id,
     owner: gitRepo.owner,
     name: gitRepo.repo,
+    providerId: gitRepo.providerId,
   };
 }
 
@@ -81,6 +88,7 @@ function ensureArtifact(
   id: ArtifactId,
   name: string,
   packmindVersion: number,
+  flags: { isDeleted?: boolean; isPending?: boolean } = {},
 ): ArtifactAccumulator {
   const key = artifactKey(kind, id);
   const existing = pkg.artifacts.get(key);
@@ -88,6 +96,8 @@ function ensureArtifact(
     if (packmindVersion > existing.packmindVersion) {
       existing.packmindVersion = packmindVersion;
     }
+    if (flags.isDeleted) existing.isDeleted = true;
+    if (flags.isPending === false) existing.isPending = false;
     return existing;
   }
   const created: ArtifactAccumulator = {
@@ -95,10 +105,22 @@ function ensureArtifact(
     kind,
     name,
     packmindVersion,
+    isDeleted: !!flags.isDeleted,
+    isPending: !!flags.isPending,
     installs: [],
   };
   pkg.artifacts.set(key, created);
   return created;
+}
+
+function deployedDriftReason(
+  isDeleted: boolean,
+  deployedVersion: number,
+  packmindVersion: number,
+): RepoInstall['driftReason'] {
+  if (isDeleted) return 'needs-removal';
+  if (deployedVersion < packmindVersion) return 'behind';
+  return 'aligned';
 }
 
 function pushStandard(
@@ -108,13 +130,14 @@ function pushStandard(
   target: TargetRef,
   branch: string,
 ): void {
-  if (info.isDeleted) return;
+  const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
     pkg,
     'standard',
     info.standard.id,
     info.standard.name,
     info.latestVersion.version,
+    { isDeleted, isPending: false },
   );
   artifact.installs.push({
     repo,
@@ -122,6 +145,11 @@ function pushStandard(
     branch,
     deployedVersion: info.deployedVersion.version,
     lastDeployedAt: info.deploymentDate,
+    driftReason: deployedDriftReason(
+      isDeleted,
+      info.deployedVersion.version,
+      info.latestVersion.version,
+    ),
   });
 }
 
@@ -132,13 +160,14 @@ function pushRecipe(
   target: TargetRef,
   branch: string,
 ): void {
-  if (info.isDeleted) return;
+  const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
     pkg,
     'command',
     info.recipe.id,
     info.recipe.name,
     info.latestVersion.version,
+    { isDeleted, isPending: false },
   );
   artifact.installs.push({
     repo,
@@ -146,6 +175,11 @@ function pushRecipe(
     branch,
     deployedVersion: info.deployedVersion.version,
     lastDeployedAt: info.deploymentDate,
+    driftReason: deployedDriftReason(
+      isDeleted,
+      info.deployedVersion.version,
+      info.latestVersion.version,
+    ),
   });
 }
 
@@ -156,13 +190,14 @@ function pushSkill(
   target: TargetRef,
   branch: string,
 ): void {
-  if (info.isDeleted) return;
+  const isDeleted = !!info.isDeleted;
   const artifact = ensureArtifact(
     pkg,
     'skill',
     info.skill.id,
     info.skill.name,
     info.latestVersion.version,
+    { isDeleted, isPending: false },
   );
   artifact.installs.push({
     repo,
@@ -170,6 +205,81 @@ function pushSkill(
     branch,
     deployedVersion: info.deployedVersion.version,
     lastDeployedAt: info.deploymentDate,
+    driftReason: deployedDriftReason(
+      isDeleted,
+      info.deployedVersion.version,
+      info.latestVersion.version,
+    ),
+  });
+}
+
+function pushPendingStandard(
+  pkg: PackageAccumulator,
+  info: PendingStandardInfo,
+  repo: RepoRef,
+  target: TargetRef,
+  branch: string,
+): void {
+  const artifact = ensureArtifact(pkg, 'standard', info.id, info.name, 0, {
+    isPending: true,
+  });
+  // Only mark as pending if no deployed install has registered first.
+  if (artifact.installs.length === 0 && !artifact.isDeleted) {
+    artifact.isPending = true;
+  }
+  artifact.installs.push({
+    repo,
+    target,
+    branch,
+    deployedVersion: 0,
+    lastDeployedAt: '',
+    driftReason: 'not-distributed',
+  });
+}
+
+function pushPendingRecipe(
+  pkg: PackageAccumulator,
+  info: PendingRecipeInfo,
+  repo: RepoRef,
+  target: TargetRef,
+  branch: string,
+): void {
+  const artifact = ensureArtifact(pkg, 'command', info.id, info.name, 0, {
+    isPending: true,
+  });
+  if (artifact.installs.length === 0 && !artifact.isDeleted) {
+    artifact.isPending = true;
+  }
+  artifact.installs.push({
+    repo,
+    target,
+    branch,
+    deployedVersion: 0,
+    lastDeployedAt: '',
+    driftReason: 'not-distributed',
+  });
+}
+
+function pushPendingSkill(
+  pkg: PackageAccumulator,
+  info: PendingSkillInfo,
+  repo: RepoRef,
+  target: TargetRef,
+  branch: string,
+): void {
+  const artifact = ensureArtifact(pkg, 'skill', info.id, info.name, 0, {
+    isPending: true,
+  });
+  if (artifact.installs.length === 0 && !artifact.isDeleted) {
+    artifact.isPending = true;
+  }
+  artifact.installs.push({
+    repo,
+    target,
+    branch,
+    deployedVersion: 0,
+    lastDeployedAt: '',
+    driftReason: 'not-distributed',
   });
 }
 
@@ -198,6 +308,16 @@ function sortInstallLocations(locations: InstallLocation[]): InstallLocation[] {
   });
 }
 
+function toDistributionStatus(
+  status: DistributionStatus | undefined | null,
+): DistributionStatus | null {
+  return status ?? null;
+}
+
+function toDistributionDate(date: string | undefined | null): string | null {
+  return date && date.length > 0 ? date : null;
+}
+
 export function buildPackageDriftOverview(
   byTarget: ActiveDistributedPackagesByTarget[],
 ): PackageDrift[] {
@@ -217,6 +337,10 @@ export function buildPackageDriftOverview(
         repo: repoRef,
         target: targetRef,
         branch,
+        lastDistributionStatus: toDistributionStatus(
+          active.lastDistributionStatus,
+        ),
+        lastDistributedAt: toDistributionDate(active.lastDistributedAt),
       });
       for (const s of active.deployedStandards)
         pushStandard(pkg, s, repoRef, targetRef, branch);
@@ -224,6 +348,12 @@ export function buildPackageDriftOverview(
         pushRecipe(pkg, r, repoRef, targetRef, branch);
       for (const k of active.deployedSkills)
         pushSkill(pkg, k, repoRef, targetRef, branch);
+      for (const s of active.pendingStandards)
+        pushPendingStandard(pkg, s, repoRef, targetRef, branch);
+      for (const r of active.pendingRecipes)
+        pushPendingRecipe(pkg, r, repoRef, targetRef, branch);
+      for (const k of active.pendingSkills)
+        pushPendingSkill(pkg, k, repoRef, targetRef, branch);
     }
   }
 
@@ -237,6 +367,8 @@ export function buildPackageDriftOverview(
         kind: a.kind,
         name: a.name,
         packmindVersion: a.packmindVersion,
+        isDeleted: a.isDeleted,
+        isPending: a.isPending,
         installs: [...a.installs],
       })),
     ),
@@ -246,7 +378,7 @@ export function buildPackageDriftOverview(
 
 export function packageHasDrift(pkg: PackageDrift): boolean {
   return pkg.artifacts.some((a) =>
-    a.installs.some((i) => i.deployedVersion < a.packmindVersion),
+    a.installs.some((i) => i.driftReason !== 'aligned'),
   );
 }
 
@@ -254,7 +386,7 @@ export function packageBehindInstallCount(pkg: PackageDrift): number {
   const behind = new Set<string>();
   for (const a of pkg.artifacts) {
     for (const i of a.installs) {
-      if (i.deployedVersion < a.packmindVersion) {
+      if (i.driftReason !== 'aligned') {
         behind.add(`${i.repo.id}:${i.target.id}`);
       }
     }
@@ -265,16 +397,28 @@ export function packageBehindInstallCount(pkg: PackageDrift): number {
 export function totalBehindInstallCount(packages: PackageDrift[]): number {
   let total = 0;
   for (const pkg of packages) {
-    const behindKeys = new Set<string>();
-    for (const a of pkg.artifacts) {
-      for (const i of a.installs) {
-        if (i.deployedVersion < a.packmindVersion) {
-          behindKeys.add(`${i.repo.id}:${i.target.id}`);
-        }
-      }
-    }
-    total += behindKeys.size;
+    total += packageBehindInstallCount(pkg);
   }
+  return total;
+}
+
+export function packageHasFailedDistribution(pkg: PackageDrift): boolean {
+  return pkg.installLocations.some(
+    (loc) => loc.lastDistributionStatus === DistributionStatus.failure,
+  );
+}
+
+export function packageFailedInstallCount(pkg: PackageDrift): number {
+  let n = 0;
+  for (const loc of pkg.installLocations) {
+    if (loc.lastDistributionStatus === DistributionStatus.failure) n++;
+  }
+  return n;
+}
+
+export function totalFailedInstallCount(packages: PackageDrift[]): number {
+  let total = 0;
+  for (const pkg of packages) total += packageFailedInstallCount(pkg);
   return total;
 }
 
