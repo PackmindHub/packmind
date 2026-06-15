@@ -50,6 +50,7 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { RemovePluginButton } from './RemovePluginButton';
 import { CancelRemovalButton } from './CancelRemovalButton';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
+import { PluginOverviewTab } from './PluginOverviewTab';
 
 export interface MarketplaceDetailLayoutProps {
   organizationId: OrganizationId | string;
@@ -438,6 +439,8 @@ interface PluginDetailPaneProps {
   version: string | null;
 }
 
+type DetailTabId = 'overview';
+
 function PluginDetailPane({
   distribution,
   marketplaceName,
@@ -452,6 +455,7 @@ function PluginDetailPane({
     marketplaceId,
   );
   const cancelMutation = useCancelPluginRemoval(organizationId, marketplaceId);
+  const [tab, setTab] = useState<DetailTabId>('overview');
 
   const pendingRemoval =
     !!distribution.removalRequestedAt ||
@@ -495,46 +499,114 @@ function PluginDetailPane({
 
         <VersionTrail version={version} isOutdated={isOutdated} />
 
-        <PMFeatureFlag
-          featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
-          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-          userEmail={user?.email}
-        >
-          <PMBox>
-            {removable && !pendingRemoval && (
-              <RemovePluginButton
-                pluginSlug={distribution.pluginSlug}
-                packageName={distribution.packageName}
-                marketplaceName={marketplaceName}
-                onMark={() => markMutation.mutate(distribution.id)}
-                isMarking={
-                  markMutation.isPending &&
-                  (markMutation.variables as MarketplaceDistributionId) ===
-                    distribution.id
-                }
-              />
-            )}
-            {pendingRemoval && (
-              <CancelRemovalButton
-                pluginSlug={distribution.pluginSlug}
-                packageName={distribution.packageName}
-                marketplaceName={marketplaceName}
-                onCancel={() => cancelMutation.mutate(distribution.id)}
-                isCancelling={
-                  cancelMutation.isPending &&
-                  (cancelMutation.variables as MarketplaceDistributionId) ===
-                    distribution.id
-                }
-              />
-            )}
-          </PMBox>
-        </PMFeatureFlag>
+        <DetailTabs active={tab} onChange={setTab} />
 
-        <PlaceholderBlock>
-          Curated version, repo adoption, and bundled artifacts will land here
-          as the backend exposes them.
-        </PlaceholderBlock>
+        {tab === 'overview' && (
+          <PMVStack gap={6} align="stretch">
+            <PluginOverviewTab
+              organizationId={organizationId}
+              packageSlug={distribution.packageSlug}
+            />
+            <PMFeatureFlag
+              featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
+              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+              userEmail={user?.email}
+            >
+              <PMBox>
+                {removable && !pendingRemoval && (
+                  <RemovePluginButton
+                    pluginSlug={distribution.pluginSlug}
+                    packageName={distribution.packageName}
+                    marketplaceName={marketplaceName}
+                    onMark={() => markMutation.mutate(distribution.id)}
+                    isMarking={
+                      markMutation.isPending &&
+                      (markMutation.variables as MarketplaceDistributionId) ===
+                        distribution.id
+                    }
+                  />
+                )}
+                {pendingRemoval && (
+                  <CancelRemovalButton
+                    pluginSlug={distribution.pluginSlug}
+                    packageName={distribution.packageName}
+                    marketplaceName={marketplaceName}
+                    onCancel={() => cancelMutation.mutate(distribution.id)}
+                    isCancelling={
+                      cancelMutation.isPending &&
+                      (cancelMutation.variables as MarketplaceDistributionId) ===
+                        distribution.id
+                    }
+                  />
+                )}
+              </PMBox>
+            </PMFeatureFlag>
+          </PMVStack>
+        )}
       </PMVStack>
+    </PMBox>
+  );
+}
+
+interface DetailTabsProps {
+  active: DetailTabId;
+  onChange: (next: DetailTabId) => void;
+}
+
+/**
+ * Tab strip inside the plugin detail pane. Only "Overview" is wired today;
+ * Changes / Adoption / Settings from the prototype will join once the
+ * backend exposes the data each tab needs.
+ */
+function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
+  return (
+    <PMHStack
+      gap={6}
+      align="center"
+      borderBottom="1px solid"
+      borderColor="border.tertiary"
+    >
+      <DetailTabButton
+        active={active === 'overview'}
+        onClick={() => onChange('overview')}
+      >
+        Overview
+      </DetailTabButton>
+    </PMHStack>
+  );
+}
+
+interface DetailTabButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+function DetailTabButton({
+  active,
+  onClick,
+  children,
+}: Readonly<DetailTabButtonProps>) {
+  return (
+    <PMBox
+      as="button"
+      onClick={onClick}
+      bg="transparent"
+      border="none"
+      cursor="pointer"
+      paddingY={3}
+      paddingX={0}
+      fontSize="sm"
+      fontWeight="medium"
+      color={active ? 'text.primary' : 'text.faded'}
+      borderBottom="2px solid"
+      borderColor={active ? 'branding.primary' : 'transparent'}
+      marginBottom="-1px"
+      transition="color 150ms ease-out"
+      _hover={active ? undefined : { color: 'text.primary' }}
+      aria-pressed={active}
+    >
+      {children}
     </PMBox>
   );
 }
@@ -855,23 +927,6 @@ function ContainerFrame({ children }: Readonly<{ children: React.ReactNode }>) {
       overflow="hidden"
     >
       {children}
-    </PMBox>
-  );
-}
-
-function PlaceholderBlock({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <PMBox
-      bg="background.secondary"
-      borderRadius="sm"
-      paddingX={4}
-      paddingY={3}
-    >
-      <PMText fontSize="xs" color="faded">
-        {children}
-      </PMText>
     </PMBox>
   );
 }

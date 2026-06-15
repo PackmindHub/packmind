@@ -16,6 +16,7 @@ import { MarketplaceId } from '../MarketplaceId';
  */
 export type MarketplaceDistributionListItem = MarketplaceDistribution & {
   packageName: string;
+  packageSlug: string;
   authorName: string;
   space: {
     id: SpaceId;

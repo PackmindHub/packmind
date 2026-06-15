@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import {
   IGetPackageByIdUseCase,
+  IGetPackageSummaryUseCase,
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
@@ -184,6 +185,16 @@ export class DeploymentsGatewayApi
     return this._api.get(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
+  };
+
+  getPackageSummary: NewGateway<IGetPackageSummaryUseCase> = async ({
+    organizationId,
+    slug,
+  }: {
+    organizationId: OrganizationId;
+    slug: string;
+  }) => {
+    return this._api.get(`/organizations/${organizationId}/packages/${slug}`);
   };
 
   publishRecipes: NewGateway<IPublishRecipes> = async ({

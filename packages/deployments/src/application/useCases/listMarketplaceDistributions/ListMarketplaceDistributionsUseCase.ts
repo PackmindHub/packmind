@@ -119,12 +119,14 @@ export class ListMarketplaceDistributionsUseCase
       new Set<PackageId>(distributions.map((d) => d.packageId)),
     );
     const packageNameById = new Map<PackageId, string>();
+    const packageSlugById = new Map<PackageId, string>();
     const packageSpaceIdById = new Map<PackageId, SpaceId>();
     await Promise.all(
       uniquePackageIds.map(async (pid) => {
         const pkg = await this.packageService.findById(pid);
         if (pkg) {
           packageNameById.set(pid, pkg.name);
+          packageSlugById.set(pid, pkg.slug);
           packageSpaceIdById.set(pid, pkg.spaceId);
         }
       }),
@@ -170,6 +172,7 @@ export class ListMarketplaceDistributionsUseCase
         return {
           ...distribution,
           packageName: packageNameById.get(distribution.packageId) ?? '',
+          packageSlug: packageSlugById.get(distribution.packageId) ?? '',
           authorName: authorNameById.get(distribution.authorId) ?? '',
           space,
         };

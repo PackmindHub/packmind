@@ -155,6 +155,10 @@ describe('ListMarketplaceDistributionsUseCase', () => {
       expect(result[0].packageName).toBe('My Package');
     });
 
+    it('enriches the row with the package slug', () => {
+      expect(result[0].packageSlug).toBe('my-package');
+    });
+
     it('enriches the row with the author display name', () => {
       expect(result[0].authorName).toBe('Author Person');
     });
