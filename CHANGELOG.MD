@@ -1,15 +1,9 @@
-# [Unreleased]
+# [1.15.1] - 2026-06-15
 
 ## Added
 
 - Enable rendering packmind artifacts in `~/.claude` #332
 - Add GitHub App connection method in organization git settings
-
-## Changed
-
-## Fixed
-
-## Removed
 
 # [1.15.0] - 2026-05-23
 
@@ -315,7 +309,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.15.0...HEAD
+[1.15.1]: https://github.com/PackmindHub/packmind/compare/release/1.15.0...release/1.15.1
 [1.15.0]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...release/1.15.0
 [1.14.0]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...release/1.14.0
 [1.13.1]: https://github.com/PackmindHub/packmind/compare/release/1.13.0...release/1.13.1
