@@ -89,7 +89,7 @@ type PackageDetailPaneProps = {
   distributionHistoryHref: string | null;
 };
 
-type InstallDriftFilter = 'all' | 'drift' | 'aligned';
+type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
 
 function installKey(repoId: string, targetId: string): string {
   return `${repoId}::${targetId}`;
@@ -169,12 +169,15 @@ export function PackageDetailPane({
 
   const installCounts = useMemo(() => {
     let drift = 0;
+    let failed = 0;
     for (const e of entries) {
       if (e.behindArtifacts.length > 0) drift++;
+      if (e.lastDistributionStatus === DistributionStatus.failure) failed++;
     }
     return {
       all: entries.length,
       drift,
+      failed,
       aligned: entries.length - drift,
     };
   }, [entries]);
@@ -183,6 +186,10 @@ export function PackageDetailPane({
     let list = entries;
     if (installFilter === 'drift')
       list = list.filter((e) => e.behindArtifacts.length > 0);
+    else if (installFilter === 'failed')
+      list = list.filter(
+        (e) => e.lastDistributionStatus === DistributionStatus.failure,
+      );
     else if (installFilter === 'aligned')
       list = list.filter((e) => e.behindArtifacts.length === 0);
     const q = repoQuery.trim().toLowerCase();
@@ -964,6 +971,7 @@ const INSTALL_FILTER_ITEMS: Array<{
 }> = [
   { value: 'all', label: 'All' },
   { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'failed', label: 'Failed', dotColor: 'red.500' },
   { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
 ];
 
@@ -973,7 +981,7 @@ function InstallFilterControl({
   onChange,
 }: Readonly<{
   value: InstallDriftFilter;
-  counts: { all: number; drift: number; aligned: number };
+  counts: { all: number; drift: number; failed: number; aligned: number };
   onChange: (next: InstallDriftFilter) => void;
 }>) {
   return (
@@ -1142,11 +1150,17 @@ function InstallEmptyState({
 }>) {
   const message = (() => {
     if (repoQuery && installFilter !== 'all') {
-      const label = installFilter === 'drift' ? 'drifted' : 'aligned';
+      const label =
+        installFilter === 'drift'
+          ? 'drifted'
+          : installFilter === 'failed'
+            ? 'failed'
+            : 'aligned';
       return `No ${label} distributions match “${repoQuery}”.`;
     }
     if (repoQuery) return `No distributions match “${repoQuery}”.`;
     if (installFilter === 'drift') return 'No drifted distributions.';
+    if (installFilter === 'failed') return 'No failed distributions.';
     if (installFilter === 'aligned') return 'No aligned distributions.';
     return 'No distributions.';
   })();
