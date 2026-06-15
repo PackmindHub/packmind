@@ -12,10 +12,8 @@ export interface MarketplaceDetailAlertsProps {
 }
 
 /**
- * Inline alert strip extracted from the legacy `MarketplaceDetailsHeader`.
- * Preserves the four critical warnings (drift, pending sync PR, missing sync
- * PR, outdated plugins) so the new layout can surface them without owning
- * their copy.
+ * Inline alert strip for the marketplace detail page: drift, pending sync PR,
+ * missing sync PR, and outdated plugins. Returns `null` when nothing applies.
  */
 export const MarketplaceDetailAlerts = ({
   organizationId,
