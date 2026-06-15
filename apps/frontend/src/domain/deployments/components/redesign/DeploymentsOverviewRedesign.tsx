@@ -175,7 +175,7 @@ export function DeploymentsOverviewRedesign() {
               <PMHStack gap={2} flexShrink={0}>
                 {hasAnyDrift && (
                   <PMButton
-                    variant="outline"
+                    variant="primary"
                     size="sm"
                     onClick={handleDistributeAllDrifted}
                   >
@@ -184,7 +184,7 @@ export function DeploymentsOverviewRedesign() {
                 )}
                 {autoUpdateHref && (
                   <PMButton
-                    variant="tertiary"
+                    variant="secondary"
                     size="sm"
                     onClick={() => navigate(autoUpdateHref)}
                   >

@@ -68,6 +68,11 @@ type PackageBlock = {
   driftedEntries: InstallDriftEntry[];
 };
 
+type CliBlock = {
+  pkg: PackageDrift;
+  cliEntries: InstallDriftEntry[];
+};
+
 function installSelectionKey(
   pkgId: PackageId,
   repoId: string,
@@ -107,13 +112,35 @@ export function SyncSurface({
     [packages, scope],
   );
 
+  const { actionableBlocks, cliBlocks } = useMemo(() => {
+    const actionable: PackageBlock[] = [];
+    const cli: CliBlock[] = [];
+    for (const block of blocks) {
+      const gitPush: InstallDriftEntry[] = [];
+      const cliEntries: InstallDriftEntry[] = [];
+      for (const entry of block.driftedEntries) {
+        const reason = lockReasonFor(
+          entry,
+          providersWithToken,
+          isProvidersLoading,
+        );
+        if (reason === 'no-app-token') cliEntries.push(entry);
+        else gitPush.push(entry);
+      }
+      if (gitPush.length > 0)
+        actionable.push({ pkg: block.pkg, driftedEntries: gitPush });
+      if (cliEntries.length > 0) cli.push({ pkg: block.pkg, cliEntries });
+    }
+    return { actionableBlocks: actionable, cliBlocks: cli };
+  }, [blocks, providersWithToken, isProvidersLoading]);
+
   const initialSelection = useMemo<Set<string>>(() => {
     const next = new Set<string>();
     const explicitKeys =
       scope.kind === 'package' && scope.installKeys
         ? new Set(scope.installKeys)
         : null;
-    for (const block of blocks) {
+    for (const block of actionableBlocks) {
       for (const entry of block.driftedEntries) {
         if (lockReasonFor(entry, providersWithToken, isProvidersLoading))
           continue;
@@ -127,13 +154,12 @@ export function SyncSurface({
       }
     }
     return next;
-  }, [blocks, scope, providersWithToken, isProvidersLoading]);
+  }, [actionableBlocks, scope, providersWithToken, isProvidersLoading]);
 
   const lockCounts = useMemo(() => {
     let inProgress = 0;
-    let noAppToken = 0;
     let selectable = 0;
-    for (const block of blocks) {
+    for (const block of actionableBlocks) {
       for (const entry of block.driftedEntries) {
         const reason = lockReasonFor(
           entry,
@@ -141,19 +167,16 @@ export function SyncSurface({
           isProvidersLoading,
         );
         if (reason === 'in-progress') inProgress++;
-        else if (reason === 'no-app-token') noAppToken++;
         else selectable++;
       }
     }
-    return {
-      inProgress,
-      noAppToken,
-      selectable,
-      total: inProgress + noAppToken,
-    };
-  }, [blocks, providersWithToken, isProvidersLoading]);
+    return { inProgress, selectable };
+  }, [actionableBlocks, providersWithToken, isProvidersLoading]);
 
-  const allLocked = blocks.length > 0 && lockCounts.selectable === 0;
+  const actionableAllLocked =
+    actionableBlocks.length > 0 && lockCounts.selectable === 0;
+  const hasNothing = actionableBlocks.length === 0 && cliBlocks.length === 0;
+  const cliOnly = actionableBlocks.length === 0 && cliBlocks.length > 0;
 
   const [selected, setSelected] = useState<Set<string>>(initialSelection);
   const [step, setStep] = useState<SyncStep>('review');
@@ -195,7 +218,7 @@ export function SyncSurface({
     const installs = new Set<string>();
     const packagesTouched = new Set<PackageId>();
     let updatedArtifacts = 0;
-    for (const block of blocks) {
+    for (const block of actionableBlocks) {
       for (const entry of block.driftedEntries) {
         const k = installSelectionKey(
           block.pkg.id,
@@ -214,11 +237,11 @@ export function SyncSurface({
       packageCount: packagesTouched.size,
       artifactUpdateCount: updatedArtifacts,
     };
-  }, [blocks, selected]);
+  }, [actionableBlocks, selected]);
 
   const selectionByPackage = useMemo(() => {
     const map = new Map<PackageId, TargetId[]>();
-    for (const block of blocks) {
+    for (const block of actionableBlocks) {
       const targets: TargetId[] = [];
       for (const entry of block.driftedEntries) {
         const k = installSelectionKey(
@@ -231,7 +254,7 @@ export function SyncSurface({
       if (targets.length > 0) map.set(block.pkg.id, targets);
     }
     return map;
-  }, [blocks, selected]);
+  }, [actionableBlocks, selected]);
 
   const handleConfirm = useCallback(async () => {
     if (stats.installCount === 0) return;
@@ -310,9 +333,14 @@ export function SyncSurface({
           <PMVStack align="flex-start" gap={1}>
             <PMHeading level="h3">{titleForScope(scope, blocks)}</PMHeading>
             <PMText fontSize="sm" color="secondary" maxW="68ch">
-              Each selected distribution receives a direct commit on its
-              configured branch bringing every bundled artifact to its Packmind
-              version.
+              Selected distributions receive a direct commit on their configured
+              branch bringing every bundled artifact to its Packmind version.
+              Distributions without a connected provider are listed separately
+              and must be updated via{' '}
+              <PMText as="span" fontFamily="mono" fontSize="xs">
+                packmind-cli install
+              </PMText>
+              .
             </PMText>
           </PMVStack>
           <PMBox
@@ -371,31 +399,36 @@ export function SyncSurface({
         transition="opacity 200ms ease-out"
         padding={6}
       >
-        {blocks.length === 0 ? (
+        {hasNothing ? (
           <NothingToSync />
-        ) : allLocked ? (
-          <AllLockedState
-            inProgressCount={lockCounts.inProgress}
-            noAppTokenCount={lockCounts.noAppToken}
-          />
         ) : (
           <PMVStack gap={4} align="stretch">
-            <LockSummary
-              ready={lockCounts.selectable}
-              inProgress={lockCounts.inProgress}
-              noAppToken={lockCounts.noAppToken}
-            />
-            {blocks.map((block) => (
-              <PackageSyncBlock
-                key={block.pkg.id}
-                block={block}
-                selected={selected}
-                providersWithToken={providersWithToken}
-                isProvidersLoading={isProvidersLoading}
-                onToggleInstall={toggleInstall}
-                onTogglePackage={(on) => togglePackage(block, on)}
-              />
-            ))}
+            {cliOnly ? (
+              <NoActionableNote />
+            ) : actionableAllLocked ? (
+              <AllInProgressState count={lockCounts.inProgress} />
+            ) : (
+              <>
+                <LockSummary
+                  ready={lockCounts.selectable}
+                  inProgress={lockCounts.inProgress}
+                />
+                {actionableBlocks.map((block) => (
+                  <PackageSyncBlock
+                    key={block.pkg.id}
+                    block={block}
+                    selected={selected}
+                    providersWithToken={providersWithToken}
+                    isProvidersLoading={isProvidersLoading}
+                    onToggleInstall={toggleInstall}
+                    onTogglePackage={(on) => togglePackage(block, on)}
+                  />
+                ))}
+              </>
+            )}
+            {cliBlocks.length > 0 && (
+              <CliInstallSection cliBlocks={cliBlocks} />
+            )}
           </PMVStack>
         )}
       </PMBox>
@@ -443,15 +476,17 @@ export function SyncSurface({
               </PMIcon>
               {isSyncing
                 ? 'Redistributing…'
-                : allLocked
-                  ? 'Waiting on in-progress distributions'
-                  : stats.installCount === 0
-                    ? 'Select at least one distribution'
-                    : `Redistribute ${stats.packageCount} package${
-                        stats.packageCount === 1 ? '' : 's'
-                      } to ${stats.installCount} distribution${
-                        stats.installCount === 1 ? '' : 's'
-                      }`}
+                : cliOnly
+                  ? 'Nothing to redistribute from the app'
+                  : actionableAllLocked
+                    ? 'Waiting on in-progress distributions'
+                    : stats.installCount === 0
+                      ? 'Select at least one distribution'
+                      : `Redistribute ${stats.packageCount} package${
+                          stats.packageCount === 1 ? '' : 's'
+                        } to ${stats.installCount} distribution${
+                          stats.installCount === 1 ? '' : 's'
+                        }`}
             </PMButton>
           </PMHStack>
         </PMHStack>
@@ -903,11 +938,9 @@ function InstallSyncRow({
 function LockSummary({
   ready,
   inProgress,
-  noAppToken,
 }: Readonly<{
   ready: number;
   inProgress: number;
-  noAppToken: number;
 }>) {
   const segments: Array<{
     key: string;
@@ -950,37 +983,6 @@ function LockSummary({
       ),
     });
   }
-  if (noAppToken > 0) {
-    segments.push({
-      key: 'no-app-token',
-      dot: 'orange.500',
-      label: (
-        <>
-          <PMText
-            as="span"
-            fontWeight="semibold"
-            color="primary"
-            fontVariantNumeric="tabular-nums"
-          >
-            {noAppToken}
-          </PMText>
-          {' via '}
-          <PMText
-            as="span"
-            fontFamily="mono"
-            fontSize="xs"
-            color="warning"
-            paddingX={1}
-            paddingY="1px"
-            bg="background.tertiary"
-            borderRadius="sm"
-          >
-            packmind-cli install
-          </PMText>
-        </>
-      ),
-    });
-  }
 
   return (
     <PMHStack
@@ -1015,56 +1017,219 @@ function LockSummary({
   );
 }
 
-function AllLockedState({
-  inProgressCount,
-  noAppTokenCount,
-}: Readonly<{
-  inProgressCount: number;
-  noAppTokenCount: number;
-}>) {
-  const total = inProgressCount + noAppTokenCount;
-  const onlyInProgress = noAppTokenCount === 0;
-  const onlyNoToken = inProgressCount === 0;
-  const icon = onlyNoToken ? <LuTriangleAlert /> : <LuClock />;
-  const iconColor = onlyNoToken ? 'orange.500' : 'blue.500';
+function AllInProgressState({ count }: Readonly<{ count: number }>) {
   return (
-    <PMVStack gap={2} align="center" paddingY={10}>
-      <PMIcon fontSize="2xl" color={iconColor}>
-        {icon}
+    <PMVStack gap={2} align="center" paddingY={6}>
+      <PMIcon fontSize="2xl" color="blue.500">
+        <LuClock />
       </PMIcon>
       <PMText fontSize="sm" color="primary" fontWeight="medium">
-        Nothing to redistribute from the app.
+        Nothing to redistribute from the app right now.
       </PMText>
       <PMText fontSize="xs" color="secondary" textAlign="center" maxW="56ch">
-        {onlyInProgress &&
-          (total === 1
-            ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to redistribute.'
-            : `All ${total} drifted distributions are currently in progress. Wait for them to finish, then come back to redistribute.`)}
-        {onlyNoToken && (
-          <>
-            {total === 1
-              ? 'The only drifted distribution lives on a git provider with no token.'
-              : `All ${total} drifted distributions live on git providers with no token.`}{' '}
-            Use{' '}
-            <PMText as="span" fontFamily="mono" fontSize="xs">
-              packmind-cli install
-            </PMText>{' '}
-            to update {total === 1 ? 'it' : 'them'} from the command line.
-          </>
-        )}
-        {!onlyInProgress && !onlyNoToken && (
-          <>
-            {inProgressCount} distribution
-            {inProgressCount === 1 ? '' : 's'} in progress and {noAppTokenCount}{' '}
-            require{noAppTokenCount === 1 ? 's' : ''}{' '}
-            <PMText as="span" fontFamily="mono" fontSize="xs">
-              packmind-cli install
-            </PMText>
-            . Nothing left to redistribute from the app right now.
-          </>
-        )}
+        {count === 1
+          ? 'The only drifted distribution is currently in progress. Wait for it to finish, then come back to redistribute.'
+          : `All ${count} drifted distributions are currently in progress. Wait for them to finish, then come back to redistribute.`}
       </PMText>
     </PMVStack>
+  );
+}
+
+function NoActionableNote() {
+  return (
+    <PMBox
+      paddingX={4}
+      paddingY={3}
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      bg="background.secondary"
+    >
+      <PMText fontSize="sm" color="secondary">
+        Nothing to push from the app — every drifted distribution lives on a
+        provider without a connected token. Use the CLI section below.
+      </PMText>
+    </PMBox>
+  );
+}
+
+function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
+  const [expanded, setExpanded] = useState(true);
+  const distributionsCount = cliBlocks.reduce(
+    (acc, b) => acc + b.cliEntries.length,
+    0,
+  );
+  const reposCount = new Set(
+    cliBlocks.flatMap((b) => b.cliEntries.map((e) => e.repo.id)),
+  ).size;
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText('packmind-cli install');
+      pmToaster.create({
+        type: 'success',
+        title: 'Copied',
+        description: '`packmind-cli install` copied to your clipboard.',
+      });
+    } catch {
+      pmToaster.create({
+        type: 'error',
+        title: 'Copy failed',
+        description: 'Could not access the clipboard.',
+      });
+    }
+  }, []);
+
+  return (
+    <PMBox
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="md"
+      bg="background.secondary"
+      overflow="hidden"
+    >
+      <PMBox
+        as="button"
+        onClick={() => setExpanded((v) => !v)}
+        bg="transparent"
+        border="none"
+        width="100%"
+        paddingX={4}
+        paddingY={3}
+        cursor="pointer"
+        textAlign="left"
+        _hover={{ bg: 'background.tertiary' }}
+        transition="background-color 120ms ease-out"
+        aria-expanded={expanded}
+      >
+        <PMHStack gap={2} align="center" justify="space-between">
+          <PMHStack gap={2} align="center">
+            <PMIcon fontSize="sm" color="text.secondary">
+              {expanded ? <LuChevronDown /> : <LuChevronRight />}
+            </PMIcon>
+            <PMIcon fontSize="sm" color="warning">
+              <LuTerminal />
+            </PMIcon>
+            <PMText fontSize="sm" fontWeight="semibold" color="primary">
+              {distributionsCount} distribution
+              {distributionsCount === 1 ? '' : 's'} need{' '}
+              <PMText
+                as="span"
+                fontFamily="mono"
+                fontSize="xs"
+                color="warning"
+                paddingX={1}
+                paddingY="1px"
+                bg="background.tertiary"
+                borderRadius="sm"
+              >
+                packmind-cli install
+              </PMText>
+            </PMText>
+          </PMHStack>
+          <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
+            across {reposCount} repo{reposCount === 1 ? '' : 's'}
+          </PMText>
+        </PMHStack>
+      </PMBox>
+
+      {expanded && (
+        <PMBox
+          paddingX={4}
+          paddingY={4}
+          borderTopWidth="1px"
+          borderColor="border.tertiary"
+        >
+          <PMVStack gap={4} align="stretch">
+            <PMHStack
+              gap={2}
+              align="center"
+              justify="space-between"
+              bg="background.tertiary"
+              paddingX={3}
+              paddingY={2}
+              borderRadius="sm"
+            >
+              <PMText as="span" fontFamily="mono" fontSize="sm" color="warning">
+                packmind-cli install
+              </PMText>
+              <PMButton variant="tertiary" size="sm" onClick={handleCopy}>
+                Copy
+              </PMButton>
+            </PMHStack>
+            <PMText fontSize="xs" color="secondary">
+              Run the command from each repo below — it syncs every Packmind
+              package configured on that repo at once.
+            </PMText>
+            <PMVStack gap={3} align="stretch">
+              {cliBlocks.map((block) => (
+                <PMVStack key={block.pkg.id} gap={1.5} align="stretch">
+                  <PMText fontSize="xs" fontWeight="semibold" color="primary">
+                    {block.pkg.name}
+                  </PMText>
+                  <PMVStack gap={1} align="stretch" paddingLeft={2}>
+                    {block.cliEntries.map((entry) => (
+                      <PMHStack
+                        key={`${entry.repo.id}::${entry.target.id}`}
+                        gap={2}
+                        align="center"
+                        wrap="wrap"
+                      >
+                        <PMText fontSize="xs" color="secondary">
+                          {entry.repo.owner}/{entry.repo.name}
+                        </PMText>
+                        <PMHStack
+                          gap="4px"
+                          align="center"
+                          color={
+                            entry.branch === 'main'
+                              ? 'text.faded'
+                              : 'text.secondary'
+                          }
+                        >
+                          <PMIcon fontSize="xs">
+                            <LuGitBranch />
+                          </PMIcon>
+                          <PMText
+                            fontSize="11px"
+                            fontFamily="mono"
+                            fontVariantNumeric="tabular-nums"
+                          >
+                            {entry.branch}
+                          </PMText>
+                        </PMHStack>
+                        {!entry.target.isDefault && (
+                          <PMBox
+                            paddingX="6px"
+                            paddingY="1px"
+                            borderRadius="sm"
+                            bg="background.tertiary"
+                            color="text.secondary"
+                            fontFamily="mono"
+                            fontSize="11px"
+                          >
+                            {entry.target.name}
+                          </PMBox>
+                        )}
+                        <PMText
+                          fontSize="11px"
+                          color="faded"
+                          fontVariantNumeric="tabular-nums"
+                          marginLeft="auto"
+                        >
+                          {entry.behindArtifacts.length} artifact
+                          {entry.behindArtifacts.length === 1 ? '' : 's'} behind
+                        </PMText>
+                      </PMHStack>
+                    ))}
+                  </PMVStack>
+                </PMVStack>
+              ))}
+            </PMVStack>
+          </PMVStack>
+        </PMBox>
+      )}
+    </PMBox>
   );
 }
 

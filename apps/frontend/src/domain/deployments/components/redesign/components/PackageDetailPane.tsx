@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   PMAlert,
   PMBadge,
@@ -190,6 +190,18 @@ export function PackageDetailPane({
     return list;
   }, [entries, installFilter, repoQuery]);
 
+  const splitByMode = useMemo(() => {
+    const gitPush: InstallDriftEntry[] = [];
+    const cliInstall: InstallDriftEntry[] = [];
+    for (const entry of filteredEntries) {
+      const reason =
+        lockByKey.get(installKey(entry.repo.id, entry.target.id)) ?? null;
+      if (reason === 'no-app-token') cliInstall.push(entry);
+      else gitPush.push(entry);
+    }
+    return { gitPush, cliInstall };
+  }, [filteredEntries, lockByKey]);
+
   const hasActiveFilter = installFilter !== 'all' || repoQuery.length > 0;
   const clearFilters = () => {
     setInstallFilter('all');
@@ -338,18 +350,46 @@ export function PackageDetailPane({
           />
         ) : (
           <PMVStack gap={0} align="stretch">
-            {filteredEntries.map((entry) => {
-              const key = installKey(entry.repo.id, entry.target.id);
-              return (
-                <InstallRow
-                  key={key}
-                  entry={entry}
-                  selected={selectedKeys.has(key)}
-                  lockReason={lockByKey.get(key) ?? null}
-                  onToggle={() => toggleInstall(key)}
+            {splitByMode.gitPush.length > 0 && (
+              <>
+                <ModeSectionHeader
+                  mode="git-push"
+                  count={splitByMode.gitPush.length}
                 />
-              );
-            })}
+                {splitByMode.gitPush.map((entry) => {
+                  const key = installKey(entry.repo.id, entry.target.id);
+                  return (
+                    <InstallRow
+                      key={key}
+                      entry={entry}
+                      selected={selectedKeys.has(key)}
+                      lockReason={lockByKey.get(key) ?? null}
+                      onToggle={() => toggleInstall(key)}
+                    />
+                  );
+                })}
+              </>
+            )}
+            {splitByMode.cliInstall.length > 0 && (
+              <>
+                <ModeSectionHeader
+                  mode="cli-install"
+                  count={splitByMode.cliInstall.length}
+                />
+                {splitByMode.cliInstall.map((entry) => {
+                  const key = installKey(entry.repo.id, entry.target.id);
+                  return (
+                    <InstallRow
+                      key={key}
+                      entry={entry}
+                      selected={selectedKeys.has(key)}
+                      lockReason={lockByKey.get(key) ?? null}
+                      onToggle={() => toggleInstall(key)}
+                    />
+                  );
+                })}
+              </>
+            )}
           </PMVStack>
         )}
       </PMBox>
@@ -524,7 +564,6 @@ function InstallRow({
             hasDrift={hasDrift}
             behindCount={behindCount}
             totalArtifactsOnInstall={totalArtifactsOnInstall}
-            lockReason={lockReason}
           />
           <DistributionEventLine entry={entry} />
         </PMVStack>
@@ -663,7 +702,6 @@ type RowStateLineProps = {
   hasDrift: boolean;
   behindCount: number;
   totalArtifactsOnInstall: number;
-  lockReason: InstallLockReason | null;
 };
 
 function RowStateLine({
@@ -671,7 +709,6 @@ function RowStateLine({
   hasDrift,
   behindCount,
   totalArtifactsOnInstall,
-  lockReason,
 }: Readonly<RowStateLineProps>) {
   const inProgress =
     entry.lastDistributionStatus === DistributionStatus.in_progress;
@@ -706,23 +743,6 @@ function RowStateLine({
         />
         <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
           {behindCount} of {totalArtifactsOnInstall} behind
-          {lockReason === 'no-app-token' && (
-            <>
-              {', via '}
-              <PMText
-                as="span"
-                fontFamily="mono"
-                fontSize="11px"
-                color="warning"
-                paddingX={1}
-                paddingY="1px"
-                bg="background.tertiary"
-                borderRadius="sm"
-              >
-                packmind-cli install
-              </PMText>
-            </>
-          )}
         </PMText>
       </PMHStack>
     );
@@ -904,6 +924,84 @@ function InstallFilterControl({
         );
       })}
     </PMHStack>
+  );
+}
+
+type DistributionMode = 'git-push' | 'cli-install';
+
+const MODE_META: Record<
+  DistributionMode,
+  { icon: IconType; title: string; description: ReactNode }
+> = {
+  'git-push': {
+    icon: LuGitBranch,
+    title: 'Git push',
+    description: 'Packmind commits directly on the configured branch.',
+  },
+  'cli-install': {
+    icon: LuTerminal,
+    title: 'CLI install',
+    description: (
+      <>
+        Update by running{' '}
+        <PMText
+          as="span"
+          fontFamily="mono"
+          fontSize="11px"
+          color="warning"
+          paddingX={1}
+          paddingY="1px"
+          bg="background.tertiary"
+          borderRadius="sm"
+        >
+          packmind-cli install
+        </PMText>{' '}
+        from each repo.
+      </>
+    ),
+  },
+};
+
+function ModeSectionHeader({
+  mode,
+  count,
+}: Readonly<{ mode: DistributionMode; count: number }>) {
+  const meta = MODE_META[mode];
+  const Icon = meta.icon;
+  return (
+    <PMBox
+      paddingX={6}
+      paddingY={2.5}
+      bg="background.secondary"
+      borderTopWidth="1px"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      _first={{ borderTopWidth: 0 }}
+      position="sticky"
+      top={0}
+      zIndex={1}
+    >
+      <PMVStack gap={0.5} align="stretch">
+        <PMHStack gap={2} align="center">
+          <PMIcon fontSize="sm" color="text.secondary">
+            <Icon />
+          </PMIcon>
+          <PMText fontSize="sm" fontWeight="semibold" color="primary">
+            {meta.title}
+          </PMText>
+          <PMText
+            fontSize="11px"
+            color="faded"
+            fontVariantNumeric="tabular-nums"
+          >
+            · {count} distribution{count === 1 ? '' : 's'}
+          </PMText>
+        </PMHStack>
+        <PMText fontSize="xs" color="secondary">
+          {meta.description}
+        </PMText>
+      </PMVStack>
+    </PMBox>
   );
 }
 
