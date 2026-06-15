@@ -14,10 +14,6 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
-  HandleWebHookCommand,
-  HandleWebHookResult,
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
   ListProvidersCommand,
   ListProvidersResponse,
 } from '../contracts';
@@ -86,24 +82,6 @@ export interface IGitPort {
     filePath: string,
     branch?: string,
   ): Promise<{ sha: string; content: string } | null>;
-
-  /**
-   * Handle webhook payload for a git repository with file content
-   *
-   * @param command - The webhook command
-   * @returns Promise of webhook result with file paths and content
-   */
-  handleWebHook(command: HandleWebHookCommand): Promise<HandleWebHookResult>;
-
-  /**
-   * Handle webhook payload for a git repository without fetching file content
-   *
-   * @param command - The webhook command
-   * @returns Promise of webhook result with file paths but without content
-   */
-  handleWebHookWithoutContent(
-    command: HandleWebHookWithoutContentCommand,
-  ): Promise<HandleWebHookWithoutContentResult>;
 
   /**
    * Add a new git provider for an organization
