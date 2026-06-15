@@ -618,5 +618,4 @@ export class GithubRepository implements IGitRepo {
       return [];
     }
   }
-
 }

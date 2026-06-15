@@ -941,5 +941,4 @@ export class GitlabRepository implements IGitRepo {
       return [];
     }
   }
-
 }

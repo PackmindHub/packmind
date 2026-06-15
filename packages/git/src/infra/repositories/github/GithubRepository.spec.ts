@@ -1096,5 +1096,4 @@ describe('GithubRepository', () => {
       });
     });
   });
-
 });
