@@ -1,27 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useParams } from 'react-router';
-import {
-  PMHStack,
-  PMText,
-  PMVStack,
-  PMInput,
-  PMTabs,
-  PMSegmentGroup,
-} from '@packmind/ui';
+import { PMHStack, PMText, PMVStack, PMTabs } from '@packmind/ui';
 import { RepositoryCentricView } from '../RepositoryCentricView';
 import { OutdatedDistributeBanner } from '../OutdatedDistributeBanner/OutdatedDistributeBanner';
 import { DeploymentsBlankState } from '../DeploymentsBlankState';
-import { ArtifactsView } from '../ArtifactsView';
-import type { ArtifactTypeFilter } from '../ArtifactsView/ArtifactsView';
 import { TargetMultiSelect } from '../TargetMultiSelect';
 import { RepositoryMultiSelect } from '../RepositoryMultiSelect';
 import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
+import { DeploymentsOverviewRedesignContent } from '../redesign/DeploymentsOverviewRedesign';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { ActiveDistributedPackagesByTarget, Target } from '@packmind/types';
-import { buildArtifactRollups } from '../../utils/buildArtifactRollups';
 
-type ViewMode = 'repositories' | 'artifacts';
+type ViewMode = 'repositories' | 'packages';
 
 const extractAvailableTargets = (
   entries: ReadonlyArray<ActiveDistributedPackagesByTarget>,
@@ -59,7 +50,7 @@ export const DeploymentsPage: React.FC = () => {
   // URL-synchronized state for viewMode
   const rawView = searchParams.get('view');
   const viewMode: ViewMode =
-    rawView === 'repositories' || rawView === 'artifacts'
+    rawView === 'repositories' || rawView === 'packages'
       ? (rawView as ViewMode)
       : 'repositories';
   const setViewMode = (newViewMode: ViewMode) => {
@@ -67,16 +58,14 @@ export const DeploymentsPage: React.FC = () => {
       const newParams = new URLSearchParams(prev);
       newParams.set('view', newViewMode);
       newParams.delete('search');
-      newParams.set('repoStatus', 'all');
+      newParams.delete('artType');
 
       if (newViewMode === 'repositories') {
-        newParams.delete('artType');
+        newParams.set('repoStatus', 'all');
+      } else if (newViewMode === 'packages') {
         newParams.delete('repoIds');
         newParams.delete('targetFilter');
-      } else if (newViewMode === 'artifacts') {
-        newParams.delete('repoIds');
-        newParams.delete('targetFilter');
-        newParams.set('artType', 'all');
+        newParams.delete('repoStatus');
       }
 
       return newParams;
@@ -183,11 +172,6 @@ export const DeploymentsPage: React.FC = () => {
     [entries],
   );
 
-  const artifactRollups = useMemo(
-    () => buildArtifactRollups(entries),
-    [entries],
-  );
-
   // Cleanup invalid selectedRepoIds when data updates
   useEffect(() => {
     if (selectedRepoIds.length > 0 && availableRepositories.length > 0) {
@@ -234,20 +218,6 @@ export const DeploymentsPage: React.FC = () => {
     return <DeploymentsBlankState />;
   }
 
-  let searchPlaceholder: string;
-  if (viewMode === 'repositories') searchPlaceholder = 'Search repositories...';
-  else searchPlaceholder = 'Search artifacts...';
-
-  const searchField = (
-    <PMInput
-      id="deployment-search"
-      placeholder={searchPlaceholder}
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      width="300px"
-    />
-  );
-
   const renderRepositoriesView = () => (
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
       <OutdatedDistributeBanner entries={entries} />
@@ -281,67 +251,6 @@ export const DeploymentsPage: React.FC = () => {
     </PMVStack>
   );
 
-  const rawArtType = searchParams.get('artType');
-  const artifactTypeFilter: ArtifactTypeFilter =
-    rawArtType === 'all' ||
-    rawArtType === 'commands' ||
-    rawArtType === 'standards' ||
-    rawArtType === 'skills'
-      ? (rawArtType as ArtifactTypeFilter)
-      : 'all';
-  const setArtifactTypeFilter = (newType: ArtifactTypeFilter) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set('artType', newType);
-      return newParams;
-    });
-  };
-
-  const renderArtifactsView = () => (
-    <PMVStack gap={4} marginTop={4} align={'stretch'}>
-      <PMHStack gap={4}>
-        {searchField}
-        <StatusCombobox
-          value={repositoryStatus}
-          onChange={setRepositoryStatus}
-        />
-        <PMSegmentGroup.Root
-          size="sm"
-          marginLeft={'auto'}
-          value={artifactTypeFilter}
-          onValueChange={(e) => {
-            if (
-              e.value === 'all' ||
-              e.value === 'commands' ||
-              e.value === 'standards' ||
-              e.value === 'skills'
-            )
-              setArtifactTypeFilter(e.value as ArtifactTypeFilter);
-          }}
-        >
-          <PMSegmentGroup.Indicator />
-          <PMSegmentGroup.Items
-            items={[
-              { label: 'All', value: 'all' },
-              { label: 'Commands', value: 'commands' },
-              { label: 'Standards', value: 'standards' },
-              { label: 'Skills', value: 'skills' },
-            ]}
-          />
-        </PMSegmentGroup.Root>
-      </PMHStack>
-      <ArtifactsView
-        recipes={artifactRollups.recipes}
-        standards={artifactRollups.standards}
-        skills={artifactRollups.skills}
-        searchTerm={searchTerm}
-        artifactStatusFilter={repositoryStatus}
-        orgSlug={orgSlug}
-        artifactTypeFilter={artifactTypeFilter}
-      />
-    </PMVStack>
-  );
-
   return (
     <PMTabs
       defaultValue={viewMode}
@@ -355,9 +264,9 @@ export const DeploymentsPage: React.FC = () => {
           content: renderRepositoriesView(),
         },
         {
-          value: 'artifacts',
-          triggerLabel: 'Artifacts',
-          content: renderArtifactsView(),
+          value: 'packages',
+          triggerLabel: 'Packages',
+          content: <DeploymentsOverviewRedesignContent />,
         },
       ]}
     />

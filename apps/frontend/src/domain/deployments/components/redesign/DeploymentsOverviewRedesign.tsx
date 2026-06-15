@@ -34,6 +34,27 @@ import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
   const { organization } = useAuthContext();
+  const { spaceSlug } = useCurrentSpace();
+  const deploymentsHref =
+    organization && spaceSlug
+      ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
+      : null;
+  return (
+    <PMPage
+      title="Overview"
+      subtitle="Resolve drift between Packmind packages and their distributions."
+      isFullWidth
+      breadcrumbComponent={
+        deploymentsHref ? <Backlink href={deploymentsHref} /> : undefined
+      }
+    >
+      <DeploymentsOverviewRedesignContent />
+    </PMPage>
+  );
+}
+
+export function DeploymentsOverviewRedesignContent() {
+  const { organization } = useAuthContext();
   const { spaceId, spaceSlug, isReady } = useCurrentSpace();
   const [searchParams] = useSearchParams();
   const isStubMode = import.meta.env.DEV && searchParams.get('stub') === '1';
@@ -96,10 +117,6 @@ export function DeploymentsOverviewRedesign() {
   const failedInstalls = totalFailedInstallCount(packages);
   const hasAnyDrift = driftPackagesCount > 0;
   const hasAnySignal = hasAnyDrift || failedInstalls > 0;
-  const deploymentsHref =
-    organization && spaceSlug
-      ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
-      : null;
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
@@ -109,22 +126,13 @@ export function DeploymentsOverviewRedesign() {
       : null;
   const navigate = useNavigate();
 
+  if (!isStubMode && (!isReady || isLoading)) return <LoadingState />;
+  if (!isStubMode && isError) return <ErrorState />;
+  if (!isStubMode && packages.length === 0) return <EmptyState />;
+
   return (
-    <PMPage
-      title="Overview"
-      subtitle="Resolve drift between Packmind packages and their distributions."
-      isFullWidth
-      breadcrumbComponent={
-        deploymentsHref ? <Backlink href={deploymentsHref} /> : undefined
-      }
-    >
-      {!isStubMode && (!isReady || isLoading) ? (
-        <LoadingState />
-      ) : !isStubMode && isError ? (
-        <ErrorState />
-      ) : !isStubMode && packages.length === 0 ? (
-        <EmptyState />
-      ) : syncScope !== null ? (
+    <>
+      {syncScope !== null ? (
         <SyncSurface
           packages={packages}
           scope={syncScope}
@@ -239,7 +247,7 @@ export function DeploymentsOverviewRedesign() {
           </PMBox>
         </PMVStack>
       )}
-    </PMPage>
+    </>
   );
 }
 
