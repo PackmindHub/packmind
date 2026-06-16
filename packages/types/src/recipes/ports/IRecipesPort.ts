@@ -12,8 +12,6 @@ import {
   ListRecipesBySpaceCommand,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
-  UpdateRecipesFromGitHubCommand,
-  UpdateRecipesFromGitLabCommand,
 } from '../contracts';
 import { Recipe } from '../Recipe';
 import { RecipeId } from '../RecipeId';
@@ -105,24 +103,6 @@ export interface IRecipesPort {
    * Get a recipe version by its ID
    */
   getRecipeVersionById(id: string): Promise<RecipeVersion | null>;
-
-  // ===========================
-  // GIT INTEGRATION
-  // ===========================
-
-  /**
-   * Update recipes from GitHub webhook events
-   */
-  updateRecipesFromGitHub(
-    command: UpdateRecipesFromGitHubCommand,
-  ): Promise<Recipe[]>;
-
-  /**
-   * Update recipes from GitLab webhook events
-   */
-  updateRecipesFromGitLab(
-    command: UpdateRecipesFromGitLabCommand,
-  ): Promise<Recipe[]>;
 
   /**
    * Update a recipe from UI with new content (creates new version)

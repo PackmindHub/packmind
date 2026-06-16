@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import {
   PMAlert,
   PMBadge,
@@ -9,6 +10,7 @@ import {
   PMHeading,
   PMIcon,
   PMInput,
+  PMLink,
   PMSpinner,
   PMText,
   PMTooltip,
@@ -16,6 +18,7 @@ import {
 } from '@packmind/ui';
 import {
   LuArrowRight,
+  LuArrowUpRight,
   LuBookOpen,
   LuChevronDown,
   LuChevronRight,
@@ -24,6 +27,7 @@ import {
   LuSearch,
   LuTerminal,
   LuTrash2,
+  LuTriangleAlert,
   LuWandSparkles,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
@@ -33,7 +37,10 @@ import {
   type GitProviderId,
   type PackageId,
 } from '@packmind/types';
-import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
+import {
+  packageBehindInstallCount,
+  packageFailedInstallCount,
+} from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
   packageMostRecentPush,
@@ -78,9 +85,11 @@ type PackageDetailPaneProps = {
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
+  /** Link to the package's distribution history (failure details live there). */
+  distributionHistoryHref: string | null;
 };
 
-type InstallDriftFilter = 'all' | 'drift' | 'aligned';
+type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
 
 function installKey(repoId: string, targetId: string): string {
   return `${repoId}::${targetId}`;
@@ -91,10 +100,13 @@ export function PackageDetailPane({
   providersWithToken,
   isProvidersLoading,
   onSyncPackage,
+  distributionHistoryHref,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
+  const failedInstallCount = packageFailedInstallCount(pkg);
   const hasDrift = behindInstallCount > 0;
+  const hasFailure = failedInstallCount > 0;
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
@@ -157,12 +169,15 @@ export function PackageDetailPane({
 
   const installCounts = useMemo(() => {
     let drift = 0;
+    let failed = 0;
     for (const e of entries) {
       if (e.behindArtifacts.length > 0) drift++;
+      if (e.lastDistributionStatus === DistributionStatus.failure) failed++;
     }
     return {
       all: entries.length,
       drift,
+      failed,
       aligned: entries.length - drift,
     };
   }, [entries]);
@@ -171,6 +186,10 @@ export function PackageDetailPane({
     let list = entries;
     if (installFilter === 'drift')
       list = list.filter((e) => e.behindArtifacts.length > 0);
+    else if (installFilter === 'failed')
+      list = list.filter(
+        (e) => e.lastDistributionStatus === DistributionStatus.failure,
+      );
     else if (installFilter === 'aligned')
       list = list.filter((e) => e.behindArtifacts.length === 0);
     const q = repoQuery.trim().toLowerCase();
@@ -186,6 +205,18 @@ export function PackageDetailPane({
     }
     return list;
   }, [entries, installFilter, repoQuery]);
+
+  const splitByMode = useMemo(() => {
+    const gitPush: InstallDriftEntry[] = [];
+    const cliInstall: InstallDriftEntry[] = [];
+    for (const entry of filteredEntries) {
+      const reason =
+        lockByKey.get(installKey(entry.repo.id, entry.target.id)) ?? null;
+      if (reason === 'no-app-token') cliInstall.push(entry);
+      else gitPush.push(entry);
+    }
+    return { gitPush, cliInstall };
+  }, [filteredEntries, lockByKey]);
 
   const hasActiveFilter = installFilter !== 'all' || repoQuery.length > 0;
   const clearFilters = () => {
@@ -211,7 +242,7 @@ export function PackageDetailPane({
   }, [driftedKeys, selectedKeys, lockByKey]);
 
   return (
-    <PMVStack gap={0} align="stretch" minH={0}>
+    <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
         paddingX={6}
         paddingY={5}
@@ -272,8 +303,43 @@ export function PackageDetailPane({
                 }
               />
             )}
+            {hasFailure && (
+              <SummaryStat
+                label="Failed"
+                value={`${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'}`}
+                tone="error"
+              />
+            )}
           </PMHStack>
-          {!hasDrift && (
+          {hasFailure && (
+            <PMAlert.Root status="error">
+              <PMAlert.Indicator>
+                <PMIcon>
+                  <LuTriangleAlert />
+                </PMIcon>
+              </PMAlert.Indicator>
+              <PMAlert.Content>
+                <PMAlert.Title>
+                  {failedInstallCount === 1
+                    ? 'The last distribution attempt failed on 1 target.'
+                    : `The last distribution attempt failed on ${failedInstallCount} targets.`}
+                </PMAlert.Title>
+                {distributionHistoryHref && (
+                  <PMAlert.Description>
+                    <PMLink asChild variant="underline" fontSize="sm">
+                      <Link to={distributionHistoryHref}>
+                        View distribution history for error details
+                        <PMIcon fontSize="xs" marginLeft="4px">
+                          <LuArrowUpRight />
+                        </PMIcon>
+                      </Link>
+                    </PMLink>
+                  </PMAlert.Description>
+                )}
+              </PMAlert.Content>
+            </PMAlert.Root>
+          )}
+          {!hasDrift && !hasFailure && (
             <PMAlert.Root status="success">
               <PMAlert.Indicator />
               <PMAlert.Title>
@@ -335,18 +401,48 @@ export function PackageDetailPane({
           />
         ) : (
           <PMVStack gap={0} align="stretch">
-            {filteredEntries.map((entry) => {
-              const key = installKey(entry.repo.id, entry.target.id);
-              return (
-                <InstallRow
-                  key={key}
-                  entry={entry}
-                  selected={selectedKeys.has(key)}
-                  lockReason={lockByKey.get(key) ?? null}
-                  onToggle={() => toggleInstall(key)}
+            {splitByMode.gitPush.length > 0 && (
+              <>
+                <ModeSectionHeader
+                  mode="git-push"
+                  count={splitByMode.gitPush.length}
                 />
-              );
-            })}
+                {splitByMode.gitPush.map((entry) => {
+                  const key = installKey(entry.repo.id, entry.target.id);
+                  return (
+                    <InstallRow
+                      key={key}
+                      entry={entry}
+                      selected={selectedKeys.has(key)}
+                      lockReason={lockByKey.get(key) ?? null}
+                      onToggle={() => toggleInstall(key)}
+                      distributionHistoryHref={distributionHistoryHref}
+                    />
+                  );
+                })}
+              </>
+            )}
+            {splitByMode.cliInstall.length > 0 && (
+              <>
+                <ModeSectionHeader
+                  mode="cli-install"
+                  count={splitByMode.cliInstall.length}
+                />
+                {splitByMode.cliInstall.map((entry) => {
+                  const key = installKey(entry.repo.id, entry.target.id);
+                  return (
+                    <InstallRow
+                      key={key}
+                      entry={entry}
+                      selected={selectedKeys.has(key)}
+                      lockReason={lockByKey.get(key) ?? null}
+                      onToggle={() => toggleInstall(key)}
+                      distributionHistoryHref={distributionHistoryHref}
+                    />
+                  );
+                })}
+              </>
+            )}
           </PMVStack>
         )}
       </PMBox>
@@ -399,10 +495,16 @@ function SummaryStat({
 }: Readonly<{
   label: string;
   value: string;
-  tone?: 'neutral' | 'ok' | 'warn';
+  tone?: 'neutral' | 'ok' | 'warn' | 'error';
 }>) {
   const color =
-    tone === 'warn' ? 'warning' : tone === 'ok' ? 'success' : 'primary';
+    tone === 'error'
+      ? 'error'
+      : tone === 'warn'
+        ? 'warning'
+        : tone === 'ok'
+          ? 'success'
+          : 'primary';
   return (
     <PMHStack gap={1.5} align="baseline">
       <PMText
@@ -431,6 +533,7 @@ type InstallRowProps = {
   selected: boolean;
   lockReason: InstallLockReason | null;
   onToggle: () => void;
+  distributionHistoryHref: string | null;
 };
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
@@ -444,6 +547,7 @@ function InstallRow({
   selected,
   lockReason,
   onToggle,
+  distributionHistoryHref,
 }: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
@@ -521,9 +625,11 @@ function InstallRow({
             hasDrift={hasDrift}
             behindCount={behindCount}
             totalArtifactsOnInstall={totalArtifactsOnInstall}
-            lockReason={lockReason}
           />
-          <DistributionEventLine entry={entry} />
+          <DistributionEventLine
+            entry={entry}
+            distributionHistoryHref={distributionHistoryHref}
+          />
         </PMVStack>
       </PMHStack>
 
@@ -660,7 +766,6 @@ type RowStateLineProps = {
   hasDrift: boolean;
   behindCount: number;
   totalArtifactsOnInstall: number;
-  lockReason: InstallLockReason | null;
 };
 
 function RowStateLine({
@@ -668,10 +773,10 @@ function RowStateLine({
   hasDrift,
   behindCount,
   totalArtifactsOnInstall,
-  lockReason,
 }: Readonly<RowStateLineProps>) {
   const inProgress =
     entry.lastDistributionStatus === DistributionStatus.in_progress;
+  const failed = entry.lastDistributionStatus === DistributionStatus.failure;
 
   if (inProgress) {
     return (
@@ -691,6 +796,28 @@ function RowStateLine({
     );
   }
 
+  if (failed) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBadge colorPalette="red" size="sm">
+          <PMIcon fontSize="xs">
+            <LuTriangleAlert />
+          </PMIcon>
+          Failed
+        </PMBadge>
+        {hasDrift && (
+          <PMText
+            fontSize="xs"
+            color="warning"
+            fontVariantNumeric="tabular-nums"
+          >
+            {behindCount} of {totalArtifactsOnInstall} behind
+          </PMText>
+        )}
+      </PMHStack>
+    );
+  }
+
   if (hasDrift) {
     return (
       <PMHStack gap={2} align="center">
@@ -703,23 +830,6 @@ function RowStateLine({
         />
         <PMText fontSize="xs" color="warning" fontVariantNumeric="tabular-nums">
           {behindCount} of {totalArtifactsOnInstall} behind
-          {lockReason === 'no-app-token' && (
-            <>
-              {', via '}
-              <PMText
-                as="span"
-                fontFamily="mono"
-                fontSize="11px"
-                color="warning"
-                paddingX={1}
-                paddingY="1px"
-                bg="background.tertiary"
-                borderRadius="sm"
-              >
-                packmind-cli install
-              </PMText>
-            </>
-          )}
         </PMText>
       </PMHStack>
     );
@@ -761,7 +871,11 @@ function RowStateLine({
 
 function DistributionEventLine({
   entry,
-}: Readonly<{ entry: InstallDriftEntry }>) {
+  distributionHistoryHref,
+}: Readonly<{
+  entry: InstallDriftEntry;
+  distributionHistoryHref: string | null;
+}>) {
   const anchorIso = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
   if (!anchorIso) return null;
   const verb = entry.lastDistributionStatus
@@ -773,6 +887,37 @@ function DistributionEventLine({
     entry.lastDistributionStatus !== DistributionStatus.in_progress &&
     entry.mostRecentDeployedAtDays >= STALE_DAYS_THRESHOLD;
   const color = failed ? 'red.500' : stale ? 'orange.500' : 'text.faded';
+
+  if (failed && distributionHistoryHref) {
+    return (
+      <PMTooltip
+        label={`Failed ${formatAbsoluteDate(anchorIso)} — view error details`}
+        placement="top"
+      >
+        <PMLink asChild>
+          <Link
+            to={distributionHistoryHref}
+            aria-label={`View distribution history (failed ${anchorIso})`}
+          >
+            <PMHStack gap="4px" align="center" color={color}>
+              <PMText
+                fontSize="11px"
+                fontVariantNumeric="tabular-nums"
+                textDecoration="underline"
+                textUnderlineOffset="2px"
+              >
+                Failed {formatRelativeDate(anchorIso)}
+              </PMText>
+              <PMIcon fontSize="10px">
+                <LuArrowUpRight />
+              </PMIcon>
+            </PMHStack>
+          </Link>
+        </PMLink>
+      </PMTooltip>
+    );
+  }
+
   return (
     <PMTooltip label={formatAbsoluteDate(anchorIso)} placement="top">
       <PMHStack
@@ -817,6 +962,7 @@ const INSTALL_FILTER_ITEMS: Array<{
 }> = [
   { value: 'all', label: 'All' },
   { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'failed', label: 'Failed', dotColor: 'red.500' },
   { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
 ];
 
@@ -826,7 +972,7 @@ function InstallFilterControl({
   onChange,
 }: Readonly<{
   value: InstallDriftFilter;
-  counts: { all: number; drift: number; aligned: number };
+  counts: { all: number; drift: number; failed: number; aligned: number };
   onChange: (next: InstallDriftFilter) => void;
 }>) {
   return (
@@ -904,6 +1050,84 @@ function InstallFilterControl({
   );
 }
 
+type DistributionMode = 'git-push' | 'cli-install';
+
+const MODE_META: Record<
+  DistributionMode,
+  { icon: IconType; title: string; description: ReactNode }
+> = {
+  'git-push': {
+    icon: LuGitBranch,
+    title: 'Git push',
+    description: 'Packmind commits directly on the configured branch.',
+  },
+  'cli-install': {
+    icon: LuTerminal,
+    title: 'CLI install',
+    description: (
+      <>
+        Update by running{' '}
+        <PMText
+          as="span"
+          fontFamily="mono"
+          fontSize="11px"
+          color="warning"
+          paddingX={1}
+          paddingY="1px"
+          bg="background.tertiary"
+          borderRadius="sm"
+        >
+          packmind-cli install
+        </PMText>{' '}
+        from each repo.
+      </>
+    ),
+  },
+};
+
+function ModeSectionHeader({
+  mode,
+  count,
+}: Readonly<{ mode: DistributionMode; count: number }>) {
+  const meta = MODE_META[mode];
+  const Icon = meta.icon;
+  return (
+    <PMBox
+      paddingX={6}
+      paddingY={2.5}
+      bg="background.secondary"
+      borderTopWidth="1px"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      _first={{ borderTopWidth: 0 }}
+      position="sticky"
+      top={0}
+      zIndex={1}
+    >
+      <PMVStack gap={0.5} align="stretch">
+        <PMHStack gap={2} align="center">
+          <PMIcon fontSize="sm" color="text.secondary">
+            <Icon />
+          </PMIcon>
+          <PMText fontSize="sm" fontWeight="semibold" color="primary">
+            {meta.title}
+          </PMText>
+          <PMText
+            fontSize="11px"
+            color="faded"
+            fontVariantNumeric="tabular-nums"
+          >
+            · {count} distribution{count === 1 ? '' : 's'}
+          </PMText>
+        </PMHStack>
+        <PMText fontSize="xs" color="secondary">
+          {meta.description}
+        </PMText>
+      </PMVStack>
+    </PMBox>
+  );
+}
+
 function InstallEmptyState({
   installFilter,
   repoQuery,
@@ -917,11 +1141,17 @@ function InstallEmptyState({
 }>) {
   const message = (() => {
     if (repoQuery && installFilter !== 'all') {
-      const label = installFilter === 'drift' ? 'drifted' : 'aligned';
+      const label =
+        installFilter === 'drift'
+          ? 'drifted'
+          : installFilter === 'failed'
+            ? 'failed'
+            : 'aligned';
       return `No ${label} distributions match “${repoQuery}”.`;
     }
     if (repoQuery) return `No distributions match “${repoQuery}”.`;
     if (installFilter === 'drift') return 'No drifted distributions.';
+    if (installFilter === 'failed') return 'No failed distributions.';
     if (installFilter === 'aligned') return 'No aligned distributions.';
     return 'No distributions.';
   })();

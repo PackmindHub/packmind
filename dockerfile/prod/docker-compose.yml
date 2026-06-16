@@ -116,7 +116,10 @@ services:
     image: packmind/frontend:${PACKMIND_TAG:-latest}
     container_name: packmind-frontend
     ports:
-      - '${FRONTEND_PUBLIC_PORT:-8081}:80'
+      # Internal container port. Default 80 matches the currently published
+      # frontend images. Rootless-safe images serve nginx on the unprivileged
+      # port 8080 (no port <1024) — set FRONTEND_CONTAINER_PORT=8080 for those.
+      - '${FRONTEND_PUBLIC_PORT:-8081}:${FRONTEND_CONTAINER_PORT:-80}'
     depends_on:
       - api
       - mcp-server

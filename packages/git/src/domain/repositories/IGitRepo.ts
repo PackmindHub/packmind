@@ -13,20 +13,6 @@ export interface IGitRepo {
     deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>>;
 
-  handlePushHook(
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<
-    {
-      filepath: string;
-      fileContent: string;
-      author: string | null;
-      gitSha: string | null;
-      gitRepo: string | null;
-      message: string | null;
-    }[]
-  >;
-
   getFileOnRepo(
     path: string,
     branch?: string,

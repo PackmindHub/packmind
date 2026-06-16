@@ -25,10 +25,7 @@ import {
   totalBehindInstallCount,
   totalFailedInstallCount,
 } from './selectors/buildPackageDriftOverview';
-import {
-  behindInstallsRequiringCliCount,
-  providersWithTokenSet,
-} from './selectors/providerAuth';
+import { providersWithTokenSet } from './selectors/providerAuth';
 import { PackageMasterRail } from './components/PackageMasterRail';
 import { PackageDetailPane } from './components/PackageDetailPane';
 import { SyncSurface, type SyncScope } from './components/SyncSurface';
@@ -36,6 +33,27 @@ import { STUB_PACKAGES, STUB_PROVIDER_OK } from './stubPackages';
 import type { PackageDrift } from './types';
 
 export function DeploymentsOverviewRedesign() {
+  const { organization } = useAuthContext();
+  const { spaceSlug } = useCurrentSpace();
+  const deploymentsHref =
+    organization && spaceSlug
+      ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
+      : null;
+  return (
+    <PMPage
+      title="Overview"
+      subtitle="Resolve drift between Packmind packages and their distributions."
+      isFullWidth
+      breadcrumbComponent={
+        deploymentsHref ? <Backlink href={deploymentsHref} /> : undefined
+      }
+    >
+      <DeploymentsOverviewRedesignContent />
+    </PMPage>
+  );
+}
+
+export function DeploymentsOverviewRedesignContent() {
   const { organization } = useAuthContext();
   const { spaceId, spaceSlug, isReady } = useCurrentSpace();
   const [searchParams] = useSearchParams();
@@ -97,37 +115,24 @@ export function DeploymentsOverviewRedesign() {
   const driftPackagesCount = packages.filter(packageHasDrift).length;
   const driftedInstalls = totalBehindInstallCount(packages);
   const failedInstalls = totalFailedInstallCount(packages);
-  const cliRequiredInstalls = useMemo(
-    () => behindInstallsRequiringCliCount(packages, providersWithToken),
-    [packages, providersWithToken],
-  );
   const hasAnyDrift = driftPackagesCount > 0;
   const hasAnySignal = hasAnyDrift || failedInstalls > 0;
-  const deploymentsHref =
-    organization && spaceSlug
-      ? `/org/${organization.slug}/space/${spaceSlug}/deployments`
-      : null;
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
+  const selectedPackageHistoryHref =
+    organization && spaceSlug && selectedPackage
+      ? `${routes.space.toPackage(organization.slug, spaceSlug, selectedPackage.id)}?tab=distributions`
+      : null;
   const navigate = useNavigate();
 
+  if (!isStubMode && (!isReady || isLoading)) return <LoadingState />;
+  if (!isStubMode && isError) return <ErrorState />;
+  if (!isStubMode && packages.length === 0) return <EmptyState />;
+
   return (
-    <PMPage
-      title="Overview"
-      subtitle="Resolve drift between Packmind packages and their distributions."
-      isFullWidth
-      breadcrumbComponent={
-        deploymentsHref ? <Backlink href={deploymentsHref} /> : undefined
-      }
-    >
-      {!isStubMode && (!isReady || isLoading) ? (
-        <LoadingState />
-      ) : !isStubMode && isError ? (
-        <ErrorState />
-      ) : !isStubMode && packages.length === 0 ? (
-        <EmptyState />
-      ) : syncScope !== null ? (
+    <>
+      {syncScope !== null ? (
         <SyncSurface
           packages={packages}
           scope={syncScope}
@@ -169,22 +174,21 @@ export function DeploymentsOverviewRedesign() {
               driftPackagesCount={driftPackagesCount}
               totalPackagesCount={packages.length}
               failedInstalls={failedInstalls}
-              cliRequiredInstalls={cliRequiredInstalls}
             />
             {hasAnySignal && (
               <PMHStack gap={2} flexShrink={0}>
                 {hasAnyDrift && (
                   <PMButton
-                    variant="outline"
+                    variant="primary"
                     size="sm"
                     onClick={handleDistributeAllDrifted}
                   >
-                    {`Distribute drifted (${driftPackagesCount})`}
+                    Distribute drifted
                   </PMButton>
                 )}
                 {autoUpdateHref && (
                   <PMButton
-                    variant="tertiary"
+                    variant="secondary"
                     size="sm"
                     onClick={() => navigate(autoUpdateHref)}
                   >
@@ -229,6 +233,7 @@ export function DeploymentsOverviewRedesign() {
                     onSyncPackage={handleSyncPackage}
                     providersWithToken={providersWithToken}
                     isProvidersLoading={isProvidersLoading && !isStubMode}
+                    distributionHistoryHref={selectedPackageHistoryHref}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">
@@ -242,7 +247,7 @@ export function DeploymentsOverviewRedesign() {
           </PMBox>
         </PMVStack>
       )}
-    </PMPage>
+    </>
   );
 }
 
@@ -252,14 +257,12 @@ function SummaryLine({
   driftPackagesCount,
   totalPackagesCount,
   failedInstalls,
-  cliRequiredInstalls,
 }: Readonly<{
   hasAnyDrift: boolean;
   driftedInstalls: number;
   driftPackagesCount: number;
   totalPackagesCount: number;
   failedInstalls: number;
-  cliRequiredInstalls: number;
 }>) {
   if (!hasAnyDrift && failedInstalls === 0) {
     return (
@@ -300,25 +303,6 @@ function SummaryLine({
           {' · '}
           <Metric value={failedInstalls} tone="error" />
           {' failed'}
-        </>
-      )}
-      {cliRequiredInstalls > 0 && hasAnyDrift && (
-        <>
-          {', '}
-          <Metric value={cliRequiredInstalls} tone="warning" />
-          {' of which via '}
-          <PMText
-            as="span"
-            fontFamily="mono"
-            fontSize="xs"
-            color="warning"
-            paddingX={1}
-            paddingY="1px"
-            bg="background.tertiary"
-            borderRadius="sm"
-          >
-            packmind-cli install
-          </PMText>
         </>
       )}
     </PMText>

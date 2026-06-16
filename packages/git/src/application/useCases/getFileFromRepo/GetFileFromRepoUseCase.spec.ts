@@ -35,7 +35,6 @@ describe('GetFileFromRepoUseCase', () => {
     mockGitRepoInstance = {
       getFileOnRepo: jest.fn(),
       commitFiles: jest.fn(),
-      handlePushHook: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
       checkDirectoryExists: jest.fn(),
     } as jest.Mocked<IGitRepo>;

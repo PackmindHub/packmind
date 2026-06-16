@@ -14,10 +14,6 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
-  HandleWebHookCommand,
-  HandleWebHookResult,
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
   ListProvidersCommand,
   ListProvidersResponse,
 } from '../contracts';
@@ -86,24 +82,6 @@ export interface IGitPort {
     filePath: string,
     branch?: string,
   ): Promise<{ sha: string; content: string } | null>;
-
-  /**
-   * Handle webhook payload for a git repository with file content
-   *
-   * @param command - The webhook command
-   * @returns Promise of webhook result with file paths and content
-   */
-  handleWebHook(command: HandleWebHookCommand): Promise<HandleWebHookResult>;
-
-  /**
-   * Handle webhook payload for a git repository without fetching file content
-   *
-   * @param command - The webhook command
-   * @returns Promise of webhook result with file paths but without content
-   */
-  handleWebHookWithoutContent(
-    command: HandleWebHookWithoutContentCommand,
-  ): Promise<HandleWebHookWithoutContentResult>;
 
   /**
    * Add a new git provider for an organization
@@ -292,10 +270,9 @@ export interface IGitPort {
   /**
    * Queue a job to fetch file content from a git repository asynchronously
    *
-   * Takes the output from handleWebHookWithoutContent and enriches it with file content,
-   * producing the same format as handleWebHook.
+   * Takes a list of files (without content) and enriches each with its file content.
    *
-   * @param input - Parameters containing repository ID and files from handleWebHookWithoutContent
+   * @param input - Parameters containing repository ID and files to enrich
    * @param onComplete - Optional callback to execute when the job completes successfully
    * @returns Job ID that can be used to track the job status
    */

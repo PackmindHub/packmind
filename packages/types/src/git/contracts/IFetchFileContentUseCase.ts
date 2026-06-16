@@ -1,16 +1,26 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { GitCommit } from '../GitCommit';
 import { GitRepoId } from '../GitRepoId';
-import { HandleWebHookResult } from './IHandleWebHookUseCase';
-import { HandleWebHookWithoutContentResult } from './IHandleWebHookWithoutContentUseCase';
+
+export type FetchFileContentFile = {
+  gitCommit: GitCommit;
+  filePath: string;
+};
+
+export type FetchedFileContent = {
+  gitCommit: GitCommit;
+  filePath: string;
+  fileContent: string;
+};
 
 export interface FetchFileContentInput {
   organizationId: OrganizationId;
   gitRepoId: GitRepoId;
-  files: HandleWebHookWithoutContentResult;
+  files: FetchFileContentFile[];
 }
 
 export interface FetchFileContentOutput {
   organizationId: OrganizationId;
   gitRepoId: GitRepoId;
-  files: HandleWebHookResult;
+  files: FetchedFileContent[];
 }

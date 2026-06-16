@@ -11,7 +11,7 @@
  * export class RecipesAdapter implements IBaseAdapter<IRecipesPort>, IRecipesPort {
  *   private gitPort: IGitPort | null = null;
  *   private accountsPort: IAccountsPort | null = null;
- *   private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUseCase;
+ *   private _captureRecipe!: CaptureRecipeUseCase;
  *
  *   public initialize(ports: {
  *     [IGitPortName]: IGitPort;
@@ -25,7 +25,7 @@
  *     }
  *
  *     // Create use cases with non-null ports
- *     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUseCase(
+ *     this._captureRecipe = new CaptureRecipeUseCase(
  *       this.services.getRecipeService(),
  *       this.gitPort!,
  *     );

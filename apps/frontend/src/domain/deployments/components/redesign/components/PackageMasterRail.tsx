@@ -36,7 +36,7 @@ type PackageMasterRailProps = {
   isProvidersLoading: boolean;
 };
 
-type DriftFilter = 'all' | 'drift' | 'aligned';
+type DriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
 
 export function PackageMasterRail({
   packages,
@@ -54,13 +54,24 @@ export function PackageMasterRail({
 
   const counts = useMemo(() => {
     let drift = 0;
-    for (const p of packages) if (packageHasDrift(p)) drift++;
-    return { all: packages.length, drift, aligned: packages.length - drift };
+    let failed = 0;
+    for (const p of packages) {
+      if (packageHasDrift(p)) drift++;
+      if (packageHasFailedDistribution(p)) failed++;
+    }
+    return {
+      all: packages.length,
+      drift,
+      failed,
+      aligned: packages.length - drift,
+    };
   }, [packages]);
 
   const filtered = useMemo(() => {
     let list = packages;
     if (driftFilter === 'drift') list = list.filter(packageHasDrift);
+    else if (driftFilter === 'failed')
+      list = list.filter(packageHasFailedDistribution);
     else if (driftFilter === 'aligned')
       list = list.filter((p) => !packageHasDrift(p));
     const q = query.trim().toLowerCase();
@@ -519,12 +530,20 @@ function FilteredZero({
   driftFilter: DriftFilter;
   onClear: () => void;
 }>) {
+  const filterLabel =
+    driftFilter === 'drift'
+      ? 'drifted'
+      : driftFilter === 'failed'
+        ? 'failed'
+        : 'aligned';
   const message = (() => {
     if (query)
       return driftFilter === 'all'
         ? `No packages match “${query}”.`
-        : `No ${driftFilter === 'drift' ? 'drifted' : 'aligned'} packages match “${query}”.`;
+        : `No ${filterLabel} packages match “${query}”.`;
     if (driftFilter === 'drift') return 'No packages currently drifting.';
+    if (driftFilter === 'failed')
+      return 'No packages with failed distributions.';
     if (driftFilter === 'aligned') return 'No fully aligned packages.';
     return 'No packages.';
   })();
@@ -552,7 +571,7 @@ function FilteredZero({
 
 type DriftFilterControlProps = {
   value: DriftFilter;
-  counts: { all: number; drift: number; aligned: number };
+  counts: { all: number; drift: number; failed: number; aligned: number };
   onChange: (value: DriftFilter) => void;
 };
 
@@ -563,6 +582,7 @@ const FILTER_ITEMS: Array<{
 }> = [
   { value: 'all', label: 'All' },
   { value: 'drift', label: 'Drift', dotColor: 'orange.500' },
+  { value: 'failed', label: 'Failed', dotColor: 'red.500' },
   { value: 'aligned', label: 'Aligned', dotColor: 'green.500' },
 ];
 
