@@ -437,7 +437,7 @@ interface PluginDetailPaneProps {
   version: string | null;
 }
 
-type DetailTabId = 'overview';
+type DetailTabId = 'overview' | 'changes';
 
 function PluginDetailPane({
   distribution,
@@ -453,6 +453,14 @@ function PluginDetailPane({
     marketplaceId,
   );
   const [tab, setTab] = useState<DetailTabId>('overview');
+  const tabsAnchorId = `plugin-detail-tabs-${distribution.id}`;
+
+  const handleViewChanges = () => {
+    setTab('changes');
+    document
+      .getElementById(tabsAnchorId)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const pendingRemoval =
     !!distribution.removalRequestedAt ||
@@ -494,9 +502,15 @@ function PluginDetailPane({
           </PMHStack>
         </PMVStack>
 
-        <VersionTrail version={version} isOutdated={isOutdated} />
+        <VersionTrail
+          version={version}
+          isOutdated={isOutdated}
+          onViewChanges={handleViewChanges}
+        />
 
-        <DetailTabs active={tab} onChange={setTab} />
+        <PMBox id={tabsAnchorId} scrollMarginTop="16px">
+          <DetailTabs active={tab} onChange={setTab} />
+        </PMBox>
 
         {tab === 'overview' && (
           <PMVStack gap={6} align="stretch">
@@ -527,8 +541,46 @@ function PluginDetailPane({
             </PMFeatureFlag>
           </PMVStack>
         )}
+
+        {tab === 'changes' && <ChangesTab isOutdated={isOutdated} />}
       </PMVStack>
     </PMBox>
+  );
+}
+
+function ChangesTab({ isOutdated }: Readonly<{ isOutdated: boolean }>) {
+  if (!isOutdated) {
+    return (
+      <PMHStack gap={2} align="center">
+        <PMBox
+          width="6px"
+          height="6px"
+          borderRadius="full"
+          bg="green.500"
+          aria-hidden
+        />
+        <PMText fontSize="sm" color="secondary">
+          In sync with the marketplace.
+        </PMText>
+      </PMHStack>
+    );
+  }
+  return (
+    <PMVStack gap={3} align="start">
+      <PMHStack gap={2} align="center">
+        <PMIcon fontSize="sm" color="orange.500">
+          <LuTriangleAlert />
+        </PMIcon>
+        <PMText fontSize="md" color="primary" fontWeight="medium">
+          Changes ready to publish
+        </PMText>
+      </PMHStack>
+      <PMText fontSize="sm" color="secondary" lineHeight={1.55} maxW="70ch">
+        The source package has moved ahead of what is published to this
+        marketplace. A per-change diff is not available yet — republish the
+        package from its space to bring the marketplace up to date.
+      </PMText>
+    </PMVStack>
   );
 }
 
@@ -538,9 +590,9 @@ interface DetailTabsProps {
 }
 
 /**
- * Tab strip inside the plugin detail pane. Only "Overview" is wired today;
- * Changes / Adoption / Settings from the prototype will join once the
- * backend exposes the data each tab needs.
+ * Tab strip inside the plugin detail pane. Overview and Changes are wired
+ * today; Adoption / Settings from the prototype will join once the backend
+ * exposes the data each tab needs.
  */
 function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
   return (
@@ -555,6 +607,12 @@ function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
         onClick={() => onChange('overview')}
       >
         Overview
+      </DetailTabButton>
+      <DetailTabButton
+        active={active === 'changes'}
+        onClick={() => onChange('changes')}
+      >
+        Changes
       </DetailTabButton>
     </PMHStack>
   );
@@ -598,6 +656,7 @@ function DetailTabButton({
 interface VersionTrailProps {
   version: string | null;
   isOutdated: boolean;
+  onViewChanges: () => void;
 }
 
 /**
@@ -607,7 +666,11 @@ interface VersionTrailProps {
  * with a second connector; both are gated on backend data we do not have yet
  * and will join the trail later.
  */
-function VersionTrail({ version, isOutdated }: Readonly<VersionTrailProps>) {
+function VersionTrail({
+  version,
+  isOutdated,
+  onViewChanges,
+}: Readonly<VersionTrailProps>) {
   return (
     <PMBox
       display="grid"
@@ -619,7 +682,7 @@ function VersionTrail({ version, isOutdated }: Readonly<VersionTrailProps>) {
       borderBottomWidth="1px"
       borderColor="border.tertiary"
     >
-      <TrailConnector isOutdated={isOutdated} />
+      <TrailConnector isOutdated={isOutdated} onViewChanges={onViewChanges} />
       <TrailTier
         label="Published"
         value={version ? `v${version}` : 'v—'}
@@ -664,9 +727,13 @@ function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
 
 interface TrailConnectorProps {
   isOutdated: boolean;
+  onViewChanges: () => void;
 }
 
-function TrailConnector({ isOutdated }: Readonly<TrailConnectorProps>) {
+function TrailConnector({
+  isOutdated,
+  onViewChanges,
+}: Readonly<TrailConnectorProps>) {
   return (
     <PMVStack gap={2} align="center" minW="120px" paddingTop="18px">
       <PMIcon
@@ -677,14 +744,41 @@ function TrailConnector({ isOutdated }: Readonly<TrailConnectorProps>) {
         <LuChevronRight />
       </PMIcon>
       {isOutdated ? (
-        <PMHStack gap={1.5} align="center">
-          <PMIcon fontSize="xs" color="orange.500">
-            <LuTriangleAlert />
-          </PMIcon>
-          <PMText fontSize="xs" color="warning" fontWeight="medium">
-            Changes ready to publish
-          </PMText>
-        </PMHStack>
+        <PMVStack gap={1} align="center">
+          <PMHStack gap={1.5} align="center">
+            <PMIcon fontSize="xs" color="orange.500">
+              <LuTriangleAlert />
+            </PMIcon>
+            <PMText
+              fontSize="xs"
+              color="warning"
+              fontWeight="medium"
+              fontVariantNumeric="tabular-nums"
+            >
+              Changes ready
+            </PMText>
+          </PMHStack>
+          <PMBox
+            as="button"
+            fontSize="11px"
+            color="branding.primary"
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            padding={0}
+            onClick={onViewChanges}
+            transition="color 120ms ease-out"
+            _hover={{ color: 'blue.300' }}
+            _focusVisible={{
+              outline: '2px solid',
+              outlineColor: 'branding.primary',
+              outlineOffset: '2px',
+              borderRadius: 'sm',
+            }}
+          >
+            View changes →
+          </PMBox>
+        </PMVStack>
       ) : (
         <PMHStack gap={1.5} align="center">
           <PMBox
