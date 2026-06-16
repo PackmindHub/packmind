@@ -8,6 +8,7 @@ import { DistributionSchema } from './DistributionSchema';
 import { DistributedPackageSchema } from './DistributedPackageSchema';
 import { MarketplaceSchema } from './MarketplaceSchema';
 import { MarketplaceDistributionSchema } from './MarketplaceDistributionSchema';
+import { PluginInstallationSchema } from './PluginInstallationSchema';
 
 export {
   TargetSchema,
@@ -20,6 +21,7 @@ export {
   DistributedPackageSchema,
   MarketplaceSchema,
   MarketplaceDistributionSchema,
+  PluginInstallationSchema,
 };
 export const deploymentsSchemas = [
   TargetSchema,
@@ -32,4 +34,5 @@ export const deploymentsSchemas = [
   DistributedPackageSchema,
   MarketplaceSchema,
   MarketplaceDistributionSchema,
+  PluginInstallationSchema,
 ];

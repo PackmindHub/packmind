@@ -102,6 +102,11 @@ export const MarketplaceSchema = new EntitySchema<
       type: 'jsonb',
       nullable: true,
     },
+    trackingToken: {
+      name: 'tracking_token',
+      type: 'varchar',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
@@ -142,6 +147,10 @@ export const MarketplaceSchema = new EntitySchema<
       columns: ['organizationId', 'gitRepoId'],
       unique: true,
       where: 'deleted_at IS NULL',
+    },
+    {
+      name: 'idx_marketplace_tracking_token',
+      columns: ['trackingToken'],
     },
   ],
 });
