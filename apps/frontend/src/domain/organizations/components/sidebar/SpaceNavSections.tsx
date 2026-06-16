@@ -2,7 +2,6 @@ import React from 'react';
 import { PMBox } from '@packmind/ui';
 import {
   LuBookCheck,
-  LuEye,
   LuGitPullRequestArrow,
   LuHouse,
   LuPackage,
@@ -28,7 +27,7 @@ export function SpaceNavSections({
     <>
       <SpaceNavItemLink
         url={routes.space.toDashboard(orgSlug, spaceSlug)}
-        label="Dashboard"
+        label="Overview"
         exact
         icon={<LuHouse />}
       />
@@ -58,16 +57,6 @@ export function SpaceNavSections({
         label="Packages"
         icon={<LuPackage />}
         data-testid={SidebarNavigationDataTestId.PackagesLink}
-      />
-      <SpaceNavItemLink
-        url={routes.space.toDeployments(orgSlug, spaceSlug)}
-        label="Overview"
-        icon={<LuEye />}
-        badge={{
-          text: 'Enterprise',
-          colorScheme: 'purple',
-          tooltipLabel: 'Coming soon to the Enterprise plan',
-        }}
       />
     </>
   );

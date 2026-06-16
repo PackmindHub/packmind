@@ -11,26 +11,25 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuClock, LuRotateCw, LuSearch } from 'react-icons/lu';
-import type { GitProviderId, PackageId } from '@packmind/types';
+import type { GitProviderId, GitRepoId } from '@packmind/types';
 import {
-  packageBehindInstallCount,
-  packageFailedInstallCount,
-  packageHasDrift,
-  packageHasFailedDistribution,
-} from '../selectors/buildPackageDriftOverview';
-import {
-  packageLockProfile,
-  type PackageLockProfile,
-} from '../selectors/installLock';
-import type { PackageDrift } from '../types';
+  repositoryBehindInstallCount,
+  repositoryDriftedTargetCount,
+  repositoryFailedInstallCount,
+  repositoryHasDrift,
+  repositoryHasFailedDistribution,
+  repositoryLockProfile,
+  type RepositoryLockProfile,
+} from '../selectors/buildRepositoryDriftOverview';
+import type { RepositoryDrift } from '../types';
 
-type PackageMasterRailProps = {
-  packages: PackageDrift[];
-  selectedPackageId: PackageId | null;
-  onSelect: (packageId: PackageId) => void;
-  bulkSelected: Set<PackageId>;
-  onToggleBulk: (packageId: PackageId) => void;
-  onSetBulkSelection: (next: Set<PackageId>) => void;
+type RepositoryMasterRailProps = {
+  repositories: RepositoryDrift[];
+  selectedRepositoryId: GitRepoId | null;
+  onSelect: (repositoryId: GitRepoId) => void;
+  bulkSelected: Set<GitRepoId>;
+  onToggleBulk: (repositoryId: GitRepoId) => void;
+  onSetBulkSelection: (next: Set<GitRepoId>) => void;
   onDistributeBulk: () => void;
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
@@ -38,9 +37,9 @@ type PackageMasterRailProps = {
 
 type DriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
 
-export function PackageMasterRail({
-  packages,
-  selectedPackageId,
+export function RepositoryMasterRail({
+  repositories,
+  selectedRepositoryId,
   onSelect,
   bulkSelected,
   onToggleBulk,
@@ -48,61 +47,65 @@ export function PackageMasterRail({
   onDistributeBulk,
   providersWithToken,
   isProvidersLoading,
-}: Readonly<PackageMasterRailProps>) {
+}: Readonly<RepositoryMasterRailProps>) {
   const [query, setQuery] = useState('');
   const [driftFilter, setDriftFilter] = useState<DriftFilter>('all');
 
   const counts = useMemo(() => {
     let drift = 0;
     let failed = 0;
-    for (const p of packages) {
-      if (packageHasDrift(p)) drift++;
-      if (packageHasFailedDistribution(p)) failed++;
+    for (const r of repositories) {
+      if (repositoryHasDrift(r)) drift++;
+      if (repositoryHasFailedDistribution(r)) failed++;
     }
     return {
-      all: packages.length,
+      all: repositories.length,
       drift,
       failed,
-      aligned: packages.length - drift,
+      aligned: repositories.length - drift,
     };
-  }, [packages]);
+  }, [repositories]);
 
   const filtered = useMemo(() => {
-    let list = packages;
-    if (driftFilter === 'drift') list = list.filter(packageHasDrift);
+    let list = repositories;
+    if (driftFilter === 'drift') list = list.filter(repositoryHasDrift);
     else if (driftFilter === 'failed')
-      list = list.filter(packageHasFailedDistribution);
+      list = list.filter(repositoryHasFailedDistribution);
     else if (driftFilter === 'aligned')
-      list = list.filter((p) => !packageHasDrift(p));
+      list = list.filter((r) => !repositoryHasDrift(r));
     const q = query.trim().toLowerCase();
-    if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
+    if (q) {
+      list = list.filter((r) =>
+        `${r.repo.owner}/${r.repo.name}`.toLowerCase().includes(q),
+      );
+    }
     return list;
-  }, [packages, query, driftFilter]);
+  }, [repositories, query, driftFilter]);
 
   const visibleDrifted = useMemo(
-    () => filtered.filter(packageHasDrift),
+    () => filtered.filter(repositoryHasDrift),
     [filtered],
   );
 
   const bulkDistributionCount = useMemo(() => {
     let n = 0;
-    for (const p of packages) {
-      if (bulkSelected.has(p.id)) n += packageBehindInstallCount(p);
+    for (const r of repositories) {
+      if (bulkSelected.has(r.id)) n += repositoryBehindInstallCount(r);
     }
     return n;
-  }, [packages, bulkSelected]);
+  }, [repositories, bulkSelected]);
 
   const selectionActive = bulkSelected.size > 0;
 
   const handleSelectAllVisible = () => {
     const next = new Set(bulkSelected);
-    for (const p of visibleDrifted) next.add(p.id);
+    for (const r of visibleDrifted) next.add(r.id);
     onSetBulkSelection(next);
   };
 
   const handleClearVisible = () => {
     const next = new Set(bulkSelected);
-    for (const p of visibleDrifted) next.delete(p.id);
+    for (const r of visibleDrifted) next.delete(r.id);
     onSetBulkSelection(next);
   };
 
@@ -135,14 +138,14 @@ export function PackageMasterRail({
             letterSpacing="wider"
             fontWeight="semibold"
           >
-            Packages
+            Repositories
           </PMText>
           <PMText
             fontSize="11px"
             color="faded"
             fontVariantNumeric="tabular-nums"
           >
-            {packages.length}
+            {repositories.length}
           </PMText>
         </PMHStack>
         <PMBox position="relative">
@@ -161,7 +164,7 @@ export function PackageMasterRail({
             </PMIcon>
           </PMBox>
           <PMInput
-            placeholder="Filter packages"
+            placeholder="Filter repositories"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             size="sm"
@@ -186,20 +189,20 @@ export function PackageMasterRail({
             }}
           />
         ) : (
-          filtered.map((p) => (
-            <PackageRow
-              key={p.id}
-              pkg={p}
-              selected={p.id === selectedPackageId}
-              bulkSelected={bulkSelected.has(p.id)}
+          filtered.map((r) => (
+            <RepositoryRow
+              key={r.id}
+              repo={r}
+              selected={r.id === selectedRepositoryId}
+              bulkSelected={bulkSelected.has(r.id)}
               selectionActive={selectionActive}
-              lockProfile={packageLockProfile(
-                p,
+              lockProfile={repositoryLockProfile(
+                r,
                 providersWithToken,
                 isProvidersLoading,
               )}
-              onSelect={() => onSelect(p.id)}
-              onToggleBulk={() => onToggleBulk(p.id)}
+              onSelect={() => onSelect(r.id)}
+              onToggleBulk={() => onToggleBulk(r.id)}
             />
           ))
         )}
@@ -210,7 +213,7 @@ export function PackageMasterRail({
         bulkDistributionCount={bulkDistributionCount}
         visibleDrifted={visibleDrifted}
         visibleDriftedSelectedCount={
-          visibleDrifted.filter((p) => bulkSelected.has(p.id)).length
+          visibleDrifted.filter((r) => bulkSelected.has(r.id)).length
         }
         onSelectAllVisible={handleSelectAllVisible}
         onClearVisible={handleClearVisible}
@@ -221,30 +224,31 @@ export function PackageMasterRail({
   );
 }
 
-type PackageRowProps = {
-  pkg: PackageDrift;
+type RepositoryRowProps = {
+  repo: RepositoryDrift;
   selected: boolean;
   bulkSelected: boolean;
   selectionActive: boolean;
-  lockProfile: PackageLockProfile;
+  lockProfile: RepositoryLockProfile;
   onSelect: () => void;
   onToggleBulk: () => void;
 };
 
-function PackageRow({
-  pkg,
+function RepositoryRow({
+  repo,
   selected,
   bulkSelected,
   selectionActive,
   lockProfile,
   onSelect,
   onToggleBulk,
-}: Readonly<PackageRowProps>) {
-  const behindInstallCount = packageBehindInstallCount(pkg);
-  const hasDrift = packageHasDrift(pkg);
-  const hasFailure = packageHasFailedDistribution(pkg);
-  const failedInstallCount = packageFailedInstallCount(pkg);
-  const totalInstalls = pkg.installLocations.length;
+}: Readonly<RepositoryRowProps>) {
+  const behindInstallCount = repositoryBehindInstallCount(repo);
+  const driftedTargets = repositoryDriftedTargetCount(repo);
+  const hasDrift = behindInstallCount > 0;
+  const hasFailure = repositoryHasFailedDistribution(repo);
+  const failedInstallCount = repositoryFailedInstallCount(repo);
+  const totalTargets = repo.targets.length;
   const [hovered, setHovered] = useState(false);
   const showCheckbox = hasDrift && (bulkSelected || selectionActive || hovered);
 
@@ -255,34 +259,30 @@ function PackageRow({
         ? 'blue.300'
         : 'orange.500'
       : 'green.500';
+
   const summaryLine = (() => {
     if (hasFailure) {
       return `${failedInstallCount} failed`;
     }
     if (hasDrift) {
-      return `${behindInstallCount} drifted`;
+      const targetWord = driftedTargets === 1 ? 'target' : 'targets';
+      return `${driftedTargets} ${targetWord} drifted`;
     }
-    const installWord = totalInstalls === 1 ? 'distribution' : 'distributions';
-    return `${totalInstalls} ${installWord} aligned`;
+    const targetWord = totalTargets === 1 ? 'target' : 'targets';
+    return `${totalTargets} ${targetWord} aligned`;
   })();
+
   const tooltipLabel = hasFailure
-    ? `${failedInstallCount} of ${totalInstalls} distribution${totalInstalls === 1 ? '' : 's'} failed`
+    ? `${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'} failed`
     : hasDrift
       ? lockProfile === 'all-no-app-token'
         ? `${behindInstallCount} drifted, all via packmind-cli install`
         : lockProfile === 'all-in-progress'
           ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} in progress`
-          : `${behindInstallCount} of ${totalInstalls} distributions behind`
-      : `${totalInstalls} distributions aligned`;
-  const ariaLabel = hasFailure
-    ? `Package ${pkg.name}, ${failedInstallCount} of ${totalInstalls} distributions failed`
-    : hasDrift
-      ? lockProfile === 'all-no-app-token'
-        ? `Package ${pkg.name}, ${behindInstallCount} drifted via packmind-cli install`
-        : lockProfile === 'all-in-progress'
-          ? `Package ${pkg.name}, ${behindInstallCount} in progress`
-          : `Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`
-      : `Package ${pkg.name}, aligned`;
+          : `${behindInstallCount} of ${totalTargets} target${totalTargets === 1 ? '' : 's'} need redistribution`
+      : `${totalTargets} target${totalTargets === 1 ? '' : 's'} aligned`;
+
+  const ariaLabel = `Repository ${repo.repo.owner}/${repo.repo.name}, ${summaryLine}`;
   const showLockTag = hasDrift && !hasFailure && lockProfile !== 'none';
 
   return (
@@ -294,7 +294,7 @@ function PackageRow({
       borderColor="border.tertiary"
       transition="background-color 120ms ease-out"
       display="flex"
-      alignItems="center"
+      alignItems="stretch"
       paddingLeft={3}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -313,7 +313,6 @@ function PackageRow({
 
       <PMBox
         width="16px"
-        height="16px"
         flexShrink={0}
         display="inline-flex"
         alignItems="center"
@@ -331,7 +330,7 @@ function PackageRow({
               size="sm"
               checked={bulkSelected}
               onCheckedChange={() => onToggleBulk()}
-              aria-label={`Select ${pkg.name} for bulk distribute`}
+              aria-label={`Select ${repo.repo.owner}/${repo.repo.name} for bulk distribute`}
             />
           </PMBox>
         )}
@@ -365,17 +364,35 @@ function PackageRow({
               truncate
               maxW="100%"
             >
-              {pkg.name}
+              {repo.repo.owner}/{repo.repo.name}
             </PMText>
-            <PMText
-              fontSize="11px"
-              color={hasFailure ? 'error' : hasDrift ? 'warning' : 'secondary'}
-              fontVariantNumeric="tabular-nums"
-              truncate
-              maxW="100%"
-            >
-              {summaryLine}
-            </PMText>
+            <PMHStack gap={1.5} align="center" maxW="100%">
+              <PMText
+                fontSize="11px"
+                color="faded"
+                fontVariantNumeric="tabular-nums"
+                truncate
+              >
+                {repo.branch}
+              </PMText>
+              <PMBox
+                width="2px"
+                height="2px"
+                borderRadius="full"
+                bg="border.tertiary"
+                aria-hidden
+                flexShrink={0}
+              />
+              <PMText
+                fontSize="11px"
+                color={
+                  hasFailure ? 'error' : hasDrift ? 'warning' : 'secondary'
+                }
+                truncate
+              >
+                {summaryLine}
+              </PMText>
+            </PMHStack>
           </PMVStack>
           <PMHStack gap={1.5} align="center" flexShrink={0} paddingTop="3px">
             {showLockTag && (
@@ -431,7 +448,7 @@ function PackageRow({
 type RailActionBarProps = {
   bulkSelectionSize: number;
   bulkDistributionCount: number;
-  visibleDrifted: PackageDrift[];
+  visibleDrifted: RepositoryDrift[];
   visibleDriftedSelectedCount: number;
   onSelectAllVisible: () => void;
   onClearVisible: () => void;
@@ -502,7 +519,7 @@ function RailActionBar({
               else onClearVisible();
             }}
             disabled={visibleDrifted.length === 0}
-            aria-label="Select all visible drifted packages"
+            aria-label="Select all visible drifted repositories"
           />
           <PMText
             fontSize="xs"
@@ -560,13 +577,13 @@ function FilteredZero({
   const message = (() => {
     if (query)
       return driftFilter === 'all'
-        ? `No packages match “${query}”.`
-        : `No ${filterLabel} packages match “${query}”.`;
-    if (driftFilter === 'drift') return 'No packages currently drifting.';
+        ? `No repositories match “${query}”.`
+        : `No ${filterLabel} repositories match “${query}”.`;
+    if (driftFilter === 'drift') return 'No repositories currently drifting.';
     if (driftFilter === 'failed')
-      return 'No packages with failed distributions.';
-    if (driftFilter === 'aligned') return 'No fully aligned packages.';
-    return 'No packages.';
+      return 'No repositories with failed distributions.';
+    if (driftFilter === 'aligned') return 'No fully aligned repositories.';
+    return 'No repositories.';
   })();
   return (
     <PMVStack gap={2} align="start" padding={4}>

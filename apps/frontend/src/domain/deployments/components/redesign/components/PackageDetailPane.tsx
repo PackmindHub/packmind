@@ -248,15 +248,15 @@ export function PackageDetailPane({
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
         paddingX={6}
-        paddingY={5}
+        paddingY={3}
         borderBottomWidth="1px"
         borderColor="border.tertiary"
         bg="background.primary"
       >
-        <PMVStack gap={3} align="stretch">
+        <PMVStack gap={2.5} align="stretch">
           <PMHStack gap={3} align="start" justify="space-between">
-            <PMVStack gap={1.5} align="start" flex={1} minW={0}>
-              <PMHeading level="h2" color="primary">
+            <PMVStack gap={1} align="start" flex={1} minW={0}>
+              <PMHeading level="h3" color="primary">
                 {pkg.name}
               </PMHeading>
               <PMText fontSize="sm" color="secondary" maxW="68ch">
@@ -340,16 +340,6 @@ export function PackageDetailPane({
                   </PMAlert.Description>
                 )}
               </PMAlert.Content>
-            </PMAlert.Root>
-          )}
-          {!hasDrift && !hasFailure && (
-            <PMAlert.Root status="success">
-              <PMAlert.Indicator />
-              <PMAlert.Title>
-                All {totalInstalls} distribution
-                {totalInstalls === 1 ? '' : 's'} are on the latest version of
-                every bundled artifact.
-              </PMAlert.Title>
             </PMAlert.Root>
           )}
         </PMVStack>
@@ -453,7 +443,7 @@ export function PackageDetailPane({
       {hasDrift && (
         <PMBox
           paddingX={6}
-          paddingY={4}
+          paddingY={2.5}
           borderTopWidth="1px"
           borderColor="border.tertiary"
           bg="background.secondary"
@@ -463,8 +453,8 @@ export function PackageDetailPane({
           <PMHStack gap={3} align="center" justify="space-between">
             <PMText fontSize="xs" color="secondary">
               {selectedDriftedCount === 0
-                ? 'Select distributions to redistribute the package.'
-                : `${selectedDriftedCount} of ${behindInstallCount} drifted distribution${behindInstallCount === 1 ? '' : 's'} selected.`}
+                ? 'Select distributions to redistribute.'
+                : `${selectedDriftedCount} of ${behindInstallCount} drifted selected.`}
             </PMText>
             <PMButton
               variant="primary"

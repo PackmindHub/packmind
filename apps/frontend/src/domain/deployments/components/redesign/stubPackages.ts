@@ -13,7 +13,16 @@ import {
   createStandardId,
   createTargetId,
 } from '@packmind/types';
-import type { PackageDrift, RepoRef, TargetRef } from './types';
+import type {
+  ArtifactDrift,
+  InstallLocation,
+  PackageDrift,
+  RepoRef,
+  RepositoryDrift,
+  TargetDrift,
+  TargetRef,
+} from './types';
+import type { GitRepoId, TargetId } from '@packmind/types';
 
 export const STUB_PROVIDER_OK = createGitProviderId('prov-ok');
 export const STUB_PROVIDER_NO_TOKEN = createGitProviderId('prov-no-token');
@@ -455,3 +464,71 @@ export const STUB_PACKAGES: PackageDrift[] = [
     ],
   },
 ];
+
+/**
+ * Pivots STUB_PACKAGES into the repository-centric shape so the
+ * /deployments-v2?view=repositories stub render matches the by-packages stub.
+ * The function is structurally equivalent to `buildRepositoryDriftOverview`
+ * but starts from the already-built PackageDrift[] (no API payload).
+ */
+function pivotPackagesIntoRepositories(
+  packages: PackageDrift[],
+): RepositoryDrift[] {
+  type RepoAccumulator = {
+    id: GitRepoId;
+    repo: RepoRef;
+    branch: string;
+    targets: Map<TargetId, { target: TargetRef; packages: PackageDrift[] }>;
+  };
+  const repos = new Map<GitRepoId, RepoAccumulator>();
+
+  for (const pkg of packages) {
+    for (const loc of pkg.installLocations) {
+      let r = repos.get(loc.repo.id);
+      if (!r) {
+        r = {
+          id: loc.repo.id,
+          repo: loc.repo,
+          branch: loc.branch,
+          targets: new Map(),
+        };
+        repos.set(loc.repo.id, r);
+      }
+      let t = r.targets.get(loc.target.id);
+      if (!t) {
+        t = { target: loc.target, packages: [] };
+        r.targets.set(loc.target.id, t);
+      }
+      const scopedArtifacts: ArtifactDrift[] = pkg.artifacts
+        .map((a) => ({
+          ...a,
+          installs: a.installs.filter(
+            (i) => i.repo.id === loc.repo.id && i.target.id === loc.target.id,
+          ),
+        }))
+        .filter((a) => a.installs.length > 0);
+      const scopedInstallLocation: InstallLocation = loc;
+      t.packages.push({
+        id: pkg.id,
+        name: pkg.name,
+        description: pkg.description,
+        artifacts: scopedArtifacts,
+        installLocations: [scopedInstallLocation],
+      });
+    }
+  }
+
+  return Array.from(repos.values()).map((r) => ({
+    id: r.id,
+    repo: r.repo,
+    branch: r.branch,
+    targets: Array.from(r.targets.values()).map<TargetDrift>((t) => ({
+      id: t.target.id,
+      target: t.target,
+      packages: t.packages,
+    })),
+  }));
+}
+
+export const STUB_REPOSITORIES: RepositoryDrift[] =
+  pivotPackagesIntoRepositories(STUB_PACKAGES);
