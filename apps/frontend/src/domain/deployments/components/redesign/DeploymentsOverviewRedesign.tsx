@@ -24,6 +24,7 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { routes } from '../../../../shared/utils/routes';
+import { getEnvVar } from '../../../../shared/utils/getEnvVar';
 import {
   buildPackageDriftOverview,
   packageBehindInstallCount,
@@ -86,7 +87,8 @@ export function DeploymentsOverviewRedesignContent() {
   const { organization } = useAuthContext();
   const { spaceId, spaceSlug, isReady } = useCurrentSpace();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isStubMode = import.meta.env.DEV && searchParams.get('stub') === '1';
+  const isStubMode =
+    getEnvVar('MODE') === 'development' && searchParams.get('stub') === '1';
   const { data, isLoading, isError } =
     useListActiveDistributedPackagesBySpaceQuery(
       isStubMode ? undefined : spaceId,

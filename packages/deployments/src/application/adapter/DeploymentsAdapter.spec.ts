@@ -1,4 +1,6 @@
 import {
+  ListMarketplaceDistributionsCommand,
+  MarkPluginForRemovalCommand,
   RenderPackageAsPluginCommand,
   TrackPluginDeletedCommand,
 } from '@packmind/types';
@@ -20,7 +22,15 @@ describe('DeploymentsAdapter', () => {
     beforeEach(async () => {
       execute = jest.fn().mockResolvedValue(response);
 
-      adapter = new DeploymentsAdapter({} as never, {} as never, {} as never);
+      adapter = new DeploymentsAdapter(
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+      );
       (
         adapter as unknown as {
           _renderPackageAsPluginUseCase: { execute: typeof execute };
@@ -58,7 +68,15 @@ describe('DeploymentsAdapter', () => {
     beforeEach(async () => {
       execute = jest.fn().mockResolvedValue(response);
 
-      adapter = new DeploymentsAdapter({} as never, {} as never, {} as never);
+      adapter = new DeploymentsAdapter(
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+      );
       (
         adapter as unknown as {
           _trackPluginDeletedUseCase: { execute: typeof execute };
@@ -75,6 +93,93 @@ describe('DeploymentsAdapter', () => {
     });
 
     it('delegates to TrackPluginDeletedUseCase', () => {
+      expect(execute).toHaveBeenCalledWith(command);
+    });
+
+    it('returns the use case response', () => {
+      expect(result).toBe(response);
+    });
+  });
+
+  describe('markPluginForRemoval', () => {
+    const response = { distribution: { id: 'd1' } } as never;
+    let execute: jest.Mock;
+    let adapter: DeploymentsAdapter;
+    let command: MarkPluginForRemovalCommand;
+    let result: typeof response;
+
+    beforeEach(async () => {
+      execute = jest.fn().mockResolvedValue(response);
+
+      adapter = new DeploymentsAdapter(
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+      );
+      (
+        adapter as unknown as {
+          _markPluginForRemovalUseCase: { execute: typeof execute };
+        }
+      )._markPluginForRemovalUseCase = { execute };
+
+      command = {
+        userId: 'u',
+        organizationId: 'o',
+        marketplaceId: 'm',
+        distributionId: 'd1',
+      } as MarkPluginForRemovalCommand;
+
+      result = await adapter.markPluginForRemoval(command);
+    });
+
+    it('delegates to MarkPluginForRemovalUseCase with the command', () => {
+      expect(execute).toHaveBeenCalledWith(command);
+    });
+
+    it('returns the use case response', () => {
+      expect(result).toBe(response);
+    });
+  });
+
+  describe('listMarketplaceDistributions', () => {
+    const response = [] as never;
+    let execute: jest.Mock;
+    let adapter: DeploymentsAdapter;
+    let command: ListMarketplaceDistributionsCommand;
+    let result: typeof response;
+
+    beforeEach(async () => {
+      execute = jest.fn().mockResolvedValue(response);
+
+      adapter = new DeploymentsAdapter(
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+      );
+      (
+        adapter as unknown as {
+          _listMarketplaceDistributionsUseCase: { execute: typeof execute };
+        }
+      )._listMarketplaceDistributionsUseCase = { execute };
+
+      command = {
+        userId: 'u',
+        organizationId: 'o',
+        marketplaceId: 'm',
+      } as ListMarketplaceDistributionsCommand;
+
+      result = await adapter.listMarketplaceDistributions(command);
+    });
+
+    it('delegates to ListMarketplaceDistributionsUseCase with the command', () => {
       expect(execute).toHaveBeenCalledWith(command);
     });
 

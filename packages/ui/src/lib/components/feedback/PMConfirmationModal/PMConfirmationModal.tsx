@@ -19,7 +19,7 @@ export type PMConfirmationModalProps = {
   /** Title displayed in the modal header */
   title: string;
   /** Message displayed in the modal body */
-  message: string;
+  message: ReactNode;
   /** Text for the confirm button (defaults to "Delete") */
   confirmText?: string;
   /** Text for the cancel button (defaults to "Cancel") */

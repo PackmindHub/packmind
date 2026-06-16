@@ -460,6 +460,10 @@ export class StandardsAdapter
     return standardsPerSpace.flat();
   }
 
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.services.getStandardService().countBySpaceIds(spaceIds);
+  }
+
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]> {
     return this.repositories.getRuleExampleRepository().findByRuleId(id);
   }

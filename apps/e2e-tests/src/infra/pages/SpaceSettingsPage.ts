@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 import { ISpaceSettingsPage } from '../../domain/pages';
 
@@ -20,11 +22,16 @@ export class SpaceSettingsPage
     await comboboxInput.click();
     await comboboxInput.fill(displayName);
 
+    // Ark UI's PMCombobox.Item does not propagate ItemText to the option's
+    // accessible name, so `getByRole('option', { name })` never matches.
+    // Match the role=option element by visible text via a CSS locator,
+    // which is not filtered by Playwright's accessibility heuristics.
+    // Use a longer timeout because the orgUsers query refetches on dialog
+    // mount after page reload and can take several seconds on slower envs.
     const option = this.page
-      .locator('[data-part="item-text"]')
-      .filter({ hasText: displayName })
-      .first();
-    await option.waitFor({ state: 'visible' });
+      .locator('[role="option"]')
+      .filter({ hasText: displayName });
+    await expect(option).toBeVisible({ timeout: 15000 });
     await option.click();
   }
 
@@ -51,6 +58,56 @@ export class SpaceSettingsPage
     }
 
     return members;
+  }
+
+  async getSpaceNameInput(): Promise<string> {
+    return this.page.getByLabel('Name').inputValue();
+  }
+
+  async setSpaceName(name: string): Promise<void> {
+    const input = this.page.getByLabel('Name');
+    await input.clear();
+    await input.fill(name);
+  }
+
+  async isSpaceNameDisabled(): Promise<boolean> {
+    return this.page.getByLabel('Name').isDisabled();
+  }
+
+  async selectColor(color: string): Promise<void> {
+    await this.page.getByLabel(`Select ${color} color`).click();
+  }
+
+  async clickSaveIdentity(): Promise<void> {
+    const saveButton = this.page
+      .getByRole('button', { name: /Save changes/i })
+      .first();
+    const saveResponse = this.page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PATCH' &&
+        response.url().includes('/spaces-management/'),
+    );
+
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    await saveResponse;
+  }
+
+  async waitForIdentityUpdateSuccess(): Promise<void> {
+    await this.page
+      .getByText('Space updated')
+      .waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  async waitForIdentityUpdateError(): Promise<string> {
+    const nameInput = this.page.getByLabel('Name');
+    await expect(nameInput).toHaveAttribute('aria-invalid', 'true');
+
+    const errorText = this.page.getByText(
+      'Another space with a similar name already exists.',
+    );
+    await expect(errorText).toBeVisible({ timeout: 20000 });
+    return errorText.innerText();
   }
 
   expectedUrl(): string | RegExp {

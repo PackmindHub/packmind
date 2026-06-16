@@ -28,12 +28,13 @@ import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   CHANGE_PROPOSALS_QUERY_SCOPE,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
-} from '@packmind/proprietary/frontend/domain/change-proposals/api/queryKeys';
+} from '../../../change-proposals/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { deploymentsGateways } from '../gateways';
 import {
   DeploymentQueryKeys,
   GET_PACKAGE_BY_ID_KEY,
+  GET_PACKAGE_SUMMARY_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_TARGETS_BY_REPOSITORY_KEY,
@@ -263,6 +264,28 @@ export const useGetPackageByIdQuery = (
       isOrgMatch &&
       isSpaceMatch,
   });
+};
+
+export const getPackageSummaryOptions = (
+  organizationId: OrganizationId | string,
+  slug: string,
+) => ({
+  queryKey: [...GET_PACKAGE_SUMMARY_KEY, organizationId, slug] as const,
+  queryFn: () => {
+    return deploymentsGateways.getPackageSummary({
+      organizationId: organizationId as OrganizationId,
+      slug,
+    });
+  },
+  enabled: !!organizationId && !!slug,
+  staleTime: 1000 * 60 * 5,
+});
+
+export const useGetPackageSummaryQuery = (
+  organizationId: OrganizationId | string | undefined,
+  slug: string | undefined,
+) => {
+  return useQuery(getPackageSummaryOptions(organizationId ?? '', slug ?? ''));
 };
 
 export const useGetDashboardKpiQuery = (spaceId: string) => {

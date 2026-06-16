@@ -15,8 +15,8 @@ export const formatCreatedAt = (iso: string | null): string => {
   if (Number.isNaN(date.getTime())) {
     return EMPTY_PLACEHOLDER;
   }
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
+  return date.toLocaleDateString('en-US', {
+    day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone: 'UTC',

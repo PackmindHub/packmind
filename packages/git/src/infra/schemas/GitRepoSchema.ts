@@ -28,6 +28,11 @@ export const GitRepoSchema = new EntitySchema<
       name: 'provider_id',
       type: 'uuid',
     },
+    type: {
+      type: 'varchar',
+      nullable: false,
+      default: 'standard',
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
