@@ -69,4 +69,13 @@ export interface IMarketplaceRepository extends IRepository<Marketplace> {
    * optionally `descriptor` + `pluginCount` on drift. Bumps `updated_at`.
    */
   updateState(id: MarketplaceId, patch: MarketplaceStateUpdate): Promise<void>;
+
+  /**
+   * Find a marketplace by its tracking token.
+   *
+   * Used by the public heartbeat endpoint to resolve the marketplace (and
+   * therefore its org) without any user credentials.
+   * Returns `null` when no active (non-soft-deleted) marketplace has that token.
+   */
+  findByTrackingToken(token: string): Promise<Marketplace | null>;
 }

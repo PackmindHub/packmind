@@ -8,3 +8,8 @@ export {
   IMarketplaceRepository,
   MarketplaceStateUpdate,
 } from './IMarketplaceRepository';
+export {
+  IPluginInstallationRepository,
+  UpsertHeartbeatInput,
+  UpsertHeartbeatResult,
+} from './IPluginInstallationRepository';

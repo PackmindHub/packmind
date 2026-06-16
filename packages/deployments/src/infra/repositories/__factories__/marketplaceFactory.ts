@@ -56,6 +56,7 @@ export const marketplaceFactory: Factory<Marketplace> = (
     errorDetail: null,
     pendingPrUrl: null,
     outdatedPluginSlugs: null,
+    trackingToken: null,
     ...overrides,
   } as Marketplace;
 };

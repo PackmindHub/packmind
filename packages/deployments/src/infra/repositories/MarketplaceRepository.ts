@@ -150,6 +150,31 @@ export class MarketplaceRepository
     }
   }
 
+  async findByTrackingToken(token: string): Promise<Marketplace | null> {
+    this.logger.info('Finding marketplace by tracking token (prefix only)', {
+      tokenPrefix: token.substring(0, 6),
+    });
+
+    try {
+      const marketplace = await this.repository
+        .createQueryBuilder('marketplace')
+        .where('marketplace.trackingToken = :token', { token })
+        .getOne();
+
+      this.logger.info('Marketplace lookup by tracking token', {
+        tokenPrefix: token.substring(0, 6),
+        found: !!marketplace,
+      });
+      return marketplace;
+    } catch (error) {
+      this.logger.error('Failed to find marketplace by tracking token', {
+        tokenPrefix: token.substring(0, 6),
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findAllForReconciliation(): Promise<Marketplace[]> {
     this.logger.info('Finding all marketplaces for reconciliation sweep');
 
