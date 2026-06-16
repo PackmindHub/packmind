@@ -69,3 +69,26 @@ export type PackageDrift = {
   artifacts: ArtifactDrift[];
   installLocations: InstallLocation[];
 };
+
+/**
+ * Target view scoped to a single (repo, target) pair. Each `PackageDrift`
+ * inside `packages` has its `installLocations` and `artifact.installs`
+ * restricted to this exact (repo, target) so the existing package-scoped
+ * selectors and components keep working.
+ */
+export type TargetDrift = {
+  id: TargetId;
+  target: TargetRef;
+  packages: PackageDrift[];
+};
+
+/**
+ * Repo-centric pivot of the deployments overview: one entry per git repo,
+ * with its targets, and inside each target the scoped packages.
+ */
+export type RepositoryDrift = {
+  id: GitRepoId;
+  repo: RepoRef;
+  branch: string;
+  targets: TargetDrift[];
+};
