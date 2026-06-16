@@ -134,8 +134,8 @@ export class ListMarketplacesUseCase
 /**
  * Build the browser-facing repository URL from the provider vendor and the
  * repo coordinates. Mirrors the cloud-host convention used elsewhere in the
- * codebase (`handleWebHookWithoutContent`); returns an empty string for
- * unknown vendors so the UI can suppress the link.
+ * codebase; returns an empty string for unknown vendors so the UI can suppress
+ * the link.
  *
  * GitLab `owner` may itself be a `group/subgroup` path — that is fine, the
  * slashes carry through into a valid URL.
