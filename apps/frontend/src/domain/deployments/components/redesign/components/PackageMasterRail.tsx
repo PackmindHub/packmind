@@ -255,6 +255,16 @@ function PackageRow({
         ? 'blue.300'
         : 'orange.500'
       : 'green.500';
+  const summaryLine = (() => {
+    if (hasFailure) {
+      return `${failedInstallCount} failed`;
+    }
+    if (hasDrift) {
+      return `${behindInstallCount} drifted`;
+    }
+    const installWord = totalInstalls === 1 ? 'distribution' : 'distributions';
+    return `${totalInstalls} ${installWord} aligned`;
+  })();
   const tooltipLabel = hasFailure
     ? `${failedInstallCount} of ${totalInstalls} distribution${totalInstalls === 1 ? '' : 's'} failed`
     : hasDrift
@@ -346,61 +356,72 @@ function PackageRow({
         aria-pressed={selected}
         aria-label={ariaLabel}
       >
-        <PMHStack gap={2} align="center" justify="space-between">
-          <PMText
-            fontSize="sm"
-            fontWeight={selected ? 'semibold' : 'medium'}
-            color="primary"
-            truncate
-            flex={1}
-            minW={0}
-          >
-            {pkg.name}
-          </PMText>
-          {showLockTag && (
-            <PMBox flexShrink={0} display="inline-flex" alignItems="center">
-              {lockProfile === 'all-no-app-token' ? (
-                <PMText
-                  as="span"
-                  fontFamily="mono"
-                  fontSize="10px"
-                  fontWeight="medium"
-                  color="warning"
-                  bg="background.tertiary"
-                  paddingX={1}
-                  paddingY="1px"
-                  borderRadius="sm"
-                  letterSpacing="0.04em"
-                  textTransform="uppercase"
-                >
-                  CLI
-                </PMText>
-              ) : (
-                <PMIcon fontSize="xs" color="blue.300" aria-hidden>
-                  <LuClock />
-                </PMIcon>
-              )}
-            </PMBox>
-          )}
-          <PMTooltip label={tooltipLabel} showArrow openDelay={200}>
-            <PMBox
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              width="20px"
-              height="20px"
-              cursor="help"
-              flexShrink={0}
+        <PMHStack gap={2} align="start" justify="space-between">
+          <PMVStack gap="2px" align="start" flex={1} minW={0}>
+            <PMText
+              fontSize="sm"
+              fontWeight={selected ? 'semibold' : 'medium'}
+              color="primary"
+              truncate
+              maxW="100%"
             >
+              {pkg.name}
+            </PMText>
+            <PMText
+              fontSize="11px"
+              color={hasFailure ? 'error' : hasDrift ? 'warning' : 'secondary'}
+              fontVariantNumeric="tabular-nums"
+              truncate
+              maxW="100%"
+            >
+              {summaryLine}
+            </PMText>
+          </PMVStack>
+          <PMHStack gap={1.5} align="center" flexShrink={0} paddingTop="3px">
+            {showLockTag && (
+              <PMBox display="inline-flex" alignItems="center">
+                {lockProfile === 'all-no-app-token' ? (
+                  <PMText
+                    as="span"
+                    fontFamily="mono"
+                    fontSize="10px"
+                    fontWeight="medium"
+                    color="warning"
+                    bg="background.tertiary"
+                    paddingX={1}
+                    paddingY="1px"
+                    borderRadius="sm"
+                    letterSpacing="0.04em"
+                    textTransform="uppercase"
+                  >
+                    CLI
+                  </PMText>
+                ) : (
+                  <PMIcon fontSize="xs" color="blue.300" aria-hidden>
+                    <LuClock />
+                  </PMIcon>
+                )}
+              </PMBox>
+            )}
+            <PMTooltip label={tooltipLabel} showArrow openDelay={200}>
               <PMBox
-                width="8px"
-                height="8px"
-                borderRadius="full"
-                bg={dotColor}
-                aria-hidden
-              />
-            </PMBox>
-          </PMTooltip>
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                width="20px"
+                height="20px"
+                cursor="help"
+              >
+                <PMBox
+                  width="8px"
+                  height="8px"
+                  borderRadius="full"
+                  bg={dotColor}
+                  aria-hidden
+                />
+              </PMBox>
+            </PMTooltip>
+          </PMHStack>
         </PMHStack>
       </PMBox>
     </PMBox>
