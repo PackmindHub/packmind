@@ -39,6 +39,7 @@ import {
   UnknownMarketplaceDescriptorError,
   UnlinkMarketplaceResponse,
   ValidateMarketplaceUrlResponse,
+  ListMarketplacePluginInstallsResponse,
 } from '@packmind/types';
 import {
   AuthenticatedRequest,
@@ -101,9 +102,11 @@ describe('MarketplacesController', () => {
     errorDetail: null,
     pendingPrUrl: null,
     outdatedPluginSlugs: null,
+    trackingToken: 'aaaabbbbcccc-tracking-token',
     createdAt: new Date('2026-05-29T10:00:00.000Z'),
     updatedAt: new Date('2026-05-29T10:00:00.000Z'),
     deletedAt: null,
+    deletedBy: null,
   };
 
   const linkResponse: LinkMarketplaceResponse = {
@@ -124,6 +127,7 @@ describe('MarketplacesController', () => {
       listMarketplaceDistributions: jest.fn(),
       getMarketplaceDistributionChanges: jest.fn(),
       markPluginForRemoval: jest.fn(),
+      listMarketplacePluginInstalls: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new MarketplacesController(
@@ -1038,6 +1042,58 @@ describe('MarketplacesController', () => {
             baseRequest,
           ),
         ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+  });
+
+  describe('GET /organizations/:orgId/marketplaces/:marketplaceId/plugin-installs', () => {
+    const pluginInstallsResponse: ListMarketplacePluginInstallsResponse = [];
+
+    describe('on successful list', () => {
+      let result: ListMarketplacePluginInstallsResponse;
+
+      beforeEach(async () => {
+        mockDeploymentAdapter.listMarketplacePluginInstalls.mockResolvedValue(
+          pluginInstallsResponse,
+        );
+
+        result = await controller.listMarketplacePluginInstalls(
+          organizationId,
+          marketplaceId,
+          baseRequest,
+        );
+      });
+
+      it('returns the response from the deployment adapter', () => {
+        expect(result).toEqual(pluginInstallsResponse);
+      });
+
+      it('forwards the command to the deployment adapter', () => {
+        expect(
+          mockDeploymentAdapter.listMarketplacePluginInstalls,
+        ).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          marketplaceId,
+          source: 'ui',
+        });
+      });
+    });
+
+    describe('when the org access guard rejects a non-member', () => {
+      it('rethrows ForbiddenException unchanged (negative case only)', async () => {
+        const original = new ForbiddenException('Access denied');
+        mockDeploymentAdapter.listMarketplacePluginInstalls.mockRejectedValue(
+          original,
+        );
+
+        await expect(
+          controller.listMarketplacePluginInstalls(
+            organizationId,
+            marketplaceId,
+            baseRequest,
+          ),
+        ).rejects.toBe(original);
       });
     });
   });

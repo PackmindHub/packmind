@@ -66,6 +66,7 @@ import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
 import { TrialModule } from './trial/trial.module';
+import { TrackingModule } from './tracking/tracking.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -136,6 +137,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     ImportLegacyModule,
     TrialModule,
     PublicSkillsModule,
+    TrackingModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
@@ -146,6 +148,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       {
         path: 'skills',
         module: PublicSkillsModule,
+      },
+      {
+        path: 'tracking',
+        module: TrackingModule,
       },
       {
         path: 'organizations/:orgId',

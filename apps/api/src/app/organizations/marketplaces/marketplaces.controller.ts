@@ -36,6 +36,8 @@ import {
   ListMarketplaceDistributionsResponse,
   ListMarketplacesCommand,
   ListMarketplacesResponse,
+  ListMarketplacePluginInstallsCommand,
+  ListMarketplacePluginInstallsResponse,
   MarketplaceAlreadyLinkedError,
   MarketplaceDescriptorBadFormatError,
   MarketplaceDescriptorNotFoundError,
@@ -679,6 +681,58 @@ export class MarketplacesController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /organizations/:orgId/marketplaces/:marketplaceId/reconcile - Failed to reconcile marketplace',
+        {
+          organizationId,
+          marketplaceId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Get(':marketplaceId/plugin-installs')
+  async listMarketplacePluginInstalls(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListMarketplacePluginInstallsResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/marketplaces/:marketplaceId/plugin-installs - Listing plugin installs',
+      {
+        organizationId,
+        marketplaceId,
+      },
+    );
+
+    try {
+      const command: ListMarketplacePluginInstallsCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.listMarketplacePluginInstalls(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/plugin-installs - Plugin installs listed',
+        {
+          organizationId,
+          marketplaceId,
+          count: response.length,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/plugin-installs - Failed to list plugin installs',
         {
           organizationId,
           marketplaceId,
