@@ -84,6 +84,10 @@ import {
   RenderPackageAsPluginResponse,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  TrackPluginInstallHeartbeatCommand,
+  TrackPluginInstallHeartbeatResponse,
+  ListMarketplacePluginInstallsCommand,
+  ListMarketplacePluginInstallsResponse,
   UnlinkMarketplaceCommand,
   UnlinkMarketplaceResponse,
   UpdatePackageCommand,
@@ -767,4 +771,29 @@ export interface IDeploymentPort {
   getMarketplaceDistributionChanges(
     command: GetMarketplaceDistributionChangesCommand,
   ): Promise<GetMarketplaceDistributionChangesResponse>;
+
+  /**
+   * Processes a SessionStart heartbeat from a published Packmind plugin.
+   *
+   * Public path — the `trackingToken` in the command is the sole credential.
+   * The API layer pre-resolves `verifiedUserId` before calling this method.
+   *
+   * @param command - Heartbeat payload carrying token, slug, scope, and optional identity
+   * @returns Whether the row was created (first-seen) and the resolved marketplace id
+   */
+  trackPluginInstallHeartbeat(
+    command: TrackPluginInstallHeartbeatCommand,
+  ): Promise<TrackPluginInstallHeartbeatResponse>;
+
+  /**
+   * Lists all tracked plugin installations for a marketplace.
+   *
+   * Open to any org member (read-only). Enriches each row with user display names.
+   *
+   * @param command - Command carrying the marketplace id and auth context
+   * @returns Promise of presentation DTOs (`PluginInstallationListItem[]`)
+   */
+  listMarketplacePluginInstalls(
+    command: ListMarketplacePluginInstallsCommand,
+  ): Promise<ListMarketplacePluginInstallsResponse>;
 }

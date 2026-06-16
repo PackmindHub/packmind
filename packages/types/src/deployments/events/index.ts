@@ -11,3 +11,4 @@ export * from './MarketplaceLinkedEvent';
 export * from './MarketplacePluginRemovalInitiatedEvent';
 export * from './MarketplaceUnlinkedEvent';
 export * from './PackagesDeletedEvent';
+export * from './PluginInstallTrackedEvent';

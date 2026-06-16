@@ -1,4 +1,6 @@
 // Entity types
+export * from './PluginInstallationId';
+export * from './PluginInstallation';
 export * from './TargetId';
 export * from './Target';
 export * from './TargetWithRepository';

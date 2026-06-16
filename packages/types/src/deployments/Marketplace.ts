@@ -37,5 +37,15 @@ export type Marketplace = WithSoftDelete<
     pendingPrUrl: string | null;
     /** Slugs whose served plugin is built from a package that has changed since last publish. */
     outdatedPluginSlugs: string[] | null;
+    /**
+     * Random opaque token used to identify this marketplace's tracking endpoint.
+     * Generated at link time; backfilled by migration for existing rows.
+     * Baked into published plugin sidecars so the SessionStart hook can POST
+     * heartbeats without needing user credentials.
+     *
+     * `null` only on rows created before the migration ran (backfill sets a
+     * value for all existing rows, so this should never be null in practice).
+     */
+    trackingToken: string | null;
   }>
 >;
