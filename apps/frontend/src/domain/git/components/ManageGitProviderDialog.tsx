@@ -10,7 +10,6 @@ import {
 import { OrganizationId } from '@packmind/types';
 import { GitProviderConnection } from './ManageGitProvider/GitProviderConnection';
 import { GitProviderUI } from '../types/GitProviderTypes';
-import { WebHookConfig } from './WebHookConfig';
 import { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';
 import { GitProviderAdvancedPanel } from './ManageGitProvider/GitProviderAdvancedPanel';
 
@@ -26,7 +25,7 @@ export const ManageGitProviderDialog: React.FC<
   ManageGitProviderDialogProps
 > = ({ organizationId, editingProvider = null, onSuccess, open, setOpen }) => {
   const [displayedScreen, setDisplayedScreen] = React.useState<
-    'connection' | 'webhook' | 'repositories' | 'advanced'
+    'connection' | 'repositories' | 'advanced'
   >('connection');
 
   const showAdvanced = !!editingProvider && editingProvider.source === 'github';
@@ -68,14 +67,6 @@ export const ManageGitProviderDialog: React.FC<
               </PMLink>
               {editingProvider && (
                 <PMLink
-                  onClick={() => setDisplayedScreen('webhook')}
-                  variant={displayedScreen === 'webhook' ? 'active' : 'plain'}
-                >
-                  Webhook
-                </PMLink>
-              )}
-              {editingProvider && (
-                <PMLink
                   onClick={() => setDisplayedScreen('repositories')}
                   variant={
                     displayedScreen === 'repositories' ? 'active' : 'plain'
@@ -108,16 +99,6 @@ export const ManageGitProviderDialog: React.FC<
                       if (onSuccess) onSuccess(provider);
                     }}
                   />
-                </PMPageSection>
-              )}
-
-              {displayedScreen === 'webhook' && editingProvider && (
-                <PMPageSection
-                  title="Webhook"
-                  headingLevel="h5"
-                  backgroundColor="primary"
-                >
-                  <WebHookConfig providerVendor={editingProvider?.source} />
                 </PMPageSection>
               )}
 

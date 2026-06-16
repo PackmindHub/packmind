@@ -88,30 +88,6 @@ export class RecipesService {
     });
   }
 
-  async updateRecipesFromGitHub(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
-  ) {
-    return this.recipesAdapter.updateRecipesFromGitHub({
-      payload,
-      organizationId,
-      headers,
-    });
-  }
-
-  async updateRecipesFromGitLab(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
-  ) {
-    return this.recipesAdapter.updateRecipesFromGitLab({
-      payload,
-      organizationId,
-      headers,
-    });
-  }
-
   async updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<Recipe> {

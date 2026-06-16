@@ -31,9 +31,7 @@ import {
   SpaceId,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
-  UpdateRecipesFromGitHubCommand,
   UserId,
-  UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
 import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactory';
@@ -49,8 +47,6 @@ import { GetRecipeVersionUseCase } from '../useCases/getRecipeVersion/GetRecipeV
 import { ListRecipesBySpaceUseCase } from '../useCases/listRecipesBySpace/ListRecipesBySpaceUseCase';
 import { ListRecipeVersionsUseCase } from '../useCases/listRecipeVersions/ListRecipeVersionsUseCase';
 import { UpdateRecipeFromUIUseCase } from '../useCases/updateRecipeFromUI/UpdateRecipeFromUIUseCase';
-import { UpdateRecipesFromGitHubUseCase } from '../useCases/updateRecipesFromGitHub/UpdateRecipesFromGitHubUseCase';
-import { UpdateRecipesFromGitLabUseCase } from '../useCases/updateRecipesFromGitLab/UpdateRecipesFromGitLabUseCase';
 
 const origin = 'RecipesAdapter';
 
@@ -70,8 +66,6 @@ export class RecipesAdapter
   // Use cases - created in initialize()
   private _captureRecipe!: CaptureRecipeUseCase;
   private _captureRecipeWithPackages!: CaptureRecipeWithPackagesUseCase;
-  private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUseCase;
-  private _updateRecipesFromGitLab!: UpdateRecipesFromGitLabUseCase;
   private _updateRecipeFromUI!: UpdateRecipeFromUIUseCase;
   private _deleteRecipe!: DeleteRecipeUseCase;
   private _getRecipeById!: GetRecipeByIdUseCase;
@@ -144,24 +138,6 @@ export class RecipesAdapter
       this._captureRecipe,
       this.deploymentPort,
       this.spacesPort,
-    );
-
-    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUseCase(
-      this.recipesServices.getRecipeService(),
-      this.gitPort!,
-      this.deploymentPort!,
-    );
-    this._updateRecipesFromGitHub.setRecipesDelayedJobs(
-      this.recipesDelayedJobs,
-    );
-
-    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUseCase(
-      this.recipesServices.getRecipeService(),
-      this.gitPort!,
-      this.deploymentPort!,
-    );
-    this._updateRecipesFromGitLab.setRecipesDelayedJobs(
-      this.recipesDelayedJobs,
     );
 
     this._updateRecipeFromUI = new UpdateRecipeFromUIUseCase(
@@ -306,14 +282,6 @@ export class RecipesAdapter
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse> {
     return this._updateRecipeFromUI.execute(command);
-  }
-
-  public updateRecipesFromGitHub(command: UpdateRecipesFromGitHubCommand) {
-    return this._updateRecipesFromGitHub.execute(command);
-  }
-
-  public updateRecipesFromGitLab(command: UpdateRecipesFromGitLabCommand) {
-    return this._updateRecipesFromGitLab.execute(command);
   }
 
   public deleteRecipe(command: DeleteRecipeCommand) {

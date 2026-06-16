@@ -44,7 +44,6 @@ describe('CommitToGitUseCase', () => {
 
     mockGithubRepository = {
       commitFiles: jest.fn(),
-      handlePushHook: jest.fn(),
       getFileOnRepo: jest.fn(),
       listDirectoriesOnRepo: jest.fn(),
       checkDirectoryExists: jest.fn(),

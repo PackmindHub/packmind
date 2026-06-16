@@ -1,6 +1,6 @@
 import {
+  FetchedFileContent,
   GitRepoId,
-  HandleWebHookResult,
   OrganizationId,
   RecipeVersionId,
 } from '@packmind/types';
@@ -8,7 +8,7 @@ import {
 export interface UpdateRecipesAndGenerateSummariesInput {
   organizationId: OrganizationId;
   gitRepoId: GitRepoId;
-  files: HandleWebHookResult;
+  files: FetchedFileContent[];
   /**
    * Record of recipe slug to target path for deployment checking
    * Only recipes in this record should be processed
