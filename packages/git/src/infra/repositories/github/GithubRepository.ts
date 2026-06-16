@@ -633,24 +633,6 @@ export class GithubRepository implements IGitRepo {
     return undefined;
   }
 
-  isValidBranch(ref: string): boolean {
-    // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
-    const branchName = ref.replace('refs/heads/', '');
-    return branchName === 'main';
-  }
-
-  isPushEventFromWebhook(headers: Record<string, string>): boolean {
-    const githubEvent = headers['x-github-event'];
-    const isPushEvent = githubEvent === 'push';
-
-    this.logger.debug('Checking if webhook is a push event', {
-      eventType: githubEvent,
-      isPushEvent,
-    });
-
-    return isPushEvent;
-  }
-
   async getFileOnRepo(
     path: string,
     branch?: string,

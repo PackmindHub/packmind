@@ -766,24 +766,6 @@ export class GitlabRepository implements IGitRepo {
     return undefined;
   }
 
-  isValidBranch(ref: string): boolean {
-    // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
-    const branchName = ref.replace('refs/heads/', '');
-    return branchName === 'main';
-  }
-
-  isPushEventFromWebhook(headers: Record<string, string>): boolean {
-    const gitlabEvent = headers['x-gitlab-event'];
-    const isPushEvent = gitlabEvent === 'Push Hook';
-
-    this.logger.debug('Checking if webhook is a push event', {
-      eventType: gitlabEvent,
-      isPushEvent,
-    });
-
-    return isPushEvent;
-  }
-
   async getFileOnRepo(
     path: string,
     branch?: string,

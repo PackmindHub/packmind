@@ -1276,65 +1276,6 @@ describe('GithubRepository', () => {
     });
   });
 
-  describe('isValidBranch', () => {
-    it('returns true for main branch', () => {
-      const result = githubRepository.isValidBranch('refs/heads/main');
-      expect(result).toBe(true);
-    });
-
-    it('returns false for non-main branch', () => {
-      const result = githubRepository.isValidBranch(
-        'refs/heads/feature-branch',
-      );
-      expect(result).toBe(false);
-    });
-
-    it('returns false for develop branch', () => {
-      const result = githubRepository.isValidBranch('refs/heads/develop');
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('isPushEventFromWebhook', () => {
-    it('returns true for push events', () => {
-      const headers = { 'x-github-event': 'push' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(true);
-    });
-
-    it('returns false for pull_request events', () => {
-      const headers = { 'x-github-event': 'pull_request' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
-    });
-
-    it('returns false for issues events', () => {
-      const headers = { 'x-github-event': 'issues' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
-    });
-
-    it('returns false for repository events', () => {
-      const headers = { 'x-github-event': 'repository' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
-    });
-
-    it('returns false for release events', () => {
-      const headers = { 'x-github-event': 'release' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
-    });
-
-    describe('when x-github-event header is missing', () => {
-      it('returns false', () => {
-        const headers = {};
-        const result = githubRepository.isPushEventFromWebhook(headers);
-        expect(result).toBe(false);
-      });
-    });
-  });
-
   describe('getFileOnRepo', () => {
     const filePath = 'test/file.txt';
     const fileSha = 'test-sha-123';
