@@ -2,6 +2,7 @@ import {
   GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
+  ListMarketplacePluginInstallsResponse,
   MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
@@ -123,6 +124,15 @@ export class MarketplaceGatewayApi
     return this._api.post<SyncMarketplaceNowResponse>(
       `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/reconcile`,
       {},
+    );
+  }
+
+  async listPluginInstalls(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+  ): Promise<ListMarketplacePluginInstallsResponse> {
+    return this._api.get<ListMarketplacePluginInstallsResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/plugin-installs`,
     );
   }
 }

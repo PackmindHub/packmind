@@ -3,6 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import type {
   ListMarketplaceDistributionsResponse,
+  ListMarketplacePluginInstallsResponse,
   MarketplaceDistribution,
   MarketplaceDistributionId,
   MarketplaceId,
@@ -16,6 +17,7 @@ import {
   marketplaceQueryKeys,
   useMarkPluginForRemovalByDistribution,
   useMarkPluginForRemovalByPackage,
+  useMarketplacePluginInstalls,
 } from './MarketplaceQueries';
 
 jest.mock('../gateways', () => ({
@@ -27,6 +29,7 @@ jest.mock('../gateways', () => ({
     listDistributions: jest.fn(),
     markPluginForRemovalByDistribution: jest.fn(),
     markPluginForRemovalByPackage: jest.fn(),
+    listPluginInstalls: jest.fn(),
   },
 }));
 
@@ -38,6 +41,7 @@ const mockGateway = marketplaceGateway as unknown as {
   listDistributions: jest.Mock;
   markPluginForRemovalByDistribution: jest.Mock;
   markPluginForRemovalByPackage: jest.Mock;
+  listPluginInstalls: jest.Mock;
 };
 
 const orgId = 'org-1' as OrganizationId;
@@ -214,6 +218,105 @@ describe('useMarkPluginForRemovalByPackage', () => {
       });
       expect(hasDistributions).toBe(true);
       expect(hasPackageDetailInvalidation).toBe(true);
+    });
+  });
+});
+
+describe('marketplaceQueryKeys.pluginInstalls', () => {
+  it('nests the plugin-installs key under the marketplaces scope', () => {
+    const key = marketplaceQueryKeys.pluginInstalls();
+    const all = marketplaceQueryKeys.all();
+    expect(key.slice(0, all.length)).toEqual([...all]);
+  });
+
+  it('produces a unique key per (orgId, marketplaceId) pair', () => {
+    const a = marketplaceQueryKeys.pluginInstallList(orgId, marketplaceId);
+    const b = marketplaceQueryKeys.pluginInstallList(
+      orgId,
+      'other-mkt' as MarketplaceId,
+    );
+    expect(a).not.toEqual(b);
+  });
+});
+
+describe('marketplaceQueries.pluginInstalls', () => {
+  it('uses the pluginInstallList query key', () => {
+    const options = marketplaceQueries.pluginInstalls({
+      orgId,
+      marketplaceId,
+    });
+    expect(options.queryKey).toEqual(
+      marketplaceQueryKeys.pluginInstallList(orgId, marketplaceId),
+    );
+  });
+
+  describe('when orgId is empty', () => {
+    it('is disabled', () => {
+      const options = marketplaceQueries.pluginInstalls({
+        orgId: '',
+        marketplaceId,
+      });
+      expect(options.enabled).toBe(false);
+    });
+  });
+
+  describe('when enabled flag is false', () => {
+    it('is disabled', () => {
+      const options = marketplaceQueries.pluginInstalls({
+        orgId,
+        marketplaceId,
+        enabled: false,
+      });
+      expect(options.enabled).toBe(false);
+    });
+  });
+
+  it('has a staleTime of 10 minutes', () => {
+    const options = marketplaceQueries.pluginInstalls({
+      orgId,
+      marketplaceId,
+    });
+    expect(options.staleTime).toBe(10 * 60 * 1000);
+  });
+});
+
+describe('useMarketplacePluginInstalls', () => {
+  const stubInstallsResponse: ListMarketplacePluginInstallsResponse = [];
+
+  beforeEach(() => {
+    mockGateway.listPluginInstalls.mockResolvedValue(stubInstallsResponse);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when drawerOpen is true', () => {
+    it('calls the gateway with the correct arguments', async () => {
+      const client = createClient();
+      const { result } = renderHook(
+        () => useMarketplacePluginInstalls(orgId, marketplaceId, true),
+        { wrapper: createWrapper(client) },
+      );
+
+      await waitFor(() => result.current.isSuccess);
+
+      expect(mockGateway.listPluginInstalls).toHaveBeenCalledWith(
+        orgId,
+        marketplaceId,
+      );
+    });
+  });
+
+  describe('when drawerOpen is false', () => {
+    it('does not call the gateway', () => {
+      const client = createClient();
+      renderHook(
+        () => useMarketplacePluginInstalls(orgId, marketplaceId, false),
+        { wrapper: createWrapper(client) },
+      );
+
+      expect(mockGateway.listPluginInstalls).not.toHaveBeenCalled();
     });
   });
 });

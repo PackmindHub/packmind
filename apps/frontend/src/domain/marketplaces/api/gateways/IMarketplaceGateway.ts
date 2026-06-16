@@ -2,6 +2,7 @@ import {
   GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
+  ListMarketplacePluginInstallsResponse,
   MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
@@ -113,4 +114,15 @@ export interface IMarketplaceGateway {
     organizationId: OrganizationId,
     marketplaceId: MarketplaceId,
   ): Promise<SyncMarketplaceNowResponse>;
+
+  /**
+   * Returns all tracked plugin installation rows for the given marketplace,
+   * enriched with user display names.
+   *
+   * Route: `GET /organizations/:orgId/marketplaces/:marketplaceId/plugin-installs`
+   */
+  listPluginInstalls(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+  ): Promise<ListMarketplacePluginInstallsResponse>;
 }

@@ -9,6 +9,7 @@ import { pmToaster } from '@packmind/ui';
 import {
   GetMarketplaceDistributionChangesResponse,
   ListMarketplaceDistributionsResponse,
+  ListMarketplacePluginInstallsResponse,
   MarketplaceDistributionId,
   MarketplaceId,
   MarketplaceListItem,
@@ -35,6 +36,7 @@ export enum MarketplaceQueryKey {
   VALIDATE_URL = 'validate-url',
   DISTRIBUTIONS = 'distributions',
   DISTRIBUTION_CHANGES = 'distribution-changes',
+  PLUGIN_INSTALLS = 'plugin-installs',
 }
 
 // Factory for marketplace query keys. Lives under the per-organization scope so
@@ -75,6 +77,20 @@ export const marketplaceQueryKeys = {
       organizationId,
       marketplaceId,
       distributionId,
+    ] as const,
+  pluginInstalls: () =>
+    [
+      ...marketplaceQueryKeys.all(),
+      MarketplaceQueryKey.PLUGIN_INSTALLS,
+    ] as const,
+  pluginInstallList: (
+    organizationId: OrganizationId | string,
+    marketplaceId: MarketplaceId | string,
+  ) =>
+    [
+      ...marketplaceQueryKeys.pluginInstalls(),
+      organizationId,
+      marketplaceId,
     ] as const,
 };
 
@@ -172,7 +188,47 @@ export const marketplaceQueries = {
         ) as Promise<GetMarketplaceDistributionChangesResponse>,
       enabled: enabled && !!orgId && !!marketplaceId && !!distributionId,
     }),
+  pluginInstalls: ({
+    orgId,
+    marketplaceId,
+    enabled = true,
+    gateway = marketplaceGateway,
+  }: {
+    orgId: OrganizationId | string;
+    marketplaceId: MarketplaceId | string;
+    /** Set to false to defer fetching until e.g. the drill-down drawer is open. */
+    enabled?: boolean;
+    gateway?: IMarketplaceGateway;
+  }) =>
+    queryOptions({
+      queryKey: marketplaceQueryKeys.pluginInstallList(orgId, marketplaceId),
+      queryFn: () =>
+        gateway.listPluginInstalls(
+          orgId as OrganizationId,
+          marketplaceId as MarketplaceId,
+        ) as Promise<ListMarketplacePluginInstallsResponse>,
+      enabled: !!orgId && !!marketplaceId && enabled,
+      // 10-minute staleTime: matches page-level convention; e2e tests must
+      // call page.reload() after seeding heartbeats for results to appear.
+      staleTime: 10 * 60 * 1000,
+    }),
 };
+
+// Hook variant of marketplaceQueries.pluginInstalls. The `drawerOpen` flag
+// defers the fetch until the drill-down drawer is opened so the main table
+// doesn't trigger N queries on page load.
+export const useMarketplacePluginInstalls = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+  drawerOpen = false,
+) =>
+  useQuery(
+    marketplaceQueries.pluginInstalls({
+      orgId: organizationId,
+      marketplaceId,
+      enabled: drawerOpen,
+    }),
+  );
 
 // Hook variant of marketplaceQueries.distributions. Mirrors the existing
 // TanStack Query patterns under apps/frontend/src/domain/{domain}/api/queries.

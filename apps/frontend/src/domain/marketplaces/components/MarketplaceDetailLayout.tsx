@@ -55,6 +55,7 @@ import {
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { RemovePluginButton } from './RemovePluginButton';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
+import { PluginAdoptionTab } from './PluginAdoptionTab';
 import { PluginOverviewTab } from './PluginOverviewTab';
 
 export interface MarketplaceDetailLayoutProps {
@@ -444,7 +445,7 @@ interface PluginDetailPaneProps {
   version: string | null;
 }
 
-type DetailTabId = 'overview' | 'changes';
+type DetailTabId = 'overview' | 'changes' | 'adoption';
 
 function PluginDetailPane({
   distribution,
@@ -569,6 +570,16 @@ function PluginDetailPane({
             distributionId={distribution.id}
             isOutdated={isOutdated}
             active={tab === 'changes'}
+          />
+        )}
+
+        {tab === 'adoption' && (
+          <PluginAdoptionTab
+            organizationId={organizationId}
+            marketplaceId={marketplaceId}
+            pluginSlug={distribution.pluginSlug}
+            publishedVersion={version}
+            active={tab === 'adoption'}
           />
         )}
       </PMVStack>
@@ -761,9 +772,9 @@ interface DetailTabsProps {
 }
 
 /**
- * Tab strip inside the plugin detail pane. Overview and Changes are wired
- * today; Adoption / Settings from the prototype will join once the backend
- * exposes the data each tab needs.
+ * Tab strip inside the plugin detail pane. Overview, Changes and Adoption are
+ * wired today; Settings from the prototype will join once the backend exposes
+ * the data it needs.
  */
 function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
   return (
@@ -784,6 +795,12 @@ function DetailTabs({ active, onChange }: Readonly<DetailTabsProps>) {
         onClick={() => onChange('changes')}
       >
         Changes
+      </DetailTabButton>
+      <DetailTabButton
+        active={active === 'adoption'}
+        onClick={() => onChange('adoption')}
+      >
+        Adoption
       </DetailTabButton>
     </PMHStack>
   );
