@@ -67,8 +67,11 @@ import {
   IStandardsPortName,
   ListDeploymentsByPackageCommand,
   IListActiveDistributedPackagesBySpaceUseCase,
+  IListDriftedPackagesByOrgUseCase,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
+  ListDriftedPackagesByOrgCommand,
+  ListDriftedPackagesByOrgResponse,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
@@ -122,6 +125,7 @@ import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganiz
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
 import { ListActiveDistributedPackagesBySpaceUseCase } from '../useCases/ListActiveDistributedPackagesBySpaceUseCase';
+import { ListDriftedPackagesByOrgUseCase } from '../useCases/ListDriftedPackagesByOrgUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
@@ -200,6 +204,7 @@ export class DeploymentsAdapter
   private _renderPackageAsPluginUseCase!: RenderPackageAsPluginUseCase;
   private _trackPluginDeletedUseCase!: TrackPluginDeletedUseCase;
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
+  private _listDriftedPackagesByOrgUseCase!: ListDriftedPackagesByOrgUseCase;
   private _getLastDistributionDateByProvidersUseCase!: GetLastDistributionDateByProvidersUseCase;
 
   constructor(
@@ -467,6 +472,13 @@ export class DeploymentsAdapter
         this.skillsPort,
         this.gitPort,
       );
+
+    this._listDriftedPackagesByOrgUseCase = new ListDriftedPackagesByOrgUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.distributionRepository,
+      this.deploymentsServices.getRepositories().getPackageRepository(),
+    );
 
     this._listPackagesUseCase = new ListPackagesUseCase(
       this.accountsPort,
@@ -846,6 +858,16 @@ export class DeploymentsAdapter
 
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase {
     return this._listActiveDistributedPackagesBySpaceUseCase;
+  }
+
+  listDriftedPackagesByOrg(
+    command: ListDriftedPackagesByOrgCommand,
+  ): Promise<ListDriftedPackagesByOrgResponse> {
+    return this._listDriftedPackagesByOrgUseCase.execute(command);
+  }
+
+  getListDriftedPackagesByOrgUseCase(): IListDriftedPackagesByOrgUseCase {
+    return this._listDriftedPackagesByOrgUseCase;
   }
 
   getLastDistributionDateByProviders(
