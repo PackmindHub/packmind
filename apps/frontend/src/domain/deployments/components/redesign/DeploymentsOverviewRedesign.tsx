@@ -7,10 +7,11 @@ import {
   PMIcon,
   PMPage,
   PMSpinner,
+  PMTabs,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronRight } from 'react-icons/lu';
+import { LuChevronRight, LuFolderGit2, LuPackage } from 'react-icons/lu';
 import { useNavigate, useSearchParams } from 'react-router';
 import type {
   GitProviderId,
@@ -292,49 +293,82 @@ export function DeploymentsOverviewRedesignContent() {
           </PMAlert.Title>
         </PMAlert.Root>
       )}
-      <ViewToggle viewMode={viewMode} onChange={setViewMode} />
       <PMHStack
         justify="space-between"
         align="center"
         wrap="wrap"
         rowGap={2}
-        columnGap={4}
+        columnGap={6}
         paddingX={1}
-        paddingY={1}
+        paddingBottom={3}
         borderBottomWidth="1px"
         borderColor="border.tertiary"
-        paddingBottom={4}
       >
-        <SummaryLine
-          hasAnyDrift={hasAnyDrift}
-          driftedInstalls={driftedInstalls}
-          driftPackagesCount={driftPackagesCount}
-          totalPackagesCount={totalPackagesCount}
-          failedInstalls={failedInstalls}
-          groupNoun={summary.groupNoun}
+        <PMTabs
+          value={viewMode}
+          defaultValue={viewMode}
+          onValueChange={(e: { value: string }) =>
+            setViewMode(e.value as ViewMode)
+          }
+          variant="enclosed"
+          size="sm"
+          tabs={[
+            {
+              value: 'packages',
+              triggerLabel: (
+                <PMHStack gap={1.5} align="center">
+                  <PMIcon fontSize="sm">
+                    <LuPackage />
+                  </PMIcon>
+                  <PMText fontSize="sm">By packages</PMText>
+                </PMHStack>
+              ),
+            },
+            {
+              value: 'repositories',
+              triggerLabel: (
+                <PMHStack gap={1.5} align="center">
+                  <PMIcon fontSize="sm">
+                    <LuFolderGit2 />
+                  </PMIcon>
+                  <PMText fontSize="sm">By repository</PMText>
+                </PMHStack>
+              ),
+            },
+          ]}
         />
-        {hasAnySignal && (
-          <PMHStack gap={2} flexShrink={0}>
-            {hasAnyDrift && (
-              <PMButton
-                variant="primary"
-                size="sm"
-                onClick={handleDistributeAllDrifted}
-              >
-                Distribute drifted
-              </PMButton>
-            )}
-            {autoUpdateHref && (
-              <PMButton
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(autoUpdateHref)}
-              >
-                Set up Auto-update
-              </PMButton>
-            )}
-          </PMHStack>
-        )}
+        <PMHStack gap={4} align="center" wrap="wrap" rowGap={2}>
+          <SummaryLine
+            hasAnyDrift={hasAnyDrift}
+            driftedInstalls={driftedInstalls}
+            driftPackagesCount={driftPackagesCount}
+            totalPackagesCount={totalPackagesCount}
+            failedInstalls={failedInstalls}
+            groupNoun={summary.groupNoun}
+          />
+          {hasAnySignal && (
+            <PMHStack gap={2} flexShrink={0}>
+              {hasAnyDrift && (
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleDistributeAllDrifted}
+                >
+                  Distribute drifted
+                </PMButton>
+              )}
+              {autoUpdateHref && (
+                <PMButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(autoUpdateHref)}
+                >
+                  Set up Auto-update
+                </PMButton>
+              )}
+            </PMHStack>
+          )}
+        </PMHStack>
       </PMHStack>
       <PMBox
         bg="background.primary"
@@ -342,7 +376,7 @@ export function DeploymentsOverviewRedesignContent() {
         borderColor="border.tertiary"
         borderRadius="md"
         overflow="hidden"
-        height="calc(100vh - 280px)"
+        height="calc(100vh - 200px)"
         minHeight="480px"
       >
         <PMHStack gap={0} align="stretch" height="100%">
@@ -459,75 +493,6 @@ function buildRepoBulkScope(
     packageIds: Array.from(packageIds),
     installKeyFilter: installKeys,
   };
-}
-
-function ViewToggle({
-  viewMode,
-  onChange,
-}: Readonly<{ viewMode: ViewMode; onChange: (v: ViewMode) => void }>) {
-  return (
-    <PMHStack
-      gap={0}
-      role="tablist"
-      aria-label="Switch deployments view"
-      borderBottomWidth="1px"
-      borderColor="border.tertiary"
-    >
-      <ViewToggleTab
-        active={viewMode === 'packages'}
-        onClick={() => onChange('packages')}
-      >
-        By packages
-      </ViewToggleTab>
-      <ViewToggleTab
-        active={viewMode === 'repositories'}
-        onClick={() => onChange('repositories')}
-      >
-        By repository
-      </ViewToggleTab>
-    </PMHStack>
-  );
-}
-
-function ViewToggleTab({
-  active,
-  onClick,
-  children,
-}: Readonly<{
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}>) {
-  return (
-    <PMBox
-      as="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      bg="transparent"
-      border="none"
-      cursor="pointer"
-      paddingX={4}
-      paddingY={2.5}
-      borderBottomWidth="2px"
-      borderColor={active ? 'branding.primary' : 'transparent'}
-      marginBottom="-1px"
-      transition="border-color 120ms ease-out, color 120ms ease-out"
-      _focusVisible={{
-        outline: '2px solid',
-        outlineColor: 'branding.primary',
-        outlineOffset: '-2px',
-      }}
-    >
-      <PMText
-        fontSize="sm"
-        fontWeight={active ? 'semibold' : 'medium'}
-        color={active ? 'primary' : 'secondary'}
-      >
-        {children}
-      </PMText>
-    </PMBox>
-  );
 }
 
 function SummaryLine({

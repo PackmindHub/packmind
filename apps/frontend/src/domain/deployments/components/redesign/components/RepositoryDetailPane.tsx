@@ -241,15 +241,15 @@ export function RepositoryDetailPane({
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
         paddingX={6}
-        paddingY={5}
+        paddingY={3}
         borderBottomWidth="1px"
         borderColor="border.tertiary"
         bg="background.primary"
       >
-        <PMVStack gap={3} align="stretch">
+        <PMVStack gap={2.5} align="stretch">
           <PMHStack gap={3} align="start" justify="space-between">
-            <PMVStack gap={1.5} align="start" flex={1} minW={0}>
-              <PMHeading level="h2" color="primary">
+            <PMVStack gap={1} align="start" flex={1} minW={0}>
+              <PMHeading level="h3" color="primary">
                 {repo.repo.owner}/{repo.repo.name}
               </PMHeading>
               <PMHStack gap={2} align="center">
@@ -330,14 +330,6 @@ export function RepositoryDetailPane({
               </PMAlert.Content>
             </PMAlert.Root>
           )}
-          {!hasDrift && !hasFailure && (
-            <PMAlert.Root status="success">
-              <PMAlert.Indicator />
-              <PMAlert.Title>
-                Every target on this repository is on the latest version.
-              </PMAlert.Title>
-            </PMAlert.Root>
-          )}
         </PMVStack>
       </PMBox>
 
@@ -411,7 +403,7 @@ export function RepositoryDetailPane({
       {hasDrift && (
         <PMBox
           paddingX={6}
-          paddingY={4}
+          paddingY={2.5}
           borderTopWidth="1px"
           borderColor="border.tertiary"
           bg="background.secondary"
@@ -421,8 +413,8 @@ export function RepositoryDetailPane({
           <PMHStack gap={3} align="center" justify="space-between">
             <PMText fontSize="xs" color="secondary">
               {selectedDriftedCount === 0
-                ? 'Select packages to redistribute on this repository.'
-                : `${selectedDriftedCount} of ${driftedRowKeys.length} drifted package${driftedRowKeys.length === 1 ? '' : 's'} selected.`}
+                ? 'Select packages to redistribute.'
+                : `${selectedDriftedCount} of ${driftedRowKeys.length} drifted selected.`}
             </PMText>
             <PMButton
               variant="primary"
@@ -478,32 +470,22 @@ function TargetSection({
   return (
     <PMBox borderBottomWidth="1px" borderColor="border.tertiary">
       <PMHStack
-        gap={3}
-        align="baseline"
+        gap={2}
+        align="center"
         paddingX={6}
-        paddingY={2.5}
+        paddingY={1.5}
         bg="background.tertiary"
         borderBottomWidth="1px"
         borderColor="border.tertiary"
       >
-        <PMHStack gap={2.5} align="baseline" flex={1} minW={0}>
-          <PMText
-            fontSize="11px"
-            color="faded"
-            textTransform="uppercase"
-            letterSpacing="wider"
-            fontWeight="semibold"
-            flexShrink={0}
-          >
-            Target
-          </PMText>
+        <PMHStack gap={2} align="center" flex={1} minW={0}>
           {target.target.isDefault ? (
-            <PMText fontSize="sm" color="secondary" fontWeight="medium">
+            <PMText fontSize="xs" color="secondary" fontWeight="medium">
               Repository root
             </PMText>
           ) : (
             <PMText
-              fontSize="sm"
+              fontSize="xs"
               color="primary"
               fontWeight="medium"
               fontFamily="mono"

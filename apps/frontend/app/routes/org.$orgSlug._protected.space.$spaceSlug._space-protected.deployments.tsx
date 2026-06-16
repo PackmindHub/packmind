@@ -4,10 +4,7 @@ import { DeploymentsPage } from '../../src/domain/deployments/components/Deploym
 
 export default function SpaceDeploymentsOverviewRouteModule() {
   return (
-    <PMPage
-      title="Overview"
-      subtitle="Monitor distributions across your repositories"
-    >
+    <PMPage title="Overview" isFullWidth>
       <PMVStack align="stretch" gap={6}>
         <DeploymentsPage />
       </PMVStack>
