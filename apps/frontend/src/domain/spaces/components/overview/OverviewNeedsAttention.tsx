@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import { LuArrowRight } from 'react-icons/lu';
 import type { PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../hooks/useCurrentSpace';
@@ -83,6 +84,38 @@ export const OverviewNeedsAttention = () => {
             )}
           </PMVStack>
         </PMBox>
+
+        {organization && (
+          <PMBox
+            borderTopWidth="1px"
+            borderColor="border.tertiary"
+            paddingTop={3}
+          >
+            <Link
+              to={routes.org.toGovernance(organization.slug)}
+              style={{ textDecoration: 'none' }}
+            >
+              <PMBox
+                display="inline-flex"
+                alignItems="center"
+                gap={1}
+                fontSize="sm"
+                fontWeight="medium"
+                color="text.primary"
+                _hover={{ textDecoration: 'underline' }}
+                _focusVisible={{
+                  outline: '2px solid',
+                  outlineColor: 'border.brand',
+                  outlineOffset: '2px',
+                  borderRadius: 'sm',
+                }}
+              >
+                See all in Governance
+                <LuArrowRight />
+              </PMBox>
+            </Link>
+          </PMBox>
+        )}
       </PMVStack>
     </PMVStack>
   );
