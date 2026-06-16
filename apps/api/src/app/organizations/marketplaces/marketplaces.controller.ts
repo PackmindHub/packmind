@@ -30,6 +30,8 @@ import {
   IDeploymentPort,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
+  GetMarketplaceDistributionChangesCommand,
+  GetMarketplaceDistributionChangesResponse,
   ListMarketplaceDistributionsCommand,
   ListMarketplaceDistributionsResponse,
   ListMarketplacesCommand,
@@ -457,6 +459,63 @@ export class MarketplacesController {
         {
           organizationId,
           marketplaceId,
+          error: errorMessage,
+        },
+      );
+      throw this.mapError(error);
+    }
+  }
+
+  @Get(':marketplaceId/distributions/:distributionId/changes')
+  async getMarketplaceDistributionChanges(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('marketplaceId') marketplaceId: MarketplaceId,
+    @Param('distributionId') distributionId: MarketplaceDistributionId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetMarketplaceDistributionChangesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/changes - Listing distribution changes',
+      {
+        organizationId,
+        marketplaceId,
+        distributionId,
+      },
+    );
+
+    try {
+      const command: GetMarketplaceDistributionChangesCommand = {
+        userId,
+        organizationId,
+        marketplaceId,
+        distributionId,
+        source: request.clientSource,
+      };
+
+      const response =
+        await this.deploymentAdapter.getMarketplaceDistributionChanges(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/changes - Changes listed successfully',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
+          count: response.length,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/marketplaces/:marketplaceId/distributions/:distributionId/changes - Failed to list changes',
+        {
+          organizationId,
+          marketplaceId,
+          distributionId,
           error: errorMessage,
         },
       );

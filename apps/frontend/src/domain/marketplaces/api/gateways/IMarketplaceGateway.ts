@@ -1,4 +1,5 @@
 import {
+  GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionId,
@@ -71,6 +72,17 @@ export interface IMarketplaceGateway {
     organizationId: OrganizationId,
     marketplaceId: MarketplaceId,
   ): Promise<ListMarketplaceDistributionsResponse>;
+
+  /**
+   * Returns the artifact-level diff between a distribution's captured
+   * VersionFingerprint and the source package's current state. Drives the
+   * plugin detail "Changes" tab — returns an empty list when in sync.
+   */
+  getDistributionChanges(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+    distributionId: MarketplaceDistributionId,
+  ): Promise<GetMarketplaceDistributionChangesResponse>;
 
   /**
    * Marks a published plugin distribution as `to_be_removed`. Targets the row

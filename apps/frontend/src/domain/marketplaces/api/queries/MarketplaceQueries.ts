@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { pmToaster } from '@packmind/ui';
 import {
+  GetMarketplaceDistributionChangesResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionId,
   MarketplaceId,
@@ -33,6 +34,7 @@ export enum MarketplaceQueryKey {
   LIST = 'list',
   VALIDATE_URL = 'validate-url',
   DISTRIBUTIONS = 'distributions',
+  DISTRIBUTION_CHANGES = 'distribution-changes',
 }
 
 // Factory for marketplace query keys. Lives under the per-organization scope so
@@ -57,6 +59,22 @@ export const marketplaceQueryKeys = {
       ...marketplaceQueryKeys.distributions(),
       organizationId,
       marketplaceId,
+    ] as const,
+  distributionChangesAll: () =>
+    [
+      ...marketplaceQueryKeys.all(),
+      MarketplaceQueryKey.DISTRIBUTION_CHANGES,
+    ] as const,
+  distributionChanges: (
+    organizationId: OrganizationId | string,
+    marketplaceId: MarketplaceId | string,
+    distributionId: MarketplaceDistributionId | string,
+  ) =>
+    [
+      ...marketplaceQueryKeys.distributionChangesAll(),
+      organizationId,
+      marketplaceId,
+      distributionId,
     ] as const,
 };
 
@@ -127,6 +145,33 @@ export const marketplaceQueries = {
         ) as Promise<ListMarketplaceDistributionsResponse>,
       enabled: !!orgId && !!marketplaceId,
     }),
+  distributionChanges: ({
+    orgId,
+    marketplaceId,
+    distributionId,
+    enabled = true,
+    gateway = marketplaceGateway,
+  }: {
+    orgId: OrganizationId | string;
+    marketplaceId: MarketplaceId | string;
+    distributionId: MarketplaceDistributionId | string;
+    enabled?: boolean;
+    gateway?: IMarketplaceGateway;
+  }) =>
+    queryOptions({
+      queryKey: marketplaceQueryKeys.distributionChanges(
+        orgId,
+        marketplaceId,
+        distributionId,
+      ),
+      queryFn: () =>
+        gateway.getDistributionChanges(
+          orgId as OrganizationId,
+          marketplaceId as MarketplaceId,
+          distributionId as MarketplaceDistributionId,
+        ) as Promise<GetMarketplaceDistributionChangesResponse>,
+      enabled: enabled && !!orgId && !!marketplaceId && !!distributionId,
+    }),
 };
 
 // Hook variant of marketplaceQueries.distributions. Mirrors the existing
@@ -139,6 +184,24 @@ export const useMarketplaceDistributions = (
     marketplaceQueries.distributions({
       orgId: organizationId,
       marketplaceId,
+    }),
+  );
+
+// Hook variant of marketplaceQueries.distributionChanges. Caller passes
+// `enabled` so the request only fires when the Changes tab is opened on an
+// outdated plugin.
+export const useMarketplaceDistributionChanges = (
+  organizationId: OrganizationId | string,
+  marketplaceId: MarketplaceId | string,
+  distributionId: MarketplaceDistributionId | string,
+  enabled: boolean,
+) =>
+  useQuery(
+    marketplaceQueries.distributionChanges({
+      orgId: organizationId,
+      marketplaceId,
+      distributionId,
+      enabled,
     }),
   );
 
@@ -334,6 +397,9 @@ export const useSyncMarketplaceNow = (
         }),
         queryClient.invalidateQueries({
           queryKey: marketplaceQueryKeys.distributions(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.distributionChangesAll(),
         }),
       ]);
       pmToaster.success({

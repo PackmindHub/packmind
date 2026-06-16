@@ -52,3 +52,4 @@ export * from './IValidateMarketplaceUrlUseCase';
 export * from './IMarkPluginForRemovalUseCase';
 export * from './ISyncMarketplaceNowUseCase';
 export * from './IListMarketplaceDistributionsUseCase';
+export * from './IGetMarketplaceDistributionChangesUseCase';

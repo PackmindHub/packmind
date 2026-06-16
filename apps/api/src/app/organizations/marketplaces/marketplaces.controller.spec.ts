@@ -122,6 +122,7 @@ describe('MarketplacesController', () => {
       validateMarketplaceUrl: jest.fn(),
       publishPackageOnMarketplace: jest.fn(),
       listMarketplaceDistributions: jest.fn(),
+      getMarketplaceDistributionChanges: jest.fn(),
       markPluginForRemoval: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 

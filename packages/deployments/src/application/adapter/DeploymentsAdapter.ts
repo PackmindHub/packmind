@@ -73,6 +73,8 @@ import {
   IStandardsPortName,
   FindMarketplaceDistributionByIdCommand,
   FindMarketplaceDistributionByIdResponse,
+  GetMarketplaceDistributionChangesCommand,
+  GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListDeploymentsByPackageCommand,
@@ -149,6 +151,7 @@ import { FindMarketplaceDistributionByIdUseCase } from '../useCases/findMarketpl
 import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
 import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
 import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
+import { GetMarketplaceDistributionChangesUseCase } from '../useCases/getMarketplaceDistributionChanges';
 import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
 import { MarkPluginForRemovalUseCase } from '../useCases/markPluginForRemoval';
 import { SyncMarketplaceNowUseCase } from '../useCases/syncMarketplaceNow';
@@ -251,6 +254,7 @@ export class DeploymentsAdapter
   private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
   private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
   private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
+  private _getMarketplaceDistributionChangesUseCase!: GetMarketplaceDistributionChangesUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -702,6 +706,22 @@ export class DeploymentsAdapter
         this.marketplaceDistributionRepository,
         this.deploymentsServices.getPackageService(),
         this.spacesPort,
+        this.accountsPort,
+      );
+
+    this._getMarketplaceDistributionChangesUseCase =
+      new GetMarketplaceDistributionChangesUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        new PackageVersionFingerprintService(
+          this.recipesPort,
+          this.standardsPort,
+          this.skillsPort,
+        ),
+        this.recipesPort,
+        this.standardsPort,
+        this.skillsPort,
         this.accountsPort,
       );
   }
@@ -1215,5 +1235,11 @@ export class DeploymentsAdapter
     command: ListMarketplaceDistributionsCommand,
   ): Promise<ListMarketplaceDistributionsResponse> {
     return this._listMarketplaceDistributionsUseCase.execute(command);
+  }
+
+  async getMarketplaceDistributionChanges(
+    command: GetMarketplaceDistributionChangesCommand,
+  ): Promise<GetMarketplaceDistributionChangesResponse> {
+    return this._getMarketplaceDistributionChangesUseCase.execute(command);
   }
 }

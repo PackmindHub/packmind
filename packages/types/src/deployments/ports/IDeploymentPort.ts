@@ -44,6 +44,8 @@ import {
   IListActiveDistributedPackagesBySpaceUseCase,
   FindMarketplaceDistributionByIdCommand,
   FindMarketplaceDistributionByIdResponse,
+  GetMarketplaceDistributionChangesCommand,
+  GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceCommand,
   LinkMarketplaceResponse,
   ListActiveDistributedPackagesBySpaceCommand,
@@ -752,4 +754,17 @@ export interface IDeploymentPort {
   listMarketplaceDistributions(
     command: ListMarketplaceDistributionsCommand,
   ): Promise<ListMarketplaceDistributionsResponse>;
+
+  /**
+   * Returns the artifact-level diff between a marketplace distribution's
+   * captured VersionFingerprint and the source package's current state.
+   * Drives the plugin detail "Changes" tab. Returns `[]` when nothing has
+   * drifted, when no fingerprint was captured, or when the source package
+   * has been hard-deleted.
+   *
+   * Open to any organization member.
+   */
+  getMarketplaceDistributionChanges(
+    command: GetMarketplaceDistributionChangesCommand,
+  ): Promise<GetMarketplaceDistributionChangesResponse>;
 }

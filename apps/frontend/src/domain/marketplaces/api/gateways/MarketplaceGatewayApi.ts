@@ -1,4 +1,5 @@
 import {
+  GetMarketplaceDistributionChangesResponse,
   LinkMarketplaceResponse,
   ListMarketplaceDistributionsResponse,
   MarketplaceDistributionId,
@@ -80,6 +81,16 @@ export class MarketplaceGatewayApi
   ): Promise<ListMarketplaceDistributionsResponse> {
     return this._api.get<ListMarketplaceDistributionsResponse>(
       `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions`,
+    );
+  }
+
+  async getDistributionChanges(
+    organizationId: OrganizationId,
+    marketplaceId: MarketplaceId,
+    distributionId: MarketplaceDistributionId,
+  ): Promise<GetMarketplaceDistributionChangesResponse> {
+    return this._api.get<GetMarketplaceDistributionChangesResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/distributions/${distributionId}/changes`,
     );
   }
 

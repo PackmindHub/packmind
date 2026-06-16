@@ -23,24 +23,31 @@ import {
 } from '@packmind/ui';
 import {
   DistributionStatus,
+  type MarketplaceArtifactKind,
   type MarketplaceDistributionId,
   type MarketplaceDistributionListItem,
   type MarketplaceListItem,
   type OrganizationId,
+  type SourcePackageChange,
 } from '@packmind/types';
 import {
   LuChevronRight,
   LuEllipsis,
   LuExternalLink,
   LuInbox,
+  LuMinus,
+  LuPencil,
   LuPencilLine,
   LuPlug,
+  LuPlus,
   LuRotateCw,
   LuSearch,
   LuTrash2,
   LuTriangleAlert,
 } from 'react-icons/lu';
+import type { IconType } from 'react-icons';
 import {
+  useMarketplaceDistributionChanges,
   useMarkPluginForRemovalByDistribution,
   useMarketplaceDistributions,
   useSyncMarketplaceNow,
@@ -455,6 +462,18 @@ function PluginDetailPane({
   const [tab, setTab] = useState<DetailTabId>('overview');
   const tabsAnchorId = `plugin-detail-tabs-${distribution.id}`;
 
+  // Eager fetch when the plugin is outdated so the connector pill can show
+  // the change count (e.g. "3 changes ready") and the "View N changes" CTA
+  // without waiting on the user to open the Changes tab. The Changes tab
+  // reuses the same query under the hood — TanStack Query dedupes by key.
+  const changesQuery = useMarketplaceDistributionChanges(
+    organizationId,
+    marketplaceId,
+    distribution.id,
+    isOutdated,
+  );
+  const changesCount = changesQuery.data?.length ?? 0;
+
   const handleViewChanges = () => {
     setTab('changes');
     document
@@ -505,6 +524,7 @@ function PluginDetailPane({
         <VersionTrail
           version={version}
           isOutdated={isOutdated}
+          changesCount={changesCount}
           onViewChanges={handleViewChanges}
         />
 
@@ -542,45 +562,196 @@ function PluginDetailPane({
           </PMVStack>
         )}
 
-        {tab === 'changes' && <ChangesTab isOutdated={isOutdated} />}
+        {tab === 'changes' && (
+          <ChangesTab
+            organizationId={organizationId}
+            marketplaceId={marketplaceId}
+            distributionId={distribution.id}
+            isOutdated={isOutdated}
+            active={tab === 'changes'}
+          />
+        )}
       </PMVStack>
     </PMBox>
   );
 }
 
-function ChangesTab({ isOutdated }: Readonly<{ isOutdated: boolean }>) {
+interface ChangesTabProps {
+  organizationId: OrganizationId | string;
+  marketplaceId: MarketplaceListItem['id'];
+  distributionId: MarketplaceDistributionId;
+  isOutdated: boolean;
+  active: boolean;
+}
+
+function ChangesTab({
+  organizationId,
+  marketplaceId,
+  distributionId,
+  isOutdated,
+  active,
+}: Readonly<ChangesTabProps>) {
+  const { data, isLoading, isError } = useMarketplaceDistributionChanges(
+    organizationId,
+    marketplaceId,
+    distributionId,
+    active && isOutdated,
+  );
+
   if (!isOutdated) {
+    return <ChangesInSync />;
+  }
+
+  if (isLoading) {
     return (
       <PMHStack gap={2} align="center">
-        <PMBox
-          width="6px"
-          height="6px"
-          borderRadius="full"
-          bg="green.500"
-          aria-hidden
-        />
+        <PMSpinner size="sm" />
         <PMText fontSize="sm" color="secondary">
-          In sync with the marketplace.
+          Loading changes…
         </PMText>
       </PMHStack>
     );
   }
-  return (
-    <PMVStack gap={3} align="start">
-      <PMHStack gap={2} align="center">
-        <PMIcon fontSize="sm" color="orange.500">
-          <LuTriangleAlert />
-        </PMIcon>
-        <PMText fontSize="md" color="primary" fontWeight="medium">
-          Changes ready to publish
-        </PMText>
-      </PMHStack>
-      <PMText fontSize="sm" color="secondary" lineHeight={1.55} maxW="70ch">
-        The source package has moved ahead of what is published to this
-        marketplace. A per-change diff is not available yet — republish the
-        package from its space to bring the marketplace up to date.
+
+  if (isError) {
+    return (
+      <PMText fontSize="sm" color="error">
+        Could not load changes. Refresh the page and try again.
       </PMText>
+    );
+  }
+
+  const changes = data ?? [];
+  if (changes.length === 0) {
+    return <ChangesInSync />;
+  }
+
+  const countLabel =
+    changes.length === 1 ? '1 change' : `${changes.length} changes`;
+
+  return (
+    <PMVStack gap={4} align="stretch">
+      <PMText fontSize="md" color="primary" fontWeight="medium">
+        {countLabel} ready to publish
+      </PMText>
+      <PMVStack gap={2.5} align="stretch">
+        {changes.map((change) => (
+          <ChangeRow
+            key={`${change.artifactKind}-${change.slug}-${change.kind}`}
+            change={change}
+          />
+        ))}
+      </PMVStack>
     </PMVStack>
+  );
+}
+
+function ChangesInSync() {
+  return (
+    <PMHStack gap={2} align="center">
+      <PMBox
+        width="6px"
+        height="6px"
+        borderRadius="full"
+        bg="green.500"
+        aria-hidden
+      />
+      <PMText fontSize="sm" color="secondary">
+        In sync with the marketplace.
+      </PMText>
+    </PMHStack>
+  );
+}
+
+const CHANGE_STYLE: Record<
+  SourcePackageChange['kind'],
+  { Icon: IconType; color: string; verb: string }
+> = {
+  added: { Icon: LuPlus, color: 'green.500', verb: 'Added' },
+  removed: { Icon: LuMinus, color: 'red.500', verb: 'Removed' },
+  updated: { Icon: LuPencil, color: 'text.secondary', verb: 'Updated' },
+};
+
+const ARTIFACT_KIND_LABEL: Record<MarketplaceArtifactKind, string> = {
+  command: 'Command',
+  standard: 'Standard',
+  skill: 'Skill',
+};
+
+const MONO_ARTIFACT_KINDS: ReadonlySet<MarketplaceArtifactKind> = new Set([
+  'command',
+]);
+
+function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
+  const { Icon, color, verb } = CHANGE_STYLE[change.kind];
+  const mono = MONO_ARTIFACT_KINDS.has(change.artifactKind);
+  return (
+    <PMBox
+      display="grid"
+      gridTemplateColumns="16px 96px 1fr auto"
+      alignItems="center"
+      columnGap={3}
+    >
+      <PMBox
+        as="span"
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        color={color}
+        aria-label={verb}
+      >
+        <PMIcon fontSize="sm">
+          <Icon />
+        </PMIcon>
+      </PMBox>
+      <PMBox>
+        <PMBadge size="sm" colorPalette="gray">
+          {ARTIFACT_KIND_LABEL[change.artifactKind]}
+        </PMBadge>
+      </PMBox>
+      <PMText
+        fontSize="sm"
+        color="primary"
+        fontWeight="medium"
+        truncate
+        fontFamily={mono ? 'mono' : undefined}
+      >
+        {change.name}
+      </PMText>
+      <ChangeVersionBadge change={change} />
+    </PMBox>
+  );
+}
+
+function ChangeVersionBadge({
+  change,
+}: Readonly<{ change: SourcePackageChange }>) {
+  if (change.kind === 'added') {
+    return (
+      <PMBadge size="sm" colorPalette="green">
+        v{change.currentVersion}
+      </PMBadge>
+    );
+  }
+  if (change.kind === 'removed') {
+    return (
+      <PMBadge size="sm" colorPalette="red">
+        v{change.publishedVersion}
+      </PMBadge>
+    );
+  }
+  return (
+    <PMHStack gap={2} align="center">
+      <PMBadge size="sm" colorPalette="gray">
+        v{change.publishedVersion}
+      </PMBadge>
+      <PMText fontSize="xs" color="faded" aria-hidden>
+        →
+      </PMText>
+      <PMBadge size="sm" colorPalette="orange">
+        v{change.currentVersion}
+      </PMBadge>
+    </PMHStack>
   );
 }
 
@@ -656,6 +827,7 @@ function DetailTabButton({
 interface VersionTrailProps {
   version: string | null;
   isOutdated: boolean;
+  changesCount: number;
   onViewChanges: () => void;
 }
 
@@ -669,6 +841,7 @@ interface VersionTrailProps {
 function VersionTrail({
   version,
   isOutdated,
+  changesCount,
   onViewChanges,
 }: Readonly<VersionTrailProps>) {
   return (
@@ -682,7 +855,11 @@ function VersionTrail({
       borderBottomWidth="1px"
       borderColor="border.tertiary"
     >
-      <TrailConnector isOutdated={isOutdated} onViewChanges={onViewChanges} />
+      <TrailConnector
+        isOutdated={isOutdated}
+        changesCount={changesCount}
+        onViewChanges={onViewChanges}
+      />
       <TrailTier
         label="Published"
         value={version ? `v${version}` : 'v—'}
@@ -727,13 +904,28 @@ function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
 
 interface TrailConnectorProps {
   isOutdated: boolean;
+  changesCount: number;
   onViewChanges: () => void;
 }
 
 function TrailConnector({
   isOutdated,
+  changesCount,
   onViewChanges,
 }: Readonly<TrailConnectorProps>) {
+  const driftLabel =
+    changesCount === 0
+      ? 'Changes ready'
+      : changesCount === 1
+        ? '1 change ready'
+        : `${changesCount} changes ready`;
+  const linkLabel =
+    changesCount === 0
+      ? 'View changes'
+      : changesCount === 1
+        ? 'View 1 change'
+        : `View ${changesCount} changes`;
+
   return (
     <PMVStack gap={2} align="center" minW="120px" paddingTop="18px">
       <PMIcon
@@ -751,11 +943,11 @@ function TrailConnector({
             </PMIcon>
             <PMText
               fontSize="xs"
-              color="warning"
+              color="primary"
               fontWeight="medium"
               fontVariantNumeric="tabular-nums"
             >
-              Changes ready
+              {driftLabel}
             </PMText>
           </PMHStack>
           <PMBox
@@ -776,7 +968,7 @@ function TrailConnector({
               borderRadius: 'sm',
             }}
           >
-            View changes →
+            {linkLabel} →
           </PMBox>
         </PMVStack>
       ) : (
