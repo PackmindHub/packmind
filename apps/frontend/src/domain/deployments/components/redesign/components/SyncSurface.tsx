@@ -56,7 +56,17 @@ const KIND_ICON: Record<ArtifactKind, IconType> = {
 };
 
 export type SyncScope =
-  | { kind: 'bulk'; packageIds: PackageId[] }
+  | {
+      kind: 'bulk';
+      packageIds: PackageId[];
+      /**
+       * Optional `${repoId}::${targetId}` keys. When provided, only the
+       * matching install entries are surfaced and pre-selected. Lets the
+       * repository view trigger a scoped bulk sync that does not bleed into
+       * other repos' installs of the same package.
+       */
+      installKeyFilter?: Set<string>;
+    }
   | {
       kind: 'package';
       packageId: PackageId;
@@ -510,13 +520,19 @@ function buildPackageBlocks(
 ): PackageBlock[] {
   const bulkAllowed =
     scope.kind === 'bulk' ? new Set<PackageId>(scope.packageIds) : null;
+  const installFilter =
+    scope.kind === 'bulk' ? (scope.installKeyFilter ?? null) : null;
   const out: PackageBlock[] = [];
   for (const pkg of packages) {
     if (scope.kind === 'package' && pkg.id !== scope.packageId) continue;
     if (bulkAllowed && !bulkAllowed.has(pkg.id)) continue;
-    const driftedEntries = installDriftEntries(pkg).filter(
-      (e) => e.behindArtifacts.length > 0,
-    );
+    const driftedEntries = installDriftEntries(pkg).filter((e) => {
+      if (e.behindArtifacts.length === 0) return false;
+      if (installFilter) {
+        return installFilter.has(localInstallKey(e.repo.id, e.target.id));
+      }
+      return true;
+    });
     if (driftedEntries.length === 0) continue;
     out.push({ pkg, driftedEntries });
   }
