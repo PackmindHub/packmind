@@ -13,9 +13,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const defaultSpace = spaces?.find((s) => s.isDefaultSpace) || spaces?.[0];
 
   if (defaultSpace) {
-    throw redirect(
-      `/org/${params.orgSlug}/space/${defaultSpace.slug}/deployments`,
-    );
+    throw redirect(`/org/${params.orgSlug}/space/${defaultSpace.slug}`);
   }
 
   throw redirect(`/org/${params.orgSlug}/settings`);

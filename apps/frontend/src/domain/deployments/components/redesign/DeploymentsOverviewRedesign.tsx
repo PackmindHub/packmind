@@ -376,7 +376,7 @@ export function DeploymentsOverviewRedesignContent() {
         borderColor="border.tertiary"
         borderRadius="md"
         overflow="hidden"
-        height="calc(100vh - 200px)"
+        height="calc(100vh - 120px)"
         minHeight="480px"
       >
         <PMHStack gap={0} align="stretch" height="100%">

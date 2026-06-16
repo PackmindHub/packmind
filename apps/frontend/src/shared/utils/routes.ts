@@ -37,7 +37,7 @@ export const routes = {
     toDashboard: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}`,
     toDeployments: (orgSlug: string, spaceSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/deployments`,
+      `/org/${orgSlug}/space/${spaceSlug}`,
     toCommands: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/commands`,
     toCommand: (orgSlug: string, spaceSlug: string, commandId: string) =>
