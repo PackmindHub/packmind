@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMBox,
   PMButton,
@@ -10,7 +11,7 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import { LuClock, LuRotateCw, LuSearch } from 'react-icons/lu';
+import { LuArrowUpRight, LuClock, LuRotateCw, LuSearch } from 'react-icons/lu';
 import type { GitProviderId, PackageId } from '@packmind/types';
 import {
   packageBehindInstallCount,
@@ -34,6 +35,7 @@ type PackageMasterRailProps = {
   onDistributeBulk: () => void;
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
+  packagePageHref?: (packageId: PackageId) => string | null;
 };
 
 type DriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -48,6 +50,7 @@ export function PackageMasterRail({
   onDistributeBulk,
   providersWithToken,
   isProvidersLoading,
+  packagePageHref,
 }: Readonly<PackageMasterRailProps>) {
   const [query, setQuery] = useState('');
   const [driftFilter, setDriftFilter] = useState<DriftFilter>('all');
@@ -200,6 +203,7 @@ export function PackageMasterRail({
               )}
               onSelect={() => onSelect(p.id)}
               onToggleBulk={() => onToggleBulk(p.id)}
+              pageHref={packagePageHref?.(p.id) ?? null}
             />
           ))
         )}
@@ -229,6 +233,7 @@ type PackageRowProps = {
   lockProfile: PackageLockProfile;
   onSelect: () => void;
   onToggleBulk: () => void;
+  pageHref: string | null;
 };
 
 function PackageRow({
@@ -239,7 +244,9 @@ function PackageRow({
   lockProfile,
   onSelect,
   onToggleBulk,
+  pageHref,
 }: Readonly<PackageRowProps>) {
+  const navigate = useNavigate();
   const behindInstallCount = packageBehindInstallCount(pkg);
   const hasDrift = packageHasDrift(pkg);
   const hasFailure = packageHasFailedDistribution(pkg);
@@ -348,7 +355,7 @@ function PackageRow({
         textAlign="left"
         paddingY={2.5}
         paddingLeft={2}
-        paddingRight={3}
+        paddingRight={pageHref ? 2 : 3}
         _focusVisible={{
           outline: 'none',
           boxShadow: 'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
@@ -424,6 +431,37 @@ function PackageRow({
           </PMHStack>
         </PMHStack>
       </PMBox>
+      {pageHref && (
+        <PMTooltip label="Open package page" showArrow openDelay={300}>
+          <PMBox
+            as="button"
+            onClick={() => navigate(pageHref)}
+            bg="transparent"
+            border="none"
+            cursor="pointer"
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            width="32px"
+            height="32px"
+            marginRight={1}
+            borderRadius="sm"
+            color="text.faded"
+            transition="color 120ms ease-out, background-color 120ms ease-out"
+            _hover={{ color: 'text.primary', bg: 'background.tertiary' }}
+            _focusVisible={{
+              outline: 'none',
+              boxShadow:
+                'inset 0 0 0 2px var(--chakra-colors-branding-primary)',
+            }}
+            aria-label={`Open ${pkg.name} package page`}
+          >
+            <PMIcon fontSize="sm">
+              <LuArrowUpRight />
+            </PMIcon>
+          </PMBox>
+        </PMTooltip>
+      )}
     </PMBox>
   );
 }

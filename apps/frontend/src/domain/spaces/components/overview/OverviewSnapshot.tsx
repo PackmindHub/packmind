@@ -8,7 +8,10 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuChevronRight } from 'react-icons/lu';
-import { useGetDashboardKpiQuery } from '../../../deployments/api/queries/DeploymentsQueries';
+import {
+  useGetDashboardKpiQuery,
+  useListPackagesBySpaceQuery,
+} from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
@@ -19,19 +22,23 @@ const ROW_LABEL_WIDTH = '96px';
 const TOTAL_MIN_WIDTH = '40px';
 
 type SnapshotRowData = {
-  key: 'standards' | 'skills' | 'commands';
+  key: 'standards' | 'skills' | 'commands' | 'packages';
   label: string;
   total: number;
-  active: number;
+  active?: number;
   href: string | null;
 };
 
 export const OverviewSnapshot = () => {
   const { organization } = useAuthContext();
   const { spaceSlug, spaceId, isReady } = useCurrentSpace();
-  const { data: kpi, isLoading } = useGetDashboardKpiQuery(spaceId ?? '');
+  const { data: kpi, isLoading: isKpiLoading } = useGetDashboardKpiQuery(
+    spaceId ?? '',
+  );
+  const { data: packagesResponse, isLoading: isPackagesLoading } =
+    useListPackagesBySpaceQuery(spaceId, organization?.id);
 
-  const showSkeleton = isLoading || !isReady;
+  const showSkeleton = isKpiLoading || isPackagesLoading || !isReady;
 
   const rows: SnapshotRowData[] = [
     {
@@ -62,6 +69,15 @@ export const OverviewSnapshot = () => {
       href:
         organization && spaceSlug
           ? routes.space.toCommands(organization.slug, spaceSlug)
+          : null,
+    },
+    {
+      key: 'packages',
+      label: 'Packages',
+      total: packagesResponse?.packages?.length ?? 0,
+      href:
+        organization && spaceSlug
+          ? routes.space.toPackages(organization.slug, spaceSlug)
           : null,
     },
   ];
@@ -101,7 +117,6 @@ function SnapshotRow({
   isLast: boolean;
 }>) {
   const navigate = useNavigate();
-  const nonLive = row.total - row.active;
   const isInteractive = !!row.href;
 
   const handleClick = () => {
@@ -146,14 +161,9 @@ function SnapshotRow({
             {row.label}
           </PMText>
           {showSkeleton ? (
-            <SnapshotRowSkeleton />
+            <SnapshotRowSkeleton hasBreakdown={row.active !== undefined} />
           ) : (
-            <SnapshotRowValue
-              total={row.total}
-              active={row.active}
-              nonLive={nonLive}
-              label={row.label}
-            />
+            <SnapshotRowValue row={row} />
           )}
         </PMHStack>
         {isInteractive && (
@@ -174,34 +184,33 @@ function SnapshotRow({
   );
 }
 
-function SnapshotRowSkeleton() {
+function SnapshotRowSkeleton({
+  hasBreakdown,
+}: Readonly<{ hasBreakdown: boolean }>) {
   return (
     <PMHStack gap={4} align="baseline">
       <PMSkeleton height="28px" width="36px" borderRadius="sm" />
-      <PMSkeleton height="14px" width="60px" borderRadius="sm" />
-      <PMSkeleton height="14px" width="80px" borderRadius="sm" />
+      {hasBreakdown && (
+        <>
+          <PMSkeleton height="14px" width="60px" borderRadius="sm" />
+          <PMSkeleton height="14px" width="80px" borderRadius="sm" />
+        </>
+      )}
     </PMHStack>
   );
 }
 
-function SnapshotRowValue({
-  total,
-  active,
-  nonLive,
-  label,
-}: Readonly<{
-  total: number;
-  active: number;
-  nonLive: number;
-  label: string;
-}>) {
-  if (total === 0) {
+function SnapshotRowValue({ row }: Readonly<{ row: SnapshotRowData }>) {
+  if (row.total === 0) {
     return (
       <PMText fontSize="sm" color="faded">
-        No {label.toLowerCase()} yet
+        No {row.label.toLowerCase()} yet
       </PMText>
     );
   }
+
+  const hasBreakdown = row.active !== undefined;
+  const nonLive = hasBreakdown ? row.total - (row.active ?? 0) : 0;
 
   return (
     <PMHStack gap={4} align="baseline" wrap="wrap">
@@ -213,25 +222,33 @@ function SnapshotRowValue({
         lineHeight="1"
         minW={TOTAL_MIN_WIDTH}
       >
-        {total}
+        {row.total}
       </PMText>
-      <PMText fontSize="sm" color="secondary" fontVariantNumeric="tabular-nums">
-        <PMText as="span" color="primary" fontWeight="medium">
-          {active}
-        </PMText>{' '}
-        live
-      </PMText>
-      {nonLive > 0 && (
-        <PMText
-          fontSize="sm"
-          color="secondary"
-          fontVariantNumeric="tabular-nums"
-        >
-          <PMText as="span" color="primary" fontWeight="medium">
-            {nonLive}
-          </PMText>{' '}
-          non-live
-        </PMText>
+      {hasBreakdown && (
+        <>
+          <PMText
+            fontSize="sm"
+            color="secondary"
+            fontVariantNumeric="tabular-nums"
+          >
+            <PMText as="span" color="primary" fontWeight="medium">
+              {row.active}
+            </PMText>{' '}
+            live
+          </PMText>
+          {nonLive > 0 && (
+            <PMText
+              fontSize="sm"
+              color="secondary"
+              fontVariantNumeric="tabular-nums"
+            >
+              <PMText as="span" color="primary" fontWeight="medium">
+                {nonLive}
+              </PMText>{' '}
+              non-live
+            </PMText>
+          )}
+        </>
       )}
     </PMHStack>
   );

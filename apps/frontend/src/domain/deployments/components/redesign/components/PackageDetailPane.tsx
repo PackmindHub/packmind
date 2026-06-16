@@ -90,6 +90,8 @@ type PackageDetailPaneProps = {
   onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
   /** Link to the package's distribution history (failure details live there). */
   distributionHistoryHref: string | null;
+  /** Link to the package's detail page (default tab). */
+  packagePageHref?: string | null;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -104,6 +106,7 @@ export function PackageDetailPane({
   isProvidersLoading,
   onSyncPackage,
   distributionHistoryHref,
+  packagePageHref,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -256,9 +259,44 @@ export function PackageDetailPane({
         <PMVStack gap={2.5} align="stretch">
           <PMHStack gap={3} align="start" justify="space-between">
             <PMVStack gap={1} align="start" flex={1} minW={0}>
-              <PMHeading level="h3" color="primary">
-                {pkg.name}
-              </PMHeading>
+              <PMHStack gap={2} align="center" minW={0}>
+                <PMHeading level="h3" color="primary">
+                  {pkg.name}
+                </PMHeading>
+                {packagePageHref && (
+                  <PMTooltip
+                    label="Open package page"
+                    showArrow
+                    openDelay={300}
+                  >
+                    <PMLink
+                      asChild
+                      aria-label={`Open ${pkg.name} package page`}
+                    >
+                      <Link to={packagePageHref}>
+                        <PMBox
+                          display="inline-flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          width="28px"
+                          height="28px"
+                          borderRadius="sm"
+                          color="text.faded"
+                          transition="color 120ms ease-out, background-color 120ms ease-out"
+                          _hover={{
+                            color: 'text.primary',
+                            bg: 'background.tertiary',
+                          }}
+                        >
+                          <PMIcon fontSize="sm">
+                            <LuArrowUpRight />
+                          </PMIcon>
+                        </PMBox>
+                      </Link>
+                    </PMLink>
+                  </PMTooltip>
+                )}
+              </PMHStack>
               <PMText fontSize="sm" color="secondary" maxW="68ch">
                 {pkg.description}
               </PMText>

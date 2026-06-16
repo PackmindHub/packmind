@@ -260,6 +260,10 @@ export function DeploymentsOverviewRedesignContent() {
     organization && spaceSlug
       ? `${routes.space.toPackage(organization.slug, spaceSlug, pkgId)}?tab=distributions`
       : null;
+  const packagePageHref = (pkgId: PackageId) =>
+    organization && spaceSlug
+      ? routes.space.toPackage(organization.slug, spaceSlug, pkgId)
+      : null;
   const navigate = useNavigate();
 
   if (!isStubMode && (!isReady || isLoading)) return <LoadingState />;
@@ -394,6 +398,7 @@ export function DeploymentsOverviewRedesignContent() {
                 onDistributeBulk={handleDistributeBulk}
                 providersWithToken={providersWithToken}
                 isProvidersLoading={isProvidersLoading && !isStubMode}
+                packagePageHref={packagePageHref}
               />
               <PMBox
                 flex="1"
@@ -410,6 +415,7 @@ export function DeploymentsOverviewRedesignContent() {
                     providersWithToken={providersWithToken}
                     isProvidersLoading={isProvidersLoading && !isStubMode}
                     distributionHistoryHref={selectedPackageHistoryHref}
+                    packagePageHref={packagePageHref(selectedPackage.id)}
                   />
                 ) : (
                   <PMVStack gap={2} padding={10} align="start">
