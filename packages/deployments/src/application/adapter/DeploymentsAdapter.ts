@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  Configuration,
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
@@ -88,6 +89,8 @@ import {
   ListMarketplaceDistributionsForPackageResponse,
   ListMarketplacesCommand,
   ListMarketplacesResponse,
+  ListMarketplacePluginInstallsCommand,
+  ListMarketplacePluginInstallsResponse,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -103,6 +106,7 @@ import {
   PublishArtifactsResponse,
   PublishPackageOnMarketplaceCommand,
   PublishPackageOnMarketplaceResponse,
+  Marketplace,
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
@@ -112,6 +116,8 @@ import {
   TargetWithRepository,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  TrackPluginInstallHeartbeatCommand,
+  TrackPluginInstallHeartbeatResponse,
   UnlinkMarketplaceCommand,
   UnlinkMarketplaceResponse,
   UpdateRenderModeConfigurationCommand,
@@ -125,6 +131,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
 import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { IPluginInstallationRepository } from '../../domain/repositories/IPluginInstallationRepository';
 import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { PublishPluginToMarketplaceJobFactory } from '../../infra/jobs/PublishPluginToMarketplaceJobFactory';
@@ -185,6 +192,8 @@ import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase';
 import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
+import { TrackPluginInstallHeartbeatUseCase } from '../useCases/trackPluginInstallHeartbeat/TrackPluginInstallHeartbeatUseCase';
+import { ListMarketplacePluginInstallsUseCase } from '../useCases/listMarketplacePluginInstalls/ListMarketplacePluginInstallsUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -255,6 +264,8 @@ export class DeploymentsAdapter
   private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
   private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
   private _getMarketplaceDistributionChangesUseCase!: GetMarketplaceDistributionChangesUseCase;
+  private _trackPluginInstallHeartbeatUseCase!: TrackPluginInstallHeartbeatUseCase;
+  private _listMarketplacePluginInstallsUseCase!: ListMarketplacePluginInstallsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -262,6 +273,7 @@ export class DeploymentsAdapter
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
+    private readonly pluginInstallationRepository: IPluginInstallationRepository,
     private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly gitRepoService: GitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -472,6 +484,21 @@ export class DeploymentsAdapter
       this.accountsPort,
       ports.eventEmitterService,
     );
+
+    this._trackPluginInstallHeartbeatUseCase =
+      new TrackPluginInstallHeartbeatUseCase(
+        this.pluginInstallationRepository,
+        this.marketplaceRepository,
+        this.deploymentsServices.getPackageService(),
+        ports.eventEmitterService,
+      );
+
+    this._listMarketplacePluginInstallsUseCase =
+      new ListMarketplacePluginInstallsUseCase(
+        this.pluginInstallationRepository,
+        this.marketplaceRepository,
+        this.accountsPort,
+      );
 
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
       targetResolutionService,
@@ -872,6 +899,7 @@ export class DeploymentsAdapter
    * consistent across surfaces.
    */
   private async renderPluginForPublishJob(params: {
+    marketplace: Marketplace;
     package: import('@packmind/types').Package;
     userId: string;
     organizationId: string;
@@ -892,6 +920,39 @@ export class DeploymentsAdapter
     const slug = `@${space.slug}/${params.package.slug}`;
     const pluginRoot = `plugins/${params.package.slug}`;
 
+    // Build install-tracking metadata when the marketplace has a tracking
+    // token. Tokens are generated at link time; the null guard covers rows
+    // created before this feature shipped and not yet republished.
+    let installTracking:
+      | {
+          apiBaseUrl: string;
+          marketplaceName: string;
+          pluginSlug: string;
+          trackingToken: string;
+        }
+      | undefined;
+
+    if (params.marketplace.trackingToken !== null) {
+      const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
+      if (appWebUrl) {
+        // The API is served under the versioned global prefix `/api/v0`
+        // (see apps/api main.ts). Embedding only `/api` produces a 404.
+        const normalizedBase = appWebUrl.replace(/\/$/, '');
+        installTracking = {
+          apiBaseUrl: `${normalizedBase}/api/v0`,
+          marketplaceName: params.marketplace.name,
+          pluginSlug: params.package.slug,
+          trackingToken: params.marketplace.trackingToken,
+        };
+      } else {
+        // Don't bake an unreachable localhost URL into a distributed plugin;
+        // skip install-tracking hooks when APP_WEB_URL is not configured.
+        this.logger.warn(
+          'APP_WEB_URL is not configured; skipping plugin install-tracking hooks for this publish',
+        );
+      }
+    }
+
     const response = await this._renderPackageAsPluginUseCase.execute({
       userId: params.userId,
       organizationId: params.organizationId,
@@ -899,6 +960,7 @@ export class DeploymentsAdapter
       mode: 'marketplace',
       pluginRoot,
       pluginName: params.package.name,
+      ...(installTracking !== undefined ? { installTracking } : {}),
     });
 
     const marketplacePluginDescription = formatMarketplacePluginDescription({
@@ -1241,5 +1303,17 @@ export class DeploymentsAdapter
     command: GetMarketplaceDistributionChangesCommand,
   ): Promise<GetMarketplaceDistributionChangesResponse> {
     return this._getMarketplaceDistributionChangesUseCase.execute(command);
+  }
+
+  async trackPluginInstallHeartbeat(
+    command: TrackPluginInstallHeartbeatCommand,
+  ): Promise<TrackPluginInstallHeartbeatResponse> {
+    return this._trackPluginInstallHeartbeatUseCase.execute(command);
+  }
+
+  async listMarketplacePluginInstalls(
+    command: ListMarketplacePluginInstallsCommand,
+  ): Promise<ListMarketplacePluginInstallsResponse> {
+    return this._listMarketplacePluginInstallsUseCase.execute(command);
   }
 }

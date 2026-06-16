@@ -25,6 +25,7 @@ import {
   IStandardsPortName,
   Marketplace,
   MarketplaceDistribution,
+  PluginInstallation,
 } from '@packmind/types';
 import {
   GitRepoRepository,
@@ -41,8 +42,10 @@ import { AnthropicMarketplaceDescriptorParser } from './application/services/par
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
 import { MarketplaceDistributionRepository } from './infra/repositories/MarketplaceDistributionRepository';
 import { MarketplaceRepository } from './infra/repositories/MarketplaceRepository';
+import { PluginInstallationRepository } from './infra/repositories/PluginInstallationRepository';
 import { MarketplaceDistributionSchema } from './infra/schemas/MarketplaceDistributionSchema';
 import { MarketplaceSchema } from './infra/schemas/MarketplaceSchema';
+import { PluginInstallationSchema } from './infra/schemas/PluginInstallationSchema';
 
 const origin = 'DeploymentsHexa';
 
@@ -63,6 +66,7 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly services: DeploymentsServices;
   private readonly marketplaceRepository: MarketplaceRepository;
   private readonly marketplaceDistributionRepository: MarketplaceDistributionRepository;
+  private readonly pluginInstallationRepository: PluginInstallationRepository;
   private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry;
   private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
@@ -104,6 +108,13 @@ export class DeploymentsHexa extends BaseHexa<
           ) as Repository<MarketplaceDistribution>,
         );
 
+      // Persistence for plugin install heartbeat rows (tracking installs by scope).
+      this.pluginInstallationRepository = new PluginInstallationRepository(
+        this.dataSource.getRepository(
+          PluginInstallationSchema,
+        ) as Repository<PluginInstallation>,
+      );
+
       // Vendor-agnostic parser registry. New marketplace vendors plug in by
       // appending to this array — link/unlink use cases do not branch on
       // vendor.
@@ -128,6 +139,7 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getDistributedPackageRepository(),
         this.marketplaceRepository,
         this.marketplaceDistributionRepository,
+        this.pluginInstallationRepository,
         this.marketplaceDescriptorParserRegistry,
         this.gitRepoService,
       );

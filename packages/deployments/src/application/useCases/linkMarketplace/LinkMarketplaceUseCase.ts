@@ -229,6 +229,9 @@ export class LinkMarketplaceUseCase
       errorDetail: null,
       pendingPrUrl: null,
       outdatedPluginSlugs: null,
+      // Generate a fresh tracking token so new marketplaces always have a
+      // non-null token from creation time (spec §7.2).
+      trackingToken: uuidv4(),
     } as Marketplace;
     const insertedMarketplace =
       await this.marketplaceRepository.add(marketplaceEntity);
