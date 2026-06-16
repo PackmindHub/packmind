@@ -1,4 +1,9 @@
+import { useNavigate } from 'react-router';
 import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import type { PackageId } from '@packmind/types';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../hooks/useCurrentSpace';
+import { routes } from '../../../../shared/utils/routes';
 import { OverviewSectionLabel } from './OverviewSectionLabel';
 import { useDriftedPackages } from './useDriftedPackages';
 
@@ -18,6 +23,8 @@ function buildDriftHeading(
 }
 
 export const OverviewNeedsAttention = () => {
+  const { organization } = useAuthContext();
+  const { spaceSlug } = useCurrentSpace();
   const { driftedPackages, totalBehindInstalls, isReady } =
     useDriftedPackages();
 
@@ -53,32 +60,21 @@ export const OverviewNeedsAttention = () => {
         >
           <PMVStack align="stretch" gap={2}>
             {visible.map((pkg) => (
-              <PMHStack
+              <DriftedPackageRow
                 key={pkg.id}
-                justify="space-between"
-                align="baseline"
-                gap={4}
-              >
-                <PMText
-                  fontSize="sm"
-                  color="primary"
-                  fontWeight="medium"
-                  truncate
-                >
-                  {pkg.name}
-                </PMText>
-                <PMText
-                  fontSize="sm"
-                  color="secondary"
-                  fontVariantNumeric="tabular-nums"
-                  flexShrink={0}
-                >
-                  {pkg.behindInstalls}{' '}
-                  {pkg.behindInstalls === 1
-                    ? 'distribution behind'
-                    : 'distributions behind'}
-                </PMText>
-              </PMHStack>
+                packageId={pkg.id}
+                packageName={pkg.name}
+                behindInstalls={pkg.behindInstalls}
+                href={
+                  organization && spaceSlug
+                    ? routes.space.toPackage(
+                        organization.slug,
+                        spaceSlug,
+                        pkg.id,
+                      )
+                    : null
+                }
+              />
             ))}
             {remaining > 0 && (
               <PMText fontSize="sm" color="faded">
@@ -91,3 +87,69 @@ export const OverviewNeedsAttention = () => {
     </PMVStack>
   );
 };
+
+function DriftedPackageRow({
+  packageId,
+  packageName,
+  behindInstalls,
+  href,
+}: Readonly<{
+  packageId: PackageId;
+  packageName: string;
+  behindInstalls: number;
+  href: string | null;
+}>) {
+  const navigate = useNavigate();
+  const isInteractive = !!href;
+
+  return (
+    <PMHStack justify="space-between" align="baseline" gap={4}>
+      <PMBox
+        as={isInteractive ? 'button' : 'div'}
+        onClick={isInteractive ? () => navigate(href) : undefined}
+        role="group"
+        bg="transparent"
+        border="none"
+        padding={0}
+        cursor={isInteractive ? 'pointer' : 'default'}
+        textAlign="left"
+        minW={0}
+        _focusVisible={{
+          outline: '2px solid',
+          outlineColor: 'border.brand',
+          outlineOffset: '2px',
+          borderRadius: 'sm',
+        }}
+        aria-label={isInteractive ? `Open package ${packageName}` : undefined}
+        data-package-id={packageId}
+      >
+        <PMText
+          fontSize="sm"
+          color="primary"
+          fontWeight="medium"
+          truncate
+          textDecoration={isInteractive ? 'underline' : 'none'}
+          textDecorationColor="{colors.border.tertiary}"
+          textUnderlineOffset="3px"
+          transition="text-decoration-color 120ms ease-out"
+          _groupHover={
+            isInteractive
+              ? { textDecorationColor: '{colors.text.primary}' }
+              : undefined
+          }
+        >
+          {packageName}
+        </PMText>
+      </PMBox>
+      <PMText
+        fontSize="sm"
+        color="secondary"
+        fontVariantNumeric="tabular-nums"
+        flexShrink={0}
+      >
+        {behindInstalls}{' '}
+        {behindInstalls === 1 ? 'distribution behind' : 'distributions behind'}
+      </PMText>
+    </PMHStack>
+  );
+}
