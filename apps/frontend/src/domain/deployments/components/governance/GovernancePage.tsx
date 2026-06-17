@@ -9,10 +9,7 @@ export function GovernancePage() {
     useListDriftedPackagesByOrgQuery();
 
   return (
-    <PMPage
-      title="Governance"
-      subtitle="Across the spaces of your organization."
-    >
+    <PMPage title="Governance" isFullWidth>
       <PMVStack align="stretch" gap={8}>
         <GovernanceDriftSection
           entries={data ?? []}

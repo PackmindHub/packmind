@@ -1,6 +1,15 @@
-import { PMAlert, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMAlert,
+  PMBox,
+  PMHeading,
+  PMHStack,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import type { DriftedPackageInfo } from '@packmind/types';
 import { GovernanceDriftRow } from './GovernanceDriftRow';
+
+const CARD_INSET = 5;
 
 interface GovernanceDriftSectionProps {
   entries: DriftedPackageInfo[];
@@ -19,20 +28,31 @@ export function GovernanceDriftSection({
 }: Readonly<GovernanceDriftSectionProps>) {
   return (
     <PMVStack align="stretch" gap={3}>
-      <SectionHeader
-        entries={entries}
-        isLoading={isLoading}
-        isError={isError}
-      />
-      <PMVStack
-        align="stretch"
-        gap={0}
+      <PMHStack justify="space-between" align="baseline">
+        <PMHeading
+          level="h2"
+          color="faded"
+          fontSize="xs"
+          fontWeight="medium"
+          textTransform="uppercase"
+          letterSpacing="0.08em"
+        >
+          Drift
+        </PMHeading>
+        {!isLoading && !isError && entries.length > 0 && (
+          <PMText fontSize="sm" color="secondary">
+            {buildDriftHeading(entries)}
+          </PMText>
+        )}
+      </PMHStack>
+      <PMBox
         bg="background.primary"
         borderRadius="md"
+        paddingY={CARD_INSET}
         overflow="hidden"
       >
         {isError ? (
-          <PMBox padding={5}>
+          <PMBox paddingX={CARD_INSET}>
             <PMAlert.Root status="error">
               <PMAlert.Indicator />
               <PMAlert.Content>
@@ -63,45 +83,35 @@ export function GovernanceDriftSection({
             </PMAlert.Root>
           </PMBox>
         ) : isLoading ? (
-          <SkeletonRows />
+          <PMVStack align="stretch" gap={0}>
+            <SkeletonRows />
+          </PMVStack>
         ) : entries.length === 0 ? (
-          <PMBox paddingX={4} paddingY={6}>
+          <PMBox
+            paddingX={CARD_INSET}
+            paddingY={3}
+            minHeight="60px"
+            display="flex"
+            alignItems="center"
+          >
             <PMText fontSize="sm" color="secondary">
               All distributions are up to date across your spaces.
             </PMText>
           </PMBox>
         ) : (
-          entries.map((entry) => (
-            <GovernanceDriftRow
-              key={`${entry.spaceId}:${entry.packageId}`}
-              entry={entry}
-              orgSlug={orgSlug}
-            />
-          ))
+          <PMVStack align="stretch" gap={0}>
+            {entries.map((entry, index) => (
+              <GovernanceDriftRow
+                key={`${entry.spaceId}:${entry.packageId}`}
+                entry={entry}
+                orgSlug={orgSlug}
+                isLast={index === entries.length - 1}
+              />
+            ))}
+          </PMVStack>
         )}
-      </PMVStack>
+      </PMBox>
     </PMVStack>
-  );
-}
-
-function SectionHeader({
-  entries,
-  isLoading,
-  isError,
-}: Readonly<
-  Pick<GovernanceDriftSectionProps, 'entries' | 'isLoading' | 'isError'>
->) {
-  return (
-    <PMHStack justify="space-between" align="baseline" paddingX={1}>
-      <PMText fontSize="lg" fontWeight="medium" color="primary">
-        Drift
-      </PMText>
-      {!isLoading && !isError && entries.length > 0 && (
-        <PMText fontSize="sm" color="secondary">
-          {buildDriftHeading(entries)}
-        </PMText>
-      )}
-    </PMHStack>
   );
 }
 
@@ -126,12 +136,15 @@ function SkeletonRows() {
       {[0, 1, 2].map((i) => (
         <PMBox
           key={i}
-          paddingX={4}
+          paddingX={CARD_INSET}
           paddingY={3}
-          borderTopWidth={i === 0 ? '0' : '1px'}
+          minHeight="60px"
+          borderBottomWidth={i === 2 ? '0' : '1px'}
           borderColor="border.tertiary"
+          display="flex"
+          alignItems="center"
         >
-          <PMHStack justify="space-between" align="baseline" gap={4}>
+          <PMHStack justify="space-between" align="center" width="full" gap={4}>
             <PMBox
               height="14px"
               width={`${40 + i * 10}%`}
