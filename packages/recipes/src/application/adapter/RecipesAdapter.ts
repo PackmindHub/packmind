@@ -324,6 +324,10 @@ export class RecipesAdapter
     return result.recipes;
   }
 
+  public countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.recipesServices.getRecipeService().countBySpaceIds(spaceIds);
+  }
+
   public listRecipeVersions(recipeId: RecipeId) {
     return this._listRecipeVersions.listRecipeVersions(recipeId);
   }

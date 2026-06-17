@@ -105,6 +105,9 @@ jobs:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Prepare SonarQube Cloud Scan
+        run: cp private/sonar-project.properties .
+
       - name: Generate Proprietary tsconfig
         env:
           PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}

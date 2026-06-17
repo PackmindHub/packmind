@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  Configuration,
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
@@ -7,6 +8,12 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  ListMarketplaceDistributionsCommand,
+  ListMarketplaceDistributionsResponse,
+  MarkPluginForRemovalCommand,
+  MarkPluginForRemovalResponse,
+  SyncMarketplaceNowCommand,
+  SyncMarketplaceNowResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -65,6 +72,12 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  FindMarketplaceDistributionByIdCommand,
+  FindMarketplaceDistributionByIdResponse,
+  GetMarketplaceDistributionChangesCommand,
+  GetMarketplaceDistributionChangesResponse,
+  LinkMarketplaceCommand,
+  LinkMarketplaceResponse,
   ListDeploymentsByPackageCommand,
   IListActiveDistributedPackagesBySpaceUseCase,
   IListDriftedPackagesByOrgUseCase,
@@ -75,6 +88,12 @@ import {
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
+  ListMarketplaceDistributionsForPackageCommand,
+  ListMarketplaceDistributionsForPackageResponse,
+  ListMarketplacesCommand,
+  ListMarketplacesResponse,
+  ListMarketplacePluginInstallsCommand,
+  ListMarketplacePluginInstallsResponse,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -88,6 +107,9 @@ import {
   RemovePackageFromTargetsResponse,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
+  PublishPackageOnMarketplaceCommand,
+  PublishPackageOnMarketplaceResponse,
+  Marketplace,
   PublishPackagesCommand,
   PullContentCommand,
   RenderModeConfiguration,
@@ -97,14 +119,31 @@ import {
   TargetWithRepository,
   TrackPluginDeletedCommand,
   TrackPluginDeletedResponse,
+  TrackPluginInstallHeartbeatCommand,
+  TrackPluginInstallHeartbeatResponse,
+  UnlinkMarketplaceCommand,
+  UnlinkMarketplaceResponse,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
+  ValidateMarketplaceUrlCommand,
+  ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
+import { GitRepoService } from '@packmind/git';
 import { IDeploymentsDelayedJobs } from '../../domain/jobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { IMarketplaceDistributionRepository } from '../../domain/repositories/IMarketplaceDistributionRepository';
+import { IMarketplaceRepository } from '../../domain/repositories/IMarketplaceRepository';
+import { IPluginInstallationRepository } from '../../domain/repositories/IPluginInstallationRepository';
+import { MarketplaceReconciliationJobFactory } from '../../infra/jobs/MarketplaceReconciliationJobFactory';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
+import { PublishPluginToMarketplaceJobFactory } from '../../infra/jobs/PublishPluginToMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceJobFactory } from '../../infra/jobs/RemovePluginFromMarketplaceJobFactory';
+import { RemovePluginFromMarketplaceDelayedJob } from '../jobs/RemovePluginFromMarketplaceDelayedJob';
 import { DeploymentsServices } from '../services/DeploymentsServices';
+import { MarketplaceDescriptorParserRegistry } from '../services/MarketplaceDescriptorParserRegistry';
+import { PackageVersionFingerprintService } from '../services/PackageVersionFingerprintService';
+import { formatMarketplacePluginDescription } from '../services/formatMarketplacePluginDescription';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -118,6 +157,17 @@ import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDef
 import { DownloadSkillZipForAgentUseCase } from '../useCases/DownloadSkillZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetPackageByIdUseCase } from '../useCases/getPackageById/GetPackageByIdUseCase';
+import { FindMarketplaceDistributionByIdUseCase } from '../useCases/findMarketplaceDistributionById';
+import { LinkMarketplaceUseCase } from '../useCases/linkMarketplace';
+import { ListMarketplaceDistributionsForPackageUseCase } from '../useCases/listMarketplaceDistributionsForPackage';
+import { ListMarketplaceDistributionsUseCase } from '../useCases/listMarketplaceDistributions';
+import { GetMarketplaceDistributionChangesUseCase } from '../useCases/getMarketplaceDistributionChanges';
+import { ListMarketplacesUseCase } from '../useCases/listMarketplaces';
+import { MarkPluginForRemovalUseCase } from '../useCases/markPluginForRemoval';
+import { SyncMarketplaceNowUseCase } from '../useCases/syncMarketplaceNow';
+import { PublishPackageOnMarketplaceUseCase } from '../useCases/publishPackageOnMarketplace';
+import { UnlinkMarketplaceUseCase } from '../useCases/unlinkMarketplace';
+import { ValidateMarketplaceUrlUseCase } from '../useCases/validateMarketplaceUrl';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetTargetByIdUseCase } from '../useCases/GetTargetByIdUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
@@ -146,6 +196,8 @@ import { InstallPackagesUseCase } from '../useCases/InstallPackagesUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { RenderPackageAsPluginUseCase } from '../useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase';
 import { TrackPluginDeletedUseCase } from '../useCases/trackPluginDeleted/TrackPluginDeletedUseCase';
+import { TrackPluginInstallHeartbeatUseCase } from '../useCases/trackPluginInstallHeartbeat/TrackPluginInstallHeartbeatUseCase';
+import { ListMarketplacePluginInstallsUseCase } from '../useCases/listMarketplacePluginInstalls/ListMarketplacePluginInstallsUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -206,11 +258,29 @@ export class DeploymentsAdapter
   private _listActiveDistributedPackagesBySpaceUseCase!: ListActiveDistributedPackagesBySpaceUseCase;
   private _listDriftedPackagesByOrgUseCase!: ListDriftedPackagesByOrgUseCase;
   private _getLastDistributionDateByProvidersUseCase!: GetLastDistributionDateByProvidersUseCase;
+  private _linkMarketplaceUseCase!: LinkMarketplaceUseCase;
+  private _unlinkMarketplaceUseCase!: UnlinkMarketplaceUseCase;
+  private _listMarketplacesUseCase!: ListMarketplacesUseCase;
+  private _validateMarketplaceUrlUseCase!: ValidateMarketplaceUrlUseCase;
+  private _publishPackageOnMarketplaceUseCase!: PublishPackageOnMarketplaceUseCase;
+  private _listMarketplaceDistributionsForPackageUseCase!: ListMarketplaceDistributionsForPackageUseCase;
+  private _findMarketplaceDistributionByIdUseCase!: FindMarketplaceDistributionByIdUseCase;
+  private _markPluginForRemovalUseCase!: MarkPluginForRemovalUseCase;
+  private _syncMarketplaceNowUseCase!: SyncMarketplaceNowUseCase;
+  private _listMarketplaceDistributionsUseCase!: ListMarketplaceDistributionsUseCase;
+  private _getMarketplaceDistributionChangesUseCase!: GetMarketplaceDistributionChangesUseCase;
+  private _trackPluginInstallHeartbeatUseCase!: TrackPluginInstallHeartbeatUseCase;
+  private _listMarketplacePluginInstallsUseCase!: ListMarketplacePluginInstallsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly marketplaceRepository: IMarketplaceRepository,
+    private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
+    private readonly pluginInstallationRepository: IPluginInstallationRepository,
+    private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry,
+    private readonly gitRepoService: GitRepoService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -241,6 +311,7 @@ export class DeploymentsAdapter
     // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
       ports.jobsService,
+      ports.eventEmitterService,
     );
 
     // Step 3: Validate all required ports are set
@@ -419,6 +490,21 @@ export class DeploymentsAdapter
       ports.eventEmitterService,
     );
 
+    this._trackPluginInstallHeartbeatUseCase =
+      new TrackPluginInstallHeartbeatUseCase(
+        this.pluginInstallationRepository,
+        this.marketplaceRepository,
+        this.deploymentsServices.getPackageService(),
+        ports.eventEmitterService,
+      );
+
+    this._listMarketplacePluginInstallsUseCase =
+      new ListMarketplacePluginInstallsUseCase(
+        this.pluginInstallationRepository,
+        this.marketplaceRepository,
+        this.accountsPort,
+      );
+
     this._getDeployedContentUseCase = new GetDeployedContentUseCase(
       targetResolutionService,
       this.distributionRepository,
@@ -572,6 +658,111 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
+
+    // Marketplace use cases. The reconciliation job is wired through here so
+    // both Link/Unlink can drive the BullMQ repeatable schedule.
+    this._linkMarketplaceUseCase = new LinkMarketplaceUseCase(
+      this.marketplaceRepository,
+      this.gitRepoService,
+      this.gitPort,
+      this.marketplaceDescriptorParserRegistry,
+      ports.eventEmitterService,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
+      this.accountsPort,
+    );
+
+    this._unlinkMarketplaceUseCase = new UnlinkMarketplaceUseCase(
+      this.marketplaceRepository,
+      this.gitPort,
+      ports.eventEmitterService,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
+      this.accountsPort,
+    );
+
+    this._listMarketplacesUseCase = new ListMarketplacesUseCase(
+      this.marketplaceRepository,
+      this.gitRepoService,
+      this.gitPort,
+      this.accountsPort,
+    );
+
+    this._validateMarketplaceUrlUseCase = new ValidateMarketplaceUrlUseCase(
+      this.gitPort,
+      this.marketplaceDescriptorParserRegistry,
+      this.accountsPort,
+    );
+
+    this._publishPackageOnMarketplaceUseCase =
+      new PublishPackageOnMarketplaceUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.gitPort,
+        this.gitRepoService,
+        this.marketplaceDescriptorParserRegistry,
+        ports.eventEmitterService,
+        this.deploymentsDelayedJobs.publishPluginToMarketplaceDelayedJob,
+        this.accountsPort,
+      );
+
+    this._listMarketplaceDistributionsForPackageUseCase =
+      new ListMarketplaceDistributionsForPackageUseCase(
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.accountsPort,
+      );
+
+    this._findMarketplaceDistributionByIdUseCase =
+      new FindMarketplaceDistributionByIdUseCase(
+        this.marketplaceDistributionRepository,
+        this.accountsPort,
+      );
+
+    // Plugin removal use cases (gated behind marketplace-plugin-removal flag
+    // on the frontend; backend remains symmetric to link/unlink).
+    this._markPluginForRemovalUseCase = new MarkPluginForRemovalUseCase(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.deploymentsServices.getPackageService(),
+      ports.eventEmitterService,
+      this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob,
+      this.accountsPort,
+    );
+
+    // On-demand "Sync now" reconciliation (member-scoped). Reuses the
+    // reconciliation job so a manual refresh runs the same sweep as the cron.
+    this._syncMarketplaceNowUseCase = new SyncMarketplaceNowUseCase(
+      this.marketplaceRepository,
+      this.deploymentsDelayedJobs.marketplaceReconciliationDelayedJob,
+      this.accountsPort,
+    );
+
+    this._listMarketplaceDistributionsUseCase =
+      new ListMarketplaceDistributionsUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        this.spacesPort,
+        this.accountsPort,
+      );
+
+    this._getMarketplaceDistributionChangesUseCase =
+      new GetMarketplaceDistributionChangesUseCase(
+        this.marketplaceRepository,
+        this.marketplaceDistributionRepository,
+        this.deploymentsServices.getPackageService(),
+        new PackageVersionFingerprintService(
+          this.recipesPort,
+          this.standardsPort,
+          this.skillsPort,
+        ),
+        this.recipesPort,
+        this.standardsPort,
+        this.skillsPort,
+        this.accountsPort,
+      );
   }
 
   /**
@@ -580,8 +771,18 @@ export class DeploymentsAdapter
    */
   private async buildDelayedJobs(
     jobsService: JobsService,
+    eventEmitterService: PackmindEventEmitterService,
   ): Promise<IDeploymentsDelayedJobs> {
     this.logger.debug('Building delayed jobs for Deployments domain');
+
+    // Shared fingerprint service: baselines a package's artifact versions at
+    // publish time and recomputes them on reconcile to flag "outdated". Built
+    // once here and shared by the publish + reconciliation factories.
+    const versionFingerprintService = new PackageVersionFingerprintService(
+      this.recipesPort!,
+      this.standardsPort!,
+      this.skillsPort!,
+    );
 
     const jobFactory = new PublishArtifactsJobFactory(
       this.distributionRepository,
@@ -597,9 +798,193 @@ export class DeploymentsAdapter
       );
     }
 
+    // Marketplace reconciliation queue — per-marketplace BullMQ repeatable
+    // jobs (default `*/30 * * * *`). Registered through the same JobsService
+    // so the queue is initialized alongside the rest of the worker pool.
+    const reconciliationFactory = new MarketplaceReconciliationJobFactory(
+      this.marketplaceRepository,
+      this.marketplaceDistributionRepository,
+      this.gitRepoService,
+      this.gitPort!,
+      this.marketplaceDescriptorParserRegistry,
+      this.deploymentsServices.getPackageService(),
+      versionFingerprintService,
+    );
+    jobsService.registerJobQueue(
+      reconciliationFactory.getQueueName(),
+      reconciliationFactory,
+    );
+    await reconciliationFactory.createQueue();
+
+    if (!reconciliationFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for marketplace reconciliation',
+      );
+    }
+
+    // Marketplace plugin publish queue. The worker is intentionally
+    // single-concurrency — Git pushes onto the rolling `packmind/sync` branch
+    // must be serialized across simultaneous publish attempts. The renderer
+    // is provided as a lazy callable so it can reach the
+    // `RenderPackageAsPluginUseCase` that is constructed later in
+    // `initialize()`.
+    const publishPluginToMarketplaceFactory =
+      new PublishPluginToMarketplaceJobFactory(
+        this.marketplaceDistributionRepository,
+        this.marketplaceRepository,
+        this.deploymentsServices.getPackageService(),
+        this.gitRepoService,
+        this.gitPort!,
+        this.marketplaceDescriptorParserRegistry,
+        async (params) => this.renderPluginForPublishJob(params),
+        versionFingerprintService,
+        eventEmitterService,
+      );
+    jobsService.registerJobQueue(
+      publishPluginToMarketplaceFactory.getQueueName(),
+      publishPluginToMarketplaceFactory,
+    );
+    await publishPluginToMarketplaceFactory.createQueue();
+
+    if (!publishPluginToMarketplaceFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for publish plugin to marketplace',
+      );
+    }
+
+    // Marketplace plugin removal queue — the inverse of the publish queue.
+    // Also single-concurrency: deletion commits onto `packmind/sync` must be
+    // serialized with publishes. No renderer is needed (we delete the
+    // plugin's files rather than render them).
+    const removePluginFromMarketplaceFactory =
+      new RemovePluginFromMarketplaceJobFactory(
+        this.marketplaceDistributionRepository,
+        this.marketplaceRepository,
+        this.gitRepoService,
+        this.gitPort!,
+        this.marketplaceDescriptorParserRegistry,
+      );
+    jobsService.registerJobQueue(
+      removePluginFromMarketplaceFactory.getQueueName(),
+      removePluginFromMarketplaceFactory,
+    );
+    await removePluginFromMarketplaceFactory.createQueue();
+
+    if (!removePluginFromMarketplaceFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for remove plugin from marketplace',
+      );
+    }
+
     this.logger.debug('Deployments delayed jobs built successfully');
     return {
       publishArtifactsDelayedJob: jobFactory.delayedJob,
+      marketplaceReconciliationDelayedJob: reconciliationFactory.delayedJob,
+      publishPluginToMarketplaceDelayedJob:
+        publishPluginToMarketplaceFactory.delayedJob,
+      removePluginFromMarketplaceDelayedJob:
+        removePluginFromMarketplaceFactory.delayedJob,
+    };
+  }
+
+  /**
+   * Exposes the marketplace plugin removal job so the cross-cutting
+   * `PackageDeletedDistributionsListener` (constructed in `DeploymentsHexa`)
+   * can enqueue deletions for the package-deletion cascade. Available only
+   * after `initialize()` has built the delayed jobs.
+   */
+  public getRemovePluginFromMarketplaceJob(): RemovePluginFromMarketplaceDelayedJob {
+    if (!this.deploymentsDelayedJobs) {
+      throw new Error(
+        'DeploymentsAdapter: delayed jobs not initialized — call initialize() first',
+      );
+    }
+    return this.deploymentsDelayedJobs.removePluginFromMarketplaceDelayedJob;
+  }
+
+  /**
+   * Renderer callable used by the `PublishPluginToMarketplaceDelayedJob`.
+   *
+   * Wraps `RenderPackageAsPluginUseCase` so the job spec stays decoupled from
+   * the rendering hexagon. The package is resolved via the existing
+   * `@<space-slug>/<package-slug>` selector to keep the rendering path
+   * consistent across surfaces.
+   */
+  private async renderPluginForPublishJob(params: {
+    marketplace: Marketplace;
+    package: import('@packmind/types').Package;
+    userId: string;
+    organizationId: string;
+  }): Promise<
+    import('../jobs/PublishPluginToMarketplaceDelayedJob').PluginRendererResult
+  > {
+    if (!this.spacesPort) {
+      throw new Error(
+        'DeploymentsAdapter: SpacesPort missing — renderer cannot run',
+      );
+    }
+    const space = await this.spacesPort.getSpaceById(params.package.spaceId);
+    if (!space) {
+      throw new Error(
+        `Space ${params.package.spaceId} not found for package ${params.package.slug}`,
+      );
+    }
+    const slug = `@${space.slug}/${params.package.slug}`;
+    const pluginRoot = `plugins/${params.package.slug}`;
+
+    // Build install-tracking metadata when the marketplace has a tracking
+    // token. Tokens are generated at link time; the null guard covers rows
+    // created before this feature shipped and not yet republished.
+    let installTracking:
+      | {
+          apiBaseUrl: string;
+          marketplaceName: string;
+          pluginSlug: string;
+          trackingToken: string;
+        }
+      | undefined;
+
+    if (params.marketplace.trackingToken !== null) {
+      const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
+      if (appWebUrl) {
+        // The API is served under the versioned global prefix `/api/v0`
+        // (see apps/api main.ts). Embedding only `/api` produces a 404.
+        const normalizedBase = appWebUrl.replace(/\/$/, '');
+        installTracking = {
+          apiBaseUrl: `${normalizedBase}/api/v0`,
+          marketplaceName: params.marketplace.name,
+          pluginSlug: params.package.slug,
+          trackingToken: params.marketplace.trackingToken,
+        };
+      } else {
+        // Don't bake an unreachable localhost URL into a distributed plugin;
+        // skip install-tracking hooks when APP_WEB_URL is not configured.
+        this.logger.warn(
+          'APP_WEB_URL is not configured; skipping plugin install-tracking hooks for this publish',
+        );
+      }
+    }
+
+    const response = await this._renderPackageAsPluginUseCase.execute({
+      userId: params.userId,
+      organizationId: params.organizationId,
+      packageSlug: slug,
+      mode: 'marketplace',
+      pluginRoot,
+      pluginName: params.package.name,
+      ...(installTracking !== undefined ? { installTracking } : {}),
+    });
+
+    const marketplacePluginDescription = formatMarketplacePluginDescription({
+      spaceSlug: space.slug,
+      packageDescription: response.pluginDescription,
+    });
+
+    return {
+      files: response.files.map((f) => ({ path: f.path, content: f.content })),
+      pluginName: response.pluginName,
+      pluginVersion: response.pluginVersion,
+      pluginDescription: marketplacePluginDescription,
     };
   }
 
@@ -874,5 +1259,83 @@ export class DeploymentsAdapter
     command: GetLastDistributionDateByProvidersCommand,
   ): Promise<GetLastDistributionDateByProvidersResponse> {
     return this._getLastDistributionDateByProvidersUseCase.execute(command);
+  }
+
+  async linkMarketplace(
+    command: LinkMarketplaceCommand,
+  ): Promise<LinkMarketplaceResponse> {
+    return this._linkMarketplaceUseCase.execute(command);
+  }
+
+  async unlinkMarketplace(
+    command: UnlinkMarketplaceCommand,
+  ): Promise<UnlinkMarketplaceResponse> {
+    return this._unlinkMarketplaceUseCase.execute(command);
+  }
+
+  async listMarketplaces(
+    command: ListMarketplacesCommand,
+  ): Promise<ListMarketplacesResponse> {
+    return this._listMarketplacesUseCase.execute(command);
+  }
+
+  async validateMarketplaceUrl(
+    command: ValidateMarketplaceUrlCommand,
+  ): Promise<ValidateMarketplaceUrlResponse> {
+    return this._validateMarketplaceUrlUseCase.execute(command);
+  }
+
+  async publishPackageOnMarketplace(
+    command: PublishPackageOnMarketplaceCommand,
+  ): Promise<PublishPackageOnMarketplaceResponse> {
+    return this._publishPackageOnMarketplaceUseCase.execute(command);
+  }
+
+  async listMarketplaceDistributionsForPackage(
+    command: ListMarketplaceDistributionsForPackageCommand,
+  ): Promise<ListMarketplaceDistributionsForPackageResponse> {
+    return this._listMarketplaceDistributionsForPackageUseCase.execute(command);
+  }
+
+  async findMarketplaceDistributionById(
+    command: FindMarketplaceDistributionByIdCommand,
+  ): Promise<FindMarketplaceDistributionByIdResponse> {
+    return this._findMarketplaceDistributionByIdUseCase.execute(command);
+  }
+
+  async markPluginForRemoval(
+    command: MarkPluginForRemovalCommand,
+  ): Promise<MarkPluginForRemovalResponse> {
+    return this._markPluginForRemovalUseCase.execute(command);
+  }
+
+  async syncMarketplaceNow(
+    command: SyncMarketplaceNowCommand,
+  ): Promise<SyncMarketplaceNowResponse> {
+    return this._syncMarketplaceNowUseCase.execute(command);
+  }
+
+  async listMarketplaceDistributions(
+    command: ListMarketplaceDistributionsCommand,
+  ): Promise<ListMarketplaceDistributionsResponse> {
+    return this._listMarketplaceDistributionsUseCase.execute(command);
+  }
+
+  async getMarketplaceDistributionChanges(
+    command: GetMarketplaceDistributionChangesCommand,
+  ): Promise<GetMarketplaceDistributionChangesResponse> {
+    return this._getMarketplaceDistributionChangesUseCase.execute(command);
+  }
+
+  async trackPluginInstallHeartbeat(
+    command: TrackPluginInstallHeartbeatCommand,
+  ): Promise<TrackPluginInstallHeartbeatResponse> {
+    return this._trackPluginInstallHeartbeatUseCase.execute(command);
+  }
+
+  async listMarketplacePluginInstalls(
+    command: ListMarketplacePluginInstallsCommand,
+  ): Promise<ListMarketplacePluginInstallsResponse> {
+    return this._listMarketplacePluginInstallsUseCase.execute(command);
   }
 }

@@ -9,6 +9,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+# Standard: Amplitude analytics usage
+
+Define Amplitude analytics event and property naming conventions (snake_case events ending with a verb, lowerCamelCase properties) for cloud-only, EU-hosted, non-PII tracking across CLI, MCP, and web app interfaces to standardize behavior insights collection. :
+* Event name ends with the verb (e.g 'standard_created', 'user_signed_up')
+* Property name should be in lower camel case
+* Tracked event name should be snake cased
+
+Full standard is available here for further request: [Amplitude analytics usage](../../.packmind/standards/amplitude-analytics-usage.md)
+
 # Standard: Backend Tests Redaction
 
 Enforce Jest backend test conventions in Packmind **/*.spec.ts (verb-first names, behavioral assertions, nested `describe('when...')`, one `expect`, `afterEach` cleanup with `datasource.destroy()` and `jest.clearAllMocks()`, `toEqual` for arrays, and `stubLogger()` for typed `PackmindLogger` stubs) to improve readability, consistency, and debuggability while preventing inter-test pollution. :
@@ -43,6 +52,13 @@ Enforce masking of personal information in TypeScript logs, using a standard fir
 * Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 
 Full standard is available here for further request: [Compliance - Logging Personal Information](../../.packmind/standards/compliance-logging-personal-information.md)
+
+# Standard: Packmind Proprietary
+
+Prohibit imports from '@packmind/editions' in proprietary codebases to prevent unintended use of open-source–only modules and ensure proper licensing boundaries. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](../../.packmind/standards/packmind-proprietary.md)
 
 # Standard: Typescript good practices
 

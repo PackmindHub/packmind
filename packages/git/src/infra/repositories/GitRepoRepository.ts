@@ -1,6 +1,9 @@
 import { GitRepo } from '@packmind/types';
 import { GitProviderId } from '@packmind/types';
-import { IGitRepoRepository } from '../../domain/repositories/IGitRepoRepository';
+import {
+  IGitRepoRepository,
+  GitRepoTypeFilter,
+} from '../../domain/repositories/IGitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { Repository } from 'typeorm';
@@ -36,18 +39,37 @@ export class GitRepoRepository
   async findByOwnerAndRepo(
     owner: string,
     repo: string,
-    opts?: Pick<QueryOption, 'includeDeleted'>,
+    opts?: Pick<QueryOption, 'includeDeleted'> & {
+      type?: GitRepoTypeFilter;
+    },
   ): Promise<GitRepo | null> {
-    this.logger.info('Finding git repo by owner and repo', { owner, repo });
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
+    this.logger.info('Finding git repo by owner and repo', {
+      owner,
+      repo,
+      type,
+    });
 
     try {
-      const gitRepo = await this.repository.findOne({
-        where: { owner, repo },
-        withDeleted: opts?.includeDeleted ?? false,
-      });
+      const queryBuilder = this.repository
+        .createQueryBuilder('gitRepo')
+        .where('gitRepo.owner = :owner', { owner })
+        .andWhere('gitRepo.repo = :repo', { repo });
+
+      if (type !== 'any') {
+        queryBuilder.andWhere('gitRepo.type = :type', { type });
+      }
+
+      if (opts?.includeDeleted) {
+        queryBuilder.withDeleted();
+      }
+
+      const gitRepo = await queryBuilder.getOne();
       this.logger.info('Git repo found by owner and repo', {
         owner,
         repo,
+        type,
         found: !!gitRepo,
       });
       return gitRepo;
@@ -55,6 +77,7 @@ export class GitRepoRepository
       this.logger.error('Failed to find git repo by owner and repo', {
         owner,
         repo,
+        type,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -66,8 +89,12 @@ export class GitRepoRepository
     repo: string,
     branch: string,
     organizationId: OrganizationId,
-    opts?: Pick<QueryOption, 'includeDeleted'>,
+    opts?: Pick<QueryOption, 'includeDeleted'> & {
+      type?: GitRepoTypeFilter;
+    },
   ): Promise<GitRepo | null> {
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
     this.logger.info(
       'Finding git repo by owner, repo, branch, and organization',
       {
@@ -75,6 +102,7 @@ export class GitRepoRepository
         repo,
         branch,
         organizationId,
+        type,
       },
     );
 
@@ -93,6 +121,10 @@ export class GitRepoRepository
           organizationId,
         });
 
+      if (type !== 'any') {
+        queryBuilder.andWhere('gitRepo.type = :type', { type });
+      }
+
       if (opts?.includeDeleted) {
         queryBuilder.withDeleted();
       }
@@ -106,6 +138,7 @@ export class GitRepoRepository
           repo,
           branch,
           organizationId,
+          type,
           found: !!gitRepo,
         },
       );
@@ -118,6 +151,7 @@ export class GitRepoRepository
           repo,
           branch,
           organizationId,
+          type,
           error: error instanceof Error ? error.message : String(error),
         },
       );
@@ -125,19 +159,111 @@ export class GitRepoRepository
     }
   }
 
-  async findByProviderId(providerId: GitProviderId): Promise<GitRepo[]> {
-    this.logger.info('Finding git repos by provider ID', { providerId });
+  async findByOwnerAndRepoInOrganization(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+    opts?: Pick<QueryOption, 'includeDeleted'> & {
+      type?: GitRepoTypeFilter;
+      providerId?: GitProviderId;
+    },
+  ): Promise<GitRepo | null> {
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
+    this.logger.info('Finding git repo by owner, repo, and organization', {
+      owner,
+      repo,
+      organizationId,
+      type,
+      providerId: opts?.providerId,
+    });
 
     try {
-      const gitRepos = await this.repository.find({ where: { providerId } });
+      const queryBuilder = this.repository
+        .createQueryBuilder('gitRepo')
+        .innerJoin(
+          GitProviderSchema.options.name,
+          'provider',
+          'gitRepo.providerId = provider.id',
+        )
+        .where('gitRepo.owner = :owner', { owner })
+        .andWhere('gitRepo.repo = :repo', { repo })
+        .andWhere('provider.organizationId = :organizationId', {
+          organizationId,
+        });
+
+      if (type !== 'any') {
+        queryBuilder.andWhere('gitRepo.type = :type', { type });
+      }
+
+      if (opts?.providerId) {
+        queryBuilder.andWhere('gitRepo.providerId = :providerId', {
+          providerId: opts.providerId,
+        });
+      }
+
+      if (opts?.includeDeleted) {
+        queryBuilder.withDeleted();
+      }
+
+      const gitRepo = await queryBuilder.getOne();
+
+      this.logger.info('Git repo found by owner, repo, and organization', {
+        owner,
+        repo,
+        organizationId,
+        type,
+        providerId: opts?.providerId,
+        found: !!gitRepo,
+      });
+      return gitRepo;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find git repo by owner, repo, and organization',
+        {
+          owner,
+          repo,
+          organizationId,
+          type,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findByProviderId(
+    providerId: GitProviderId,
+    opts?: { type?: GitRepoTypeFilter },
+  ): Promise<GitRepo[]> {
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
+    this.logger.info('Finding git repos by provider ID', {
+      providerId,
+      type,
+    });
+
+    try {
+      const queryBuilder = this.repository
+        .createQueryBuilder('gitRepo')
+        .where('gitRepo.providerId = :providerId', { providerId });
+
+      if (type !== 'any') {
+        queryBuilder.andWhere('gitRepo.type = :type', { type });
+      }
+
+      const gitRepos = await queryBuilder.getMany();
+
       this.logger.info('Git repos found by provider ID', {
         providerId,
+        type,
         count: gitRepos.length,
       });
       return gitRepos;
     } catch (error) {
       this.logger.error('Failed to find git repos by provider ID', {
         providerId,
+        type,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -146,55 +272,79 @@ export class GitRepoRepository
 
   async findByOrganizationId(
     organizationId: OrganizationId,
+    opts?: { type?: GitRepoTypeFilter },
   ): Promise<GitRepo[]> {
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
     this.logger.info('Finding git repos by organization ID', {
       organizationId,
+      type,
     });
 
     try {
-      const gitRepos = await this.repository
+      const queryBuilder = this.repository
         .createQueryBuilder('gitRepo')
         .innerJoin(
           GitProviderSchema.options.name,
           'provider',
           'gitRepo.providerId = provider.id',
         )
-        .where('provider.organizationId = :organizationId', { organizationId })
-        .getMany();
+        .where('provider.organizationId = :organizationId', {
+          organizationId,
+        });
+
+      if (type !== 'any') {
+        queryBuilder.andWhere('gitRepo.type = :type', { type });
+      }
+
+      const gitRepos = await queryBuilder.getMany();
 
       this.logger.info('Git repos found by organization ID', {
         organizationId,
+        type,
         count: gitRepos.length,
       });
       return gitRepos;
     } catch (error) {
       this.logger.error('Failed to find git repos by organization ID', {
         organizationId,
+        type,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
   }
 
-  async list(organizationId?: OrganizationId): Promise<GitRepo[]> {
-    this.logger.info('Listing git repos', { organizationId });
+  async list(
+    organizationId?: OrganizationId,
+    opts?: { type?: GitRepoTypeFilter },
+  ): Promise<GitRepo[]> {
+    const type: GitRepoTypeFilter = opts?.type ?? 'standard';
+
+    this.logger.info('Listing git repos', { organizationId, type });
 
     try {
       let gitRepos: GitRepo[];
       if (organizationId) {
-        gitRepos = await this.findByOrganizationId(organizationId);
+        gitRepos = await this.findByOrganizationId(organizationId, { type });
       } else {
-        gitRepos = await this.repository.find();
+        const queryBuilder = this.repository.createQueryBuilder('gitRepo');
+        if (type !== 'any') {
+          queryBuilder.where('gitRepo.type = :type', { type });
+        }
+        gitRepos = await queryBuilder.getMany();
       }
 
       this.logger.info('Git repos listed successfully', {
         organizationId,
+        type,
         count: gitRepos.length,
       });
       return gitRepos;
     } catch (error) {
       this.logger.error('Failed to list git repos', {
         organizationId,
+        type,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

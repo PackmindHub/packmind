@@ -148,6 +148,33 @@ export class RecipeRepository
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting recipes by space IDs', {
+      spaceCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('recipe')
+        .select('recipe.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('recipe.space_id IN (:...spaceIds)', { spaceIds })
+        .groupBy('recipe.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      return new Map(rows.map((row) => [row.spaceId, Number(row.count)]));
+    } catch (error) {
+      this.logger.error('Failed to count recipes by space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async markAsMoved(
     recipeId: RecipeId,
     destinationSpaceId: SpaceId,

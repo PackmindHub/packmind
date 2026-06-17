@@ -1,26 +1,20 @@
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-  within,
-} from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider, pmToaster } from '@packmind/ui';
-import { SpaceType, createPackageId, createSpaceId } from '@packmind/types';
+import {
+  Space,
+  SpaceType,
+  createOrganizationId,
+  createPackageId,
+  createSpaceId,
+} from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 
-import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import * as SpacesManagementQueriesModule from '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries';
 import * as DeploymentsQueriesModule from '../../deployments/api/queries/DeploymentsQueries';
 import * as UseNavigationModule from '../../../shared/hooks/useNavigation';
 import * as UseAuthContextModule from '../../accounts/hooks/useAuthContext';
 import { SpaceDangerZoneSection } from './SpaceDangerZoneSection';
-
-jest.mock('../hooks/useCurrentSpace', () => ({
-  ...jest.requireActual('../hooks/useCurrentSpace'),
-  useCurrentSpace: jest.fn(),
-}));
 
 jest.mock(
   '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
@@ -56,31 +50,10 @@ jest.mock('@packmind/ui', () => ({
     error: jest.fn(),
   },
 }));
-const mockUseCurrentSpace = (
-  overrides: Partial<ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>>,
-) => {
-  jest.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
-    spaceId: 'space-1',
-    spaceSlug: 'test-space',
-    spaceName: 'Test Space',
-    space: {
-      id: 'space-1',
-      name: 'Test Space',
-      slug: 'test-space',
-      type: SpaceType.open,
-      organizationId: 'org-1',
-      isDefaultSpace: false,
-    },
-    isLoading: false,
-    error: null,
-    isReady: true,
-    ...overrides,
-  } as unknown as ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>);
-};
 
 const mockMutate = jest.fn();
-
 const mockLeaveMutate = jest.fn();
+const mockToDashboard = jest.fn();
 
 const mockLeaveSpaceMutation = () => {
   jest
@@ -116,8 +89,6 @@ const mockListPackagesBySpaceQuery = (
     >);
 };
 
-const mockToDashboard = jest.fn();
-
 const mockNavigation = () => {
   jest.spyOn(UseNavigationModule, 'useNavigation').mockReturnValue({
     org: { toDashboard: mockToDashboard },
@@ -126,7 +97,7 @@ const mockNavigation = () => {
 
 const mockAuth = () => {
   jest.spyOn(UseAuthContextModule, 'useAuthContext').mockReturnValue({
-    organization: { id: 'org-1', slug: 'org-slug' },
+    organization: { id: createOrganizationId('org-1'), slug: 'org-slug' },
   } as unknown as ReturnType<typeof UseAuthContextModule.useAuthContext>);
 };
 
@@ -134,14 +105,26 @@ const renderWithProviders = (component: React.ReactElement) => {
   return render(<UIProvider>{component}</UIProvider>);
 };
 
+const buildSpace = (overrides: Partial<Space> = {}): Space =>
+  spaceFactory({
+    id: createSpaceId('space-1'),
+    name: 'Test Space',
+    slug: 'test-space',
+    type: SpaceType.open,
+    organizationId: createOrganizationId('org-1'),
+    isDefaultSpace: false,
+    ...overrides,
+  });
+
 describe('SpaceDangerZoneSection', () => {
   afterEach(() => {
     jest.clearAllMocks();
     mockMutate.mockReset();
+    mockLeaveMutate.mockReset();
+    mockToDashboard.mockReset();
   });
 
   beforeEach(() => {
-    mockUseCurrentSpace({});
     mockLeaveSpaceMutation();
     mockDeleteSpaceMutation();
     mockListPackagesBySpaceQuery();
@@ -150,44 +133,38 @@ describe('SpaceDangerZoneSection', () => {
   });
 
   describe('when the space is the default space', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: 'space-1',
-          name: 'Default Space',
-          slug: 'default-space',
-          type: SpaceType.open,
-          organizationId: 'org-1',
-          isDefaultSpace: true,
-        },
-      });
-    });
-
     it('does not render the leave button', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ isDefaultSpace: true });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
 
       expect(
         screen.queryByRole('button', { name: /leave this space/i }),
       ).not.toBeInTheDocument();
     });
+
+    it('does not render the delete button', () => {
+      const space = buildSpace({ isDefaultSpace: true });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
+
+      expect(
+        screen.queryByRole('button', { name: /delete this space/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('when the space is open', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: 'space-1',
-          name: 'Test Space',
-          slug: 'test-space',
-          type: SpaceType.open,
-          organizationId: 'org-1',
-          isDefaultSpace: false,
-        },
-      });
-    });
-
     it('shows the rejoin-anytime message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ type: SpaceType.open });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
 
       expect(
         screen.getByText(/You can rejoin whenever you want\./),
@@ -195,7 +172,11 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the rejoin-anytime message in the leave confirmation dialog', async () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ type: SpaceType.open });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -211,21 +192,12 @@ describe('SpaceDangerZoneSection', () => {
   });
 
   describe('when the space is restricted', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: 'space-1',
-          name: 'Test Space',
-          slug: 'test-space',
-          type: SpaceType.restricted,
-          organizationId: 'org-1',
-          isDefaultSpace: false,
-        },
-      });
-    });
-
     it('shows the ask-administrator message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ type: SpaceType.restricted });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
 
       expect(
         screen.getByText(/You'll have to ask an administrator to rejoin\./),
@@ -233,7 +205,11 @@ describe('SpaceDangerZoneSection', () => {
     });
 
     it('shows the ask-administrator message in the leave confirmation dialog', async () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ type: SpaceType.restricted });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -251,21 +227,12 @@ describe('SpaceDangerZoneSection', () => {
   });
 
   describe('when the space is private', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: 'space-1',
-          name: 'Test Space',
-          slug: 'test-space',
-          type: SpaceType.private,
-          organizationId: 'org-1',
-          isDefaultSpace: false,
-        },
-      });
-    });
-
     it('shows the ask-administrator message in the danger zone description', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace({ type: SpaceType.private });
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
 
       expect(
         screen.getByText(/You'll have to ask an administrator to rejoin\./),
@@ -275,7 +242,10 @@ describe('SpaceDangerZoneSection', () => {
 
   describe('when the leave dialog is opened', () => {
     const openLeaveDialog = async () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -331,7 +301,7 @@ describe('SpaceDangerZoneSection', () => {
           fireEvent.click(leaveButton);
 
           expect(mockLeaveMutate).toHaveBeenCalledWith(
-            { spaceId: 'space-1' },
+            { spaceId: createSpaceId('space-1') },
             expect.objectContaining({
               onSuccess: expect.any(Function),
               onError: expect.any(Function),
@@ -354,7 +324,7 @@ describe('SpaceDangerZoneSection', () => {
           fireEvent.submit(form);
 
           expect(mockLeaveMutate).toHaveBeenCalledWith(
-            { spaceId: 'space-1' },
+            { spaceId: createSpaceId('space-1') },
             expect.objectContaining({
               onSuccess: expect.any(Function),
               onError: expect.any(Function),
@@ -399,7 +369,10 @@ describe('SpaceDangerZoneSection', () => {
         // Simulate a slow mutation: do not invoke any callbacks
       });
 
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -447,7 +420,10 @@ describe('SpaceDangerZoneSection', () => {
         },
       );
 
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -482,7 +458,10 @@ describe('SpaceDangerZoneSection', () => {
         },
       );
 
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /leave this space/i,
       });
@@ -506,9 +485,52 @@ describe('SpaceDangerZoneSection', () => {
     });
   });
 
+  describe('when canDelete is true', () => {
+    it('renders the delete button enabled', () => {
+      const space = buildSpace();
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /delete this space/i }),
+      ).toBeEnabled();
+    });
+  });
+
+  describe('when canDelete is false', () => {
+    it('disables the delete button', () => {
+      const space = buildSpace();
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={false} />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /delete this space/i }),
+      ).toBeDisabled();
+    });
+
+    it('still renders the leave button', () => {
+      const space = buildSpace();
+
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={false} />,
+      );
+
+      expect(
+        screen.getByRole('button', { name: /leave this space/i }),
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('when the delete dialog is opened', () => {
     const openDeleteDialog = async () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
@@ -576,7 +598,7 @@ describe('SpaceDangerZoneSection', () => {
         fireEvent.click(deleteButton);
 
         expect(mockMutate).toHaveBeenCalledWith(
-          { spaceId: 'space-1' },
+          { spaceId: createSpaceId('space-1') },
           expect.objectContaining({
             onSuccess: expect.any(Function),
             onError: expect.any(Function),
@@ -599,7 +621,7 @@ describe('SpaceDangerZoneSection', () => {
         fireEvent.submit(form);
 
         expect(mockMutate).toHaveBeenCalledWith(
-          { spaceId: 'space-1' },
+          { spaceId: createSpaceId('space-1') },
           expect.objectContaining({
             onSuccess: expect.any(Function),
             onError: expect.any(Function),
@@ -638,7 +660,10 @@ describe('SpaceDangerZoneSection', () => {
           name: '@test/other-package',
         },
       ]);
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection space={space} canDelete={true} />,
+      );
       const trigger = screen.getByRole('button', {
         name: /delete this space/i,
       });
@@ -653,67 +678,59 @@ describe('SpaceDangerZoneSection', () => {
     });
   });
 
-  describe('when the space is the default space', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: createSpaceId('space-1'),
-          name: 'Default Space',
-          slug: 'default-space',
-          type: SpaceType.open,
-          organizationId: 'org-1',
-          isDefaultSpace: true,
+  describe('when the delete mutation succeeds', () => {
+    const triggerDeleteSuccess = async (
+      onDeleted?: () => void,
+    ): Promise<void> => {
+      mockMutate.mockImplementation(
+        (
+          _params: unknown,
+          options: { onSuccess?: () => void; onError?: () => void },
+        ) => {
+          options.onSuccess?.();
         },
+      );
+
+      const space = buildSpace();
+      renderWithProviders(
+        <SpaceDangerZoneSection
+          space={space}
+          canDelete={true}
+          onDeleted={onDeleted}
+        />,
+      );
+      const trigger = screen.getByRole('button', {
+        name: /delete this space/i,
+      });
+      await act(async () => {
+        fireEvent.click(trigger);
+      });
+      await screen.findByPlaceholderText('Enter space name');
+      const input = screen.getByPlaceholderText('Enter space name');
+      fireEvent.change(input, { target: { value: 'Test Space' } });
+      const deleteButton = screen.getByRole('button', { name: 'Delete' });
+      await act(async () => {
+        fireEvent.click(deleteButton);
+      });
+    };
+
+    describe('when no onDeleted callback is provided', () => {
+      it('redirects to the organization dashboard', async () => {
+        await triggerDeleteSuccess();
+
+        expect(mockToDashboard).toHaveBeenCalled();
       });
     });
 
-    it('does not render the delete button', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
+    describe('when an onDeleted callback is provided', () => {
+      it('calls onDeleted instead of redirecting', async () => {
+        const onDeleted = jest.fn();
 
-      expect(
-        screen.queryByRole('button', { name: /delete this space/i }),
-      ).not.toBeInTheDocument();
-    });
-  });
+        await triggerDeleteSuccess(onDeleted);
 
-  describe('when the space is not the default space', () => {
-    beforeEach(() => {
-      mockUseCurrentSpace({
-        space: {
-          id: createSpaceId('space-1'),
-          name: 'Test Space',
-          slug: 'test-space',
-          type: SpaceType.open,
-          organizationId: 'org-1',
-          isDefaultSpace: false,
-        },
+        expect(onDeleted).toHaveBeenCalled();
+        expect(mockToDashboard).not.toHaveBeenCalled();
       });
-    });
-
-    it('renders the delete button', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={true} />);
-
-      expect(
-        screen.getByRole('button', { name: /delete this space/i }),
-      ).toBeInTheDocument();
-    });
-  });
-
-  describe('when canDeleteSpace is false', () => {
-    it('does not render the delete button', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={false} />);
-
-      expect(
-        screen.queryByRole('button', { name: /delete this space/i }),
-      ).not.toBeInTheDocument();
-    });
-
-    it('renders the leave button', () => {
-      renderWithProviders(<SpaceDangerZoneSection canDeleteSpace={false} />);
-
-      expect(
-        screen.getByRole('button', { name: /leave this space/i }),
-      ).toBeInTheDocument();
     });
   });
 });

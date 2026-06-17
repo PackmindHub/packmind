@@ -1,5 +1,5 @@
 import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
-import { SpaceId, RecipeId } from '@packmind/types';
+import { SpaceId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import {
   IGetPackageByIdUseCase,
+  IGetPackageSummaryUseCase,
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
@@ -47,9 +48,17 @@ import {
   GetDashboardNonLiveCommand,
   AddArtefactsToPackageCommand,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
+import {
+  FindMarketplaceDistributionByIdCommand,
+  IFindMarketplaceDistributionByIdUseCase,
+  OrganizationId,
+  PublishPackageOnMarketplaceResponse,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
-import { IDeploymentsGateway } from './IDeploymentsGateway';
+import {
+  IDeploymentsGateway,
+  PublishPackageOnMarketplaceArgs,
+} from './IDeploymentsGateway';
 
 export class DeploymentsGatewayApi
   extends PackmindGateway
@@ -177,6 +186,16 @@ export class DeploymentsGatewayApi
     return this._api.get(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
+  };
+
+  getPackageSummary: NewGateway<IGetPackageSummaryUseCase> = async ({
+    organizationId,
+    slug,
+  }: {
+    organizationId: OrganizationId;
+    slug: string;
+  }) => {
+    return this._api.get(`/organizations/${organizationId}/packages/${slug}`);
   };
 
   publishRecipes: NewGateway<IPublishRecipes> = async ({
@@ -327,6 +346,27 @@ export class DeploymentsGatewayApi
     async ({ organizationId }) => {
       return this._api.get(
         `/organizations/${organizationId}/deployments/governance/drifted-packages`,
+      );
+    };
+
+  publishPackageOnMarketplace = async ({
+    organizationId,
+    marketplaceId,
+    packageId,
+  }: PublishPackageOnMarketplaceArgs): Promise<PublishPackageOnMarketplaceResponse> => {
+    return this._api.post<PublishPackageOnMarketplaceResponse>(
+      `${this._endpoint}/${organizationId}/marketplaces/${marketplaceId}/publish`,
+      { packageId },
+    );
+  };
+
+  findMarketplaceDistributionById: NewGateway<IFindMarketplaceDistributionByIdUseCase> =
+    async ({
+      organizationId,
+      marketplaceDistributionId,
+    }: NewPackmindCommandBody<FindMarketplaceDistributionByIdCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/marketplace-distributions/${marketplaceDistributionId}`,
       );
     };
 }
