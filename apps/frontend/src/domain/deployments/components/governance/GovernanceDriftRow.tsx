@@ -1,16 +1,8 @@
 import { useNavigate } from 'react-router';
-import {
-  PMBadge,
-  PMBox,
-  PMHStack,
-  PMIcon,
-  PMStatus,
-  PMText,
-} from '@packmind/ui';
+import { PMBox, PMHStack, PMIcon, PMText } from '@packmind/ui';
 import type { DriftedPackageInfo } from '@packmind/types';
 import { LuChevronRight } from 'react-icons/lu';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
-import { getSpaceColorPalette } from '../../../organizations/components/sidebar/SpaceNavBlock';
 import { routes } from '../../../../shared/utils/routes';
 
 const CARD_INSET = 5;
@@ -32,7 +24,6 @@ export function GovernanceDriftRow({
     entry.spaceSlug,
     entry.packageId,
   );
-  const colorPalette = getSpaceColorPalette(entry.spaceName);
 
   return (
     <PMBox
@@ -59,24 +50,16 @@ export function GovernanceDriftRow({
       }}
     >
       <PMHStack gap={4} align="center" justify="space-between" height="full">
-        <PMHStack gap={5} align="center" minW={0} flex={1}>
-          <PMText
-            fontSize="md"
-            fontWeight="medium"
-            color="primary"
-            truncate
-            flexShrink={1}
-            minW={0}
-          >
-            {entry.packageName}
-          </PMText>
-          <PMBadge size="sm" variant="subtle" flexShrink={0}>
-            <PMStatus.Root colorPalette={colorPalette} as="span" mr={1.5}>
-              <PMStatus.Indicator />
-            </PMStatus.Root>
-            {entry.spaceName}
-          </PMBadge>
-        </PMHStack>
+        <PMText
+          fontSize="md"
+          fontWeight="medium"
+          color="primary"
+          truncate
+          minW={0}
+          flex={1}
+        >
+          {entry.packageName}
+        </PMText>
         <PMHStack gap={5} align="center" flexShrink={0}>
           <PMText
             fontSize="sm"

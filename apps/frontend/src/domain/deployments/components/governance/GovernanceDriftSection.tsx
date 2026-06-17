@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import {
   PMAlert,
   PMBox,
@@ -6,8 +7,9 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import type { DriftedPackageInfo } from '@packmind/types';
+import type { DriftedPackageInfo, SpaceId } from '@packmind/types';
 import { GovernanceDriftRow } from './GovernanceDriftRow';
+import { GovernanceSpaceSectionHeader } from './GovernanceSpaceSectionHeader';
 
 const CARD_INSET = 5;
 
@@ -19,6 +21,13 @@ interface GovernanceDriftSectionProps {
   orgSlug: string;
 }
 
+type SpaceGroup = {
+  spaceId: SpaceId;
+  spaceName: string;
+  totalBehind: number;
+  entries: DriftedPackageInfo[];
+};
+
 export function GovernanceDriftSection({
   entries,
   isLoading,
@@ -26,6 +35,8 @@ export function GovernanceDriftSection({
   onRetry,
   orgSlug,
 }: Readonly<GovernanceDriftSectionProps>) {
+  const groups = groupBySpace(entries);
+
   return (
     <PMVStack align="stretch" gap={3}>
       <PMHStack justify="space-between" align="baseline">
@@ -48,7 +59,9 @@ export function GovernanceDriftSection({
       <PMBox
         bg="background.primary"
         borderRadius="md"
-        paddingY={CARD_INSET}
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        paddingY={isError || isLoading || entries.length === 0 ? CARD_INSET : 0}
         overflow="hidden"
       >
         {isError ? (
@@ -100,18 +113,49 @@ export function GovernanceDriftSection({
           </PMBox>
         ) : (
           <PMVStack align="stretch" gap={0}>
-            {entries.map((entry, index) => (
-              <GovernanceDriftRow
-                key={`${entry.spaceId}:${entry.packageId}`}
-                entry={entry}
-                orgSlug={orgSlug}
-                isLast={index === entries.length - 1}
-              />
+            {groups.map((group) => (
+              <Fragment key={group.spaceId}>
+                <GovernanceSpaceSectionHeader
+                  spaceName={group.spaceName}
+                  behindCount={group.totalBehind}
+                  packageCount={group.entries.length}
+                />
+                {group.entries.map((entry, index) => (
+                  <GovernanceDriftRow
+                    key={`${entry.spaceId}:${entry.packageId}`}
+                    entry={entry}
+                    orgSlug={orgSlug}
+                    isLast={index === group.entries.length - 1}
+                  />
+                ))}
+              </Fragment>
             ))}
           </PMVStack>
         )}
       </PMBox>
     </PMVStack>
+  );
+}
+
+function groupBySpace(entries: DriftedPackageInfo[]): SpaceGroup[] {
+  const map = new Map<SpaceId, SpaceGroup>();
+  for (const entry of entries) {
+    let group = map.get(entry.spaceId);
+    if (!group) {
+      group = {
+        spaceId: entry.spaceId,
+        spaceName: entry.spaceName,
+        totalBehind: 0,
+        entries: [],
+      };
+      map.set(entry.spaceId, group);
+    }
+    group.totalBehind += entry.behindDistributions;
+    group.entries.push(entry);
+  }
+  return Array.from(map.values()).sort(
+    (a, b) =>
+      b.totalBehind - a.totalBehind || a.spaceName.localeCompare(b.spaceName),
   );
 }
 
