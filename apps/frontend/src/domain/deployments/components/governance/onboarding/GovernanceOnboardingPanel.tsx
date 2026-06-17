@@ -27,11 +27,6 @@ const UNLOCK_ITEMS: UnlockItem[] = [
     description: 'Review proposed changes before they ship to every repo.',
     comingSoon: true,
   },
-  {
-    title: 'Adoption coverage',
-    description: 'Track which repos are on the latest version.',
-    comingSoon: true,
-  },
 ];
 
 export function GovernanceOnboardingPanel() {
