@@ -114,31 +114,33 @@ const KIND_LABEL: Record<ArtifactKind, string> = {
   skill: 'Skills',
 };
 
-// Commands are invoked verbatim (e.g. `/deploy`) — render their names in a
-// monospace face so the typing target is recognisable at a glance.
-const MONO_KINDS: ReadonlySet<ArtifactKind> = new Set<ArtifactKind>([
-  'command',
-]);
-
 function groupArtifacts(
   summary: GetPackageSummaryResponse,
 ): Record<ArtifactKind, Artifact[]> {
+  const byName = (a: Artifact, b: Artifact) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
   return {
-    command: summary.recipes.map((r) => ({
-      kind: 'command' as const,
-      name: r.name,
-      summary: r.summary ?? '',
-    })),
-    standard: summary.standards.map((s) => ({
-      kind: 'standard' as const,
-      name: s.name,
-      summary: s.summary ?? '',
-    })),
-    skill: summary.skills.map((s) => ({
-      kind: 'skill' as const,
-      name: s.name,
-      summary: s.summary ?? '',
-    })),
+    command: summary.recipes
+      .map((r) => ({
+        kind: 'command' as const,
+        name: r.name,
+        summary: r.summary ?? '',
+      }))
+      .sort(byName),
+    standard: summary.standards
+      .map((s) => ({
+        kind: 'standard' as const,
+        name: s.name,
+        summary: s.summary ?? '',
+      }))
+      .sort(byName),
+    skill: summary.skills
+      .map((s) => ({
+        kind: 'skill' as const,
+        name: s.name,
+        summary: s.summary ?? '',
+      }))
+      .sort(byName),
   };
 }
 
@@ -420,7 +422,6 @@ function ArtifactGroup({
 
 function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
   const Icon = KIND_ICON[artifact.kind];
-  const mono = MONO_KINDS.has(artifact.kind);
   return (
     <PMBox
       paddingY="6px"
@@ -446,13 +447,7 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
           <Icon />
         </PMIcon>
       </PMBox>
-      <PMText
-        fontSize="sm"
-        fontWeight="medium"
-        color="primary"
-        truncate
-        fontFamily={mono ? 'mono' : undefined}
-      >
+      <PMText fontSize="sm" fontWeight="medium" color="primary" truncate>
         {artifact.name}
       </PMText>
       <PMText fontSize="xs" color="secondary" lineHeight={1.4} truncate>

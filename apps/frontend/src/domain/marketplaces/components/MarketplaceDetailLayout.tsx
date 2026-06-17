@@ -787,13 +787,8 @@ const ARTIFACT_KIND_LABEL: Record<MarketplaceArtifactKind, string> = {
   skill: 'Skill',
 };
 
-const MONO_ARTIFACT_KINDS: ReadonlySet<MarketplaceArtifactKind> = new Set([
-  'command',
-]);
-
 function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
   const { Icon, color, verb } = CHANGE_STYLE[change.kind];
-  const mono = MONO_ARTIFACT_KINDS.has(change.artifactKind);
   return (
     <PMBox
       display="grid"
@@ -818,13 +813,7 @@ function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
           {ARTIFACT_KIND_LABEL[change.artifactKind]}
         </PMBadge>
       </PMBox>
-      <PMText
-        fontSize="sm"
-        color="primary"
-        fontWeight="medium"
-        truncate
-        fontFamily={mono ? 'mono' : undefined}
-      >
+      <PMText fontSize="sm" color="primary" fontWeight="medium" truncate>
         {change.name}
       </PMText>
       <ChangeVersionBadge change={change} />
@@ -1320,6 +1309,17 @@ function formatPublishedAt(value: Date | string | null | undefined): string {
   if (!value) return '—';
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
+
+  const diffMinutes = Math.round((Date.now() - date.getTime()) / 60000);
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+
   return date.toLocaleDateString();
 }
 
