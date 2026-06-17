@@ -31,6 +31,7 @@ import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/o
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { OrganizationsSearchModule } from './organizations/search/search.module';
 import { RecipesModule } from './organizations/spaces/recipes/recipes.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
@@ -216,6 +217,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'playbook',
             module: PlaybookModule,
+          },
+          {
+            path: 'search',
+            module: OrganizationsSearchModule,
           },
           {
             path: 'spaces',
