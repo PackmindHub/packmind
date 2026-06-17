@@ -4,9 +4,11 @@ import {
   PMBox,
   PMHeading,
   PMHStack,
+  PMIcon,
   PMText,
   PMVStack,
 } from '@packmind/ui';
+import { LuCircleCheck } from 'react-icons/lu';
 import type { DriftedPackageInfo, SpaceId } from '@packmind/types';
 import { GovernanceDriftRow } from './GovernanceDriftRow';
 import { GovernanceSpaceSectionHeader } from './GovernanceSpaceSectionHeader';
@@ -61,7 +63,7 @@ export function GovernanceDriftSection({
         borderRadius="md"
         borderWidth="1px"
         borderColor="border.tertiary"
-        paddingY={isError || isLoading || entries.length === 0 ? CARD_INSET : 0}
+        paddingY={isError || isLoading ? CARD_INSET : 0}
         overflow="hidden"
       >
         {isError ? (
@@ -100,17 +102,23 @@ export function GovernanceDriftSection({
             <SkeletonRows />
           </PMVStack>
         ) : entries.length === 0 ? (
-          <PMBox
+          <PMVStack
+            gap={2}
+            align="center"
+            textAlign="center"
             paddingX={CARD_INSET}
-            paddingY={3}
-            minHeight="60px"
-            display="flex"
-            alignItems="center"
+            paddingY={10}
           >
-            <PMText fontSize="sm" color="secondary">
-              All distributions are up to date across your spaces.
+            <PMIcon fontSize="2xl" color="text.success" aria-hidden>
+              <LuCircleCheck />
+            </PMIcon>
+            <PMText fontSize="sm" color="primary" fontWeight="medium">
+              Everything's in sync
             </PMText>
-          </PMBox>
+            <PMText fontSize="xs" color="secondary">
+              Every package is on its latest version across all spaces.
+            </PMText>
+          </PMVStack>
         ) : (
           <PMVStack align="stretch" gap={0}>
             {groups.map((group) => (
