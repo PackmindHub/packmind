@@ -1,0 +1,71 @@
+# Local development infra ONLY — Postgres + Redis (+ optional pgAdmin).
+# The apps (api, frontend, mcp-server) run natively on the host via `pnpm dev`,
+# NOT in containers. This avoids bind-mount fs-event loss, file-watch polling,
+# and the shared Nx-daemon socket — the sources of the old in-container setup's pain.
+#
+#   Start:   docker compose -f docker-compose.dev.yml up -d
+#   With UI: docker compose -f docker-compose.dev.yml --profile tools up -d
+#   Stop:    docker compose -f docker-compose.dev.yml down
+#   Wipe:    docker compose -f docker-compose.dev.yml down -v
+#
+# NOTE: reuses ports 5432/6379. Do not run this alongside the legacy
+# docker-compose.yml dev stack — `down` the old one first.
+#
+# Dedicated Compose project name isolates containers/volumes/network from the
+# legacy stack (which defaults to project "packmind"), so the two never collide.
+name: packmind-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: packmind-dev-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: packmind
+    ports:
+      - '5432:5432'
+    volumes:
+      - packmind-dev-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 2s
+
+  redis:
+    image: redis:7.2.4
+    container_name: packmind-dev-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - packmind-dev-redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 1s
+
+  pgadmin:
+    profiles:
+      - tools
+    image: dpage/pgadmin4:latest
+    container_name: packmind-dev-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - '2345:80'
+    volumes:
+      - packmind-dev-pgadmin:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  packmind-dev-postgres:
+  packmind-dev-redis:
+  packmind-dev-pgadmin:
