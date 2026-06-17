@@ -17,6 +17,7 @@ import {
   PMAvatar,
   PMVStack,
   DEFAULT_FEATURE_DOMAIN_MAP,
+  GOVERNANCE_FEATURE_KEY,
   isFeatureFlagEnabled,
   MARKETPLACES_FEATURE_KEY,
 } from '@packmind/ui';
@@ -31,6 +32,7 @@ import { SidebarHelpMenu } from './SidebarHelpMenu';
 import {
   LuCircleHelp,
   LuCircleUser,
+  LuListChecks,
   LuLogOut,
   LuPanelLeftClose,
   LuPanelLeftOpen,
@@ -183,6 +185,11 @@ export const SidebarNavigation: React.FunctionComponent<
   const location = useLocation();
   const navigate = useNavigate();
   const signOutMutation = useSignOutMutation();
+  const hasGovernanceAccess = isFeatureFlagEnabled({
+    featureKeys: [GOVERNANCE_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   useEffect(() => {
     setActiveSpacePanel(null);
@@ -190,9 +197,10 @@ export const SidebarNavigation: React.FunctionComponent<
 
   // Routes that live outside of any space — on these, no space should appear
   // active in the sidebar (all spaces collapsed).
-  const isOrgOnlySection = /^\/org\/[^/]+\/(settings|setup|profile)(\/|$)/.test(
-    location.pathname,
-  );
+  const isOrgOnlySection =
+    /^\/org\/[^/]+\/(settings|setup|profile|governance)(\/|$)/.test(
+      location.pathname,
+    );
 
   const fallbackSpaceSlug =
     isOrgOnlySection || !spaces?.length ? undefined : spaces[0].slug;
@@ -441,6 +449,21 @@ export const SidebarNavigation: React.FunctionComponent<
         }
       >
         <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
+          {/* Organization-level entries */}
+          {hasGovernanceAccess && (
+            <PMBox paddingBottom={2}>
+              <PMVerticalNavSection
+                navEntries={[
+                  <SidebarNavigationLink
+                    key="governance"
+                    url={routes.org.toGovernance(orgSlug)}
+                    label="Governance"
+                    icon={<LuListChecks />}
+                  />,
+                ]}
+              />
+            </PMBox>
+          )}
           {canSeeMarketplaces && (
             <PMBox paddingBottom={2}>
               <PMVerticalNavSection

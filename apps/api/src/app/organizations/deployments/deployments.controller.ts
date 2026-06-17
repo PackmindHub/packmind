@@ -31,6 +31,8 @@ import {
   PackageId,
   OrganizationId,
   ListActiveDistributedPackagesBySpaceCommand,
+  ListDriftedPackagesByOrgCommand,
+  ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -808,6 +810,42 @@ export class DeploymentsController {
           organizationId,
           error: error instanceof Error ? error.message : String(error),
         },
+      );
+      throw error;
+    }
+  }
+
+  @Get('governance/drifted-packages')
+  async listDriftedPackagesByOrg(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListDriftedPackagesByOrgResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/governance/drifted-packages',
+      { organizationId },
+    );
+
+    try {
+      const command: ListDriftedPackagesByOrgCommand = {
+        userId: request.user.userId,
+        organizationId,
+      };
+
+      const result =
+        await this.deploymentsService.listDriftedPackagesByOrg(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/governance/drifted-packages - OK',
+        { organizationId, count: result.length },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/governance/drifted-packages - Failed',
+        { organizationId, error: errorMessage },
       );
       throw error;
     }

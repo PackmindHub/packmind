@@ -40,6 +40,26 @@ interface SpaceNavBlockProps {
   dataTestId?: string;
 }
 
+const SPACE_COLOR_PALETTES = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'teal',
+  'blue',
+  'cyan',
+  'purple',
+  'pink',
+] as const;
+
+export function getSpaceColorPalette(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.trunc(hash * 31 + (name.codePointAt(i) ?? 0));
+  }
+  return SPACE_COLOR_PALETTES[Math.abs(hash) % SPACE_COLOR_PALETTES.length];
+}
+
 export function getSpaceInitials(name: string): string {
   return name
     .split(/\s+/)

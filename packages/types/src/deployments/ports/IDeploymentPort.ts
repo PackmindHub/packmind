@@ -42,6 +42,7 @@ import {
   InstallPackagesResponse,
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
+  IListDriftedPackagesByOrgUseCase,
   FindMarketplaceDistributionByIdCommand,
   FindMarketplaceDistributionByIdResponse,
   GetMarketplaceDistributionChangesCommand,
@@ -56,6 +57,8 @@ import {
   SyncMarketplaceNowCommand,
   SyncMarketplaceNowResponse,
   ListActiveDistributedPackagesBySpaceResponse,
+  ListDriftedPackagesByOrgCommand,
+  ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -602,6 +605,23 @@ export interface IDeploymentPort {
    * Exposes the typed use case instance for consumers that need the port-typed reference.
    */
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
+
+  /**
+   * Lists packages with at least one drifted (outdated) distribution across
+   * all spaces of the calling user's organization. Returns a flat aggregate
+   * keyed by (packageId, spaceId), sorted by behindDistributions desc.
+   *
+   * @param command - Command containing user and organization context.
+   * @returns Promise of drifted package summaries.
+   */
+  listDriftedPackagesByOrg(
+    command: ListDriftedPackagesByOrgCommand,
+  ): Promise<ListDriftedPackagesByOrgResponse>;
+
+  /**
+   * Exposes the typed use case instance for consumers that need the port-typed reference.
+   */
+  getListDriftedPackagesByOrgUseCase(): IListDriftedPackagesByOrgUseCase;
 
   /**
    * For each requested Git provider, return the createdAt of the most recent

@@ -13,6 +13,8 @@ export const ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY =
 
 export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
+export const GOVERNANCE_FEATURE_KEY = 'governance';
+
 export const MARKETPLACES_FEATURE_KEY = 'marketplaces';
 
 export const MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY =
@@ -24,24 +26,25 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
     '@promyze.com',
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [GOVERNANCE_FEATURE_KEY]: ['joan.racenet@packmind.com'],
   [MARKETPLACES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
-const isEmailEntry = (entry: string): boolean => {
-  const trimmed = entry.trim();
-  return trimmed.includes('@') && !trimmed.startsWith('@');
-};
+const isExactEmailEntry = (entry: string): boolean =>
+  entry.includes('@') && !entry.trim().startsWith('@');
 
 const normalizeDomain = (domain: string): string =>
   domain.trim().toLowerCase().replace(/^@/, '');
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
 const extractDomainFromEmail = (email?: string | null): string | null => {
   if (!email) {
     return null;
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
   const atIndex = normalizedEmail.lastIndexOf('@');
 
   if (atIndex === -1 || atIndex === normalizedEmail.length - 1) {
@@ -51,13 +54,30 @@ const extractDomainFromEmail = (email?: string | null): string | null => {
   return normalizedEmail.slice(atIndex + 1);
 };
 
-const isAllowedForFeature = ({
+const isEntryAllowedForUser = ({
+  entry,
+  userEmail,
+  userDomain,
+}: {
+  entry: string;
+  userEmail: string;
+  userDomain: string | null;
+}): boolean => {
+  if (isExactEmailEntry(entry)) {
+    return normalizeEmail(entry) === userEmail;
+  }
+  return userDomain !== null && normalizeDomain(entry) === userDomain;
+};
+
+const isFeatureAllowedForUser = ({
   featureKey,
   userEmail,
+  userDomain,
   featureDomainMap,
 }: {
   featureKey: string;
   userEmail: string;
+  userDomain: string | null;
   featureDomainMap: Record<string, readonly string[]>;
 }): boolean => {
   const allowedEntries = featureDomainMap[featureKey];
@@ -66,15 +86,9 @@ const isAllowedForFeature = ({
     return false;
   }
 
-  const normalizedEmail = userEmail.trim().toLowerCase();
-  const userDomain = extractDomainFromEmail(normalizedEmail);
-
-  return allowedEntries.some((entry) => {
-    if (isEmailEntry(entry)) {
-      return entry.trim().toLowerCase() === normalizedEmail;
-    }
-    return userDomain ? normalizeDomain(entry) === userDomain : false;
-  });
+  return allowedEntries.some((entry) =>
+    isEntryAllowedForUser({ entry, userEmail, userDomain }),
+  );
 };
 
 export const isFeatureFlagEnabled = ({
@@ -93,10 +107,14 @@ export const isFeatureFlagEnabled = ({
     return false;
   }
 
+  const normalizedEmail = normalizeEmail(userEmail);
+  const userDomain = extractDomainFromEmail(userEmail);
+
   return featureKeys.some((featureKey) =>
-    isAllowedForFeature({
+    isFeatureAllowedForUser({
       featureKey,
-      userEmail,
+      userEmail: normalizedEmail,
+      userDomain,
       featureDomainMap,
     }),
   );
