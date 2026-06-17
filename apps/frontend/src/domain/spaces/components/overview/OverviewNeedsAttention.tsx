@@ -1,5 +1,13 @@
 import { Link, useNavigate } from 'react-router';
-import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMBox,
+  PMHStack,
+  PMText,
+  PMVStack,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  GOVERNANCE_FEATURE_KEY,
+  isFeatureFlagEnabled,
+} from '@packmind/ui';
 import { LuArrowRight } from 'react-icons/lu';
 import type { PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -24,10 +32,15 @@ function buildDriftHeading(
 }
 
 export const OverviewNeedsAttention = () => {
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceSlug } = useCurrentSpace();
   const { driftedPackages, totalBehindInstalls, isReady } =
     useDriftedPackages();
+  const hasGovernanceAccess = isFeatureFlagEnabled({
+    featureKeys: [GOVERNANCE_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   if (!isReady) return null;
   if (driftedPackages.length === 0) return null;
@@ -85,7 +98,7 @@ export const OverviewNeedsAttention = () => {
           </PMVStack>
         </PMBox>
 
-        {organization && (
+        {organization && hasGovernanceAccess && (
           <PMBox
             borderTopWidth="1px"
             borderColor="border.tertiary"
