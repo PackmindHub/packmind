@@ -16,6 +16,9 @@ import {
   PMPortal,
   PMAvatar,
   PMVStack,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  GOVERNANCE_FEATURE_KEY,
+  isFeatureFlagEnabled,
 } from '@packmind/ui';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router';
 import {
@@ -168,6 +171,11 @@ export const SidebarNavigation: React.FunctionComponent<
   const location = useLocation();
   const navigate = useNavigate();
   const signOutMutation = useSignOutMutation();
+  const hasGovernanceAccess = isFeatureFlagEnabled({
+    featureKeys: [GOVERNANCE_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   useEffect(() => {
     setActiveSpacePanel(null);
@@ -417,18 +425,20 @@ export const SidebarNavigation: React.FunctionComponent<
       >
         <PMBox display="flex" flexDirection="column" flex={1} minH={0} w="full">
           {/* Organization-level entries */}
-          <PMBox paddingBottom={2}>
-            <PMVerticalNavSection
-              navEntries={[
-                <SidebarNavigationLink
-                  key="governance"
-                  url={routes.org.toGovernance(orgSlug)}
-                  label="Governance"
-                  icon={<LuListChecks />}
-                />,
-              ]}
-            />
-          </PMBox>
+          {hasGovernanceAccess && (
+            <PMBox paddingBottom={2}>
+              <PMVerticalNavSection
+                navEntries={[
+                  <SidebarNavigationLink
+                    key="governance"
+                    url={routes.org.toGovernance(orgSlug)}
+                    label="Governance"
+                    icon={<LuListChecks />}
+                  />,
+                ]}
+              />
+            </PMBox>
+          )}
 
           {/* Spaces -- scrollable */}
           <PMBox
