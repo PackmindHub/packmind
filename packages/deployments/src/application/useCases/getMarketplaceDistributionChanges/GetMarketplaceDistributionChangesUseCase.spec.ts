@@ -133,6 +133,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
       findSuccessfulByMarketplaceId: jest
         .fn()
         .mockResolvedValue([baseDistribution]),
+      findPendingMergesByMarketplaceId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
 
     mockPackageService = {
@@ -221,12 +222,22 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
       });
     });
 
+    it('flags the package as outdated against the main branch', () => {
+      expect(result.state).toBe('outdated_main');
+    });
+
     it('returns one entry per added/updated/removed artifact', () => {
-      expect(result).toHaveLength(5);
+      expect(result.changes).toHaveLength(5);
+    });
+
+    it('returns a null PR url', () => {
+      expect(result.prUrl).toBeNull();
     });
 
     it('orders the changes added → updated → removed, then by artifact kind, then by name', () => {
-      expect(result.map((c) => ({ kind: c.kind, name: c.name }))).toEqual([
+      expect(
+        result.changes.map((c) => ({ kind: c.kind, name: c.name })),
+      ).toEqual([
         { kind: 'added', name: 'Lint Strict' },
         { kind: 'updated', name: 'Format Code' },
         { kind: 'updated', name: 'TypeScript Style' },
@@ -236,17 +247,17 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('attaches null publishedVersion to added artifacts', () => {
-      const added = result.find((c) => c.kind === 'added');
+      const added = result.changes.find((c) => c.kind === 'added');
       expect(added?.publishedVersion).toBeNull();
     });
 
     it('attaches null currentVersion to removed artifacts', () => {
-      const removed = result.find((c) => c.kind === 'removed');
+      const removed = result.changes.find((c) => c.kind === 'removed');
       expect(removed?.currentVersion).toBeNull();
     });
 
     it('exposes both versions for an updated artifact', () => {
-      const updated = result.find((c) => c.name === 'Format Code');
+      const updated = result.changes.find((c) => c.name === 'Format Code');
       expect(updated).toMatchObject({
         kind: 'updated',
         publishedVersion: 1,
@@ -255,7 +266,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('labels recipes with the marketplace "command" artifact kind', () => {
-      const updated = result.find((c) => c.name === 'Format Code');
+      const updated = result.changes.find((c) => c.name === 'Format Code');
       expect(updated?.artifactKind).toBe('command');
     });
   });
@@ -276,7 +287,9 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('falls back to a placeholder name rather than crashing', () => {
-      const removedSkill = result.find((c) => c.artifactKind === 'skill');
+      const removedSkill = result.changes.find(
+        (c) => c.artifactKind === 'skill',
+      );
       expect(removedSkill?.name).toBe('(deleted)');
     });
   });
@@ -296,8 +309,12 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
       });
     });
 
+    it('reports in_sync_main', () => {
+      expect(result.state).toBe('in_sync_main');
+    });
+
     it('returns no changes', () => {
-      expect(result).toEqual([]);
+      expect(result.changes).toEqual([]);
     });
   });
 
@@ -318,8 +335,12 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
       });
     });
 
-    it('returns no changes rather than guessing', () => {
-      expect(result).toEqual([]);
+    it('reports in_sync_main rather than guessing', () => {
+      expect(result.state).toBe('in_sync_main');
+    });
+
+    it('returns no changes', () => {
+      expect(result.changes).toEqual([]);
     });
   });
 
@@ -346,7 +367,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('returns no changes rather than guessing', () => {
-      expect(result).toEqual([]);
+      expect(result.changes).toEqual([]);
     });
   });
 
@@ -381,7 +402,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('still surfaces the drift from the latest success row', () => {
-      expect(result.length).toBeGreaterThan(0);
+      expect(result.changes.length).toBeGreaterThan(0);
     });
   });
 
@@ -401,7 +422,109 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('returns no changes', () => {
-      expect(result).toEqual([]);
+      expect(result.changes).toEqual([]);
+    });
+  });
+
+  describe('when an open sync PR carries this package', () => {
+    const pendingMergePrUrl = 'https://example.com/pr/42';
+    const pendingMergeRow = {
+      ...baseDistribution,
+      id: createMarketplaceDistributionId(uuidv4()),
+      status: DistributionStatus.pending_merge,
+      versionFingerprint: currentFingerprint,
+      prUrl: pendingMergePrUrl,
+    } as unknown as MarketplaceDistribution;
+
+    describe('and the source still matches the PR contents', () => {
+      let result: Awaited<
+        ReturnType<GetMarketplaceDistributionChangesUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+          [pendingMergeRow],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+          distributionId,
+        });
+      });
+
+      it('reports in_sync_pr', () => {
+        expect(result.state).toBe('in_sync_pr');
+      });
+
+      it('exposes the PR url so the UI can render the View link', () => {
+        expect(result.prUrl).toBe(pendingMergePrUrl);
+      });
+    });
+
+    describe('and the source has drifted further since the PR was opened', () => {
+      let result: Awaited<
+        ReturnType<GetMarketplaceDistributionChangesUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        // Stale pending_merge fingerprint != current → "outdated_pr".
+        const drift: VersionFingerprint = {
+          ...currentFingerprint,
+          recipes: { [recipeStableId]: 7 },
+        };
+        mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+          [
+            {
+              ...pendingMergeRow,
+              versionFingerprint: drift,
+            } as unknown as MarketplaceDistribution,
+          ],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+          distributionId,
+        });
+      });
+
+      it('reports outdated_pr so the footer shows Publish', () => {
+        expect(result.state).toBe('outdated_pr');
+      });
+
+      it('still carries the PR url so callers can link out if they want', () => {
+        expect(result.prUrl).toBe(pendingMergePrUrl);
+      });
+    });
+
+    describe('and no success row has been recorded yet (first publish)', () => {
+      let result: Awaited<
+        ReturnType<GetMarketplaceDistributionChangesUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [],
+        );
+        mockMarketplaceDistributionRepository.findPendingMergesByMarketplaceId.mockResolvedValue(
+          [pendingMergeRow],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+          distributionId,
+        });
+      });
+
+      it('reports in_sync_pr because the PR is the only baseline we have', () => {
+        expect(result.state).toBe('in_sync_pr');
+      });
+
+      it('exposes the PR url', () => {
+        expect(result.prUrl).toBe(pendingMergePrUrl);
+      });
     });
   });
 
@@ -424,7 +547,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('refuses to leak data across marketplaces', () => {
-      expect(result).toEqual([]);
+      expect(result.changes).toEqual([]);
     });
   });
 
@@ -447,7 +570,7 @@ describe('GetMarketplaceDistributionChangesUseCase', () => {
     });
 
     it('refuses to leak data across organizations', () => {
-      expect(result).toEqual([]);
+      expect(result.changes).toEqual([]);
     });
   });
 

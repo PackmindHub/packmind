@@ -504,7 +504,8 @@ export class MarketplacesController {
           organizationId,
           marketplaceId,
           distributionId,
-          count: response.length,
+          state: response.state,
+          count: response.changes.length,
         },
       );
 

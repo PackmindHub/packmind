@@ -486,7 +486,7 @@ function PluginDetailPane({
     distribution.id,
     isOutdated,
   );
-  const changesCount = changesQuery.data?.length ?? 0;
+  const changesCount = changesQuery.data?.changes.length ?? 0;
 
   const handleViewChanges = () => {
     setTab('changes');
@@ -609,8 +609,19 @@ function ChangesTab({
     distribution.status === DistributionStatus.success ||
     distribution.status === DistributionStatus.pending_merge;
 
-  const changes = data ?? [];
-  const canPublish = isOutdated && changes.length > 0;
+  const changes = data?.changes ?? [];
+  const publishState = data?.state;
+  const prUrl = data?.prUrl ?? null;
+  // Publish is offered when the marketplace can usefully accept new content:
+  // either the package has never reached the rolling sync PR (outdated_main)
+  // or the source has drifted further since the PR was opened (outdated_pr).
+  // The other two states either have nothing to publish or are already
+  // covered by an open PR — see SourcePackagePublishState in the contract.
+  const canPublish =
+    publishState === 'outdated_main' || publishState === 'outdated_pr';
+  const canViewPr =
+    (publishState === 'in_sync_pr' || publishState === 'outdated_pr') &&
+    !!prUrl;
 
   const handlePublish = async () => {
     try {
@@ -657,6 +668,18 @@ function ChangesTab({
             <LuRotateCw />
           </PMIcon>
           Publish
+        </PMButton>
+      )}
+      {!canPublish && canViewPr && prUrl && (
+        <PMButton
+          variant="primary"
+          size="sm"
+          onClick={() => window.open(prUrl, '_blank', 'noopener,noreferrer')}
+        >
+          <PMIcon fontSize="sm">
+            <LuExternalLink />
+          </PMIcon>
+          View pull request
         </PMButton>
       )}
       <PMFeatureFlag
