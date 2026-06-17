@@ -97,6 +97,25 @@ export class ListMarketplaceDistributionsUseCase
       (distribution) => distribution.status !== DistributionStatus.removed,
     );
 
+    // Walk the rows ordered DESC by `createdAt` to compute, per package, the
+    // most recent `success` distribution's `publishConfirmedAt`. We keep this
+    // even when the latest row is `pending_merge` so the UI can still show
+    // "last published Xd ago" while a new PR is in flight, and distinguish a
+    // never-landed-on-main first publish from a re-publish.
+    const lastPublishedOnMainByPackageId = new Map<PackageId, Date>();
+    for (const distribution of rawDistributions) {
+      if (
+        distribution.status === DistributionStatus.success &&
+        distribution.publishConfirmedAt &&
+        !lastPublishedOnMainByPackageId.has(distribution.packageId)
+      ) {
+        lastPublishedOnMainByPackageId.set(
+          distribution.packageId,
+          distribution.publishConfirmedAt,
+        );
+      }
+    }
+
     // One row per package — only the latest distribution is meaningful. The
     // repository returns rows ordered by `createdAt DESC`, so the first
     // occurrence of each `packageId` is the most recent attempt and we drop
@@ -174,6 +193,8 @@ export class ListMarketplaceDistributionsUseCase
           packageSlug: packageSlugById.get(distribution.packageId) ?? '',
           authorName: authorNameById.get(distribution.authorId) ?? '',
           space,
+          lastPublishedOnMainAt:
+            lastPublishedOnMainByPackageId.get(distribution.packageId) ?? null,
         };
       },
     );

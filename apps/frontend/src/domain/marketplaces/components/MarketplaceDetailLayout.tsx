@@ -522,8 +522,7 @@ function PluginDetailPane({
               &middot;
             </PMText>
             <PMText fontSize="xs" color="faded">
-              last published{' '}
-              {formatPublishedAt(distribution.publishConfirmedAt)}
+              {formatPublicationStatus(distribution)}
             </PMText>
           </PMHStack>
         </PMVStack>
@@ -1321,6 +1320,23 @@ function formatPublishedAt(value: Date | string | null | undefined): string {
   if (diffDays < 30) return `${diffDays}d ago`;
 
   return date.toLocaleDateString();
+}
+
+// Picks the right sentence for the publication-state line in the detail
+// header. Reads `lastPublishedOnMainAt` (the most recent successful publish
+// for this package on this marketplace) rather than the row's own
+// `publishConfirmedAt`, so a re-publish whose latest row is still in PR
+// keeps showing the prior on-main date instead of falling back to "—".
+function formatPublicationStatus(
+  distribution: MarketplaceDistributionListItem,
+): string {
+  if (distribution.lastPublishedOnMainAt) {
+    return `last published ${formatPublishedAt(distribution.lastPublishedOnMainAt)}`;
+  }
+  if (distribution.status === DistributionStatus.pending_merge) {
+    return 'Still waiting for PR validation';
+  }
+  return 'last published —';
 }
 
 export interface MarketplaceDetailBacklinkProps {

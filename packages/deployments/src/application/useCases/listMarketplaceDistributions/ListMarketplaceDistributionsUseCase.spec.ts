@@ -330,6 +330,111 @@ describe('ListMarketplaceDistributionsUseCase', () => {
     });
   });
 
+  describe('lastPublishedOnMainAt enrichment', () => {
+    describe('when the latest row is a successful publish', () => {
+      const confirmedAt = new Date('2026-06-15T10:00:00.000Z');
+      const successWithConfirmedAt = {
+        ...distributionA,
+        publishConfirmedAt: confirmedAt,
+      } as MarketplaceDistribution;
+
+      let result: Awaited<
+        ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+          [successWithConfirmedAt],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+        });
+      });
+
+      it("uses the row's own publishConfirmedAt", () => {
+        expect(result[0].lastPublishedOnMainAt).toEqual(confirmedAt);
+      });
+    });
+
+    describe('when the latest row is pending_merge with no prior success', () => {
+      const pendingMerge = {
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId,
+        pluginSlug: 'my-plugin',
+        authorId: userId,
+        status: DistributionStatus.pending_merge,
+        source: 'app',
+      } as unknown as MarketplaceDistribution;
+
+      let result: Awaited<
+        ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+          [pendingMerge],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+        });
+      });
+
+      it('falls back to null', () => {
+        expect(result[0].lastPublishedOnMainAt).toBeNull();
+      });
+    });
+
+    describe('when the latest row is pending_merge over a prior success', () => {
+      const confirmedAt = new Date('2026-06-01T10:00:00.000Z');
+      const priorSuccess = {
+        ...distributionA,
+        id: createMarketplaceDistributionId(uuidv4()),
+        publishConfirmedAt: confirmedAt,
+      } as MarketplaceDistribution;
+      const latestPendingMerge = {
+        id: createMarketplaceDistributionId(uuidv4()),
+        organizationId,
+        marketplaceId,
+        packageId,
+        pluginSlug: 'my-plugin',
+        authorId: userId,
+        status: DistributionStatus.pending_merge,
+        source: 'app',
+      } as unknown as MarketplaceDistribution;
+
+      let result: Awaited<
+        ReturnType<ListMarketplaceDistributionsUseCase['execute']>
+      >;
+
+      beforeEach(async () => {
+        // Repository contract: rows ordered DESC by createdAt — the new
+        // pending_merge row comes first, the older success row second.
+        mockMarketplaceDistributionRepository.findByMarketplaceId.mockResolvedValue(
+          [latestPendingMerge, priorSuccess],
+        );
+        result = await useCase.execute({
+          userId,
+          organizationId,
+          marketplaceId,
+        });
+      });
+
+      it('keeps the latest pending_merge row as the visible distribution', () => {
+        expect(result[0].id).toEqual(latestPendingMerge.id);
+      });
+
+      it("surfaces the prior success's publishConfirmedAt on the row", () => {
+        expect(result[0].lastPublishedOnMainAt).toEqual(confirmedAt);
+      });
+    });
+  });
+
   describe('when a distribution has been removed', () => {
     let result: Awaited<
       ReturnType<ListMarketplaceDistributionsUseCase['execute']>
