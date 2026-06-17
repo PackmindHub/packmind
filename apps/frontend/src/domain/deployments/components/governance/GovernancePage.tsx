@@ -47,10 +47,6 @@ export function GovernancePage() {
               label="Approvals"
               tagline="Review proposed changes before they ship."
             />
-            <GovernancePlaceholderSection
-              label="Adoption"
-              tagline="Track which repos are on the latest version."
-            />
           </PMVStack>
           <PMVStack
             flex="1 1 0"
