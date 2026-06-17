@@ -52,11 +52,29 @@ import {
   useMarketplaceDistributions,
   useSyncMarketplaceNow,
 } from '../api/queries';
+import { marketplaceQueryKeys } from '../api/queries/MarketplaceQueries';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  INVALID_TOKEN_MESSAGE,
+  mapPublishError,
+  useMarketplacePublishMutation,
+} from '../../deployments/api/queries/useMarketplacePublishMutation';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { pmToaster } from '@packmind/ui';
 import { RemovePluginButton } from './RemovePluginButton';
 import { MarketplaceStateBadge } from './MarketplaceStateBadge';
 import { PluginAdoptionTab } from './PluginAdoptionTab';
 import { PluginOverviewTab } from './PluginOverviewTab';
+
+const PUBLISH_FAILURE_MESSAGES: Record<string, string> = {
+  invalid_token: INVALID_TOKEN_MESSAGE,
+  name_conflict_unmanaged:
+    'The package could not be published. Reason: another plugin with the same name already exists on this marketplace.',
+  descriptor_missing:
+    'The package could not be published. Reason: the marketplace descriptor (marketplace.json) is missing or malformed.',
+  other:
+    'The package could not be published. Please try again — if the problem persists, contact an organization admin.',
+};
 
 export interface MarketplaceDetailLayoutProps {
   organizationId: OrganizationId | string;
@@ -455,11 +473,6 @@ function PluginDetailPane({
   isOutdated,
   version,
 }: Readonly<PluginDetailPaneProps>) {
-  const { user } = useAuthContext();
-  const markMutation = useMarkPluginForRemovalByDistribution(
-    organizationId,
-    marketplaceId,
-  );
   const [tab, setTab] = useState<DetailTabId>('overview');
   const tabsAnchorId = `plugin-detail-tabs-${distribution.id}`;
 
@@ -481,13 +494,6 @@ function PluginDetailPane({
       .getElementById(tabsAnchorId)
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  const pendingRemoval =
-    !!distribution.removalRequestedAt ||
-    distribution.status === DistributionStatus.to_be_removed;
-  const removable =
-    distribution.status === DistributionStatus.success ||
-    distribution.status === DistributionStatus.pending_merge;
 
   return (
     <PMBox paddingX={8} paddingY={6} maxW="960px">
@@ -534,40 +540,18 @@ function PluginDetailPane({
         </PMBox>
 
         {tab === 'overview' && (
-          <PMVStack gap={6} align="stretch">
-            <PluginOverviewTab
-              organizationId={organizationId}
-              packageSlug={distribution.packageSlug}
-            />
-            <PMFeatureFlag
-              featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
-              featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-              userEmail={user?.email}
-            >
-              <PMBox>
-                {removable && !pendingRemoval && (
-                  <RemovePluginButton
-                    pluginSlug={distribution.pluginSlug}
-                    packageName={distribution.packageName}
-                    marketplaceName={marketplaceName}
-                    onMark={() => markMutation.mutate(distribution.id)}
-                    isMarking={
-                      markMutation.isPending &&
-                      (markMutation.variables as MarketplaceDistributionId) ===
-                        distribution.id
-                    }
-                  />
-                )}
-              </PMBox>
-            </PMFeatureFlag>
-          </PMVStack>
+          <PluginOverviewTab
+            organizationId={organizationId}
+            packageSlug={distribution.packageSlug}
+          />
         )}
 
         {tab === 'changes' && (
           <ChangesTab
             organizationId={organizationId}
             marketplaceId={marketplaceId}
-            distributionId={distribution.id}
+            distribution={distribution}
+            marketplaceName={marketplaceName}
             isOutdated={isOutdated}
             active={tab === 'changes'}
           />
@@ -590,7 +574,8 @@ function PluginDetailPane({
 interface ChangesTabProps {
   organizationId: OrganizationId | string;
   marketplaceId: MarketplaceListItem['id'];
-  distributionId: MarketplaceDistributionId;
+  distribution: MarketplaceDistributionListItem;
+  marketplaceName: string;
   isOutdated: boolean;
   active: boolean;
 }
@@ -598,61 +583,151 @@ interface ChangesTabProps {
 function ChangesTab({
   organizationId,
   marketplaceId,
-  distributionId,
+  distribution,
+  marketplaceName,
   isOutdated,
   active,
 }: Readonly<ChangesTabProps>) {
+  const { user } = useAuthContext();
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useMarketplaceDistributionChanges(
     organizationId,
     marketplaceId,
-    distributionId,
+    distribution.id,
     active && isOutdated,
   );
+  const markMutation = useMarkPluginForRemovalByDistribution(
+    organizationId,
+    marketplaceId,
+  );
+  const publishMutation = useMarketplacePublishMutation();
 
-  if (!isOutdated) {
-    return <ChangesInSync />;
-  }
-
-  if (isLoading) {
-    return (
-      <PMHStack gap={2} align="center">
-        <PMSpinner size="sm" />
-        <PMText fontSize="sm" color="secondary">
-          Loading changes…
-        </PMText>
-      </PMHStack>
-    );
-  }
-
-  if (isError) {
-    return (
-      <PMText fontSize="sm" color="error">
-        Could not load changes. Refresh the page and try again.
-      </PMText>
-    );
-  }
+  const pendingRemoval =
+    !!distribution.removalRequestedAt ||
+    distribution.status === DistributionStatus.to_be_removed;
+  const removable =
+    distribution.status === DistributionStatus.success ||
+    distribution.status === DistributionStatus.pending_merge;
 
   const changes = data ?? [];
-  if (changes.length === 0) {
-    return <ChangesInSync />;
-  }
+  const canPublish = isOutdated && changes.length > 0;
 
-  const countLabel =
-    changes.length === 1 ? '1 change' : `${changes.length} changes`;
+  const handlePublish = async () => {
+    try {
+      const response = await publishMutation.mutateAsync({
+        organizationId: organizationId as OrganizationId,
+        marketplaceId,
+        packageId: distribution.packageId,
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.distributions(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.list(organizationId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: marketplaceQueryKeys.distributionChangesAll(),
+        }),
+      ]);
+      pmToaster.success({
+        title: 'Publish started',
+        description: `Packmind is publishing "${distribution.packageName}" as "${response.pluginSlug}". You'll see the pull request on the marketplace repository shortly.`,
+      });
+    } catch (error) {
+      const reason = mapPublishError(error);
+      pmToaster.error({
+        title: 'Publish failed',
+        description:
+          PUBLISH_FAILURE_MESSAGES[reason] ?? PUBLISH_FAILURE_MESSAGES.other,
+      });
+    }
+  };
+
+  const footer = (
+    <PMHStack gap={2} align="center">
+      {canPublish && (
+        <PMButton
+          variant="primary"
+          size="sm"
+          loading={publishMutation.isPending}
+          onClick={handlePublish}
+        >
+          <PMIcon fontSize="sm">
+            <LuRotateCw />
+          </PMIcon>
+          Publish
+        </PMButton>
+      )}
+      <PMFeatureFlag
+        featureKeys={[MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]}
+        featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+        userEmail={user?.email}
+      >
+        {removable && !pendingRemoval && (
+          <RemovePluginButton
+            pluginSlug={distribution.pluginSlug}
+            packageName={distribution.packageName}
+            marketplaceName={marketplaceName}
+            onMark={() => markMutation.mutate(distribution.id)}
+            isMarking={
+              markMutation.isPending &&
+              (markMutation.variables as MarketplaceDistributionId) ===
+                distribution.id
+            }
+          />
+        )}
+      </PMFeatureFlag>
+    </PMHStack>
+  );
+
+  const body = (() => {
+    if (!isOutdated) {
+      return <ChangesInSync />;
+    }
+    if (isLoading) {
+      return (
+        <PMHStack gap={2} align="center">
+          <PMSpinner size="sm" />
+          <PMText fontSize="sm" color="secondary">
+            Loading changes…
+          </PMText>
+        </PMHStack>
+      );
+    }
+    if (isError) {
+      return (
+        <PMText fontSize="sm" color="error">
+          Could not load changes. Refresh the page and try again.
+        </PMText>
+      );
+    }
+    if (changes.length === 0) {
+      return <ChangesInSync />;
+    }
+    const countLabel =
+      changes.length === 1 ? '1 change' : `${changes.length} changes`;
+    return (
+      <PMVStack gap={4} align="stretch">
+        <PMText fontSize="md" color="primary" fontWeight="medium">
+          {countLabel} ready to publish
+        </PMText>
+        <PMVStack gap={2.5} align="stretch">
+          {changes.map((change) => (
+            <ChangeRow
+              key={`${change.artifactKind}-${change.slug}-${change.kind}`}
+              change={change}
+            />
+          ))}
+        </PMVStack>
+      </PMVStack>
+    );
+  })();
 
   return (
-    <PMVStack gap={4} align="stretch">
-      <PMText fontSize="md" color="primary" fontWeight="medium">
-        {countLabel} ready to publish
-      </PMText>
-      <PMVStack gap={2.5} align="stretch">
-        {changes.map((change) => (
-          <ChangeRow
-            key={`${change.artifactKind}-${change.slug}-${change.kind}`}
-            change={change}
-          />
-        ))}
-      </PMVStack>
+    <PMVStack gap={5} align="stretch">
+      {body}
+      {footer}
     </PMVStack>
   );
 }

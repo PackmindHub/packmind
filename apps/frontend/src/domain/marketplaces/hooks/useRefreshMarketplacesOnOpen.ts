@@ -64,6 +64,22 @@ export function useRefreshMarketplacesOnOpen(
         );
         if (!cancelled) {
           patchMarketplaceInCache(queryClient, organizationId, next.id, result);
+          // A reconcile can flip `pending_merge → success`, prune
+          // `to_be_removed → removed`, and shift the diff exposed by the
+          // changes tab. Invalidate per-marketplace so any open detail page
+          // refetches with the freshly reconciled state.
+          void queryClient.invalidateQueries({
+            queryKey: marketplaceQueryKeys.distributionList(
+              organizationId,
+              next.id,
+            ),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: marketplaceQueryKeys.distributionChangesForMarketplace(
+              organizationId,
+              next.id,
+            ),
+          });
           if (result.state === 'drift') {
             // Drift details (descriptor.driftedPluginSlugs) are not part of
             // the sync response, so re-fetch the list to pick up the slug

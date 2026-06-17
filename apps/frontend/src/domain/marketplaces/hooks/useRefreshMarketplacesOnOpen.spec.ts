@@ -239,7 +239,51 @@ describe('useRefreshMarketplacesOnOpen', () => {
       await waitFor(() => {
         expect(result.current.refreshingIds.size).toBe(0);
       });
-      expect(invalidateSpy).not.toHaveBeenCalled();
+      expect(invalidateSpy).not.toHaveBeenCalledWith({
+        queryKey: marketplaceQueryKeys.list(orgId),
+      });
+    });
+  });
+
+  describe('after a successful refresh', () => {
+    it('invalidates the per-marketplace distributions list', async () => {
+      mockGateway.syncMarketplaceNow.mockResolvedValue(okResponse('healthy'));
+      const rows = [makeRow('m1', null)];
+      const client = createClient();
+      const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
+
+      renderHook(() => useRefreshMarketplacesOnOpen(orgId, rows), {
+        wrapper: createWrapper(client),
+      });
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: marketplaceQueryKeys.distributionList(
+            orgId,
+            'm1' as MarketplaceId,
+          ),
+        });
+      });
+    });
+
+    it('invalidates the per-marketplace distribution-changes cache', async () => {
+      mockGateway.syncMarketplaceNow.mockResolvedValue(okResponse('healthy'));
+      const rows = [makeRow('m1', null)];
+      const client = createClient();
+      const invalidateSpy = jest.spyOn(client, 'invalidateQueries');
+
+      renderHook(() => useRefreshMarketplacesOnOpen(orgId, rows), {
+        wrapper: createWrapper(client),
+      });
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: marketplaceQueryKeys.distributionChangesForMarketplace(
+            orgId,
+            'm1' as MarketplaceId,
+          ),
+        });
+      });
     });
   });
 

@@ -67,6 +67,15 @@ export const marketplaceQueryKeys = {
       ...marketplaceQueryKeys.all(),
       MarketplaceQueryKey.DISTRIBUTION_CHANGES,
     ] as const,
+  distributionChangesForMarketplace: (
+    organizationId: OrganizationId | string,
+    marketplaceId: MarketplaceId | string,
+  ) =>
+    [
+      ...marketplaceQueryKeys.distributionChangesAll(),
+      organizationId,
+      marketplaceId,
+    ] as const,
   distributionChanges: (
     organizationId: OrganizationId | string,
     marketplaceId: MarketplaceId | string,

@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from 'react-router';
+import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { PMPage, PMVStack } from '@packmind/ui';
 import type { MarketplaceId } from '@packmind/types';
@@ -14,6 +15,7 @@ import {
   MarketplaceDetailHeaderActions,
   MarketplaceDetailLayout,
 } from '../../src/domain/marketplaces/components';
+import { useRefreshMarketplacesOnOpen } from '../../src/domain/marketplaces/hooks';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 
 export const handle = {
@@ -64,12 +66,21 @@ export default function MarketplaceDetailsRouteModule() {
   }>();
   const orgId = organization?.id ?? '';
   const { data: marketplaces } = useMarketplaces(orgId);
+  const marketplace = marketplaces?.find((m) => m.id === marketplaceId);
+  // Auto-reconcile the active marketplace on detail-page open so the header
+  // pill ("Changes ready"), pendingPrUrl, and per-distribution diffs reflect
+  // the latest server state without forcing the user to click "Sync now"
+  // after merging a publish PR. The hook's 10s freshness window protects
+  // against back-and-forth navigation thrash.
+  const marketplacesForRefresh = useMemo(
+    () => (marketplace ? [marketplace] : []),
+    [marketplace],
+  );
+  useRefreshMarketplacesOnOpen(orgId, marketplacesForRefresh);
 
   if (!organization || !marketplaceId || !orgSlug) {
     return null;
   }
-
-  const marketplace = marketplaces?.find((m) => m.id === marketplaceId);
 
   return (
     <PMPage
