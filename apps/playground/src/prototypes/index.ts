@@ -11,6 +11,7 @@ import MarketplacesPrototype from './marketplaces/MarketplacesPrototype';
 import MarketplaceDetailPrototype from './marketplace-detail/MarketplaceDetailPrototype';
 import GitConnectionsPrototype from './git-connections/GitConnectionsPrototype';
 import DeploymentsOverviewRedesignPrototype from './deployments-overview-redesign/DeploymentsOverviewRedesignPrototype';
+import GetStartedPrototype from './get-started/GetStartedPrototype';
 
 export interface Prototype {
   name: string;
@@ -19,6 +20,12 @@ export interface Prototype {
 }
 
 export const prototypes: Prototype[] = [
+  {
+    name: 'Get started — onboarding redesign',
+    description:
+      'Single guided /get-started route: import skills → bundle → ship (CLI or connect) → governance populated. Replaces the post-signup modal, the reason survey, and the in-space widget.',
+    component: GetStartedPrototype,
+  },
   { name: 'Buttons', component: ButtonsPrototype },
   {
     name: 'Review changes - group view (A: filter)',
