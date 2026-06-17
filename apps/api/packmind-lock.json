@@ -11,7 +11,7 @@
     "gitlab_duo",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:26.672Z",
+  "installedAt": "2026-06-17T03:12:44.721Z",
   "artifacts": {
     "user:standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",
