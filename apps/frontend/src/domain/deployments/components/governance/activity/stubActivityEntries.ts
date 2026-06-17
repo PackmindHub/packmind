@@ -1,11 +1,14 @@
 export type ActivityKind = 'deployed' | 'edited' | 'archived';
 
+export type ActivitySubjectType = 'package' | 'standard' | 'command' | 'skill';
+
 export interface ActivityEntry {
   id: string;
   occurredAt: string;
   kind: ActivityKind;
   actor: string;
   subject: string;
+  subjectType: ActivitySubjectType;
   detail: string;
   spaceName: string;
 }
@@ -19,8 +22,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-1',
       occurredAt: new Date(now - 12 * 60 * 1000).toISOString(),
       kind: 'deployed',
-      actor: 'Joan',
+      actor: 'Joan Racenet',
       subject: 'packmind-ui',
+      subjectType: 'package',
       detail: 'deployed to 3 targets',
       spaceName: 'Design System',
     },
@@ -28,8 +32,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-2',
       occurredAt: new Date(now - 1 * HOUR).toISOString(),
       kind: 'edited',
-      actor: 'Émilie',
+      actor: 'Émilie Martin',
       subject: 'react-strict-mode',
+      subjectType: 'standard',
       detail: 'updated',
       spaceName: 'Design System',
     },
@@ -37,8 +42,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-3',
       occurredAt: new Date(now - 18 * HOUR).toISOString(),
       kind: 'deployed',
-      actor: 'Hugo',
+      actor: 'Hugo Dupont',
       subject: 'design-tokens',
+      subjectType: 'package',
       detail: 'deployed to 5 targets',
       spaceName: 'Design System',
     },
@@ -46,8 +52,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-4',
       occurredAt: new Date(now - 22 * HOUR).toISOString(),
       kind: 'archived',
-      actor: 'Maya',
+      actor: 'Maya Leroy',
       subject: 'legacy-vue-rules',
+      subjectType: 'standard',
       detail: 'archived',
       spaceName: 'Platform',
     },
@@ -55,8 +62,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-5',
       occurredAt: new Date(now - 2 * DAY).toISOString(),
       kind: 'edited',
-      actor: 'Antoine',
+      actor: 'Antoine Bernard',
       subject: 'api-conventions',
+      subjectType: 'standard',
       detail: 'updated',
       spaceName: 'Platform',
     },
@@ -64,8 +72,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-6',
       occurredAt: new Date(now - 3 * DAY).toISOString(),
       kind: 'deployed',
-      actor: 'Joan',
+      actor: 'Joan Racenet',
       subject: 'infra-tools',
+      subjectType: 'package',
       detail: 'deployed to 2 targets',
       spaceName: 'Platform',
     },
@@ -73,8 +82,9 @@ export function buildStubActivityEntries(now: number): ActivityEntry[] {
       id: 'stub-7',
       occurredAt: new Date(now - 5 * DAY).toISOString(),
       kind: 'edited',
-      actor: 'Sarah',
+      actor: 'Sarah Cohen',
       subject: 'security-headers',
+      subjectType: 'standard',
       detail: 'updated',
       spaceName: 'Platform',
     },
