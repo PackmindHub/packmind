@@ -2,21 +2,43 @@
 
 ## Starting the stack:
 
-You will need node 24.15.0 and docker to start the development stack. This repo
-uses **pnpm 11** (pinned via `packageManager` in `package.json`); enable it through
-corepack — no global install needed. pnpm settings (overrides, `allowBuilds`,
-hoisting) live in `pnpm-workspace.yaml`, not `.npmrc` or the `package.json` `pnpm`
-field, as required since pnpm 11:
+The apps (api, frontend, mcp-server) run **natively on your host**; only Postgres
+and Redis run in Docker. This gives real file-watch events and fast HMR. You need
+**Docker** and **Node 24.15.0 + pnpm 11**.
+
+Recommended — pin the toolchain with [`mise`](https://mise.jdx.dev) (reads
+`mise.toml`), then two commands:
+
+```shell
+mise install        # installs the pinned Node + pnpm (via corepack)
+pnpm install
+pnpm dev            # Postgres + Redis up → run migrations → serve all 3 apps
+```
+
+Without mise, provide Node/pnpm yourself (corepack — no global install needed):
 
 ```shell
 nvm use
 corepack enable
 pnpm install --frozen-lockfile
-PACKMIND_EDITION=oss node scripts/select-tsconfig.mjs
-docker compose --profile=dev up
+pnpm dev
 ```
 
 The app should be available at [http://localhost:4200](http://localhost:4200)
+(api on `:3000`, mcp-server on `:3001`).
+
+`pnpm dev` bakes in the local connection wiring; create a `.env` (see
+`.env.example`) only to override a default or supply a secret. Useful scripts:
+`pnpm dev:infra` (infra only), `pnpm dev:infra:down`, `pnpm dev:reset` (wipe data
+volumes), `pnpm migrate`.
+
+pnpm settings (overrides, `allowBuilds`, hoisting) live in `pnpm-workspace.yaml`,
+not `.npmrc` or the `package.json` `pnpm` field, as required since pnpm 11.
+
+> **Legacy stack (transitional):** the old full-in-container setup
+> (`PACKMIND_EDITION=oss docker compose --profile=dev up`) still works as a
+> fallback but is being retired. Do not run it at the same time as `pnpm dev` /
+> `docker-compose.dev.yml` — they share ports 5432/6379.
 
 ## Migrating an existing checkout from npm to pnpm
 
