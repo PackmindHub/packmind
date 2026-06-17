@@ -351,8 +351,7 @@ export function PluginAdoptionTab({
       >
         <PMText fontSize="sm" color="faded">
           No consumers yet. Installs appear after someone starts a Claude Code
-          session with this plugin enabled; plugins published before install
-          tracking shipped must be republished first.
+          session with this plugin enabled.
         </PMText>
       </PMBox>
     );
