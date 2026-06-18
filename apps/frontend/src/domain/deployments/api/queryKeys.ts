@@ -10,6 +10,7 @@ export enum DeploymentQueryKeys {
   LIST_SKILL_DISTRIBUTIONS = 'list-skill-distributions',
   LIST_PACKAGES_BY_SPACE = 'list-packages-by-space',
   LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE = 'list-active-distributed-packages-by-space',
+  LIST_DRIFTED_PACKAGES_BY_ORG = 'list-drifted-packages-by-org',
   GET_PACKAGE_BY_ID = 'get-package-by-id',
   UPDATE_PACKAGE = 'update-package',
   REMOVE_PACKAGE_FROM_TARGETS = 'remove-package-from-targets',
@@ -62,6 +63,12 @@ export const LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE,
+] as const;
+
+export const LIST_DRIFTED_PACKAGES_BY_ORG_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.LIST_DRIFTED_PACKAGES_BY_ORG,
 ] as const;
 
 export const GET_TARGETS_BY_GIT_REPO_KEY = [

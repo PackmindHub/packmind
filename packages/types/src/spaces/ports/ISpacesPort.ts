@@ -1,6 +1,7 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import { Space, SpaceType } from '../Space';
+import { SpaceColor } from '../SpaceColor';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
 import {
@@ -47,7 +48,7 @@ export interface ISpacesPort {
 
   /**
    * Create a space for an organization (user-initiated).
-   * Requires admin privileges.
+   * Requires organization membership.
    */
   createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse>;
 
@@ -55,6 +56,17 @@ export interface ISpacesPort {
    * List all spaces for a given organization
    */
   listSpacesByOrganization(organizationId: OrganizationId): Promise<Space[]>;
+
+  /**
+   * Return a paginated page of spaces for an organization, used by the
+   * organization spaces management listing. Spaces are ordered with the
+   * default space first, then by creation time ascending.
+   */
+  findOrgPagePaginated(
+    organizationId: OrganizationId,
+    page: number,
+    pageSize: number,
+  ): Promise<{ items: Space[]; totalCount: number }>;
 
   /**
    * Get a space by its slug within an organization
@@ -149,6 +161,15 @@ export interface ISpacesPort {
   ): Promise<UpdateMemberRoleResponse>;
 
   /**
+   * Update the pinned status of a user's membership in a space.
+   */
+  updateMembershipPinned(
+    userId: UserId,
+    spaceId: SpaceId,
+    pinned: boolean,
+  ): Promise<boolean>;
+
+  /**
    * Remove all space memberships for a user within an organization.
    * Used when a user is removed from the organization.
    */
@@ -173,21 +194,60 @@ export interface ISpacesPort {
   removeSpaceMembership(userId: UserId, spaceId: SpaceId): Promise<boolean>;
 
   /**
-   * Update the pinned status of a user's space membership.
-   */
-  updateMembershipPinned(
-    userId: UserId,
-    spaceId: SpaceId,
-    pinned: boolean,
-  ): Promise<boolean>;
-
-  /**
-   * Update a space's mutable fields (name, type).
-   * Slug is regenerated automatically when name changes.
+   * Update a space's mutable fields (name, type, color).
+   * Slug remains stable — collision is checked but slug is not regenerated.
    * Returns the updated space.
    */
   updateSpace(
     spaceId: SpaceId,
-    fields: { name?: string; type?: SpaceType },
+    fields: { name?: string; type?: SpaceType; color?: SpaceColor },
   ): Promise<Space>;
+
+  /**
+   * Soft-delete a space.
+   */
+  deleteSpace(spaceId: SpaceId, deletedBy: UserId): Promise<void>;
+
+  /**
+   * Soft-delete all memberships for a space.
+   * Returns the number of memberships soft-deleted.
+   */
+  softDeleteMembershipsBySpaceId(
+    spaceId: SpaceId,
+    deletedBy: UserId,
+  ): Promise<number>;
+
+  /**
+   * Find admin memberships for the given space IDs joined with the User
+   * entity. Returns a flat array (one row per admin per space) with the
+   * user's id and presentation displayName.
+   */
+  findAdminsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<
+    Array<{ spaceId: SpaceId; user: { id: UserId; displayName: string } }>
+  >;
+
+  /**
+   * Count active memberships grouped by space for a given role.
+   * Spaces with zero matching memberships are absent from the returned Map.
+   */
+  countByRoleForSpaceIds(
+    spaceIds: SpaceId[],
+    role: UserSpaceRole,
+  ): Promise<Map<SpaceId, number>>;
+
+  /**
+   * Count active memberships grouped by space across all roles.
+   * Spaces with zero memberships are absent from the returned Map.
+   */
+  countUsersForSpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
+
+  /**
+   * Find member user IDs grouped by space for the given space IDs.
+   * Spaces with zero memberships are absent from the returned Map.
+   */
+  findMemberIdsForSpaceIds(
+    spaceIds: SpaceId[],
+  ): Promise<Map<SpaceId, UserId[]>>;
 }

@@ -1,5 +1,14 @@
-import { useNavigate } from 'react-router';
-import { PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import { Link, useNavigate } from 'react-router';
+import {
+  PMBox,
+  PMHStack,
+  PMText,
+  PMVStack,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  GOVERNANCE_FEATURE_KEY,
+  isFeatureFlagEnabled,
+} from '@packmind/ui';
+import { LuArrowRight } from 'react-icons/lu';
 import type { PackageId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../hooks/useCurrentSpace';
@@ -23,10 +32,15 @@ function buildDriftHeading(
 }
 
 export const OverviewNeedsAttention = () => {
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceSlug } = useCurrentSpace();
   const { driftedPackages, totalBehindInstalls, isReady } =
     useDriftedPackages();
+  const hasGovernanceAccess = isFeatureFlagEnabled({
+    featureKeys: [GOVERNANCE_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   if (!isReady) return null;
   if (driftedPackages.length === 0) return null;
@@ -83,6 +97,38 @@ export const OverviewNeedsAttention = () => {
             )}
           </PMVStack>
         </PMBox>
+
+        {organization && hasGovernanceAccess && (
+          <PMBox
+            borderTopWidth="1px"
+            borderColor="border.tertiary"
+            paddingTop={3}
+          >
+            <Link
+              to={routes.org.toGovernance(organization.slug)}
+              style={{ textDecoration: 'none' }}
+            >
+              <PMBox
+                display="inline-flex"
+                alignItems="center"
+                gap={1}
+                fontSize="sm"
+                fontWeight="medium"
+                color="text.primary"
+                _hover={{ textDecoration: 'underline' }}
+                _focusVisible={{
+                  outline: '2px solid',
+                  outlineColor: 'border.brand',
+                  outlineOffset: '2px',
+                  borderRadius: 'sm',
+                }}
+              >
+                See all in Governance
+                <LuArrowRight />
+              </PMBox>
+            </Link>
+          </PMBox>
+        )}
       </PMVStack>
     </PMVStack>
   );

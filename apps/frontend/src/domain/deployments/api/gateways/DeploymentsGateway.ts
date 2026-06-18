@@ -17,6 +17,7 @@ import {
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
   IListActiveDistributedPackagesBySpaceUseCase,
+  IListDriftedPackagesByOrgUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
@@ -319,6 +320,13 @@ export class DeploymentsGatewayApi
     async ({ organizationId, spaceId }) => {
       return this._api.get(
         `/organizations/${organizationId}/deployments/spaces/${spaceId}/overview`,
+      );
+    };
+
+  listDriftedPackagesByOrg: NewGateway<IListDriftedPackagesByOrgUseCase> =
+    async ({ organizationId }) => {
+      return this._api.get(
+        `/organizations/${organizationId}/deployments/governance/drifted-packages`,
       );
     };
 }

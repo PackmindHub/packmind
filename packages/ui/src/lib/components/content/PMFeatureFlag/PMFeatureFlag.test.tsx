@@ -114,4 +114,40 @@ describe('PMFeatureFlag', () => {
 
     expect(isEnabled).toBe(true);
   });
+
+  describe('when entry is an exact email match', () => {
+    const exactEmailMap = {
+      featureExact: ['joan.racenet@packmind.com'],
+    };
+
+    it('enables the feature for the exact email', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'joan.racenet@packmind.com',
+      });
+
+      expect(isEnabled).toBe(true);
+    });
+
+    it('matches the email case-insensitively', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'Joan.Racenet@Packmind.com',
+      });
+
+      expect(isEnabled).toBe(true);
+    });
+
+    it('does not enable the feature for other users on the same domain', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'someone-else@packmind.com',
+      });
+
+      expect(isEnabled).toBe(false);
+    });
+  });
 });
