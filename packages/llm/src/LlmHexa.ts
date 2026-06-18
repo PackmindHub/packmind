@@ -84,6 +84,11 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
    * The adapter is available immediately after construction.
    */
   public getAdapter(): ILlmPort {
+    if (!this.isInitialized) {
+      this.logger.warn(
+        'LlmHexa.getAdapter() called before initialization completed',
+      );
+    }
     return this.adapter.getPort();
   }
 

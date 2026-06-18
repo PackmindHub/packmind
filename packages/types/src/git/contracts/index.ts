@@ -7,8 +7,6 @@ export * from './IDeleteGitRepoUseCase';
 export * from './IFetchFileContentUseCase';
 export * from './IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
 export * from './IGetAvailableTargets';
-export * from './IHandleWebHookUseCase';
-export * from './IHandleWebHookWithoutContentUseCase';
 export * from './IListAvailableReposUseCase';
 export * from './IListProvidersUseCase';
 export * from './IUpdateGitProviderUseCase';

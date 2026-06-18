@@ -77,6 +77,26 @@ description: 'Threat modeling skill'
     expect(content).toContain("some-key: 'value'");
   });
 
+  it('emits disallowed-tools after shell in canonical order', () => {
+    const content = generateSkillMdContent(
+      makeSkill({
+        additionalProperties: { disallowedTools: ['Monitor'], shell: 'bash' },
+      }),
+    );
+
+    expect(content.indexOf('disallowed-tools:')).toBeGreaterThan(
+      content.indexOf('shell:'),
+    );
+  });
+
+  it('produces identical output on two renders of the same skill', () => {
+    const skill = makeSkill({
+      additionalProperties: { disallowedTools: ['Monitor', 'AskUserQuestion'] },
+    });
+
+    expect(generateSkillMdContent(skill)).toBe(generateSkillMdContent(skill));
+  });
+
   it('escapes single quotes in field values', () => {
     const content = generateSkillMdContent(makeSkill({ name: "Bob's skill" }));
 

@@ -3,23 +3,61 @@
 # anywhere; it cds to the repo root itself.
 #
 # Consolidates the steps a fresh clone needs before any nx/tsc command works:
-#   1. Install dependencies (npm ci, lockfile-exact; fall back to npm install).
+#   1. Install dependencies (pnpm install --frozen-lockfile --prefer-offline).
 #   2. Generate tsconfig.base.effective.json — the edition-specific effective
 #      tsconfig that nx/tsc/chakra extend. It is gitignored (generated), so a
 #      fresh clone has none and lint/test/build fail with
 #      "Cannot find base config file ../../tsconfig.base.effective.json"
 #      until this runs.
-#   3. Install the Michel skills + sprite compose overrides.
+#   3. Install the Michel skills + compose overrides.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
-export PACKMIND_EDITION="${PACKMIND_EDITION:-oss}"
+# Resolve the edition from the git remote (packmind-proprietary -> proprietary,
+# else oss), honoring an explicit PACKMIND_EDITION override. Keeps a direct or
+# local `setup.sh` run edition-correct without the caller knowing the edition.
+export PACKMIND_EDITION="$(bash "$(dirname "${BASH_SOURCE[0]}")/resolve-edition.sh")"
+
+# Pinned pnpm version — keep in sync with package.json `packageManager` (pnpm@11.5.0).
+# Overridable via env; the default satisfies `set -u` (nounset) below.
+PNPM_VERSION="${PNPM_VERSION:-11.5.0}"
+
+# 0a. Install/activate pnpm. Prefer corepack (ships with Node); fall back to a
+#    global npm install if corepack is unavailable or refuses to activate.
+echo "==> Installing pnpm@${PNPM_VERSION}"
+if command -v corepack >/dev/null 2>&1 && corepack enable 2>/dev/null; then
+  corepack prepare "pnpm@${PNPM_VERSION}" --activate
+elif command -v pnpm >/dev/null 2>&1; then
+  echo "    corepack unavailable — using already-installed pnpm $(pnpm --version)"
+else
+  echo "    corepack unavailable — installing pnpm globally via npm"
+  npm install -g "pnpm@${PNPM_VERSION}"
+fi
+
+# Verify pnpm is callable before proceeding
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "ERROR: pnpm is not on PATH after install. Aborting." >&2
+  exit 1
+fi
+echo "    pnpm $(pnpm --version) ready"
+
+# 0c. Pin the content-addressable store OUTSIDE the checkout. Without a proper
+#     pnpm home, pnpm falls back to an in-repo .pnpm-store/ holding 80k+ files,
+#     which makes IDEs (WebStorm/IntelliJ) index/watch them and crash.
+PNPM_STORE_DIR="${PNPM_STORE_DIR:-$HOME/.pnpm-store}"
+echo "==> Pinning pnpm store -> ${PNPM_STORE_DIR}"
+# On a machine that never ran `pnpm setup`, the global bin dir isn't on PATH and
+# `pnpm config set --global` aborts. Putting it on PATH for this one call lets the
+# write succeed regardless.
+PATH="${HOME}/Library/pnpm/bin:${HOME}/.local/share/pnpm:${PATH}" \
+  pnpm config set --global store-dir "$PNPM_STORE_DIR" >/dev/null 2>&1 || true
+echo "    store-dir = $(pnpm config get store-dir)"
 
 # 1. Dependencies
 if [ -f package.json ]; then
-  echo "📦 Installing dependencies (npm ci)..."
-  npm ci || npm install
+  echo "📦 Installing dependencies (pnpm install)..."
+  pnpm install --frozen-lockfile --prefer-offline
 else
   echo "No package.json — skipping dependency install."
 fi
@@ -28,19 +66,18 @@ fi
 echo "📝 Generating tsconfig.base.effective.json (PACKMIND_EDITION=${PACKMIND_EDITION})..."
 node scripts/select-tsconfig.mjs
 
-# 3. Michel skills + sprite compose overrides
+# 3. Michel skills + compose overrides
 if [ -f scripts/install-michel-skills.sh ]; then
   bash scripts/install-michel-skills.sh
 else
   echo "No scripts/install-michel-skills.sh — skipping skill install."
 fi
 
-# 4. Patch git hooks so they survive the memory-constrained worker (pre-push
-#    nx parallelism 6 → 2, disable the packmind-cli precommit lint for now).
-if [ -f scripts/michel/patch-hooks.sh ]; then
-  bash scripts/michel/patch-hooks.sh
-else
-  echo "No scripts/michel/patch-hooks.sh — skipping hook patch."
-fi
+# Note: git hooks run UNMODIFIED on the Fly worker (performance-8x / 32 GB) —
+# it has the cores and RAM to run the full pre-push `nx affected` gate at its
+# native --parallel=6, like a developer's machine. The old hook-patcher that
+# de-fanged parallelism for the prior 16 GB box is gone. The packmind-cli
+# pre-commit lint self-skips when no PACKMIND_API_KEY is present (its `whoami`
+# fails → exit 0), so it needs no patching either.
 
 echo "✅ Michel setup complete."

@@ -143,7 +143,7 @@ describe('GitProviderConnection', () => {
       createMockMutation<ReturnType<typeof useUpdateGitProviderMutation>>(),
     );
 
-    // Default: OSS user with feature flag ON
+    // Default: OSS user
     mockUseGetMeQuery.mockReturnValue({
       data: {
         authenticated: true,
@@ -166,7 +166,7 @@ describe('GitProviderConnection', () => {
     } as ReturnType<typeof useGetMeQuery>);
   });
 
-  describe('when source is github and feature flag is enabled', () => {
+  describe('when source is github', () => {
     it('defaults to the GitHub App tab as active', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
@@ -290,58 +290,7 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when feature flag is OFF (external domain user)', () => {
-    beforeEach(() => {
-      mockUseGetMeQuery.mockReturnValue({
-        data: {
-          authenticated: true,
-          edition: 'cloud',
-          message: 'ok',
-          user: {
-            id: 'user-2',
-            email: 'user@externaldomain.com',
-            displayName: null,
-            memberships: [],
-          },
-          organization: {
-            id: mockOrganizationId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-            githubAppMode: 'shared',
-          },
-        },
-      } as ReturnType<typeof useGetMeQuery>);
-    });
-
-    it('renders no tab triggers for github source', () => {
-      renderWithProviders(
-        <GitProviderConnection organizationId={mockOrganizationId} />,
-      );
-
-      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
-    });
-
-    it('shows the legacy Access Token input directly', () => {
-      renderWithProviders(
-        <GitProviderConnection organizationId={mockOrganizationId} />,
-      );
-
-      expect(screen.getByPlaceholderText(/ghp_/i)).toBeInTheDocument();
-    });
-
-    it('does not render Installation ID input', () => {
-      renderWithProviders(
-        <GitProviderConnection organizationId={mockOrganizationId} />,
-      );
-
-      expect(
-        screen.queryByLabelText(/installation id/i),
-      ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when feature flag is ON and source is github', () => {
+  describe('when rendering the github tab strip', () => {
     it('renders two tab triggers', () => {
       renderWithProviders(
         <GitProviderConnection organizationId={mockOrganizationId} />,
@@ -363,7 +312,7 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when editing an existing App provider with flag ON', () => {
+  describe('when editing an existing App provider', () => {
     it('pins the App tab as active on mount', () => {
       const editingProvider = mockGitProviderUI({ authMethod: 'app' });
 
@@ -381,7 +330,7 @@ describe('GitProviderConnection', () => {
     });
   });
 
-  describe('when editing an existing Token provider with flag ON', () => {
+  describe('when editing an existing Token provider', () => {
     it('pins the Personal Access Token tab as active on mount', () => {
       const editingProvider = mockGitProviderUI({ authMethod: 'token' });
 

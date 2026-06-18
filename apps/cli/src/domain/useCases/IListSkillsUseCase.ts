@@ -1,6 +1,7 @@
 import { IPublicUseCase, SpaceId } from '@packmind/types';
 
 export type ListedSkill = {
+  id: string;
   slug: string;
   name: string;
   description: string;

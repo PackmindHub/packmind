@@ -21,16 +21,12 @@ jobs:
       - name: Set image name and version suffix
         id: set-image-naming
         run: |
-          if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-            echo "name_suffix=" >> $GITHUB_OUTPUT
-            echo "version_suffix=" >> $GITHUB_OUTPUT
-          elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
-            echo "name_suffix=" >> $GITHUB_OUTPUT
-            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
-          else
-            echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-            echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-          fi
+          # OSS and Proprietary repos are merged. Release produces both tag variants:
+          #   - OSS: unsuffixed (packmind/api:VERSION)
+          #   - Proprietary/Enterprise: -enterprise suffix (packmind/api:VERSION-enterprise)
+          echo "name_suffix=" >> $GITHUB_OUTPUT
+          echo "version_tag_oss=${{ steps.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "version_tag_proprietary=${{ steps.get-version.outputs.version }}-enterprise" >> $GITHUB_OUTPUT
 
       - name: Extract changelog for version
         id: extract-changelog
@@ -66,10 +62,17 @@ jobs:
             ## Docker Images
 
             The following Docker images have been built and pushed to Docker Hub:
-            - `packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
-            - `packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
-            - `packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
 
-            All images are also available with the `latest` tag.
+            ### OSS
+            - `packmind/api:${{ steps.set-image-naming.outputs.version_tag_oss }}`
+            - `packmind/frontend:${{ steps.set-image-naming.outputs.version_tag_oss }}`
+            - `packmind/mcp:${{ steps.set-image-naming.outputs.version_tag_oss }}`
+
+            ### Proprietary (Enterprise)
+            - `packmind/api:${{ steps.set-image-naming.outputs.version_tag_proprietary }}`
+            - `packmind/frontend:${{ steps.set-image-naming.outputs.version_tag_proprietary }}`
+            - `packmind/mcp:${{ steps.set-image-naming.outputs.version_tag_proprietary }}`
+
+            All images are also available with the `latest` tag (OSS) and `latest-enterprise` tag (Proprietary).
           draft: false
           prerelease: false

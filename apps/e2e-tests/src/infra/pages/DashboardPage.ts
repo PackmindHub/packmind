@@ -14,7 +14,7 @@ export class DashboardPage
 
   async expectWelcomeMessage(): Promise<void> {
     await this.skipOnboardingModal();
-    await expect(this.page.locator('h1')).toContainText('Dashboard');
+    await expect(this.page.locator('h1')).toContainText('Overview');
   }
 
   expectedUrl(): string {

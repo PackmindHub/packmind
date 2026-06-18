@@ -9,7 +9,6 @@ export enum GitQueryKeys {
   GET_REPOSITORIES_BY_PROVIDER = 'get-repositories-by-provider',
   GET_AVAILABLE_REPOSITORIES = 'get-available-repositories',
   GET_AVAILABLE_TARGETS = 'get-available-targets',
-  GET_WEBHOOKS = 'get-webhooks',
   GET_GITHUB_APP_STATUS = 'get-github-app-status',
   CHECK_PROVIDER_AUTH = 'check-provider-auth',
 }
@@ -49,12 +48,6 @@ export const GET_AVAILABLE_TARGETS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   GIT_QUERY_SCOPE,
   GitQueryKeys.GET_AVAILABLE_TARGETS,
-] as const;
-
-export const GET_GIT_WEBHOOKS_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  GIT_QUERY_SCOPE,
-  GitQueryKeys.GET_WEBHOOKS,
 ] as const;
 
 export const GET_GITHUB_APP_STATUS_KEY = [

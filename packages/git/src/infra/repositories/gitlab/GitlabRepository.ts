@@ -3,7 +3,6 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
-import { GitlabWebhookPushPayload } from '../../../domain/types/webhookPayloads';
 import { extractNextPageUrl } from './linkHeaderUtils';
 
 const origin = 'GitlabRepository';
@@ -533,22 +532,238 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
-  isValidBranch(ref: string): boolean {
-    // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
-    const branchName = ref.replace('refs/heads/', '');
-    return branchName === 'main';
-  }
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const baseBranch = this.options.branch || 'main';
 
-  isPushEventFromWebhook(headers: Record<string, string>): boolean {
-    const gitlabEvent = headers['x-gitlab-event'];
-    const isPushEvent = gitlabEvent === 'Push Hook';
-
-    this.logger.debug('Checking if webhook is a push event', {
-      eventType: gitlabEvent,
-      isPushEvent,
+    this.logger.info('Ensuring branch exists on GitLab repository', {
+      projectPath: this.projectPath,
+      baseBranch,
+      targetBranch,
     });
 
-    return isPushEvent;
+    // Step 1: Check if the target branch already exists. If GitLab returns
+    // 2xx, the branch is present and no work is needed.
+    const encodedTargetBranch = encodeURIComponent(targetBranch);
+    try {
+      await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/repository/branches/${encodedTargetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        projectPath: this.projectPath,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitLab', {
+          projectPath: this.projectPath,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitLab: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Create the target branch from the base branch. GitLab's branch
+    // creation endpoint validates that `ref` (the base) exists; propagate any
+    // failure verbatim so the caller can surface it.
+    try {
+      await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/repository/branches`,
+        null,
+        {
+          params: {
+            branch: targetBranch,
+            ref: baseBranch,
+          },
+        },
+      );
+
+      this.logger.info('Created target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitLab: ${errorMessage}`,
+      );
+    }
+  }
+
+  async openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    const baseBranch = this.options.branch || 'main';
+    const { head, title, body } = command;
+
+    this.logger.info('Ensuring rolling merge request on GitLab repository', {
+      projectPath: this.projectPath,
+      head,
+      base: baseBranch,
+    });
+
+    // Step 1: Look up any open MR matching source -> target.
+    try {
+      const lookupResponse = await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          params: {
+            source_branch: head,
+            target_branch: baseBranch,
+            state: 'opened',
+          },
+        },
+      );
+
+      if (
+        Array.isArray(lookupResponse.data) &&
+        lookupResponse.data.length > 0
+      ) {
+        const first = lookupResponse.data[0];
+        this.logger.debug(
+          'Existing open merge request found, skipping creation',
+          {
+            projectPath: this.projectPath,
+            head,
+            base: baseBranch,
+            iid: first.iid,
+          },
+        );
+        return {
+          url: first.web_url,
+          number: first.iid,
+          wasCreated: false,
+        };
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to look up merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to look up merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+
+    // Step 2: Create a new MR.
+    try {
+      const createResponse = await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          source_branch: head,
+          target_branch: baseBranch,
+          title,
+          description: body,
+        },
+      );
+
+      this.logger.info('Created merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        iid: createResponse.data.iid,
+      });
+
+      return {
+        url: createResponse.data.web_url,
+        number: createResponse.data.iid,
+        wasCreated: true,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to open merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+  }
+
+  public async findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const baseBranch = this.options.branch || 'main';
+    const response = await this.axiosInstance.get(
+      `/projects/${this.encodedProjectPath}/merge_requests`,
+      {
+        params: {
+          source_branch: head,
+          target_branch: baseBranch,
+          state: 'opened',
+        },
+      },
+    );
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const first = response.data[0];
+      return { url: first.web_url, number: first.iid };
+    }
+    return null;
+  }
+
+  public async checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    try {
+      await this.axiosInstance.get(`/projects/${this.encodedProjectPath}`);
+      return { exists: true };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return { exists: false, reason: 'auth_failed' };
+      }
+      if (status === 404) {
+        return { exists: false, reason: 'repo_not_found' };
+      }
+      return { exists: false, reason: 'network_transient' };
+    }
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
   }
 
   async getFileOnRepo(
@@ -624,75 +839,6 @@ export class GitlabRepository implements IGitRepo {
       });
       throw error;
     }
-  }
-
-  private extractMatchingFilesFromCommits(
-    commits: Array<{
-      id?: string;
-      message?: string;
-      added?: string[];
-      modified?: string[];
-      removed?: string[];
-      author?: {
-        name?: string;
-        email?: string;
-      };
-    }>,
-    fileMatcher: RegExp,
-  ): Map<
-    string,
-    { commitId: string; author: string | null; message: string | null }
-  > {
-    const fileToLatestCommit: Map<
-      string,
-      { commitId: string; author: string | null; message: string | null }
-    > = new Map();
-
-    this.logger.debug('Processing commits from webhook payload', {
-      commitCount: commits.length,
-    });
-
-    // Process all commits to find modified files that match the pattern
-    // Keep track of the latest commit for each file
-    for (const commit of commits) {
-      if (!commit.modified || !Array.isArray(commit.modified)) continue;
-
-      this.logger.debug('Processing commit', {
-        commitId: commit.id,
-        modifiedFiles: commit.modified.length,
-      });
-
-      // Filter modified files that match the pattern
-      const commitMatchingFiles = commit.modified.filter((filepath) =>
-        fileMatcher.test(filepath),
-      );
-
-      this.logger.debug('Found matching files in commit', {
-        commitId: commit.id,
-        matchingFiles: commitMatchingFiles.length,
-      });
-
-      // Extract commit author and message
-      const author = commit.author?.name || null;
-      const message = commit.message || null;
-
-      // Update the latest commit for each matching file
-      commitMatchingFiles.forEach((filepath) => {
-        fileToLatestCommit.set(filepath, {
-          commitId: commit.id || '',
-          author,
-          message,
-        });
-        this.logger.debug('Updated latest commit for file', {
-          filepath,
-          commitId: commit.id,
-          author,
-          message,
-        });
-      });
-    }
-
-    return fileToLatestCommit;
   }
 
   async listDirectoriesOnRepo(
@@ -1027,191 +1173,6 @@ export class GitlabRepository implements IGitRepo {
       });
       // Return empty array if directory doesn't exist
       return [];
-    }
-  }
-
-  async handlePushHook(
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<
-    {
-      filepath: string;
-      fileContent: string;
-      author: string | null;
-      gitSha: string | null;
-      gitRepo: string | null;
-      message: string | null;
-    }[]
-  > {
-    this.logger.info('Processing GitLab webhook push payload', {
-      owner: this.options.owner,
-      repo: this.options.repo,
-    });
-
-    try {
-      const pushPayload = payload as GitlabWebhookPushPayload;
-
-      // Validate that this is a push event
-      if (
-        pushPayload.object_kind !== 'push' ||
-        pushPayload.event_name !== 'push'
-      ) {
-        this.logger.info(
-          'Webhook payload is not a push event - skipping processing',
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-            objectKind: pushPayload.object_kind,
-            eventName: pushPayload.event_name,
-          },
-        );
-        return [];
-      }
-
-      // Handle missing or empty commits array gracefully
-      if (!pushPayload.commits || !Array.isArray(pushPayload.commits)) {
-        this.logger.info(
-          'Webhook payload has no commits array - this could be a branch creation or deletion',
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-            ref: pushPayload.ref,
-            before: pushPayload.before,
-            after: pushPayload.after,
-            hasCommits: !!pushPayload.commits,
-          },
-        );
-        return [];
-      }
-
-      // Handle empty commits array
-      if (pushPayload.commits.length === 0) {
-        this.logger.info(
-          'Webhook payload has empty commits array - no files to process',
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-          },
-        );
-        return [];
-      }
-
-      // Check if the webhook is from a valid branch (main)
-      if (pushPayload.ref && !this.isValidBranch(pushPayload.ref)) {
-        const branchName = pushPayload.ref.replace('refs/heads/', '');
-        const repoName = `${this.options.owner}/${this.options.repo}`;
-        this.logger.info(
-          `Webhook from ${repoName} has been skipped since ${branchName} is out of scope`,
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-            branch: branchName,
-            ref: pushPayload.ref,
-          },
-        );
-        return [];
-      }
-
-      const { owner, repo } = this.options;
-
-      // Build git repository URL
-      const gitRepo = `${this.baseUrl.replace('/api/v4', '')}/${owner}/${repo}`;
-
-      // Extract matching files from commits using the helper method
-      const fileToLatestCommit = this.extractMatchingFilesFromCommits(
-        pushPayload.commits,
-        fileMatcher,
-      );
-
-      // If no matching files, return empty array
-      if (fileToLatestCommit.size === 0) {
-        this.logger.info('No matching files found in webhook payload');
-        return [];
-      }
-
-      this.logger.info('Found files to process', {
-        fileCount: fileToLatestCommit.size,
-      });
-
-      // Fetch content for each matching file using the latest commit
-      this.logger.debug('Fetching file contents from GitLab API');
-      const filesWithContent = await Promise.all(
-        Array.from(fileToLatestCommit.entries()).map(
-          async ([filepath, { commitId, author, message }]) => {
-            this.logger.debug('Fetching file content', { filepath, commitId });
-
-            const encodedPath = encodeURIComponent(filepath);
-            const response = await this.axiosInstance.get(
-              `/projects/${this.encodedProjectPath}/repository/files/${encodedPath}`,
-              {
-                params: {
-                  ref: commitId,
-                },
-              },
-            );
-
-            // GitLab API returns base64 encoded content
-            const fileContent = Buffer.from(
-              response.data.content,
-              response.data.encoding,
-            ).toString('utf-8');
-
-            this.logger.debug('File content fetched successfully', {
-              filepath,
-              contentLength: fileContent.length,
-            });
-
-            return {
-              filepath,
-              fileContent,
-              author,
-              gitSha: commitId,
-              gitRepo,
-              message,
-            };
-          },
-        ),
-      );
-
-      this.logger.info('Successfully processed webhook payload', {
-        processedFiles: filesWithContent.length,
-      });
-      return filesWithContent;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      // Extract useful error information without overwhelming logs
-      let errorInfo: {
-        owner: string;
-        repo: string;
-        error: string;
-        statusCode?: number;
-        responsePreview?: string;
-      } = {
-        owner: this.options.owner,
-        repo: this.options.repo,
-        error: errorMessage,
-      };
-
-      // Add response details if it's an axios error
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as {
-          response?: { status: number; data: unknown };
-        };
-        errorInfo = {
-          ...errorInfo,
-          statusCode: axiosError.response?.status,
-          responsePreview:
-            typeof axiosError.response?.data === 'string'
-              ? axiosError.response.data.substring(0, 100) +
-                (axiosError.response.data.length > 100 ? '...' : '')
-              : 'Non-string response',
-        };
-      }
-
-      this.logger.error('Failed to process GitLab webhook', errorInfo);
-      throw new Error(`Failed to process GitLab webhook: ${errorMessage}`);
     }
   }
 }

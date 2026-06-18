@@ -32,6 +32,11 @@ export const SpaceSchema = new EntitySchema<
       type: 'boolean',
       default: true,
     },
+    color: {
+      type: 'varchar',
+      length: 16,
+      nullable: false,
+    },
     organizationId: {
       name: 'organization_id',
       type: 'uuid',

@@ -1,8 +1,5 @@
 import React from 'react';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
-  isFeatureFlagEnabled,
   PMDialog,
   PMButton,
   PMCloseButton,
@@ -13,10 +10,8 @@ import {
 import { OrganizationId } from '@packmind/types';
 import { GitProviderConnection } from './ManageGitProvider/GitProviderConnection';
 import { GitProviderUI } from '../types/GitProviderTypes';
-import { WebHookConfig } from './WebHookConfig';
 import { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';
 import { GitProviderAdvancedPanel } from './ManageGitProvider/GitProviderAdvancedPanel';
-import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 
 interface ManageGitProviderDialogProps {
   organizationId: OrganizationId;
@@ -30,20 +25,10 @@ export const ManageGitProviderDialog: React.FC<
   ManageGitProviderDialogProps
 > = ({ organizationId, editingProvider = null, onSuccess, open, setOpen }) => {
   const [displayedScreen, setDisplayedScreen] = React.useState<
-    'connection' | 'webhook' | 'repositories' | 'advanced'
+    'connection' | 'repositories' | 'advanced'
   >('connection');
 
-  const { data: me } = useGetMeQuery();
-  const userEmail = me?.authenticated ? me.user?.email : null;
-  const githubAppEnabled = isFeatureFlagEnabled({
-    featureKeys: [GITHUB_APP_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
-  const showAdvanced =
-    !!editingProvider &&
-    editingProvider.source === 'github' &&
-    githubAppEnabled;
+  const showAdvanced = !!editingProvider && editingProvider.source === 'github';
 
   return (
     <PMDialog.Root
@@ -82,14 +67,6 @@ export const ManageGitProviderDialog: React.FC<
               </PMLink>
               {editingProvider && (
                 <PMLink
-                  onClick={() => setDisplayedScreen('webhook')}
-                  variant={displayedScreen === 'webhook' ? 'active' : 'plain'}
-                >
-                  Webhook
-                </PMLink>
-              )}
-              {editingProvider && (
-                <PMLink
                   onClick={() => setDisplayedScreen('repositories')}
                   variant={
                     displayedScreen === 'repositories' ? 'active' : 'plain'
@@ -122,16 +99,6 @@ export const ManageGitProviderDialog: React.FC<
                       if (onSuccess) onSuccess(provider);
                     }}
                   />
-                </PMPageSection>
-              )}
-
-              {displayedScreen === 'webhook' && editingProvider && (
-                <PMPageSection
-                  title="Webhook"
-                  headingLevel="h5"
-                  backgroundColor="primary"
-                >
-                  <WebHookConfig providerVendor={editingProvider?.source} />
                 </PMPageSection>
               )}
 

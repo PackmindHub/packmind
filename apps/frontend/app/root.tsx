@@ -18,6 +18,7 @@ import {
 import { useAuthContext } from '../src/domain/accounts/hooks';
 import { UserContextChangeSubscription } from '../src/domain/accounts/components/UserContextChangeSubscription';
 import { DistributionStatusChangeSubscription } from '../src/domain/deployments/components/DistributionStatusChangeSubscription';
+import { MarketplacePublishCompletedSubscription } from '../src/domain/deployments/components/MarketplacePublishCompletedSubscription';
 import { QueryProvider } from '../src/providers/QueryProvider';
 import { AuthProvider } from '../src/providers/AuthProvider';
 import { SSEProvider } from '../src/services/sse';
@@ -149,6 +150,7 @@ function AppContent() {
       >
         {isAuthenticated && <UserContextChangeSubscription />}
         {isAuthenticated && <DistributionStatusChangeSubscription />}
+        {isAuthenticated && <MarketplacePublishCompletedSubscription />}
         <Outlet />
         <PMToaster />
       </PMVStack>

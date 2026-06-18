@@ -27,8 +27,8 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - Test a project: `./node_modules/.bin/nx test <project-name>`
 - Lint a project: `./node_modules/.bin/nx lint <project-name>`
 - Build a project: `./node_modules/.bin/nx build <project-name>`
-- Test affected projects: `npm run test:staged`
-- Lint affected projects: `npm run lint:staged`
+- Test affected projects: `pnpm run test:staged`
+- Lint affected projects: `pnpm run lint:staged`
 
 ## Code Quality
 
@@ -39,7 +39,7 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
-- ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
+- ensure the env variable `PACKMIND_EDITION` is properly set to `proprietary`
 - when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
 - Some default skills use version-routed directories (`packmind-versions/<version>/`) and ask you to run `packmind-cli --version` to pick the right one. Since you already run the local build with `node ./dist/apps/cli/main.cjs`, you always have the latest — skip the `--version` check and use the `packmind-versions/next/` directory directly.
 

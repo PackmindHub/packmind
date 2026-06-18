@@ -1,0 +1,25 @@
+{
+  "name": "@packmind/playbook-change-management",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "express": "^5.2.1",
+    "@packmind/accounts": "workspace:*",
+    "@packmind/deployments": "workspace:*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/recipes": "workspace:*",
+    "@packmind/skills": "workspace:*",
+    "@packmind/spaces": "workspace:*",
+    "@packmind/standards": "workspace:*",
+    "@packmind/test-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
+    "@teppeis/multimaps": "^3.0.0",
+    "typeorm": "0.3.28",
+    "uuid": "^11.1.0"
+  }
+}

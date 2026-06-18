@@ -1,5 +1,7 @@
 .nx-daemon/
 .pnpm-store/
+# Michel worker harness — kept local, not versioned in this repo.
+/fly/
 node_modules/
 .vscode/
 .idea/

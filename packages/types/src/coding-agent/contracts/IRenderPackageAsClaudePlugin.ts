@@ -11,6 +11,16 @@ export type RenderPackageAsClaudePluginCommand = {
   recipeVersions: RecipeVersion[];
   skillVersions: SkillVersion[];
   standardVersions: StandardVersion[];
+  /**
+   * When present, install-tracking hook files are bundled into the plugin
+   * (marketplace-mode renders only). Absent → no tracking files emitted.
+   */
+  installTracking?: {
+    apiBaseUrl: string;
+    marketplaceName: string;
+    pluginSlug: string;
+    trackingToken: string;
+  };
 };
 
 export type RenderPackageAsClaudePluginResponse = {

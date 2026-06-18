@@ -3,7 +3,6 @@ import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenR
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
-import { GithubWebhookPushPayload } from '../../../domain/types/webhookPayloads';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -359,22 +358,279 @@ export class GithubRepository implements IGitRepo {
     }
   }
 
-  isValidBranch(ref: string): boolean {
-    // Extract branch name from ref (e.g., "refs/heads/main" -> "main")
-    const branchName = ref.replace('refs/heads/', '');
-    return branchName === 'main';
-  }
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const { owner, repo } = this.options;
+    const baseBranch = this.options.branch || 'main';
 
-  isPushEventFromWebhook(headers: Record<string, string>): boolean {
-    const githubEvent = headers['x-github-event'];
-    const isPushEvent = githubEvent === 'push';
-
-    this.logger.debug('Checking if webhook is a push event', {
-      eventType: githubEvent,
-      isPushEvent,
+    this.logger.info('Ensuring branch exists on GitHub repository', {
+      owner,
+      repo,
+      baseBranch,
+      targetBranch,
     });
 
-    return isPushEvent;
+    // Step 1: Check if the target branch already exists. If GitHub returns
+    // 2xx, the branch is present and no work is needed.
+    try {
+      await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        owner,
+        repo,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitHub', {
+          owner,
+          repo,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitHub: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Fetch the base branch SHA so we know where to fork from.
+    let baseSha: string;
+    try {
+      const baseRefResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${baseBranch}`,
+      );
+      baseSha = baseRefResponse.data.object.sha;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to fetch base branch ref on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to fetch base branch '${baseBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+
+    // Step 3: Create the target branch ref pointing at the base SHA.
+    try {
+      await this.axiosInstance.post(`/repos/${owner}/${repo}/git/refs`, {
+        ref: `refs/heads/${targetBranch}`,
+        sha: baseSha,
+      });
+
+      this.logger.info('Created target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitHub', {
+        owner,
+        repo,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitHub: ${errorMessage}`,
+      );
+    }
+  }
+
+  async openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    const { owner, repo } = this.options;
+    const baseBranch = this.options.branch || 'main';
+    const { head, title, body } = command;
+
+    this.logger.info('Ensuring rolling pull request on GitHub repository', {
+      owner,
+      repo,
+      head,
+      base: baseBranch,
+    });
+
+    // Step 1: Look up any existing open PR matching head -> base.
+    const existing = await this.findOpenPullRequestForBase(head, baseBranch);
+    if (existing) {
+      this.logger.debug('Existing open pull request found, skipping creation', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        number: existing.number,
+      });
+      return { url: existing.url, number: existing.number, wasCreated: false };
+    }
+
+    // Step 2: Create a new PR. GitHub may race a concurrent creator and
+    // respond with a 422 "A pull request already exists" — in that case we
+    // re-run the lookup and surface the existing PR.
+    try {
+      const createResponse = await this.axiosInstance.post(
+        `/repos/${owner}/${repo}/pulls`,
+        {
+          title,
+          head,
+          base: baseBranch,
+          body,
+        },
+      );
+
+      this.logger.info('Created pull request on GitHub', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        number: createResponse.data.number,
+      });
+
+      return {
+        url: createResponse.data.html_url,
+        number: createResponse.data.number,
+        wasCreated: true,
+      };
+    } catch (error) {
+      if (this.isPullRequestAlreadyExistsError(error)) {
+        this.logger.debug(
+          'GitHub reported PR already exists, re-running lookup',
+          { owner, repo, head, base: baseBranch },
+        );
+        const racedExisting = await this.findOpenPullRequestForBase(
+          head,
+          baseBranch,
+        );
+        if (racedExisting) {
+          return {
+            url: racedExisting.url,
+            number: racedExisting.number,
+            wasCreated: false,
+          };
+        }
+        // Fallthrough: fall back to a generic error if the post-race lookup
+        // still finds nothing (extremely unlikely, but defensive).
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to open pull request on GitHub', {
+        owner,
+        repo,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to open pull request on GitHub for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+  }
+
+  public async findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const baseBranch = this.options.branch || 'main';
+    return this.findOpenPullRequestForBase(head, baseBranch);
+  }
+
+  public async checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    const { owner, repo } = this.options;
+    try {
+      await this.axiosInstance.get(`/repos/${owner}/${repo}`);
+      return { exists: true };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return { exists: false, reason: 'auth_failed' };
+      }
+      if (status === 404) {
+        return { exists: false, reason: 'repo_not_found' };
+      }
+      return { exists: false, reason: 'network_transient' };
+    }
+  }
+
+  private async findOpenPullRequestForBase(
+    head: string,
+    base: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const { owner, repo } = this.options;
+    const response = await this.axiosInstance.get(
+      `/repos/${owner}/${repo}/pulls`,
+      {
+        params: {
+          head: `${owner}:${head}`,
+          base,
+          state: 'open',
+        },
+      },
+    );
+
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const first = response.data[0];
+      return { url: first.html_url, number: first.number };
+    }
+    return null;
+  }
+
+  private isPullRequestAlreadyExistsError(error: unknown): boolean {
+    if (this.extractHttpStatus(error) !== 422) {
+      return false;
+    }
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'data' in error.response
+    ) {
+      const data = (error.response as { data: unknown }).data;
+      const serialized =
+        typeof data === 'string' ? data : JSON.stringify(data ?? '');
+      return /pull request already exists/i.test(serialized);
+    }
+    return false;
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
   }
 
   async getFileOnRepo(
@@ -445,75 +701,6 @@ export class GithubRepository implements IGitRepo {
       });
       throw error;
     }
-  }
-
-  private extractMatchingFilesFromCommits(
-    commits: Array<{
-      id?: string;
-      message?: string;
-      added?: string[];
-      modified?: string[];
-      removed?: string[];
-      author?: {
-        name?: string;
-        email?: string;
-      };
-    }>,
-    fileMatcher: RegExp,
-  ): Map<
-    string,
-    { commitId: string; author: string | null; message: string | null }
-  > {
-    const fileToLatestCommit: Map<
-      string,
-      { commitId: string; author: string | null; message: string | null }
-    > = new Map();
-
-    this.logger.debug('Processing commits from webhook payload', {
-      commitCount: commits.length,
-    });
-
-    // Process all commits to find modified files that match the pattern
-    // Keep track of the latest commit for each file
-    for (const commit of commits) {
-      if (!commit.modified || !Array.isArray(commit.modified)) continue;
-
-      this.logger.debug('Processing commit', {
-        commitId: commit.id,
-        modifiedFiles: commit.modified.length,
-      });
-
-      // Filter modified files that match the pattern
-      const commitMatchingFiles = commit.modified.filter((filepath) =>
-        fileMatcher.test(filepath),
-      );
-
-      this.logger.debug('Found matching files in commit', {
-        commitId: commit.id,
-        matchingFiles: commitMatchingFiles.length,
-      });
-
-      // Extract commit author and message
-      const author = commit.author?.name || null;
-      const message = commit.message || null;
-
-      // Update the latest commit for each matching file
-      commitMatchingFiles.forEach((filepath) => {
-        fileToLatestCommit.set(filepath, {
-          commitId: commit.id || '',
-          author,
-          message,
-        });
-        this.logger.debug('Updated latest commit for file', {
-          filepath,
-          commitId: commit.id,
-          author,
-          message,
-        });
-      });
-    }
-
-    return fileToLatestCommit;
   }
 
   async listDirectoriesOnRepo(
@@ -704,142 +891,6 @@ export class GithubRepository implements IGitRepo {
       });
       // Return empty array if directory doesn't exist
       return [];
-    }
-  }
-
-  async handlePushHook(
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<
-    {
-      filepath: string;
-      fileContent: string;
-      author: string | null;
-      gitSha: string | null;
-      gitRepo: string | null;
-      message: string | null;
-    }[]
-  > {
-    this.logger.info('Processing GitHub webhook push payload', {
-      owner: this.options.owner,
-      repo: this.options.repo,
-    });
-
-    try {
-      const pushPayload = payload as GithubWebhookPushPayload;
-
-      // Handle missing or empty commits array gracefully
-      if (!pushPayload.commits || !Array.isArray(pushPayload.commits)) {
-        this.logger.info(
-          'Webhook payload has no commits array - this could be a non-push event (e.g., repository creation, branch creation)',
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-            ref: pushPayload.ref,
-            hasCommits: !!pushPayload.commits,
-            commitsType: typeof pushPayload.commits,
-          },
-        );
-        return [];
-      }
-
-      // Handle empty commits array
-      if (pushPayload.commits.length === 0) {
-        this.logger.info(
-          'Webhook payload has empty commits array - no files to process',
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-          },
-        );
-        return [];
-      }
-
-      // Check if the webhook is from a valid branch (main)
-      if (pushPayload.ref && !this.isValidBranch(pushPayload.ref)) {
-        const branchName = pushPayload.ref.replace('refs/heads/', '');
-        const repoName = `${this.options.owner}/${this.options.repo}`;
-        this.logger.info(
-          `Webhook from ${repoName} has been skipped since ${branchName} is out of scope`,
-          {
-            owner: this.options.owner,
-            repo: this.options.repo,
-            branch: branchName,
-            ref: pushPayload.ref,
-          },
-        );
-        return [];
-      }
-
-      const { owner, repo } = this.options;
-
-      // Build git repository URL
-      const gitRepo = `https://github.com/${owner}/${repo}`;
-
-      // Extract matching files from commits using the helper method
-      const fileToLatestCommit = this.extractMatchingFilesFromCommits(
-        pushPayload.commits,
-        fileMatcher,
-      );
-
-      // If no matching files, return empty array
-      if (fileToLatestCommit.size === 0) {
-        this.logger.info('No matching files found in webhook payload');
-        return [];
-      }
-
-      this.logger.info('Found files to process', {
-        fileCount: fileToLatestCommit.size,
-      });
-
-      // Fetch content for each matching file using the latest commit
-      this.logger.debug('Fetching file contents from GitHub API');
-      const filesWithContent = await Promise.all(
-        Array.from(fileToLatestCommit.entries()).map(
-          async ([filepath, { commitId, author, message }]) => {
-            this.logger.debug('Fetching file content', { filepath, commitId });
-
-            const response = await this.axiosInstance.get(
-              `/repos/${owner}/${repo}/contents/${filepath}`,
-              { params: { ref: commitId } },
-            );
-
-            // GitHub API returns base64 encoded content
-            const fileContent = Buffer.from(
-              response.data.content,
-              response.data.encoding,
-            ).toString('utf-8');
-
-            this.logger.debug('File content fetched successfully', {
-              filepath,
-              contentLength: fileContent.length,
-            });
-
-            return {
-              filepath,
-              fileContent,
-              author,
-              gitSha: commitId,
-              gitRepo,
-              message,
-            };
-          },
-        ),
-      );
-
-      this.logger.info('Successfully processed webhook payload', {
-        processedFiles: filesWithContent.length,
-      });
-      return filesWithContent;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to process GitHub webhook', {
-        owner: this.options.owner,
-        repo: this.options.repo,
-        error: errorMessage,
-      });
-      throw new Error(`Failed to process GitHub webhook: ${errorMessage}`);
     }
   }
 }

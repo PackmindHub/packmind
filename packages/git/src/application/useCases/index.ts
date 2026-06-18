@@ -10,8 +10,6 @@ export { DeleteGitRepoUseCase } from './deleteGitRepo/DeleteGitRepoUseCase';
 export { ListAvailableReposUseCase } from './listAvailableRepos/ListAvailableReposUseCase';
 export { CheckBranchExistsUseCase } from './checkBranchExists/CheckBranchExistsUseCase';
 export { CommitToGitUseCase } from './commitToGit/CommitToGitUseCase';
-export { HandleWebHookUseCase } from './handleWebHook/HandleWebHookUseCase';
-export { HandleWebHookWithoutContentUseCase } from './handleWebHookWithoutContent/HandleWebHookWithoutContentUseCase';
 export { GetFileFromRepoUseCase } from './getFileFromRepo/GetFileFromRepoUseCase';
 export { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';
 export { ListReposUseCase } from './listRepos/ListReposUseCase';

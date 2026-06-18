@@ -4,7 +4,6 @@ import '@testing-library/jest-dom';
 import {
   ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
-  GITHUB_APP_FEATURE_KEY,
   PMFeatureFlag,
   isFeatureFlagEnabled,
 } from './PMFeatureFlag';
@@ -116,23 +115,39 @@ describe('PMFeatureFlag', () => {
     expect(isEnabled).toBe(true);
   });
 
-  it('enables the github-app feature for allowed domains', () => {
-    const isEnabled = isFeatureFlagEnabled({
-      featureKeys: [GITHUB_APP_FEATURE_KEY],
-      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-      userEmail: 'member@packmind.com',
+  describe('when entry is an exact email match', () => {
+    const exactEmailMap = {
+      featureExact: ['joan.racenet@packmind.com'],
+    };
+
+    it('enables the feature for the exact email', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'joan.racenet@packmind.com',
+      });
+
+      expect(isEnabled).toBe(true);
     });
 
-    expect(isEnabled).toBe(true);
-  });
+    it('matches the email case-insensitively', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'Joan.Racenet@Packmind.com',
+      });
 
-  it('disables the github-app feature for non-allowed domains', () => {
-    const isEnabled = isFeatureFlagEnabled({
-      featureKeys: [GITHUB_APP_FEATURE_KEY],
-      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-      userEmail: 'member@externaldomain.com',
+      expect(isEnabled).toBe(true);
     });
 
-    expect(isEnabled).toBe(false);
+    it('does not enable the feature for other users on the same domain', () => {
+      const isEnabled = isFeatureFlagEnabled({
+        featureKeys: ['featureExact'],
+        featureDomainMap: exactEmailMap,
+        userEmail: 'someone-else@packmind.com',
+      });
+
+      expect(isEnabled).toBe(false);
+    });
   });
 });

@@ -67,17 +67,19 @@ Use `ToolSearch` for `mcp__playwright__browser_start_video`. The video tools bel
 
 ### 3. Get the app running — from a clean volume
 
-See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on **:3000**, React/Vite frontend on **:4200**, MCP server). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
+See the **`michel-run-local-dev-stack`** skill for the full stack lifecycle. Packmind runs as a Docker Compose stack (PostgreSQL, Redis, NestJS API on container port **:3000**, React/Vite frontend on container port **:4200**, MCP server). Those are **container-internal** ports — from the host the API is reached only through the frontend's Vite proxy, and the frontend's **host** port is edition-dependent (`4200` OSS / `4201` proprietary). For recordings, start from **wiped volumes** so stale Postgres schema/rows from a prior run don't leak into the footage, then confirm it's serving before recording:
 
 ```bash
-PACKMIND_EDITION=oss docker compose down -v && PACKMIND_EDITION=oss docker compose up -d --build
-# wait for the API (it runs migrations on boot — this can take a minute on a cold build)
-until curl -sf localhost:3000/api/v0 >/dev/null; do sleep 1; done
+export PACKMIND_EDITION="$(bash scripts/michel/resolve-edition.sh)"   # oss | proprietary, from the git remote
+docker compose down -v && docker compose up -d --build
+PM_WEB="$(docker compose port frontend 4200 | sed 's#.*:##')"   # host port: 4200 oss / 4201 proprietary
+# wait for the API via the Vite proxy (NOT :3000 — that container port is not host-exposed)
+until curl -sf "localhost:$PM_WEB/api/v0" >/dev/null; do sleep 1; done
 # then wait for the frontend you'll actually record
-until curl -sf localhost:4200/ >/dev/null; do sleep 1; done
+until curl -sf "localhost:$PM_WEB/" >/dev/null; do sleep 1; done
 ```
 
-The frontend you record lives at **<http://localhost:4200>** — navigate there, not at the API port.
+The frontend you record lives at **`http://localhost:$PM_WEB`** (4200 OSS / 4201 proprietary) — navigate there, not at the API port.
 
 On a freshly wiped database there is no account, so the first screen is the **sign-up / login** page. Create an account (or seed via the API) before recording the feature, otherwise the demo is just the auth screen. If a populated workspace matters, seed it via the UI or the API after the stack is up — do not record over stale state.
 
@@ -99,7 +101,7 @@ The recipe in plain English:
 
 ### Starting the video (with the common pitfall)
 
-**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. A prior session (or a crashed run on the same sprite) frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
+**Always call `browser_stop_video` before `start_video`, even on the first recording** — wrap it so its error is ignored. An earlier browser session in this run frequently leaves a screencast open, and `start_video` then fails with `Error: Screencast is already started`. Stopping first is idempotent: if nothing was recording it's a harmless no-op; if something was, it clears it.
 
 ```
 mcp__playwright__browser_stop_video()   # ignore any error; deletes/returns stub WebMs at project root
@@ -109,7 +111,14 @@ mcp__playwright__browser_start_video(
 )
 ```
 
-If you still get `Error: Screencast is already started` after that, call `browser_stop_video` again, delete the stub WebMs it drops at the project root, then retry `start_video`.
+If you still get `Error: Screencast is already started` after that, the recorder is wedged to a stale browser context that a second `stop_video` won't clear on its own. Escalate — do **not** just retry stop+start in a loop:
+
+1. `mcp__playwright__browser_stop_video()` again (ignore error).
+2. `mcp__playwright__browser_close()` — this tears down the wedged context that owns the orphaned screencast.
+3. Delete the stub WebMs it drops at the project root.
+4. Retry `start_video`. The fresh context starts clean.
+
+This is the common failure mode on the fly worker, where an earlier browser session in the same run left both a screencast _and_ its browser context alive — stopping the screencast alone is not idempotent there, because the next `start_video` reattaches to the same wedged context. Closing the context is what actually resets it.
 
 If you get `Browser is already in use for ... use --isolated`, a non-recording Playwright session has the persistent profile locked. Call `mcp__playwright__browser_close` first, then start_video.
 
@@ -169,6 +178,30 @@ Pass an empty string or `null` to hide the bar.
 
 The bar fades + slides on text change (280ms) so swaps look intentional rather than glitchy. Reinject after `location.reload()` along with the cursor.
 
+### Scenario script (written narration for the PR) — mandatory
+
+A video link alone is useless to a reviewer who can't or won't play it — typically the Product Manager the demo is for. Every recording MUST ship a short written **scenario** so the demo flow is understandable from text alone.
+
+You already have the raw material: the captions you fed to `__setSubtitle` ARE the per-step narration. After recording, distill that sequence into a concise, bullet-point scenario:
+
+- Audience: a non-technical reviewer who may never open the video. They should grasp the whole flow from the bullets.
+- Synthetic and essential only — `login → key action(s) → observable result`. Drop superficial UI steps (scrolling, opening menus, incidental clicks). Keep what proves the feature works.
+- One line per bullet. No screenshots-of-text, no implementation detail.
+
+Write it to a **sidecar file with the SAME basename as the final webm**, in the artifacts dir Michel passes you:
+
+```bash
+# video: feature-demo.webm  →  sidecar: feature-demo.scenario.md
+cat > "<ARTIFACTS_DIR>/feature-demo.scenario.md" <<'EOF'
+- Log in as a Product Manager and open the Standards page
+- Create a new standard "React naming conventions" with two rules
+- The standard appears in the list; open its detail view
+- Edit a rule inline and confirm the change persists after reload
+EOF
+```
+
+Michel's publish step finds this sidecar by basename and inlines it directly under the video link in the PR body as **What the video shows:** — you do NOT edit the PR body yourself. If the sidecar is missing or empty, the PR shows `_No scenario available — an error occurred during generation._` under the link instead — a visible defect, so always write it. For uses outside Michel (no automatic PR assembly), hand the same bullets to whoever embeds the video so they go right under the link.
+
 ### Lead-in dead air
 
 The recorder buffers for a second or two after `start_video` before useful frames appear. Combined with MCP tool round-trip latency, the first ~10–25 seconds of the WebM can show an empty page or `about:blank`. Mitigations:
@@ -180,7 +213,7 @@ The recorder buffers for a second or two after `start_video` before useful frame
 ### Typing and clicking — make it watchable
 
 - `browser_type(..., slowly=true)` types one character at a time. Use it for any text the viewer should read.
-- Before each `browser_click`, take a fresh `browser_snapshot` to get current refs (refs change after re-renders).
+- Before each `browser_click`, take a fresh `browser_snapshot` to read current UI state — but click by text/CSS (next section), not by `ref=`, so a re-render or navigation can't invalidate your target.
 - After actions that change the DOM, call `browser_wait_for(text=<expected new content>)` instead of arbitrary sleeps — recordings made of `wait_for` look like a real user; recordings made of fixed sleeps look robotic.
 - **`wait_for(text=...)` must use the label the UI actually renders, not the one you assume.** A guessed string that never appears burns the full 30s timeout. Read the real text from a fresh `browser_snapshot` first, then wait on it. If a step is flaky to wait on by text, drive it via `browser_evaluate` instead of waiting.
 
@@ -202,6 +235,30 @@ mcp__playwright__browser_evaluate(function=`() => {
 ```
 
 Using the native value setter (not `el.value = ''`) is required for React-controlled inputs — a plain assignment is silently overwritten on the next render. After clearing, `browser_type(slowly=true)` the new text so the viewer reads it.
+
+### Chakra checkboxes/radios — click the control part, not the native input
+
+Chakra UI v3 (`@packmind/ui`, on zag-js) renders a checkbox/radio as a composite: a hidden native `<input>` plus a visible control element carrying `data-part="control"`. The native `<input>` is **not interactable** — clicking it (or the row's checkbox role) is a silent no-op, and you burn snapshot/retry cycles wondering why selection never toggles. Click the visible control part instead, via `browser_evaluate`:
+
+```
+mcp__playwright__browser_evaluate(function=`() => {
+  // the visible control toggles selection; the native <input> does not
+  document.querySelector('table tbody tr:has(a:text("<name>")) [data-part="control"]').click();
+  // select-all lives in the header row:
+  // document.querySelector('table thead [data-part="control"]').click();
+}`)
+```
+
+This mirrors the e2e Page Objects, which click `[data-part="control"]` (see `apps/e2e-tests/src/infra/pages/StandardsPage.ts`). Select/combobox options follow the same idea — pick `[data-part="item"]` filtered by text.
+
+### Waiting on a Chakra dialog/drawer — target the overlay or the toast, never an inner button
+
+After opening or submitting a dialog, **do not** `wait_for` an inner button's disabled/hidden state — a condition that never settles burns the full 30s timeout. zag-js carries the open state as `data-state` **on the same node** as `role="dialog"`, so:
+
+- Wait for OPEN with one **combined** selector (a descendant search finds nothing): `[role="dialog"][data-state="open"]`.
+- Wait for the action to FINISH on the **success-toast text** the app actually renders (e.g. `moved to the selected space`), or on the dialog node detaching — not on the button you clicked.
+
+Same patterns the e2e POMs use: `AbstractPackmindAppPage.ts` for the drawer-open wait, `StandardsPage.ts` / `SkillsPage.ts` for toast waits.
 
 ### When a click doesn't propagate (drag-drop and friends)
 
@@ -303,6 +360,7 @@ If the recording has a real audio track (rare for app demos), remove `-an` and a
 Hand over:
 
 - The path of the final WebM
+- The path of the `<basename>.scenario.md` sidecar (the written scenario that lands under the video link in the PR)
 - A one-line summary of the chapters
 - Anything that was faked (e.g. "drag-drop was driven via the API because dnd-kit doesn't respond to MCP drag synth")
 - A reminder that WebM may need a modern browser or VLC to play; offer to also produce an MP4 if the client uses a tool that doesn't accept WebM

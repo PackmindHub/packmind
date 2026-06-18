@@ -147,10 +147,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    * This is an asynchronous operation that will fetch the file content
    * for multiple files at specific commits and return them when completed.
    *
-   * Takes the output from handleWebHookWithoutContent and enriches it with file content,
-   * producing the same format as handleWebHook.
+   * Takes a list of files (without content) and enriches each with its file content.
    *
-   * @param input - The input parameters containing the array of files from handleWebHookWithoutContent
+   * @param input - The input parameters containing the array of files to enrich
    * @param onComplete - Optional callback to execute when the job completes successfully
    * @returns The job ID that can be used to track the job status
    *

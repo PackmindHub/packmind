@@ -18,6 +18,7 @@ import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfiguratio
 import { PackageSchema } from '../schemas/PackageSchema';
 import { DistributionSchema } from '../schemas/DistributionSchema';
 import { DistributedPackageSchema } from '../schemas/DistributedPackageSchema';
+import { MarketplaceDistributionSchema } from '../schemas/MarketplaceDistributionSchema';
 import {
   Target,
   RenderModeConfiguration,
@@ -25,6 +26,7 @@ import {
   Package,
   Distribution,
   DistributedPackage,
+  MarketplaceDistribution,
 } from '@packmind/types';
 
 /**
@@ -65,6 +67,9 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
       this.dataSource.getRepository(
         DistributionSchema,
       ) as Repository<Distribution>,
+      this.dataSource.getRepository(
+        MarketplaceDistributionSchema,
+      ) as Repository<MarketplaceDistribution>,
     );
     this.distributedPackageRepository = new DistributedPackageRepository(
       this.dataSource.getRepository(

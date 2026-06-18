@@ -99,6 +99,10 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
         recipeVersions,
         skillVersions,
         standardVersions,
+        // Marketplace-mode renders bundle install-tracking hook files; the
+        // coding-agent domain owns the deployer that emits them.
+        installTracking:
+          command.mode === 'marketplace' ? command.installTracking : undefined,
       });
 
     this.logger.info('Rendered package as Claude plugin', {

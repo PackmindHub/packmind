@@ -15,7 +15,6 @@ import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { SkillsHexa, skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { HooksModule } from './hooks/hooks.module';
 import { AmplitudeModule } from '@packmind/amplitude';
 import {
   ImportLegacyModule,
@@ -52,6 +51,8 @@ import { OrganizationGitModule } from './organizations/git/git.module';
 import { OrganizationGitProvidersModule } from './organizations/git/providers/git-providers.module';
 import { OrganizationGitRepositoriesModule } from './organizations/git/repositories/git-repositories.module';
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
+import { OrganizationMarketplaceDistributionsModule } from './organizations/marketplace-distributions/marketplace-distributions.module';
+import { OrganizationMarketplacesModule } from './organizations/marketplaces/marketplaces.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationPluginsModule } from './organizations/plugins/plugins.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
@@ -65,6 +66,7 @@ import { PlaybookModule } from './organizations/playbook/playbook.module';
 import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
 import { TrialModule } from './trial/trial.module';
+import { TrackingModule } from './tracking/tracking.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -126,7 +128,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         JobsService, // Infrastructure service for background jobs
       ],
     }),
-    HooksModule,
     AuthModule,
     AccountsOrganizationsModule,
     OrganizationsModule,
@@ -136,6 +137,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     ImportLegacyModule,
     TrialModule,
     PublicSkillsModule,
+    TrackingModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
@@ -146,6 +148,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       {
         path: 'skills',
         module: PublicSkillsModule,
+      },
+      {
+        path: 'tracking',
+        module: TrackingModule,
       },
       {
         path: 'organizations/:orgId',
@@ -190,6 +196,14 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'llm',
             module: OrganizationLlmModule,
+          },
+          {
+            path: 'marketplace-distributions',
+            module: OrganizationMarketplaceDistributionsModule,
+          },
+          {
+            path: 'marketplaces',
+            module: OrganizationMarketplacesModule,
           },
           {
             path: 'skills',

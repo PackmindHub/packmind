@@ -1,18 +1,18 @@
 import {
   GitRepoId,
-  HandleWebHookWithoutContentResult,
-  HandleWebHookResult,
+  FetchFileContentFile,
+  FetchedFileContent,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 
 export interface FetchFileContentInput {
   organizationId: OrganizationId;
   gitRepoId: GitRepoId;
-  files: HandleWebHookWithoutContentResult;
+  files: FetchFileContentFile[];
 }
 
 export interface FetchFileContentOutput {
   organizationId: OrganizationId;
   gitRepoId: GitRepoId;
-  files: HandleWebHookResult;
+  files: FetchedFileContent[];
 }

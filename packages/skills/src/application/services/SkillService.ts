@@ -194,6 +194,10 @@ export class SkillService {
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.skillRepository.countBySpaceIds(spaceIds);
+  }
+
   async updateSkill(
     skillId: SkillId,
     skillData: UpdateSkillData,

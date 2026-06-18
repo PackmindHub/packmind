@@ -19,6 +19,7 @@ export interface IStandardRepository extends IRepository<Standard> {
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Standard[]>;
   findByUserId(userId: UserId): Promise<Standard[]>;
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   markAsMoved(
     standardId: StandardId,
     destinationSpaceId: SpaceId,

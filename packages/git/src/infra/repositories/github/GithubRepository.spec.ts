@@ -24,39 +24,6 @@ describe('GithubRepository', () => {
     repo: 'test-repo',
   };
 
-  // Sample GitHub webhook push payload
-  const pushPayload = {
-    ref: 'refs/heads/main',
-    repository: {
-      name: 'test-repo',
-      owner: {
-        name: 'test-owner',
-      },
-    },
-    commits: [
-      {
-        id: 'commit1',
-        added: ['file1.txt'],
-        modified: ['file2.txt', 'file3.md'],
-        removed: ['file4.js'],
-        author: {
-          name: 'John Doe',
-          email: 'john@example.com',
-        },
-      },
-      {
-        id: 'commit2',
-        added: [],
-        modified: ['file5.txt', 'file6.md'],
-        removed: [],
-        author: {
-          name: 'Jane Smith',
-          email: 'jane@example.com',
-        },
-      },
-    ],
-  };
-
   beforeEach(() => {
     mockAxiosInstance = {
       interceptors: {
@@ -1011,61 +978,300 @@ describe('GithubRepository', () => {
     });
   });
 
-  describe('isValidBranch', () => {
-    it('returns true for main branch', () => {
-      const result = githubRepository.isValidBranch('refs/heads/main');
-      expect(result).toBe(true);
+  describe('createBranchFromBase', () => {
+    const baseBranchSha = 'base-branch-sha-abc';
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: 'existing-sync-sha' } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new ref', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
     });
 
-    it('returns false for non-main branch', () => {
-      const result = githubRepository.isValidBranch(
-        'refs/heads/feature-branch',
-      );
-      expect(result).toBe(false);
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: baseBranchSha } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({ data: {} });
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base SHA', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/refs`,
+          {
+            ref: 'refs/heads/packmind/sync',
+            sha: baseBranchSha,
+          },
+        );
+      });
     });
 
-    it('returns false for develop branch', () => {
-      const result = githubRepository.isValidBranch('refs/heads/develop');
-      expect(result).toBe(false);
+    describe('when fetching the base branch ref fails', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.reject(new Error('Network down'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+      });
+
+      it('propagates an error mentioning the base branch', async () => {
+        await expect(
+          githubRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to fetch base branch 'main' on GitHub: Network down`,
+        );
+      });
     });
   });
 
-  describe('isPushEventFromWebhook', () => {
-    it('returns true for push events', () => {
-      const headers = { 'x-github-event': 'push' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(true);
+  describe('openOrUpdatePullRequest', () => {
+    const command = {
+      head: 'packmind/sync',
+      title: 'Packmind sync',
+      body: 'rolling PR body',
+    };
+
+    describe('when an open pull request already exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 12,
+              html_url: 'https://github.com/test-owner/test-repo/pull/12',
+            },
+          ],
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('returns the existing pull request URL', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/12',
+        );
+      });
+
+      it('does not POST a new pull request', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
     });
 
-    it('returns false for pull_request events', () => {
-      const headers = { 'x-github-event': 'pull_request' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
+    describe('when no open pull request exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({
+          data: {
+            number: 21,
+            html_url: 'https://github.com/test-owner/test-repo/pull/21',
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('POSTs a new pull request with the expected payload', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/pulls`,
+          {
+            title: 'Packmind sync',
+            head: 'packmind/sync',
+            base: 'main',
+            body: 'rolling PR body',
+          },
+        );
+      });
+
+      it('reports wasCreated=true', () => {
+        expect(result.wasCreated).toBe(true);
+      });
     });
 
-    it('returns false for issues events', () => {
-      const headers = { 'x-github-event': 'issues' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
+    describe('when GitHub responds 422 "pull request already exists" on create', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        const lookupResponses: Array<{ data: unknown[] }> = [
+          { data: [] },
+          {
+            data: [
+              {
+                number: 99,
+                html_url: 'https://github.com/test-owner/test-repo/pull/99',
+              },
+            ],
+          },
+        ];
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(lookupResponses.shift() ?? { data: [] }),
+          );
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: {
+            status: 422,
+            data: { message: 'A pull request already exists for foo:bar' },
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('falls back to the existing pull request', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/99',
+        );
+      });
     });
 
-    it('returns false for repository events', () => {
-      const headers = { 'x-github-event': 'repository' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
+    describe('when GitHub responds with a non-422 error on create', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: { status: 500, data: { message: 'Server error' } },
+          message: 'Server error',
+        });
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          githubRepository.openOrUpdatePullRequest(command),
+        ).rejects.toThrow(/Failed to open pull request on GitHub/);
+      });
+    });
+  });
+
+  describe('findOpenPullRequest', () => {
+    describe('when an open pull request exists', () => {
+      let result: Awaited<
+        ReturnType<typeof githubRepository.findOpenPullRequest>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 7,
+              html_url: 'https://github.com/test-owner/test-repo/pull/7',
+            },
+          ],
+        });
+        result = await githubRepository.findOpenPullRequest('packmind/sync');
+      });
+
+      it('returns the first open pull request mapped to url and number', () => {
+        expect(result).toEqual({
+          url: 'https://github.com/test-owner/test-repo/pull/7',
+          number: 7,
+        });
+      });
     });
 
-    it('returns false for release events', () => {
-      const headers = { 'x-github-event': 'release' };
-      const result = githubRepository.isPushEventFromWebhook(headers);
-      expect(result).toBe(false);
+    describe('when no open pull request exists', () => {
+      it('returns null', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        const result =
+          await githubRepository.findOpenPullRequest('packmind/sync');
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('checkRepositoryExists', () => {
+    describe('when the repository endpoint returns 200', () => {
+      it('reports the repository exists', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: {} });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: true });
+      });
     });
 
-    describe('when x-github-event header is missing', () => {
-      it('returns false', () => {
-        const headers = {};
-        const result = githubRepository.isPushEventFromWebhook(headers);
-        expect(result).toBe(false);
+    describe('when the repository endpoint returns 404', () => {
+      it('classifies the failure as repo_not_found', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 404 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
+    });
+
+    describe('when the repository endpoint returns 401', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 401 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the repository endpoint returns 403', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 403 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the request fails with a network error', () => {
+      it('classifies the failure as network_transient', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue(new Error('socket hang up'));
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'network_transient' });
       });
     });
   });
@@ -1184,386 +1390,6 @@ describe('GithubRepository', () => {
           const result = await githubRepository.getFileOnRepo(filePath);
 
           expect(result).toBeNull();
-        });
-      });
-    });
-  });
-
-  describe('handlePushHook', () => {
-    const fileMatcher = /\.txt$/; // Match files ending with .txt
-    const fileContent1 = 'content of file2.txt';
-    const fileContent2 = 'content of file5.txt';
-
-    beforeEach(() => {
-      // Mock the get method for fetching file content
-      mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
-        if (url.includes('file2.txt')) {
-          return Promise.resolve({
-            data: {
-              content: Buffer.from(fileContent1).toString('base64'),
-              encoding: 'base64',
-            },
-          });
-        } else if (url.includes('file5.txt')) {
-          return Promise.resolve({
-            data: {
-              content: Buffer.from(fileContent2).toString('base64'),
-              encoding: 'base64',
-            },
-          });
-        }
-        return Promise.reject(new Error(`File not found: ${url}`));
-      });
-    });
-
-    describe('when processing a valid push payload', () => {
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          pushPayload,
-          fileMatcher,
-        );
-      });
-
-      it('returns matching files with their content', () => {
-        expect(result).toEqual(
-          expect.arrayContaining([
-            {
-              filepath: 'file2.txt',
-              fileContent: fileContent1,
-              author: 'John Doe',
-              gitSha: 'commit1',
-              gitRepo: 'https://github.com/test-owner/test-repo',
-              message: null,
-            },
-            {
-              filepath: 'file5.txt',
-              fileContent: fileContent2,
-              author: 'Jane Smith',
-              gitSha: 'commit2',
-              gitRepo: 'https://github.com/test-owner/test-repo',
-              message: null,
-            },
-          ]),
-        );
-      });
-
-      it('fetches the content for file2.txt', () => {
-        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-          `/repos/${options.owner}/${options.repo}/contents/file2.txt`,
-          { params: { ref: 'commit1' } },
-        );
-      });
-
-      it('fetches the content for file5.txt', () => {
-        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-          `/repos/${options.owner}/${options.repo}/contents/file5.txt`,
-          { params: { ref: 'commit2' } },
-        );
-      });
-    });
-
-    describe('when no files match the pattern', () => {
-      const noMatchMatcher = /\.nonexistent$/;
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          pushPayload,
-          noMatchMatcher,
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toHaveLength(0);
-      });
-
-      it('does not call the API', () => {
-        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
-      });
-    });
-
-    it('handles API errors gracefully', async () => {
-      mockAxiosInstance.get.mockRejectedValue(new Error('API Error'));
-
-      await expect(
-        githubRepository.handlePushHook(pushPayload, fileMatcher),
-      ).rejects.toThrow('Failed to process GitHub webhook: API Error');
-    });
-
-    describe('when payload has no commits array', () => {
-      const invalidPayload = { invalid: 'payload' };
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          invalidPayload,
-          fileMatcher,
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not call the API', () => {
-        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when payload has empty commits array', () => {
-      const emptyCommitsPayload = {
-        ref: 'refs/heads/main',
-        repository: {
-          name: 'test-repo',
-          owner: {
-            name: 'test-owner',
-          },
-        },
-        commits: [],
-      };
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          emptyCommitsPayload,
-          fileMatcher,
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not call the API', () => {
-        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when webhook is for a non-main branch', () => {
-      const nonMainBranchPayload = {
-        ref: 'refs/heads/feature-branch',
-        repository: {
-          name: 'test-repo',
-          owner: {
-            name: 'test-owner',
-          },
-        },
-        commits: [
-          {
-            id: 'commit1',
-            added: ['file1.txt'],
-            modified: ['file2.txt'],
-            removed: [],
-            author: {
-              name: 'John Doe',
-              email: 'john@example.com',
-            },
-          },
-        ],
-      };
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          nonMainBranchPayload,
-          fileMatcher,
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not call the API', () => {
-        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when webhook is for develop branch', () => {
-      const developBranchPayload = {
-        ref: 'refs/heads/develop',
-        repository: {
-          name: 'test-repo',
-          owner: {
-            name: 'test-owner',
-          },
-        },
-        commits: [
-          {
-            id: 'commit1',
-            added: ['file1.txt'],
-            modified: ['file2.txt'],
-            removed: [],
-            author: {
-              name: 'John Doe',
-              email: 'john@example.com',
-            },
-          },
-        ],
-      };
-      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
-
-      beforeEach(async () => {
-        result = await githubRepository.handlePushHook(
-          developBranchPayload,
-          fileMatcher,
-        );
-      });
-
-      it('returns an empty array', () => {
-        expect(result).toEqual([]);
-      });
-
-      it('does not call the API', () => {
-        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
-      });
-    });
-
-    it('processes webhook for main branch normally', async () => {
-      const mainBranchPayload = {
-        ref: 'refs/heads/main',
-        repository: {
-          name: 'test-repo',
-          owner: {
-            name: 'test-owner',
-          },
-        },
-        commits: [
-          {
-            id: 'commit1',
-            added: [],
-            modified: ['file2.txt'],
-            removed: [],
-            author: {
-              name: 'John Doe',
-              email: 'john@example.com',
-            },
-          },
-        ],
-      };
-
-      const result = await githubRepository.handlePushHook(
-        mainBranchPayload,
-        fileMatcher,
-      );
-
-      expect(result).toEqual([
-        {
-          filepath: 'file2.txt',
-          fileContent: fileContent1,
-          author: 'John Doe',
-          gitSha: 'commit1',
-          gitRepo: 'https://github.com/test-owner/test-repo',
-          message: null,
-        },
-      ]);
-    });
-
-    describe('when the same file is modified in multiple commits', () => {
-      let result: {
-        filepath: string;
-        fileContent: string;
-        author: string | null;
-        gitSha: string | null;
-        gitRepo: string | null;
-        message: string | null;
-      }[];
-      const firstVersionContent = 'First version';
-      const secondVersionContent = 'Second version';
-      const sameFilePayload = {
-        ref: 'refs/heads/main',
-        repository: {
-          name: 'test-repo',
-          owner: {
-            name: 'test-owner',
-          },
-        },
-        commits: [
-          {
-            id: 'commit1',
-            added: [],
-            modified: ['.packmind/recipes/recipe.md'],
-            removed: [],
-            author: {
-              name: 'First Author',
-              email: 'first@example.com',
-            },
-          },
-          {
-            id: 'commit2',
-            added: [],
-            modified: ['.packmind/recipes/recipe.md'],
-            removed: [],
-            author: {
-              name: 'Second Author',
-              email: 'second@example.com',
-            },
-          },
-        ],
-      };
-
-      beforeEach(async () => {
-        // Mock the get method to return different content based on commit
-        mockAxiosInstance.get = jest.fn().mockImplementation((url, config) => {
-          if (url.includes('.packmind/recipes/recipe.md')) {
-            if (config?.params?.ref === 'commit1') {
-              return Promise.resolve({
-                data: {
-                  content: Buffer.from(firstVersionContent).toString('base64'),
-                  encoding: 'base64',
-                },
-              });
-            } else if (config?.params?.ref === 'commit2') {
-              return Promise.resolve({
-                data: {
-                  content: Buffer.from(secondVersionContent).toString('base64'),
-                  encoding: 'base64',
-                },
-              });
-            }
-          }
-          return Promise.reject(new Error(`File not found: ${url}`));
-        });
-
-        const fileMatcher = /\.packmind\/recipes\/recipe\.md$/;
-        result = await githubRepository.handlePushHook(
-          sameFilePayload,
-          fileMatcher,
-        );
-      });
-
-      describe('when the same file is modified in multiple commits', () => {
-        it('returns only the latest version', async () => {
-          expect(result).toEqual([
-            {
-              filepath: '.packmind/recipes/recipe.md',
-              fileContent: secondVersionContent,
-              author: 'Second Author',
-              gitSha: 'commit2',
-              gitRepo: 'https://github.com/test-owner/test-repo',
-              message: null,
-            },
-          ]);
-        });
-      });
-
-      describe('when the same file is modified in multiple commits', () => {
-        it('calls the API for the latest commit', async () => {
-          expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-            `/repos/${options.owner}/${options.repo}/contents/.packmind/recipes/recipe.md`,
-            { params: { ref: 'commit2' } },
-          );
-        });
-      });
-
-      describe('when the same file is modified multiple times', () => {
-        it('does not call the API for the earlier commit', async () => {
-          expect(mockAxiosInstance.get).not.toHaveBeenCalledWith(
-            `/repos/${options.owner}/${options.repo}/contents/.packmind/recipes/recipe.md`,
-            { params: { ref: 'commit1' } },
-          );
         });
       });
     });

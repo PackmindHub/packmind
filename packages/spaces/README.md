@@ -24,7 +24,7 @@ The package follows **hexagonal architecture** with clear separation of concerns
 ## Installation
 
 ```bash
-npm install @packmind/spaces
+pnpm add @packmind/spaces
 ```
 
 ## Usage

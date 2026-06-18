@@ -104,6 +104,10 @@ export class RecipeService {
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.recipeRepository.countBySpaceIds(spaceIds);
+  }
+
   async listRecipesByUser(userId: UserId): Promise<Recipe[]> {
     this.logger.info('Listing recipes by user', { userId });
 

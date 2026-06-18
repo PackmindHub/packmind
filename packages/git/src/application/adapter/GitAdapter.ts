@@ -20,10 +20,6 @@ import {
   GitRepo,
   GitRepoId,
   GithubAppMode,
-  HandleWebHookCommand,
-  HandleWebHookResult,
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
   IAccountsPort,
   IAccountsPortName,
   IDeploymentPort,
@@ -54,8 +50,6 @@ import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRe
 import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase';
 import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/GetRepositoryByIdUseCase';
-import { HandleWebHookUseCase } from '../useCases/handleWebHook/HandleWebHookUseCase';
-import { HandleWebHookWithoutContentUseCase } from '../useCases/handleWebHookWithoutContent/HandleWebHookWithoutContentUseCase';
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/ListAvailableReposUseCase';
 import { ListProvidersUseCase } from '../useCases/listProviders/ListProvidersUseCase';
 import { ListReposUseCase } from '../useCases/listRepos/ListReposUseCase';
@@ -78,8 +72,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
   private _commitToGit!: CommitToGitUseCase;
-  private _handleWebHook!: HandleWebHookUseCase;
-  private _handleWebHookWithoutContent!: HandleWebHookWithoutContentUseCase;
   private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
   private _listRepos!: ListReposUseCase;
@@ -190,19 +182,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
-    );
-
-    this._handleWebHook = new HandleWebHookUseCase(
-      this.gitServices.getGitCommitService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoService(),
-      this.gitServices.getGitRepoFactory(),
-    );
-
-    this._handleWebHookWithoutContent = new HandleWebHookWithoutContentUseCase(
-      this.gitServices.getGitCommitService(),
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoService(),
     );
 
     this._getFileFromRepo = new GetFileFromRepoUseCase(
@@ -397,16 +376,50 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     );
   }
 
-  public async handleWebHook(
-    command: HandleWebHookCommand,
-  ): Promise<HandleWebHookResult> {
-    return this._handleWebHook.execute(command);
+  public async createBranchFromBase(
+    repo: GitRepo,
+    branch: string,
+  ): Promise<void> {
+    // Mirrors the commitToGit plumbing: resolve the provider via the
+    // GitProviderService and let it dispatch to the right IGitRepo
+    // implementation. The repo's `branch` field is the BASE branch used to
+    // bootstrap the target branch when it is missing.
+    await this.gitServices
+      .getGitProviderService()
+      .createBranchFromBase(
+        repo.providerId,
+        repo.owner,
+        repo.repo,
+        repo.branch,
+        branch,
+      );
   }
 
-  public async handleWebHookWithoutContent(
-    command: HandleWebHookWithoutContentCommand,
-  ): Promise<HandleWebHookWithoutContentResult> {
-    return this._handleWebHookWithoutContent.execute(command);
+  public async openOrUpdatePullRequest(
+    repo: GitRepo,
+    command: { head: string; title: string; body?: string },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    return this.gitServices
+      .getGitProviderService()
+      .openOrUpdatePullRequest(repo, command);
+  }
+
+  public async findOpenSyncPullRequest(
+    repo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    return this.gitServices
+      .getGitProviderService()
+      .findOpenSyncPullRequest(repo, head);
+  }
+
+  public async checkMarketplaceRepoExists(repo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    return this.gitServices
+      .getGitProviderService()
+      .checkMarketplaceRepoExists(repo);
   }
 
   public async getFileFromRepo(

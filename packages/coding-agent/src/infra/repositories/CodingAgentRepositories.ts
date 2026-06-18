@@ -15,6 +15,8 @@ import {
 } from '@packmind/types';
 import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
 
+const EMPTY_UPDATES: FileUpdates = { createOrUpdate: [], delete: [] };
+
 /**
  * CodingAgentRepositories - Repository aggregator implementation for the CodingAgent domain
  *
@@ -69,11 +71,16 @@ export class CodingAgentRepositories implements ICodingAgentRepositories {
     );
     await deployer.deployStandards(command.standardVersions, gitRepo, target);
 
+    const trackingUpdate = command.installTracking
+      ? deployer.deployTrackingHooks(command.installTracking, target)
+      : EMPTY_UPDATES;
+
     return {
       files: this.toRenderedFiles([
         manifestUpdate,
         commandsUpdate,
         skillsUpdate,
+        trackingUpdate,
       ]),
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
     };

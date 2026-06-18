@@ -1,6 +1,6 @@
 {
   "name": "packmind-api-production",
-  "version": "1.15.0",
+  "version": "1.15.1",
   "private": true,
   "type": "commonjs",
   "main": "main.js",
@@ -22,6 +22,7 @@
     "@sentry/node": "^9.40.0",
     "@teppeis/multimaps": "^3.0.0",
     "archiver": "^7.0.1",
+    "async-mutex": "^0.5.0",
     "axios": "1.15.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",

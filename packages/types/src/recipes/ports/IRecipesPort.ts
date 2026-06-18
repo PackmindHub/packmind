@@ -12,8 +12,6 @@ import {
   ListRecipesBySpaceCommand,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
-  UpdateRecipesFromGitHubCommand,
-  UpdateRecipesFromGitLabCommand,
 } from '../contracts';
 import { Recipe } from '../Recipe';
 import { RecipeId } from '../RecipeId';
@@ -89,6 +87,22 @@ export interface IRecipesPort {
    */
   listRecipesBySpace(command: ListRecipesBySpaceCommand): Promise<Recipe[]>;
 
+  /**
+   * List all recipes across every space of an organization, without space
+   * membership checks. Intended for organization-scoped aggregations
+   * (e.g. governance drift) where the caller has already been authorized at
+   * the organization level.
+   */
+  listAllRecipesByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Recipe[]>;
+
+  /**
+   * Count recipes grouped by space ID, omitting spaces with zero recipes.
+   * Used for management listing aggregations.
+   */
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
+
   // ===========================
   // RECIPE VERSION MANAGEMENT
   // ===========================
@@ -111,24 +125,6 @@ export interface IRecipesPort {
    * Get a recipe version by its ID
    */
   getRecipeVersionById(id: string): Promise<RecipeVersion | null>;
-
-  // ===========================
-  // GIT INTEGRATION
-  // ===========================
-
-  /**
-   * Update recipes from GitHub webhook events
-   */
-  updateRecipesFromGitHub(
-    command: UpdateRecipesFromGitHubCommand,
-  ): Promise<Recipe[]>;
-
-  /**
-   * Update recipes from GitLab webhook events
-   */
-  updateRecipesFromGitLab(
-    command: UpdateRecipesFromGitLabCommand,
-  ): Promise<Recipe[]>;
 
   /**
    * Update a recipe from UI with new content (creates new version)

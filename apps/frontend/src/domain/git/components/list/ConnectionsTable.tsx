@@ -11,7 +11,7 @@ import {
 } from '@packmind/ui';
 import { LuEllipsis, LuPenLine, LuRefreshCw, LuTrash2 } from 'react-icons/lu';
 import { format, formatDistanceToNowStrict } from 'date-fns';
-import { GitProviderVendor } from '@packmind/types';
+import { GitProviderId, GitProviderVendor } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import { useCheckProviderAuthQuery } from '../../api/queries';
 import { VendorMark, vendorLabel } from '../shared/VendorMark';
@@ -23,12 +23,14 @@ import {
 
 interface ConnectionsTableProps {
   connections: GitProviderUI[];
+  marketplaceCountByProviderId: Map<GitProviderId, number>;
   onEdit: (connection: GitProviderUI) => void;
   onDelete: (connection: GitProviderUI) => void;
 }
 
 export const ConnectionsTable: React.FC<ConnectionsTableProps> = ({
   connections,
+  marketplaceCountByProviderId,
   onEdit,
   onDelete,
 }) => {
@@ -45,6 +47,9 @@ export const ConnectionsTable: React.FC<ConnectionsTableProps> = ({
         <ConnectionRow
           key={connection.id}
           connection={connection}
+          marketplaceCount={
+            marketplaceCountByProviderId.get(connection.id) ?? 0
+          }
           isLast={idx === connections.length - 1}
           onEdit={() => onEdit(connection)}
           onDelete={() => onDelete(connection)}
@@ -72,16 +77,20 @@ const TableHeader: React.FC = () => (
       Connection
     </PMBox>
     <PMBox width="160px">Status</PMBox>
-    <PMBox width="70px" textAlign="right">
+    <PMBox width="60px" textAlign="right">
       Repos
     </PMBox>
     <PMBox width="140px">Last distribution</PMBox>
+    <PMBox width="110px" textAlign="right">
+      Marketplaces
+    </PMBox>
     <PMBox width="90px" />
   </PMHStack>
 );
 
 interface ConnectionRowProps {
   connection: GitProviderUI;
+  marketplaceCount: number;
   isLast: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -89,6 +98,7 @@ interface ConnectionRowProps {
 
 const ConnectionRow: React.FC<ConnectionRowProps> = ({
   connection,
+  marketplaceCount,
   isLast,
   onEdit,
   onDelete,
@@ -120,6 +130,7 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       data-url={connection.url ?? ''}
       data-repo-count={repoCount}
       data-status={bucket}
+      data-marketplace-count={marketplaceCount}
       gap={3}
       paddingX={4}
       paddingY={3}
@@ -155,9 +166,9 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
       </PMBox>
 
       <PMText
-        width="70px"
+        width="60px"
         fontSize="sm"
-        color="secondary"
+        color={repoCount > 0 ? 'secondary' : 'faded'}
         textAlign="right"
         fontVariantNumeric="tabular-nums"
       >
@@ -170,6 +181,16 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         />
       </PMBox>
 
+      <PMText
+        width="110px"
+        fontSize="sm"
+        color={marketplaceCount > 0 ? 'secondary' : 'faded'}
+        textAlign="right"
+        fontVariantNumeric="tabular-nums"
+      >
+        {marketplaceCount}
+      </PMText>
+
       <PMHStack width="90px" gap={1} justify="flex-end">
         <RefreshStatusButton
           isFetching={probe.isFetching}
@@ -180,7 +201,11 @@ const ConnectionRow: React.FC<ConnectionRowProps> = ({
         <RowActionsMenu
           onEdit={onEdit}
           onDelete={onDelete}
-          deleteDisabled={repoCount > 0}
+          deleteDisabled={repoCount > 0 || marketplaceCount > 0}
+          deleteDisabledReason={deleteDisabledReason(
+            repoCount,
+            marketplaceCount,
+          )}
         />
       </PMHStack>
     </PMHStack>
@@ -265,15 +290,14 @@ interface RowActionsMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   deleteDisabled: boolean;
+  deleteDisabledReason: string;
 }
-
-const DELETE_DISABLED_TOOLTIP =
-  'Detach all repositories from this connection before deleting it.';
 
 const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
   onEdit,
   onDelete,
   deleteDisabled,
+  deleteDisabledReason,
 }) => (
   <PMMenu.Root positioning={{ placement: 'bottom-end' }}>
     <PMMenu.Trigger asChild>
@@ -308,7 +332,11 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
               Edit
             </PMText>
           </PMMenu.Item>
-          <DeleteMenuItem onDelete={onDelete} deleteDisabled={deleteDisabled} />
+          <DeleteMenuItem
+            onDelete={onDelete}
+            deleteDisabled={deleteDisabled}
+            deleteDisabledReason={deleteDisabledReason}
+          />
         </PMMenu.Content>
       </PMMenu.Positioner>
     </PMPortal>
@@ -318,11 +346,13 @@ const RowActionsMenu: React.FC<RowActionsMenuProps> = ({
 interface DeleteMenuItemProps {
   onDelete: () => void;
   deleteDisabled: boolean;
+  deleteDisabledReason: string;
 }
 
 const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
   onDelete,
   deleteDisabled,
+  deleteDisabledReason,
 }) => {
   const item = (
     <PMMenu.Item
@@ -358,11 +388,27 @@ const DeleteMenuItem: React.FC<DeleteMenuItemProps> = ({
   }
 
   return (
-    <PMTooltip label={DELETE_DISABLED_TOOLTIP} placement="left">
+    <PMTooltip label={deleteDisabledReason} placement="left">
       <PMBox width="full">{item}</PMBox>
     </PMTooltip>
   );
 };
+
+function deleteDisabledReason(
+  repoCount: number,
+  marketplaceCount: number,
+): string {
+  if (repoCount > 0 && marketplaceCount > 0) {
+    return 'Detach all repositories and unlink marketplaces (managed in Marketplaces) from this connection before deleting it.';
+  }
+  if (repoCount > 0) {
+    return 'Detach all repositories from this connection before deleting it.';
+  }
+  if (marketplaceCount > 0) {
+    return 'Unlink marketplaces (managed in Marketplaces) from this connection before deleting it.';
+  }
+  return '';
+}
 
 function vendorPlaceholder(vendor: GitProviderVendor): string {
   if (vendor === 'github') return 'Unnamed GitHub connection';

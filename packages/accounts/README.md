@@ -37,7 +37,7 @@ The package follows **hexagonal architecture** with clear separation of concerns
 ## Installation
 
 ```bash
-npm install @packmind/accounts
+pnpm add @packmind/accounts
 ```
 
 ## Usage

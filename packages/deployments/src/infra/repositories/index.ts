@@ -4,6 +4,8 @@ import { PackageRepository } from './PackageRepository';
 import { DistributionRepository } from './DistributionRepository';
 import { DistributedPackageRepository } from './DistributedPackageRepository';
 import { DeploymentsRepositories } from './DeploymentsRepositories';
+import { MarketplaceRepository } from './MarketplaceRepository';
+import { PluginInstallationRepository } from './PluginInstallationRepository';
 
 export {
   TargetRepository,
@@ -12,4 +14,6 @@ export {
   DistributionRepository,
   DistributedPackageRepository,
   DeploymentsRepositories,
+  MarketplaceRepository,
+  PluginInstallationRepository,
 };

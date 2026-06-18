@@ -1,5 +1,6 @@
 export * from './SpaceId';
 export * from './Space';
+export * from './SpaceColor';
 export * from './UserSpaceMembership';
 export * from './ports';
 export * from './contracts';

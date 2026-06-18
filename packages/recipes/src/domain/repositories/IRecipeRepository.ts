@@ -21,5 +21,6 @@ export interface IRecipeRepository extends IRepository<Recipe> {
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Recipe[]>;
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   markAsMoved(recipeId: RecipeId, destinationSpaceId: SpaceId): Promise<void>;
 }

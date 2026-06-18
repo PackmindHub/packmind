@@ -1310,262 +1310,262 @@ describe('GitlabRepository', () => {
     });
   });
 
-  describe('handlePushHook', () => {
-    describe('when processing valid push webhook payload', () => {
-      const mockPayload = {
-        object_kind: 'push',
-        event_name: 'push',
-        before: '95790bf891e76fee5e1747ab589903a6a1f80f22',
-        after: 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7',
-        ref: 'refs/heads/main',
-        ref_protected: true,
-        checkout_sha: 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7',
-        user_id: 4,
-        user_name: 'John Smith',
-        user_username: 'jsmith',
-        user_email: 'john@example.com',
-        user_avatar: 'https://s.gravatar.com/avatar/test',
-        project_id: 15,
-        project: {
-          id: 15,
-          name: 'testrepo',
-          description: '',
-          web_url: 'https://gitlab.com/testowner/testrepo',
-          avatar_url: null,
-          git_ssh_url: 'git@gitlab.com:testowner/testrepo.git',
-          git_http_url: 'https://gitlab.com/testowner/testrepo.git',
-          namespace: 'testowner',
-          visibility_level: 20,
-          path_with_namespace: 'testowner/testrepo',
-          default_branch: 'main',
-          ci_config_path: null,
-          homepage: 'https://gitlab.com/testowner/testrepo',
-          url: 'git@gitlab.com:testowner/testrepo.git',
-          ssh_url: 'git@gitlab.com:testowner/testrepo.git',
-          http_url: 'https://gitlab.com/testowner/testrepo.git',
-        },
-        commits: [
+  describe('createBranchFromBase', () => {
+    const encodedProjectPath = encodeURIComponent('testowner/testrepo');
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.resolve({ data: { name: 'packmind/sync' } });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+
+        await gitlabRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new branch', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post.mockResolvedValue({ data: {} });
+
+        await gitlabRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base branch', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/repository/branches`,
+          null,
           {
-            id: 'commit-123',
-            message: 'Test commit',
-            title: 'Test commit',
-            timestamp: '2023-01-01T12:00:00Z',
-            url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-123',
-            author: {
-              name: 'Test Author',
-              email: 'test@example.com',
+            params: {
+              branch: 'packmind/sync',
+              ref: 'main',
             },
-            added: [],
-            modified: ['.packmind/recipes/test-recipe.md'],
-            removed: [],
           },
-        ],
-        total_commits_count: 1,
-      };
-      let result: Awaited<ReturnType<typeof gitlabRepository.handlePushHook>>;
+        );
+      });
+    });
+
+    describe('when probing the target branch fails with a non-404 error', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (
+            url.includes(`/projects/${encodedProjectPath}/repository/branches/`)
+          ) {
+            return Promise.reject(new Error('Boom'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+      });
+
+      it('propagates the error without attempting to create the branch', async () => {
+        await expect(
+          gitlabRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to ensure branch 'packmind/sync' on GitLab: Boom`,
+        );
+      });
+    });
+  });
+
+  describe('openOrUpdatePullRequest', () => {
+    const encodedProjectPath = encodeURIComponent('testowner/testrepo');
+    const command = {
+      head: 'packmind/sync',
+      title: 'Packmind sync',
+      body: 'rolling MR body',
+    };
+
+    describe('when an open merge request already exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
 
       beforeEach(async () => {
         mockAxiosInstance.get.mockResolvedValue({
+          data: [
+            {
+              iid: 7,
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+            },
+          ],
+        });
+
+        result = await gitlabRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('returns the existing merge request URL', () => {
+        expect(result.url).toBe(
+          'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+        );
+      });
+
+      it('does not POST a new merge request', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no open merge request exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+        mockAxiosInstance.post.mockResolvedValue({
           data: {
-            content: Buffer.from('# Test Recipe\nContent').toString('base64'),
-            encoding: 'base64',
+            iid: 9,
+            web_url: 'https://gitlab.com/testowner/testrepo/-/merge_requests/9',
           },
         });
 
-        result = await gitlabRepository.handlePushHook(
-          mockPayload,
-          /.packmind\/recipes\/.*\.md/,
-        );
+        result = await gitlabRepository.openOrUpdatePullRequest(command);
       });
 
-      it('returns one matching file', () => {
-        expect(result).toHaveLength(1);
-      });
-
-      it('returns file details with correct content', () => {
-        expect(result[0]).toEqual({
-          filepath: '.packmind/recipes/test-recipe.md',
-          fileContent: '# Test Recipe\nContent',
-          author: 'Test Author',
-          gitSha: 'commit-123',
-          gitRepo: 'https://gitlab.com/testowner/testrepo',
-          message: 'Test commit',
-        });
-      });
-    });
-
-    it('returns empty array for non-push events', async () => {
-      const mockPayload = {
-        object_kind: 'merge_request',
-        event_name: 'merge_request',
-        ref: 'refs/heads/main',
-      };
-
-      const result = await gitlabRepository.handlePushHook(
-        mockPayload,
-        /.packmind\/recipes\/.*\.md/,
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    describe('when no commits provided', () => {
-      it('returns empty array', async () => {
-        const mockPayload = {
-          object_kind: 'push',
-          event_name: 'push',
-          ref: 'refs/heads/main',
-          commits: [],
-          total_commits_count: 0,
-        };
-
-        const result = await gitlabRepository.handlePushHook(
-          mockPayload,
-          /.packmind\/recipes\/.*\.md/,
-        );
-
-        expect(result).toEqual([]);
-      });
-    });
-
-    it('returns empty array for non-main branch', async () => {
-      const mockPayload = {
-        object_kind: 'push',
-        event_name: 'push',
-        ref: 'refs/heads/feature-branch',
-        commits: [
+      it('POSTs a new merge request with the expected payload', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/merge_requests`,
           {
-            id: 'commit-123',
-            message: 'Test commit',
-            title: 'Test commit',
-            timestamp: '2023-01-01T12:00:00Z',
-            url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-123',
-            author: {
-              name: 'Test Author',
-              email: 'test@example.com',
-            },
-            added: [],
-            modified: ['.packmind/recipes/test-recipe.md'],
-            removed: [],
+            source_branch: 'packmind/sync',
+            target_branch: 'main',
+            title: 'Packmind sync',
+            description: 'rolling MR body',
           },
-        ],
-        total_commits_count: 1,
-      };
-
-      const result = await gitlabRepository.handlePushHook(
-        mockPayload,
-        /.packmind\/recipes\/.*\.md/,
-      );
-
-      expect(result).toEqual([]);
-    });
-
-    describe('when no matching files found', () => {
-      it('returns empty array', async () => {
-        const mockPayload = {
-          object_kind: 'push',
-          event_name: 'push',
-          ref: 'refs/heads/main',
-          commits: [
-            {
-              id: 'commit-123',
-              message: 'Test commit',
-              title: 'Test commit',
-              timestamp: '2023-01-01T12:00:00Z',
-              url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-123',
-              author: {
-                name: 'Test Author',
-                email: 'test@example.com',
-              },
-              added: [],
-              modified: ['README.md', 'src/index.js'],
-              removed: [],
-            },
-          ],
-          total_commits_count: 1,
-        };
-
-        const result = await gitlabRepository.handlePushHook(
-          mockPayload,
-          /.packmind\/recipes\/.*\.md/,
         );
+      });
 
-        expect(result).toEqual([]);
+      it('reports wasCreated=true', () => {
+        expect(result.wasCreated).toBe(true);
       });
     });
 
-    describe('when webhook processing fails', () => {
-      it('throws error', async () => {
-        const mockPayload = {
-          object_kind: 'push',
-          event_name: 'push',
-          ref: 'refs/heads/main',
-          commits: [
-            {
-              id: 'commit-123',
-              message: 'Test commit',
-              title: 'Test commit',
-              timestamp: '2023-01-01T12:00:00Z',
-              url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-123',
-              author: {
-                name: 'Test Author',
-                email: 'test@example.com',
-              },
-              added: [],
-              modified: ['.packmind/recipes/test-recipe.md'],
-              removed: [],
-            },
-          ],
-          total_commits_count: 1,
-        };
+    describe('when the lookup fails with a non-404 error', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('GitLab 503'));
+      });
 
-        mockAxiosInstance.get.mockRejectedValue(new Error('API error'));
-
+      it('propagates the error without attempting to create the merge request', async () => {
         await expect(
-          gitlabRepository.handlePushHook(
-            mockPayload,
-            /.packmind\/recipes\/.*\.md/,
-          ),
-        ).rejects.toThrow('Failed to process GitLab webhook: API error');
-      });
-    });
-  });
-
-  describe('isValidBranch', () => {
-    it('returns true for main branch', () => {
-      expect(gitlabRepository.isValidBranch('refs/heads/main')).toBe(true);
-    });
-
-    describe('when branch is not main', () => {
-      it('returns false for develop branch', () => {
-        expect(gitlabRepository.isValidBranch('refs/heads/develop')).toBe(
-          false,
+          gitlabRepository.openOrUpdatePullRequest(command),
+        ).rejects.toThrow(
+          `Failed to look up merge request on GitLab for 'packmind/sync' -> 'main': GitLab 503`,
         );
       });
+    });
+  });
 
-      it('returns false for feature branch', () => {
-        expect(
-          gitlabRepository.isValidBranch('refs/heads/feature-branch'),
-        ).toBe(false);
+  describe('findOpenPullRequest', () => {
+    describe('when an open merge request exists', () => {
+      it('returns the first open merge request mapped to url and number', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: [
+            {
+              iid: 7,
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+            },
+          ],
+        });
+
+        const result =
+          await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(result).toEqual({
+          url: 'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+          number: 7,
+        });
+      });
+
+      it('queries the merge requests endpoint scoped to head and base branches', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/merge_requests',
+          {
+            params: {
+              source_branch: 'packmind/sync',
+              target_branch: 'main',
+              state: 'opened',
+            },
+          },
+        );
+      });
+    });
+
+    describe('when no open merge request exists', () => {
+      it('returns null', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        const result =
+          await gitlabRepository.findOpenPullRequest('packmind/sync');
+
+        expect(result).toBeNull();
       });
     });
   });
 
-  describe('isPushEventFromWebhook', () => {
-    it('returns true for GitLab push events', () => {
-      const headers = { 'x-gitlab-event': 'Push Hook' };
-      expect(gitlabRepository.isPushEventFromWebhook(headers)).toBe(true);
+  describe('checkRepositoryExists', () => {
+    describe('when the project endpoint returns 200', () => {
+      it('reports the repository exists', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: {} });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: true });
+      });
     });
 
-    it('returns false for other GitLab events', () => {
-      const headers = { 'x-gitlab-event': 'Merge Request Hook' };
-      expect(gitlabRepository.isPushEventFromWebhook(headers)).toBe(false);
+    describe('when the project endpoint returns 404', () => {
+      it('classifies the failure as repo_not_found', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 404 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
     });
 
-    describe('when no GitLab event header present', () => {
-      it('returns false', () => {
-        const headers = { 'x-github-event': 'push' };
-        expect(gitlabRepository.isPushEventFromWebhook(headers)).toBe(false);
+    describe('when the project endpoint returns 401', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 401 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the project endpoint returns 403', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get.mockRejectedValue({ response: { status: 403 } });
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the request fails with a network error', () => {
+      it('classifies the failure as network_transient', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('socket hang up'));
+
+        const result = await gitlabRepository.checkRepositoryExists();
+
+        expect(result).toEqual({ exists: false, reason: 'network_transient' });
       });
     });
   });

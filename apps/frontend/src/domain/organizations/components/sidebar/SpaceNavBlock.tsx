@@ -14,9 +14,14 @@ import {
   LuHouse,
   LuPackage,
   LuSlidersHorizontal,
+  LuStar,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
+import {
+  usePinSpaceMutation,
+  useUnpinSpaceMutation,
+} from '../../../spaces-management/api/queries/SpacesManagementQueries';
 import { SpaceVisibilityIcon } from './SpaceVisibilityIcon';
 import { useNavigate } from 'react-router';
 import type { UserSpaceWithRole } from '@packmind/types';
@@ -154,6 +159,8 @@ function ExpandedSpaceNavBlock({
   dataTestId,
 }: Readonly<SpaceNavBlockProps>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox>
@@ -194,11 +201,7 @@ function ExpandedSpaceNavBlock({
                 whiteSpace="nowrap"
                 minW={0}
               >
-                <PMStatus.Root
-                  colorPalette={getSpaceColorPalette(space.name)}
-                  as="span"
-                  mr={1.5}
-                >
+                <PMStatus.Root colorPalette={space.color} as="span" mr={1.5}>
                   <PMStatus.Indicator />
                 </PMStatus.Root>
                 {space.name}
@@ -212,10 +215,37 @@ function ExpandedSpaceNavBlock({
               onClick={() =>
                 navigate(routes.space.toSettings(orgSlug, space.slug))
               }
+              mr={1}
               data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
             >
               <LuSlidersHorizontal />
             </PMIconButton>
+            {!space.isDefaultSpace && (
+              <PMBox
+                as="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  if (space.pinned) {
+                    unpinMutation.mutate({ spaceId: space.id });
+                  } else {
+                    pinMutation.mutate({ spaceId: space.id });
+                  }
+                }}
+                title={space.pinned ? 'Unpin space' : 'Pin space'}
+                flexShrink={0}
+                cursor="pointer"
+                color={space.pinned ? 'yellow.400' : 'text.faded'}
+                _hover={{ color: 'yellow.400' }}
+                display="flex"
+                alignItems="center"
+                data-testid={`space-pin-toggle-${space.id}`}
+              >
+                <LuStar
+                  size={14}
+                  fill={space.pinned ? 'currentColor' : 'none'}
+                />
+              </PMBox>
+            )}
           </PMBox>
           <SpaceNavSections orgSlug={orgSlug} spaceSlug={space.slug} />
         </PMBox>
@@ -232,7 +262,6 @@ function CollapsedSpaceNavBlock({
   dataTestId,
 }: Readonly<Omit<SpaceNavBlockProps, 'isSelected'>>): React.ReactElement {
   const initials = getSpaceInitials(space.name);
-  const navigate = useNavigate();
 
   return (
     <PMBox
@@ -244,62 +273,31 @@ function CollapsedSpaceNavBlock({
       borderRadius="md"
       py={isActive ? 1.5 : 0}
     >
-      <PMBox
-        display="flex"
-        alignItems="center"
-        gap={0.5}
-        {...(!isActive && {
-          css: {
-            '& .space-settings-btn': {
-              opacity: 0,
-              transition: 'opacity 0.15s',
-            },
-            '&:hover .space-settings-btn': { opacity: 1 },
-          },
-        })}
-      >
-        <PMTooltip label={space.name}>
-          <PMBox
-            as="button"
-            onClick={onSpaceClick}
-            cursor="pointer"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            data-testid={dataTestId}
+      <PMTooltip label={space.name}>
+        <PMBox
+          as="button"
+          onClick={onSpaceClick}
+          cursor="pointer"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          data-testid={dataTestId}
+        >
+          <PMAvatar.Root
+            size="xs"
+            borderRadius="sm"
+            backgroundColor={`${space.color}.solid`}
+            color="text.primary"
+            {...(isActive && {
+              outline: '2px solid',
+              outlineColor: 'border.primary',
+              outlineOffset: '2px',
+            })}
           >
-            <PMAvatar.Root
-              size="xs"
-              borderRadius="sm"
-              backgroundColor={`${getSpaceColorPalette(space.name)}.solid`}
-              color="text.primary"
-              {...(isActive && {
-                outline: '2px solid',
-                outlineColor: 'border.primary',
-                outlineOffset: '2px',
-              })}
-            >
-              <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
-            </PMAvatar.Root>
-          </PMBox>
-        </PMTooltip>
-
-        {!isActive && (
-          <PMIconButton
-            className="space-settings-btn"
-            aria-label="Space settings"
-            size="2xs"
-            variant="ghost"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              navigate(routes.space.toSettings(orgSlug, space.slug));
-            }}
-            data-testid={SidebarNavigationDataTestId.SpaceSettingsLink}
-          >
-            <LuSlidersHorizontal />
-          </PMIconButton>
-        )}
-      </PMBox>
+            <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
+          </PMAvatar.Root>
+        </PMBox>
+      </PMTooltip>
 
       {isActive && (
         <PMBox
@@ -332,6 +330,8 @@ function SpaceNameRow({
   dataTestId?: string;
 }>): React.ReactElement {
   const navigate = useNavigate();
+  const pinMutation = usePinSpaceMutation();
+  const unpinMutation = useUnpinSpaceMutation();
 
   return (
     <PMBox
@@ -366,11 +366,7 @@ function SpaceNameRow({
           whiteSpace="nowrap"
           minW={0}
         >
-          <PMStatus.Root
-            colorPalette={getSpaceColorPalette(space.name)}
-            as="span"
-            mr={1.5}
-          >
+          <PMStatus.Root colorPalette={space.color} as="span" mr={1.5}>
             <PMStatus.Indicator />
           </PMStatus.Root>
           {space.name}
@@ -390,6 +386,31 @@ function SpaceNameRow({
       >
         <LuSlidersHorizontal />
       </PMIconButton>
+      {!space.isDefaultSpace && (
+        <PMBox
+          as="button"
+          {...(!space.pinned && { className: 'space-settings-btn' })}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (space.pinned) {
+              unpinMutation.mutate({ spaceId: space.id });
+            } else {
+              pinMutation.mutate({ spaceId: space.id });
+            }
+          }}
+          title={space.pinned ? 'Unpin space' : 'Pin space'}
+          flexShrink={0}
+          cursor="pointer"
+          transition="opacity 0.15s"
+          color={space.pinned ? 'yellow.400' : 'text.faded'}
+          _hover={{ color: 'yellow.400' }}
+          display="flex"
+          alignItems="center"
+          data-testid={`space-pin-toggle-${space.id}`}
+        >
+          <LuStar size={14} fill={space.pinned ? 'currentColor' : 'none'} />
+        </PMBox>
+      )}
     </PMBox>
   );
 }
