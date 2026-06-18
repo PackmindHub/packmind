@@ -1,12 +1,8 @@
-import { useMemo } from 'react';
 import {
   PMBox,
   PMEmptyState,
   PMHStack,
   PMSpinner,
-  PMTable,
-  PMTableColumn,
-  PMTableRow,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -17,57 +13,20 @@ import { MarketplaceRow } from './MarketplaceRow';
 export interface MarketplacesIndexProps {
   marketplaces: MarketplaceListItem[];
   isLoading: boolean;
-  /**
-   * When set, the unlink button on this marketplace renders the loading
-   * state. Caller passes the `MarketplaceId` currently being mutated via
-   * `useUnlinkMarketplace`.
-   */
   unlinkingMarketplaceId?: MarketplaceId | null;
-  /**
-   * Ids of rows whose live state is currently being refreshed on page open.
-   * Each such row shows an inline "checking" indicator next to its state.
-   */
   refreshingIds?: ReadonlySet<MarketplaceId>;
   onUnlink: (marketplaceId: MarketplaceId) => void;
   /**
-   * Kept for parity with the route call site (`organizationId` was passed by
-   * the L placeholder). Not used directly here — the route owns the data and
-   * action hooks. Optional so consumers do not have to thread it through.
+   * Unused, kept for parity with the route call site so we don't have to
+   * touch the route in this change.
    */
   organizationId?: string;
-  /**
-   * Organization slug used to build links from the marketplace name cell to
-   * the marketplace details route. Optional so legacy call sites still work.
-   */
   orgSlug?: string;
 }
 
-const COLUMNS: PMTableColumn[] = [
-  { key: 'name', header: 'Marketplace', grow: true },
-  { key: 'repository', header: 'Repository', width: '200px' },
-  { key: 'vendor', header: 'Agent', width: '120px' },
-  { key: 'state', header: 'State', width: '120px', align: 'center' },
-  {
-    key: 'pluginCount',
-    header: 'Plugins',
-    width: '90px',
-    align: 'center',
-  },
-  { key: 'addedBy', header: 'Added by', width: '160px' },
-  {
-    key: 'lastValidatedAt',
-    header: 'Last checked',
-    width: '140px',
-  },
-  { key: 'actions', header: '', width: '110px', align: 'right' },
-];
-
 /**
- * Lists linked marketplaces for the current organization.
- *
- * The route owns data + mutations and passes the resolved props in. Empty,
- * loading and populated states are all handled here so the route component
- * stays a thin shell.
+ * Lists linked marketplaces for the current organization. The route owns
+ * data + mutations; we just render the empty / loading / populated states.
  */
 export const MarketplacesIndex = ({
   marketplaces,
@@ -77,20 +36,6 @@ export const MarketplacesIndex = ({
   onUnlink,
   orgSlug,
 }: Readonly<MarketplacesIndexProps>) => {
-  const rows = useMemo<PMTableRow[]>(
-    () =>
-      marketplaces.map((marketplace) =>
-        MarketplaceRow({
-          marketplace,
-          onUnlink,
-          isUnlinking: unlinkingMarketplaceId === marketplace.id,
-          isRefreshing: refreshingIds?.has(marketplace.id) ?? false,
-          orgSlug,
-        }),
-      ),
-    [marketplaces, onUnlink, unlinkingMarketplaceId, refreshingIds, orgSlug],
-  );
-
   if (isLoading) {
     return (
       <PMEmptyState
@@ -103,13 +48,11 @@ export const MarketplacesIndex = ({
 
   if (marketplaces.length === 0) {
     return (
-      <PMVStack align="stretch" gap={4}>
-        <PMEmptyState
-          icon={<LuPlug />}
-          title="Link your first marketplace"
-          description="Marketplaces are Git repositories Packmind reads to discover plugins your team can install. Link one to make its plugins available to your organization."
-        />
-      </PMVStack>
+      <PMEmptyState
+        icon={<LuPlug />}
+        title="Link your first marketplace"
+        description="Marketplaces are Git repositories Packmind reads to discover plugins your team can install. Link one to make its plugins available to your organization."
+      />
     );
   }
 
@@ -121,17 +64,59 @@ export const MarketplacesIndex = ({
           {marketplaces.length === 1 ? 'marketplace' : 'marketplaces'} linked
         </PMText>
       </PMHStack>
-      <PMBox width="full">
-        <PMTable
-          columns={COLUMNS}
-          data={rows}
-          striped
-          hoverable
-          size="md"
-          variant="line"
-          getRowId={(row) => (row as { id: string }).id}
-        />
+      <PMBox
+        bg="background.primary"
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="md"
+        overflow="hidden"
+      >
+        <ListHeader />
+        {marketplaces.map((marketplace, index) => {
+          const isLast = index === marketplaces.length - 1;
+          return (
+            <PMBox
+              key={marketplace.id}
+              {...(isLast ? { '& > *': { borderBottom: 'none' } } : {})}
+            >
+              <MarketplaceRow
+                marketplace={marketplace}
+                onUnlink={onUnlink}
+                isUnlinking={unlinkingMarketplaceId === marketplace.id}
+                isRefreshing={refreshingIds?.has(marketplace.id) ?? false}
+                orgSlug={orgSlug}
+              />
+            </PMBox>
+          );
+        })}
       </PMBox>
     </PMVStack>
   );
 };
+
+const ListHeader = () => (
+  <PMHStack
+    gap={5}
+    paddingX={4}
+    paddingY={2}
+    bg="background.secondary"
+    borderBottom="1px solid"
+    borderColor="border.tertiary"
+    fontSize="10px"
+    color="text.faded"
+    textTransform="uppercase"
+    letterSpacing="wider"
+    fontWeight="semibold"
+  >
+    <PMBox flex={1} minW={0}>
+      Marketplace
+    </PMBox>
+    <PMBox width="280px" flexShrink={0}>
+      Contents
+    </PMBox>
+    <PMBox width="180px" flexShrink={0} textAlign="right">
+      Coverage
+    </PMBox>
+    <PMBox width="64px" flexShrink={0} />
+  </PMHStack>
+);

@@ -2,6 +2,7 @@
 // order: presentational pieces first, then the form composites, then the
 // drawer + list page that compose them.
 export * from './MarketplaceStateBadge';
+export * from './MarketplaceStateDot';
 export * from './SubmitErrorBanner';
 export * from './AgentsFieldset';
 export * from './GitNotConnectedNotice';

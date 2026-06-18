@@ -9,7 +9,7 @@ import {
 } from '@packmind/types';
 import {
   MarketplaceRow,
-  UnlinkMarketplaceButton,
+  RowActionsMenu,
   __testables__,
 } from './MarketplaceRow';
 
@@ -44,90 +44,124 @@ const baseMarketplace: MarketplaceListItem = {
   },
 };
 
+const renderRow = (
+  overrides: Partial<MarketplaceListItem> = {},
+  rowProps: {
+    orgSlug?: string;
+    isUnlinking?: boolean;
+    isRefreshing?: boolean;
+  } = {},
+) => {
+  const onUnlink = jest.fn();
+  render(
+    <UIProvider>
+      <MemoryRouter>
+        <MarketplaceRow
+          marketplace={{ ...baseMarketplace, ...overrides }}
+          onUnlink={onUnlink}
+          isUnlinking={rowProps.isUnlinking ?? false}
+          isRefreshing={rowProps.isRefreshing ?? false}
+          orgSlug={rowProps.orgSlug}
+        />
+      </MemoryRouter>
+    </UIProvider>,
+  );
+  return { onUnlink };
+};
+
 describe('MarketplaceRow', () => {
-  it('produces the table cell map for a marketplace', () => {
-    const cells = MarketplaceRow({
-      marketplace: baseMarketplace,
-      onUnlink: jest.fn(),
-      isUnlinking: false,
-    });
-
-    expect(cells.id).toBe('mkt-1');
-    expect(cells.name).toBeDefined();
-    expect(cells.repository).toBeDefined();
-    expect(cells.state).toBeDefined();
-    expect(cells.actions).toBeDefined();
-  });
-
   it('renders the marketplace name as a link to the details route when orgSlug is set', () => {
-    const cells = MarketplaceRow({
-      marketplace: baseMarketplace,
-      onUnlink: jest.fn(),
-      isUnlinking: false,
-      orgSlug: 'acme',
-    });
-
-    render(
-      <UIProvider>
-        <MemoryRouter>{cells.name as React.ReactElement}</MemoryRouter>
-      </UIProvider>,
-    );
+    renderRow({}, { orgSlug: 'acme' });
 
     const link = screen.getByRole('link', { name: /Acme Playbook/ });
     expect(link).toHaveAttribute('href', '/org/acme/marketplaces/mkt-1');
   });
-});
 
-describe('MarketplaceRow repository cell', () => {
-  const renderRepositoryCell = (marketplace: MarketplaceListItem) => {
-    const cells = MarketplaceRow({
-      marketplace,
-      onUnlink: jest.fn(),
-      isUnlinking: false,
-    });
-    render(<UIProvider>{cells.repository}</UIProvider>);
-  };
-
-  it('renders an external link to the repository web URL', () => {
-    renderRepositoryCell(baseMarketplace);
-
-    const link = screen.getByRole('link', {
-      name: 'Open acme/plugins on GitHub',
-    });
-    expect(link).toHaveAttribute('href', 'https://github.com/acme/plugins');
-    expect(link).toHaveAttribute('target', '_blank');
+  it('shows the plugin count with the correct plural', () => {
+    renderRow();
+    expect(screen.getByText('7 plugins')).toBeInTheDocument();
   });
 
-  it('renders the owner/repo as plain text when there is no URL', () => {
-    renderRepositoryCell({
-      ...baseMarketplace,
-      repository: {
-        gitProviderId: createGitProviderId('provider-1'),
-        owner: 'acme',
-        repo: 'plugins',
-        branch: 'main',
-        providerSource: 'unknown',
-        url: '',
+  it('uses the singular noun when the marketplace has one plugin', () => {
+    renderRow({ pluginCount: 1 });
+    expect(screen.getByText('1 plugin')).toBeInTheDocument();
+  });
+
+  it('renders the refreshing spinner when the row is being refreshed', () => {
+    renderRow({}, { isRefreshing: true });
+    expect(screen.getByLabelText('Checking marketplace')).toBeInTheDocument();
+  });
+
+  it('does not render the state dot when the marketplace is healthy and up to date', () => {
+    renderRow();
+    expect(
+      screen.queryByTestId('marketplace-state-dot-healthy'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the orange state dot when the marketplace is unreachable', () => {
+    renderRow({ state: 'unreachable' });
+    expect(
+      screen.getByTestId('marketplace-state-dot-unreachable'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not render the state dot when the marketplace is drifting', () => {
+    renderRow({ state: 'drift' });
+    expect(
+      screen.queryByTestId('marketplace-state-dot-drift'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the outdated indicator with the drifted plugin count when the marketplace is drifting', () => {
+    renderRow({
+      state: 'drift',
+      descriptor: {
+        vendor: 'anthropic',
+        name: 'Acme Playbook',
+        plugins: [],
+        raw: {},
+        driftedPluginSlugs: ['plugin-a', 'plugin-b'],
       },
     });
-
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    expect(screen.getByText('acme/plugins')).toBeInTheDocument();
+    expect(screen.getByText('2 outdated')).toBeInTheDocument();
   });
 
-  it('renders a dash when the backing repository is missing', () => {
-    renderRepositoryCell({ ...baseMarketplace, repository: null });
+  it('renders the outdated indicator with the upstream plugin count when plugins are outdated', () => {
+    renderRow({ outdatedPluginSlugs: ['plugin-a', 'plugin-b', 'plugin-c'] });
+    expect(screen.getByText('3 outdated')).toBeInTheDocument();
+  });
 
-    expect(screen.getByText('—')).toBeInTheDocument();
+  it('does not render the outdated indicator for a healthy marketplace', () => {
+    renderRow();
+    expect(screen.queryByText(/outdated/i)).not.toBeInTheDocument();
+  });
+
+  it('renders the repo actions trigger labelled with the owner/repo', () => {
+    renderRow();
+    expect(
+      screen.getByRole('button', {
+        name: 'Repository actions for acme/plugins',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders a dash for the repository when the backing repository is missing', () => {
+    renderRow({ repository: null });
+    expect(
+      screen.queryByRole('button', { name: /Repository actions/ }),
+    ).not.toBeInTheDocument();
+    // The repository cell and the coverage placeholder both render an em-dash.
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 });
 
-describe('UnlinkMarketplaceButton', () => {
-  const renderButton = (overrides: { isUnlinking?: boolean } = {}) => {
+describe('RowActionsMenu', () => {
+  const renderMenu = (overrides: { isUnlinking?: boolean } = {}) => {
     const onUnlink = jest.fn();
     render(
       <UIProvider>
-        <UnlinkMarketplaceButton
+        <RowActionsMenu
           marketplace={baseMarketplace}
           onUnlink={onUnlink}
           isUnlinking={overrides.isUnlinking ?? false}
@@ -137,20 +171,25 @@ describe('UnlinkMarketplaceButton', () => {
     return { onUnlink };
   };
 
-  it('exposes an accessible unlink button labelled with the marketplace name', () => {
-    renderButton();
+  it('exposes an accessible trigger labelled with the marketplace name', () => {
+    renderMenu();
     expect(
-      screen.getByRole('button', { name: 'Unlink Acme Playbook' }),
+      screen.getByRole('button', { name: 'Actions for Acme Playbook' }),
     ).toBeInTheDocument();
   });
 
-  it('invokes onUnlink when the user confirms the dialog', async () => {
-    const { onUnlink } = renderButton();
+  it('invokes onUnlink when the user confirms the dialog from the menu', async () => {
+    const { onUnlink } = renderMenu();
 
     await act(async () => {
       fireEvent.click(
-        screen.getByRole('button', { name: 'Unlink Acme Playbook' }),
+        screen.getByRole('button', { name: 'Actions for Acme Playbook' }),
       );
+    });
+
+    const unlinkItem = await screen.findByText('Unlink marketplace');
+    await act(async () => {
+      fireEvent.click(unlinkItem);
     });
 
     const confirmButton = await screen.findByRole('button', {
@@ -161,36 +200,6 @@ describe('UnlinkMarketplaceButton', () => {
     });
 
     expect(onUnlink).toHaveBeenCalledWith('mkt-1');
-  });
-});
-
-describe('formatLastValidated', () => {
-  const { formatLastValidated } = __testables__;
-
-  it('returns "Pending" when there is no last-validated timestamp', () => {
-    expect(formatLastValidated(null)).toBe('Pending');
-  });
-
-  it('returns "Just now" within the first minute', () => {
-    expect(formatLastValidated(new Date(Date.now() - 5_000))).toBe('Just now');
-  });
-
-  it('returns minutes for short intervals', () => {
-    expect(formatLastValidated(new Date(Date.now() - 5 * 60_000))).toBe(
-      '5m ago',
-    );
-  });
-
-  it('returns hours for medium intervals', () => {
-    expect(formatLastValidated(new Date(Date.now() - 3 * 60 * 60_000))).toBe(
-      '3h ago',
-    );
-  });
-
-  it('returns days for long intervals under a month', () => {
-    expect(
-      formatLastValidated(new Date(Date.now() - 5 * 24 * 60 * 60_000)),
-    ).toBe('5d ago');
   });
 });
 
@@ -217,7 +226,63 @@ describe('providerLabel', () => {
     expect(providerLabel('gitlab')).toBe('GitLab');
   });
 
-  it('falls back to "Unknown provider" for unrecognized sources', () => {
-    expect(providerLabel('unknown')).toBe('Unknown provider');
+  it('falls back to "provider" for unrecognized sources', () => {
+    expect(providerLabel('unknown')).toBe('provider');
+  });
+});
+
+describe('deriveSshUrl', () => {
+  const { deriveSshUrl } = __testables__;
+
+  it('derives a GitHub SSH URL from the web URL', () => {
+    expect(deriveSshUrl('https://github.com/acme/plugins')).toBe(
+      'git@github.com:acme/plugins.git',
+    );
+  });
+
+  it('strips a trailing .git before re-adding it', () => {
+    expect(deriveSshUrl('https://github.com/acme/plugins.git')).toBe(
+      'git@github.com:acme/plugins.git',
+    );
+  });
+
+  it('handles GitLab subgroup paths', () => {
+    expect(deriveSshUrl('https://gitlab.com/acme/team/plugins')).toBe(
+      'git@gitlab.com:acme/team/plugins.git',
+    );
+  });
+
+  it('returns null for an empty URL', () => {
+    expect(deriveSshUrl('')).toBeNull();
+  });
+
+  it('returns null for a non-HTTP URL', () => {
+    expect(deriveSshUrl('git@github.com:acme/plugins.git')).toBeNull();
+  });
+});
+
+describe('normalizeHttps', () => {
+  const { normalizeHttps } = __testables__;
+
+  it('appends .git when missing', () => {
+    expect(normalizeHttps('https://github.com/acme/plugins')).toBe(
+      'https://github.com/acme/plugins.git',
+    );
+  });
+
+  it('keeps a single trailing .git when already present', () => {
+    expect(normalizeHttps('https://github.com/acme/plugins.git')).toBe(
+      'https://github.com/acme/plugins.git',
+    );
+  });
+
+  it('returns the raw URL when it is not HTTP(S)', () => {
+    expect(normalizeHttps('git@github.com:acme/plugins.git')).toBe(
+      'git@github.com:acme/plugins.git',
+    );
+  });
+
+  it('returns null for an empty URL', () => {
+    expect(normalizeHttps('')).toBeNull();
   });
 });
