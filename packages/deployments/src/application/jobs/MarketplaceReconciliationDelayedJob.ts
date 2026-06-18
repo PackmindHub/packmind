@@ -514,16 +514,20 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     }
 
     // (c) Drift detection (AC9, AC10): a slug carried by a `success`
-    // distribution is missing AND is not in `pendingRemovalSlugs`.
-    const driftedPluginSlugs: string[] = [];
+    // distribution is missing AND is not in `pendingRemovalSlugs`. Each
+    // republish writes a fresh `success` row for the same plugin, so dedupe
+    // by slug — consumers (banner, state badge) want a flat list of plugins,
+    // not one entry per historical publish.
+    const driftedSlugSet = new Set<string>();
     for (const live of successDistributions) {
       if (
         !descriptorSlugs.has(live.pluginSlug) &&
         !pendingRemovalSlugs.has(live.pluginSlug)
       ) {
-        driftedPluginSlugs.push(live.pluginSlug);
+        driftedSlugSet.add(live.pluginSlug);
       }
     }
+    const driftedPluginSlugs = Array.from(driftedSlugSet);
 
     // Step 6 — Decide final state.
     //   - If `success` slugs went missing without a pending-removal pair →

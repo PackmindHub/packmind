@@ -12,20 +12,22 @@ export interface MarketplaceDetailAlertsProps {
 }
 
 /**
- * Inline alert strip for the marketplace detail page. Surfaces only the two
- * sync-PR conditions a user must act on:
+ * Inline alert strip for the marketplace detail page. Surfaces conditions a
+ * user must act on:
+ *  - the marketplace descriptor was edited outside Packmind (warning),
  *  - an open Packmind sync PR awaiting review (info),
  *  - pending publishes/removals with no open sync PR (warning).
  *
- * Drift and outdated-plugin signals live elsewhere (state badge tooltip and
- * per-row indicators in the rail/detail pane), so they do not appear here.
- * Returns `null` when nothing applies.
+ * Per-row outdated-plugin signals live elsewhere (rail / detail pane), so
+ * they do not appear here. Returns `null` when nothing applies.
  */
 export const MarketplaceDetailAlerts = ({
   organizationId,
   marketplace,
 }: Readonly<MarketplaceDetailAlertsProps>) => {
   const pendingPrUrl = marketplace.pendingPrUrl;
+  const showDriftPanel = marketplace.state === 'drift';
+  const driftedPluginSlugs = marketplace.descriptor?.driftedPluginSlugs ?? [];
 
   const { data: distributions } = useMarketplaceDistributions(
     organizationId,
@@ -38,10 +40,47 @@ export const MarketplaceDetailAlerts = ({
   );
   const showNoSyncPrPanel = hasPendingSyncChanges && !pendingPrUrl;
 
-  if (!pendingPrUrl && !showNoSyncPrPanel) return null;
+  if (!pendingPrUrl && !showNoSyncPrPanel && !showDriftPanel) return null;
 
   return (
     <PMVStack align="stretch" gap={3}>
+      {showDriftPanel && (
+        <PMAlert.Root status="warning" data-testid="marketplace-drift-panel">
+          <PMAlert.Indicator />
+          <PMBox>
+            <PMAlert.Title>
+              Marketplace descriptor changed outside Packmind
+            </PMAlert.Title>
+            <PMAlert.Description>
+              <PMText variant="small">
+                The marketplace descriptor file on the repository was edited
+                directly — Packmind did not make this change. Confirm the edit
+                is intentional, or publish a package again to bring the
+                marketplace back in line with Packmind.
+              </PMText>
+              {driftedPluginSlugs.length > 0 && (
+                <>
+                  <PMText variant="small" marginTop={2}>
+                    The following plugins were published by Packmind but are no
+                    longer listed in the descriptor:
+                  </PMText>
+                  <PMBox as="ul" marginTop={1} paddingLeft={4}>
+                    {driftedPluginSlugs.map((slug) => (
+                      <PMBox
+                        as="li"
+                        key={slug}
+                        data-testid={`marketplace-drift-panel-slug-${slug}`}
+                      >
+                        <PMText variant="small">{slug}</PMText>
+                      </PMBox>
+                    ))}
+                  </PMBox>
+                </>
+              )}
+            </PMAlert.Description>
+          </PMBox>
+        </PMAlert.Root>
+      )}
       {pendingPrUrl && (
         <PMAlert.Root status="info" data-testid="marketplace-pending-pr-panel">
           <PMAlert.Indicator />

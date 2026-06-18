@@ -1214,6 +1214,45 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       });
     });
 
+    describe('drift detection dedup across republishes of the same plugin', () => {
+      // Each republish writes a new `success` row for the same plugin slug.
+      // The drift list must collapse them so the banner / state badge shows
+      // one entry per plugin, not one entry per historical publish.
+      const liveA = buildSuccessDistribution('p1');
+      const liveB = buildSuccessDistribution('p1');
+      const liveC = buildSuccessDistribution('p1');
+      let result: MarketplaceReconciliationJobOutput;
+
+      beforeEach(async () => {
+        const descriptorWithoutP1: MarketplaceDescriptor = {
+          ...baseDescriptor,
+          plugins: [{ slug: 'p2', name: 'Plugin 2' }],
+        };
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'abc',
+          content: JSON.stringify(descriptorWithoutP1.raw),
+        });
+        mockParserRegistry.parse.mockReturnValue(descriptorWithoutP1);
+        mockMarketplaceDistributionRepository.findSuccessfulByMarketplaceId.mockResolvedValue(
+          [liveA, liveB, liveC],
+        );
+        mockMarketplaceDistributionRepository.findPendingRemovalsByMarketplaceId.mockResolvedValue(
+          [],
+        );
+
+        result = await job.runJob('job-x2b', input, new AbortController());
+      });
+
+      it('still flags the marketplace as drift', () => {
+        expect(result.state).toBe('drift');
+      });
+
+      it('reports the slug only once in driftedPluginSlugs', () => {
+        const [, patch] = mockMarketplaceRepository.updateState.mock.calls[0];
+        expect(patch.descriptor?.driftedPluginSlugs).toEqual(['p1']);
+      });
+    });
+
     describe('drift suppression when a to_be_removed exists for the slug (AC10)', () => {
       const live = buildSuccessDistribution('p1');
       const pending = buildPendingRemovalDistribution('p1');
