@@ -4,7 +4,10 @@ import {
   DriftedPackageInfo,
   IAccountsPort,
   IListDriftedPackagesByOrgUseCase,
+  IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
+  IStandardsPort,
   ListDriftedPackagesByOrgCommand,
   ListDriftedPackagesByOrgResponse,
   OrganizationId,
@@ -22,6 +25,18 @@ import { IPackageRepository } from '../../domain/repositories/IPackageRepository
 
 const origin = 'ListDriftedPackagesByOrgUseCase';
 
+/**
+ * Latest version number of each artifact (standard / recipe / skill) of the
+ * organization, keyed by artifact id. Mirrors how the space overview resolves
+ * drift: an artifact missing from the map is considered deleted, and a deployed
+ * version lower than the latest is considered behind.
+ */
+type LatestArtifactVersions = {
+  standards: Map<string, number>;
+  recipes: Map<string, number>;
+  skills: Map<string, number>;
+};
+
 export class ListDriftedPackagesByOrgUseCase
   extends AbstractMemberUseCase<
     ListDriftedPackagesByOrgCommand,
@@ -34,6 +49,9 @@ export class ListDriftedPackagesByOrgUseCase
     accountsPort: IAccountsPort,
     private readonly distributionRepository: IDistributionRepository,
     private readonly packageRepository: IPackageRepository,
+    private readonly standardsPort: IStandardsPort,
+    private readonly recipesPort: IRecipesPort,
+    private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -51,8 +69,13 @@ export class ListDriftedPackagesByOrgUseCase
       return [];
     }
 
+    const latestVersions =
+      await this.loadLatestArtifactVersions(organizationId);
+
     const perSpace = await Promise.all(
-      spaces.map((space) => this.collectSpaceDrift(space, organizationId)),
+      spaces.map((space) =>
+        this.collectSpaceDrift(space, organizationId, latestVersions),
+      ),
     );
 
     return perSpace.flat().sort((a, b) => {
@@ -63,9 +86,26 @@ export class ListDriftedPackagesByOrgUseCase
     });
   }
 
+  private async loadLatestArtifactVersions(
+    organizationId: OrganizationId,
+  ): Promise<LatestArtifactVersions> {
+    const [standards, recipes, skills] = await Promise.all([
+      this.standardsPort.listAllStandardsByOrganization(organizationId),
+      this.recipesPort.listAllRecipesByOrganization(organizationId),
+      this.skillsPort.listAllSkillsByOrganization(organizationId),
+    ]);
+
+    return {
+      standards: new Map(standards.map((s) => [s.id as string, s.version])),
+      recipes: new Map(recipes.map((r) => [r.id as string, r.version])),
+      skills: new Map(skills.map((s) => [s.id as string, s.version])),
+    };
+  }
+
   private async collectSpaceDrift(
     space: Space,
     organizationId: OrganizationId,
+    latestVersions: LatestArtifactVersions,
   ): Promise<DriftedPackageInfo[]> {
     const [outdatedByTarget, activeOps, packages] = await Promise.all([
       this.distributionRepository.findOutdatedDeploymentsBySpace(
@@ -88,6 +128,7 @@ export class ListDriftedPackagesByOrgUseCase
       outdatedByTarget,
       activeOps,
       packagesById,
+      latestVersions,
     );
 
     const results: DriftedPackageInfo[] = [];
@@ -122,10 +163,25 @@ function computeLastDistributedAt(
   return lastByPackage;
 }
 
+/**
+ * A deployed artifact is in drift when it has been deleted from Packmind
+ * (no current version, i.e. it still needs to be removed from the target) or
+ * when its deployed version is behind the latest version. This matches the
+ * drift determination used by the space overview.
+ */
+function isDeployedArtifactDrifted(
+  deployedVersion: number,
+  latestVersion: number | undefined,
+): boolean {
+  if (latestVersion === undefined) return true;
+  return deployedVersion < latestVersion;
+}
+
 function computeDriftedTargets(
   outdatedByTarget: OutdatedDeploymentsByTarget[],
   activeOps: ReadonlyArray<ActivePackageOperationRow>,
   packagesById: Map<PackageId, Package>,
+  latestVersions: LatestArtifactVersions,
 ): Map<PackageId, Set<TargetId>> {
   const opsByTarget = new Map<TargetId, PackageId[]>();
   for (const op of activeOps) {
@@ -142,23 +198,44 @@ function computeDriftedTargets(
     const packageIdsOnTarget = opsByTarget.get(outdated.targetId);
     if (!packageIdsOnTarget?.length) continue;
 
-    const outdatedStandardIds = new Set(
-      outdated.standards.map((s) => s.artifactId as string),
+    const driftedStandardIds = new Set(
+      outdated.standards
+        .filter((s) =>
+          isDeployedArtifactDrifted(
+            s.deployedVersion,
+            latestVersions.standards.get(s.artifactId as string),
+          ),
+        )
+        .map((s) => s.artifactId as string),
     );
-    const outdatedRecipeIds = new Set(
-      outdated.recipes.map((r) => r.artifactId as string),
+    const driftedRecipeIds = new Set(
+      outdated.recipes
+        .filter((r) =>
+          isDeployedArtifactDrifted(
+            r.deployedVersion,
+            latestVersions.recipes.get(r.artifactId as string),
+          ),
+        )
+        .map((r) => r.artifactId as string),
     );
-    const outdatedSkillIds = new Set(
-      outdated.skills.map((s) => s.artifactId as string),
+    const driftedSkillIds = new Set(
+      outdated.skills
+        .filter((s) =>
+          isDeployedArtifactDrifted(
+            s.deployedVersion,
+            latestVersions.skills.get(s.artifactId as string),
+          ),
+        )
+        .map((s) => s.artifactId as string),
     );
 
     for (const packageId of packageIdsOnTarget) {
       const pkg = packagesById.get(packageId);
       if (!pkg) continue;
       const hasDrift =
-        pkg.standards.some((id) => outdatedStandardIds.has(id)) ||
-        pkg.recipes.some((id) => outdatedRecipeIds.has(id)) ||
-        pkg.skills.some((id) => outdatedSkillIds.has(id));
+        pkg.standards.some((id) => driftedStandardIds.has(id)) ||
+        pkg.recipes.some((id) => driftedRecipeIds.has(id)) ||
+        pkg.skills.some((id) => driftedSkillIds.has(id));
       if (!hasDrift) continue;
 
       let bucket = driftedTargetsByPackage.get(packageId);

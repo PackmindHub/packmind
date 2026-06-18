@@ -564,6 +564,9 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.distributionRepository,
       this.deploymentsServices.getRepositories().getPackageRepository(),
+      this.standardsPort,
+      this.recipesPort,
+      this.skillsPort,
     );
 
     this._listPackagesUseCase = new ListPackagesUseCase(

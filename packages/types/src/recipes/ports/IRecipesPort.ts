@@ -82,6 +82,16 @@ export interface IRecipesPort {
   listRecipesBySpace(command: ListRecipesBySpaceCommand): Promise<Recipe[]>;
 
   /**
+   * List all recipes across every space of an organization, without space
+   * membership checks. Intended for organization-scoped aggregations
+   * (e.g. governance drift) where the caller has already been authorized at
+   * the organization level.
+   */
+  listAllRecipesByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Recipe[]>;
+
+  /**
    * Count recipes grouped by space ID, omitting spaces with zero recipes.
    * Used for management listing aggregations.
    */

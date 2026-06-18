@@ -282,6 +282,29 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     });
   }
 
+  /**
+   * List all skills across every space of an organization, bypassing space
+   * membership checks. Used for organization-scoped aggregations where the
+   * caller is already authorized at the organization level.
+   */
+  async listAllSkillsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Skill[]> {
+    if (!this.spacesPort) {
+      this.logger.warn('SpacesPort not available, returning empty results');
+      return [];
+    }
+
+    const spaces =
+      await this.spacesPort.listSpacesByOrganization(organizationId);
+    const skillsPerSpace = await Promise.all(
+      spaces.map((space) =>
+        this.services.getSkillService().listSkillsBySpace(space.id),
+      ),
+    );
+    return skillsPerSpace.flat();
+  }
+
   public countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
     return this.services.getSkillService().countBySpaceIds(spaceIds);
   }
