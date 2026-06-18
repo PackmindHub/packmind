@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, useParams } from 'react-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PMBox, PMHStack, PMVStack } from '@packmind/ui';
-import { TopNavbar } from '../../src/domain/search';
+import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 import { SidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -115,27 +114,23 @@ export default function AuthenticatedLayout() {
 
   return (
     <SidebarCollapseProvider value={sidebarCollapseValue}>
-      <PMVStack h="100%" w="100%" gap={0} alignItems="stretch">
-        <TopNavbar />
-        <PMHStack
-          flex={1}
-          minH={0}
-          w="100%"
-          alignItems={'stretch'}
-          gap={0}
-          overflow={'hidden'}
-        >
-          <SidebarNavigation
-            organization={me.organization}
-            contentAreaRef={contentAreaRef}
-          />
-          <PMBox flex={'1'} h="100%" overflow={'auto'} position="relative">
-            <div ref={contentAreaRef} style={{ height: '100%' }}>
-              <Outlet />
-            </div>
-          </PMBox>
-        </PMHStack>
-      </PMVStack>
+      <PMHStack
+        h="100%"
+        w="100%"
+        alignItems={'stretch'}
+        gap={0}
+        overflow={'hidden'}
+      >
+        <SidebarNavigation
+          organization={me.organization}
+          contentAreaRef={contentAreaRef}
+        />
+        <PMBox flex={'1'} h="100%" overflow={'auto'} position="relative">
+          <div ref={contentAreaRef} style={{ height: '100%' }}>
+            <Outlet />
+          </div>
+        </PMBox>
+      </PMHStack>
       <OnboardingIntentModal
         open={showOnboardingModal}
         onComplete={handleOnboardingComplete}
