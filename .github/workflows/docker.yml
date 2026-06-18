@@ -34,15 +34,26 @@ on:
         required: true
         description: 'Docker Hub access token'
     outputs:
+      # Primary tag (proprietary/enterprise): e.g. packmind/api-proprietary:SHA or packmind/api:VERSION-enterprise
       api-image-tag:
-        description: 'API Docker image tag'
+        description: 'API Docker image tag (proprietary)'
         value: ${{ jobs.build-scan-push.outputs.api-image-tag }}
       frontend-image-tag:
-        description: 'Frontend Docker image tag'
+        description: 'Frontend Docker image tag (proprietary)'
         value: ${{ jobs.build-scan-push.outputs.frontend-image-tag }}
       mcp-server-image-tag:
-        description: 'MCP Server Docker image tag'
+        description: 'MCP Server Docker image tag (proprietary)'
         value: ${{ jobs.build-scan-push.outputs.mcp-image-tag }}
+      # OSS tags: e.g. packmind/api-oss:SHA or packmind/api:VERSION
+      api-image-tag-oss:
+        description: 'API Docker image tag (OSS)'
+        value: ${{ jobs.build-scan-push.outputs.api-image-tag-oss }}
+      frontend-image-tag-oss:
+        description: 'Frontend Docker image tag (OSS)'
+        value: ${{ jobs.build-scan-push.outputs.frontend-image-tag-oss }}
+      mcp-server-image-tag-oss:
+        description: 'MCP Server Docker image tag (OSS)'
+        value: ${{ jobs.build-scan-push.outputs.mcp-image-tag-oss }}
       version:
         description: 'Package version used for Docker tags'
         value: ${{ jobs.build-scan-push.outputs.version }}
@@ -78,11 +89,14 @@ jobs:
       github.ref == 'refs/heads/main' ||
       startsWith(github.ref, 'refs/tags/release/')
     outputs:
-      # On main: outputs SHA tag (what's actually pushed)
-      # On release/*: outputs version tag (what's actually pushed)
+      # Primary tag (proprietary/enterprise): e.g. packmind/api-proprietary:SHA or packmind/api:VERSION-enterprise
       api-image-tag: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
       frontend-image-tag: packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
       mcp-image-tag: packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
+      # OSS tags: e.g. packmind/api-oss:SHA or packmind/api:VERSION
+      api-image-tag-oss: packmind/api${{ steps.get-image-tag.outputs.name_suffix_oss }}:${{ steps.get-image-tag.outputs.tag_oss }}
+      frontend-image-tag-oss: packmind/frontend${{ steps.get-image-tag.outputs.name_suffix_oss }}:${{ steps.get-image-tag.outputs.tag_oss }}
+      mcp-image-tag-oss: packmind/mcp${{ steps.get-image-tag.outputs.name_suffix_oss }}:${{ steps.get-image-tag.outputs.tag_oss }}
       version: ${{ steps.get-version.outputs.version }}
 
     steps:
@@ -107,43 +121,37 @@ jobs:
       - name: Set image naming strategy
         id: set-image-naming
         run: |
-          # For release tags: use unsuffixed names (packmind/api:version)
-          # For main branch: use suffixed names (packmind/api-oss:sha or packmind/api-proprietary:sha)
+          # OSS and Proprietary repos are merged. Every run produces BOTH tag variants:
+          #   - Proprietary / Enterprise tags (primary): -proprietary suffix or -enterprise version suffix
+          #   - OSS tags (secondary): -oss suffix or unsuffixed version
+          # The primary build uses proprietary naming; OSS tags are added via docker tag.
           if [[ "${{ github.ref }}" == refs/tags/release/* ]]; then
-            # Release tags: unsuffixed image names
-            if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-              echo "name_suffix=" >> $GITHUB_OUTPUT
-              echo "version_suffix=" >> $GITHUB_OUTPUT
-            elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
-              echo "name_suffix=" >> $GITHUB_OUTPUT
-              echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
-            else
-              echo "name_suffix=" >> $GITHUB_OUTPUT
-              echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-            fi
+            # Release tags: unsuffixed image names, -enterprise version suffix
+            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
           else
-            # Main branch: suffixed image names for internal tracking
-            if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-              echo "name_suffix=-oss" >> $GITHUB_OUTPUT
-              echo "version_suffix=" >> $GITHUB_OUTPUT
-            elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
-              echo "name_suffix=-proprietary" >> $GITHUB_OUTPUT
-              echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
-            else
-              echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-              echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-            fi
+            # Main branch: -proprietary suffixed names, -enterprise version suffix
+            echo "name_suffix=-proprietary" >> $GITHUB_OUTPUT
+            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
           fi
 
       - name: Determine image tag
         id: get-image-tag
         run: |
-          # On release/* tags: use semantic version (e.g., 1.4.2 or 1.4.2-enterprise)
+          # On release/* tags: use semantic version with enterprise suffix (e.g., 1.4.2-enterprise)
           # On main branch: use commit SHA
           if [[ "${{ github.ref }}" == refs/tags/release/* ]]; then
+            # Proprietary: packmind/api:VERSION-enterprise
             echo "tag=${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}" >> $GITHUB_OUTPUT
+            # OSS: packmind/api:VERSION (unsuffixed name, unsuffixed version)
+            echo "name_suffix_oss=" >> $GITHUB_OUTPUT
+            echo "tag_oss=${{ steps.get-version.outputs.version }}" >> $GITHUB_OUTPUT
           else
+            # Proprietary: packmind/api-proprietary:SHA
             echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+            # OSS: packmind/api-oss:SHA
+            echo "name_suffix_oss=-oss" >> $GITHUB_OUTPUT
+            echo "tag_oss=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Cache pnpm supply-chain verification
@@ -183,12 +191,12 @@ jobs:
       # API-specific pre-build step
       - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          PACKMIND_EDITION: proprietary
         run: node scripts/select-tsconfig.mjs
 
       - name: Build migration bundle for Docker
         env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          PACKMIND_EDITION: proprietary
         run: ./node_modules/.bin/nx bundle-docker migrations
 
       # Docker setup
@@ -214,7 +222,7 @@ jobs:
         env:
           VERSION: ${{ steps.get-version.outputs.version }}
           SHA: ${{ github.sha }}
-          EDITION: ${{ vars.PACKMIND_EDITION }}
+          EDITION: proprietary
           IMAGE_NAME_SUFFIX: ${{ steps.set-image-naming.outputs.name_suffix }}
           VERSION_SUFFIX: ${{ steps.set-image-naming.outputs.version_suffix }}
         run: |
@@ -294,10 +302,18 @@ jobs:
             return 1
           }
 
-          # Push only SHA-tagged images (version tags are reserved for releases)
+          # Push proprietary-tagged images (primary)
           retry_push "packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
           retry_push "packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
           retry_push "packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
+
+          # Also tag and push OSS variants (same image, extra tags)
+          docker tag "packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}" "packmind/api-oss:${{ github.sha }}"
+          retry_push "packmind/api-oss:${{ github.sha }}"
+          docker tag "packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}" "packmind/frontend-oss:${{ github.sha }}"
+          retry_push "packmind/frontend-oss:${{ github.sha }}"
+          docker tag "packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}" "packmind/mcp-oss:${{ github.sha }}"
+          retry_push "packmind/mcp-oss:${{ github.sha }}"
 
       # Release tags: Rebuild with multi-platform and push
       - name: Build and push multi-platform images (release)
@@ -305,7 +321,7 @@ jobs:
         env:
           VERSION: ${{ steps.get-version.outputs.version }}
           SHA: ${{ github.sha }}
-          EDITION: ${{ vars.PACKMIND_EDITION }}
+          EDITION: proprietary
           IMAGE_NAME_SUFFIX: ${{ steps.set-image-naming.outputs.name_suffix }}
           VERSION_SUFFIX: ${{ steps.set-image-naming.outputs.version_suffix }}
         run: |
@@ -314,21 +330,23 @@ jobs:
             release \
             --push
 
-      # Release tags (OSS only): Build and push public images
-      - name: Build and push public images (release - OSS only)
-        if: startsWith(github.ref, 'refs/tags/release/') && vars.PACKMIND_EDITION == 'oss'
+      # Release tags: Build and push public (OSS-style) images
+      # These are unsuffixed tags (packmind/api:VERSION, packmind/api:latest)
+      # alongside the enterprise tags already pushed by the bake release group
+      - name: Build and push public images (release)
+        if: startsWith(github.ref, 'refs/tags/release/')
         run: |
-          # Build and push public API image
+          # Build and push public API image (unsuffixed OSS tags)
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             -f dockerfile/Dockerfile.api \
-            --build-arg EDITION=${{ vars.PACKMIND_EDITION }} \
+            --build-arg EDITION=proprietary \
             -t packmind/api:${{ steps.get-version.outputs.version }} \
             -t packmind/api:latest \
             --push \
             .
 
-          # Build and push public Frontend image
+          # Build and push public Frontend image (unsuffixed OSS tags)
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             -f dockerfile/Dockerfile.frontend \
@@ -337,7 +355,7 @@ jobs:
             --push \
             .
 
-          # Build and push public MCP image
+          # Build and push public MCP image (unsuffixed OSS tags)
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             -f dockerfile/Dockerfile.mcp \
