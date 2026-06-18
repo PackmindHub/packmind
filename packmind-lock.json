@@ -10,12 +10,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-17T03:12:43.940Z",
+  "installedAt": "2026-06-18T03:12:11.167Z",
   "artifacts": {
     "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
@@ -28,6 +30,11 @@
       ],
       "source": "user",
       "files": [
+        {
+          "path": ".agents/skills/cli-e2e-test-authoring/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/cli-e2e-test-authoring/SKILL.md",
           "agent": "claude",
@@ -47,6 +54,11 @@
           "path": ".gitlab/duo/skills/cli-e2e-test-authoring/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/cli-e2e-test-authoring/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -61,6 +73,15 @@
       ],
       "source": "user",
       "files": [
+        {
+          "path": ".agents/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "codex"
+        },
+        {
+          "path": ".agents/skills/working-with-playground-app/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/working-with-playground-app/references/frontend-domain-structure.md",
           "agent": "claude"
@@ -96,6 +117,15 @@
           "path": ".gitlab/duo/skills/working-with-playground-app/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/working-with-playground-app/references/frontend-domain-structure.md",
+          "agent": "opencode"
+        },
+        {
+          "path": ".opencode/skills/working-with-playground-app/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -110,6 +140,15 @@
       ],
       "source": "user",
       "files": [
+        {
+          "path": ".agents/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "codex"
+        },
+        {
+          "path": ".agents/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/working-with-pm-design-kit/references/component-catalog.md",
           "agent": "claude"
@@ -144,6 +183,15 @@
         {
           "path": ".gitlab/duo/skills/working-with-pm-design-kit/SKILL.md",
           "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/working-with-pm-design-kit/references/component-catalog.md",
+          "agent": "opencode"
+        },
+        {
+          "path": ".opencode/skills/working-with-pm-design-kit/SKILL.md",
+          "agent": "opencode",
           "isSkillDefinition": true
         }
       ]
@@ -274,6 +322,16 @@
       "source": "default",
       "files": [
         {
+          "path": ".agents/skills/packmind-cli-list-commands/LICENSE.txt",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-cli-list-commands/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
           "path": ".claude/skills/packmind-cli-list-commands/LICENSE.txt",
           "agent": "claude",
           "isSkillDefinition": true
@@ -312,6 +370,16 @@
           "path": ".gitlab/duo/skills/packmind-cli-list-commands/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-cli-list-commands/LICENSE.txt",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-cli-list-commands/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -324,6 +392,21 @@
       "packageIds": [],
       "source": "default",
       "files": [
+        {
+          "path": ".agents/skills/packmind-create-package/LICENSE.txt",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-create-package/README.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-create-package/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/packmind-create-package/LICENSE.txt",
           "agent": "claude",
@@ -383,6 +466,21 @@
           "path": ".gitlab/duo/skills/packmind-create-package/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-create-package/LICENSE.txt",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-create-package/README.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-create-package/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -395,6 +493,91 @@
       "packageIds": [],
       "source": "default",
       "files": [
+        {
+          "path": ".agents/skills/packmind-onboard/LICENSE.txt",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/README.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/references/ci-local-workflow-parity.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/references/file-template-consistency.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/references/role-taxonomy-drift.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/references/test-data-construction.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-onboard/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/packmind-onboard/LICENSE.txt",
           "agent": "claude",
@@ -734,6 +917,91 @@
           "path": ".gitlab/duo/skills/packmind-onboard/SKILL.md",
           "agent": "gitlab_duo",
           "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/LICENSE.txt",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/README.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/references/ci-local-workflow-parity.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/references/file-template-consistency.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/references/role-taxonomy-drift.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/references/test-data-construction.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-onboard/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
         }
       ]
     },
@@ -746,6 +1014,61 @@
       "packageIds": [],
       "source": "default",
       "files": [
+        {
+          "path": ".agents/skills/packmind-update-playbook/LICENSE.txt",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/references/agent-skills-specification.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/references/create-command-procedure.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/references/create-skill-procedure.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/references/create-standard-procedure.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/SKILL.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/steps/analyze-commands.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/steps/analyze-skills.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".agents/skills/packmind-update-playbook/steps/analyze-standards.md",
+          "agent": "codex",
+          "isSkillDefinition": true
+        },
         {
           "path": ".claude/skills/packmind-update-playbook/LICENSE.txt",
           "agent": "claude",
@@ -964,6 +1287,61 @@
         {
           "path": ".gitlab/duo/skills/packmind-update-playbook/steps/analyze-standards.md",
           "agent": "gitlab_duo",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/LICENSE.txt",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/references/agent-skills-specification.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/references/create-command-procedure.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/references/create-skill-procedure.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/references/create-standard-procedure.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/SKILL.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/steps/analyze-commands.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/steps/analyze-skills.md",
+          "agent": "opencode",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".opencode/skills/packmind-update-playbook/steps/analyze-standards.md",
+          "agent": "opencode",
           "isSkillDefinition": true
         }
       ]
