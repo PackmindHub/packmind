@@ -14,13 +14,7 @@ import type {
   OrganizationId,
 } from '@packmind/types';
 import type { IconType } from 'react-icons';
-import {
-  LuChevronRight,
-  LuSearch,
-  LuShield,
-  LuTerminal,
-  LuWandSparkles,
-} from 'react-icons/lu';
+import { LuSearch, LuShield, LuTerminal, LuWandSparkles } from 'react-icons/lu';
 import { useGetPackageSummaryQuery } from '../../deployments/api/queries/DeploymentsQueries';
 
 interface PluginOverviewTabProps {
@@ -428,7 +422,7 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
       paddingX={2}
       borderRadius="sm"
       display="grid"
-      gridTemplateColumns="14px minmax(0, 32ch) minmax(0, 1fr) 14px"
+      gridTemplateColumns="14px minmax(0, 32ch) minmax(0, 1fr)"
       alignItems="center"
       columnGap={3}
       transition="background-color 120ms ease-out"
@@ -453,19 +447,6 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
       <PMText fontSize="xs" color="secondary" lineHeight={1.4} truncate>
         {artifact.summary}
       </PMText>
-      <PMBox
-        as="span"
-        display="inline-flex"
-        alignItems="center"
-        justifyContent="center"
-        color="text.faded"
-        opacity={0.5}
-        aria-hidden
-      >
-        <PMIcon fontSize="sm">
-          <LuChevronRight />
-        </PMIcon>
-      </PMBox>
     </PMBox>
   );
 }
