@@ -15,7 +15,7 @@ import { SSEEventPublisher } from '@packmind/node-utils';
 import { ruleFactory } from '@packmind/standards/test';
 import { stubLogger } from '@packmind/test-utils';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { ILinterDelayedJobs } from '../../../domain/jobs/ILinterDelayedJobs';
+import { ILinterDelayedJobs } from '../../jobs/ILinterDelayedJobs';
 import { AssessRuleDetectionDelayedJob } from '../assessRuleDetection/shared/AssessRuleDetectionDelayedJob';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -26,7 +26,7 @@ import { DataSource } from 'typeorm';
 import { LinterAdapter } from './application/adapter/LinterAdapter';
 import { LinterListener } from './application/listeners/LinterListener';
 import { DetectionProgramService } from './application/services/DetectionProgramService';
-import { ILinterDelayedJobs } from './domain/jobs/ILinterDelayedJobs';
+import { ILinterDelayedJobs } from './application/jobs/ILinterDelayedJobs';
 import { AssessRuleDetectionJobFactory } from './infra/AssessRuleDetectionJobFactory';
 import { GenerateProgramJobFactory } from './infra/GenerateProgramJobFactory';
 import { MoveLinterArtefactsJobFactory } from './infra/MoveLinterArtefactsJobFactory';

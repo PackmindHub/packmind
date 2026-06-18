@@ -12,7 +12,7 @@ import {
   IStandardsPort,
   IStandardsPortName,
 } from '@packmind/types';
-import { ILinterDelayedJobs } from '../../domain/jobs/ILinterDelayedJobs';
+import { ILinterDelayedJobs } from '../jobs/ILinterDelayedJobs';
 import { ILinterRepositories } from '../../domain/repositories/ILinterRepositories';
 import { DetectionProgramService } from '../services/DetectionProgramService';
 import { LinterAdapter } from './LinterAdapter';

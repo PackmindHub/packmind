@@ -28,7 +28,7 @@ import {
   DetectionProgram,
   RuleDetectionAssessment,
 } from '../../domain';
-import type { ILinterDelayedJobs } from '../../domain/jobs/ILinterDelayedJobs';
+import type { ILinterDelayedJobs } from '../jobs/ILinterDelayedJobs';
 import type { ILinterRepositories } from '../../domain/repositories/ILinterRepositories';
 import {
   AssessRuleDetectionInput,

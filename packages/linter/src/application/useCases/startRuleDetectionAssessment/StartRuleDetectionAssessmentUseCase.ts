@@ -10,7 +10,7 @@ import {
   IStartRuleDetectionAssessmentUseCase,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { ILinterDelayedJobs } from '../../../domain/jobs/ILinterDelayedJobs';
+import { ILinterDelayedJobs } from '../../jobs/ILinterDelayedJobs';
 import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'StartRuleDetectionAssessmentUseCase';
