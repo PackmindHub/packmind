@@ -14,7 +14,6 @@ import { OrganizationSkillsModule } from './skills/skills.module';
 import { SpacesManagementModule } from '@packmind/spaces-management';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookModule } from './playbook/playbook.module';
-import { OrganizationsSearchModule } from './search/search.module';
 
 /**
  * Root module for organization-scoped routes
@@ -49,7 +48,6 @@ import { OrganizationsSearchModule } from './search/search.module';
     OrganizationSkillsModule,
     SpacesManagementModule,
     PlaybookModule,
-    OrganizationsSearchModule,
   ],
   controllers: [OrganizationsController],
   providers: [
