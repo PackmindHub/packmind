@@ -119,10 +119,9 @@ export class RemovePluginFromMarketplaceDelayedJob extends AbstractAIDelayedJob<
     // critical for the package-deletion cascade where the package is gone.
     const pluginSlug = distribution.pluginSlug;
 
-    const marketplaceGitRepo =
-      await this.gitPort.findMarketplaceGitRepoById(
-        marketplace.gitRepoId,
-      );
+    const marketplaceGitRepo = await this.gitPort.findMarketplaceGitRepoById(
+      marketplace.gitRepoId,
+    );
     if (!marketplaceGitRepo) {
       throw new Error(
         `[${this.origin}] Marketplace git repo not found for marketplace ${input.marketplaceId}`,

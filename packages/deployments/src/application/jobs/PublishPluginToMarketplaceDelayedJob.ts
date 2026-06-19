@@ -237,10 +237,9 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
 
       // Fresh-read the descriptor at job execution time to catch concurrent
       // edits since the use case acquired its snapshot.
-      const marketplaceGitRepo =
-        await this.gitPort.findMarketplaceGitRepoById(
-          marketplace.gitRepoId,
-        );
+      const marketplaceGitRepo = await this.gitPort.findMarketplaceGitRepoById(
+        marketplace.gitRepoId,
+      );
       if (!marketplaceGitRepo) {
         throw new PublishJobFailure(
           'descriptor_missing',

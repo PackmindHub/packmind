@@ -863,9 +863,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
     });
 
     it('does not resolve the marketplace-typed GitRepo', () => {
-      expect(
-        mockGitPort.findMarketplaceGitRepoById,
-      ).not.toHaveBeenCalled();
+      expect(mockGitPort.findMarketplaceGitRepoById).not.toHaveBeenCalled();
     });
 
     it('does not fetch the descriptor', () => {
