@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { GitRepoService } from '@packmind/git';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createGitProviderId,
@@ -143,7 +142,6 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
   let mockPackageService: jest.Mocked<PackageService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockEventEmitter: jest.Mocked<PackmindEventEmitterService>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
@@ -185,11 +183,8 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
       // the use case reads descriptor + lock from the marketplace's default
       // branch.
       checkBranchExists: jest.fn().mockResolvedValue(false),
-    } as unknown as jest.Mocked<IGitPort>;
-
-    mockGitRepoService = {
       findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
-    } as unknown as jest.Mocked<GitRepoService>;
+    } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
       parse: jest.fn().mockReturnValue(parsedDescriptor),
@@ -214,7 +209,6 @@ describe('PublishPackageOnMarketplaceUseCase', () => {
       mockPackageService,
       mockSpacesPort,
       mockGitPort,
-      mockGitRepoService,
       mockParserRegistry,
       mockEventEmitter,
       mockPublishJob,

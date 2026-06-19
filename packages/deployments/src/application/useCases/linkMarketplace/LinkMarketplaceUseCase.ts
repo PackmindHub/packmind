@@ -25,7 +25,6 @@ import {
   MarketplaceLinkedEvent,
   UserId,
 } from '@packmind/types';
-import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { MarketplaceReconciliationDelayedJob } from '../../jobs/MarketplaceReconciliationDelayedJob';
 import { fetchMarketplaceDescriptorFile } from '../../services/fetchMarketplaceDescriptorFile';
@@ -60,7 +59,6 @@ export class LinkMarketplaceUseCase
 {
   constructor(
     private readonly marketplaceRepository: IMarketplaceRepository,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly eventEmitterService: PackmindEventEmitterService,
@@ -135,7 +133,7 @@ export class LinkMarketplaceUseCase
     // 2. Cross-type collision check (standard ↔ marketplace), scoped to the
     //    target provider so the same owner/repo on a different provider in the
     //    org (e.g. a GitHub vs GitLab `acme/plugins`) is not a false collision.
-    const existingRepo = await this.gitRepoService.findGitRepoIgnoringType(
+    const existingRepo = await this.gitPort.findGitRepoIgnoringType(
       organization.id,
       owner,
       repo,
@@ -156,8 +154,8 @@ export class LinkMarketplaceUseCase
       }
       if (existingRepo.type === 'marketplace') {
         // Active (non-soft-deleted) marketplace row exists for these
-        // coordinates. The GitRepoService default finder excludes
-        // soft-deleted rows, so reaching here means there is a live one.
+        // coordinates. The default finder excludes soft-deleted rows, so
+        // reaching here means there is a live one.
         this.logger.error('Marketplace already linked', {
           owner,
           repo,
@@ -199,7 +197,7 @@ export class LinkMarketplaceUseCase
     const descriptor = this.parserRegistry.parse(file.content);
 
     // 5. Persist the marketplace-typed GitRepo.
-    const createdGitRepo = await this.gitRepoService.addGitRepo({
+    const createdGitRepo = await this.gitPort.addMarketplaceGitRepo({
       owner,
       repo,
       branch,

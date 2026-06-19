@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { GitRepoService } from '@packmind/git';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createGitProviderId,
@@ -126,7 +125,6 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
   let mockPackageService: jest.Mocked<PackageService>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockRenderer: jest.MockedFunction<PluginRenderer>;
@@ -152,11 +150,8 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       findById: jest.fn().mockResolvedValue(pkg),
     } as unknown as jest.Mocked<PackageService>;
 
-    mockGitRepoService = {
-      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
-    } as unknown as jest.Mocked<GitRepoService>;
-
     mockGitPort = {
+      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
       // By default the descriptor is served as a minimal valid JSON and the
       // packmind-lock.json file is reported as missing — first-publish path.
@@ -213,7 +208,6 @@ describe('PublishPluginToMarketplaceDelayedJob', () => {
       mockMarketplaceDistributionRepository,
       mockMarketplaceRepository,
       mockPackageService,
-      mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
       mockRenderer,

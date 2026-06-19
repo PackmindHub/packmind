@@ -1,6 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   IGitPort,
   RemovePluginFromMarketplaceJobInput,
@@ -27,7 +26,6 @@ export class RemovePluginFromMarketplaceJobFactory implements IJobFactory<Remove
   constructor(
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly marketplaceRepository: IMarketplaceRepository,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -40,7 +38,6 @@ export class RemovePluginFromMarketplaceJobFactory implements IJobFactory<Remove
       (listeners) => queueFactory(this.getQueueName(), listeners),
       this.marketplaceDistributionRepository,
       this.marketplaceRepository,
-      this.gitRepoService,
       this.gitPort,
       this.parserRegistry,
     );

@@ -13,7 +13,6 @@ import {
   MarketplaceRepositoryInfo,
   UserId,
 } from '@packmind/types';
-import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 
 const origin = 'ListMarketplacesUseCase';
@@ -41,7 +40,6 @@ export class ListMarketplacesUseCase
 {
   constructor(
     private readonly marketplaceRepository: IMarketplaceRepository,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -96,7 +94,7 @@ export class ListMarketplacesUseCase
     >();
     await Promise.all(
       marketplaces.map(async (marketplace) => {
-        const gitRepo = await this.gitRepoService.findMarketplaceGitRepoById(
+        const gitRepo = await this.gitPort.findMarketplaceGitRepoById(
           marketplace.gitRepoId,
         );
         if (!gitRepo) {

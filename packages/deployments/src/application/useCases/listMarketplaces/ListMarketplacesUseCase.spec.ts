@@ -17,7 +17,6 @@ import {
   User,
   UserId,
 } from '@packmind/types';
-import { GitRepoService } from '@packmind/git';
 import { IMarketplaceRepository } from '../../../domain/repositories/IMarketplaceRepository';
 import { ListMarketplacesUseCase } from './ListMarketplacesUseCase';
 
@@ -108,7 +107,6 @@ describe('ListMarketplacesUseCase', () => {
   };
 
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let useCase: ListMarketplacesUseCase;
@@ -137,16 +135,6 @@ describe('ListMarketplacesUseCase', () => {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockGitRepoService = {
-      findMarketplaceGitRepoById: jest
-        .fn()
-        .mockImplementation(async (id: GitRepo['id']) => {
-          if (id === m1.gitRepoId) return gitRepo1;
-          if (id === m2.gitRepoId) return gitRepo2;
-          return null;
-        }),
-    } as unknown as jest.Mocked<GitRepoService>;
-
     mockGitPort = {
       listProviders: jest.fn().mockResolvedValue({
         providers: [
@@ -160,11 +148,17 @@ describe('ListMarketplacesUseCase', () => {
           },
         ],
       }),
+      findMarketplaceGitRepoById: jest
+        .fn()
+        .mockImplementation(async (id: GitRepo['id']) => {
+          if (id === m1.gitRepoId) return gitRepo1;
+          if (id === m2.gitRepoId) return gitRepo2;
+          return null;
+        }),
     } as unknown as jest.Mocked<IGitPort>;
 
     useCase = new ListMarketplacesUseCase(
       mockMarketplaceRepository,
-      mockGitRepoService,
       mockGitPort,
       mockAccountsPort,
       stubLogger(),
@@ -242,7 +236,7 @@ describe('ListMarketplacesUseCase', () => {
 
     describe('when the backing git repo can no longer be resolved', () => {
       it('sets repository to null', async () => {
-        mockGitRepoService.findMarketplaceGitRepoById.mockResolvedValue(null);
+        mockGitPort.findMarketplaceGitRepoById.mockResolvedValue(null);
 
         const result = await useCase.execute(command);
 

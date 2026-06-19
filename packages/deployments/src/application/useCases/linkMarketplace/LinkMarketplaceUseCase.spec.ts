@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { GitRepoService } from '@packmind/git';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createGitProviderId,
@@ -91,7 +90,6 @@ describe('LinkMarketplaceUseCase', () => {
   };
 
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -123,11 +121,6 @@ describe('LinkMarketplaceUseCase', () => {
       hardDeleteById: jest.fn(),
     } as unknown as jest.Mocked<IMarketplaceRepository>;
 
-    mockGitRepoService = {
-      findGitRepoIgnoringType: jest.fn().mockResolvedValue(null),
-      addGitRepo: jest.fn().mockResolvedValue(createdGitRepo),
-    } as unknown as jest.Mocked<GitRepoService>;
-
     mockGitPort = {
       listProviders: jest.fn().mockResolvedValue({
         providers: [providerWithToken],
@@ -136,6 +129,8 @@ describe('LinkMarketplaceUseCase', () => {
         sha: 'abc',
         content: JSON.stringify({ vendor: 'anthropic', plugins: [] }),
       }),
+      findGitRepoIgnoringType: jest.fn().mockResolvedValue(null),
+      addMarketplaceGitRepo: jest.fn().mockResolvedValue(createdGitRepo),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockParserRegistry = {
@@ -163,7 +158,6 @@ describe('LinkMarketplaceUseCase', () => {
 
     useCase = new LinkMarketplaceUseCase(
       mockMarketplaceRepository,
-      mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
       mockEventEmitterService,
@@ -259,10 +253,10 @@ describe('LinkMarketplaceUseCase', () => {
       });
     });
 
-    it('persists a marketplace-typed GitRepo via GitRepoService.addGitRepo', async () => {
+    it('persists a marketplace-typed GitRepo via IGitPort.addMarketplaceGitRepo', async () => {
       await useCase.execute(baseCommand);
 
-      expect(mockGitRepoService.addGitRepo).toHaveBeenCalledWith(
+      expect(mockGitPort.addMarketplaceGitRepo).toHaveBeenCalledWith(
         expect.objectContaining({
           owner: 'acme',
           repo: 'plugins',
@@ -369,7 +363,7 @@ describe('LinkMarketplaceUseCase', () => {
       });
 
       it('does not persist a git repo', () => {
-        expect(mockGitRepoService.addGitRepo).not.toHaveBeenCalled();
+        expect(mockGitPort.addMarketplaceGitRepo).not.toHaveBeenCalled();
       });
 
       it('does not emit any event', () => {
@@ -409,7 +403,7 @@ describe('LinkMarketplaceUseCase', () => {
   describe('cross-type collisions', () => {
     describe('when a marketplace-typed repo exists', () => {
       it('throws MarketplaceAlreadyLinkedError', async () => {
-        mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
+        mockGitPort.findGitRepoIgnoringType.mockResolvedValue({
           id: createGitRepoId(uuidv4()),
           owner: 'acme',
           repo: 'plugins',
@@ -426,7 +420,7 @@ describe('LinkMarketplaceUseCase', () => {
 
     describe('when a standard-typed repo exists', () => {
       it('throws GitRepoAlreadyLinkedAsStandardError', async () => {
-        mockGitRepoService.findGitRepoIgnoringType.mockResolvedValue({
+        mockGitPort.findGitRepoIgnoringType.mockResolvedValue({
           id: createGitRepoId(uuidv4()),
           owner: 'acme',
           repo: 'plugins',
@@ -445,7 +439,7 @@ describe('LinkMarketplaceUseCase', () => {
       it('scopes the collision check to the target provider', async () => {
         await useCase.execute(baseCommand);
 
-        expect(mockGitRepoService.findGitRepoIgnoringType).toHaveBeenCalledWith(
+        expect(mockGitPort.findGitRepoIgnoringType).toHaveBeenCalledWith(
           organizationId,
           baseCommand.owner,
           baseCommand.repo,

@@ -6,7 +6,6 @@ import {
   QueueListeners,
   WorkerListeners,
 } from '@packmind/node-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   DistributionStatus,
   IGitPort,
@@ -67,7 +66,7 @@ const logOrigin = 'MarketplaceReconciliationDelayedJob';
  * For each scheduled run the worker:
  *  1. Loads the marketplace row by id. If soft-deleted or missing → skip
  *     (return the current/known state with `lastValidatedAt = now`).
- *  2. Resolves the marketplace-typed `GitRepo` via `GitRepoService`. Missing
+ *  2. Resolves the marketplace-typed `GitRepo` via `IGitPort`. Missing
  *     repo → `state='unreachable'`.
  *  3. Fetches `marketplace.json` via `IGitPort.getFileFromRepo`. Any fetch
  *     failure (network, 404, etc.) → `state='unreachable'`, descriptor
@@ -110,7 +109,6 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     >,
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly packageService: PackageService,
@@ -226,7 +224,7 @@ export class MarketplaceReconciliationDelayedJob extends AbstractAIDelayedJob<
     }
 
     // Step 2 — Resolve the underlying marketplace-typed GitRepo.
-    const gitRepo = await this.gitRepoService.findMarketplaceGitRepoById(
+    const gitRepo = await this.gitPort.findMarketplaceGitRepoById(
       marketplace.gitRepoId,
     );
     if (!gitRepo) {

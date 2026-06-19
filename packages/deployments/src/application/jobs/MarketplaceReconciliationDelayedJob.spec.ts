@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import { IQueue, QueueListeners } from '@packmind/node-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -73,7 +72,6 @@ describe('MarketplaceReconciliationDelayedJob', () => {
 
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let mockPackageService: jest.Mocked<PackageService>;
@@ -113,11 +111,8 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       updateStatus: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IMarketplaceDistributionRepository>;
 
-    mockGitRepoService = {
-      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
-    } as unknown as jest.Mocked<GitRepoService>;
-
     mockGitPort = {
+      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
       getFileFromRepo: jest.fn(),
       checkMarketplaceRepoExists: jest.fn().mockResolvedValue({ exists: true }),
       findOpenSyncPullRequest: jest.fn().mockResolvedValue(null),
@@ -155,7 +150,6 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       queueFactory,
       mockMarketplaceRepository,
       mockMarketplaceDistributionRepository,
-      mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
       mockPackageService,
@@ -381,7 +375,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
       let result: MarketplaceReconciliationJobOutput;
 
       beforeEach(async () => {
-        mockGitRepoService.findMarketplaceGitRepoById.mockResolvedValue(null);
+        mockGitPort.findMarketplaceGitRepoById.mockResolvedValue(null);
 
         result = await job.runJob('job-6', input, new AbortController());
       });
@@ -870,7 +864,7 @@ describe('MarketplaceReconciliationDelayedJob', () => {
 
     it('does not resolve the marketplace-typed GitRepo', () => {
       expect(
-        mockGitRepoService.findMarketplaceGitRepoById,
+        mockGitPort.findMarketplaceGitRepoById,
       ).not.toHaveBeenCalled();
     });
 

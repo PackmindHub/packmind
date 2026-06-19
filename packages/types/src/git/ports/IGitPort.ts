@@ -167,6 +167,47 @@ export interface IGitPort {
   addGitRepo(command: AddGitRepoCommand): Promise<GitRepo>;
 
   /**
+   * Persist a marketplace-typed git repository directly.
+   *
+   * Marketplace repos are created from descriptor coordinates rather than the
+   * provider-driven add-repo flow, so this accepts the entity shape (minus the
+   * generated id) instead of an AddGitRepoCommand.
+   *
+   * @param gitRepo - The marketplace git repository to persist (without id)
+   * @returns Promise of the created git repository
+   */
+  addMarketplaceGitRepo(gitRepo: Omit<GitRepo, 'id'>): Promise<GitRepo>;
+
+  /**
+   * Find a marketplace-typed git repository by id.
+   *
+   * Returns null when no row is found or when the row is not marketplace-typed,
+   * so standard rows never leak into marketplace flows.
+   *
+   * @param id - The git repository id
+   * @returns Promise of the marketplace git repository or null
+   */
+  findMarketplaceGitRepoById(id: GitRepoId): Promise<GitRepo | null>;
+
+  /**
+   * Find a git repository by owner/repo within an organization without any type
+   * filter. Used by the marketplace link flow for its cross-type collision
+   * check between standard and marketplace repositories.
+   *
+   * @param organizationId - The organization to scope the lookup to
+   * @param owner - The repository owner
+   * @param repo - The repository name
+   * @param opts - Optional flags; pass `providerId` to scope to one provider
+   * @returns Promise of the git repository or null
+   */
+  findGitRepoIgnoringType(
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+    opts?: Pick<QueryOption, 'includeDeleted'> & { providerId?: GitProviderId },
+  ): Promise<GitRepo | null>;
+
+  /**
    * Delete a git provider
    *
    * @param id - The git provider ID

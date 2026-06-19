@@ -306,6 +306,29 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._addGitRepo.execute(command);
   }
 
+  public async addMarketplaceGitRepo(
+    gitRepo: Omit<GitRepo, 'id'>,
+  ): Promise<GitRepo> {
+    return this.gitServices.getGitRepoService().addGitRepo(gitRepo);
+  }
+
+  public async findMarketplaceGitRepoById(
+    id: GitRepoId,
+  ): Promise<GitRepo | null> {
+    return this.gitServices.getGitRepoService().findMarketplaceGitRepoById(id);
+  }
+
+  public async findGitRepoIgnoringType(
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+    opts?: Pick<QueryOption, 'includeDeleted'> & { providerId?: GitProviderId },
+  ): Promise<GitRepo | null> {
+    return this.gitServices
+      .getGitRepoService()
+      .findGitRepoIgnoringType(organizationId, owner, repo, opts);
+  }
+
   public async deleteGitProvider(
     id: GitProviderId,
     userId: UserId,

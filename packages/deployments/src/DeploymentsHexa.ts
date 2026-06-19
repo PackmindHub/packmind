@@ -27,11 +27,6 @@ import {
   MarketplaceDistribution,
   PluginInstallation,
 } from '@packmind/types';
-import {
-  GitRepoRepository,
-  GitRepoSchema,
-  GitRepoService,
-} from '@packmind/git';
 import { DataSource, Repository } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { DeploymentsListener } from './application/listeners/DeploymentsListener';
@@ -68,7 +63,6 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly marketplaceDistributionRepository: MarketplaceDistributionRepository;
   private readonly pluginInstallationRepository: PluginInstallationRepository;
   private readonly marketplaceDescriptorParserRegistry: MarketplaceDescriptorParserRegistry;
-  private readonly gitRepoService: GitRepoService;
   private readonly adapter: DeploymentsAdapter;
   private readonly listener: DeploymentsListener;
   // Built during initialize() — needs the removal delayed job, which only
@@ -123,16 +117,9 @@ export class DeploymentsHexa extends BaseHexa<
           new AnthropicMarketplaceDescriptorParser(),
         ]);
 
-      // LinkMarketplaceUseCase needs the GitRepoService for the cross-type
-      // collision check (`findGitRepoIgnoringType`) and to persist the
-      // marketplace-typed GitRepo. The service is constructed from the
-      // GitRepoRepository (re-exported from @packmind/git so this Hexa can
-      // wire it without reaching into git's internals).
-      this.gitRepoService = new GitRepoService(
-        new GitRepoRepository(this.dataSource.getRepository(GitRepoSchema)),
-      );
-
-      // Create adapter in constructor - ports will be set during initialize()
+      // Create adapter in constructor - ports will be set during initialize().
+      // The marketplace use cases reach git through IGitPort (wired during
+      // initialize()), so no GitRepoService is constructed here.
       this.adapter = new DeploymentsAdapter(
         this.services,
         this.repositories.getDistributionRepository(),
@@ -141,7 +128,6 @@ export class DeploymentsHexa extends BaseHexa<
         this.marketplaceDistributionRepository,
         this.pluginInstallationRepository,
         this.marketplaceDescriptorParserRegistry,
-        this.gitRepoService,
       );
 
       // Create listener - will be initialized during initialize()

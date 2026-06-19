@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -96,7 +95,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
 
   let mockMarketplaceDistributionRepository: jest.Mocked<IMarketplaceDistributionRepository>;
   let mockMarketplaceRepository: jest.Mocked<IMarketplaceRepository>;
-  let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockParserRegistry: jest.Mocked<MarketplaceDescriptorParserRegistry>;
   let job: RemovePluginFromMarketplaceDelayedJob;
@@ -111,11 +109,8 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       findById: jest.fn().mockResolvedValue(marketplace),
     } as unknown as jest.Mocked<IMarketplaceRepository>;
 
-    mockGitRepoService = {
-      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
-    } as unknown as jest.Mocked<GitRepoService>;
-
     mockGitPort = {
+      findMarketplaceGitRepoById: jest.fn().mockResolvedValue(gitRepo),
       commitToGit: jest.fn().mockResolvedValue(successfulCommit),
       getFileFromRepo: jest.fn().mockImplementation(async (_repo, path) => {
         if (path === 'packmind-lock.json') {
@@ -153,7 +148,6 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
       async () => ({}) as never,
       mockMarketplaceDistributionRepository,
       mockMarketplaceRepository,
-      mockGitRepoService,
       mockGitPort,
       mockParserRegistry,
       stubLogger(),
@@ -372,7 +366,7 @@ describe('RemovePluginFromMarketplaceDelayedJob', () => {
 
   describe('when the marketplace git repo is missing', () => {
     beforeEach(() => {
-      mockGitRepoService.findMarketplaceGitRepoById = jest
+      mockGitPort.findMarketplaceGitRepoById = jest
         .fn()
         .mockResolvedValue(null);
     });

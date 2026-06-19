@@ -340,7 +340,13 @@ describe('RenderPackageAsPluginUseCase', () => {
     });
   });
 
-  describe('install tracking hook files', () => {
+  // The use case delegates plugin rendering — including the install-tracking
+  // hook files — to ICodingAgentPort.renderPackageAsClaudePlugin. Producing the
+  // hook files (hooks.json, track-install.*, packmind-tracking.env) is the
+  // ClaudePluginDeployer's job and is covered in @packmind/coding-agent. Here we
+  // only assert the use case forwards installTracking correctly (marketplace
+  // mode only).
+  describe('install tracking forwarding to the coding-agent port', () => {
     const installTracking: RenderPackageAsPluginCommand['installTracking'] = {
       apiBaseUrl: 'https://app.packmind.io/api',
       marketplaceName: 'acme-marketplace',
@@ -355,77 +361,35 @@ describe('RenderPackageAsPluginUseCase', () => {
     });
 
     describe('when installTracking is absent', () => {
-      it('emits no hook files', async () => {
-        const result = await useCase.execute(
-          buildCommand({ installTracking: undefined }),
+      it('forwards no install tracking to the port', async () => {
+        await useCase.execute(buildCommand({ installTracking: undefined }));
+        expect(
+          codingAgentPort.renderPackageAsClaudePlugin,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({ installTracking: undefined }),
         );
-        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
-        expect(hookPaths).toEqual([]);
       });
     });
 
     describe('when mode is standalone and installTracking is present', () => {
-      it('emits no hook files', async () => {
-        const result = await useCase.execute(
+      it('forwards no install tracking to the port', async () => {
+        await useCase.execute(
           buildCommand({ mode: 'standalone', installTracking }),
         );
-        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
-        expect(hookPaths).toEqual([]);
+        expect(
+          codingAgentPort.renderPackageAsClaudePlugin,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({ installTracking: undefined }),
+        );
       });
     });
 
     describe('when mode is marketplace and installTracking is present', () => {
-      let result: Awaited<ReturnType<typeof useCase.execute>>;
-
-      beforeEach(async () => {
-        result = await useCase.execute(buildCommand({ installTracking }));
-      });
-
-      it('emits exactly four hook files', () => {
-        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
-        expect(hookPaths).toHaveLength(4);
-      });
-
-      it('emits hooks/hooks.json', () => {
+      it('forwards the install tracking config to the port', async () => {
+        await useCase.execute(buildCommand({ installTracking }));
         expect(
-          result.files.some((f) => f.path.endsWith('hooks/hooks.json')),
-        ).toBe(true);
-      });
-
-      it('emits hooks/track-install.sh', () => {
-        expect(
-          result.files.some((f) => f.path.endsWith('hooks/track-install.sh')),
-        ).toBe(true);
-      });
-
-      it('emits hooks/track-install.ps1', () => {
-        expect(
-          result.files.some((f) => f.path.endsWith('hooks/track-install.ps1')),
-        ).toBe(true);
-      });
-
-      it('emits hooks/packmind-tracking.env', () => {
-        expect(
-          result.files.some((f) =>
-            f.path.endsWith('hooks/packmind-tracking.env'),
-          ),
-        ).toBe(true);
-      });
-
-      it('injects the tracking token into the sidecar', () => {
-        const env = result.files.find((f) =>
-          f.path.endsWith('hooks/packmind-tracking.env'),
-        );
-        expect(env?.content).toContain('PACKMIND_TRACKING_TOKEN=tok_abc123');
-      });
-
-      it('injects the marketplace name into the sidecar', () => {
-        const env = result.files.find((f) =>
-          f.path.endsWith('hooks/packmind-tracking.env'),
-        );
-        expect(env?.content).toContain(
-          'PACKMIND_MARKETPLACE_NAME=acme-marketplace',
-        );
+          codingAgentPort.renderPackageAsClaudePlugin,
+        ).toHaveBeenCalledWith(expect.objectContaining({ installTracking }));
       });
     });
   });

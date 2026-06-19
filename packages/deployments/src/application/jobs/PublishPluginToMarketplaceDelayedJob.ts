@@ -8,7 +8,6 @@ import {
   SSEEventPublisher,
   WorkerListeners,
 } from '@packmind/node-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   DistributionStatus,
   FileModification,
@@ -124,7 +123,6 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly packageService: PackageService,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly renderer: PluginRenderer,
@@ -240,7 +238,7 @@ export class PublishPluginToMarketplaceDelayedJob extends AbstractAIDelayedJob<
       // Fresh-read the descriptor at job execution time to catch concurrent
       // edits since the use case acquired its snapshot.
       const marketplaceGitRepo =
-        await this.gitRepoService.findMarketplaceGitRepoById(
+        await this.gitPort.findMarketplaceGitRepoById(
           marketplace.gitRepoId,
         );
       if (!marketplaceGitRepo) {

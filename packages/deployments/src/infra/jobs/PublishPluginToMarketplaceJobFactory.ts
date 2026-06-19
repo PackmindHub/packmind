@@ -5,7 +5,6 @@ import {
   PackmindEventEmitterService,
   queueFactory,
 } from '@packmind/node-utils';
-import { GitRepoService } from '@packmind/git';
 import {
   IGitPort,
   PublishPluginToMarketplaceJobInput,
@@ -38,7 +37,6 @@ export class PublishPluginToMarketplaceJobFactory implements IJobFactory<Publish
     private readonly marketplaceDistributionRepository: IMarketplaceDistributionRepository,
     private readonly marketplaceRepository: IMarketplaceRepository,
     private readonly packageService: PackageService,
-    private readonly gitRepoService: GitRepoService,
     private readonly gitPort: IGitPort,
     private readonly parserRegistry: MarketplaceDescriptorParserRegistry,
     private readonly renderer: PluginRenderer,
@@ -55,7 +53,6 @@ export class PublishPluginToMarketplaceJobFactory implements IJobFactory<Publish
       this.marketplaceDistributionRepository,
       this.marketplaceRepository,
       this.packageService,
-      this.gitRepoService,
       this.gitPort,
       this.parserRegistry,
       this.renderer,
