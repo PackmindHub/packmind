@@ -963,9 +963,6 @@ importers:
       '@nestjs/common':
         specifier: ^11.1.6
         version: 11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2)
-      '@packmind/deployments':
-        specifier: workspace:*
-        version: link:../deployments
       '@packmind/git':
         specifier: workspace:*
         version: link:../git
@@ -20244,6 +20241,7 @@ packages:
         integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==,
       }
     engines: { node: ^18 || >=20 }
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
