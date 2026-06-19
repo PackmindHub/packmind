@@ -124,7 +124,24 @@ export abstract class AbstractPackmindAppPage
   }
 
   async navigateToDashboard(): Promise<IDashboardPage> {
-    await this.page.getByRole('link', { name: 'Dashboard' }).first().click();
+    // The Dashboard link lives under a space's nav section. On org-only
+    // routes (settings/setup/profile) no space is active, so the link is
+    // not rendered in the sidebar — open the default space drawer first
+    // to reveal it.
+    const dashboardLink = this.page.getByRole('link', { name: 'Overview' });
+
+    if (!(await dashboardLink.first().isVisible())) {
+      await this.page
+        .getByTestId(SidebarNavigationDataTestId.DefaultSpaceRow)
+        .click();
+      const openDrawer = this.page.locator(
+        '[role="dialog"][data-state="open"]',
+      );
+      await openDrawer.waitFor({ state: 'visible' });
+      await openDrawer.getByRole('link', { name: 'Overview' }).click();
+    } else {
+      await dashboardLink.first().click();
+    }
 
     return this.pageFactory.getDashboardPage();
   }
@@ -150,7 +167,7 @@ export abstract class AbstractPackmindAppPage
     // Playwright's auto-wait on click handles stability through the open
     // animation — no extra animation barrier needed (and `getAnimations()`
     // evaluates against an element that React can unmount mid-call).
-    await openDrawer.getByRole('link', { name: 'Dashboard' }).click();
+    await openDrawer.getByRole('link', { name: 'Overview' }).click();
 
     // Wait for actual navigation (URL was already matching /org/** so waitForLoaded won't wait)
     await this.page.waitForURL((url) => url.toString() !== currentUrl);

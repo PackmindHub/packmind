@@ -38,6 +38,16 @@ class SyncJob<Input, Output> implements IQueue<Input, Output> {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
   async cancelJob(_jobId: string): Promise<void> {}
+
+  async removeRepeatable(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _name: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _pattern: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _jobId: string,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  ): Promise<void> {}
 }
 
 // Mock the queueFactory, Configuration, and SSEEventPublisher from @packmind/node-utils

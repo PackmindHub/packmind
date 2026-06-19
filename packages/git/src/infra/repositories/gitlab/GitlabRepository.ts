@@ -532,6 +532,240 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
+  async createBranchFromBase(targetBranch: string): Promise<void> {
+    const baseBranch = this.options.branch || 'main';
+
+    this.logger.info('Ensuring branch exists on GitLab repository', {
+      projectPath: this.projectPath,
+      baseBranch,
+      targetBranch,
+    });
+
+    // Step 1: Check if the target branch already exists. If GitLab returns
+    // 2xx, the branch is present and no work is needed.
+    const encodedTargetBranch = encodeURIComponent(targetBranch);
+    try {
+      await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/repository/branches/${encodedTargetBranch}`,
+      );
+
+      this.logger.debug('Target branch already exists, skipping creation', {
+        projectPath: this.projectPath,
+        targetBranch,
+      });
+      return;
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status !== 404) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to probe target branch existence on GitLab', {
+          projectPath: this.projectPath,
+          targetBranch,
+          error: errorMessage,
+        });
+        throw new Error(
+          `Failed to ensure branch '${targetBranch}' on GitLab: ${errorMessage}`,
+        );
+      }
+      // 404 -> branch missing, proceed to create it from the base branch.
+      this.logger.debug('Target branch missing, will create from base', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    }
+
+    // Step 2: Create the target branch from the base branch. GitLab's branch
+    // creation endpoint validates that `ref` (the base) exists; propagate any
+    // failure verbatim so the caller can surface it.
+    try {
+      await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/repository/branches`,
+        null,
+        {
+          params: {
+            branch: targetBranch,
+            ref: baseBranch,
+          },
+        },
+      );
+
+      this.logger.info('Created target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create target branch on GitLab', {
+        projectPath: this.projectPath,
+        baseBranch,
+        targetBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to create branch '${targetBranch}' on GitLab: ${errorMessage}`,
+      );
+    }
+  }
+
+  async openOrUpdatePullRequest(command: {
+    head: string;
+    title: string;
+    body?: string;
+  }): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    const baseBranch = this.options.branch || 'main';
+    const { head, title, body } = command;
+
+    this.logger.info('Ensuring rolling merge request on GitLab repository', {
+      projectPath: this.projectPath,
+      head,
+      base: baseBranch,
+    });
+
+    // Step 1: Look up any open MR matching source -> target.
+    try {
+      const lookupResponse = await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          params: {
+            source_branch: head,
+            target_branch: baseBranch,
+            state: 'opened',
+          },
+        },
+      );
+
+      if (
+        Array.isArray(lookupResponse.data) &&
+        lookupResponse.data.length > 0
+      ) {
+        const first = lookupResponse.data[0];
+        this.logger.debug(
+          'Existing open merge request found, skipping creation',
+          {
+            projectPath: this.projectPath,
+            head,
+            base: baseBranch,
+            iid: first.iid,
+          },
+        );
+        return {
+          url: first.web_url,
+          number: first.iid,
+          wasCreated: false,
+        };
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to look up merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to look up merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+
+    // Step 2: Create a new MR.
+    try {
+      const createResponse = await this.axiosInstance.post(
+        `/projects/${this.encodedProjectPath}/merge_requests`,
+        {
+          source_branch: head,
+          target_branch: baseBranch,
+          title,
+          description: body,
+        },
+      );
+
+      this.logger.info('Created merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        iid: createResponse.data.iid,
+      });
+
+      return {
+        url: createResponse.data.web_url,
+        number: createResponse.data.iid,
+        wasCreated: true,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to create merge request on GitLab', {
+        projectPath: this.projectPath,
+        head,
+        base: baseBranch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to open merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
+      );
+    }
+  }
+
+  public async findOpenPullRequest(
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const baseBranch = this.options.branch || 'main';
+    const response = await this.axiosInstance.get(
+      `/projects/${this.encodedProjectPath}/merge_requests`,
+      {
+        params: {
+          source_branch: head,
+          target_branch: baseBranch,
+          state: 'opened',
+        },
+      },
+    );
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const first = response.data[0];
+      return { url: first.web_url, number: first.iid };
+    }
+    return null;
+  }
+
+  public async checkRepositoryExists(): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    try {
+      await this.axiosInstance.get(`/projects/${this.encodedProjectPath}`);
+      return { exists: true };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return { exists: false, reason: 'auth_failed' };
+      }
+      if (status === 404) {
+        return { exists: false, reason: 'repo_not_found' };
+      }
+      return { exists: false, reason: 'network_transient' };
+    }
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'status' in error.response &&
+      typeof (error.response as { status: unknown }).status === 'number'
+    ) {
+      return (error.response as { status: number }).status;
+    }
+    return undefined;
+  }
+
   async getFileOnRepo(
     path: string,
     branch?: string,

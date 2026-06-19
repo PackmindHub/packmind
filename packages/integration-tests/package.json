@@ -6,8 +6,11 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@nestjs/common": "^11.1.17",
+    "bullmq": "^5.58.2",
+    "jsonwebtoken": "^9.0.2",
     "@packmind/accounts": "workspace:*",
-    "@packmind/editions": "workspace:*",
+    "@packmind/amplitude": "workspace:*",
     "@packmind/recipes": "workspace:*",
     "@packmind/git": "workspace:*",
     "@packmind/node-utils": "workspace:*",
@@ -17,12 +20,12 @@
     "@packmind/standards": "workspace:*",
     "@packmind/coding-agent": "workspace:*",
     "@packmind/deployments": "workspace:*",
+    "@packmind/playbook-change-management": "workspace:*",
+    "uuid": "^11.1.0",
     "@packmind/test-utils": "workspace:*",
     "@packmind/llm": "workspace:*",
-    "uuid": "^11.1.0",
+    "@packmind/linter": "workspace:*",
     "typeorm": "0.3.28",
-    "jsonwebtoken": "^9.0.3",
-    "jest-stage": "^1.0.0",
-    "bullmq": "^5.58.2"
+    "jest-stage": "^1.0.0"
   }
 }

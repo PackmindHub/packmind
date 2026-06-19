@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { PMBox, PMHStack, PMIcon, PMText } from '@packmind/ui';
 import type { DriftedPackageInfo } from '@packmind/types';
-import { LuChevronRight } from 'react-icons/lu';
+import { LuChevronRight, LuPackage } from 'react-icons/lu';
 import { formatRelativeDate } from '../redesign/selectors/installDriftEntries';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -50,16 +50,20 @@ export function GovernanceDriftRow({
       }}
     >
       <PMHStack gap={4} align="center" justify="space-between" height="full">
-        <PMText
-          fontSize="md"
-          fontWeight="medium"
-          color="primary"
-          truncate
-          minW={0}
-          flex={1}
-        >
-          {entry.packageName}
-        </PMText>
+        <PMHStack gap={2.5} align="center" minW={0} flex={1}>
+          <PMIcon color="text.faded" fontSize="md" flexShrink={0} aria-hidden>
+            <LuPackage />
+          </PMIcon>
+          <PMText
+            fontSize="md"
+            fontWeight="medium"
+            color="primary"
+            truncate
+            minW={0}
+          >
+            {entry.packageName}
+          </PMText>
+        </PMHStack>
         <PMHStack gap={5} align="center" flexShrink={0}>
           <PMText
             fontSize="sm"

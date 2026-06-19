@@ -32,6 +32,18 @@ export interface ISkillsPort {
     userId: string,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]>;
+  /**
+   * List all skills across every space of an organization, without space
+   * membership checks. Intended for organization-scoped aggregations
+   * (e.g. governance drift) where the caller has already been authorized at
+   * the organization level.
+   */
+  listAllSkillsByOrganization(organizationId: OrganizationId): Promise<Skill[]>;
+  /**
+   * Count skills grouped by space ID, omitting spaces with zero skills.
+   * Used for management listing aggregations.
+   */
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   findSkillBySlug(
     slug: string,
     organizationId: OrganizationId,

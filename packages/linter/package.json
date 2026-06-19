@@ -1,0 +1,25 @@
+{
+  "name": "@packmind/linter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@packmind/deployments": "workspace:*",
+    "@packmind/git": "workspace:*",
+    "@packmind/linter-ast": "workspace:*",
+    "@packmind/linter-execution": "workspace:*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/types": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/standards": "workspace:*",
+    "bullmq": "^5.23.6",
+    "typeorm": "0.3.28",
+    "uuid": "^11.1.0",
+    "@nestjs/common": "^11.1.6",
+    "@packmind/test-utils": "workspace:*",
+    "@packmind/llm": "workspace:*",
+    "yaml": "^2.8.1"
+  }
+}

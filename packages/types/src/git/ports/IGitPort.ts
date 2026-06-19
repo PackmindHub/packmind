@@ -84,6 +84,58 @@ export interface IGitPort {
   ): Promise<{ sha: string; content: string } | null>;
 
   /**
+   * Ensure a branch exists on a git repository, creating it from a base branch
+   * if missing. No-op when the target branch already exists.
+   *
+   * Used by the marketplace-publish flow to bootstrap the rolling `packmind/sync`
+   * branch from the marketplace's default branch on the first publish.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch used when creating)
+   * @param branch - The target branch name to ensure exists
+   * @returns Promise resolving when the branch is guaranteed to exist
+   */
+  createBranchFromBase(repo: GitRepo, branch: string): Promise<void>;
+
+  /**
+   * Open a pull request on a git repository, or update an existing one when a PR
+   * with the same `head → base` already exists (rolling-PR semantics).
+   *
+   * Idempotent: if a PR matching `head → base` is already open, the existing one
+   * is returned untouched (no second PR is created). Used by the
+   * marketplace-publish flow to keep a single "Packmind sync" PR per marketplace.
+   *
+   * @param repo - The git repository (its `branch` field is the BASE branch)
+   * @param command - PR head / title / body
+   * @returns Promise of the PR URL and number
+   */
+  openOrUpdatePullRequest(
+    repo: GitRepo,
+    command: {
+      head: string;
+      title: string;
+      body?: string;
+    },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }>;
+
+  /**
+   * Find the open "Packmind sync" pull request on a marketplace repo, or
+   * `null` when none is open. Used by reconcile to surface a pending PR.
+   */
+  findOpenSyncPullRequest(
+    repo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null>;
+
+  /**
+   * Probe a marketplace repo's reachability with the configured credentials,
+   * distinguishing auth failure / repo gone / transient network error.
+   */
+  checkMarketplaceRepoExists(repo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }>;
+
+  /**
    * Add a new git provider for an organization
    *
    * @param command - Command containing git provider details and user/organization context

@@ -9,13 +9,17 @@ import {
   createUserId,
   DistributionStatus,
   IAccountsPort,
+  IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
+  IStandardsPort,
   ListDriftedPackagesByOrgCommand,
   Organization,
   Package,
   PackageId,
   Space,
   SpaceType,
+  Standard,
   StandardId,
   TargetId,
   User,
@@ -31,6 +35,11 @@ import { ListDriftedPackagesByOrgUseCase } from './ListDriftedPackagesByOrgUseCa
 
 const orgId = createOrganizationId('org-1');
 const userId = createUserId('user-1');
+
+// The use case only reads `id` and `version` from each artifact to resolve
+// drift, so minimal objects are enough.
+const standardVersion = (id: StandardId, version: number): Standard =>
+  ({ id, version }) as unknown as Standard;
 
 const space = (id: string, slug: string, name: string): Space => ({
   id: createSpaceId(id),
@@ -94,6 +103,9 @@ describe('ListDriftedPackagesByOrgUseCase', () => {
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockPackageRepository: jest.Mocked<IPackageRepository>;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
 
   const ctx: MemberContext = {
     user: { id: userId } as User,
@@ -123,11 +135,26 @@ describe('ListDriftedPackagesByOrgUseCase', () => {
       findBySpaceId: jest.fn(),
     } as unknown as jest.Mocked<IPackageRepository>;
 
+    mockStandardsPort = {
+      listAllStandardsByOrganization: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
+    mockRecipesPort = {
+      listAllRecipesByOrganization: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<IRecipesPort>;
+
+    mockSkillsPort = {
+      listAllSkillsByOrganization: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     useCase = new ListDriftedPackagesByOrgUseCase(
       mockSpacesPort,
       mockAccountsPort,
       mockDistributionRepository,
       mockPackageRepository,
+      mockStandardsPort,
+      mockRecipesPort,
+      mockSkillsPort,
       stubLogger(),
     );
   });
@@ -198,6 +225,9 @@ describe('ListDriftedPackagesByOrgUseCase', () => {
         mockPackageRepository.findBySpaceId.mockResolvedValue([
           pkg('pkg-1', 'packmind-ui', spaceId, [standardId]),
         ]);
+        mockStandardsPort.listAllStandardsByOrganization.mockResolvedValue([
+          standardVersion(standardId, 2),
+        ]);
       });
 
       it('counts two behind distributions and reports the latest lastUpdatedAt', async () => {
@@ -253,6 +283,10 @@ describe('ListDriftedPackagesByOrgUseCase', () => {
           }
           return [pkg('pkg-b', 'alpha', spaceB, [stdB])];
         });
+        mockStandardsPort.listAllStandardsByOrganization.mockResolvedValue([
+          standardVersion(stdA, 2),
+          standardVersion(stdB, 2),
+        ]);
       });
 
       it('sorts by behindDistributions desc then name asc and tags each row with its space', async () => {
@@ -286,11 +320,73 @@ describe('ListDriftedPackagesByOrgUseCase', () => {
         mockPackageRepository.findBySpaceId.mockResolvedValue([
           pkg('pkg-1', 'pkg one', spaceId, [ownedStd]),
         ]);
+        mockStandardsPort.listAllStandardsByOrganization.mockResolvedValue([
+          standardVersion(otherStd, 2),
+          standardVersion(ownedStd, 1),
+        ]);
       });
 
       it('does not attribute drift to that package', async () => {
         const result = await useCase['executeForMembers'](baseCommand);
         expect(result).toEqual([]);
+      });
+    });
+
+    describe('when a deployed artifact is on its latest version', () => {
+      const spaceId = createSpaceId('space-1');
+      const packageId = createPackageId('pkg-1');
+      const standardId = createStandardId('std-1');
+      const target = createTargetId('target-1');
+
+      beforeEach(() => {
+        mockSpacesPort.listSpacesByOrganization.mockResolvedValue([
+          space('space-1', 'space-one', 'Space One'),
+        ]);
+        mockDistributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue(
+          [outdatedOnTarget(target, [standardId])],
+        );
+        mockDistributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [activeOp(packageId, target)],
+        );
+        mockPackageRepository.findBySpaceId.mockResolvedValue([
+          pkg('pkg-1', 'pkg one', spaceId, [standardId]),
+        ]);
+        mockStandardsPort.listAllStandardsByOrganization.mockResolvedValue([
+          standardVersion(standardId, 1),
+        ]);
+      });
+
+      it('does not report the package as drifted', async () => {
+        const result = await useCase['executeForMembers'](baseCommand);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when a deployed artifact has been deleted from Packmind', () => {
+      const spaceId = createSpaceId('space-1');
+      const packageId = createPackageId('pkg-1');
+      const standardId = createStandardId('std-1');
+      const target = createTargetId('target-1');
+
+      beforeEach(() => {
+        mockSpacesPort.listSpacesByOrganization.mockResolvedValue([
+          space('space-1', 'space-one', 'Space One'),
+        ]);
+        mockDistributionRepository.findOutdatedDeploymentsBySpace.mockResolvedValue(
+          [outdatedOnTarget(target, [standardId])],
+        );
+        mockDistributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
+          [activeOp(packageId, target)],
+        );
+        mockPackageRepository.findBySpaceId.mockResolvedValue([
+          pkg('pkg-1', 'pkg one', spaceId, [standardId]),
+        ]);
+        mockStandardsPort.listAllStandardsByOrganization.mockResolvedValue([]);
+      });
+
+      it('reports the package as drifted', async () => {
+        const result = await useCase['executeForMembers'](baseCommand);
+        expect(result.map((r) => r.packageId)).toEqual([packageId]);
       });
     });
   });

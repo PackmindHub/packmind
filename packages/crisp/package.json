@@ -1,0 +1,16 @@
+{
+  "name": "@packmind/crisp",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "crisp-api": "^10.0.17",
+    "typeorm": "^0.3.20",
+    "@packmind/logger": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/types": "workspace:*",
+    "@packmind/test-utils": "workspace:*"
+  }
+}
