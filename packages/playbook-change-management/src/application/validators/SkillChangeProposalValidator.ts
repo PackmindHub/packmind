@@ -12,7 +12,7 @@ import {
   SkillVersionId,
   ScalarUpdatePayload,
 } from '@packmind/types';
-import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/types';
 import {
   MemberContext,
   canonicalJsonStringify,

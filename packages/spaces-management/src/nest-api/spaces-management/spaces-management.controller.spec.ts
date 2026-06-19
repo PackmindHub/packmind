@@ -24,7 +24,7 @@ import {
   SpaceType,
 } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';

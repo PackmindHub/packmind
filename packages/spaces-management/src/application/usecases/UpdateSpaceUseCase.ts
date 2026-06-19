@@ -18,7 +18,7 @@ import {
   UpdateSpaceCommand,
   UpdateSpaceResponse,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { CannotRenameDefaultSpaceError } from '../../domain/errors/CannotRenameDefaultSpaceError';
 import { CannotUpdateDefaultSpaceVisibilityError } from '../../domain/errors/CannotUpdateDefaultSpaceVisibilityError';
 import { InvalidSpaceColorError } from '../../domain/errors/InvalidSpaceColorError';

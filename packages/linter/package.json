@@ -6,7 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@packmind/deployments": "workspace:*",
     "@packmind/git": "workspace:*",
     "@packmind/linter-ast": "workspace:*",
     "@packmind/linter-execution": "workspace:*",

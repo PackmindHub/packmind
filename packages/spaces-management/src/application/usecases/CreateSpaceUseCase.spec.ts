@@ -11,7 +11,7 @@ import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
-import { SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceSlugConflictError } from '@packmind/types';
 import { CreateSpaceUseCase } from './CreateSpaceUseCase';
 
 describe('CreateSpaceUseCase', () => {

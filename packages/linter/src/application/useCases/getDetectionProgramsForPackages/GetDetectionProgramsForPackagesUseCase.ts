@@ -8,7 +8,7 @@ import {
   GetDetectionProgramsForPackagesResponse,
   IGetDetectionProgramsForPackagesUseCase,
 } from '@packmind/types';
-import { parsePackageSlug } from '@packmind/deployments';
+import { parsePackageSlug } from '@packmind/types';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
 
 const origin = 'GetDetectionProgramsForPackagesUseCase';

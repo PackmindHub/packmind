@@ -27,7 +27,7 @@ import {
   IStandardsPort,
   UserId,
 } from '@packmind/types';
-import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import {
   CreatedIds,

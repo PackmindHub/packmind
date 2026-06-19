@@ -26,7 +26,7 @@ import {
   StandardDeletedEvent,
   UserId,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';

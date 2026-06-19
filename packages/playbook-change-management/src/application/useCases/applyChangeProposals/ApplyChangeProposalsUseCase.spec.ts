@@ -3,7 +3,7 @@ import {
   SpaceMembershipRequiredError,
 } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { SkillValidationError } from '@packmind/skills';
+import { SkillValidationError } from '@packmind/types';
 import {
   AcceptedChangeProposal,
   ChangeProposal,

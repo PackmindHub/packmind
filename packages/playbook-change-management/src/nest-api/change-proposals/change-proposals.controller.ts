@@ -35,7 +35,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
-import { SkillValidationError } from '@packmind/skills';
+import { SkillValidationError } from '@packmind/types';
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../shared/organization-access.guard';
 import {

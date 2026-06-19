@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { SkillValidationError } from '@packmind/skills';
+import { SkillValidationError } from '@packmind/types';
 import {
   AcceptedChangeProposal,
   ChangeProposalId,

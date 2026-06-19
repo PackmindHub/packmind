@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { PinSpaceUseCase } from './PinSpaceUseCase';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';

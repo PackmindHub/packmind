@@ -15,7 +15,7 @@ import {
   SpaceDeletedEvent,
   UserSpaceRole,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { CannotDeleteDefaultSpaceError } from '../../domain/errors/CannotDeleteDefaultSpaceError';
 import { SpaceDeletionForbiddenError } from '../../domain/errors/SpaceDeletionForbiddenError';
 

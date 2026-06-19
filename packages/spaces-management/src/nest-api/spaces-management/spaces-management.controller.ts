@@ -35,7 +35,7 @@ import {
   BrowseSpacesResponse,
   SpaceId,
 } from '@packmind/types';
-import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/spaces';
+import { SpaceNotFoundError, SpaceSlugConflictError } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';

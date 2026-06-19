@@ -24,7 +24,7 @@ import { standardFactory } from '@packmind/standards/test/standardFactory';
 import { skillFactory } from '@packmind/skills/test/skillFactory';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { stubLogger } from '@packmind/test-utils';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { ArtifactNameConflictError } from '../../domain/errors/ArtifactNameConflictError';
 import { ArtifactNotInSourceSpaceError } from '../../domain/errors/ArtifactNotInSourceSpaceError';
 import { ArtifactSlugConflictError } from '../../domain/errors/ArtifactSlugConflictError';

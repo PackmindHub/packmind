@@ -6,10 +6,16 @@ import {
   ALLOWED_FRONTMATTER_FIELDS,
   SkillProperties,
 } from '../../domain/SkillProperties';
+import {
+  NAME_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  COMPATIBILITY_MAX_LENGTH,
+} from '@packmind/types';
 
-export const NAME_MAX_LENGTH = 64;
-export const DESCRIPTION_MAX_LENGTH = 1024;
-export const COMPATIBILITY_MAX_LENGTH = 500;
+// Re-exported for backward compatibility; the canonical definitions live in
+// @packmind/types so cross-domain consumers don't reach into the skills source.
+export { NAME_MAX_LENGTH, DESCRIPTION_MAX_LENGTH, COMPATIBILITY_MAX_LENGTH };
+
 const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
 
 /**

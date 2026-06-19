@@ -12,7 +12,7 @@ import {
   PinSpaceResponse,
   SpacePinnedEvent,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { CannotPinDefaultSpaceError } from '../../domain/errors/CannotPinDefaultSpaceError';
 
 export class PinSpaceUseCase extends AbstractSpaceMemberUseCase<

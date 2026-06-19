@@ -15,7 +15,7 @@ import {
   SkillVersion,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
-import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/types';
 import { SkillChangeProposalValidator } from './SkillChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../errors/SkillFileNotFoundError';

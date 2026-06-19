@@ -33,7 +33,7 @@ import {
   StandardId,
   UserId,
 } from '@packmind/types';
-import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
+import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { DiffService } from '@packmind/types';

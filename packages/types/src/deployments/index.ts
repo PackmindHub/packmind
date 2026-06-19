@@ -37,6 +37,9 @@ export * from './DistributedPackage';
 export * from './MarketplaceDistributionId';
 export * from './MarketplaceDistribution';
 
+// Utilities
+export * from './parsePackageSlug';
+
 // Contracts
 export * from './contracts';
 

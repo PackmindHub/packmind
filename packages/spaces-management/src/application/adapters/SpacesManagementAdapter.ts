@@ -37,7 +37,7 @@ import {
   ListOrganizationSpacesForManagementResponse,
   createOrganizationId,
 } from '@packmind/types';
-import { SpaceNotFoundError } from '@packmind/spaces';
+import { SpaceNotFoundError } from '@packmind/types';
 import { CreateSpaceUseCase } from '../usecases/CreateSpaceUseCase';
 import { MoveArtifactsToSpaceUseCase } from '../usecases/MoveArtifactsToSpaceUseCase';
 import { BrowseSpacesUseCase } from '../usecases/BrowseSpacesUseCase';

@@ -19,7 +19,7 @@ import {
   SkillId,
   SpaceId,
 } from '@packmind/types';
-import { SkillValidationError } from '@packmind/skills';
+import { SkillValidationError } from '@packmind/types';
 import { SkillsChangeProposalsService } from './skills-change-proposals.service';
 import { OrganizationAccessGuard } from '../../../shared/organization-access.guard';
 
