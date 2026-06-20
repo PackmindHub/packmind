@@ -227,6 +227,7 @@ services:
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '200'
       WATCHPACK_POLLING: 'true'
+      WATCH_POLLING: '1'
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
       APP_WEB_URL: ${APP_WEB_URL:-http://localhost:4200}
 

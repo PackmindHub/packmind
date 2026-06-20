@@ -47,7 +47,7 @@
         "parallel": true,
         "commands": [
           "nx run api:build:development --skip-nx-cache",
-          "sh -lc 'mkdir -p dist/apps/api; while [ ! -f dist/apps/api/main.js ]; do sleep 0.2; done; npx nodemon --config apps/api/nodemon.json --legacy-watch --polling-interval 500'"
+          "sh -lc 'mkdir -p dist/apps/api; while [ ! -f dist/apps/api/main.js ]; do sleep 0.2; done; npx nodemon --config apps/api/nodemon.json ${WATCH_POLLING:+--legacy-watch --polling-interval 500}'"
         ]
       },
       "configurations": {

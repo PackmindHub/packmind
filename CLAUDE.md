@@ -19,8 +19,28 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Local Development Environment
 
-Local development uses Docker Compose to run all services (API, frontend, database, Redis, mcp-Server, Postgresq).
-This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
+Apps (api, frontend, mcp-server) run **natively on the host**; only the stateful
+infra (PostgreSQL, Redis) runs in Docker via `docker-compose.dev.yml`. This gives
+real file-watch events and fast HMR — no Nx daemon socket, no file-watch polling.
+
+Per-developer install (minimal): Docker + [`mise`](https://mise.jdx.dev) (pins
+Node + pnpm from `mise.toml`).
+
+```bash
+mise install && pnpm install   # one-time
+pnpm dev                        # daily: infra up → migrations → serve all 3 apps native
+```
+
+`pnpm dev` bakes in the deterministic localhost wiring (see `scripts/dev-serve.sh`);
+an optional `.env` overrides it (see `.env.example`). Other scripts: `dev:infra`,
+`dev:infra:down`, `dev:reset` (wipe volumes), `dev:setup`, `migrate`.
+
+Apps serve at: frontend `:4200`, api `:3000`, mcp-server `:3001`.
+
+> Legacy full-in-container stack (`docker-compose.yml`,
+> `PACKMIND_EDITION=oss docker compose --profile dev up -d`) remains during the
+> transition as a fallback. Do not run it alongside `docker-compose.dev.yml`
+> (port conflicts). `docker-local.sh` + `dockerfile/` still build prod-like images.
 ## Working with Nx
 
 The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)

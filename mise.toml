@@ -1,0 +1,9 @@
+# Per-developer toolchain, pinned. Install once with `mise install`.
+# Node version mirrors .nvmrc; pnpm is provisioned via corepack to match
+# package.json "packageManager" exactly (no version drift vs the lockfile).
+[tools]
+node = { version = "24.15.0", postinstall = "corepack enable && corepack prepare pnpm@11.5.0 --activate" }
+
+[env]
+# Default edition for local development (override per-shell if needed).
+PACKMIND_EDITION = "oss"
