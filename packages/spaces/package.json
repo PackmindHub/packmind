@@ -11,7 +11,7 @@
     "@packmind/types": "workspace:*",
     "@packmind/accounts": "workspace:*",
     "@packmind/test-utils": "workspace:*",
-    "typeorm": "0.3.28",
+    "typeorm": "0.3.29",
     "slug": "^11.0.0",
     "uuid": "^11.1.0"
   }
