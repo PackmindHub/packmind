@@ -324,6 +324,33 @@ export class RecipesAdapter
     return result.recipes;
   }
 
+  public countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.recipesServices.getRecipeService().countBySpaceIds(spaceIds);
+  }
+
+  /**
+   * List all recipes across every space of an organization, bypassing space
+   * membership checks. Used for organization-scoped aggregations where the
+   * caller is already authorized at the organization level.
+   */
+  public async listAllRecipesByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Recipe[]> {
+    if (!this.spacesPort) {
+      this.logger.warn('SpacesPort not available, returning empty results');
+      return [];
+    }
+
+    const spaces =
+      await this.spacesPort.listSpacesByOrganization(organizationId);
+    const recipesPerSpace = await Promise.all(
+      spaces.map((space) =>
+        this.recipesServices.getRecipeService().listRecipesBySpace(space.id),
+      ),
+    );
+    return recipesPerSpace.flat();
+  }
+
   public listRecipeVersions(recipeId: RecipeId) {
     return this._listRecipeVersions.listRecipeVersions(recipeId);
   }

@@ -19,6 +19,7 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   GOVERNANCE_FEATURE_KEY,
   isFeatureFlagEnabled,
+  MARKETPLACES_FEATURE_KEY,
 } from '@packmind/ui';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router';
 import {
@@ -35,7 +36,9 @@ import {
   LuLogOut,
   LuPanelLeftClose,
   LuPanelLeftOpen,
+  LuSearch,
   LuSettings,
+  LuStore,
   LuWrench,
 } from 'react-icons/lu';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
@@ -51,6 +54,7 @@ import { useSidebarCollapse } from './SidebarCollapseContext';
 import { SpaceNavBlock } from './sidebar/SpaceNavBlock';
 import { SpaceNavPanel } from './sidebar/SpaceNavPanel';
 import { BrowseSpaces } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpaces';
+import { BrowseSpacesTab } from '@packmind/proprietary/frontend/domain/spaces-management/components/BrowseSpacesDrawer';
 import { CustomSpacesNavBlock } from '@packmind/proprietary/frontend/domain/spaces-management/components/CustomSpacesNavBlock';
 
 const SIDEBAR_WIDTH_EXPANDED = '220px';
@@ -168,6 +172,16 @@ export const SidebarNavigation: React.FunctionComponent<
   const { user } = useAuthContext();
   const [activeSpacePanel, setActiveSpacePanel] = useState<string | null>(null);
   const [lastPanelSpace, setLastPanelSpace] = useState<Space | null>(null);
+  const [browseDrawerOpen, setBrowseDrawerOpen] = useState(false);
+  const [browseDrawerTab, setBrowseDrawerTab] = useState<BrowseSpacesTab>(
+    BrowseSpacesTab.MY_SPACES,
+  );
+
+  const openBrowseDrawer = (tab: BrowseSpacesTab) => {
+    setBrowseDrawerTab(tab);
+    setBrowseDrawerOpen(true);
+  };
+
   const location = useLocation();
   const navigate = useNavigate();
   const signOutMutation = useSignOutMutation();
@@ -237,6 +251,17 @@ export const SidebarNavigation: React.FunctionComponent<
   }
 
   const orgSlug = organization.slug;
+
+  // Marketplaces are administered at the org level and still behind a feature
+  // flag, so the main-sidebar entry is shown only to admins whose email opts
+  // into the flag — matching the page's own admin guard.
+  const canSeeMarketplaces =
+    organization.role === 'admin' &&
+    isFeatureFlagEnabled({
+      featureKeys: [MARKETPLACES_FEATURE_KEY],
+      featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+      userEmail: user?.email,
+    });
 
   const defaultSpace = spaces.find((space) => space.isDefaultSpace);
 
@@ -439,6 +464,21 @@ export const SidebarNavigation: React.FunctionComponent<
               />
             </PMBox>
           )}
+          {canSeeMarketplaces && (
+            <PMBox paddingBottom={2}>
+              <PMVerticalNavSection
+                navEntries={[
+                  <SidebarNavigationLink
+                    key="marketplaces"
+                    url={routes.org.toMarketplaces(orgSlug)}
+                    label="Marketplaces"
+                    icon={<LuStore />}
+                    aria-label="Marketplaces"
+                  />,
+                ]}
+              />
+            </PMBox>
+          )}
 
           {/* Spaces -- scrollable */}
           <PMBox
@@ -466,12 +506,27 @@ export const SidebarNavigation: React.FunctionComponent<
                 >
                   Spaces
                 </PMText>
-                <BrowseSpaces />
+                <PMBox
+                  as="button"
+                  color="text.faded"
+                  cursor="pointer"
+                  _hover={{ color: 'text.primary' }}
+                  transition="color 0.15s"
+                  onClick={() => openBrowseDrawer(BrowseSpacesTab.ALL_SPACES)}
+                  data-testid="browse-spaces-trigger"
+                  display="flex"
+                  alignItems="center"
+                >
+                  <PMIcon fontSize="xs">
+                    <LuSearch />
+                  </PMIcon>
+                </PMBox>
               </PMBox>
             )}
 
             <PMVStack
               alignItems="stretch"
+              gap={isCollapsed ? 2 : 0}
               scrollbarColor="{colors.background.tertiary} transparent"
               minHeight={0}
               overflowY="auto"
@@ -482,11 +537,7 @@ export const SidebarNavigation: React.FunctionComponent<
                 orgSlug={orgSlug}
                 isActive={defaultSpace.slug === currentSpaceSlug}
                 isSelected={activeSpacePanel === defaultSpace.id}
-                onSpaceClick={() => {
-                  if (defaultSpace.slug !== currentSpaceSlug) {
-                    setActiveSpacePanel(defaultSpace.id);
-                  }
-                }}
+                onSpaceClick={() => setActiveSpacePanel(defaultSpace.id)}
                 dataTestId={SidebarNavigationDataTestId.DefaultSpaceRow}
               />
 
@@ -496,17 +547,23 @@ export const SidebarNavigation: React.FunctionComponent<
                   orgSlug={orgSlug}
                   currentSpaceSlug={currentSpaceSlug}
                   selectedSpaceId={activeSpacePanel}
-                  onSpaceClick={(space) => {
-                    if (space.slug !== currentSpaceSlug) {
-                      setActiveSpacePanel(space.id);
-                    }
-                  }}
+                  onSpaceClick={(space) => setActiveSpacePanel(space.id)}
+                  onBrowseMySpaces={() =>
+                    openBrowseDrawer(BrowseSpacesTab.MY_SPACES)
+                  }
                 />
               )}
             </PMVStack>
           </PMBox>
         </PMBox>
       </PMVerticalNav>
+
+      <BrowseSpaces
+        open={browseDrawerOpen}
+        onClose={() => setBrowseDrawerOpen(false)}
+        initialTab={browseDrawerTab}
+        containerRef={contentAreaRef}
+      />
 
       {/* SpaceNavPanel drawer */}
       {lastPanelSpace && (

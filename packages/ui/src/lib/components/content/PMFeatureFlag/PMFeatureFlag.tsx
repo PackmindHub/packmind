@@ -15,6 +15,11 @@ export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 
 export const GOVERNANCE_FEATURE_KEY = 'governance';
 
+export const MARKETPLACES_FEATURE_KEY = 'marketplaces';
+
+export const MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY =
+  'marketplace-plugin-removal';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [ADD_CHANGE_PROPOSALS_IN_WEBAPP_FEATURE_KEY]: [
     '@packmind.com',
@@ -22,6 +27,8 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [GOVERNANCE_FEATURE_KEY]: ['joan.racenet@packmind.com'],
+  [MARKETPLACES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [MARKETPLACE_PLUGIN_REMOVAL_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const isExactEmailEntry = (entry: string): boolean =>

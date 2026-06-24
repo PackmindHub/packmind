@@ -1,0 +1,21 @@
+{
+  "name": "@packmind/spaces-management",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@packmind/types": "workspace:*",
+    "@packmind/node-utils": "workspace:*",
+    "@packmind/logger": "workspace:*",
+    "@packmind/accounts": "workspace:*",
+    "@packmind/spaces": "workspace:*",
+    "@packmind/standards": "workspace:*",
+    "@packmind/skills": "workspace:*",
+    "@packmind/recipes": "workspace:*",
+    "@packmind/test-utils": "workspace:*",
+    "typeorm": "0.3.28"
+  }
+}

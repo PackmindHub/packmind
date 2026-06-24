@@ -26,6 +26,20 @@ module.exports = {
     '<rootDir>/src/**/*.(spec|test).[jt]s?(x)',
     '<rootDir>/app/**/*.(spec|test).[jt]s?(x)',
   ],
+  // The @nx/jest preset ships moduleFileExtensions without tsx/jsx.
+  // Override so React component specs (and source files) resolve correctly —
+  // otherwise Jest silently skips every *.spec.tsx / *.test.tsx in the suite.
+  moduleFileExtensions: [
+    'ts',
+    'tsx',
+    'js',
+    'jsx',
+    'mts',
+    'mjs',
+    'cts',
+    'cjs',
+    'html',
+  ],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',
   moduleNameMapper: {

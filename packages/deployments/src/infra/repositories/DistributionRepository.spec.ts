@@ -17,6 +17,7 @@ import {
   createUserId,
   Distribution,
   DistributionStatus,
+  MarketplaceDistribution,
   RenderMode,
   StandardId,
   RecipeId,
@@ -29,7 +30,13 @@ import { OutdatedDeploymentsByTarget } from '../../domain/repositories/IDistribu
 describe('DistributionRepository', () => {
   let repository: DistributionRepository;
   let mockTypeOrmRepository: jest.Mocked<Repository<Distribution>>;
+  let mockMarketplaceRepository: jest.Mocked<
+    Repository<MarketplaceDistribution>
+  >;
   let mockQueryBuilder: jest.Mocked<SelectQueryBuilder<Distribution>>;
+  let mockMarketplaceQueryBuilder: jest.Mocked<
+    SelectQueryBuilder<MarketplaceDistribution>
+  >;
   let logger: jest.Mocked<PackmindLogger>;
 
   const organizationId = createOrganizationId('org-123');
@@ -59,15 +66,49 @@ describe('DistributionRepository', () => {
     return qb;
   };
 
+  const createMockMarketplaceQueryBuilder = (): jest.Mocked<
+    SelectQueryBuilder<MarketplaceDistribution>
+  > => {
+    const qb = {
+      innerJoin: jest.fn().mockReturnThis(),
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      setParameter: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      distinctOn: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      getMany: jest.fn(),
+      getRawMany: jest.fn(),
+    } as unknown as jest.Mocked<SelectQueryBuilder<MarketplaceDistribution>>;
+    return qb;
+  };
+
   beforeEach(() => {
     logger = stubLogger();
     mockQueryBuilder = createMockQueryBuilder();
+    mockMarketplaceQueryBuilder = createMockMarketplaceQueryBuilder();
     mockTypeOrmRepository = {
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       save: jest.fn(),
     } as unknown as jest.Mocked<Repository<Distribution>>;
 
-    repository = new DistributionRepository(mockTypeOrmRepository, logger);
+    mockMarketplaceRepository = {
+      createQueryBuilder: jest
+        .fn()
+        .mockReturnValue(mockMarketplaceQueryBuilder),
+      save: jest.fn(),
+    } as unknown as jest.Mocked<Repository<MarketplaceDistribution>>;
+
+    repository = new DistributionRepository(
+      mockTypeOrmRepository,
+      mockMarketplaceRepository,
+      logger,
+    );
   });
 
   afterEach(() => {
@@ -2040,6 +2081,9 @@ describe('DistributionRepository', () => {
             lastDeployedAt: '2026-04-15T08:30:00.000Z',
           },
         ]);
+        (mockMarketplaceQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
+          [],
+        );
 
         result =
           await repository.findLastSuccessfulDistributionDateByProviderIds(
@@ -2073,6 +2117,9 @@ describe('DistributionRepository', () => {
     describe('when a provider has no matching distribution', () => {
       it('omits the provider from the map', async () => {
         (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+        (mockMarketplaceQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
+          [],
+        );
 
         const result =
           await repository.findLastSuccessfulDistributionDateByProviderIds(
@@ -2081,6 +2128,84 @@ describe('DistributionRepository', () => {
           );
 
         expect(result.has(providerA)).toBe(false);
+      });
+    });
+
+    describe('when only marketplace publishes exist for a provider', () => {
+      it('returns the marketplace timestamp for that provider', async () => {
+        (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([]);
+        (mockMarketplaceQueryBuilder.getRawMany as jest.Mock).mockResolvedValue(
+          [
+            {
+              providerId: providerA,
+              lastDeployedAt: new Date('2026-05-15T14:00:00.000Z'),
+            },
+          ],
+        );
+
+        const result =
+          await repository.findLastSuccessfulDistributionDateByProviderIds(
+            organizationId,
+            [providerA],
+          );
+
+        expect(result.get(providerA)).toBe('2026-05-15T14:00:00.000Z');
+      });
+    });
+
+    describe('when both distribution and marketplace timestamps exist', () => {
+      describe('when marketplace timestamp is later', () => {
+        it('returns the later marketplace timestamp', async () => {
+          (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+            {
+              providerId: providerA,
+              lastDeployedAt: '2026-05-01T10:00:00.000Z',
+            },
+          ]);
+          (
+            mockMarketplaceQueryBuilder.getRawMany as jest.Mock
+          ).mockResolvedValue([
+            {
+              providerId: providerA,
+              lastDeployedAt: '2026-05-15T14:00:00.000Z',
+            },
+          ]);
+
+          const result =
+            await repository.findLastSuccessfulDistributionDateByProviderIds(
+              organizationId,
+              [providerA],
+            );
+
+          expect(result.get(providerA)).toBe('2026-05-15T14:00:00.000Z');
+        });
+      });
+
+      describe('when distribution timestamp is later', () => {
+        it('returns the later distribution timestamp', async () => {
+          (mockQueryBuilder.getRawMany as jest.Mock).mockResolvedValue([
+            {
+              providerId: providerA,
+              lastDeployedAt: '2026-05-20T16:00:00.000Z',
+            },
+          ]);
+          (
+            mockMarketplaceQueryBuilder.getRawMany as jest.Mock
+          ).mockResolvedValue([
+            {
+              providerId: providerA,
+              lastDeployedAt: '2026-05-15T14:00:00.000Z',
+            },
+          ]);
+
+          const result =
+            await repository.findLastSuccessfulDistributionDateByProviderIds(
+              organizationId,
+              [providerA],
+            );
+
+          expect(result.get(providerA)).toBe('2026-05-20T16:00:00.000Z');
+        });
       });
     });
   });

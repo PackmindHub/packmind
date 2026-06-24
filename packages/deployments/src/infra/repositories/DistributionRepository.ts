@@ -6,6 +6,7 @@ import {
   DistributionStatus,
   GitCommit,
   GitProviderId,
+  MarketplaceDistribution,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -28,6 +29,7 @@ import {
   OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
+import { MarketplaceDistributionSchema } from '../schemas/MarketplaceDistributionSchema';
 
 const origin = 'DistributionRepository';
 
@@ -55,6 +57,9 @@ export class DistributionRepository implements IDistributionRepository {
   constructor(
     private readonly repository: Repository<Distribution> = localDataSource.getRepository<Distribution>(
       DistributionSchema,
+    ),
+    private readonly marketplaceDistributionRepository: Repository<MarketplaceDistribution> = localDataSource.getRepository<MarketplaceDistribution>(
+      MarketplaceDistributionSchema,
     ),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -1777,7 +1782,7 @@ export class DistributionRepository implements IDistributionRepository {
     try {
       type Row = { providerId: GitProviderId; lastDeployedAt: string };
 
-      const rows = await this.repository
+      const distributionRows = await this.repository
         .createQueryBuilder('distribution')
         .innerJoin('distribution.target', 'target')
         .innerJoin('target.gitRepo', 'gitRepo')
@@ -1795,9 +1800,42 @@ export class DistributionRepository implements IDistributionRepository {
         .addSelect('MAX(distribution.createdAt)', 'lastDeployedAt')
         .getRawMany<Row>();
 
+      const marketplaceRows = await this.marketplaceDistributionRepository
+        .createQueryBuilder('mdist')
+        .innerJoin('mdist.marketplace', 'marketplace')
+        .innerJoin('marketplace.gitRepo', 'gitRepo')
+        .where('mdist.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('mdist.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('gitRepo.providerId IN (:...providerIds)', {
+          providerIds: providerIds as string[],
+        })
+        .groupBy('gitRepo.providerId')
+        .select('gitRepo.provider_id', 'providerId')
+        .addSelect('MAX(mdist.createdAt)', 'lastDeployedAt')
+        .getRawMany<Row>();
+
       const result = new Map<GitProviderId, string>();
-      for (const row of rows) {
+
+      // Add distribution rows
+      for (const row of distributionRows) {
         result.set(row.providerId, toIsoString(row.lastDeployedAt));
+      }
+
+      // Merge marketplace rows, keeping the later timestamp per providerId
+      for (const row of marketplaceRows) {
+        const marketplaceTimestamp = toIsoString(row.lastDeployedAt);
+        const existingTimestamp = result.get(row.providerId);
+
+        if (
+          existingTimestamp == null ||
+          marketplaceTimestamp > existingTimestamp
+        ) {
+          result.set(row.providerId, marketplaceTimestamp);
+        }
       }
 
       this.logger.info(

@@ -66,8 +66,20 @@ const DISTRIBUTION_STATUS_BADGE: Record<
     label: 'In progress',
     colorPalette: 'blue',
   },
+  [DistributionStatus.pending_merge]: {
+    label: 'Pending PR review',
+    colorPalette: 'blue',
+  },
   [DistributionStatus.no_changes]: {
     label: 'No changes',
+    colorPalette: 'gray',
+  },
+  [DistributionStatus.to_be_removed]: {
+    label: 'To be removed',
+    colorPalette: 'gray',
+  },
+  [DistributionStatus.removed]: {
+    label: 'Removed',
     colorPalette: 'gray',
   },
 };

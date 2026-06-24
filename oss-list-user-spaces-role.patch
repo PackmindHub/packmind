@@ -1,0 +1,78 @@
+diff --git a/packages/spaces/src/application/usecases/ListUserSpacesUseCase.spec.ts b/packages/spaces/src/application/usecases/ListUserSpacesUseCase.spec.ts
+index 3bd13a849..e1e303d1e 100644
+--- a/packages/spaces/src/application/usecases/ListUserSpacesUseCase.spec.ts
++++ b/packages/spaces/src/application/usecases/ListUserSpacesUseCase.spec.ts
+@@ -59,10 +59,15 @@ describe('ListUserSpacesUseCase', () => {
+         );
+       });
+ 
+-      it('returns spaces from memberships', async () => {
++      it('returns spaces with roles from memberships', async () => {
+         const result = await useCase.execute(buildCommand());
+ 
+-        expect(result).toEqual({ spaces: [space1, space2] });
++        expect(result).toEqual({
++          spaces: [
++            { ...space1, role: UserSpaceRole.MEMBER },
++            { ...space2, role: UserSpaceRole.ADMIN },
++          ],
++        });
+       });
+ 
+       it('calls membership service with correct params', async () => {
+@@ -114,7 +119,9 @@ describe('ListUserSpacesUseCase', () => {
+       it('filters out memberships with undefined space', async () => {
+         const result = await useCase.execute(buildCommand());
+ 
+-        expect(result).toEqual({ spaces: [space1] });
++        expect(result).toEqual({
++          spaces: [{ ...space1, role: UserSpaceRole.MEMBER }],
++        });
+       });
+     });
+   });
+diff --git a/packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts b/packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts
+index 7384aff76..910438b6d 100644
+--- a/packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts
++++ b/packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts
+@@ -4,10 +4,13 @@ import {
+   ListUserSpacesResponse,
+   OrganizationId,
+   Space,
++  UserSpaceMembership,
+   UserId,
+ } from '@packmind/types';
+ import { UserSpaceMembershipService } from '../services/UserSpaceMembershipService';
+ 
++type MembershipWithSpace = UserSpaceMembership & { space: Space };
++
+ export class ListUserSpacesUseCase implements IListUserSpaces {
+   constructor(
+     private readonly userSpaceMembershipService: UserSpaceMembershipService,
+@@ -23,8 +26,8 @@ export class ListUserSpacesUseCase implements IListUserSpaces {
+       );
+ 
+     const spaces = memberships
+-      .map((m) => m.space)
+-      .filter((s): s is Space => s !== undefined);
++      .filter((m): m is MembershipWithSpace => m.space !== undefined)
++      .map((m) => ({ ...m.space, role: m.role }));
+ 
+     return { spaces };
+   }
+diff --git a/packages/types/src/spaces/contracts/IListUserSpaces.ts b/packages/types/src/spaces/contracts/IListUserSpaces.ts
+index c2c88d0bf..a8c2cdfef 100644
+--- a/packages/types/src/spaces/contracts/IListUserSpaces.ts
++++ b/packages/types/src/spaces/contracts/IListUserSpaces.ts
+@@ -1,8 +1,10 @@
+ import { IUseCase, PackmindCommand } from '../../UseCase';
+ import { Space } from '../Space';
++import { UserSpaceRole } from '../UserSpaceMembership';
+ 
+ export type ListUserSpacesCommand = PackmindCommand;
+-export type ListUserSpacesResponse = { spaces: Space[] };
++export type UserSpaceWithRole = Space & { role: UserSpaceRole };
++export type ListUserSpacesResponse = { spaces: UserSpaceWithRole[] };
+ 
+ export type IListUserSpaces = IUseCase<
+   ListUserSpacesCommand,
