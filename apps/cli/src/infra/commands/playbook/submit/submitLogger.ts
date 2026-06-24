@@ -77,6 +77,37 @@ export function logPackageAddGuidance(
   }
 }
 
+export async function logReviewUrls(
+  packmindCliHexa: PackmindCliHexa,
+  spaceIds: string[],
+): Promise<void> {
+  if (spaceIds.length === 0) return;
+  const buildUrl = resolveUrlBuilder(() => 'review-changes/');
+  try {
+    const allSpaces = await packmindCliHexa.getSpaces();
+    const spaceById = new Map(allSpaces.map((s) => [s.id as string, s]));
+    const urls: string[] = [];
+    for (const spaceId of spaceIds) {
+      const spaceSlug = spaceById.get(spaceId)?.slug;
+      if (!spaceSlug) continue;
+      // artifactId is unused for the review page; pass an empty string.
+      const url = buildUrl(spaceSlug, '');
+      if (url) urls.push(url);
+    }
+    if (urls.length === 0) return;
+    if (urls.length === 1) {
+      logInfoConsole(`Review your change proposals at: ${urls[0]}`);
+    } else {
+      logInfoConsole('Review your change proposals at:');
+      for (const url of urls) {
+        logInfoConsole(`  - ${url}`);
+      }
+    }
+  } catch {
+    // Best effort — don't fail submit if space info can't be fetched
+  }
+}
+
 export async function logRemovedPackagesNotification(
   packmindCliHexa: PackmindCliHexa,
   packageIds: Set<string>,

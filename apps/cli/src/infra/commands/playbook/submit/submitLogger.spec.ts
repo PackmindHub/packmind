@@ -3,6 +3,7 @@ import {
   collectParts,
   logPackageAddGuidance,
   fetchAvailablePackageSlugs,
+  logReviewUrls,
 } from './submitLogger';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
 
@@ -14,6 +15,18 @@ jest.mock('../../../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   formatCommand: (text: string) => text,
 }));
+
+jest.mock('../../../utils/credentials', () => ({
+  loadApiKey: jest.fn(() => 'fake-key'),
+  decodeApiKey: jest.fn(() => ({
+    host: 'https://packmind.example',
+    jwt: { organization: { slug: 'my-org' } },
+  })),
+}));
+
+const { loadApiKey, decodeApiKey } = jest.requireMock(
+  '../../../utils/credentials',
+) as { loadApiKey: jest.Mock; decodeApiKey: jest.Mock };
 
 const { logInfoConsole } = jest.requireMock('../../../utils/consoleLogger') as {
   logInfoConsole: jest.Mock;
@@ -241,6 +254,78 @@ describe('fetchAvailablePackageSlugs', () => {
       ]);
 
       expect(slugs).toEqual([]);
+    });
+  });
+});
+
+describe('logReviewUrls', () => {
+  let mockPackmindCliHexa: PackmindCliHexa;
+
+  beforeEach(() => {
+    loadApiKey.mockReturnValue('fake-key');
+    decodeApiKey.mockReturnValue({
+      host: 'https://packmind.example',
+      jwt: { organization: { slug: 'my-org' } },
+    });
+    mockPackmindCliHexa = {
+      getSpaces: jest.fn().mockResolvedValue([
+        { id: 'space-1', slug: 'facades', name: 'Facades' },
+        { id: 'space-2', slug: 'core', name: 'Core' },
+      ]),
+    } as unknown as PackmindCliHexa;
+  });
+
+  afterEach(() => jest.clearAllMocks());
+
+  describe('when a single space received proposals', () => {
+    it('prints the space-scoped review URL using the org slug', async () => {
+      await logReviewUrls(mockPackmindCliHexa, ['space-1']);
+
+      expect(logInfoConsole).toHaveBeenCalledWith(
+        'Review your change proposals at: https://packmind.example/org/my-org/space/facades/review-changes/',
+      );
+    });
+  });
+
+  describe('when multiple spaces received proposals', () => {
+    it('lists one review URL per space', async () => {
+      await logReviewUrls(mockPackmindCliHexa, ['space-1', 'space-2']);
+
+      expect(logInfoConsole.mock.calls.map((c) => c[0])).toEqual([
+        'Review your change proposals at:',
+        '  - https://packmind.example/org/my-org/space/facades/review-changes/',
+        '  - https://packmind.example/org/my-org/space/core/review-changes/',
+      ]);
+    });
+  });
+
+  describe('when no space ids are provided', () => {
+    it('prints nothing', async () => {
+      await logReviewUrls(mockPackmindCliHexa, []);
+
+      expect(logInfoConsole).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when credentials are missing', () => {
+    it('prints nothing', async () => {
+      loadApiKey.mockReturnValue(null);
+
+      await logReviewUrls(mockPackmindCliHexa, ['space-1']);
+
+      expect(logInfoConsole).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when getSpaces throws', () => {
+    it('prints nothing', async () => {
+      (mockPackmindCliHexa.getSpaces as jest.Mock).mockRejectedValue(
+        new Error('network'),
+      );
+
+      await logReviewUrls(mockPackmindCliHexa, ['space-1']);
+
+      expect(logInfoConsole).not.toHaveBeenCalled();
     });
   });
 });

@@ -21,6 +21,7 @@ import {
   fetchAvailablePackageSlugs,
   logPackageAddGuidance,
   logRemovedPackagesNotification,
+  logReviewUrls,
   collectParts,
 } from './submit/submitLogger';
 import {
@@ -491,5 +492,10 @@ export async function playbookSubmitHandler(
   } else {
     logSuccessConsole(`Change proposals: ${parts.join(', ')}`);
   }
+
+  if (totalCreated > 0) {
+    await logReviewUrls(packmindCliHexa, succeededSpaces);
+  }
+
   exit(0);
 }
