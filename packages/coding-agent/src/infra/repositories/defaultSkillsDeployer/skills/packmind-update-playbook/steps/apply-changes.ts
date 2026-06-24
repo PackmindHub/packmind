@@ -44,8 +44,8 @@ Run \`packmind-cli diff\` and present the output. List all artifacts included in
 
 Run \`packmind-cli diff --submit -m "<concise summary of all changes>"\` to submit the changes as proposals for human review on Packmind. If this command fails, show the full error output, stop, and ask the user how to proceed — do not retry silently.
 
-Once submitted, run \`packmind-cli whoami\` and extract the \`Organization:\` field from the output. Construct the review URL as \`https://app.packmind.ai/org/<organization>/space/global/review-changes/\`.
+Once submitted, the \`playbook submit\` command prints a review URL for each space it submitted to (a line like \`Review your change proposals at: <url>\`). Use that exact URL — do not construct one yourself, as only the CLI knows the correct host, organization slug, and space slug.
 
 Tell the user: **"✅ Successfully sent to Packmind for review!"**
-Then add in italics: *"Review and accept your change proposals at <constructed-url> — once accepted, changes will be propagated and will replace all local copies."*
+Then add in italics: *"Review and accept your change proposals at <url-from-cli-output> — once accepted, changes will be propagated and will replace all local copies."* If the submit output listed multiple review URLs (one per space), include all of them.
 `;
