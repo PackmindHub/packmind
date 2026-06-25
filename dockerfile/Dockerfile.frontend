@@ -1,4 +1,4 @@
-FROM nginx:1.29.8-alpine3.23-slim@sha256:6a9338004bea53f33e1d44a0f644ed082c3076b03747566c9535b0c724c98d09
+FROM nginx:1.31.2-alpine3.23-slim@sha256:dd722b8ee8794f3c273bfaf8b5351b0652a68ccd73c17e5f0d029857a58f25ef
 
 # Create a single-layer for all setup operations
 RUN apk add --no-cache bash=5.3.3-r1 gettext=0.24.1-r1 && \
