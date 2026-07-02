@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:27.646Z",
+  "installedAt": "2026-07-02T03:09:15.843Z",
   "artifacts": {
     "user:standard:frontend-data-flow": {
       "name": "Frontend Data Flow",

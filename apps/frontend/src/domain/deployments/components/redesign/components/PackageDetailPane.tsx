@@ -72,6 +72,9 @@ const DISTRIBUTION_VERB: Record<DistributionStatus, string> = {
   [DistributionStatus.failure]: 'Failed',
   [DistributionStatus.in_progress]: 'Started',
   [DistributionStatus.no_changes]: 'Checked',
+  [DistributionStatus.pending_merge]: 'Pending merge',
+  [DistributionStatus.to_be_removed]: 'Marked for removal',
+  [DistributionStatus.removed]: 'Removed',
 };
 
 function formatAbsoluteDate(iso: string): string {

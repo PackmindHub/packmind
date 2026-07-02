@@ -311,6 +311,96 @@ describe('RenderPackageAsPluginUseCase', () => {
     });
   });
 
+  describe('install tracking hook files', () => {
+    const installTracking: RenderPackageAsPluginCommand['installTracking'] = {
+      apiBaseUrl: 'https://app.packmind.io/api',
+      marketplaceName: 'acme-marketplace',
+      pluginSlug: 'security',
+      trackingToken: 'tok_abc123',
+    };
+
+    beforeEach(() => {
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        buildPackage(),
+      ]);
+    });
+
+    describe('when installTracking is absent', () => {
+      it('emits no hook files', async () => {
+        const result = await useCase.execute(
+          buildCommand({ installTracking: undefined }),
+        );
+        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
+        expect(hookPaths).toEqual([]);
+      });
+    });
+
+    describe('when mode is standalone and installTracking is present', () => {
+      it('emits no hook files', async () => {
+        const result = await useCase.execute(
+          buildCommand({ mode: 'standalone', installTracking }),
+        );
+        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
+        expect(hookPaths).toEqual([]);
+      });
+    });
+
+    describe('when mode is marketplace and installTracking is present', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        result = await useCase.execute(buildCommand({ installTracking }));
+      });
+
+      it('emits exactly four hook files', () => {
+        const hookPaths = result.files.filter((f) => f.path.includes('hooks/'));
+        expect(hookPaths).toHaveLength(4);
+      });
+
+      it('emits hooks/hooks.json', () => {
+        expect(
+          result.files.some((f) => f.path.endsWith('hooks/hooks.json')),
+        ).toBe(true);
+      });
+
+      it('emits hooks/track-install.sh', () => {
+        expect(
+          result.files.some((f) => f.path.endsWith('hooks/track-install.sh')),
+        ).toBe(true);
+      });
+
+      it('emits hooks/track-install.ps1', () => {
+        expect(
+          result.files.some((f) => f.path.endsWith('hooks/track-install.ps1')),
+        ).toBe(true);
+      });
+
+      it('emits hooks/packmind-tracking.env', () => {
+        expect(
+          result.files.some((f) =>
+            f.path.endsWith('hooks/packmind-tracking.env'),
+          ),
+        ).toBe(true);
+      });
+
+      it('injects the tracking token into the sidecar', () => {
+        const env = result.files.find((f) =>
+          f.path.endsWith('hooks/packmind-tracking.env'),
+        );
+        expect(env?.content).toContain('PACKMIND_TRACKING_TOKEN=tok_abc123');
+      });
+
+      it('injects the marketplace name into the sidecar', () => {
+        const env = result.files.find((f) =>
+          f.path.endsWith('hooks/packmind-tracking.env'),
+        );
+        expect(env?.content).toContain(
+          'PACKMIND_MARKETPLACE_NAME=acme-marketplace',
+        );
+      });
+    });
+  });
+
   describe('when the package has skills and commands', () => {
     beforeEach(() => {
       const recipes = [buildRecipe('r1', 'audit'), buildRecipe('r2', 'review')];

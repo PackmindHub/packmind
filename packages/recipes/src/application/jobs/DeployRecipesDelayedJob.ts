@@ -148,7 +148,7 @@ export class DeployRecipesDelayedJob extends AbstractAIDelayedJob<
 
       await this.deploymentPort.publishArtifacts({
         organizationId: input.organizationId,
-        userId: createUserId('system'), // System user for webhook-triggered deployments
+        userId: createUserId('system'), // System user for automated background deployments
         targetIds: targetIdsToDeployTo,
         recipeVersionIds: input.recipeVersionIds,
         standardVersionIds: [],

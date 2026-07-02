@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:26.672Z",
+  "installedAt": "2026-07-02T03:09:14.989Z",
   "artifacts": {
     "user:standard:nestjs-module-hierarchy": {
       "name": "NestJS Module Hierarchy",

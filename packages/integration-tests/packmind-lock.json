@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:28.363Z",
+  "installedAt": "2026-07-02T03:09:16.441Z",
   "artifacts": {
     "user:standard:integration-tests-structure-and-patterns": {
       "name": "Integration Tests Structure and Patterns",

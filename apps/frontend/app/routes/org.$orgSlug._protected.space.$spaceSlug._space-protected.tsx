@@ -8,7 +8,6 @@ import {
   getSpacesQueryOptions,
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
-import { pmToaster } from '@packmind/ui';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import { type AuthenticatedMeWithOrganization } from '../../src/shared/data/ensureOrgContext';
 import {
@@ -26,103 +25,54 @@ async function clientLoaderWithMe(
   params: Params<string>,
   me: AuthenticatedMeWithOrganization,
 ): Promise<{ space: unknown }> {
-  // Validate space exists and belongs to this org
+  // Fetch user's accessible spaces first — this never reveals private space info
+  let userSpaces;
   try {
-    const space = await queryClient.ensureQueryData(
-      getSpaceBySlugQueryOptions(params.spaceSlug || '', me.organization.id),
-    );
-
-    if (!space) {
-      // Fetch all spaces to redirect to the first available one
-      const spaces = await queryClient.fetchQuery(
-        getSpacesQueryOptions(me.organization.id),
-      );
-
-      if (spaces && spaces.length > 0) {
-        setFlashToast({
-          type: 'error',
-          title: 'Space not found',
-          description: `The space '${params.spaceSlug}' does not exist. Redirecting to ${spaces[0].name}.`,
-        });
-        throw redirect(`/org/${params.orgSlug}/space/${spaces[0].slug}`);
-      } else {
-        // No spaces at all - this shouldn't happen
-        setFlashToast({
-          type: 'error',
-          title: 'No spaces available',
-          description: 'Please contact support.',
-        });
-        throw redirect(`/org/${params.orgSlug}`);
-      }
-    }
-
-    // Verify the current user is a member of this space
-    const userSpaces = await queryClient.ensureQueryData(
+    userSpaces = await queryClient.ensureQueryData(
       getSpacesQueryOptions(me.organization.id),
     );
-    const isMember = userSpaces.some((s) => s.id === space.id);
+  } catch {
+    setFlashToast({
+      type: 'error',
+      title: 'Error loading spaces',
+      description: 'Please try again.',
+    });
+    throw redirect(`/org/${params.orgSlug}`);
+  }
 
-    if (!isMember) {
-      if (userSpaces.length > 0) {
-        setFlashToast({
-          type: 'error',
-          title: 'Access denied',
-          description: `You do not have permission to access the space '${space.name}'.`,
-        });
-        throw redirect(`/org/${params.orgSlug}/space/${userSpaces[0].slug}`);
-      } else {
-        setFlashToast({
-          type: 'error',
-          title: 'No spaces available',
-          description:
-            'You are not a member of any space. Please contact your administrator.',
-        });
-        throw redirect(`/org/${params.orgSlug}`);
-      }
-    }
+  // Check membership using only the user's own space list to avoid leaking
+  // whether a space exists. This prevents space enumeration attacks:
+  // "not found" and "no access" produce the same response.
+  const space = userSpaces.find((s) => s.slug === params.spaceSlug);
 
-    // Prefetch standards list for this space to warm cache for child routes
-    // This runs in parallel and doesn't block the loader
-    queryClient.prefetchQuery(
-      getStandardsBySpaceQueryOptions(space.id, me.organization.id),
-    );
-
-    return { space };
-  } catch (error) {
-    // If space not found, redirect to first available space
-    if (error instanceof Response) {
-      throw error; // Re-throw redirect responses
-    }
-
-    try {
-      const spaces = await queryClient.fetchQuery(
-        getSpacesQueryOptions(me.organization.id),
-      );
-
-      if (spaces && spaces.length > 0) {
-        setFlashToast({
-          type: 'error',
-          title: 'Error loading space',
-          description: `Redirecting to ${spaces[0].name}.`,
-        });
-        throw redirect(`/org/${params.orgSlug}/space/${spaces[0].slug}`);
-      }
-    } catch (innerError) {
-      if (innerError instanceof Response) {
-        throw innerError;
-      }
-      // Fallback to org page
+  if (!space) {
+    if (userSpaces.length > 0) {
       setFlashToast({
         type: 'error',
-        title: 'Error loading spaces',
-        description: 'Please try again.',
+        title: 'Space not found',
+        description: `The space '${params.spaceSlug}' could not be found. Redirecting to ${userSpaces[0].name}.`,
+      });
+      throw redirect(`/org/${params.orgSlug}/space/${userSpaces[0].slug}`);
+    } else {
+      setFlashToast({
+        type: 'error',
+        title: 'No spaces available',
+        description:
+          'You are not a member of any space. Please contact your administrator.',
       });
       throw redirect(`/org/${params.orgSlug}`);
     }
-
-    // If we reach here, redirect to org page as final fallback
-    throw redirect(`/org/${params.orgSlug}`);
   }
+
+  // Prefetch full space details and standards list for child routes
+  queryClient.prefetchQuery(
+    getSpaceBySlugQueryOptions(params.spaceSlug || '', me.organization.id),
+  );
+  queryClient.prefetchQuery(
+    getStandardsBySpaceQueryOptions(space.id, me.organization.id),
+  );
+
+  return { space };
 }
 
 export default function SpaceProtectedLayout() {

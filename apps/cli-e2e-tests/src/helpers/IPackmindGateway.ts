@@ -8,6 +8,7 @@ import {
   ICreateStandardUseCase,
   IGenerateApiKeyUseCase,
   IGetTargetsByOrganizationUseCase,
+  IListActiveDistributedPackagesBySpaceUseCase,
   IListChangeProposalsByArtefact,
   IListChangeProposalsBySpace,
   IListPackagesBySpaceUseCase,
@@ -65,6 +66,7 @@ export interface IDeploymentsGateway {
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
   updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase>;
   listDeploymentsByPackage(packageId: string): Promise<Distribution[]>;
+  listActiveDistributedPackagesBySpace: Gateway<IListActiveDistributedPackagesBySpaceUseCase>;
 }
 
 export interface ISkillsGateway {

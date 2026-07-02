@@ -12,7 +12,11 @@ import {
 import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { gitProviderFactory, gitlabProviderFactory } from '../../test';
+import {
+  gitProviderFactory,
+  gitlabProviderFactory,
+  gitRepoFactory,
+} from '../../test';
 
 describe('GitProviderService', () => {
   let gitProviderService: GitProviderService;
@@ -626,6 +630,123 @@ describe('GitProviderService', () => {
             branch,
           ),
         ).rejects.toThrow('GitLab API error');
+      });
+    });
+  });
+
+  describe('checkMarketplaceRepoExists', () => {
+    const marketplaceRepo = gitRepoFactory({
+      providerId: createGitProviderId('provider-1'),
+      type: 'marketplace',
+    });
+
+    describe('when the provider cannot be resolved', () => {
+      beforeEach(() => {
+        mockGitProviderRepository.findById.mockResolvedValue(null);
+      });
+
+      it('short-circuits to auth_failed without probing the repo', async () => {
+        const result =
+          await gitProviderService.checkMarketplaceRepoExists(marketplaceRepo);
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+
+      it('never builds a git repo instance', async () => {
+        await gitProviderService.checkMarketplaceRepoExists(marketplaceRepo);
+
+        expect(mockGitRepoFactory.createGitRepo).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a token-auth provider has no token', () => {
+      it('short-circuits to auth_failed', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue({
+          ...mockGitProvider,
+          authMethod: 'token',
+          token: null,
+        });
+
+        const result =
+          await gitProviderService.checkMarketplaceRepoExists(marketplaceRepo);
+
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the provider resolves with credentials', () => {
+      it('delegates the probe to the git repo instance', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        const mockRepoInstance = {
+          checkRepositoryExists: jest
+            .fn()
+            .mockResolvedValue({ exists: false, reason: 'repo_not_found' }),
+        };
+        mockGitRepoFactory.createGitRepo.mockResolvedValue(
+          mockRepoInstance as never,
+        );
+
+        const result =
+          await gitProviderService.checkMarketplaceRepoExists(marketplaceRepo);
+
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
+    });
+  });
+
+  describe('findOpenSyncPullRequest', () => {
+    const marketplaceRepo = gitRepoFactory({
+      providerId: createGitProviderId('provider-1'),
+      type: 'marketplace',
+    });
+
+    describe('when the provider cannot be resolved', () => {
+      it('throws a provider-not-found error', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(null);
+
+        await expect(
+          gitProviderService.findOpenSyncPullRequest(
+            marketplaceRepo,
+            'packmind/sync',
+          ),
+        ).rejects.toThrow('Git provider not found');
+      });
+    });
+
+    describe('when a token-auth provider has no token', () => {
+      it('throws a token-not-configured error', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue({
+          ...mockGitProvider,
+          authMethod: 'token',
+          token: null,
+        });
+
+        await expect(
+          gitProviderService.findOpenSyncPullRequest(
+            marketplaceRepo,
+            'packmind/sync',
+          ),
+        ).rejects.toThrow('Git provider token not configured');
+      });
+    });
+
+    describe('when the provider resolves with credentials', () => {
+      it('delegates the lookup to the git repo instance', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        const openPr = { url: 'https://github.com/o/r/pull/3', number: 3 };
+        const mockRepoInstance = {
+          findOpenPullRequest: jest.fn().mockResolvedValue(openPr),
+        };
+        mockGitRepoFactory.createGitRepo.mockResolvedValue(
+          mockRepoInstance as never,
+        );
+
+        const result = await gitProviderService.findOpenSyncPullRequest(
+          marketplaceRepo,
+          'packmind/sync',
+        );
+
+        expect(result).toEqual(openPr);
       });
     });
   });
