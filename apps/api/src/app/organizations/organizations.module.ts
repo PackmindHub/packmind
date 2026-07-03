@@ -6,7 +6,6 @@ import { OrganizationsUsersModule } from './users/users.module';
 import { OrganizationDeploymentsModule } from './deployments/deployments.module';
 import { OrganizationGitModule } from './git/git.module';
 import { OrganizationLlmModule } from './llm/llm.module';
-import { OrganizationMcpModule } from './mcp/mcp.module';
 import { OrganizationPluginsModule } from './plugins/plugins.module';
 import { OrganizationSkillsModule } from './skills/skills.module';
 import { SpacesManagementModule } from '@packmind/spaces-management';
@@ -39,7 +38,6 @@ import { PlaybookModule } from './playbook/playbook.module';
     OrganizationDeploymentsModule,
     OrganizationGitModule,
     OrganizationLlmModule,
-    OrganizationMcpModule,
     OrganizationPluginsModule,
     OrganizationSkillsModule,
     SpacesManagementModule,

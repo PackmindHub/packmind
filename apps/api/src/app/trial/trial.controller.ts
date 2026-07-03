@@ -19,7 +19,7 @@ import {
   createOrganizationId,
 } from '@packmind/types';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
-import { McpService } from '../organizations/mcp/mcp.service';
+import { TrialTokenService } from './trial-token.service';
 
 const origin = 'TrialController';
 const validAgents = [
@@ -34,7 +34,7 @@ const validAgents = [
 const DEFAULT_APP_WEB_URL = 'http://localhost:4200';
 
 interface GetActivationTokenBody {
-  mcpToken: string;
+  trialToken: string;
 }
 
 export interface GetActivationTokenResponse {
@@ -45,7 +45,7 @@ export interface GetActivationTokenResponse {
 export class TrialController {
   constructor(
     @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
-    private readonly mcpService: McpService,
+    private readonly trialTokenService: TrialTokenService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('TrialController initialized');
@@ -67,7 +67,7 @@ export class TrialController {
       const { user, organization, role } =
         await this.accountsAdapter.startTrial(command);
 
-      const tokenResponse = this.mcpService.generateTokenForUser(
+      const tokenResponse = this.trialTokenService.generateTokenForUser(
         user,
         organization,
         role,
@@ -85,8 +85,7 @@ export class TrialController {
         user,
         organization,
         role,
-        mcpToken: tokenResponse.access_token,
-        mcpUrl: await this.mcpService.getMcpUrl(),
+        trialToken: tokenResponse.access_token,
         cliLoginCode,
       };
     } catch (error) {
@@ -108,26 +107,26 @@ export class TrialController {
       'POST /quick-start/get-activation-token - Getting activation token',
     );
 
-    if (!body.mcpToken) {
-      throw new BadRequestException('MCP token is required');
+    if (!body.trialToken) {
+      throw new BadRequestException('Trial token is required');
     }
 
     try {
-      // Decode the MCP token to extract user information
-      // Using mcpService.verifyToken() ensures we use the same JWT secret
-      // that was used to sign the token (MCP_JWT_SECRET_KEY)
-      const decoded = this.mcpService.verifyToken(body.mcpToken);
+      // Decode the trial token to extract user information.
+      // Using trialTokenService.verifyToken() ensures we use the same JWT
+      // secret that was used to sign the token.
+      const decoded = this.trialTokenService.verifyToken(body.trialToken);
 
       if (!decoded.sub || !decoded.organizationId) {
         throw new UnauthorizedException(
-          'Invalid MCP token: missing required claims',
+          'Invalid trial token: missing required claims',
         );
       }
 
       const userId = createUserId(decoded.sub);
       const organizationId = createOrganizationId(decoded.organizationId);
 
-      // Generate the activation token using the same logic as the MCP tool
+      // Generate the trial account activation token
       const { activationToken } =
         await this.accountsAdapter.generateTrialActivationToken({
           userId,

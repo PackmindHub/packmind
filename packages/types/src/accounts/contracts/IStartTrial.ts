@@ -17,8 +17,7 @@ export type StartTrialResult = {
   user: User;
   organization: Organization;
   role: UserOrganizationRole;
-  mcpToken?: string;
-  mcpUrl?: string;
+  trialToken?: string;
   cliLoginCode?: string;
 };
 
