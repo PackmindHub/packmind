@@ -70,7 +70,10 @@ export const SetupSkillsPage = () => {
       title="Default skills"
       subtitle="Install Packmind's curated skills to enhance your AI agent's capabilities"
     >
-      <PMPageSection title="Playbook management skills" backgroundColor="primary">
+      <PMPageSection
+        title="Playbook management skills"
+        backgroundColor="primary"
+      >
         <PMText variant="body" color="secondary" my={4}>
           These skills provide workflows to create new skills, standards,
           commands, and packages, as well as an onboarding skill that generates
