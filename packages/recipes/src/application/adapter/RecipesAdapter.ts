@@ -35,7 +35,6 @@ import {
 } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
 import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactory';
-import { UpdateRecipesAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesServices } from '../services/RecipesServices';
 import { CaptureRecipeUseCase } from '../useCases/captureRecipe/CaptureRecipeUseCase';
 import { CaptureRecipeWithPackagesUseCase } from '../useCases/captureRecipeWithPackages/CaptureRecipeWithPackagesUseCase';
@@ -58,7 +57,6 @@ export class RecipesAdapter
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
-  private llmPort: ILlmPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
@@ -103,12 +101,6 @@ export class RecipesAdapter
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
-    this.llmPort = ports[ILlmPortName];
-
-    // Set llmPort to services
-    if (this.llmPort) {
-      this.recipesServices.setLlmPort(this.llmPort);
-    }
 
     // Step 2: Build delayed jobs
     this.recipesDelayedJobs = await this.buildDelayedJobs(
@@ -129,7 +121,6 @@ export class RecipesAdapter
       this.accountsPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
-      this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
     );
 
@@ -145,7 +136,6 @@ export class RecipesAdapter
       this.accountsPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
-      this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
     );
 
@@ -197,28 +187,9 @@ export class RecipesAdapter
   ): Promise<IRecipesDelayedJobs> {
     this.logger.info('Building recipes delayed jobs');
 
-    // Create UpdateRecipesAndGenerateSummaries job factory
-    const updateRecipesJobFactory =
-      new UpdateRecipesAndGenerateSummariesJobFactory(
-        this.recipesServices.getRecipeService(),
-        this.recipesServices.getRecipeVersionService(),
-        this.recipesServices.getRecipeSummaryService(),
-        this.spacesPort!,
-      );
-    await updateRecipesJobFactory.createQueue();
-
     // Create DeployRecipes job factory
     const deployRecipesJobFactory = new DeployRecipesJobFactory(deploymentPort);
     await deployRecipesJobFactory.createQueue();
-
-    // Register job factories with JobsService
-    this.logger.debug(
-      'Registering UpdateRecipesAndGenerateSummaries job queue',
-    );
-    jobsService.registerJobQueue(
-      updateRecipesJobFactory.getQueueName(),
-      updateRecipesJobFactory,
-    );
 
     this.logger.debug('Registering DeployRecipes job queue');
     jobsService.registerJobQueue(
@@ -229,8 +200,6 @@ export class RecipesAdapter
     this.logger.info('Recipes delayed jobs built and registered successfully');
 
     return {
-      updateRecipesAndGenerateSummariesDelayedJob:
-        updateRecipesJobFactory.getDelayedJob(),
       deployRecipesDelayedJob: deployRecipesJobFactory.getDelayedJob(),
     };
   }

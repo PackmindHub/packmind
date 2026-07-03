@@ -26,7 +26,6 @@ export class RecipeVersionService {
     this.logger.info('Adding new recipe version', {
       recipeId: recipeVersionData.recipeId,
       version: recipeVersionData.version,
-      hasSummary: !!recipeVersionData.summary,
     });
 
     try {
@@ -46,7 +45,6 @@ export class RecipeVersionService {
         versionId,
         recipeId: recipeVersionData.recipeId,
         version: recipeVersionData.version,
-        hasSummary: !!savedVersion.summary,
       });
 
       return savedVersion;
