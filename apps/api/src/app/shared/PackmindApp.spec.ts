@@ -87,7 +87,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -103,7 +102,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -119,7 +117,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -135,7 +132,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -151,7 +147,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -167,7 +162,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -183,7 +177,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -199,7 +192,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -215,7 +207,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -231,7 +222,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -247,7 +237,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -264,7 +253,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -281,7 +269,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -298,7 +285,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 
@@ -315,7 +301,6 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
-        jwtService: undefined,
         apiKeyService,
       });
 

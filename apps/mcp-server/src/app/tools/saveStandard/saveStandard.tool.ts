@@ -8,13 +8,6 @@ import {
   stringToProgrammingLanguage,
 } from '@packmind/types';
 import { z } from 'zod';
-import {
-  buildTrialActivationPrompt,
-  buildTrialInstallPrompt,
-  ensureDefaultPackageWithArtifact,
-  isTrialUser,
-  shouldPromptForTrialActivation,
-} from '../trialPackageUtils';
 import { registerMcpTool, ToolDependencies } from '../types';
 import { getGlobalSpace } from '../utils';
 
@@ -178,54 +171,11 @@ export function registerSaveStandardTool(
           { tool: `save_standard` },
         );
 
-        // For trial users, ensure the standard is added to the Default package
-        let trialPackageSlug: string | null = null;
-        const isTrial = await isTrialUser(
-          fastify,
-          createUserId(userContext.userId),
-        );
-
-        if (isTrial) {
-          logger.info('Trial user detected, ensuring Default package exists', {
-            userId: userContext.userId,
-          });
-
-          trialPackageSlug = await ensureDefaultPackageWithArtifact(
-            fastify,
-            userContext,
-            firstSpace.id,
-            { standardId: standard.id },
-            logger,
-          );
-        }
-
-        const baseMessage = `Standard '${standard.slug}' has been created successfully with ${processedRules.length} rules and ${processedRules.reduce((sum, r) => sum + (r.examples?.length || 0), 0)} examples.`;
-
-        if (trialPackageSlug) {
-          const shouldPromptActivation = await shouldPromptForTrialActivation(
-            fastify,
-            createUserId(userContext.userId),
-          );
-
-          const activationPrompt = shouldPromptActivation
-            ? `\n\n${buildTrialActivationPrompt()}`
-            : '';
-
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `${baseMessage}\n\n${buildTrialInstallPrompt(trialPackageSlug)}${activationPrompt}`,
-              },
-            ],
-          };
-        }
-
         return {
           content: [
             {
               type: 'text',
-              text: baseMessage,
+              text: `Standard '${standard.slug}' has been created successfully with ${processedRules.length} rules and ${processedRules.reduce((sum, r) => sum + (r.examples?.length || 0), 0)} examples.`,
             },
           ],
         };

@@ -1,18 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   createOrganizationId,
-  createRecipeId,
   createUserId,
   RecipeStep,
 } from '@packmind/types';
 import { z } from 'zod';
-import {
-  buildTrialActivationPrompt,
-  buildTrialInstallPrompt,
-  ensureDefaultPackageWithArtifact,
-  isTrialUser,
-  shouldPromptForTrialActivation,
-} from '../trialPackageUtils';
 import { registerMcpTool, ToolDependencies } from '../types';
 import { getGlobalSpace } from '../utils';
 
@@ -170,54 +162,11 @@ export function registerSaveCommandTool(
         { tool: `save_command` },
       );
 
-      // For trial users, ensure the command is added to the Default package
-      let trialPackageSlug: string | null = null;
-      const isTrial = await isTrialUser(
-        fastify,
-        createUserId(userContext.userId),
-      );
-
-      if (isTrial) {
-        logger.info('Trial user detected, ensuring Default package exists', {
-          userId: userContext.userId,
-        });
-
-        trialPackageSlug = await ensureDefaultPackageWithArtifact(
-          fastify,
-          userContext,
-          globalSpace.id,
-          { recipeId: createRecipeId(command.id) },
-          logger,
-        );
-      }
-
-      const baseMessage = `Command '${command.name}' has been created successfully.`;
-
-      if (trialPackageSlug) {
-        const shouldPromptActivation = await shouldPromptForTrialActivation(
-          fastify,
-          createUserId(userContext.userId),
-        );
-
-        const activationPrompt = shouldPromptActivation
-          ? `\n\n${buildTrialActivationPrompt()}`
-          : '';
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `${baseMessage}\n\n${buildTrialInstallPrompt(trialPackageSlug)}${activationPrompt}`,
-            },
-          ],
-        };
-      }
-
       return {
         content: [
           {
             type: 'text',
-            text: baseMessage,
+            text: `Command '${command.name}' has been created successfully.`,
           },
         ],
       };

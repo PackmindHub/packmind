@@ -2,7 +2,7 @@ import { UserEvent } from '../../events';
 
 export interface OrganizationCreatedPayload {
   name: string;
-  method: 'sign-up' | 'quick-start' | 'create';
+  method: 'sign-up' | 'create';
 }
 
 /**

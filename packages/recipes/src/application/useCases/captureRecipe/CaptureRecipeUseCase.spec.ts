@@ -432,7 +432,6 @@ describe('CaptureRecipeUseCase', () => {
       spaceId = createSpaceId(uuidv4());
 
       user = {
-        trial: false,
         id: userId,
         email: 'test@example.com',
         passwordHash: 'hashed_password',
