@@ -7,7 +7,6 @@ This directory contains all deployable applications in the Packmind monorepo.
 ### Backend Services
 
 - **api** - Main NestJS backend API with hexagonal architecture, TypeORM, and BullMQ
-- **mcp-server** - Model Context Protocol server exposing Packmind capabilities to AI agents
 
 ### Frontend & CLI
 
@@ -27,4 +26,4 @@ This directory contains all deployable applications in the Packmind monorepo.
 - Test an application: `./node_modules/.bin/nx test <app-name>`
 - Lint an application: `./node_modules/.bin/nx lint <app-name>`
 
-**Available applications**: `api`, `mcp-server`, `frontend`, `cli`, `e2e-tests`, `doc`
+**Available applications**: `api`, `frontend`, `cli`, `e2e-tests`, `doc`
