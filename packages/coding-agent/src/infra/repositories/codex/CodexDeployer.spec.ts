@@ -65,7 +65,6 @@ describe('CodexDeployer', () => {
           content:
             '---\ndescription: "A test recipe"\n---\nThis is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -125,7 +124,6 @@ describe('CodexDeployer', () => {
           slug: standard.slug,
           description: 'This is the standard description',
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: 'backend',
         };

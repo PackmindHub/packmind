@@ -133,11 +133,7 @@ export async function showPackageHandler(
     if (pkg.standards && pkg.standards.length > 0) {
       logConsole('Standards:');
       pkg.standards.forEach((standard) => {
-        if (standard.summary) {
-          logConsole(`  - ${standard.name}: ${standard.summary}`);
-        } else {
-          logConsole(`  - ${standard.name}`);
-        }
+        logConsole(`  - ${standard.name}`);
       });
       logConsole('');
     }
@@ -145,11 +141,7 @@ export async function showPackageHandler(
     if (pkg.recipes && pkg.recipes.length > 0) {
       logConsole('Commands:');
       pkg.recipes.forEach((recipe) => {
-        if (recipe.summary) {
-          logConsole(`  - ${recipe.name}: ${recipe.summary}`);
-        } else {
-          logConsole(`  - ${recipe.name}`);
-        }
+        logConsole(`  - ${recipe.name}`);
       });
       logConsole('');
     }

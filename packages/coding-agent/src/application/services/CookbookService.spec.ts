@@ -16,7 +16,6 @@ describe('CookbookService', () => {
           {
             name: 'Test Recipe',
             slug: 'test-recipe',
-            summary: 'A test recipe for testing',
           },
         ];
         result = service.buildCookbook(recipes);
@@ -45,62 +44,24 @@ describe('CookbookService', () => {
           {
             name: 'Recipe One',
             slug: 'recipe-one',
-            summary: 'First recipe summary',
           },
           {
             name: 'Recipe Two',
             slug: 'recipe-two',
-            summary: 'Second recipe summary',
           },
         ];
         result = service.buildCookbook(recipes);
       });
 
-      it('includes first recipe with summary', () => {
+      it('includes first recipe with its name', () => {
         expect(result).toContain(
-          '- [Recipe One](recipes/recipe-one.md) : First recipe summary',
+          '- [Recipe One](recipes/recipe-one.md) : Recipe One',
         );
       });
 
-      it('includes second recipe with summary', () => {
+      it('includes second recipe with its name', () => {
         expect(result).toContain(
-          '- [Recipe Two](recipes/recipe-two.md) : Second recipe summary',
-        );
-      });
-    });
-
-    describe('when summary is null', () => {
-      it('uses recipe name as summary', () => {
-        const recipes = [
-          {
-            name: 'Recipe Without Summary',
-            slug: 'no-summary',
-            summary: null,
-          },
-        ];
-
-        const result = service.buildCookbook(recipes);
-
-        expect(result).toContain(
-          '- [Recipe Without Summary](recipes/no-summary.md) : Recipe Without Summary',
-        );
-      });
-    });
-
-    describe('when summary is empty string', () => {
-      it('uses recipe name as summary', () => {
-        const recipes = [
-          {
-            name: 'Recipe With Empty Summary',
-            slug: 'empty-summary',
-            summary: '  ',
-          },
-        ];
-
-        const result = service.buildCookbook(recipes);
-
-        expect(result).toContain(
-          '- [Recipe With Empty Summary](recipes/empty-summary.md) : Recipe With Empty Summary',
+          '- [Recipe Two](recipes/recipe-two.md) : Recipe Two',
         );
       });
     });
@@ -113,17 +74,14 @@ describe('CookbookService', () => {
           {
             name: 'Zebra Recipe',
             slug: 'zebra',
-            summary: 'Last alphabetically',
           },
           {
             name: 'Apple Recipe',
             slug: 'apple',
-            summary: 'First alphabetically',
           },
           {
             name: 'Middle Recipe',
             slug: 'middle',
-            summary: 'Middle alphabetically',
           },
         ];
 

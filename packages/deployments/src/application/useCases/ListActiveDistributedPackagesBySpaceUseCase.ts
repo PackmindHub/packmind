@@ -317,7 +317,6 @@ function buildDeployedStandardInfo(
     slug,
     version,
     description,
-    summary: null,
     userId,
     scope,
   });
