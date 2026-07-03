@@ -24,45 +24,5 @@ services:
     working_dir: /packmind
     entrypoint: npm install
 
-  build-mcp-server:
-    image: node:24.15.0-alpine3.23
-    container_name: packmind-prod-build-mcp-server
-    volumes:
-      - .:/packmind
-    working_dir: /packmind
-    entrypoint: node_modules/.bin/nx run mcp-server:build:production
-    depends_on:
-      install-dependencies:
-        condition: service_completed_successfully
-
-  install-mcp-server:
-    image: node:24.15.0-alpine3.23
-    container_name: packmind-prod-install-mcp-server
-    volumes:
-      - ./dist/apps/mcp-server:/mcp-server
-    working_dir: /mcp-server
-    entrypoint: npm i
-    depends_on:
-      build-mcp-server:
-        condition: service_completed_successfully
-
-  mcp-server:
-    image: node:24.15.0-alpine3.23
-    container_name: packmind-prod-mcp-server
-    volumes:
-      - ./dist/apps/mcp-server:/mcp-server
-    working_dir: /mcp-server
-    ports:
-      - '3001:3001'
-    entrypoint: node main.js --host=0.0.0.0 --verbose
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@packmind-prod-postgres:5432/packmind
-      REDIS_URI: ${REDIS_URI:-redis://localhost:6379}
-    depends_on:
-      install-mcp-server:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-
 volumes:
   postgres-data-prod:
