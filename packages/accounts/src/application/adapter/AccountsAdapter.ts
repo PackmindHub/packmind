@@ -63,13 +63,6 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
-  IStartTrial,
-  IGenerateTrialActivationTokenUseCase,
-  GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResponse,
-  IActivateTrialAccountUseCase,
-  ActivateTrialAccountCommand,
-  ActivateTrialAccountResult,
   IValidateInvitationTokenUseCase,
   IValidatePasswordResetTokenUseCase,
   IValidatePasswordUseCase,
@@ -93,8 +86,6 @@ import {
   SignInSocialUserCommand,
   SignInSocialUserResponse,
   SignInUserCommand,
-  StartTrialCommand,
-  StartTrialResult,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -113,8 +104,6 @@ import {
   SignUpWithOrganizationCommand,
 } from '../../domain/useCases';
 import { RenameOrganizationUseCase } from '../useCases/renameOrganization/RenameOrganizationUseCase';
-import { GenerateTrialActivationTokenUseCase } from '../useCases/generateTrialActivationToken/GenerateTrialActivationTokenUseCase';
-import { ActivateTrialAccountUseCase } from '../useCases/activateTrialAccount/ActivateTrialAccountUseCase';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
 import { RequestPasswordResetUseCase } from '../useCases/RequestPasswordResetUseCase';
 import { ResetPasswordUseCase } from '../useCases/ResetPasswordUseCase';
@@ -143,7 +132,6 @@ import { SignInSocialUserUseCase } from '../useCases/signInSocialUser/SignInSoci
 import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganization/SignUpWithOrganizationUseCase';
 import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
 import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
-import { StartTrialUseCase } from '../useCases/startTrial/StartTrialUseCase';
 import { GetUserOnboardingStatusUseCase } from '../useCases/getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
 import { CompleteUserOnboardingUseCase } from '../useCases/completeUserOnboarding/CompleteUserOnboardingUseCase';
 import { UpdateUserDisplayNameUseCase } from '../useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase';
@@ -186,9 +174,6 @@ export class AccountsAdapter
   private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
   private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
-  private _startTrial!: IStartTrial;
-  private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
-  private _activateTrialAccount!: IActivateTrialAccountUseCase;
   private _getUserOnboardingStatus!: IGetUserOnboardingStatusUseCase;
   private _completeUserOnboarding!: ICompleteUserOnboardingUseCase;
   private _updateUserDisplayName!: IUpdateUserDisplayNameUseCase;
@@ -379,33 +364,6 @@ export class AccountsAdapter
       this.logger.debug('CLI login use cases initialized');
     } else {
       this.logger.debug('API key use cases skipped - service not available');
-    }
-
-    // Trial use case
-    this._startTrial = new StartTrialUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
-      ports.eventEmitterService,
-      this.spacesPort,
-      this.deploymentPort ?? undefined,
-    );
-    this.logger.debug('Start trial use case initialized');
-
-    // Trial activation token use case (requires TrialActivationService)
-    const trialActivationService =
-      this.accountsServices.getTrialActivationService?.();
-    if (trialActivationService) {
-      this._generateTrialActivationToken =
-        new GenerateTrialActivationTokenUseCase(this, trialActivationService);
-      this.logger.debug('Generate trial activation token use case initialized');
-
-      this._activateTrialAccount = new ActivateTrialAccountUseCase(
-        trialActivationService,
-        this.accountsServices.getUserService(),
-        this.accountsServices.getOrganizationService(),
-        ports.eventEmitterService,
-      );
-      this.logger.debug('Activate trial account use case initialized');
     }
 
     this.logger.info('AccountsAdapter initialized successfully');
@@ -637,35 +595,6 @@ export class AccountsAdapter
       );
     }
     return this._exchangeCliLoginCode.execute(command);
-  }
-
-  // Trial use cases
-  public async startTrial(
-    command: StartTrialCommand,
-  ): Promise<StartTrialResult> {
-    return this._startTrial.execute(command);
-  }
-
-  public async generateTrialActivationToken(
-    command: GenerateTrialActivationTokenCommand,
-  ): Promise<GenerateTrialActivationTokenResponse> {
-    if (!this._generateTrialActivationToken) {
-      throw new Error(
-        'Trial activation token generation not available - missing dependencies',
-      );
-    }
-    return this._generateTrialActivationToken.execute(command);
-  }
-
-  public async activateTrialAccount(
-    command: ActivateTrialAccountCommand,
-  ): Promise<ActivateTrialAccountResult> {
-    if (!this._activateTrialAccount) {
-      throw new Error(
-        'Trial account activation not available - missing dependencies',
-      );
-    }
-    return this._activateTrialAccount.execute(command);
   }
 
   // User profile operations
