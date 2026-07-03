@@ -55,12 +55,10 @@ jobs:
           # Update prod cloud values
           yq eval '.api.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
           yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
-          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
 
           # Update staging cloud values
           yq eval '.api.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
           yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
-          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
 
       - name: Commit and Push Changes (main branch - proprietary)
         if: github.ref == 'refs/heads/main' && vars.PACKMIND_EDITION == 'proprietary'
@@ -85,7 +83,6 @@ jobs:
           # Update staging on-premise values
           yq eval '.api.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
           yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
-          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
 
       - name: Commit and Push Changes (main branch - oss)
         if: github.ref == 'refs/heads/main' && vars.PACKMIND_EDITION == 'oss'
@@ -112,7 +109,6 @@ jobs:
           # Update release on-premise values
           yq eval '.api.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
           yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
-          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
 
       - name: Commit and Push Changes (release tags - oss)
         if: startsWith(github.ref, 'refs/tags/release/') && vars.PACKMIND_EDITION == 'oss'
@@ -142,7 +138,6 @@ jobs:
           # Update release on-premise enterprise values
           yq eval '.api.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_ENTERPRISE_VALUES
           yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_ENTERPRISE_VALUES
-          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_ENTERPRISE_VALUES
 
       - name: Commit and Push Changes (release tags - proprietary)
         if: startsWith(github.ref, 'refs/tags/release/') && vars.PACKMIND_EDITION == 'proprietary'

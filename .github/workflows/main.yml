@@ -48,7 +48,6 @@ jobs:
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
       frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
-      mcp-server-artifact: ${{ needs.build.outputs.mcp-server-artifact }}
       standard-samples-artifact: ${{ needs.build.outputs.standard-samples-artifact }}
       node-version: 24.15.0
     secrets:
