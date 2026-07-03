@@ -1,7 +1,6 @@
 import { PMPage, PMVStack, PMHStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
-import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components/DownloadDefaultSkillsPopover';
 import { useGetSkillsQuery } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { useParams } from 'react-router';
 import { SkillsCreateButton } from '../../src/domain/skills/components/SkillsCreateButton';
@@ -26,7 +25,6 @@ export default function SkillsIndexRouteModule() {
       subtitle="Skills give the AI the ability to handle a type of task on its own — use them when a task requires structured know-how or multiple steps"
       actions={
         <PMHStack gap={2}>
-          {hasSkills && <DownloadDefaultSkillsPopover />}
           {hasSkills && spaceSlug && (
             <SkillsCreateButton spaceSlug={spaceSlug} />
           )}

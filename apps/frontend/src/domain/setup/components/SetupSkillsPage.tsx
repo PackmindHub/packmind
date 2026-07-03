@@ -6,7 +6,6 @@ import {
   PMTableColumn,
   PMText,
 } from '@packmind/ui';
-import { DownloadDefaultSkillsPopover } from '../../skills/components/DownloadDefaultSkillsPopover';
 
 interface DefaultSkill {
   name: string;
@@ -69,19 +68,9 @@ export const SetupSkillsPage = () => {
   return (
     <PMPage
       title="Default skills"
-      subtitle="Download and install Packmind's curated skills to enhance your AI agent's capabilities"
+      subtitle="Install Packmind's curated skills to enhance your AI agent's capabilities"
     >
-      <PMPageSection
-        title="Playbook management skills"
-        backgroundColor="primary"
-        cta={
-          <DownloadDefaultSkillsPopover
-            buttonVariant="tertiary"
-            buttonSize="sm"
-            buttonLabel="Get default skills"
-          />
-        }
-      >
+      <PMPageSection title="Playbook management skills" backgroundColor="primary">
         <PMText variant="body" color="secondary" my={4}>
           These skills provide workflows to create new skills, standards,
           commands, and packages, as well as an onboarding skill that generates
