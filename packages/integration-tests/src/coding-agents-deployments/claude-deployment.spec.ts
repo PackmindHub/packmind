@@ -120,7 +120,6 @@ describe(
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-              summary: 'Test recipe for deployment',
               userId: user.id,
             },
           ];
@@ -182,7 +181,7 @@ describe(
 
         it('includes recipe description in frontmatter', () => {
           expect(recipeFile?.content).toContain(
-            "description: 'Test recipe for deployment'",
+            `description: '${recipe.name}'`,
           );
         });
 
@@ -211,7 +210,6 @@ describe(
               slug: standard.slug,
               description: standard.description,
               version: standard.version,
-              summary: 'Test standard for deployment',
               userId: user.id,
               scope: standard.scope,
             },
@@ -273,7 +271,7 @@ describe(
 
         it('includes standard description', () => {
           expect(standardFile?.content).toContain(
-            "description: 'Test standard for deployment'",
+            `description: '${standard.description}'`,
           );
         });
 
@@ -312,7 +310,6 @@ describe(
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-              summary: 'Test recipe for deployment',
               userId: user.id,
             },
           ];
@@ -325,7 +322,6 @@ describe(
               slug: standard.slug,
               description: standard.description,
               version: standard.version,
-              summary: 'Test standard for deployment',
               userId: user.id,
               scope: standard.scope,
             },
@@ -391,7 +387,7 @@ describe(
 
           it('includes recipe description in frontmatter', () => {
             expect(recipeFile?.content).toContain(
-              "description: 'Test recipe for deployment'",
+              `description: '${recipe.name}'`,
             );
           });
         });
@@ -444,7 +440,6 @@ describe(
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-              summary: 'Test recipe for deployment',
               userId: user.id,
             },
           ];
@@ -503,7 +498,7 @@ describe(
 
         it('includes recipe description in frontmatter', () => {
           expect(recipeFile.content).toContain(
-            "description: 'Test recipe for deployment'",
+            `description: '${recipe.name}'`,
           );
         });
 
@@ -536,7 +531,6 @@ describe(
               slug: standard.slug,
               description: standard.description,
               version: standard.version,
-              summary: 'Test standard for deployment',
               userId: user.id,
               scope: standard.scope,
             },
@@ -716,7 +710,6 @@ describe(
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-              summary: 'Test recipe',
               userId: user.id,
             },
           ];
@@ -761,7 +754,7 @@ describe(
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile?.content).toContain("description: 'Test recipe'");
+          expect(recipeFile?.content).toContain(`description: '${recipe.name}'`);
         });
       });
     });
