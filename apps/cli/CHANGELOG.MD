@@ -10,6 +10,17 @@
 
 ## Removed
 
+- Deprecated commands:
+  - `skills add` (use `playbook add`)
+  - `commands create` (use `playbook add`)
+  - `standards create` (use `playbook add`)
+  - `diff` (use `playbook status`)
+
+- Deprecated flags and options:
+  - `lint --diff` (use `--changed-files` or `--changed-lines`)
+  - `install --list` (use `packages list`)
+  - `install --show <packageName>` (use `packages show <packageName>`)
+
 # [0.30.1] - 2026-06-11
 
 ## Fixed
