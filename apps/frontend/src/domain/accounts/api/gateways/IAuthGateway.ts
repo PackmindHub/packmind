@@ -19,7 +19,6 @@ import {
   Gateway,
   ICheckEmailAvailabilityUseCase,
   IActivateUserAccountUseCase,
-  IActivateTrialAccountUseCase,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
   IValidatePasswordResetTokenUseCase,
@@ -120,7 +119,6 @@ export interface IAuthGateway {
     token: string,
   ): Promise<ValidatePasswordResetResponse>;
   resetPassword: PublicGateway<IResetPasswordUseCase>;
-  activateTrialAccount: PublicGateway<IActivateTrialAccountUseCase>;
   selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;
