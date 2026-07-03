@@ -8,7 +8,6 @@ export type CreateStandardWithPackagesCommand = PackmindCommand & {
   spaceId: SpaceId;
   name: string;
   description: string;
-  summary?: string;
   scope?: string | null;
   rules: RuleWithExamples[];
   packageSlugs?: string[];
