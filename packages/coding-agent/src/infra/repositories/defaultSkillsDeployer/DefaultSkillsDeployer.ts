@@ -1,6 +1,4 @@
 import { FileUpdates } from '@packmind/types';
-import { CliListCommandsDeployer } from './CliListCommandsDeployer';
-import { CreatePackageDeployer } from './CreatePackageDeployer';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
@@ -36,8 +34,6 @@ export type DefaultSkillsDeployResult = {
 export class DefaultSkillsDeployer {
   private readonly skillDeployers: ISkillDeployer[] = [
     new OnboardDeployer(),
-    new CreatePackageDeployer(),
-    new CliListCommandsDeployer(),
     new UpdatePlaybookDeployer(),
   ];
 
@@ -46,6 +42,16 @@ export class DefaultSkillsDeployer {
     public readonly skillsFolderPath: string,
   ) {}
 
+  /**
+   * Slugs of every default skill that Packmind has ever shipped, used by the
+   * agent deployers to purge managed default-skill directories from existing
+   * installations. This list is intentionally broader than `skillDeployers`:
+   * skills that have been removed or deprecated (e.g. `packmind-create-skill`,
+   * `packmind-create-standard`, `packmind-create-command`,
+   * `packmind-create-package`, `packmind-cli-list-commands`) are no longer
+   * deployed but must remain here so they are cleaned up from users' machines
+   * on the next deployment.
+   */
   public static getDefaultSkillSlugs(): string[] {
     return [
       'packmind-create-skill',
