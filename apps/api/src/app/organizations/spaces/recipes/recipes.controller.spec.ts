@@ -385,7 +385,6 @@ describe('OrganizationsSpacesRecipesController', () => {
           content: updateData.content,
           userId,
           source: 'ui',
-          summary: undefined,
         });
       });
     });

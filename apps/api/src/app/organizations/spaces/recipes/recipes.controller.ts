@@ -229,7 +229,6 @@ export class OrganizationsSpacesRecipesController {
     updateData: {
       name: string;
       content: string;
-      summary?: string;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<Recipe> {
@@ -255,7 +254,6 @@ export class OrganizationsSpacesRecipesController {
         content: updateData.content,
         userId,
         source: request.clientSource,
-        summary: updateData.summary,
       });
 
       this.logger.info(

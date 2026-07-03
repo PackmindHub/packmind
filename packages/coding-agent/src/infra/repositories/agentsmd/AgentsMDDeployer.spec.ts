@@ -62,7 +62,6 @@ describe('AgentsMDDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -139,7 +138,6 @@ describe('AgentsMDDeployer', () => {
           description: 'Test standard description',
           scope: 'frontend',
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           rules: [],
         };
@@ -221,7 +219,6 @@ describe('AgentsMDDeployer', () => {
           description: 'Frontend standard description',
           scope: 'frontend',
           version: 1,
-          summary: 'Frontend standard summary',
           userId: createUserId('user-1'),
           rules: [],
         };
@@ -234,7 +231,6 @@ describe('AgentsMDDeployer', () => {
           description: 'Backend standard description',
           scope: 'backend',
           version: 1,
-          summary: 'Backend standard summary',
           userId: createUserId('user-1'),
           rules: [],
         };

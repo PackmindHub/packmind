@@ -88,7 +88,6 @@ export class StandardsService {
       return this.standardsHexa.getAdapter().createStandardWithExamples({
         name: standard.name,
         description: standard.description,
-        summary: null,
         rules: standard.rules.map((r) => ({
           content: r.content,
           examples: r.examples?.map((e) => ({

@@ -1,6 +1,6 @@
 export class CookbookService {
   public buildCookbook(
-    recipes: Array<{ name: string; slug: string; summary?: string | null }>,
+    recipes: Array<{ name: string; slug: string }>,
   ): string {
     const sortedRecipes = [...recipes].sort((a, b) =>
       a.name.localeCompare(b.name),
@@ -22,7 +22,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
   }
 
   private generateRecipesList(
-    recipes: Array<{ name: string; slug: string; summary?: string | null }>,
+    recipes: Array<{ name: string; slug: string }>,
   ): string {
     if (recipes.length === 0) {
       return 'No recipes available.';
@@ -31,11 +31,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
     return recipes.map((recipe) => this.formatRecipeEntry(recipe)).join('\n');
   }
 
-  private formatRecipeEntry(recipe: {
-    name: string;
-    slug: string;
-    summary?: string | null;
-  }): string {
+  private formatRecipeEntry(recipe: { name: string; slug: string }): string {
     const fileName = `${recipe.slug}.md`;
     const relativePath = `recipes/${fileName}`;
     const description = this.getRecipeDescription(recipe);
@@ -43,15 +39,8 @@ This cookbook contains all available coding recipes that can be used by AI agent
     return `- [${recipe.name}](${relativePath}) : ${description}`;
   }
 
-  private getRecipeDescription(recipe: {
-    name: string;
-    summary?: string | null;
-  }): string {
-    if (!recipe.summary || recipe.summary.trim() === '') {
-      return recipe.name;
-    }
-
-    return recipe.summary.trim();
+  private getRecipeDescription(recipe: { name: string }): string {
+    return recipe.name;
   }
 
   private generateFooter(): string {
