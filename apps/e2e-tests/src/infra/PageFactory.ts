@@ -1,5 +1,4 @@
 import {
-  IActivateAccountPage,
   ICliSetupPage,
   IDashboardPage,
   IGitSettingsPage,
@@ -13,9 +12,6 @@ import {
   ISkillsPage,
   ISpaceSettingsPage,
   IStandardsPage,
-  IStartTrialAgentPage,
-  IStartTrialAgentSelectorPage,
-  IStartTrialPage,
   IUsersSettingsPage,
 } from '../domain/pages';
 import { Page } from '@playwright/test';
@@ -30,10 +26,6 @@ import { PackagePage } from './pages/PackagePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
 import { InvitationPage } from './pages/InvitationPage';
-import { StartTrialPage } from './pages/StartTrialPage';
-import { StartTrialAgentSelectorPage } from './pages/StartTrialAgentSelectorPage';
-import { ClaudeStartTrialAgentPage } from './pages/ClaudeStartTrialAgentPage';
-import { ActivateAccountPage } from './pages/ActivateAccountPage';
 import { SpaceSettingsPage } from './pages/SpaceSettingsPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
@@ -89,29 +81,6 @@ export class PageFactory implements IPageFactory {
   async getInvitationPage(token: string): Promise<IInvitationPage> {
     await this.page.goto(`/activate?token=${token}`);
     return this.getPageInstance(InvitationPage);
-  }
-
-  async getStartTrialPage(): Promise<IStartTrialPage> {
-    await this.page.goto('/quick-start');
-    return this.getPageInstance(StartTrialPage);
-  }
-
-  async getStartTrialAgentSelectorPage(): Promise<IStartTrialAgentSelectorPage> {
-    await this.page.goto('/quick-start/select-agent');
-    return this.getPageInstance(StartTrialAgentSelectorPage);
-  }
-
-  async getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage> {
-    switch (agent) {
-      case 'claude':
-        return this.getPageInstance(ClaudeStartTrialAgentPage);
-      default:
-        throw new Error(`Unsupported agent: ${agent}`);
-    }
-  }
-
-  async getActivateAccountPage(): Promise<IActivateAccountPage> {
-    return this.getPageInstance(ActivateAccountPage);
   }
 
   async getSpaceSettingsPage(): Promise<ISpaceSettingsPage> {
