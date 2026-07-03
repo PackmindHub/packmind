@@ -5,7 +5,6 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
-  AiNotConfigured,
   CommandUpdatedEvent,
   IAccountsPort,
   ISpacesPort,
@@ -14,7 +13,6 @@ import {
   UpdateRecipeFromUIResponse,
 } from '@packmind/types';
 import { RecipeService } from '../../services/RecipeService';
-import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 
 const origin = 'UpdateRecipeFromUIUseCase';
@@ -31,7 +29,6 @@ export class UpdateRecipeFromUIUseCase
     accountsPort: IAccountsPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
-    private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(spacesPort, accountsPort, new PackmindLogger(origin));
@@ -109,48 +106,6 @@ export class UpdateRecipeFromUIUseCase
       },
     );
 
-    // Generate summary for the recipe version (AI-generated like Git flow)
-    let summary: string | null = null;
-    try {
-      this.logger.info('Generating summary for recipe version');
-      summary = await this.recipeSummaryService.createRecipeSummary(
-        organizationId,
-        {
-          recipeId: existingRecipe.id,
-          name: name.trim(),
-          slug: existingRecipe.slug,
-          content: content.trim(),
-          version: nextVersion,
-          summary: null,
-          gitCommit: undefined,
-          userId,
-        },
-      );
-      this.logger.info('Summary generated successfully', {
-        summaryLength: summary?.length || 0,
-      });
-    } catch (summaryError) {
-      if (summaryError instanceof AiNotConfigured) {
-        this.logger.warn(
-          'AI service not configured - proceeding without summary',
-          {
-            error: summaryError.message,
-          },
-        );
-      } else {
-        const errorMessage =
-          summaryError instanceof Error
-            ? summaryError.message
-            : String(summaryError);
-        this.logger.error(
-          'Failed to generate summary, proceeding without summary',
-          {
-            error: errorMessage,
-          },
-        );
-      }
-    }
-
     // Create new recipe version with editor's userId
     this.logger.info('Creating new recipe version');
     const newRecipeVersion = await this.recipeVersionService.addRecipeVersion({
@@ -159,7 +114,6 @@ export class UpdateRecipeFromUIUseCase
       slug: existingRecipe.slug,
       content: content.trim(),
       version: nextVersion,
-      summary,
       gitCommit: undefined, // No git commit for UI updates
       userId, // Use editor's ID for the version
     });
