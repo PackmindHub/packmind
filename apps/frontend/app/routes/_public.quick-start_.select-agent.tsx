@@ -1,17 +1,5 @@
-import { useNavigate } from 'react-router';
-import { StartTrialAgentSelector } from '../../src/domain/accounts/components';
-import { routes } from '../../src/shared/utils/routes';
+import { Navigate } from 'react-router';
 
-export default function StartTrialSelectAgentRouteModule() {
-  const navigate = useNavigate();
-
-  return (
-    <StartTrialAgentSelector
-      onTokenAvailable={(agent, token, mcpUrl, cliLoginCode) => {
-        navigate(
-          routes.auth.toStartTrialAgent(agent, token, mcpUrl, cliLoginCode),
-        );
-      }}
-    />
-  );
+export default function QuickStartSelectAgentRedirect() {
+  return <Navigate to="/sign-up/create-account" replace />;
 }

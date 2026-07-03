@@ -1,7 +1,7 @@
 import { IStartTrial, PublicGateway } from '@packmind/types';
 
 export interface GetActivationTokenCommand {
-  mcpToken: string;
+  trialToken: string;
 }
 
 export interface GetActivationTokenResponse {

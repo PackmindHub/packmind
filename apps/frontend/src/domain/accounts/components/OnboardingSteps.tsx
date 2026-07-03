@@ -56,7 +56,7 @@ export const OnboardingSteps: React.FC = () => {
             <PMVStack align="flex-start" paddingBottom={6} gap={4}>
               <PMText as="p">
                 Create standards and commands tailored to your project context.
-                With configured MCP server, use this prompt with your AI coding
+                Once your CLI is configured, use this prompt with your AI coding
                 agent:
               </PMText>
 
@@ -71,7 +71,7 @@ export const OnboardingSteps: React.FC = () => {
                       <PMVStack align="flex-start" gap={4} paddingTop={4}>
                         <PMField.Root width="full">
                           <PMField.Label>
-                            Prompt: Bootstrap with on-boarding MCP tool
+                            Prompt: Bootstrap with the Packmind onboarding
                           </PMField.Label>
                           <CopiableTextarea
                             value="Run the Packmind on-boarding process"

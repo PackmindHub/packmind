@@ -9,16 +9,12 @@ import {
   useCreateCliLoginCodeMutation,
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
-  useGetMcpTokenMutation,
-  useGetMcpURLQuery,
 } from '../api/queries/AuthQueries';
 
 jest.mock('../api/queries/AuthQueries', () => ({
   useCreateCliLoginCodeMutation: jest.fn(),
   useGetCurrentApiKeyQuery: jest.fn(),
   useGenerateApiKeyMutation: jest.fn(),
-  useGetMcpTokenMutation: jest.fn(),
-  useGetMcpURLQuery: jest.fn(),
 }));
 
 jest.mock('../hooks/useAuthContext', () => ({
@@ -88,15 +84,6 @@ describe('OnboardingSteps', () => {
       typeof useGenerateApiKeyMutation
     >;
 
-  const mockUseGetMcpTokenMutation =
-    useGetMcpTokenMutation as jest.MockedFunction<
-      typeof useGetMcpTokenMutation
-    >;
-
-  const mockUseGetMcpURLQuery = useGetMcpURLQuery as jest.MockedFunction<
-    typeof useGetMcpURLQuery
-  >;
-
   const defaultMutationResult = {
     mutate: jest.fn(),
     mutateAsync: jest.fn(),
@@ -152,12 +139,6 @@ describe('OnboardingSteps', () => {
     mockUseGenerateApiKeyMutation.mockReturnValue(
       defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
     );
-    mockUseGetMcpTokenMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGetMcpTokenMutation>,
-    );
-    mockUseGetMcpURLQuery.mockReturnValue(
-      defaultQueryResult as ReturnType<typeof useGetMcpURLQuery>,
-    );
   });
 
   it('renders all three onboarding steps', () => {
@@ -177,7 +158,6 @@ describe('OnboardingSteps', () => {
     expect(screen.getByText('Install the Packmind CLI')).toBeInTheDocument();
     expect(screen.getByText('1. Install CLI')).toBeInTheDocument();
     expect(screen.getByText('2. Authenticate')).toBeInTheDocument();
-    expect(screen.getByText('3. Connect AI')).toBeInTheDocument();
   });
 
   it('renders placeholder content for step 2', () => {
@@ -185,7 +165,7 @@ describe('OnboardingSteps', () => {
 
     expect(
       screen.getByText(
-        'Create standards and commands tailored to your project context. With configured MCP server, use this prompt with your AI coding agent:',
+        'Create standards and commands tailored to your project context. Once your CLI is configured, use this prompt with your AI coding agent:',
       ),
     ).toBeInTheDocument();
   });

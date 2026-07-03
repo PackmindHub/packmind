@@ -1,13 +1,5 @@
-import { useNavigate } from 'react-router';
-import { PreInstallationInfo } from '../../src/domain/accounts/components/PreInstallationInfo';
-import { routes } from '../../src/shared/utils/routes';
+import { Navigate } from 'react-router';
 
-export default function StartTrialRouteModule() {
-  const navigate = useNavigate();
-
-  return (
-    <PreInstallationInfo
-      onContinue={() => navigate(routes.auth.toStartTrialSelectAgent())}
-    />
-  );
+export default function QuickStartRedirect() {
+  return <Navigate to="/sign-up/create-account" replace />;
 }

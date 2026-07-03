@@ -6,6 +6,3 @@ export * from './SidebarAccountsMenuDataTestIds';
 export * from './SettingsPageDataTestIds';
 export * from './CliAuthenticationDataTestIds';
 export * from './UsersPageDataTestIds';
-export * from './StartTrialAgentSelectorDataTestIds';
-export * from './StartTrialAgentPageDataTestIds';
-export * from './PreInstallationInfoDataTestIds';
