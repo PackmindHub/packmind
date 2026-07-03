@@ -11,8 +11,6 @@ import {
   IGetMcpUrlUseCase,
   NewGateway,
   CreateCliLoginCodeResponse,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
 } from '@packmind/types';
 import {
   PublicGateway,
@@ -125,8 +123,6 @@ export interface IAuthGateway {
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;
   createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
-  getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse>;
-  completeOnboarding(): Promise<CompleteUserOnboardingResponse>;
   getSocialProviders(): Promise<{ providers: string[] }>;
   updateProfile(body: {
     displayName?: string | null;

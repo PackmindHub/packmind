@@ -10,7 +10,4 @@ export { McpConfig } from './McpConfig';
 export { UsersPage } from './UsersPage';
 export { UsersList } from './UsersList';
 export { InviteUsersDialog } from './InviteUsers/InviteUsersDialog';
-export { StartTrialAgentSelector } from './trial';
 export { SignUpOptions } from './SignUpOptions';
-export { PreInstallationInfo } from './PreInstallationInfo';
-export { GetStartedWithPackmindWidget } from './GetStartedWithPackmindWidget';

@@ -1,5 +1,4 @@
 import { PMBox, PMHStack, PMPage, PMVStack } from '@packmind/ui';
-import { GetStartedWithPackmindWidget } from '../../../accounts/components/GetStartedWithPackmindWidget';
 import { DeploymentsOverviewRedesignContent } from '../../../deployments/components/redesign/DeploymentsOverviewRedesign';
 import { OverviewSnapshot } from './OverviewSnapshot';
 import { OverviewNeedsAttention } from './OverviewNeedsAttention';
@@ -15,7 +14,6 @@ export const SpaceOverviewPage = () => {
   return (
     <PMPage title="Overview" isFullWidth>
       <PMVStack align="stretch" gap={8}>
-        <GetStartedWithPackmindWidget />
         {showNeedsAttention ? (
           <PMHStack align="stretch" gap={6} wrap="wrap" rowGap={6}>
             <PMBox flex={1} minW={COLUMN_MIN_WIDTH}>

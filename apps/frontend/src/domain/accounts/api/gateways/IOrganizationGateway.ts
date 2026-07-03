@@ -1,7 +1,5 @@
 import { Organization, NewGateway } from '@packmind/types';
 import {
-  UserOrganizationRole,
-  OrganizationOnboardingStatus,
   ICreateInvitationsUseCase,
   IRemoveUserFromOrganizationUseCase,
   IRenameOrganizationUseCase,
@@ -14,5 +12,4 @@ export interface IOrganizationGateway {
   inviteUsers: NewGateway<ICreateInvitationsUseCase>;
   removeUser: NewGateway<IRemoveUserFromOrganizationUseCase>;
   renameOrganization: NewGateway<IRenameOrganizationUseCase>;
-  getOnboardingStatus(orgId: string): Promise<OrganizationOnboardingStatus>;
 }
