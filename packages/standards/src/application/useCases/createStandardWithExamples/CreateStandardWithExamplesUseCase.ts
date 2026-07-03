@@ -174,7 +174,7 @@ export class CreateStandardWithExamplesUseCase {
         rules: processedRules,
         scope,
         summary: finalSummary,
-        userId, // Track the user who created this through MCP
+        userId, // Track the user who created this standard
       };
 
       const standardVersion =
