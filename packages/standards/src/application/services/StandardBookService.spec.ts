@@ -112,42 +112,48 @@ describe('StandardBookService', () => {
     });
 
     describe('when description is unavailable', () => {
-      it('falls back to standard name when description is empty', () => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Empty Standard',
-              slug: 'empty-standard',
-              description: '',
-            },
-            '2023-01-01',
-          ),
-        ];
+      describe('when description is empty', () => {
+        it('falls back to standard name', () => {
+          const standardVersions: WithTimestamps<StandardVersion>[] = [
+            createStandardVersionWithTimestamp(
+              {
+                name: 'Empty Standard',
+                slug: 'empty-standard',
+                description: '',
+              },
+              '2023-01-01',
+            ),
+          ];
 
-        const result = standardBookService.buildStandardBook(standardVersions);
+          const result =
+            standardBookService.buildStandardBook(standardVersions);
 
-        expect(result).toContain(
-          '- [Empty Standard](./standards/empty-standard.md) : Empty Standard',
-        );
+          expect(result).toContain(
+            '- [Empty Standard](./standards/empty-standard.md) : Empty Standard',
+          );
+        });
       });
 
-      it('falls back to standard name when description is null', () => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Null Description Standard',
-              slug: 'null-description-standard',
-              description: null as unknown as string,
-            },
-            '2023-01-02',
-          ),
-        ];
+      describe('when description is null', () => {
+        it('falls back to standard name', () => {
+          const standardVersions: WithTimestamps<StandardVersion>[] = [
+            createStandardVersionWithTimestamp(
+              {
+                name: 'Null Description Standard',
+                slug: 'null-description-standard',
+                description: null as unknown as string,
+              },
+              '2023-01-02',
+            ),
+          ];
 
-        const result = standardBookService.buildStandardBook(standardVersions);
+          const result =
+            standardBookService.buildStandardBook(standardVersions);
 
-        expect(result).toContain(
-          '- [Null Description Standard](./standards/null-description-standard.md) : Null Description Standard',
-        );
+          expect(result).toContain(
+            '- [Null Description Standard](./standards/null-description-standard.md) : Null Description Standard',
+          );
+        });
       });
     });
 

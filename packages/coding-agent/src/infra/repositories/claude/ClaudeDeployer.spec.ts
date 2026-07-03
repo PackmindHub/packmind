@@ -114,7 +114,7 @@ describe('ClaudeDeployer', () => {
             slug: recipe.slug,
             content: 'This is the recipe content',
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
           };
 
           result = await deployer.deployRecipes(
@@ -492,7 +492,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -606,7 +606,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -637,7 +637,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -666,7 +666,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -695,7 +695,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -726,7 +726,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -757,7 +757,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -788,7 +788,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -817,7 +817,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -1730,7 +1730,7 @@ describe('ClaudeDeployer', () => {
             slug: recipe.slug,
             content: 'Recipe content',
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
           };
 
           const standardVersion: StandardVersion = {
@@ -1740,7 +1740,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -1836,7 +1836,7 @@ describe('ClaudeDeployer', () => {
             slug: recipe.slug,
             content: 'Recipe content',
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
           };
 
           const standardVersion: StandardVersion = {
@@ -1846,7 +1846,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -1952,7 +1952,7 @@ describe('ClaudeDeployer', () => {
             slug: recipe.slug,
             content: 'Recipe content',
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
           };
 
           result = await deployer.deployArtifacts([recipeVersion], []);
@@ -2129,7 +2129,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           };
@@ -3738,7 +3738,7 @@ describe('ClaudeDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-              userId: createUserId('user-1'),
+            userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
           },
@@ -3801,7 +3801,7 @@ describe('ClaudeDeployer', () => {
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-                userId: createUserId('user-1'),
+              userId: createUserId('user-1'),
             },
           ];
 
@@ -3818,7 +3818,7 @@ describe('ClaudeDeployer', () => {
               slug: standard.slug,
               description: standard.description,
               version: standard.version,
-                  userId: createUserId('user-1'),
+              userId: createUserId('user-1'),
               scope: standard.scope,
               rules: [] as Rule[],
             },

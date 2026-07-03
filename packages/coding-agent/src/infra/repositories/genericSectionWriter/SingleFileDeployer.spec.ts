@@ -857,7 +857,10 @@ describe('SingleFileDeployer', () => {
           },
         ];
 
-        result = await deployer.deployArtifacts([], standardWithNullDescription);
+        result = await deployer.deployArtifacts(
+          [],
+          standardWithNullDescription,
+        );
       });
 
       it('returns one createOrUpdate entry', () => {

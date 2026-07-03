@@ -1,7 +1,5 @@
 export class CookbookService {
-  public buildCookbook(
-    recipes: Array<{ name: string; slug: string }>,
-  ): string {
+  public buildCookbook(recipes: Array<{ name: string; slug: string }>): string {
     const sortedRecipes = [...recipes].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
