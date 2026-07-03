@@ -15,7 +15,6 @@ import {
   RuleAddedEvent,
   StandardCreatedEvent,
   StandardId,
-  StandardVersion,
   StandardVersionId,
   UserId,
   createStandardId,
@@ -24,7 +23,6 @@ import {
 } from '@packmind/types';
 import slug from 'slug';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import {
   CreateStandardVersionData,
@@ -45,7 +43,6 @@ export class CreateStandardUseCase
     accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
-    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly ruleRepository: IRuleRepository,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -161,13 +158,6 @@ export class CreateStandardUseCase
         rulesCount: rules.length,
       });
 
-      await this.generateStandardVersionSummary(
-        userId,
-        organizationId,
-        standardVersion,
-        rules,
-      );
-
       // Determine the method: use provided method, or default based on source
       const creationMethod = method ?? (source === 'cli' ? 'cli' : 'blank');
 
@@ -204,20 +194,6 @@ export class CreateStandardUseCase
       });
       throw error;
     }
-  }
-
-  public async generateStandardVersionSummary(
-    userId: UserId,
-    organizationId: OrganizationId,
-    standardVersion: StandardVersion,
-    rules: Array<{ content: string }>,
-  ) {
-    await this.generateStandardSummaryDelayedJob.addJob({
-      userId,
-      organizationId,
-      standardVersion,
-      rules: rules.map((r) => ({ content: r.content, examples: [] })),
-    });
   }
 
   private async emitRuleAddedEventsForRules(

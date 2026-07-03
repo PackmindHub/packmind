@@ -40,10 +40,6 @@ export const StandardVersionSchema = new EntitySchema<
     description: {
       type: 'text',
     },
-    summary: {
-      type: 'text',
-      nullable: true,
-    },
     standardId: {
       name: 'standard_id',
       type: 'uuid',
