@@ -37,7 +37,6 @@ describe('StandardVersionService', () => {
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
-      updateSummary: jest.fn(),
     };
 
     ruleRepository = {

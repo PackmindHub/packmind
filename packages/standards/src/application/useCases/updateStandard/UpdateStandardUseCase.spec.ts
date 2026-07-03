@@ -5,7 +5,6 @@ import {
 import { UpdateStandardUseCase } from './UpdateStandardUseCase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { Standard, StandardId, createStandardId } from '@packmind/types';
@@ -51,7 +50,6 @@ describe('UpdateStandardUseCase', () => {
   let updateStandardUseCase: UpdateStandardUseCase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
@@ -85,11 +83,6 @@ describe('UpdateStandardUseCase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock GenerateStandardSummaryDelayedJob
-    generateStandardSummaryDelayedJob = {
-      addJob: jest.fn(),
-    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
-
     // Mock RuleRepository
     ruleRepository = {
       add: jest.fn(),
@@ -115,8 +108,6 @@ describe('UpdateStandardUseCase', () => {
     );
 
     ruleExampleRepository.findByRuleId.mockResolvedValue([]);
-
-    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     stubbedLogger = stubLogger();
 
@@ -190,13 +181,9 @@ describe('UpdateStandardUseCase', () => {
       standardVersionService,
       ruleRepository,
       ruleExampleRepository,
-      generateStandardSummaryDelayedJob,
       eventEmitterService,
       stubbedLogger,
     );
-
-    // Spy on the generateStandardSummary method
-    jest.spyOn(updateStandardUseCase, 'generateStandardSummary');
   });
 
   afterEach(() => {
@@ -347,23 +334,6 @@ describe('UpdateStandardUseCase', () => {
         );
       });
 
-      it('calls generateStandardSummary method once', () => {
-        expect(
-          updateStandardUseCase.generateStandardSummary,
-        ).toHaveBeenCalledTimes(1);
-      });
-
-      it('calls generateStandardSummary method with correct parameters', () => {
-        expect(
-          updateStandardUseCase.generateStandardSummary,
-        ).toHaveBeenCalledWith(
-          createUserId(inputData.userId),
-          inputData.organizationId,
-          newStandardVersion,
-          [{ content: 'Updated rule content', examples: [] }],
-        );
-      });
-
       it('creates new standard version with updated rules', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -480,14 +450,6 @@ describe('UpdateStandardUseCase', () => {
         expect(
           standardVersionService.addStandardVersion,
         ).not.toHaveBeenCalled();
-      });
-
-      describe('when content is unchanged', () => {
-        it('does not call generateStandardSummary method', () => {
-          expect(
-            updateStandardUseCase.generateStandardSummary,
-          ).not.toHaveBeenCalled();
-        });
       });
 
       it('returns the existing standard unchanged', () => {
@@ -631,108 +593,6 @@ describe('UpdateStandardUseCase', () => {
             userId: createUserId(inputData.userId),
           }),
         );
-      });
-    });
-
-    describe('when summary generation fails', () => {
-      let inputData: UpdateStandardCommand;
-      let existingStandard: Standard;
-      let latestVersion: StandardVersion;
-      let existingRules: Rule[];
-
-      beforeEach(async () => {
-        inputData = {
-          standardId: standardId,
-          name: 'Updated Standard Name',
-          description: 'Updated description',
-          rules: [
-            { id: createRuleId(uuidv4()), content: 'Updated rule content' },
-          ],
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: null,
-        };
-
-        existingStandard = standardFactory({
-          id: standardId,
-          name: 'Original Standard Name',
-          description: 'Original description',
-          version: 1,
-          spaceId: spaceId,
-        });
-
-        latestVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId,
-          name: 'Original Standard Name',
-          description: 'Original description',
-          version: 1,
-        });
-
-        existingRules = [
-          ruleFactory({
-            content: 'Original rule content',
-            standardVersionId: latestVersion.id,
-          }),
-        ];
-
-        const updatedStandard = standardFactory({
-          id: standardId,
-          name: inputData.name,
-          description: inputData.description,
-          version: 2,
-        });
-
-        const newStandardVersion = standardVersionFactory({
-          standardId,
-          name: inputData.name,
-          description: inputData.description,
-          version: 2,
-        });
-
-        // Setup mocks
-        standardService.getStandardById.mockResolvedValue(existingStandard);
-        standardVersionService.getLatestStandardVersion.mockResolvedValue(
-          latestVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          newStandardVersion,
-        );
-
-        await updateStandardUseCase.execute(inputData);
-      });
-
-      it('still updates the standard despite summary failure', () => {
-        expect(standardService.updateStandard).toHaveBeenCalled();
-      });
-
-      it('still creates new version despite summary failure', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
-      });
-
-      it('ensures userId is properly passed despite summary generation failures', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: createUserId(inputData.userId),
-          }),
-        );
-      });
-
-      it('ensures userId is defined during error handling', () => {
-        const callArgs = (
-          standardVersionService.addStandardVersion as jest.Mock
-        ).mock.calls[0][0];
-        expect(callArgs.userId).toBeDefined();
-      });
-
-      it('preserves correct userId value during error handling', () => {
-        const callArgs = (
-          standardVersionService.addStandardVersion as jest.Mock
-        ).mock.calls[0][0];
-        expect(callArgs.userId).toEqual(createUserId(inputData.userId));
       });
     });
 
