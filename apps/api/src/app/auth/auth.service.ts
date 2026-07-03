@@ -10,8 +10,6 @@ import {
   ActivateTrialAccountCommand,
   ActivateTrialAccountResult,
   createTrialActivationToken,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
   SocialProvider,
   SOCIAL_PROVIDER_DISPLAY_NAMES,
   SignInSocialUserResponse,
@@ -963,46 +961,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Gets the onboarding status for a user's organization
-   * @param userId User ID
-   * @param organizationId Organization ID
-   * @returns Onboarding status including hasDeployed flag
-   */
-  async getOnboardingStatus(
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<{ hasDeployed: boolean }> {
-    this.logger.log('Fetching onboarding status', {
-      userId,
-      organizationId,
-    });
-
-    try {
-      const status = await this.accountsAdapter.getOrganizationOnboardingStatus(
-        {
-          userId,
-          organizationId,
-        },
-      );
-
-      this.logger.log('Onboarding status fetched successfully', {
-        userId,
-        organizationId,
-        hasDeployed: status.hasDeployed,
-      });
-
-      return { hasDeployed: status.hasDeployed };
-    } catch (error) {
-      this.logger.error('Failed to fetch onboarding status', {
-        userId,
-        organizationId,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
   async updateUserDisplayName(
     req: AuthenticatedRequest,
     displayName: string | null,
@@ -1041,76 +999,5 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     return this.jwtService.verify<JwtPayload>(token);
-  }
-
-  /**
-   * Gets the user onboarding status for the authenticated user
-   * @param req Authenticated request containing user and organization info
-   * @returns User onboarding status including steps to show
-   */
-  async getUserOnboardingStatus(
-    req: AuthenticatedRequest,
-  ): Promise<GetUserOnboardingStatusResponse> {
-    this.logger.log('Getting user onboarding status', {
-      userId: req.user.userId,
-      organizationId: req.organization.id,
-    });
-
-    try {
-      const result = await this.accountsAdapter.getUserOnboardingStatus({
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      this.logger.log('User onboarding status retrieved successfully', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        showOnboarding: result.showOnboarding,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to get user onboarding status', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Marks the user onboarding as completed
-   * @param req Authenticated request containing user and organization info
-   * @returns Success status
-   */
-  async completeUserOnboarding(
-    req: AuthenticatedRequest,
-  ): Promise<CompleteUserOnboardingResponse> {
-    this.logger.log('Completing user onboarding', {
-      userId: req.user.userId,
-      organizationId: req.organization.id,
-    });
-
-    try {
-      const result = await this.accountsAdapter.completeUserOnboarding({
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      this.logger.log('User onboarding completed successfully', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to complete user onboarding', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
   }
 }
