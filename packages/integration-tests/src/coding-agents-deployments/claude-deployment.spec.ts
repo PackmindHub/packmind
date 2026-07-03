@@ -497,9 +497,7 @@ describe(
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile.content).toContain(
-            `description: '${recipe.name}'`,
-          );
+          expect(recipeFile.content).toContain(`description: '${recipe.name}'`);
         });
 
         it('includes recipe content', () => {
@@ -754,7 +752,9 @@ describe(
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile?.content).toContain(`description: '${recipe.name}'`);
+          expect(recipeFile?.content).toContain(
+            `description: '${recipe.name}'`,
+          );
         });
       });
     });

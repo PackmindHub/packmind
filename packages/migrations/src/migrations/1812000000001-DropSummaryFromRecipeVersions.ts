@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'DropSummaryFromRecipeVersions1812000000001';
 
-export class DropSummaryFromRecipeVersions1812000000001
-  implements MigrationInterface
-{
+export class DropSummaryFromRecipeVersions1812000000001 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

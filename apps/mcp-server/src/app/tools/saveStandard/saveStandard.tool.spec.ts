@@ -300,7 +300,6 @@ describe('createStandard.tool', () => {
         });
       });
     });
-
   });
 
   describe('invalid programming language handling', () => {
