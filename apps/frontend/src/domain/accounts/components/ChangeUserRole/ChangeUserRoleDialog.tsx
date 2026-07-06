@@ -1,9 +1,12 @@
 import React from 'react';
 import {
-  PMDialog,
+  PMDrawer,
+  PMPortal,
+  PMBox,
   PMButton,
   PMCloseButton,
-  PMButtonGroup,
+  PMHStack,
+  PMHeading,
   PMIcon,
   PMField,
   PMNativeSelect,
@@ -76,71 +79,88 @@ export const ChangeUserRoleDialog: React.FC<ChangeUserRoleDialogProps> = ({
   };
 
   return (
-    <PMDialog.Root
-      closeOnInteractOutside={false}
+    <PMDrawer.Root
       open={open}
-      onOpenChange={(details: { open: boolean }) => {
-        if (!details.open) {
+      onOpenChange={(e) => {
+        if (!e.open) {
           handleClose();
         }
       }}
-      size={'md'}
-      scrollBehavior={'inside'}
+      placement="end"
+      size="md"
     >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content>
-          <PMDialog.Header>
-            <PMDialog.Title>Change User Role</PMDialog.Title>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <PMVStack gap={4} alignItems={'flex-start'}>
-              <PMText>
-                Change the role for <strong>{userStatus.email}</strong> in your
-                organization.
-              </PMText>
+      <PMPortal>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header
+              borderBottom="1px solid"
+              borderColor="border.tertiary"
+            >
+              <PMVStack gap={1} align="stretch" flex={1}>
+                <PMHeading size="md">Change User Role</PMHeading>
+                <PMText fontSize="xs" color="faded">
+                  Update this user's role in your organization.
+                </PMText>
+              </PMVStack>
+              <PMDrawer.CloseTrigger asChild>
+                <PMCloseButton size="sm" />
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
 
-              <PMField.Root width={'fit-content'}>
-                <PMField.Label>New Role</PMField.Label>
-                <PMNativeSelect
-                  value={selectedRole}
-                  onChange={handleRoleChange}
-                  items={[
-                    { value: 'admin', label: 'Admin' },
-                    { value: 'member', label: 'Member' },
-                  ]}
-                />
-                <PMField.HelperText>
-                  {selectedRole === 'admin'
-                    ? 'Admins can manage users, settings, and organization data.'
-                    : 'Members have standard access to organization features.'}
-                </PMField.HelperText>
-              </PMField.Root>
-            </PMVStack>
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButtonGroup size={'sm'}>
-              <PMButton variant="tertiary" onClick={handleClose}>
-                Cancel
-              </PMButton>
-              <PMButton
-                variant="primary"
-                onClick={handleOnSubmit}
-                disabled={isPending || selectedRole === userStatus.role}
-                loading={isPending}
-              >
-                <PMIcon>
-                  <LuUserCog />
-                </PMIcon>
-                Change Role
-              </PMButton>
-            </PMButtonGroup>
-          </PMDialog.Footer>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
-    </PMDialog.Root>
+            <PMDrawer.Body padding={5}>
+              <PMVStack gap={4} alignItems={'flex-start'}>
+                <PMText>
+                  Change the role for <strong>{userStatus.email}</strong> in
+                  your organization.
+                </PMText>
+
+                <PMField.Root width={'fit-content'}>
+                  <PMField.Label>New Role</PMField.Label>
+                  <PMNativeSelect
+                    value={selectedRole}
+                    onChange={handleRoleChange}
+                    items={[
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'member', label: 'Member' },
+                    ]}
+                  />
+                  <PMField.HelperText>
+                    {selectedRole === 'admin'
+                      ? 'Admins can manage users, settings, and organization data.'
+                      : 'Members have standard access to organization features.'}
+                  </PMField.HelperText>
+                </PMField.Root>
+              </PMVStack>
+            </PMDrawer.Body>
+
+            <PMBox
+              borderTop="1px solid"
+              borderColor="border.tertiary"
+              paddingX={5}
+              paddingY={3}
+            >
+              <PMHStack justify="space-between" align="center">
+                <PMButton variant="tertiary" size="sm" onClick={handleClose}>
+                  Cancel
+                </PMButton>
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOnSubmit}
+                  disabled={isPending || selectedRole === userStatus.role}
+                  loading={isPending}
+                >
+                  <PMIcon>
+                    <LuUserCog />
+                  </PMIcon>
+                  Change Role
+                </PMButton>
+              </PMHStack>
+            </PMBox>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
+      </PMPortal>
+    </PMDrawer.Root>
   );
 };
