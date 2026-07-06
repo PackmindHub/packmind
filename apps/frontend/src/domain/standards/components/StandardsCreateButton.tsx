@@ -54,7 +54,11 @@ export const StandardsCreateButton = ({
                   }}
                   p={3}
                 >
-                  <PMVStack alignItems={'flex-start'} gap={0} cursor={'pointer'}>
+                  <PMVStack
+                    alignItems={'flex-start'}
+                    gap={0}
+                    cursor={'pointer'}
+                  >
                     <PMHStack gap={2} mb={1}>
                       <PMIcon color="yellow.200" size="lg">
                         <LuLibrary />
@@ -75,7 +79,11 @@ export const StandardsCreateButton = ({
                     setIsFromCodeDialogOpen(true);
                   }}
                 >
-                  <PMVStack alignItems={'flex-start'} gap={0} cursor={'pointer'}>
+                  <PMVStack
+                    alignItems={'flex-start'}
+                    gap={0}
+                    cursor={'pointer'}
+                  >
                     <PMHStack gap={2} mb={1}>
                       <PMIcon color="branding.primary" size="lg">
                         <LuBot />
@@ -85,7 +93,8 @@ export const StandardsCreateButton = ({
                       </PMText>
                     </PMHStack>
                     <PMText fontSize="xs" color="secondary">
-                      Configure your agent to create standards from your codebase
+                      Configure your agent to create standards from your
+                      codebase
                     </PMText>
                   </PMVStack>
                 </PMMenu.Item>
