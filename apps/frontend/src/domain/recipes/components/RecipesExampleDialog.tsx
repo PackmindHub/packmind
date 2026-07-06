@@ -1,16 +1,10 @@
-import {
-  PMButton,
-  PMCloseButton,
-  PMDialog,
-  PMHStack,
-  PMIcon,
-  PMPortal,
-} from '@packmind/ui';
+import { PMBox, PMButton, PMHStack, PMIcon, PMVStack } from '@packmind/ui';
+import { useState } from 'react';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
-import { LuBook } from 'react-icons/lu';
+import { LuBook, LuChevronDown, LuChevronRight } from 'react-icons/lu';
 
 interface RecipeExample {
   title: string;
@@ -111,60 +105,60 @@ const RECIPE_EXAMPLES = [
   GENERATE_PLAYWRIGHT_TEST_EXAMPLE,
 ];
 
-interface RecipesExampleDialogButtonProps {
+interface RecipesExampleDisclosureProps {
   example: RecipeExample;
 }
 
-const RecipesExampleDialogButton = ({
+const RecipesExampleDisclosure = ({
   example,
-}: RecipesExampleDialogButtonProps) => {
+}: RecipesExampleDisclosureProps) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <PMDialog.Root
-      size="xl"
-      placement="center"
-      motionPreset="slide-in-bottom"
-      scrollBehavior="inside"
-    >
-      <PMDialog.Trigger asChild>
-        <PMButton size="xs" variant="secondary" w="fit-content">
+    <PMBox width="fit-content">
+      <PMButton
+        size="xs"
+        variant="secondary"
+        w="fit-content"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+      >
+        <PMHStack gap={1} align="center">
           <PMIcon>
             <LuBook />
-          </PMIcon>{' '}
+          </PMIcon>
           Example: {example.buttonLabel}
-        </PMButton>
-      </PMDialog.Trigger>
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Command Example: {example.title}</PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <MarkdownEditorProvider>
-                <MarkdownEditor
-                  defaultValue={example.content}
-                  readOnly
-                  paddingVariant="none"
-                />
-              </MarkdownEditorProvider>
-            </PMDialog.Body>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
+          <PMIcon fontSize="xs">
+            {open ? <LuChevronDown /> : <LuChevronRight />}
+          </PMIcon>
+        </PMHStack>
+      </PMButton>
+      {open && (
+        <PMBox
+          marginTop={3}
+          paddingLeft={4}
+          borderLeft="1px solid"
+          borderColor="border.tertiary"
+        >
+          <MarkdownEditorProvider>
+            <MarkdownEditor
+              defaultValue={example.content}
+              readOnly
+              paddingVariant="none"
+            />
+          </MarkdownEditorProvider>
+        </PMBox>
+      )}
+    </PMBox>
   );
 };
 
 export const RecipesExampleDialog = () => {
   return (
-    <PMHStack mt={4} gap={2}>
+    <PMVStack mt={4} gap={2} align="flex-start">
       {RECIPE_EXAMPLES.map((example) => (
-        <RecipesExampleDialogButton key={example.title} example={example} />
+        <RecipesExampleDisclosure key={example.title} example={example} />
       ))}
-    </PMHStack>
+    </PMVStack>
   );
 };

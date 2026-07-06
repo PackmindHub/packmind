@@ -1,12 +1,13 @@
 import {
+  PMBox,
   PMButton,
   PMButtonVariants,
-  PMCloseButton,
-  PMDialog,
+  PMHStack,
   PMHeading,
-  PMPortal,
+  PMIcon,
 } from '@packmind/ui';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 
 export type GettingStartedLearnMoreDialogProps = {
   title?: string;
@@ -27,48 +28,39 @@ export const GettingStartedLearnMoreDialog: React.FC<
   buttonVariant = 'primary',
   buttonMarginTop = 0,
 }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <PMDialog.Root
-      size="xl"
-      placement="center"
-      motionPreset="slide-in-bottom"
-      scrollBehavior={'inside'}
-    >
-      <PMDialog.Trigger asChild>
-        <PMButton
-          size={buttonSize}
-          variant={buttonVariant}
-          w={'fit-content'}
-          mt={buttonMarginTop}
-        >
+    <PMBox mt={buttonMarginTop} width="full">
+      <PMButton
+        size={buttonSize}
+        variant={buttonVariant}
+        w="fit-content"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+      >
+        <PMHStack gap={1} align="center">
+          <PMIcon fontSize="sm">
+            {open ? <LuChevronDown /> : <LuChevronRight />}
+          </PMIcon>
           {buttonLabel}
-        </PMButton>
-      </PMDialog.Trigger>
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              {title && (
-                <PMDialog.Title asChild>
-                  <PMHeading level="h3">{title}</PMHeading>
-                </PMDialog.Title>
-              )}
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton size="sm" />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>{body}</PMDialog.Body>
-            <PMDialog.Footer>
-              <PMDialog.Trigger asChild>
-                <PMButton variant="tertiary" size="md">
-                  Close
-                </PMButton>
-              </PMDialog.Trigger>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
+        </PMHStack>
+      </PMButton>
+      {open && (
+        <PMBox
+          marginTop={3}
+          paddingLeft={4}
+          borderLeft="1px solid"
+          borderColor="border.tertiary"
+        >
+          {title && (
+            <PMHeading level="h3" marginBottom={3}>
+              {title}
+            </PMHeading>
+          )}
+          {body}
+        </PMBox>
+      )}
+    </PMBox>
   );
 };
