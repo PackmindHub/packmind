@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
+  PMBox,
   PMButton,
   PMCloseButton,
-  PMDialog,
-  PMHeading,
+  PMDrawer,
   PMHStack,
   PMIcon,
   PMMenu,
@@ -79,79 +79,91 @@ export const SkillsCreateButton = ({ spaceSlug }: SkillsCreateButtonProps) => {
         </PMPortal>
       </PMMenu.Root>
 
-      <PMDialog.Root
+      <PMDrawer.Root
         open={isFromCodeDialogOpen}
         onOpenChange={(e) => setIsFromCodeDialogOpen(e.open)}
-        size="xl"
-        placement="center"
-        motionPreset="slide-in-bottom"
-        scrollBehavior={'inside'}
+        placement="end"
+        size="md"
       >
         <PMPortal>
-          <PMDialog.Backdrop />
-          <PMDialog.Positioner>
-            <PMDialog.Content>
-              <PMDialog.Header>
-                <PMDialog.Title asChild>
-                  <PMHeading level="h3">How to create skills</PMHeading>
-                </PMDialog.Title>
-                <PMDialog.CloseTrigger asChild>
+          <PMDrawer.Backdrop />
+          <PMDrawer.Positioner>
+            <PMDrawer.Content>
+              <PMDrawer.Header
+                borderBottom="1px solid"
+                borderColor="border.tertiary"
+              >
+                <PMDrawer.Title>How to create skills</PMDrawer.Title>
+                <PMDrawer.CloseTrigger asChild>
                   <PMCloseButton size="sm" />
-                </PMDialog.CloseTrigger>
-              </PMDialog.Header>
-              <PMDialog.Body>
+                </PMDrawer.CloseTrigger>
+              </PMDrawer.Header>
+              <PMDrawer.Body>
                 <SkillsLearnMoreContent />
-              </PMDialog.Body>
-              <PMDialog.Footer>
-                <PMButton
-                  variant="tertiary"
-                  size="md"
-                  onClick={() => setIsFromCodeDialogOpen(false)}
-                >
-                  Close
-                </PMButton>
-              </PMDialog.Footer>
-            </PMDialog.Content>
-          </PMDialog.Positioner>
+              </PMDrawer.Body>
+              <PMBox
+                borderTop="1px solid"
+                borderColor="border.tertiary"
+                paddingX={5}
+                paddingY={3}
+              >
+                <PMHStack justify="flex-end">
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => setIsFromCodeDialogOpen(false)}
+                  >
+                    Close
+                  </PMButton>
+                </PMHStack>
+              </PMBox>
+            </PMDrawer.Content>
+          </PMDrawer.Positioner>
         </PMPortal>
-      </PMDialog.Root>
+      </PMDrawer.Root>
 
-      <PMDialog.Root
+      <PMDrawer.Root
         open={isImportDialogOpen}
         onOpenChange={(e) => setIsImportDialogOpen(e.open)}
-        size="xl"
-        placement="center"
-        motionPreset="slide-in-bottom"
-        scrollBehavior={'inside'}
+        placement="end"
+        size="md"
       >
         <PMPortal>
-          <PMDialog.Backdrop />
-          <PMDialog.Positioner>
-            <PMDialog.Content>
-              <PMDialog.Header>
-                <PMDialog.Title asChild>
-                  <PMHeading level="h3">How to import skills</PMHeading>
-                </PMDialog.Title>
-                <PMDialog.CloseTrigger asChild>
+          <PMDrawer.Backdrop />
+          <PMDrawer.Positioner>
+            <PMDrawer.Content>
+              <PMDrawer.Header
+                borderBottom="1px solid"
+                borderColor="border.tertiary"
+              >
+                <PMDrawer.Title>How to import skills</PMDrawer.Title>
+                <PMDrawer.CloseTrigger asChild>
                   <PMCloseButton size="sm" />
-                </PMDialog.CloseTrigger>
-              </PMDialog.Header>
-              <PMDialog.Body>
+                </PMDrawer.CloseTrigger>
+              </PMDrawer.Header>
+              <PMDrawer.Body>
                 <SkillsImportContent />
-              </PMDialog.Body>
-              <PMDialog.Footer>
-                <PMButton
-                  variant="tertiary"
-                  size="md"
-                  onClick={() => setIsImportDialogOpen(false)}
-                >
-                  Close
-                </PMButton>
-              </PMDialog.Footer>
-            </PMDialog.Content>
-          </PMDialog.Positioner>
+              </PMDrawer.Body>
+              <PMBox
+                borderTop="1px solid"
+                borderColor="border.tertiary"
+                paddingX={5}
+                paddingY={3}
+              >
+                <PMHStack justify="flex-end">
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => setIsImportDialogOpen(false)}
+                  >
+                    Close
+                  </PMButton>
+                </PMHStack>
+              </PMBox>
+            </PMDrawer.Content>
+          </PMDrawer.Positioner>
         </PMPortal>
-      </PMDialog.Root>
+      </PMDrawer.Root>
     </>
   );
 };
