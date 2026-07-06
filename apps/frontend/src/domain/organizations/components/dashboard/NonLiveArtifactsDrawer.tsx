@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
-  PMDialog,
+  PMDrawer,
   PMTabs,
   PMTable,
   PMTableColumn,
@@ -12,6 +12,7 @@ import {
   PMHeading,
   PMCloseButton,
   PMText,
+  PMVStack,
 } from '@packmind/ui';
 import { useGetDashboardNonLiveQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -20,17 +21,17 @@ import { routes } from '../../../../shared/utils/routes';
 
 export type ArtifactTab = 'standards' | 'commands' | 'skills';
 
-interface NonLiveArtifactsModalProps {
+interface NonLiveArtifactsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: ArtifactTab;
 }
 
-export const NonLiveArtifactsModal = ({
+export const NonLiveArtifactsDrawer = ({
   open,
   onOpenChange,
   defaultTab = 'standards',
-}: NonLiveArtifactsModalProps) => {
+}: NonLiveArtifactsDrawerProps) => {
   const { orgSlug, spaceSlug } = useParams<{
     orgSlug: string;
     spaceSlug: string;
@@ -188,30 +189,32 @@ export const NonLiveArtifactsModal = ({
   ];
 
   return (
-    <PMDialog.Root
+    <PMDrawer.Root
       open={open}
       onOpenChange={(e) => onOpenChange(e.open)}
+      placement="end"
       size="xl"
-      placement="center"
-      scrollBehavior="inside"
     >
       <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title asChild>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header
+              borderBottom="1px solid"
+              borderColor="border.tertiary"
+            >
+              <PMVStack gap={1} align="stretch" flex={1}>
                 <PMHeading level="h3">Non-distributed Artifacts</PMHeading>
-              </PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
+                <PMText fontSize="xs" color="faded">
+                  These artifacts are not currently included in any package
+                  distributed to target repositories.
+                </PMText>
+              </PMVStack>
+              <PMDrawer.CloseTrigger asChild>
                 <PMCloseButton size="sm" />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText as="p" mb={4} color="secondary">
-                These artifacts are not currently included in any package
-                distributed to target repositories.
-              </PMText>
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
+            <PMDrawer.Body padding={5}>
               <PMTabs
                 defaultValue={activeTab}
                 value={activeTab}
@@ -220,10 +223,10 @@ export const NonLiveArtifactsModal = ({
                   setActiveTab(details.value as ArtifactTab)
                 }
               />
-            </PMDialog.Body>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
+            </PMDrawer.Body>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
       </PMPortal>
-    </PMDialog.Root>
+    </PMDrawer.Root>
   );
 };
