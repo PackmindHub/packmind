@@ -1,15 +1,19 @@
 import React from 'react';
 import {
-  PMDialog,
+  PMDrawer,
+  PMPortal,
+  PMBox,
   PMButton,
   PMCloseButton,
-  PMButtonGroup,
+  PMHStack,
+  PMHeading,
   PMIcon,
   PMField,
   PMInput,
   PMNativeSelect,
   PMVStack,
   PMInputGroup,
+  PMText,
   pmToaster,
 } from '@packmind/ui';
 import { LuMail } from 'react-icons/lu';
@@ -101,81 +105,104 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
     }
   };
 
-  return (
-    <PMDialog.Root
-      closeOnInteractOutside={false}
-      open={open}
-      onOpenChange={(details: { open: boolean }) => {
-        setOpen(details.open);
-      }}
-      size={'lg'}
-      scrollBehavior={'inside'}
-    >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content>
-          <PMDialog.Header>
-            <PMDialog.Title>Invite users</PMDialog.Title>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <PMVStack gap={4} alignItems={'flex-start'}>
-              <PMField.Root width={'md'} invalid={!!emailError}>
-                <PMField.Label>Emails (max. {MAX_EMAILS})</PMField.Label>
-                <PMInputGroup startElement={<LuMail />}>
-                  <PMInput
-                    placeholder="ex: alice@myorga.com, john@myorga.com"
-                    onChange={handleEmailsChange}
-                    maxLength={10000}
-                    data-testid={UsersPageDataTestIds.InviteUsersEmailInput}
-                  />
-                </PMInputGroup>
-                <PMField.HelperText>
-                  Add multiple emails separated by commas.
-                </PMField.HelperText>
-                <PMField.ErrorText>{emailError}</PMField.ErrorText>
-              </PMField.Root>
+  const submitDisabled =
+    isPending ||
+    emails.length === 0 ||
+    emails.length > MAX_EMAILS ||
+    !!emailError;
 
-              <PMField.Root width={'fit-content'}>
-                <PMField.Label>Default role</PMField.Label>
-                <PMNativeSelect
-                  value={role}
-                  onChange={handleRoleChange}
-                  items={[
-                    { value: 'admin', label: 'Admin' },
-                    { value: 'member', label: 'Member' },
-                  ]}
-                />
-              </PMField.Root>
-            </PMVStack>
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButtonGroup size={'sm'}>
-              <PMDialog.Trigger asChild>
-                <PMButton variant="tertiary">Cancel</PMButton>
-              </PMDialog.Trigger>
-              <PMButton
-                variant="primary"
-                onClick={handleOnSubmit}
-                disabled={
-                  isPending ||
-                  emails.length === 0 ||
-                  emails.length > MAX_EMAILS ||
-                  !!emailError
-                }
-                data-testid={UsersPageDataTestIds.InviteUsersSubmitCTA}
-              >
-                <PMIcon>
-                  <LuMail />
-                </PMIcon>
-                Send Invites
-              </PMButton>
-            </PMButtonGroup>
-          </PMDialog.Footer>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
-    </PMDialog.Root>
+  return (
+    <PMDrawer.Root
+      open={open}
+      onOpenChange={(e) => {
+        setOpen(e.open);
+      }}
+      placement="end"
+      size="md"
+    >
+      <PMPortal>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header
+              borderBottom="1px solid"
+              borderColor="border.tertiary"
+            >
+              <PMVStack gap={1} align="stretch" flex={1}>
+                <PMHeading size="md">Invite users</PMHeading>
+                <PMText fontSize="xs" color="faded">
+                  Invite people to your organization by email.
+                </PMText>
+              </PMVStack>
+              <PMDrawer.CloseTrigger asChild>
+                <PMCloseButton size="sm" />
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
+
+            <PMDrawer.Body padding={5}>
+              <PMVStack gap={4} alignItems={'flex-start'}>
+                <PMField.Root width={'md'} invalid={!!emailError}>
+                  <PMField.Label>Emails (max. {MAX_EMAILS})</PMField.Label>
+                  <PMInputGroup startElement={<LuMail />}>
+                    <PMInput
+                      placeholder="ex: alice@myorga.com, john@myorga.com"
+                      onChange={handleEmailsChange}
+                      maxLength={10000}
+                      data-testid={UsersPageDataTestIds.InviteUsersEmailInput}
+                    />
+                  </PMInputGroup>
+                  <PMField.HelperText>
+                    Add multiple emails separated by commas.
+                  </PMField.HelperText>
+                  <PMField.ErrorText>{emailError}</PMField.ErrorText>
+                </PMField.Root>
+
+                <PMField.Root width={'fit-content'}>
+                  <PMField.Label>Default role</PMField.Label>
+                  <PMNativeSelect
+                    value={role}
+                    onChange={handleRoleChange}
+                    items={[
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'member', label: 'Member' },
+                    ]}
+                  />
+                </PMField.Root>
+              </PMVStack>
+            </PMDrawer.Body>
+
+            <PMBox
+              borderTop="1px solid"
+              borderColor="border.tertiary"
+              paddingX={5}
+              paddingY={3}
+            >
+              <PMHStack justify="space-between" align="center">
+                <PMButton
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </PMButton>
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOnSubmit}
+                  loading={isPending}
+                  disabled={submitDisabled}
+                  data-testid={UsersPageDataTestIds.InviteUsersSubmitCTA}
+                >
+                  <PMIcon>
+                    <LuMail />
+                  </PMIcon>
+                  Send Invites
+                </PMButton>
+              </PMHStack>
+            </PMBox>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
+      </PMPortal>
+    </PMDrawer.Root>
   );
 };
