@@ -278,7 +278,8 @@ export const AddSpaceMembersDialog: React.FC<AddSpaceMembersDialogProps> = ({
                     <PMIcon>
                       <LuPlus />
                     </PMIcon>
-                    Add {selectedMembers.length > 0 ? selectedMembers.length : ''}{' '}
+                    Add{' '}
+                    {selectedMembers.length > 0 ? selectedMembers.length : ''}{' '}
                     member{selectedMembers.length !== 1 ? 's' : ''}
                   </PMButton>
                 </PMButtonGroup>
