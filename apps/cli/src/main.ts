@@ -13,7 +13,6 @@ import { whoamiCommand } from './infra/commands/WhoamiCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
-import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { pluginsCommand } from './infra/commands/PluginsCommand';
 import { playbookCommand } from './infra/commands/PlaybookCommand';
@@ -97,7 +96,6 @@ const app = subcommands({
   cmds: {
     commands: commandsCommand,
     config: configCommand,
-    diff: diffCommand,
     init: initCommand,
     install: installCommand,
     lint: lintCommand,
