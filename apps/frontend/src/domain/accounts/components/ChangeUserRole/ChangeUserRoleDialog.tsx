@@ -86,6 +86,7 @@ export const ChangeUserRoleDialog: React.FC<ChangeUserRoleDialogProps> = ({
           handleClose();
         }
       }}
+      closeOnInteractOutside={false}
       placement="end"
       size="md"
     >
