@@ -6,6 +6,7 @@ import {
   PMTableColumn,
   PMText,
 } from '@packmind/ui';
+import { GetDefaultSkillsPopover } from '../../skills/components/GetDefaultSkillsPopover';
 
 interface DefaultSkill {
   name: string;
@@ -73,6 +74,13 @@ export const SetupSkillsPage = () => {
       <PMPageSection
         title="Playbook management skills"
         backgroundColor="primary"
+        cta={
+          <GetDefaultSkillsPopover
+            buttonVariant="tertiary"
+            buttonSize="sm"
+            buttonLabel="Get default skills"
+          />
+        }
       >
         <PMText variant="body" color="secondary" my={4}>
           These skills provide workflows to create new skills, standards,
