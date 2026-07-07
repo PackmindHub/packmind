@@ -95,6 +95,7 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
       onOpenChange={(e) => {
         if (!e.open) handleClose();
       }}
+      closeOnInteractOutside={false}
       placement="end"
       size="md"
     >

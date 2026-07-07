@@ -117,6 +117,7 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
       onOpenChange={(e) => {
         setOpen(e.open);
       }}
+      closeOnInteractOutside={false}
       placement="end"
       size="md"
     >
