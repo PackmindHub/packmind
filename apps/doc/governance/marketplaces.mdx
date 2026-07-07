@@ -1,0 +1,149 @@
+---
+title: 'Publish to a marketplace'
+---
+
+A marketplace lets you distribute Packmind packages as **managed plugins** through a Git repository, so your team can install them directly in Claude Code. Instead of committing instruction files into each project, you publish a package once and Packmind keeps the marketplace repository up to date for you.
+
+## Overview
+
+A marketplace is a Git repository that hosts a `marketplace.json` descriptor — the catalogue Claude Code reads to discover and install plugins. When you publish a package to a marketplace, Packmind:
+
+- Renders the package's skills and commands into a plugin.
+- Opens (or amends) a single **Packmind sync** pull request on the marketplace repository.
+- Adds the plugin to the marketplace catalogue once you merge that pull request.
+
+With a marketplace in place you can:
+
+- **Publish** a package as a plugin your whole organization can install.
+- **Track** every publish attempt and its status.
+- **Monitor** the marketplace's health and who has adopted each plugin.
+- **Retire** plugins that are no longer needed.
+
+<Note>
+  Marketplace plugins target **Claude Code**. To distribute standards, commands,
+  and skills as instruction files across other AI assistants (Cursor, Copilot,
+  and more), use the standard [distribution flow](/governance/distribution)
+  instead.
+</Note>
+
+## Before you start
+
+- **Connect a Git provider.** The marketplace repository must be reachable through a connected Git provider — the [GitHub App](/governance/git-repository-connection#github-app-recommended) (recommended) or a personal access token. Providers created automatically by the CLI can't be used, because they hold no credentials. See [Git Repository Connection](/governance/git-repository-connection).
+- **Prepare the marketplace repository.** It must contain a `marketplace.json` descriptor at its root.
+- **Be an organization administrator.** Only admins can link or unlink a marketplace. Any organization member can publish packages to a linked marketplace.
+
+## Link a marketplace
+
+<Note>Only organization administrators can link a marketplace.</Note>
+
+1. Navigate to **Marketplaces** in your organization.
+2. Click **Link a marketplace**.
+3. Choose a **Git connection** from your connected providers.
+4. Pick the **repository** that hosts the marketplace. Use the search box to filter a long list.
+5. Click **Link marketplace**.
+
+Packmind validates that the repository exposes a valid `marketplace.json`. Once linked, the marketplace appears in the list with its contents and health at a glance.
+
+<Tip>
+  If you don't have a Git provider connected yet, the form guides you to
+  **Settings** → **Git Providers** to set one up first.
+</Tip>
+
+## Publish a package as a plugin
+
+You publish from the same **Distribute** menu you use for repositories.
+
+1. Navigate to the **Packages** section.
+2. Select the package (or packages) you want to publish.
+3. Click **Distribute** and choose **To marketplaces**.
+4. In the **Publish to a marketplace** dialog, pick the target marketplace.
+5. Click **Publish**.
+
+Packmind opens or amends the **Packmind sync** pull request on the marketplace repository. Review that pull request and **merge it** to make the plugin live.
+
+<Warning>
+  **Packages need a skill or a command.** A marketplace plugin must contain at
+  least one skill or command. Packages that contain only standards can't be
+  published as plugins.
+</Warning>
+
+## Track distributions
+
+Open a marketplace to see its plugins and every publish attempt. Each publish creates a distribution record you can follow through its lifecycle:
+
+| Status                | Meaning                                                                 |
+| --------------------- | ----------------------------------------------------------------------- |
+| **In progress**       | Packmind is preparing the plugin files.                                 |
+| **Pending PR review** | The Packmind sync pull request is open and waiting to be merged.        |
+| **Published**         | The pull request was merged and the plugin is live in the marketplace.  |
+| **Removal pending**   | You requested removal; the deletion is being prepared.                  |
+| **To be removed**     | The deletion pull request is open, waiting to be merged.                |
+| **Removed**           | The plugin has been removed from the marketplace.                       |
+| **Failed**            | The publish couldn't complete. See the reason on the row and try again. |
+
+Packmind checks the marketplace periodically and moves a distribution from **Pending PR review** to **Published** as soon as it confirms the pull request was merged. If you'd rather not wait, use **Sync now** to check immediately.
+
+## Monitor marketplace health
+
+Each marketplace shows a health indicator so you can spot problems early:
+
+| State           | Meaning                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Healthy**     | The marketplace matches what Packmind expects.                                                                               |
+| **Drift**       | A plugin Packmind considers published is missing, or the catalogue changed outside Packmind. Review the listed plugin slugs. |
+| **Unreachable** | Packmind couldn't reach the repository — for example an authentication or network error.                                     |
+
+When drift is detected, either mark the affected plugin for removal (if the change was intentional) or restore it in the marketplace repository (if it was a mistake). See [Retire a plugin from a marketplace](/governance/retire-plugin#drift-detection) for the full workflow.
+
+## Monitor adoption
+
+Open a plugin and switch to the **Adoption** tab to see who is using it. You can view adoption two ways:
+
+- **By repo** — which repositories have installed the plugin.
+- **By person** — which people have installed it.
+
+Each entry shows whether it's **Up to date** or **Outdated** compared with the published version, so you can tell when consumers are running an older build and nudge them to update.
+
+<Note>
+  Adoption data appears after someone starts a Claude Code session with the
+  plugin enabled. A newly published plugin shows no consumers until it's
+  installed and used.
+</Note>
+
+## Retire a plugin
+
+When a plugin is no longer needed, retire it through the guided, pull-request-governed flow — the same rolling **Packmind sync** pull request used to publish. See [Retire a plugin from a marketplace](/governance/retire-plugin) for the complete process, including cancelling a pending removal and handling drift.
+
+## Unlink a marketplace
+
+<Note>Only organization administrators can unlink a marketplace.</Note>
+
+1. Navigate to **Marketplaces**.
+2. Find the marketplace in the list.
+3. Use its row action to **Unlink** and confirm.
+
+Unlinking stops Packmind from tracking the repository. It does not delete plugins already published to the marketplace — those remain in the repository until you remove them.
+
+## Troubleshooting
+
+- **Problem**: The **To marketplaces** option is greyed out.
+  - **Solution**: Your selection contains only standards. Add at least one skill or command to the package, or select a package that already has one.
+
+- **Problem**: Linking fails with a descriptor error.
+  - **Solution**: Confirm the repository has a valid `marketplace.json` at its root and that the connected Git provider can access it.
+
+- **Problem**: A publish stays at **Pending PR review**.
+  - **Solution**: The Packmind sync pull request hasn't been merged yet. Open it on the marketplace repository, review, and merge. Use **Sync now** to refresh the status afterwards.
+
+- **Problem**: The marketplace shows **Unreachable**.
+  - **Solution**: Check that the Git provider is still connected and authorized, then use **Sync now** to retry.
+
+- **Problem**: A publish fails with a name conflict.
+  - **Solution**: A plugin with the same name already exists in the marketplace and isn't managed by Packmind. Rename or remove the conflicting entry, then publish again.
+
+## Related Documentation
+
+- [Distribute artifacts](/governance/distribution) — distribute packages to Git repositories and via the CLI
+- [Retire a plugin from a marketplace](/governance/retire-plugin) — remove a published plugin through the governed flow
+- [Git repository connection](/governance/git-repository-connection) — connect the marketplace repository to Packmind
+- [Packages Management](/concepts/packages-management) — group standards, commands, and skills into packages

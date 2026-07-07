@@ -82,6 +82,7 @@
           "governance/distribution",
           "governance/retire-plugin",
           "governance/git-repository-connection",
+          "governance/marketplaces",
           "governance/overview"
         ]
       },
