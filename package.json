@@ -9,6 +9,12 @@
   "packageManager": "pnpm@11.5.0",
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=16384' nx run-many -t build",
+    "dev": "pnpm dev:infra && pnpm dev:setup && pnpm migrate && bash scripts/dev-serve.sh",
+    "dev:infra": "docker compose -f docker-compose.dev.yml up -d --wait",
+    "dev:infra:down": "docker compose -f docker-compose.dev.yml down",
+    "dev:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "dev:setup": "node scripts/prepare-local-dev.mjs",
+    "migrate": "cd packages/migrations && pnpm typeorm migration:run --dataSource=datasource.ts --transaction each",
     "chakra:typegen": "pnpm --filter ./packages/ui exec chakra typegen ./src/lib/theme/theme.ts",
     "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false pnpm exec playwright test --config apps/e2e-tests/playwright.config.ts",
     "husky": "husky",
