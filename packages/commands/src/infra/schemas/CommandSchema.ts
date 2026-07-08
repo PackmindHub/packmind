@@ -24,8 +24,8 @@ export const CommandSchema = new EntitySchema<
     >
   >
 >({
-  name: 'Recipe',
-  tableName: 'recipes',
+  name: 'Command',
+  tableName: 'commands',
   columns: {
     name: {
       type: 'varchar',
@@ -65,7 +65,7 @@ export const CommandSchema = new EntitySchema<
   relations: {
     versions: {
       type: 'one-to-many',
-      target: 'RecipeVersion',
+      target: 'CommandVersion',
       inverseSide: 'recipe',
     },
     gitCommit: {
@@ -79,7 +79,7 @@ export const CommandSchema = new EntitySchema<
   },
   indices: [
     {
-      name: 'idx_recipe_user',
+      name: 'idx_command_user',
       columns: ['userId'],
     },
   ],

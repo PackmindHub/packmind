@@ -1567,7 +1567,7 @@ export class DistributionRepository implements IDistributionRepository {
             ids: distributedPackageIds,
           })
           .select('distributedPackage.id', 'distributedPackageId')
-          .addSelect('recipeVersion.recipe_id', 'recipeId')
+          .addSelect('recipeVersion.command_id', 'recipeId')
           .addSelect('recipeVersion.name', 'name')
           .addSelect('recipeVersion.slug', 'slug')
           .addSelect('recipeVersion.version', 'version')

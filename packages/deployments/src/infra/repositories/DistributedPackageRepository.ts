@@ -175,13 +175,13 @@ export class DistributedPackageRepository
     try {
       const values = recipeVersionIds.map((recipeVersionId) => ({
         distributed_package_id: distributedPackageId,
-        recipe_version_id: recipeVersionId,
+        command_version_id: recipeVersionId,
       }));
 
       await this.repository
         .createQueryBuilder()
         .insert()
-        .into('distributed_package_recipe_versions')
+        .into('distributed_package_command_versions')
         .values(values)
         .execute();
 

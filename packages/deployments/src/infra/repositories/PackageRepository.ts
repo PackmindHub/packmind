@@ -262,8 +262,8 @@ export class PackageRepository
       // Fetch recipe IDs separately (relationships are cleaned up when recipes are deleted)
       const commandRelations = await this.repository.manager
         .createQueryBuilder()
-        .select('pr.recipe_id', 'recipe_id')
-        .from('package_recipes', 'pr')
+        .select('pr.command_id', 'recipe_id')
+        .from('package_commands', 'pr')
         .where('pr.package_id = :packageId', { packageId: id })
         .getRawMany();
 
@@ -592,7 +592,7 @@ export class PackageRepository
       await this.repository
         .createQueryBuilder()
         .insert()
-        .into('package_recipes')
+        .into('package_commands')
         .values(values)
         .execute();
 
@@ -691,7 +691,7 @@ export class PackageRepository
       await this.repository
         .createQueryBuilder()
         .delete()
-        .from('package_recipes')
+        .from('package_commands')
         .where('package_id = :packageId', { packageId })
         .execute();
 
@@ -704,7 +704,7 @@ export class PackageRepository
         await this.repository
           .createQueryBuilder()
           .insert()
-          .into('package_recipes')
+          .into('package_commands')
           .values(values)
           .execute();
       }
@@ -773,8 +773,8 @@ export class PackageRepository
       const result = await this.repository
         .createQueryBuilder()
         .delete()
-        .from('package_recipes')
-        .where('recipe_id = :recipeId', { recipeId })
+        .from('package_commands')
+        .where('command_id = :recipeId', { recipeId })
         .execute();
 
       this.logger.info('Recipe removed from all packages successfully', {

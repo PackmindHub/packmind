@@ -6,8 +6,8 @@ export interface PackageCommand {
 }
 
 export const PackageCommandsSchema = new EntitySchema<PackageCommand>({
-  name: 'PackageRecipe',
-  tableName: 'package_recipes',
+  name: 'PackageCommand',
+  tableName: 'package_commands',
   columns: {
     package_id: {
       type: 'uuid',
@@ -15,6 +15,8 @@ export const PackageCommandsSchema = new EntitySchema<PackageCommand>({
       nullable: false,
     },
     recipe_id: {
+      // TS property kept as recipe_id (wire/internal); physical column renamed
+      name: 'command_id',
       type: 'uuid',
       primary: true,
       nullable: false,

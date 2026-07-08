@@ -128,7 +128,7 @@ export class CommandVersionRepository
       const recipeVersion = await this.repository
         .createQueryBuilder('rv')
         .innerJoin('rv.recipe', 'recipe')
-        .where('rv.recipe_id = :recipeId', { recipeId })
+        .where('rv.command_id = :recipeId', { recipeId })
         .andWhere('rv.version = :version', { version })
         .andWhere('recipe.space_id IN (:...allowedSpaceIds)', {
           allowedSpaceIds,

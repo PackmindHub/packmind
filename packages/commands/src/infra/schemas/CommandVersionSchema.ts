@@ -24,8 +24,8 @@ export const CommandVersionSchema = new EntitySchema<
     >
   >
 >({
-  name: 'RecipeVersion',
-  tableName: 'recipe_versions',
+  name: 'CommandVersion',
+  tableName: 'command_versions',
   columns: {
     name: {
       type: 'varchar',
@@ -37,7 +37,7 @@ export const CommandVersionSchema = new EntitySchema<
       type: 'text',
     },
     recipeId: {
-      name: 'recipe_id',
+      name: 'command_id',
       type: 'uuid',
     },
     version: {
@@ -63,9 +63,9 @@ export const CommandVersionSchema = new EntitySchema<
   relations: {
     recipe: {
       type: 'many-to-one',
-      target: 'Recipe',
+      target: 'Command',
       joinColumn: {
-        name: 'recipe_id',
+        name: 'command_id',
       },
       onDelete: 'CASCADE',
     },
