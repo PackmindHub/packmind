@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 
-const origin = 'DropSummaryFromStandardVersions1812000000000';
+const origin = 'DropSummaryFromStandardVersions1783492148916';
 
-export class DropSummaryFromStandardVersions1812000000000 implements MigrationInterface {
+export class DropSummaryFromStandardVersions1783492148916 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
