@@ -59,6 +59,7 @@ import {
   GitProviderNotFoundError,
   IDeploymentPort,
   IGitPort,
+  ListAvailableReposResponse,
   OrganizationGitHubApp,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
@@ -74,6 +75,16 @@ const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
 // but defined here to avoid the broken import chain.
 const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 const DEPLOYMENT_ADAPTER_TOKEN = 'DEPLOYMENT_ADAPTER';
+
+// Wraps a repo list in the paginated response shape returned by
+// gitAdapter.listAvailableRepos.
+const reposResponse = (
+  repositories: ListAvailableReposResponse['repositories'] = [],
+): ListAvailableReposResponse => ({
+  currentPage: 1,
+  availablePages: 1,
+  repositories,
+});
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Configuration } = require('@packmind/node-utils') as {
@@ -386,7 +397,9 @@ describe('GitProvidersService', () => {
       (
         mockGitAdapter.getActiveOrganizationGitHubApp as jest.Mock
       ).mockResolvedValue(activeApp);
-      (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([]);
+      (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+        reposResponse(),
+      );
       (
         mockGitAdapter.findGitProviderByAppInstallation as jest.Mock
       ).mockResolvedValue(null);
@@ -489,22 +502,24 @@ describe('GitProvidersService', () => {
 
       describe('when the installation can access repos', () => {
         beforeEach(async () => {
-          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
-            {
-              name: 'repo-a',
-              owner: 'acme',
-              private: false,
-              defaultBranch: 'main',
-              stars: 0,
-            },
-            {
-              name: 'repo-b',
-              owner: 'acme',
-              private: true,
-              defaultBranch: 'develop',
-              stars: 5,
-            },
-          ]);
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+            reposResponse([
+              {
+                name: 'repo-a',
+                owner: 'acme',
+                private: false,
+                defaultBranch: 'main',
+                stars: 0,
+              },
+              {
+                name: 'repo-b',
+                owner: 'acme',
+                private: true,
+                defaultBranch: 'develop',
+                stars: 5,
+              },
+            ]),
+          );
 
           await service.completeGithubAppInstall({
             organizationId: orgId,
@@ -553,7 +568,7 @@ describe('GitProvidersService', () => {
 
         beforeEach(async () => {
           (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
-            [],
+            reposResponse(),
           );
 
           result = await service.completeGithubAppInstall({
@@ -580,22 +595,24 @@ describe('GitProvidersService', () => {
         >;
 
         beforeEach(async () => {
-          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
-            {
-              name: 'repo-a',
-              owner: 'acme',
-              private: false,
-              defaultBranch: 'main',
-              stars: 0,
-            },
-            {
-              name: 'repo-b',
-              owner: 'acme',
-              private: true,
-              defaultBranch: 'main',
-              stars: 0,
-            },
-          ]);
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+            reposResponse([
+              {
+                name: 'repo-a',
+                owner: 'acme',
+                private: false,
+                defaultBranch: 'main',
+                stars: 0,
+              },
+              {
+                name: 'repo-b',
+                owner: 'acme',
+                private: true,
+                defaultBranch: 'main',
+                stars: 0,
+              },
+            ]),
+          );
           (mockGitAdapter.addGitRepo as jest.Mock)
             .mockRejectedValueOnce(new Error('repo-a already exists'))
             .mockResolvedValueOnce({ id: 'repo-b-id' });
@@ -670,7 +687,7 @@ describe('GitProvidersService', () => {
       describe('when the installation has no new repos', () => {
         beforeEach(async () => {
           (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
-            [],
+            reposResponse(),
           );
 
           await service.completeGithubAppInstall({
@@ -701,22 +718,24 @@ describe('GitProvidersService', () => {
 
       describe('when the installation exposes repos', () => {
         beforeEach(async () => {
-          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue([
-            {
-              name: 'repo-a',
-              owner: 'acme',
-              private: false,
-              defaultBranch: 'main',
-              stars: 0,
-            },
-            {
-              name: 'repo-b',
-              owner: 'acme',
-              private: true,
-              defaultBranch: 'develop',
-              stars: 5,
-            },
-          ]);
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+            reposResponse([
+              {
+                name: 'repo-a',
+                owner: 'acme',
+                private: false,
+                defaultBranch: 'main',
+                stars: 0,
+              },
+              {
+                name: 'repo-b',
+                owner: 'acme',
+                private: true,
+                defaultBranch: 'develop',
+                stars: 5,
+              },
+            ]),
+          );
 
           await service.completeGithubAppInstall({
             organizationId: orgId,

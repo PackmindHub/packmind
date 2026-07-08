@@ -5,6 +5,7 @@ import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
   GitProviderId,
+  ListAvailableReposResponse,
   createGitProviderId,
 } from '@packmind/types';
 import { GitRepo } from '@packmind/types';
@@ -59,17 +60,10 @@ export class GitProviderService {
     return this.gitProviderRepository.deleteById(id, userId);
   }
 
-  async getAvailableRepos(gitProviderId: GitProviderId): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+  async getAvailableRepos(
+    gitProviderId: GitProviderId,
+    page = 1,
+  ): Promise<ListAvailableReposResponse> {
     // NOTE: This method contains business logic and should be moved to a use case
     // This is kept temporarily for backward compatibility
     // Find the GitProvider linked in the database
@@ -83,7 +77,10 @@ export class GitProviderService {
     // Create an instance of IGitProvider using the factory (token validation delegated)
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
-    return providerInstance.listAvailableRepositories(); // Always filters for write-only repositories
+    // Always filters for write-only repositories
+    const { repositories, totalPages } =
+      await providerInstance.listAvailableRepositories(page);
+    return { currentPage: page, availablePages: totalPages, repositories };
   }
 
   async checkProviderAuth(

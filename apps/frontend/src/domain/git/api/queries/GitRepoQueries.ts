@@ -50,22 +50,36 @@ export const useGetRepositoriesByProviderQuery = (
   });
 };
 
-export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
+export const useGetAvailableRepositoriesQuery = (
+  providerId: GitProviderId,
+  page?: number,
+) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
+    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId, page],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch available repositories',
         );
       }
-      return gitProviderGateway.getAvailableRepositories(
-        organization.id,
-        providerId,
-      );
+      return gitProviderGateway.getAvailableRepositories({
+        organizationId: organization.id,
+        gitProviderId: providerId,
+        page,
+      });
     },
+    // The API returns bare repositories; the UI wants a fullName, so derive it
+    // here once instead of in every consumer.
+    select: (data) => ({
+      currentPage: data.currentPage,
+      availablePages: data.availablePages,
+      repositories: data.repositories.map((repo) => ({
+        ...repo,
+        fullName: `${repo.owner}/${repo.name}`,
+      })),
+    }),
     enabled: !!organization?.id && !!providerId,
   });
 };

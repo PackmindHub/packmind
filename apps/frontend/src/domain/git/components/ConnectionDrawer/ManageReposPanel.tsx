@@ -83,7 +83,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         group.trackedBranches.push(t.branch);
       }
 
-      for (const r of available.data ?? []) {
+      for (const r of available.data?.repositories ?? []) {
         const group = groupMap.get(r.fullName);
         if (group) {
           group.defaultBranch = r.defaultBranch;
@@ -96,7 +96,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
       }
 
       const untrackedMap = new Map<string, UntrackedRepo>();
-      for (const r of available.data ?? []) {
+      for (const r of available.data?.repositories ?? []) {
         if (groupMap.has(r.fullName)) continue;
         untrackedMap.set(r.fullName, {
           key: r.fullName,
