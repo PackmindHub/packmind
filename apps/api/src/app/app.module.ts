@@ -63,7 +63,6 @@ import {
 import { CliVersionLoggerMiddleware } from './shared/middleware/CliVersionLoggerMiddleware';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
-import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
 import { TrialModule } from './trial/trial.module';
 import { TrackingModule } from './tracking/tracking.module';
@@ -136,8 +135,11 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     LinterModule,
     ImportLegacyModule,
     TrialModule,
+<<<<<<< HEAD
     PublicSkillsModule,
     TrackingModule,
+=======
+>>>>>>> origin/main
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
@@ -146,6 +148,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         module: TrialModule,
       },
       {
+<<<<<<< HEAD
         path: 'skills',
         module: PublicSkillsModule,
       },
@@ -154,6 +157,8 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         module: TrackingModule,
       },
       {
+=======
+>>>>>>> origin/main
         path: 'organizations/:orgId',
         module: OrganizationsModule,
         children: [

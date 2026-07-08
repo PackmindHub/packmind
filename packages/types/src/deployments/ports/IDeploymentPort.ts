@@ -13,8 +13,6 @@ import {
   DeleteTargetResponse,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  DownloadDefaultSkillsZipForAgentCommand,
-  DownloadDefaultSkillsZipForAgentResponse,
   DownloadSkillZipForAgentCommand,
   DownloadSkillZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
@@ -524,19 +522,6 @@ export interface IDeploymentPort {
   deployDefaultSkills(
     command: DeployDefaultSkillsCommand,
   ): Promise<DeployDefaultSkillsResponse>;
-
-  /**
-   * Downloads default skills as a zip file for a specific coding agent (public endpoint)
-   *
-   * Generates default skills for the specified coding agent and packages them
-   * into a zip file. This is a public endpoint that doesn't require authentication.
-   *
-   * @param command - Command containing the agent type
-   * @returns Promise of DownloadDefaultSkillsZipForAgentResponse with zip file name and base64-encoded content
-   */
-  downloadDefaultSkillsZipForAgent(
-    command: DownloadDefaultSkillsZipForAgentCommand,
-  ): Promise<DownloadDefaultSkillsZipForAgentResponse>;
 
   /**
    * Downloads a single skill as a zip file rendered for a specific coding agent
