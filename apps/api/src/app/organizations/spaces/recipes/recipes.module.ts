@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { recipesSchemas } from '@packmind/recipes';
+import { recipesSchemas } from '@packmind/commands';
 import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';

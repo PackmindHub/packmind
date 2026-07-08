@@ -1,0 +1,26 @@
+{
+  "name": "commands",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/commands/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/commands/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/commands",
+        "tsConfig": "packages/commands/tsconfig.lib.json",
+        "packageJson": "packages/commands/package.json",
+        "main": "packages/commands/src/index.ts",
+        "assets": ["packages/commands/*.md"]
+      }
+    }
+  }
+}

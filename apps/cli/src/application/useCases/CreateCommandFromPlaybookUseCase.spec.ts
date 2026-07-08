@@ -5,7 +5,7 @@ import { ISpaceService } from '../../domain/services/ISpaceService';
 import { createMockSpaceService } from '../../mocks/createMockServices';
 import { spaceFactory } from '@packmind/spaces/test';
 import { createRecipeId, createSpaceId } from '@packmind/types';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 
 describe('CreateCommandFromPlaybookUseCase', () => {
   let useCase: CreateCommandFromPlaybookUseCase;

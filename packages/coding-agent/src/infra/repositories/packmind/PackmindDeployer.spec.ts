@@ -1,4 +1,4 @@
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import {
   createGitProviderId,

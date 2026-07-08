@@ -14,7 +14,7 @@ import {
 } from '@packmind/types';
 
 import { standardFactory } from '@packmind/standards/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 
 export class DataFactory {

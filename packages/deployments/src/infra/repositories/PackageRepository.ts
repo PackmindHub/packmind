@@ -15,7 +15,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RecipeSchema } from '@packmind/recipes';
+import { RecipeSchema } from '@packmind/commands';
 import { StandardSchema, StandardVersionSchema } from '@packmind/standards';
 import { SkillSchema } from '@packmind/skills';
 import { SpaceSchema } from '@packmind/spaces';

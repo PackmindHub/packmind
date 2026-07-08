@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { standardFactory } from '@packmind/standards/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
 import { GetDashboardNonLiveUseCase } from './GetDashboardNonLiveUseCase';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';

@@ -14,7 +14,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillVersionFactory } from '@packmind/skills/test';
-import { recipeVersionFactory } from '@packmind/recipes/test';
+import { recipeVersionFactory } from '@packmind/commands/test';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CursorDeployer', () => {

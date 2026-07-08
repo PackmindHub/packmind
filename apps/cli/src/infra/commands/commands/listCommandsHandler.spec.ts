@@ -6,7 +6,7 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IOutput } from '../../../domain/repositories/IOutput';
 import { createMockOutput } from '../../../mocks/createMockRepositories';
 import { spaceFactory } from '@packmind/spaces/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { createSpaceId } from '@packmind/types';
 
 const spaceAId = createSpaceId('space-a');

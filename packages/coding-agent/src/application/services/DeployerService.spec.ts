@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { stubLogger } from '@packmind/test-utils';
 import {

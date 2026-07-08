@@ -23,7 +23,7 @@ import {
   DistributionStatus,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
+import { recipeVersionFactory } from '@packmind/commands/test/recipeVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '../../../test/packageFactory';

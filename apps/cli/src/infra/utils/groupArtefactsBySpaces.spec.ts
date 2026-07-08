@@ -1,5 +1,5 @@
 import { spaceFactory } from '@packmind/spaces/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { groupArtefactBySpaces } from './groupArtefactsBySpaces';
 
 describe('groupArtefactsBySpaces', () => {

@@ -7,7 +7,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { linterSchemas } from '@packmind/editions';
-import { recipesSchemas } from '@packmind/recipes';
+import { recipesSchemas } from '@packmind/commands';
 import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';

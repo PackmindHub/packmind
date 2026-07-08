@@ -9,7 +9,7 @@ import {
   JobsService,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
+import { RecipesHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';

@@ -17,7 +17,7 @@ import {
   BaseServiceOpts,
   HexaRegistry,
 } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
+import { RecipesHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';

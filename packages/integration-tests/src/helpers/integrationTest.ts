@@ -3,7 +3,7 @@ import stage from 'jest-stage';
 import { createIntegrationTestFixture } from './createIntegrationTestFixture';
 import { accountsSchemas } from '@packmind/accounts';
 import { spacesSchemas } from '@packmind/spaces';
-import { recipesSchemas } from '@packmind/recipes';
+import { recipesSchemas } from '@packmind/commands';
 import { standardsSchemas } from '@packmind/standards';
 import { skillsSchemas } from '@packmind/skills';
 import { gitSchemas } from '@packmind/git';

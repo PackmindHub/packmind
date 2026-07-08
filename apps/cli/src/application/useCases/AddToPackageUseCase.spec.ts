@@ -9,7 +9,7 @@ import {
   createMockStandardsGateway,
 } from '../../mocks/createMockGateways';
 import { createMockSpaceService } from '../../mocks/createMockServices';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
 import { standardFactory } from '@packmind/standards/test';
 

@@ -4,7 +4,7 @@ import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { HexaRegistry, JobsService } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
+import { RecipesHexa } from '@packmind/commands';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { FastifyInstance } from 'fastify';

@@ -14,7 +14,7 @@ import {
   Rule,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { recipeFactory } from '@packmind/recipes/test';
+import { recipeFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 
 describe('ContinueDeployer', () => {

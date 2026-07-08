@@ -1,5 +1,5 @@
-import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
-import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
+import { recipeFactory } from '@packmind/commands/test/recipeFactory';
+import { recipeVersionFactory } from '@packmind/commands/test/recipeVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
 import {
   RecipeDeploymentStatus,

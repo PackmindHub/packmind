@@ -38,7 +38,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
+import { recipeVersionFactory } from '@packmind/commands/test/recipeVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';

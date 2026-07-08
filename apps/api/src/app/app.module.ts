@@ -9,7 +9,7 @@ import { GitHexa, gitSchemas } from '@packmind/git';
 import { llmSchemas } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
+import { RecipesHexa, recipesSchemas } from '@packmind/commands';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { SkillsHexa, skillsSchemas } from '@packmind/skills';

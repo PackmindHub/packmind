@@ -8,7 +8,7 @@
   "dependencies": {
     "@packmind/logger": "workspace:*",
     "@packmind/node-utils": "workspace:*",
-    "@packmind/recipes": "workspace:*",
+    "@packmind/commands": "workspace:*",
     "@packmind/skills": "workspace:*",
     "@packmind/standards": "workspace:*",
     "@packmind/test-utils": "workspace:*",

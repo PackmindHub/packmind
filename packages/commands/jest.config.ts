@@ -8,13 +8,13 @@ const {
 } = require('../../jest-utils.ts');
 
 module.exports = {
-  displayName: 'recipes',
+  displayName: 'commands',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
   transform: swcTransform,
   transformIgnorePatterns: standardTransformIgnorePatterns,
   moduleFileExtensions: standardModuleFileExtensions,
-  coverageDirectory: '../../coverage/packages/recipes',
+  coverageDirectory: '../../coverage/packages/commands',
   moduleNameMapper: pathsToModuleNameMapper(
     compilerOptions.paths,
     '<rootDir>/../../',
