@@ -3,17 +3,19 @@ import { Link } from 'react-router';
 import {
   PMButton,
   PMMenu,
-  PMPopover,
   PMPortal,
   PMText,
   PMHStack,
   PMIcon,
   PMVStack,
+  PMDialog,
   PMHeading,
+  PMCloseButton,
 } from '@packmind/ui';
 import { LuBot, LuPencilLine } from 'react-icons/lu';
 import { GETTING_STARTED_CREATE_COMMAND_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface RecipesCreateButtonProps {
   orgSlug: string;
@@ -25,19 +27,14 @@ export const RecipesCreateButton = ({
   spaceSlug,
 }: RecipesCreateButtonProps) => {
   const [isFromCodeDialogOpen, setIsFromCodeDialogOpen] = useState(false);
+  const analytics = useAnalytics();
 
   return (
-    <PMPopover.Root
-      open={isFromCodeDialogOpen}
-      onOpenChange={(e) => setIsFromCodeDialogOpen(e.open)}
-      positioning={{ placement: 'bottom-end' }}
-    >
+    <>
       <PMMenu.Root>
-        <PMPopover.Anchor>
-          <PMMenu.Trigger asChild>
-            <PMButton>Create</PMButton>
-          </PMMenu.Trigger>
-        </PMPopover.Anchor>
+        <PMMenu.Trigger asChild>
+          <PMButton>Create</PMButton>
+        </PMMenu.Trigger>
         <PMPortal>
           <PMMenu.Positioner>
             <PMMenu.Content minW="350px">
@@ -83,34 +80,44 @@ export const RecipesCreateButton = ({
           </PMMenu.Positioner>
         </PMPortal>
       </PMMenu.Root>
-      <PMPortal>
-        <PMPopover.Positioner>
-          <PMPopover.Content width="480px" maxWidth="90vw">
-            <PMPopover.Arrow>
-              <PMPopover.ArrowTip />
-            </PMPopover.Arrow>
-            <PMPopover.Body>
-              <PMPopover.Title asChild>
-                <PMHeading level="h4">
-                  {GETTING_STARTED_CREATE_COMMAND_DIALOG.title}
-                </PMHeading>
-              </PMPopover.Title>
-              <PMVStack align="stretch" gap={4} mt={4}>
+      <PMDialog.Root
+        open={isFromCodeDialogOpen}
+        onOpenChange={(e) => setIsFromCodeDialogOpen(e.open)}
+        size="xl"
+        placement="center"
+        motionPreset="slide-in-bottom"
+        scrollBehavior={'inside'}
+      >
+        <PMPortal>
+          <PMDialog.Backdrop />
+          <PMDialog.Positioner>
+            <PMDialog.Content>
+              <PMDialog.Header>
+                <PMDialog.Title asChild>
+                  <PMHeading level="h3">
+                    {GETTING_STARTED_CREATE_COMMAND_DIALOG.title}
+                  </PMHeading>
+                </PMDialog.Title>
+                <PMDialog.CloseTrigger asChild>
+                  <PMCloseButton size="sm" />
+                </PMDialog.CloseTrigger>
+              </PMDialog.Header>
+              <PMDialog.Body>
                 {GETTING_STARTED_CREATE_COMMAND_DIALOG.body}
-                <PMHStack justify="flex-end">
-                  <PMButton
-                    variant="tertiary"
-                    size="sm"
-                    onClick={() => setIsFromCodeDialogOpen(false)}
-                  >
-                    Close
-                  </PMButton>
-                </PMHStack>
-              </PMVStack>
-            </PMPopover.Body>
-          </PMPopover.Content>
-        </PMPopover.Positioner>
-      </PMPortal>
-    </PMPopover.Root>
+              </PMDialog.Body>
+              <PMDialog.Footer>
+                <PMButton
+                  variant="tertiary"
+                  size="md"
+                  onClick={() => setIsFromCodeDialogOpen(false)}
+                >
+                  Close
+                </PMButton>
+              </PMDialog.Footer>
+            </PMDialog.Content>
+          </PMDialog.Positioner>
+        </PMPortal>
+      </PMDialog.Root>
+    </>
   );
 };
