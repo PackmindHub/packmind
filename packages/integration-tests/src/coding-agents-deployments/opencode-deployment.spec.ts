@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { skillVersionFactory } from '@packmind/skills/test';
 import { spacesSchemas } from '@packmind/spaces';
@@ -14,9 +14,9 @@ import {
   GitRepo,
   IGitPort,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -31,7 +31,7 @@ import { TestApp } from '../helpers/TestApp';
 describe('OpenCode Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...spacesSchemas,
     ...gitSchemas,
@@ -43,7 +43,7 @@ describe('OpenCode Deployment Integration', () => {
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let organization: Organization;
   let user: User;
@@ -76,7 +76,7 @@ describe('OpenCode Deployment Integration', () => {
     assert(foundSpace, 'Default Global space should exist');
     space = foundSpace;
 
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for OpenCode',
       content:
         '---\ndescription: "Test recipe"\nagent: build\n---\nThis is test recipe content for OpenCode',
@@ -143,9 +143,9 @@ describe('OpenCode Deployment Integration', () => {
       };
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      const recipeVersions: RecipeVersion[] = [
+      const recipeVersions: CommandVersion[] = [
         {
-          id: 'recipe-version-1' as RecipeVersionId,
+          id: 'recipe-version-1' as CommandVersionId,
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -156,7 +156,7 @@ describe('OpenCode Deployment Integration', () => {
         },
       ];
 
-      fileUpdates = await deployerService.aggregateRecipeDeployments(
+      fileUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],

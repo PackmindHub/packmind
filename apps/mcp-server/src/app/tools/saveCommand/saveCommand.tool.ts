@@ -1,9 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   createOrganizationId,
-  createRecipeId,
+  createCommandId,
   createUserId,
-  RecipeStep,
+  CommandStep,
 } from '@packmind/types';
 import { z } from 'zod';
 import {
@@ -102,7 +102,7 @@ export function registerSaveCommandTool(
         throw new Error('User context is required to create commands');
       }
 
-      const recipesHexa = fastify.recipesHexa();
+      const commandsHexa = fastify.recipesHexa();
 
       const globalSpace = await getGlobalSpace(
         fastify,
@@ -116,14 +116,14 @@ export function registerSaveCommandTool(
 
       // If packageSlugs provided, use captureRecipeWithPackages to save command
       if (packageSlugs && packageSlugs.length > 0) {
-        const { recipe: command } = await recipesHexa
+        const { recipe: command } = await commandsHexa
           .getAdapter()
-          .captureRecipeWithPackages({
+          .captureCommandWithPackages({
             name,
             summary,
             whenToUse,
             contextValidationCheckpoints,
-            steps: steps as RecipeStep[],
+            steps: steps as CommandStep[],
             packageSlugs,
             organizationId: userContext.organizationId,
             userId: userContext.userId,
@@ -150,12 +150,12 @@ export function registerSaveCommandTool(
       }
 
       // Otherwise use regular captureRecipe to save command
-      const command = await recipesHexa.getAdapter().captureRecipe({
+      const command = await commandsHexa.getAdapter().captureCommand({
         name,
         summary,
         whenToUse,
         contextValidationCheckpoints,
-        steps: steps as RecipeStep[],
+        steps: steps as CommandStep[],
         organizationId: createOrganizationId(userContext.organizationId),
         userId: createUserId(userContext.userId),
         spaceId: globalSpace.id,
@@ -186,7 +186,7 @@ export function registerSaveCommandTool(
           fastify,
           userContext,
           globalSpace.id,
-          { recipeId: createRecipeId(command.id) },
+          { recipeId: createCommandId(command.id) },
           logger,
         );
       }

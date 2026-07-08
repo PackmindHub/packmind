@@ -5,7 +5,7 @@ import {
   FileModification,
   FileUpdates,
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -27,8 +27,8 @@ export class DeployerService {
       .getDeployer(agent);
   }
 
-  async aggregateRecipeDeployments(
-    recipeVersions: RecipeVersion[],
+  async aggregateCommandDeployments(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
@@ -58,7 +58,7 @@ export class DeployerService {
           const deployer = this.codingAgentRepositories
             .getDeployerRegistry()
             .getDeployer(agent);
-          const updates = await deployer.deployRecipes(
+          const updates = await deployer.deployCommands(
             recipeVersions,
             gitRepo,
             target,
@@ -231,7 +231,7 @@ export class DeployerService {
   }
 
   async aggregateArtifactRendering(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[],
     codingAgents: CodingAgent[],

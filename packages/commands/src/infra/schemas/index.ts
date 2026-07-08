@@ -1,5 +1,5 @@
-import { RecipeSchema } from './RecipeSchema';
-import { RecipeVersionSchema } from './RecipeVersionSchema';
+import { CommandSchema } from './CommandSchema';
+import { CommandVersionSchema } from './CommandVersionSchema';
 
-export { RecipeSchema, RecipeVersionSchema };
-export const recipesSchemas = [RecipeSchema, RecipeVersionSchema];
+export { CommandSchema, CommandVersionSchema };
+export const commandsSchemas = [CommandSchema, CommandVersionSchema];

@@ -15,8 +15,8 @@ import {
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
-  IRecipesPort,
-  IRecipesPortName,
+  ICommandsPort,
+  ICommandsPortName,
   ISkillsPort,
   ISkillsPortName,
   ISpacesPort,
@@ -94,7 +94,8 @@ export class DeploymentsHexa extends BaseHexa<
     try {
       // Get all required ports - let errors propagate
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
-      const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
+      const commandsPort =
+        registry.getAdapter<ICommandsPort>(ICommandsPortName);
       const codingAgentPort =
         registry.getAdapter<ICodingAgentPort>(ICodingAgentPortName);
       const standardsPort =
@@ -111,7 +112,7 @@ export class DeploymentsHexa extends BaseHexa<
       // Initialize adapter with all ports
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
-        [IRecipesPortName]: recipesPort,
+        [ICommandsPortName]: commandsPort,
         [ICodingAgentPortName]: codingAgentPort,
         [IStandardsPortName]: standardsPort,
         [ISkillsPortName]: skillsPort,

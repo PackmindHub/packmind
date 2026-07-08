@@ -3,7 +3,7 @@ import { useListPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 import {
   OrganizationId,
   Package,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -12,7 +12,7 @@ import {
 type ArtifactType = 'standard' | 'recipe' | 'skill';
 
 interface UsePackagesForArtifactParams {
-  artifactId: StandardId | RecipeId | SkillId | undefined;
+  artifactId: StandardId | CommandId | SkillId | undefined;
   artifactType: ArtifactType;
   spaceId: SpaceId | undefined;
   organizationId: OrganizationId | undefined;
@@ -20,7 +20,7 @@ interface UsePackagesForArtifactParams {
 
 export function getArtifactPackages(
   packages: Package[] | undefined,
-  artifactId: StandardId | RecipeId | SkillId,
+  artifactId: StandardId | CommandId | SkillId,
   artifactType: ArtifactType,
 ): Package[] {
   if (!packages) return [];
@@ -30,7 +30,7 @@ export function getArtifactPackages(
       case 'standard':
         return pkg.standards?.includes(artifactId as StandardId);
       case 'recipe':
-        return pkg.recipes?.includes(artifactId as RecipeId);
+        return pkg.recipes?.includes(artifactId as CommandId);
       case 'skill':
         return pkg.skills?.includes(artifactId as SkillId);
     }

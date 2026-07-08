@@ -1,4 +1,4 @@
-import { RecipeVersion } from '../../recipes';
+import { CommandVersion } from '../../commands';
 import { SkillVersion } from '../../skills';
 import { StandardVersion } from '../../standards';
 import { FileUpdates } from '../../deployments';
@@ -7,7 +7,7 @@ import { CodingAgent } from '../CodingAgent';
 export type GenerateAgentCleanupUpdatesCommand = {
   agents: CodingAgent[];
   artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   };

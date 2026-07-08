@@ -1,11 +1,11 @@
 // Create command types
 import {
   Gateway,
-  ICaptureRecipeUseCase,
-  IListRecipesBySpaceUseCase,
+  ICaptureCommandUseCase,
+  IListCommandsBySpaceUseCase,
 } from '@packmind/types';
 
 export interface ICommandsGateway {
-  create: Gateway<ICaptureRecipeUseCase>;
-  list: Gateway<IListRecipesBySpaceUseCase>;
+  create: Gateway<ICaptureCommandUseCase>;
+  list: Gateway<IListCommandsBySpaceUseCase>;
 }

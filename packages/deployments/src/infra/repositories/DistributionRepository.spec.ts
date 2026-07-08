@@ -6,8 +6,8 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -19,7 +19,7 @@ import {
   DistributionStatus,
   RenderMode,
   StandardId,
-  RecipeId,
+  CommandId,
   SkillId,
 } from '@packmind/types';
 import { Repository, SelectQueryBuilder } from 'typeorm';
@@ -466,13 +466,13 @@ describe('DistributionRepository', () => {
   });
 
   describe('findActiveRecipeVersionsByTarget', () => {
-    const createRecipeVersion = (
+    const createCommandVersion = (
       id: string,
       recipeId: string,
       name: string,
     ) => ({
-      id: createRecipeVersionId(id),
-      recipeId: createRecipeId(recipeId),
+      id: createCommandVersionId(id),
+      recipeId: createCommandId(recipeId),
       name,
       slug: name.toLowerCase().replace(/ /g, '-'),
       content: `Content for ${name}`,
@@ -503,9 +503,9 @@ describe('DistributionRepository', () => {
     });
 
     describe('with active packages', () => {
-      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One');
+      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
       let result: Awaited<
-        ReturnType<typeof repository.findActiveRecipeVersionsByTarget>
+        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
       >;
 
       beforeEach(async () => {
@@ -527,7 +527,7 @@ describe('DistributionRepository', () => {
 
         mockQueryBuilder.getMany.mockResolvedValue([distribution]);
 
-        result = await repository.findActiveRecipeVersionsByTarget(
+        result = await repository.findActiveCommandVersionsByTarget(
           organizationId,
           targetId,
         );
@@ -543,10 +543,10 @@ describe('DistributionRepository', () => {
     });
 
     describe('with removed packages', () => {
-      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One');
-      const rv2 = createRecipeVersion('rv-2', 'recipe-2', 'Recipe Two');
+      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
+      const rv2 = createCommandVersion('rv-2', 'recipe-2', 'Recipe Two');
       let result: Awaited<
-        ReturnType<typeof repository.findActiveRecipeVersionsByTarget>
+        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
       >;
 
       beforeEach(async () => {
@@ -604,7 +604,7 @@ describe('DistributionRepository', () => {
           addDistribution,
         ]);
 
-        result = await repository.findActiveRecipeVersionsByTarget(
+        result = await repository.findActiveCommandVersionsByTarget(
           organizationId,
           targetId,
         );
@@ -620,9 +620,9 @@ describe('DistributionRepository', () => {
     });
 
     describe('when package is re-added after removal', () => {
-      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One');
+      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
       let result: Awaited<
-        ReturnType<typeof repository.findActiveRecipeVersionsByTarget>
+        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
       >;
 
       beforeEach(async () => {
@@ -680,7 +680,7 @@ describe('DistributionRepository', () => {
           addDistribution1,
         ]);
 
-        result = await repository.findActiveRecipeVersionsByTarget(
+        result = await repository.findActiveCommandVersionsByTarget(
           organizationId,
           targetId,
         );
@@ -696,9 +696,9 @@ describe('DistributionRepository', () => {
     });
 
     describe('with null/undefined operation', () => {
-      const rv1 = createRecipeVersion('rv-1', 'recipe-1', 'Recipe One');
+      const rv1 = createCommandVersion('rv-1', 'recipe-1', 'Recipe One');
       let result: Awaited<
-        ReturnType<typeof repository.findActiveRecipeVersionsByTarget>
+        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
       >;
 
       beforeEach(async () => {
@@ -720,7 +720,7 @@ describe('DistributionRepository', () => {
 
         mockQueryBuilder.getMany.mockResolvedValue([distribution]);
 
-        result = await repository.findActiveRecipeVersionsByTarget(
+        result = await repository.findActiveCommandVersionsByTarget(
           organizationId,
           targetId,
         );
@@ -736,10 +736,18 @@ describe('DistributionRepository', () => {
     });
 
     describe('with duplicate recipe versions', () => {
-      const rv1v1 = createRecipeVersion('rv-1-v1', 'recipe-1', 'Recipe One v1');
-      const rv1v2 = createRecipeVersion('rv-1-v2', 'recipe-1', 'Recipe One v2');
+      const rv1v1 = createCommandVersion(
+        'rv-1-v1',
+        'recipe-1',
+        'Recipe One v1',
+      );
+      const rv1v2 = createCommandVersion(
+        'rv-1-v2',
+        'recipe-1',
+        'Recipe One v2',
+      );
       let result: Awaited<
-        ReturnType<typeof repository.findActiveRecipeVersionsByTarget>
+        ReturnType<typeof repository.findActiveCommandVersionsByTarget>
       >;
 
       beforeEach(async () => {
@@ -780,7 +788,7 @@ describe('DistributionRepository', () => {
           distribution2,
         ]);
 
-        result = await repository.findActiveRecipeVersionsByTarget(
+        result = await repository.findActiveCommandVersionsByTarget(
           organizationId,
           targetId,
         );
@@ -1050,7 +1058,7 @@ describe('DistributionRepository', () => {
               's2' as StandardId,
               's3' as StandardId,
             ],
-            recipeIds: ['r1' as RecipeId, 'r2' as RecipeId],
+            recipeIds: ['r1' as CommandId, 'r2' as CommandId],
             skillIds: ['sk1' as SkillId],
           });
 
@@ -1133,7 +1141,7 @@ describe('DistributionRepository', () => {
     describe('with deployed artifacts across packages', () => {
       const standardId1 = createStandardId('std-1');
       const standardId2 = createStandardId('std-2');
-      const recipeId1 = createRecipeId('recipe-1');
+      const commandId1 = createCommandId('recipe-1');
       const skillId1 = 'skill-1' as never;
 
       let result: Awaited<
@@ -1178,8 +1186,8 @@ describe('DistributionRepository', () => {
               ],
               recipeVersions: [
                 {
-                  id: createRecipeVersionId('rv-1'),
-                  recipeId: recipeId1,
+                  id: createCommandVersionId('rv-1'),
+                  recipeId: commandId1,
                   name: 'Recipe One',
                   slug: 'recipe-one',
                   content: 'content',
@@ -1217,7 +1225,7 @@ describe('DistributionRepository', () => {
       });
 
       it('returns recipe IDs', () => {
-        expect(result.recipeIds).toEqual([recipeId1]);
+        expect(result.recipeIds).toEqual([commandId1]);
       });
 
       it('returns skill IDs', () => {
@@ -1589,9 +1597,9 @@ describe('DistributionRepository', () => {
       slug: string;
       version: number;
     };
-    type RecipeVersionRowRaw = {
+    type CommandVersionRowRaw = {
       distributedPackageId: string;
-      recipeId: RecipeId;
+      recipeId: CommandId;
       name: string;
       slug: string;
       version: number;
@@ -1607,20 +1615,20 @@ describe('DistributionRepository', () => {
     const seedRawMany = (
       latestRows: LatestRowRaw[],
       standardRows: StandardVersionRowRaw[] = [],
-      recipeRows: RecipeVersionRowRaw[] = [],
+      commandRows: CommandVersionRowRaw[] = [],
       skillRows: SkillVersionRowRaw[] = [],
     ) => {
       (mockQueryBuilder.getRawMany as jest.Mock)
         .mockResolvedValueOnce(latestRows)
         .mockResolvedValueOnce(standardRows)
-        .mockResolvedValueOnce(recipeRows)
+        .mockResolvedValueOnce(commandRows)
         .mockResolvedValueOnce(skillRows);
     };
 
     describe('with standards and recipes across multiple targets', () => {
       const standardId1 = createStandardId('std-1');
       const standardId2 = createStandardId('std-2');
-      const recipeId1 = createRecipeId('recipe-1');
+      const commandId1 = createCommandId('recipe-1');
 
       let result: OutdatedDeploymentsByTarget[];
 
@@ -1661,7 +1669,7 @@ describe('DistributionRepository', () => {
           [
             {
               distributedPackageId: 'dp-1',
-              recipeId: recipeId1,
+              recipeId: commandId1,
               name: 'Recipe One',
               slug: 'recipe-one',
               version: 3,
@@ -1701,7 +1709,7 @@ describe('DistributionRepository', () => {
 
       it('sets correct recipe artifactId for first target', () => {
         const target1 = result.find((r) => r.targetId === targetId1);
-        expect(target1!.recipes[0].artifactId).toBe(recipeId1);
+        expect(target1!.recipes[0].artifactId).toBe(commandId1);
       });
 
       it('sets correct recipe deployedVersion for first target', () => {

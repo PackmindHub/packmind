@@ -1,11 +1,11 @@
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
 import { PackmindCommand } from '../../UseCase';
 import { ChangeProposalId } from '../ChangeProposalId';
 import { StandardVersionId } from '../../standards';
-import { RecipeVersionId } from '../../recipes';
+import { CommandVersionId } from '../../commands';
 import { SkillVersionId } from '../../skills';
 import { AcceptedChangeProposal } from '../AcceptedChangeProposal';
 import { PackageId } from '../../deployments';
@@ -19,9 +19,9 @@ import { PackageId } from '../../deployments';
  * ArtefactVersionId<StandardId> = StandardVersionId
  * ArtefactVersionId<SkillId> = SkillVersionId
  */
-export type ArtefactVersionId<T extends StandardId | RecipeId | SkillId> =
-  T extends RecipeId
-    ? RecipeVersionId
+export type ArtefactVersionId<T extends StandardId | CommandId | SkillId> =
+  T extends CommandId
+    ? CommandVersionId
     : T extends StandardId
       ? StandardVersionId
       : T extends SkillId
@@ -29,7 +29,7 @@ export type ArtefactVersionId<T extends StandardId | RecipeId | SkillId> =
         : never;
 
 export type ApplyChangeProposalsCommand<
-  T extends StandardId | RecipeId | SkillId,
+  T extends StandardId | CommandId | SkillId,
 > = PackmindCommand & {
   artefactId: T;
   spaceId: SpaceId;
@@ -38,7 +38,7 @@ export type ApplyChangeProposalsCommand<
 };
 
 export type ApplyChangeProposalsResponse<
-  T extends StandardId | RecipeId | SkillId,
+  T extends StandardId | CommandId | SkillId,
 > = {
   newArtefactVersion?: ArtefactVersionId<T>;
   updatedPackages?: PackageId[];
@@ -46,7 +46,7 @@ export type ApplyChangeProposalsResponse<
 };
 
 export interface IApplyChangeProposalsUseCase<
-  T extends StandardId | RecipeId | SkillId,
+  T extends StandardId | CommandId | SkillId,
 > {
   execute: (
     command: ApplyChangeProposalsCommand<T>,

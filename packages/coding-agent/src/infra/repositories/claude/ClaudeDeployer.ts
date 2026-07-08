@@ -7,7 +7,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillFileOutput,
   SkillVersion,
   StandardVersion,
@@ -48,8 +48,8 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -67,7 +67,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
 
     // Generate individual Claude command files for each recipe
     for (const recipeVersion of recipeVersions) {
-      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
+      const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       const targetPrefixedPath = getTargetPrefixedPath(configFile.path, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
@@ -103,7 +103,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   /**
    * Generate Claude command file for a specific recipe
    */
-  private generateClaudeConfigForRecipe(recipeVersion: RecipeVersion): {
+  private generateClaudeConfigForCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
   } {
@@ -169,8 +169,8 @@ ${recipeVersion.content}`;
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for recipes (Claude Code)', {
       recipesCount: recipeVersions.length,
@@ -183,7 +183,7 @@ ${recipeVersion.content}`;
 
     // Generate individual Claude command files for each recipe (without target prefix)
     for (const recipeVersion of recipeVersions) {
-      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
+      const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
@@ -313,7 +313,7 @@ ${recipeVersion.content}`;
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
@@ -333,7 +333,7 @@ ${recipeVersion.content}`;
 
     // Generate individual Claude command files for each recipe
     for (const recipeVersion of recipeVersions) {
-      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
+      const configFile = this.generateClaudeConfigForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
@@ -393,12 +393,12 @@ ${recipeVersion.content}`;
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -426,8 +426,8 @@ ${recipeVersion.content}`;
     }
 
     // Clean up legacy packmind commands subdirectory when recipes are removed
-    const hasRemovedRecipes = removed.recipeVersions.length > 0;
-    if (hasRemovedRecipes) {
+    const hasRemovedCommands = removed.recipeVersions.length > 0;
+    if (hasRemovedCommands) {
       fileUpdates.delete.push({
         path: ClaudeDeployer.LEGACY_COMMANDS_FOLDER_PATH,
         type: DeleteItemType.Directory,
@@ -469,7 +469,7 @@ ${recipeVersion.content}`;
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {

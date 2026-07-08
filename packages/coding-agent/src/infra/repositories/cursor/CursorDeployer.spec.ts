@@ -7,14 +7,14 @@ import {
   createTargetId,
   IStandardsPort,
   SkillVersion,
-  RecipeVersion,
+  CommandVersion,
   createSkillVersionId,
   createSkillFileId,
   DeleteItemType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { skillVersionFactory } from '@packmind/skills/test';
-import { recipeVersionFactory } from '@packmind/commands/test';
+import { commandVersionFactory } from '@packmind/commands/test';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 describe('CursorDeployer', () => {
@@ -612,14 +612,14 @@ describe('CursorDeployer', () => {
       >;
 
       beforeEach(async () => {
-        const removedRecipes = [
-          recipeVersionFactory({ slug: 'removed-recipe-1' }),
-          recipeVersionFactory({ slug: 'removed-recipe-2' }),
+        const removedCommands = [
+          commandVersionFactory({ slug: 'removed-recipe-1' }),
+          commandVersionFactory({ slug: 'removed-recipe-2' }),
         ];
 
         fileUpdates = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -869,12 +869,12 @@ describe('CursorDeployer', () => {
       let result: Awaited<
         ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
       >;
-      let recipeVersions: RecipeVersion[];
+      let recipeVersions: CommandVersion[];
 
       beforeEach(async () => {
         recipeVersions = [
-          recipeVersionFactory({ slug: 'recipe-one' }),
-          recipeVersionFactory({ slug: 'recipe-two' }),
+          commandVersionFactory({ slug: 'recipe-one' }),
+          commandVersionFactory({ slug: 'recipe-two' }),
         ];
 
         result = await deployer.generateAgentCleanupFileUpdates({

@@ -7,7 +7,7 @@ import {
   IGitPortName,
   IStandardsPort,
   IStandardsPortName,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
@@ -134,7 +134,7 @@ describe('CodingAgentAdapter', () => {
     beforeEach(() => {
       mockDeployer = {
         deployArtifacts: jest.fn(),
-        deployRecipes: jest.fn(),
+        deployCommands: jest.fn(),
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
@@ -163,7 +163,7 @@ describe('CodingAgentAdapter', () => {
 
       it('retrieves deployer for the agent', async () => {
         await adapter.deployArtifactsForAgents({
-          recipeVersions: [] as RecipeVersion[],
+          recipeVersions: [] as CommandVersion[],
           standardVersions: [] as StandardVersion[],
           skillVersions: [] as SkillVersion[],
           codingAgents: ['claude'] as CodingAgent[],
@@ -174,7 +174,7 @@ describe('CodingAgentAdapter', () => {
 
       it('calls deployArtifacts with empty arrays', async () => {
         await adapter.deployArtifactsForAgents({
-          recipeVersions: [] as RecipeVersion[],
+          recipeVersions: [] as CommandVersion[],
           standardVersions: [] as StandardVersion[],
           skillVersions: [] as SkillVersion[],
           codingAgents: ['claude'] as CodingAgent[],
@@ -185,7 +185,7 @@ describe('CodingAgentAdapter', () => {
 
       it('returns file updates from deployer', async () => {
         const result = await adapter.deployArtifactsForAgents({
-          recipeVersions: [] as RecipeVersion[],
+          recipeVersions: [] as CommandVersion[],
           standardVersions: [] as StandardVersion[],
           skillVersions: [] as SkillVersion[],
           codingAgents: ['claude'] as CodingAgent[],
@@ -216,7 +216,7 @@ describe('CodingAgentAdapter', () => {
           .mockResolvedValueOnce(copilotUpdates);
 
         return adapter.deployArtifactsForAgents({
-          recipeVersions: [] as RecipeVersion[],
+          recipeVersions: [] as CommandVersion[],
           standardVersions: [] as StandardVersion[],
           skillVersions: [] as SkillVersion[],
           codingAgents: ['claude', 'copilot'] as CodingAgent[],
@@ -256,7 +256,7 @@ describe('CodingAgentAdapter', () => {
     beforeEach(() => {
       mockDeployer = {
         deployArtifacts: jest.fn(),
-        deployRecipes: jest.fn(),
+        deployCommands: jest.fn(),
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
@@ -291,12 +291,12 @@ describe('CodingAgentAdapter', () => {
 
         return adapter.generateRemovalUpdatesForAgents({
           removed: {
-            recipeVersions: [] as RecipeVersion[],
+            recipeVersions: [] as CommandVersion[],
             standardVersions: [] as StandardVersion[],
             skillVersions: [] as SkillVersion[],
           },
           installed: {
-            recipeVersions: [] as RecipeVersion[],
+            recipeVersions: [] as CommandVersion[],
             standardVersions: [] as StandardVersion[],
             skillVersions: [] as SkillVersion[],
           },
@@ -336,7 +336,7 @@ describe('CodingAgentAdapter', () => {
     beforeEach(() => {
       mockDeployer = {
         deployArtifacts: jest.fn(),
-        deployRecipes: jest.fn(),
+        deployCommands: jest.fn(),
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),

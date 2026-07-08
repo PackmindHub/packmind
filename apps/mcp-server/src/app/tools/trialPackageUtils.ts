@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
-  RecipeId,
+  CommandId,
   SpaceId,
   StandardId,
   UserId,
@@ -15,7 +15,7 @@ export const DEFAULT_PACKAGE_DESCRIPTION =
 
 export type ArtifactToAdd = {
   standardId?: StandardId;
-  recipeId?: RecipeId;
+  recipeId?: CommandId;
 };
 
 export async function ensureDefaultPackageWithArtifact(

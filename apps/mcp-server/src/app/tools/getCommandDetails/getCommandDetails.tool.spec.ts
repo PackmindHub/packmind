@@ -76,7 +76,7 @@ describe('getCommandDetails.tool', () => {
       };
 
       const mockCommandsAdapter = {
-        findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
+        findCommandBySlug: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockFastify.recipesHexa.mockReturnValue({
@@ -112,7 +112,7 @@ describe('getCommandDetails.tool', () => {
   describe('when command does not exist', () => {
     it('returns not found message', async () => {
       const mockCommandsAdapter = {
-        findRecipeBySlug: jest.fn().mockResolvedValue(null),
+        findCommandBySlug: jest.fn().mockResolvedValue(null),
       };
 
       mockFastify.recipesHexa.mockReturnValue({
@@ -143,7 +143,7 @@ describe('getCommandDetails.tool', () => {
     };
 
     const mockCommandsAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
+      findCommandBySlug: jest.fn().mockResolvedValue(mockCommand),
     };
 
     mockFastify.recipesHexa.mockReturnValue({
@@ -177,7 +177,7 @@ describe('getCommandDetails.tool', () => {
   describe('when adapter throws error', () => {
     it('returns error message', async () => {
       const mockCommandsAdapter = {
-        findRecipeBySlug: jest
+        findCommandBySlug: jest
           .fn()
           .mockRejectedValue(new Error('Database error')),
       };
@@ -213,7 +213,7 @@ describe('getCommandDetails.tool', () => {
       };
 
       const mockCommandsAdapter = {
-        findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
+        findCommandBySlug: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockFastify.recipesHexa.mockReturnValue({

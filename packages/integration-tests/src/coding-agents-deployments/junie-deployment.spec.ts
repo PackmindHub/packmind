@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { DeployerService, JunieDeployer } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -15,9 +15,9 @@ import {
   IGitPort,
   IStandardsPort,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -32,7 +32,7 @@ import { TestApp } from '../helpers/TestApp';
 describe('Junie Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...spacesSchemas,
     ...gitSchemas,
@@ -45,7 +45,7 @@ describe('Junie Deployment Integration', () => {
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let organization: Organization;
   let user: User;
@@ -86,7 +86,7 @@ describe('Junie Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe',
       content: 'This is test recipe content for deployment',
       organizationId: organization.id,
@@ -158,13 +158,13 @@ describe('Junie Deployment Integration', () => {
 
     describe('when clearing recipes section for single-file deployers', () => {
       let fileUpdates: Awaited<
-        ReturnType<typeof deployerService.aggregateRecipeDeployments>
+        ReturnType<typeof deployerService.aggregateCommandDeployments>
       >;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -175,7 +175,7 @@ describe('Junie Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await deployerService.aggregateRecipeDeployments(
+        fileUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [defaultTarget],
@@ -291,9 +291,9 @@ describe('Junie Deployment Integration', () => {
       let finalFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -325,12 +325,13 @@ describe('Junie Deployment Integration', () => {
           gitRepoId: gitRepo.id,
         };
 
-        const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [localDefaultTarget],
-          ['junie'],
-        );
+        const commandUpdates =
+          await deployerService.aggregateCommandDeployments(
+            recipeVersions,
+            gitRepo,
+            [localDefaultTarget],
+            ['junie'],
+          );
 
         const standardsUpdates =
           await deployerService.aggregateStandardsDeployments(
@@ -340,7 +341,7 @@ describe('Junie Deployment Integration', () => {
             ['junie'],
           );
 
-        const allUpdates = [recipeUpdates, standardsUpdates];
+        const allUpdates = [commandUpdates, standardsUpdates];
         pathMap = new Map<string, FileModification>();
 
         for (const update of allUpdates) {
@@ -396,13 +397,13 @@ describe('Junie Deployment Integration', () => {
 
     describe('when clearing recipes section for single-file deployers', () => {
       let fileUpdates: Awaited<
-        ReturnType<typeof deployerService.aggregateRecipeDeployments>
+        ReturnType<typeof deployerService.aggregateCommandDeployments>
       >;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -413,7 +414,7 @@ describe('Junie Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await deployerService.aggregateRecipeDeployments(
+        fileUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [defaultTarget],
@@ -543,9 +544,9 @@ describe('Junie Deployment Integration', () => {
       beforeEach(async () => {
         jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -556,7 +557,7 @@ describe('Junie Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await junieDeployer.deployRecipes(
+        fileUpdates = await junieDeployer.deployCommands(
           recipeVersions,
           gitRepo,
           defaultTarget,

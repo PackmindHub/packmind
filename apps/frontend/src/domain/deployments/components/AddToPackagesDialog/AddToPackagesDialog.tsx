@@ -21,7 +21,7 @@ import {
   OrganizationId,
   Package,
   PackageId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -37,7 +37,7 @@ import { usePackagesMissingAnyArtifact } from '../../hooks/usePackagesMissingAny
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
-type ArtifactId = StandardId | RecipeId | SkillId;
+type ArtifactId = StandardId | CommandId | SkillId;
 
 interface AddToPackagesDialogProps {
   open: boolean;
@@ -80,7 +80,7 @@ function buildArtefactEntry(
     case 'standard':
       return { packageId, standardIds: ids as StandardId[] };
     case 'recipe':
-      return { packageId, recipeIds: ids as RecipeId[] };
+      return { packageId, recipeIds: ids as CommandId[] };
     case 'skill':
       return { packageId, skillIds: ids as SkillId[] };
   }

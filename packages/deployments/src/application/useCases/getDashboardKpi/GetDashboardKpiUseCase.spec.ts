@@ -5,7 +5,7 @@ import {
   createUserId,
   DashboardKpiResponse,
   GetDashboardKpiCommand,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -16,7 +16,7 @@ describe('GetDashboardKpiUseCase', () => {
   let useCase: GetDashboardKpiUseCase;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
   let standardsPort: jest.Mocked<IStandardsPort>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
 
   const organizationId = createOrganizationId('org-1');
@@ -38,9 +38,9 @@ describe('GetDashboardKpiUseCase', () => {
       listStandardsBySpace: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
-    recipesPort = {
-      listRecipesBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      listCommandsBySpace: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     skillsPort = {
       listSkillsBySpace: jest.fn(),
@@ -49,7 +49,7 @@ describe('GetDashboardKpiUseCase', () => {
     useCase = new GetDashboardKpiUseCase(
       distributionRepository,
       standardsPort,
-      recipesPort,
+      commandsPort,
       skillsPort,
       stubLogger(),
     );
@@ -66,7 +66,7 @@ describe('GetDashboardKpiUseCase', () => {
         {} as never,
         {} as never,
       ]);
-      recipesPort.listRecipesBySpace.mockResolvedValue([
+      commandsPort.listCommandsBySpace.mockResolvedValue([
         {} as never,
         {} as never,
       ]);
@@ -110,7 +110,7 @@ describe('GetDashboardKpiUseCase', () => {
 
     beforeEach(async () => {
       standardsPort.listStandardsBySpace.mockResolvedValue([]);
-      recipesPort.listRecipesBySpace.mockResolvedValue([]);
+      commandsPort.listCommandsBySpace.mockResolvedValue([]);
       skillsPort.listSkillsBySpace.mockResolvedValue([]);
       distributionRepository.countActiveArtifactsBySpace.mockResolvedValue({
         standards: 0,
@@ -154,7 +154,7 @@ describe('GetDashboardKpiUseCase', () => {
         {} as never,
         {} as never,
       ]);
-      recipesPort.listRecipesBySpace.mockResolvedValue([
+      commandsPort.listCommandsBySpace.mockResolvedValue([
         {} as never,
         {} as never,
         {} as never,

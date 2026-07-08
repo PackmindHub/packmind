@@ -7,7 +7,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { linterSchemas } from '@packmind/editions';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -19,7 +19,7 @@ export async function registerDb(fastify: FastifyInstance) {
     type: 'postgres',
     logging: false,
     entities: [
-      ...recipesSchemas,
+      ...commandsSchemas,
       ...gitSchemas,
       ...accountsSchemas,
       ...spacesSchemas,

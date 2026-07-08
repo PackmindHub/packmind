@@ -1,6 +1,6 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Package, PackageId } from '../Package';
-import { RecipeId } from '../../recipes';
+import { CommandId } from '../../commands';
 import { StandardId } from '../../standards';
 import { SkillId } from '../../skills';
 import { SpaceId } from '../../spaces';
@@ -9,7 +9,7 @@ export type AddArtefactsToPackageCommand = PackmindCommand & {
   spaceId: SpaceId;
   packageId: PackageId;
   standardIds?: StandardId[];
-  recipeIds?: RecipeId[];
+  recipeIds?: CommandId[];
   skillIds?: SkillId[];
 };
 

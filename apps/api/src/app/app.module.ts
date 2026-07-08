@@ -9,7 +9,7 @@ import { GitHexa, gitSchemas } from '@packmind/git';
 import { llmSchemas } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
-import { RecipesHexa, recipesSchemas } from '@packmind/commands';
+import { CommandsHexa, commandsSchemas } from '@packmind/commands';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { SkillsHexa, skillsSchemas } from '@packmind/skills';
@@ -31,7 +31,7 @@ import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/o
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { OrganizationsModule } from './organizations/organizations.module';
-import { RecipesModule } from './organizations/spaces/recipes/recipes.module';
+import { CommandsModule } from './organizations/spaces/commands/commands.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
@@ -40,7 +40,7 @@ import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/s
 import { OrganizationsSpacesMembersModule } from './organizations/spaces/members/members.module';
 import {
   OrganizationsSpacesChangeProposalsModule,
-  OrganizationsSpacesRecipesChangeProposalsModule,
+  OrganizationsSpacesCommandsChangeProposalsModule,
   OrganizationsSpacesStandardsChangeProposalsModule,
   OrganizationsSpacesSkillsChangeProposalsModule,
 } from '@packmind/playbook-change-management';
@@ -72,7 +72,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [
-        ...recipesSchemas,
+        ...commandsSchemas,
         ...gitSchemas,
         ...accountsSchemas,
         ...spacesSchemas,
@@ -109,7 +109,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
         AccountsHexa,
         GitHexa,
-        RecipesHexa,
+        CommandsHexa,
         SkillsHexa, // Skills domain
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
@@ -201,11 +201,11 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
             children: [
               {
                 path: ':spaceId/recipes',
-                module: RecipesModule,
+                module: CommandsModule,
                 children: [
                   {
                     path: ':recipeId/change-proposals',
-                    module: OrganizationsSpacesRecipesChangeProposalsModule,
+                    module: OrganizationsSpacesCommandsChangeProposalsModule,
                   },
                 ],
               },

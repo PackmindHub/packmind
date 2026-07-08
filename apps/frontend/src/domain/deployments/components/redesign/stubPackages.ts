@@ -8,7 +8,7 @@ import {
   createGitProviderId,
   createGitRepoId,
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createStandardId,
   createTargetId,
@@ -124,7 +124,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
         ],
       },
       {
-        id: createRecipeId('rcp-release'),
+        id: createCommandId('rcp-release'),
         kind: 'command',
         name: 'release',
         packmindVersion: 3,
@@ -240,7 +240,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
     description: 'New-user welcome flow and supporting standards.',
     artifacts: [
       {
-        id: createRecipeId('rcp-welcome'),
+        id: createCommandId('rcp-welcome'),
         kind: 'command',
         name: 'welcome',
         packmindVersion: 2,
@@ -326,7 +326,7 @@ export const STUB_PACKAGES: PackageDrift[] = [
     description: 'Mobile build pipeline and release rituals.',
     artifacts: [
       {
-        id: createRecipeId('rcp-mobile-build'),
+        id: createCommandId('rcp-mobile-build'),
         kind: 'command',
         name: 'mobile-build',
         packmindVersion: 4,

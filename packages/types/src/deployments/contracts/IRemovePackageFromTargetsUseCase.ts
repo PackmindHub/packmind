@@ -1,7 +1,7 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { TargetId } from '../TargetId';
 import { PackageId } from '../Package';
-import { RecipeVersionId } from '../../recipes/RecipeVersion';
+import { CommandVersionId } from '../../commands/CommandVersion';
 import { StandardVersionId } from '../../standards/StandardVersionId';
 import { SkillVersionId } from '../../skills/SkillVersionId';
 
@@ -25,13 +25,13 @@ export type TargetArtifactResolution = {
   targetId: TargetId;
   /** Artifacts that only belong to the removed package and should be deleted */
   exclusiveArtifacts: {
-    recipeVersionIds: RecipeVersionId[];
+    recipeVersionIds: CommandVersionId[];
     standardVersionIds: StandardVersionId[];
     skillVersionIds: SkillVersionId[];
   };
   /** Artifacts that belong to remaining packages and should be re-rendered */
   remainingArtifacts: {
-    recipeVersionIds: RecipeVersionId[];
+    recipeVersionIds: CommandVersionId[];
     standardVersionIds: StandardVersionId[];
     skillVersionIds: SkillVersionId[];
   };

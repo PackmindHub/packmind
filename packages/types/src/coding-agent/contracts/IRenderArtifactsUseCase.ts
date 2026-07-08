@@ -1,5 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { RecipeVersion } from '../../recipes';
+import { CommandVersion } from '../../commands';
 import { SkillVersion } from '../../skills';
 import { StandardVersion } from '../../standards';
 import { FileUpdates } from '../../deployments';
@@ -8,12 +8,12 @@ import { CodingAgent } from '../CodingAgent';
 
 export type RenderArtifactsCommand = PackmindCommand & {
   installed: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   };
   removed: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   };

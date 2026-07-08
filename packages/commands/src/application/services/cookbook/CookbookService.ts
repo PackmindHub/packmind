@@ -1,6 +1,6 @@
 import { WithTimestamps } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { RecipeVersion } from '@packmind/types';
+import { CommandVersion } from '@packmind/types';
 
 const origin = 'CookbookService';
 
@@ -12,23 +12,23 @@ export class CookbookService {
   }
 
   public buildCookbook(
-    recipeVersions: WithTimestamps<RecipeVersion>[],
+    recipeVersions: WithTimestamps<CommandVersion>[],
   ): string {
     this.logger.info('Building cookbook', {
       totalRecipes: recipeVersions.length,
     });
 
     // Sort recipe versions alphabetically by name for consistent, human-readable ordering
-    const sortedRecipes = [...recipeVersions].sort((a, b) =>
+    const sortedCommands = [...recipeVersions].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
 
     this.logger.debug('Recipes sorted alphabetically', {
-      sortedCount: sortedRecipes.length,
+      sortedCount: sortedCommands.length,
     });
 
     // Generate the cookbook content
-    const cookbookContent = this.generateCookbookContent(sortedRecipes);
+    const cookbookContent = this.generateCookbookContent(sortedCommands);
 
     this.logger.info('Cookbook generated successfully', {
       contentLength: cookbookContent.length,
@@ -38,13 +38,13 @@ export class CookbookService {
   }
 
   private generateCookbookContent(
-    sortedRecipes: WithTimestamps<RecipeVersion>[],
+    sortedCommands: WithTimestamps<CommandVersion>[],
   ): string {
     const header = this.generateHeader();
-    const recipesList = this.generateRecipesList(sortedRecipes);
+    const commandsList = this.generateCommandsList(sortedCommands);
     const footer = this.generateFooter();
 
-    return [header, recipesList, footer].join('\n\n');
+    return [header, commandsList, footer].join('\n\n');
   }
 
   private generateHeader(): string {
@@ -55,25 +55,27 @@ This cookbook contains all available coding recipes that can be used by AI agent
 ## Available Recipes`;
   }
 
-  private generateRecipesList(
-    recipes: WithTimestamps<RecipeVersion>[],
+  private generateCommandsList(
+    recipes: WithTimestamps<CommandVersion>[],
   ): string {
     if (recipes.length === 0) {
       return 'No recipes available.';
     }
 
-    return recipes.map((recipe) => this.formatRecipeEntry(recipe)).join('\n');
+    return recipes.map((recipe) => this.formatCommandEntry(recipe)).join('\n');
   }
 
-  private formatRecipeEntry(recipe: WithTimestamps<RecipeVersion>): string {
+  private formatCommandEntry(recipe: WithTimestamps<CommandVersion>): string {
     const fileName = `${recipe.slug}.md`;
     const relativePath = `recipes/${fileName}`;
-    const description = this.getRecipeDescription(recipe);
+    const description = this.getCommandDescription(recipe);
 
     return `- [${recipe.name}](${relativePath}) : ${description}`;
   }
 
-  private getRecipeDescription(recipe: WithTimestamps<RecipeVersion>): string {
+  private getCommandDescription(
+    recipe: WithTimestamps<CommandVersion>,
+  ): string {
     // If summary is null or empty, use the recipe name
     if (!recipe.summary || recipe.summary.trim() === '') {
       this.logger.debug('Using recipe name as description', {

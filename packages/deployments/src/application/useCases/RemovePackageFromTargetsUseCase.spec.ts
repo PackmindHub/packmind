@@ -17,10 +17,10 @@ import {
   createGitRepoId,
   createDistributionId,
   createDistributedPackageId,
-  createRecipeVersionId,
+  createCommandVersionId,
   createStandardVersionId,
   createSkillVersionId,
-  createRecipeId,
+  createCommandId,
   createStandardId,
   createSkillId,
   RemovePackageFromTargetsCommand,
@@ -29,7 +29,7 @@ import {
   Distribution,
   DistributionStatus,
   DistributedPackage,
-  IRecipesPort,
+  ICommandsPort,
   IStandardsPort,
   ISkillsPort,
   IGitPort,
@@ -45,7 +45,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
   let mockTargetService: jest.Mocked<TargetService>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
@@ -112,13 +112,13 @@ describe('RemovePackageFromTargetsUseCase', () => {
     mockDistributedPackageRepository = {
       add: jest.fn(),
       addStandardVersions: jest.fn(),
-      addRecipeVersions: jest.fn(),
+      addCommandVersions: jest.fn(),
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
-    mockRecipesPort = {
-      getRecipeVersionById: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      getCommandVersionById: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getStandardVersionById: jest.fn(),
@@ -154,7 +154,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
       mockTargetService,
       mockDistributionRepository,
       mockDistributedPackageRepository,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       mockGitPort,
@@ -528,11 +528,11 @@ describe('RemovePackageFromTargetsUseCase', () => {
       });
 
       describe('artifact resolution', () => {
-        const recipeVersionId1 = createRecipeVersionId('rv-1');
-        const recipeVersionId2 = createRecipeVersionId('rv-2');
+        const commandVersionId1 = createCommandVersionId('rv-1');
+        const commandVersionId2 = createCommandVersionId('rv-2');
         const standardVersionId1 = createStandardVersionId('sv-1');
         const standardVersionId2 = createStandardVersionId('sv-2');
-        const sharedRecipeVersionId = createRecipeVersionId('rv-shared');
+        const sharedCommandVersionId = createCommandVersionId('rv-shared');
         const sharedStandardVersionId = createStandardVersionId('sv-shared');
 
         describe('when package has exclusive artifacts', () => {
@@ -543,8 +543,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageId,
               recipeVersions: [
                 {
-                  id: recipeVersionId1,
-                  recipeId: createRecipeId('recipe-1'),
+                  id: commandVersionId1,
+                  recipeId: createCommandId('recipe-1'),
                   name: 'Recipe 1',
                   slug: 'recipe-1',
                   content: 'content',
@@ -583,9 +583,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
               distribution,
             ]);
 
-            mockRecipesPort.getRecipeVersionById.mockResolvedValue({
-              id: recipeVersionId1,
-              recipeId: createRecipeId('recipe-1'),
+            mockCommandsPort.getCommandVersionById.mockResolvedValue({
+              id: commandVersionId1,
+              recipeId: createCommandId('recipe-1'),
               name: 'Recipe 1',
               slug: 'recipe-1',
               content: 'content',
@@ -611,7 +611,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].exclusiveArtifacts
                 .recipeVersionIds,
-            ).toEqual([recipeVersionId1]);
+            ).toEqual([commandVersionId1]);
           });
 
           it('includes exclusive standard versions in exclusiveArtifacts', async () => {
@@ -630,7 +630,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
               expect.objectContaining({
                 removed: {
                   recipeVersions: expect.arrayContaining([
-                    expect.objectContaining({ id: recipeVersionId1 }),
+                    expect.objectContaining({ id: commandVersionId1 }),
                   ]),
                   standardVersions: expect.arrayContaining([
                     expect.objectContaining({ id: standardVersionId1 }),
@@ -650,8 +650,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageId,
               recipeVersions: [
                 {
-                  id: sharedRecipeVersionId,
-                  recipeId: createRecipeId('recipe-shared'),
+                  id: sharedCommandVersionId,
+                  recipeId: createCommandId('recipe-shared'),
                   name: 'Shared Recipe',
                   slug: 'shared-recipe',
                   content: 'content',
@@ -659,8 +659,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   userId: null,
                 },
                 {
-                  id: recipeVersionId1,
-                  recipeId: createRecipeId('recipe-1'),
+                  id: commandVersionId1,
+                  recipeId: createCommandId('recipe-1'),
                   name: 'Recipe 1',
                   slug: 'recipe-1',
                   content: 'content',
@@ -698,8 +698,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: otherPackageId,
               recipeVersions: [
                 {
-                  id: sharedRecipeVersionId,
-                  recipeId: createRecipeId('recipe-shared'),
+                  id: sharedCommandVersionId,
+                  recipeId: createCommandId('recipe-shared'),
                   name: 'Shared Recipe',
                   slug: 'shared-recipe',
                   content: 'content',
@@ -707,8 +707,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   userId: null,
                 },
                 {
-                  id: recipeVersionId2,
-                  recipeId: createRecipeId('recipe-2'),
+                  id: commandVersionId2,
+                  recipeId: createCommandId('recipe-2'),
                   name: 'Recipe 2',
                   slug: 'recipe-2',
                   content: 'content',
@@ -759,12 +759,12 @@ describe('RemovePackageFromTargetsUseCase', () => {
               distribution,
             ]);
 
-            mockRecipesPort.getRecipeVersionById.mockImplementation(
+            mockCommandsPort.getCommandVersionById.mockImplementation(
               async (id) => {
-                if (id === recipeVersionId1) {
+                if (id === commandVersionId1) {
                   return {
-                    id: recipeVersionId1,
-                    recipeId: createRecipeId('recipe-1'),
+                    id: commandVersionId1,
+                    recipeId: createCommandId('recipe-1'),
                     name: 'Recipe 1',
                     slug: 'recipe-1',
                     content: 'content',
@@ -772,10 +772,10 @@ describe('RemovePackageFromTargetsUseCase', () => {
                     userId: null,
                   };
                 }
-                if (id === sharedRecipeVersionId) {
+                if (id === sharedCommandVersionId) {
                   return {
-                    id: sharedRecipeVersionId,
-                    recipeId: createRecipeId('recipe-shared'),
+                    id: sharedCommandVersionId,
+                    recipeId: createCommandId('recipe-shared'),
                     name: 'Shared Recipe',
                     slug: 'shared-recipe',
                     content: 'content',
@@ -783,10 +783,10 @@ describe('RemovePackageFromTargetsUseCase', () => {
                     userId: null,
                   };
                 }
-                if (id === recipeVersionId2) {
+                if (id === commandVersionId2) {
                   return {
-                    id: recipeVersionId2,
-                    recipeId: createRecipeId('recipe-2'),
+                    id: commandVersionId2,
+                    recipeId: createCommandId('recipe-2'),
                     name: 'Recipe 2',
                     slug: 'recipe-2',
                     content: 'content',
@@ -847,7 +847,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].exclusiveArtifacts
                 .recipeVersionIds,
-            ).toEqual([recipeVersionId1]);
+            ).toEqual([commandVersionId1]);
           });
 
           it('excludes shared recipe versions from exclusiveArtifacts', async () => {
@@ -856,7 +856,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].exclusiveArtifacts
                 .recipeVersionIds,
-            ).not.toContain(sharedRecipeVersionId);
+            ).not.toContain(sharedCommandVersionId);
           });
 
           it('includes only exclusive standard versions in exclusiveArtifacts', async () => {
@@ -883,7 +883,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].remainingArtifacts
                 .recipeVersionIds,
-            ).toContain(sharedRecipeVersionId);
+            ).toContain(sharedCommandVersionId);
           });
 
           it('includes shared standards in remainingArtifacts', async () => {
@@ -901,7 +901,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].remainingArtifacts
                 .recipeVersionIds,
-            ).toContain(recipeVersionId2);
+            ).toContain(commandVersionId2);
           });
 
           it('includes other package standards in remainingArtifacts', async () => {
@@ -922,8 +922,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageId,
               recipeVersions: [
                 {
-                  id: sharedRecipeVersionId,
-                  recipeId: createRecipeId('recipe-shared'),
+                  id: sharedCommandVersionId,
+                  recipeId: createCommandId('recipe-shared'),
                   name: 'Shared Recipe',
                   slug: 'shared-recipe',
                   content: 'content',
@@ -952,8 +952,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: otherPackageId,
               recipeVersions: [
                 {
-                  id: sharedRecipeVersionId,
-                  recipeId: createRecipeId('recipe-shared'),
+                  id: sharedCommandVersionId,
+                  recipeId: createCommandId('recipe-shared'),
                   name: 'Shared Recipe',
                   slug: 'shared-recipe',
                   content: 'content',
@@ -995,9 +995,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
               distribution,
             ]);
 
-            mockRecipesPort.getRecipeVersionById.mockResolvedValue({
-              id: sharedRecipeVersionId,
-              recipeId: createRecipeId('recipe-shared'),
+            mockCommandsPort.getCommandVersionById.mockResolvedValue({
+              id: sharedCommandVersionId,
+              recipeId: createCommandId('recipe-shared'),
               name: 'Shared Recipe',
               slug: 'shared-recipe',
               content: 'content',
@@ -1044,8 +1044,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageId,
               recipeVersions: [
                 {
-                  id: recipeVersionId1,
-                  recipeId: createRecipeId('recipe-1'),
+                  id: commandVersionId1,
+                  recipeId: createCommandId('recipe-1'),
                   name: 'Recipe 1',
                   slug: 'recipe-1',
                   content: 'content',
@@ -1064,8 +1064,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: otherPackageId,
               recipeVersions: [
                 {
-                  id: recipeVersionId1,
-                  recipeId: createRecipeId('recipe-1'),
+                  id: commandVersionId1,
+                  recipeId: createCommandId('recipe-1'),
                   name: 'Recipe 1',
                   slug: 'recipe-1',
                   content: 'content',
@@ -1107,9 +1107,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
               distribution2,
             ]);
 
-            mockRecipesPort.getRecipeVersionById.mockResolvedValue({
-              id: recipeVersionId1,
-              recipeId: createRecipeId('recipe-1'),
+            mockCommandsPort.getCommandVersionById.mockResolvedValue({
+              id: commandVersionId1,
+              recipeId: createCommandId('recipe-1'),
               name: 'Recipe 1',
               slug: 'recipe-1',
               content: 'content',
@@ -1130,7 +1130,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
         describe('when a package was previously removed', () => {
           const packageBId = createPackageId('package-b');
-          const packageBRecipeVersionId = createRecipeVersionId('rv-pkg-b');
+          const packageBCommandVersionId = createCommandVersionId('rv-pkg-b');
           const packageBStandardVersionId = createStandardVersionId('sv-pkg-b');
 
           beforeEach(() => {
@@ -1141,8 +1141,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageBId,
               recipeVersions: [
                 {
-                  id: packageBRecipeVersionId,
-                  recipeId: createRecipeId('recipe-pkg-b'),
+                  id: packageBCommandVersionId,
+                  recipeId: createCommandId('recipe-pkg-b'),
                   name: 'Package B Recipe',
                   slug: 'package-b-recipe',
                   content: 'content',
@@ -1185,8 +1185,8 @@ describe('RemovePackageFromTargetsUseCase', () => {
               packageId: packageBId,
               recipeVersions: [
                 {
-                  id: packageBRecipeVersionId,
-                  recipeId: createRecipeId('recipe-pkg-b'),
+                  id: packageBCommandVersionId,
+                  recipeId: createCommandId('recipe-pkg-b'),
                   name: 'Package B Recipe',
                   slug: 'package-b-recipe',
                   content: 'content',
@@ -1233,7 +1233,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
             expect(
               result.artifactResolutions![0].remainingArtifacts
                 .recipeVersionIds,
-            ).not.toContain(packageBRecipeVersionId);
+            ).not.toContain(packageBCommandVersionId);
           });
 
           it('excludes removed package standard artifacts from remainingArtifacts', async () => {

@@ -4,8 +4,8 @@ import {
   IAccountsPortName,
   IPlaybookChangeApplierPort,
   IPlaybookChangeApplierPortName,
-  IRecipesPort,
-  IRecipesPortName,
+  ICommandsPort,
+  ICommandsPortName,
   ISkillsPort,
   ISkillsPortName,
   ISpacesPort,
@@ -32,14 +32,14 @@ export class PlaybookChangeApplierHexa extends BaseHexa<
     const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
     const standardsPort =
       registry.getAdapter<IStandardsPort>(IStandardsPortName);
-    const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
+    const commandsPort = registry.getAdapter<ICommandsPort>(ICommandsPortName);
     const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
 
     await this.adapter.initialize({
       accountsPort,
       skillsPort,
       standardsPort,
-      recipesPort,
+      recipesPort: commandsPort,
       spacesPort,
     });
   }

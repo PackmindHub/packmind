@@ -6,8 +6,8 @@ import {
   DeleteTargetResponse,
   OrganizationId,
   PackageId,
-  RecipeId,
-  RecipeVersionId,
+  CommandId,
+  CommandVersionId,
   SpaceId,
   StandardId,
   StandardVersionId,
@@ -51,7 +51,7 @@ import {
   getDashboardNonLiveKey,
 } from '../queryKeys';
 
-export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
+export const useListCommandDeploymentsQuery = (recipeId: CommandId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
@@ -62,7 +62,7 @@ export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
           'Organization ID is required to fetch recipe deployments',
         );
       }
-      return deploymentsGateways.listDistributionsByRecipeId({
+      return deploymentsGateways.listDistributionsByCommandId({
         organizationId: organization.id,
         recipeId,
       });
@@ -142,7 +142,7 @@ export const useListDriftedPackagesByOrgQuery = () => {
   return useQuery(getListDriftedPackagesByOrgOptions(organization?.id));
 };
 
-export const useListRecipeDistributionsQuery = (recipeId: RecipeId) => {
+export const useListCommandDistributionsQuery = (recipeId: CommandId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
@@ -153,7 +153,7 @@ export const useListRecipeDistributionsQuery = (recipeId: RecipeId) => {
           'Organization ID is required to fetch recipe distributions',
         );
       }
-      return deploymentsGateways.listDistributionsByRecipeId({
+      return deploymentsGateways.listDistributionsByCommandId({
         organizationId: organization.id,
         recipeId,
       });
@@ -326,7 +326,7 @@ export const useGetDashboardNonLiveQuery = (
 };
 
 export const DEPLOY_RECIPES_MUTATION_KEY = 'deployRecipes';
-export const useDeployRecipesMutation = () => {
+export const useDeployCommandsMutation = () => {
   const queryClient = useQueryClient();
   const { organization } = useAuthContext();
 
@@ -336,14 +336,14 @@ export const useDeployRecipesMutation = () => {
       recipeVersionIds,
       targetIds,
     }: {
-      recipeVersionIds: RecipeVersionId[];
+      recipeVersionIds: CommandVersionId[];
       targetIds: TargetId[];
     }) => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to publish recipes');
       }
       console.log('Publishing recipes to targets...');
-      return deploymentsGateways.publishRecipes({
+      return deploymentsGateways.publishCommands({
         organizationId: organization.id,
         recipeVersionIds,
         targetIds,
@@ -791,7 +791,7 @@ export type AddArtefactsToPackagesOutcome =
 export type AddArtefactsToPackagesEntry = {
   packageId: PackageId;
   standardIds?: StandardId[];
-  recipeIds?: RecipeId[];
+  recipeIds?: CommandId[];
   skillIds?: SkillId[];
 };
 

@@ -1,8 +1,8 @@
 import { useParams } from 'react-router';
 import { PMPage, PMBox } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { RecipeDetails } from '../../src/domain/recipes/components/RecipeDetails';
-import { RecipeId } from '@packmind/types';
+import { CommandDetails } from '../../src/domain/commands/components/CommandDetails';
+import { CommandId } from '@packmind/types';
 
 export default function CommandDetailsIndexRouteModule() {
   const { commandId } = useParams<{
@@ -28,8 +28,8 @@ export default function CommandDetailsIndexRouteModule() {
   }
 
   return (
-    <RecipeDetails
-      id={commandId as RecipeId}
+    <CommandDetails
+      id={commandId as CommandId}
       orgSlug={organization.slug}
       orgName={organization.name}
     />

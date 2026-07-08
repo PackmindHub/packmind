@@ -5,7 +5,7 @@ import {
   createSpaceId,
   createUserId,
   IEventTrackingPort,
-  RecipeId,
+  CommandId,
   Space,
 } from '@packmind/types';
 import { registerSaveCommandTool } from './saveCommand.tool';
@@ -127,11 +127,11 @@ describe('saveCommand.tool', () => {
 
     describe('when creating command with all parameters', () => {
       let result: { content: { type: string; text: string }[] };
-      let mockAdapter: { captureRecipe: jest.Mock };
+      let mockAdapter: { captureCommand: jest.Mock };
 
       beforeEach(async () => {
         const mockCommand = {
-          id: 'command-123' as RecipeId,
+          id: 'command-123' as CommandId,
           name: 'Test Command',
           summary: 'A test command summary',
           whenToUse: ['When testing'],
@@ -153,7 +153,7 @@ describe('saveCommand.tool', () => {
         };
 
         mockAdapter = {
-          captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+          captureCommand: jest.fn().mockResolvedValue(mockCommand),
         };
 
         mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -178,7 +178,7 @@ describe('saveCommand.tool', () => {
       });
 
       it('calls captureRecipe with correct parameters', () => {
-        expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
+        expect(mockAdapter.captureCommand).toHaveBeenCalledWith({
           name: 'Test Command',
           summary: 'A test command summary',
           whenToUse: ['When testing'],
@@ -210,11 +210,11 @@ describe('saveCommand.tool', () => {
 
     describe('when creating command with complex steps including code snippets', () => {
       let result: { content: { type: string; text: string }[] };
-      let mockAdapter: { captureRecipe: jest.Mock };
+      let mockAdapter: { captureCommand: jest.Mock };
 
       beforeEach(async () => {
         const mockCommand = {
-          id: 'command-456' as RecipeId,
+          id: 'command-456' as CommandId,
           name: 'Complex Command',
           summary: 'A complex command with code snippets',
           whenToUse: [
@@ -257,7 +257,7 @@ export class User {
         };
 
         mockAdapter = {
-          captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+          captureCommand: jest.fn().mockResolvedValue(mockCommand),
         };
 
         mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -304,7 +304,7 @@ export class User {
       });
 
       it('calls captureRecipe with all step data including code snippets', () => {
-        expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
+        expect(mockAdapter.captureCommand).toHaveBeenCalledWith({
           name: 'Complex Command',
           summary: 'A complex command with code snippets',
           whenToUse: [
@@ -358,7 +358,7 @@ export class User {
 
     it('tracks analytics event on success', async () => {
       const mockCommand = {
-        id: 'command-789' as RecipeId,
+        id: 'command-789' as CommandId,
         name: 'Analytics Command',
         summary: 'Testing analytics tracking',
       };
@@ -371,7 +371,7 @@ export class User {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+        captureCommand: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -435,7 +435,7 @@ export class User {
         };
 
         const mockAdapter = {
-          captureRecipe: jest
+          captureCommand: jest
             .fn()
             .mockRejectedValue(new Error('Database connection failed')),
         };
@@ -466,7 +466,7 @@ export class User {
 
     it('uses global space via getGlobalSpace', async () => {
       const mockCommand = {
-        id: 'command-space' as RecipeId,
+        id: 'command-space' as CommandId,
         name: 'Space Command',
         summary: 'Testing space usage',
       };
@@ -479,7 +479,7 @@ export class User {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+        captureCommand: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -572,7 +572,7 @@ export class User {
             };
 
             const mockAdapter = {
-              captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+              captureCommand: jest.fn().mockResolvedValue(mockCommand),
             };
 
             mockGetGlobalSpace.mockResolvedValue({
@@ -648,7 +648,7 @@ export class User {
             };
 
             const mockAdapter = {
-              captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+              captureCommand: jest.fn().mockResolvedValue(mockCommand),
             };
 
             mockGetGlobalSpace.mockResolvedValue({
@@ -730,7 +730,7 @@ export class User {
           };
 
           const mockAdapter = {
-            captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+            captureCommand: jest.fn().mockResolvedValue(mockCommand),
           };
 
           mockGetGlobalSpace.mockResolvedValue({

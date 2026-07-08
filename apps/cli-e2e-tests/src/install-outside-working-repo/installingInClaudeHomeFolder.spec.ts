@@ -9,7 +9,7 @@ import {
   updateFile,
   UserSignedUpContext,
 } from '../helpers';
-import { Package, Recipe, Skill, Standard } from '@packmind/types';
+import { Package, Command, Skill, Standard } from '@packmind/types';
 
 describe('Running packmind-install in ~/.claude', () => {
   describeForVersion(
@@ -22,7 +22,7 @@ describe('Running packmind-install in ~/.claude', () => {
 
         let pkg: Package;
         let standard: Standard;
-        let command: Recipe;
+        let command: Command;
         let skill: Skill;
 
         beforeEach(async () => {

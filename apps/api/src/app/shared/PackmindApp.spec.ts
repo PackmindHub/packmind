@@ -11,7 +11,7 @@ import { PlaybookChangeApplierHexa } from '@packmind/playbook-change-applier';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/commands';
+import { CommandsHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
@@ -57,7 +57,7 @@ describe('PackmindApp API', () => {
         AmplitudeHexa,
         LlmHexa,
         GitHexa,
-        RecipesHexa,
+        CommandsHexa,
         LinterHexa,
         StandardsHexa,
         SkillsHexa,
@@ -155,7 +155,7 @@ describe('PackmindApp API', () => {
         apiKeyService,
       });
 
-      expect(registry.get(RecipesHexa)).toBeDefined();
+      expect(registry.get(CommandsHexa)).toBeDefined();
     });
 
     it('registers LinterHexa', async () => {
@@ -285,8 +285,8 @@ describe('PackmindApp API', () => {
         apiKeyService,
       });
 
-      const recipesHexa = registry.get(RecipesHexa);
-      expect(recipesHexa.getAdapter()).toBeDefined();
+      const commandsHexa = registry.get(CommandsHexa);
+      expect(commandsHexa.getAdapter()).toBeDefined();
     });
 
     it('provides StandardsHexa adapter', async () => {

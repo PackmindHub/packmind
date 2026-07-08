@@ -1,5 +1,5 @@
 import { PackageId } from '../../deployments/Package';
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
@@ -8,7 +8,7 @@ import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalId } from '../ChangeProposalId';
 
 export type ListChangeProposalsByArtefactCommand<
-  T extends StandardId | RecipeId | SkillId,
+  T extends StandardId | CommandId | SkillId,
 > = PackmindCommand & {
   spaceId: SpaceId;
   artefactId: T;
@@ -23,7 +23,7 @@ export type ListChangeProposalsByArtefactResponse = {
 };
 
 export interface IListChangeProposalsByArtefact<
-  T extends StandardId | RecipeId | SkillId,
+  T extends StandardId | CommandId | SkillId,
 > {
   execute: (
     command: ListChangeProposalsByArtefactCommand<T>,

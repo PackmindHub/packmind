@@ -1,13 +1,13 @@
 import { ClaudePluginDeployer } from './ClaudePluginDeployer';
 import {
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   SkillFile,
   SkillVersion,
   StandardVersion,
   Target,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillFileId,
   createSkillId,
   createSkillVersionId,
@@ -24,10 +24,10 @@ function makeTarget(path: string): Target {
   };
 }
 
-function makeRecipe(overrides: Partial<RecipeVersion> = {}): RecipeVersion {
+function makeCommand(overrides: Partial<CommandVersion> = {}): CommandVersion {
   return {
-    id: createRecipeVersionId('rv1'),
-    recipeId: createRecipeId('r1'),
+    id: createCommandVersionId('rv1'),
+    recipeId: createCommandId('r1'),
     name: 'audit',
     slug: 'audit',
     content: '# audit\n',
@@ -73,9 +73,9 @@ describe('ClaudePluginDeployer', () => {
   describe('deployRecipes', () => {
     it('renders one .md per recipe under <plugin-root>/commands/', async () => {
       const deployer = new ClaudePluginDeployer();
-      const recipe = makeRecipe({ slug: 'audit' });
+      const recipe = makeCommand({ slug: 'audit' });
 
-      const result = await deployer.deployRecipes(
+      const result = await deployer.deployCommands(
         [recipe],
         {} as GitRepo,
         makeTarget('/'),
@@ -87,7 +87,7 @@ describe('ClaudePluginDeployer', () => {
 
     describe('when no recipes', () => {
       it('returns an empty createOrUpdate', async () => {
-        const result = await new ClaudePluginDeployer().deployRecipes(
+        const result = await new ClaudePluginDeployer().deployCommands(
           [],
           {} as GitRepo,
           makeTarget('/'),
@@ -98,8 +98,8 @@ describe('ClaudePluginDeployer', () => {
 
     describe('when Target.path is set', () => {
       it('uses Target.path as the plugin root prefix', async () => {
-        const result = await new ClaudePluginDeployer().deployRecipes(
-          [makeRecipe({ slug: 'audit' })],
+        const result = await new ClaudePluginDeployer().deployCommands(
+          [makeCommand({ slug: 'audit' })],
           {} as GitRepo,
           makeTarget('plugins/security/'),
         );
@@ -110,8 +110,8 @@ describe('ClaudePluginDeployer', () => {
     });
 
     it('propagates recipe content into the file body', async () => {
-      const result = await new ClaudePluginDeployer().deployRecipes(
-        [makeRecipe({ slug: 'audit', content: '# hello' })],
+      const result = await new ClaudePluginDeployer().deployCommands(
+        [makeCommand({ slug: 'audit', content: '# hello' })],
         {} as GitRepo,
         makeTarget('/'),
       );

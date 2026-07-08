@@ -27,13 +27,13 @@ export const DashboardKPI = () => {
 
   const totalStandards = kpi?.standards.total ?? 0;
   const activeStandards = kpi?.standards.active ?? 0;
-  const totalRecipes = kpi?.recipes.total ?? 0;
-  const activeRecipes = kpi?.recipes.active ?? 0;
+  const totalCommands = kpi?.recipes.total ?? 0;
+  const activeCommands = kpi?.recipes.active ?? 0;
   const totalSkills = kpi?.skills.total ?? 0;
   const activeSkills = kpi?.skills.active ?? 0;
 
   const nonLiveStandards = totalStandards - activeStandards;
-  const nonLiveRecipes = totalRecipes - activeRecipes;
+  const nonLiveCommands = totalCommands - activeCommands;
   const nonLiveSkills = totalSkills - activeSkills;
 
   const getBackgroundColorByPercentage = (
@@ -78,17 +78,17 @@ export const DashboardKPI = () => {
     activeStandards,
     totalStandards,
   );
-  const recipesBackgroundColor = getBackgroundColorByPercentage(
-    activeRecipes,
-    totalRecipes,
+  const commandsBackgroundColor = getBackgroundColorByPercentage(
+    activeCommands,
+    totalCommands,
   );
-  const recipesBorderColor = getBorderColorByPercentage(
-    activeRecipes,
-    totalRecipes,
+  const commandsBorderColor = getBorderColorByPercentage(
+    activeCommands,
+    totalCommands,
   );
-  const recipesTextColor = getTextColorByPercentage(
-    activeRecipes,
-    totalRecipes,
+  const commandsTextColor = getTextColorByPercentage(
+    activeCommands,
+    totalCommands,
   );
   const skillsBackgroundColor = getBackgroundColorByPercentage(
     activeSkills,
@@ -181,40 +181,40 @@ export const DashboardKPI = () => {
           borderRadius={'md'}
           flex={1}
           minW={0}
-          backgroundColor={recipesBackgroundColor}
+          backgroundColor={commandsBackgroundColor}
           border={'solid 1px'}
-          borderColor={recipesBorderColor}
+          borderColor={commandsBorderColor}
         >
           <PMStat.Root size={'lg'}>
             <PMHStack justify="space-between" align="center" width="full">
               <PMStat.Label color={'text.primary'}>Commands</PMStat.Label>
-              {nonLiveRecipes > 0 && (
+              {nonLiveCommands > 0 && (
                 <PMButton
                   variant="tertiary"
                   size="xs"
                   onClick={() => openModalOnTab('commands')}
                 >
-                  {nonLiveRecipes} non-live
+                  {nonLiveCommands} non-live
                 </PMButton>
               )}
             </PMHStack>
-            <PMStat.ValueText alignItems="baseline" color={recipesTextColor}>
-              {totalRecipes === 0 ? (
+            <PMStat.ValueText alignItems="baseline" color={commandsTextColor}>
+              {totalCommands === 0 ? (
                 <PMStat.ValueUnit>No commands yet</PMStat.ValueUnit>
               ) : (
                 <>
-                  {activeRecipes}{' '}
-                  <PMStat.ValueUnit>/ {totalRecipes} total</PMStat.ValueUnit>
+                  {activeCommands}{' '}
+                  <PMStat.ValueUnit>/ {totalCommands} total</PMStat.ValueUnit>
                 </>
               )}
             </PMStat.ValueText>
-            {totalRecipes > 0 && (
+            {totalCommands > 0 && (
               <PMProgress.Root
-                value={(activeRecipes / totalRecipes) * 100}
+                value={(activeCommands / totalCommands) * 100}
                 colorPalette={
-                  totalRecipes === activeRecipes
+                  totalCommands === activeCommands
                     ? 'green'
-                    : activeRecipes === 0
+                    : activeCommands === 0
                       ? 'orange'
                       : 'blue'
                 }

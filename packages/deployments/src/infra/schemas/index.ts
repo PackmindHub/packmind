@@ -1,7 +1,7 @@
 import { TargetSchema } from './TargetSchema';
 import { RenderModeConfigurationSchema } from './RenderModeConfigurationSchema';
 import { PackageSchema } from './PackageSchema';
-import { PackageRecipesSchema } from './PackageRecipesSchema';
+import { PackageCommandsSchema } from './PackageCommandsSchema';
 import { PackageStandardsSchema } from './PackageStandardsSchema';
 import { PackageSkillsSchema } from './PackageSkillsSchema';
 import { DistributionSchema } from './DistributionSchema';
@@ -11,7 +11,7 @@ export {
   TargetSchema,
   RenderModeConfigurationSchema,
   PackageSchema,
-  PackageRecipesSchema,
+  PackageCommandsSchema,
   PackageStandardsSchema,
   PackageSkillsSchema,
   DistributionSchema,
@@ -21,7 +21,7 @@ export const deploymentsSchemas = [
   TargetSchema,
   RenderModeConfigurationSchema,
   PackageSchema,
-  PackageRecipesSchema,
+  PackageCommandsSchema,
   PackageStandardsSchema,
   PackageSkillsSchema,
   DistributionSchema,

@@ -18,9 +18,9 @@ import { useUpdatePackageMutation } from '../../api/queries/DeploymentsQueries';
 import {
   Package,
   PackageId,
-  Recipe,
+  Command,
   Standard,
-  RecipeId,
+  CommandId,
   StandardId,
   Skill,
   SkillId,
@@ -36,7 +36,7 @@ import { PackageEditFormContent } from './PackageEditFormContent';
 
 interface PackageEditFormBodyProps {
   pkg: Package;
-  allRecipes: Recipe[];
+  allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
   id: PackageId;
@@ -46,7 +46,7 @@ interface PackageEditFormBodyProps {
 
 export const PackageEditFormBody = ({
   pkg,
-  allRecipes,
+  allCommands,
   allStandards,
   allSkills,
   id,
@@ -59,7 +59,7 @@ export const PackageEditFormBody = ({
 
   const [editName, setEditName] = useState(pkg.name);
   const [editDescription, setEditDescription] = useState(pkg.description ?? '');
-  const [selectedRecipeIds, setSelectedRecipeIds] = useState<RecipeId[]>(
+  const [selectedCommandIds, setSelectedCommandIds] = useState<CommandId[]>(
     pkg.recipes ?? [],
   );
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
@@ -94,7 +94,7 @@ export const PackageEditFormBody = ({
         organizationId: organization.id,
         name: editName,
         description: editDescription,
-        recipeIds: selectedRecipeIds,
+        recipeIds: selectedCommandIds,
         standardIds: selectedStandardIds,
         skillsIds: selectedSkillIds,
       });
@@ -191,18 +191,18 @@ export const PackageEditFormBody = ({
                 p={4}
               >
                 <PackageEditFormContent
-                  key={`loaded-${allRecipes.length}-${allStandards.length}-${allSkills.length}`}
-                  allRecipes={allRecipes}
+                  key={`loaded-${allCommands.length}-${allStandards.length}-${allSkills.length}`}
+                  allCommands={allCommands}
                   allStandards={allStandards}
                   allSkills={allSkills}
-                  selectedRecipeIds={selectedRecipeIds}
+                  selectedCommandIds={selectedCommandIds}
                   selectedStandardIds={selectedStandardIds}
                   selectedSkillIds={selectedSkillIds}
-                  setSelectedRecipeIds={setSelectedRecipeIds}
+                  setSelectedCommandIds={setSelectedCommandIds}
                   setSelectedStandardIds={setSelectedStandardIds}
                   setSelectedSkillIds={setSelectedSkillIds}
                   isPending={isPending}
-                  isLoadingRecipes={false}
+                  isLoadingCommands={false}
                   isLoadingStandards={false}
                   isLoadingSkills={false}
                   orgSlug={orgSlug}

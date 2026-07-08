@@ -22,13 +22,13 @@ export function registerListCommandsTool(
         throw new Error('User context is required to list commands');
       }
 
-      const recipesHexa = fastify.recipesHexa();
+      const commandsHexa = fastify.recipesHexa();
 
       try {
         const organizationId = createOrganizationId(userContext.organizationId);
         const globalSpace = await getGlobalSpace(fastify, organizationId);
 
-        const commands = await recipesHexa.getAdapter().listRecipesBySpace({
+        const commands = await commandsHexa.getAdapter().listCommandsBySpace({
           organizationId,
           spaceId: globalSpace.id,
           userId: createUserId(userContext.userId),

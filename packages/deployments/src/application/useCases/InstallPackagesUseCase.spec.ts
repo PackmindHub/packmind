@@ -3,7 +3,7 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IAccountsPort,
   ICodingAgentPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -12,8 +12,8 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   PackmindLockFile,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   Skill,
   SkillVersion,
   Space,
@@ -27,8 +27,8 @@ import {
   CodingAgents,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -76,7 +76,7 @@ const createSpaceMembership = (
 
 describe('InstallPackagesUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
@@ -147,9 +147,9 @@ describe('InstallPackagesUseCase', () => {
         .mockResolvedValue([publicPackage]),
     } as unknown as jest.Mocked<PackageService>;
 
-    recipesPort = {
-      listRecipeVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      listCommandVersions: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     standardsPort = {
       getLatestStandardVersion: jest.fn().mockResolvedValue(null),
@@ -228,7 +228,7 @@ describe('InstallPackagesUseCase', () => {
 
     useCase = new InstallPackagesUseCase(
       packageService,
-      recipesPort,
+      commandsPort,
       standardsPort,
       skillsPort,
       codingAgentPort,
@@ -350,12 +350,12 @@ describe('InstallPackagesUseCase', () => {
         slug: 'standard-b',
       } as Standard;
 
-      const recipe: Recipe = {
-        id: createRecipeId(uuidv4()),
+      const recipe: Command = {
+        id: createCommandId(uuidv4()),
         spaceId: publicSpace.id,
         name: 'Recipe A',
         slug: 'recipe-a',
-      } as Recipe;
+      } as Command;
 
       const skillA: Skill = {
         id: createSkillId(uuidv4()),
@@ -404,14 +404,14 @@ describe('InstallPackagesUseCase', () => {
         },
       );
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId(uuidv4()),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId(uuidv4()),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
         version: 1,
-      } as unknown as RecipeVersion;
-      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      } as unknown as CommandVersion;
+      commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
 
       const buildSkillVersion = (skill: Skill): SkillVersion =>
         ({
@@ -534,25 +534,25 @@ describe('InstallPackagesUseCase', () => {
     });
 
     it('only deploys accessible packages', async () => {
-      const recipeId = createRecipeId(uuidv4());
-      const recipe: Recipe = {
+      const recipeId = createCommandId(uuidv4());
+      const recipe: Command = {
         id: recipeId,
         spaceId: publicSpace.id,
         name: 'Public Recipe',
         slug: 'public-recipe',
-      } as Recipe;
+      } as Command;
 
       publicPackage.recipes = [recipe];
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId(uuidv4()),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId(uuidv4()),
         recipeId,
         name: 'Public Recipe',
         slug: 'public-recipe',
         version: 1,
-      } as unknown as RecipeVersion;
+      } as unknown as CommandVersion;
 
-      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
 
       await useCase.execute(command);
 

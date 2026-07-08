@@ -14,9 +14,9 @@ import {
 } from '@packmind/ui';
 import { Link } from 'react-router';
 import {
-  Recipe,
+  Command,
   Standard,
-  RecipeId,
+  CommandId,
   StandardId,
   Skill,
   SkillId,
@@ -24,17 +24,17 @@ import {
 import { routes } from '../../../../shared/utils/routes';
 
 interface PackageEditFormContentProps {
-  allRecipes: Recipe[];
+  allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
-  selectedRecipeIds: RecipeId[];
+  selectedCommandIds: CommandId[];
   selectedStandardIds: StandardId[];
   selectedSkillIds: SkillId[];
-  setSelectedRecipeIds: (ids: RecipeId[]) => void;
+  setSelectedCommandIds: (ids: CommandId[]) => void;
   setSelectedStandardIds: (ids: StandardId[]) => void;
   setSelectedSkillIds: (ids: SkillId[]) => void;
   isPending: boolean;
-  isLoadingRecipes: boolean;
+  isLoadingCommands: boolean;
   isLoadingStandards: boolean;
   isLoadingSkills: boolean;
   orgSlug: string;
@@ -42,17 +42,17 @@ interface PackageEditFormContentProps {
 }
 
 export const PackageEditFormContent = ({
-  allRecipes,
+  allCommands,
   allStandards,
   allSkills,
-  selectedRecipeIds,
+  selectedCommandIds,
   selectedStandardIds,
   selectedSkillIds,
-  setSelectedRecipeIds,
+  setSelectedCommandIds,
   setSelectedStandardIds,
   setSelectedSkillIds,
   isPending,
-  isLoadingRecipes,
+  isLoadingCommands,
   isLoadingStandards,
   isLoadingSkills,
   orgSlug,
@@ -60,7 +60,7 @@ export const PackageEditFormContent = ({
 }: PackageEditFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  const recipeItems = allRecipes.map((recipe: Recipe) => ({
+  const commandItems = allCommands.map((recipe: Command) => ({
     label: recipe.name,
     value: recipe.id,
   }));
@@ -75,9 +75,9 @@ export const PackageEditFormContent = ({
     value: skill.id,
   }));
 
-  const { collection: recipeCollection, filter: filterRecipes } =
+  const { collection: commandCollection, filter: filterCommands } =
     pmUseListCollection({
-      initialItems: recipeItems,
+      initialItems: commandItems,
       filter: contains,
     });
 
@@ -93,10 +93,10 @@ export const PackageEditFormContent = ({
       filter: contains,
     });
 
-  const recipeDisplayValue =
-    selectedRecipeIds.length === 0
+  const commandDisplayValue =
+    selectedCommandIds.length === 0
       ? 'Select commands...'
-      : `${selectedRecipeIds.length} command(s) selected`;
+      : `${selectedCommandIds.length} command(s) selected`;
 
   const standardDisplayValue =
     selectedStandardIds.length === 0
@@ -228,8 +228,8 @@ export const PackageEditFormContent = ({
 
       <PMField.Root flex={1} width="full">
         <PMField.Label>Commands</PMField.Label>
-        {isLoadingRecipes || allRecipes.length === 0 ? (
-          isLoadingRecipes ? (
+        {isLoadingCommands || allCommands.length === 0 ? (
+          isLoadingCommands ? (
             <PMSpinner size="sm" />
           ) : (
             <PMText colorPalette="gray" fontSize="sm" display="block">
@@ -239,17 +239,17 @@ export const PackageEditFormContent = ({
         ) : (
           <PMVStack gap={2} width="full" align="flex-start">
             <PMCombobox.Root
-              collection={recipeCollection}
+              collection={commandCollection}
               onInputValueChange={(e: { inputValue: string }) =>
-                filterRecipes(e.inputValue)
+                filterCommands(e.inputValue)
               }
               onValueChange={(details: { value: string[] }) =>
-                setSelectedRecipeIds(details.value as RecipeId[])
+                setSelectedCommandIds(details.value as CommandId[])
               }
-              value={selectedRecipeIds}
+              value={selectedCommandIds}
               multiple
               openOnClick
-              placeholder={recipeDisplayValue}
+              placeholder={commandDisplayValue}
               width="full"
               disabled={isPending}
             >
@@ -267,7 +267,7 @@ export const PackageEditFormContent = ({
                 <PMCombobox.Positioner>
                   <PMCombobox.Content>
                     <PMCombobox.Empty>No commands found</PMCombobox.Empty>
-                    {recipeCollection.items.map((item) => (
+                    {commandCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
                         <PMCombobox.ItemIndicator />
@@ -278,15 +278,15 @@ export const PackageEditFormContent = ({
               </PMPortal>
             </PMCombobox.Root>
 
-            {selectedRecipeIds.length > 0 && (
+            {selectedCommandIds.length > 0 && (
               <PMHStack gap={2} flexWrap="wrap" width="full">
-                {selectedRecipeIds
+                {selectedCommandIds
                   .map((recipeId) => {
-                    const recipe = allRecipes.find((r) => r.id === recipeId);
+                    const recipe = allCommands.find((r) => r.id === recipeId);
                     return recipe ? { id: recipeId, name: recipe.name } : null;
                   })
                   .filter(
-                    (item): item is { id: RecipeId; name: string } =>
+                    (item): item is { id: CommandId; name: string } =>
                       item !== null,
                   )
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -320,8 +320,8 @@ export const PackageEditFormContent = ({
                         ml={1}
                         flexShrink={0}
                         onClick={() =>
-                          setSelectedRecipeIds(
-                            selectedRecipeIds.filter(
+                          setSelectedCommandIds(
+                            selectedCommandIds.filter(
                               (recipeId) => recipeId !== id,
                             ),
                           )

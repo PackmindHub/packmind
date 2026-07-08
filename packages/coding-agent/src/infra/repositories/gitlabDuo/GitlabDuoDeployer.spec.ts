@@ -7,8 +7,8 @@ import {
   createGitProviderId,
   StandardVersion,
   createStandardVersionId,
-  RecipeVersion,
-  createRecipeVersionId,
+  CommandVersion,
+  createCommandVersionId,
   Target,
   createTargetId,
   SkillFile,
@@ -17,7 +17,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { recipeFactory } from '@packmind/commands/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
@@ -49,16 +49,16 @@ describe('GitlabDuoDeployer', () => {
 
   describe('deployRecipes', () => {
     describe('with single recipe', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: Awaited<ReturnType<typeof deployer.deployCommands>>;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -68,7 +68,7 @@ describe('GitlabDuoDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.deployRecipes(
+        result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -95,10 +95,10 @@ describe('GitlabDuoDeployer', () => {
     });
 
     describe('when recipe list is empty', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: Awaited<ReturnType<typeof deployer.deployCommands>>;
 
       beforeEach(async () => {
-        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+        result = await deployer.deployCommands([], mockGitRepo, mockTarget);
       });
 
       it('creates one file to update', () => {

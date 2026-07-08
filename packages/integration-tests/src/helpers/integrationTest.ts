@@ -3,7 +3,7 @@ import stage from 'jest-stage';
 import { createIntegrationTestFixture } from './createIntegrationTestFixture';
 import { accountsSchemas } from '@packmind/accounts';
 import { spacesSchemas } from '@packmind/spaces';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { standardsSchemas } from '@packmind/standards';
 import { skillsSchemas } from '@packmind/skills';
 import { gitSchemas } from '@packmind/git';
@@ -33,7 +33,7 @@ export const integrationTest: IntegrationTest = (tests) => {
     const fixture = createIntegrationTestFixture([
       ...accountsSchemas,
       ...spacesSchemas,
-      ...recipesSchemas,
+      ...commandsSchemas,
       ...standardsSchemas,
       ...skillsSchemas,
       ...gitSchemas,

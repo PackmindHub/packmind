@@ -1,8 +1,8 @@
 import { createUserId } from '@packmind/types';
 import {
-  createRecipeId,
-  createRecipeVersionId,
-  RecipeVersion,
+  createCommandId,
+  createCommandVersionId,
+  CommandVersion,
   createStandardId,
   createStandardVersionId,
   StandardVersion,
@@ -70,10 +70,10 @@ describe('SingleFileDeployer', () => {
   });
 
   describe('deployRecipes', () => {
-    const mockRecipeVersions: RecipeVersion[] = [
+    const mockCommandVersions: CommandVersion[] = [
       {
-        id: createRecipeVersionId('recipe-version-1'),
-        recipeId: createRecipeId('recipe-1'),
+        id: createCommandVersionId('recipe-version-1'),
+        recipeId: createCommandId('recipe-1'),
         name: 'Test Recipe',
         slug: 'test-recipe',
         content: '# Test Recipe Content',
@@ -87,8 +87,8 @@ describe('SingleFileDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        result = await deployer.deployRecipes(
-          mockRecipeVersions,
+        result = await deployer.deployCommands(
+          mockCommandVersions,
           mockGitRepo,
           jetbrainsTarget,
         );
@@ -567,11 +567,11 @@ describe('SingleFileDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        const mockRecipeVersions: RecipeVersion[] = [];
+        const mockCommandVersions: CommandVersion[] = [];
         mockGitPort.getFileFromRepo.mockRejectedValue(new Error('Git error'));
 
-        result = await deployer.deployRecipes(
-          mockRecipeVersions,
+        result = await deployer.deployCommands(
+          mockCommandVersions,
           mockGitRepo,
           jetbrainsTarget,
         );
@@ -601,10 +601,10 @@ describe('SingleFileDeployer', () => {
 
       beforeEach(async () => {
         const deployerWithoutGit = new TestSingleFileDeployer(); // No gitPort
-        const mockRecipeVersions: RecipeVersion[] = [];
+        const mockCommandVersions: CommandVersion[] = [];
 
-        result = await deployerWithoutGit.deployRecipes(
-          mockRecipeVersions,
+        result = await deployerWithoutGit.deployCommands(
+          mockCommandVersions,
           mockGitRepo,
           jetbrainsTarget,
         );
@@ -631,10 +631,10 @@ describe('SingleFileDeployer', () => {
   });
 
   describe('deployArtifacts', () => {
-    const mockRecipeVersions: RecipeVersion[] = [
+    const mockCommandVersions: CommandVersion[] = [
       {
-        id: createRecipeVersionId('recipe-version-1'),
-        recipeId: createRecipeId('recipe-1'),
+        id: createCommandVersionId('recipe-version-1'),
+        recipeId: createCommandId('recipe-1'),
         name: 'Test Recipe',
         slug: 'test-recipe',
         content: '# Test Recipe Content',
@@ -663,7 +663,7 @@ describe('SingleFileDeployer', () => {
 
       beforeEach(async () => {
         result = await deployer.deployArtifacts(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
         );
       });
@@ -681,17 +681,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets recipes section content to empty string', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('includes Packmind standards section', () => {
@@ -735,17 +735,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets recipes section content to empty string', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('includes Packmind standards section', () => {
@@ -769,7 +769,7 @@ describe('SingleFileDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        result = await deployer.deployArtifacts(mockRecipeVersions, []);
+        result = await deployer.deployArtifacts(mockCommandVersions, []);
       });
 
       it('returns one createOrUpdate entry', () => {
@@ -930,17 +930,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets recipes section content to empty string', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('does not output null at end of line in standards section', () => {
@@ -961,10 +961,10 @@ describe('SingleFileDeployer', () => {
 
   describe('generateRemovalFileUpdates', () => {
     describe('when all recipes are removed and none remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe',
           slug: 'removed-recipe',
           content: '# Removed Recipe',
@@ -979,7 +979,7 @@ describe('SingleFileDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -1055,17 +1055,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets Packmind recipes section content to empty', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('includes Packmind standards section', () => {
@@ -1157,10 +1157,10 @@ describe('SingleFileDeployer', () => {
     });
 
     describe('when all recipes and standards are removed and none remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe',
           slug: 'removed-recipe',
           content: '# Removed Recipe',
@@ -1188,7 +1188,7 @@ describe('SingleFileDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: removedStandards,
             skillVersions: [],
           },
@@ -1209,17 +1209,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets Packmind recipes section content to empty', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('includes Packmind standards section', () => {
@@ -1242,10 +1242,10 @@ describe('SingleFileDeployer', () => {
     });
 
     describe('when all recipes are removed but standards remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe',
           slug: 'removed-recipe',
           content: '# Removed Recipe',
@@ -1274,7 +1274,7 @@ describe('SingleFileDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -1324,10 +1324,10 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      const installedRecipes: RecipeVersion[] = [
+      const installedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Installed Recipe',
           slug: 'installed-recipe',
           content: '# Installed Recipe',
@@ -1347,7 +1347,7 @@ describe('SingleFileDeployer', () => {
             skillVersions: [],
           },
           {
-            recipeVersions: installedRecipes,
+            recipeVersions: installedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -1363,17 +1363,17 @@ describe('SingleFileDeployer', () => {
       });
 
       it('includes Packmind recipes section', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection).toBeDefined();
+        expect(commandsSection).toBeDefined();
       });
 
       it('sets Packmind recipes section content to empty', () => {
-        const recipesSection = result.createOrUpdate[0].sections!.find(
+        const commandsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
-        expect(recipesSection!.content).toBe('');
+        expect(commandsSection!.content).toBe('');
       });
 
       it('includes Packmind standards section', () => {

@@ -3,7 +3,7 @@ import {
   DashboardKpiResponse,
   GetDashboardKpiCommand,
   IGetDashboardKpi,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -15,7 +15,7 @@ export class GetDashboardKpiUseCase implements IGetDashboardKpi {
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly standardsPort: IStandardsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -27,7 +27,7 @@ export class GetDashboardKpiUseCase implements IGetDashboardKpi {
 
     const [standards, recipes, skills, activeCounts] = await Promise.all([
       this.standardsPort.listStandardsBySpace(spaceId, organizationId, userId),
-      this.recipesPort.listRecipesBySpace({
+      this.commandsPort.listCommandsBySpace({
         spaceId,
         organizationId,
         userId,

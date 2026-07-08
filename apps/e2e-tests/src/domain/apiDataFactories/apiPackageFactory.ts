@@ -1,13 +1,13 @@
 import { IPackmindApi } from '../api/IPackmindApi';
 import { packageFactory } from '@packmind/deployments/test';
-import { RecipeId, Package, StandardId } from '@packmind/types';
+import { CommandId, Package, StandardId } from '@packmind/types';
 
 export async function apiPackageFactory(
   packmindApi: IPackmindApi,
   data?: Partial<{
     name: string;
     standardIds: StandardId[];
-    recipesIds: RecipeId[];
+    recipesIds: CommandId[];
   }>,
 ): Promise<Package> {
   const { spaces } = await packmindApi.listSpaces({});

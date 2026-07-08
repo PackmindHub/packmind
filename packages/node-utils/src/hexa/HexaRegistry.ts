@@ -193,28 +193,31 @@ export class HexaRegistry {
       // This needs to happen after all hexas are initialized to avoid circular dependencies
       try {
         // Find RecipesHexa and DeploymentsHexa by iterating through registered hexas
-        let recipesHexa: BaseHexa | undefined;
+        let commandsHexa: BaseHexa | undefined;
         let deploymentsHexa: BaseHexa | undefined;
 
         for (const [constructor, hexa] of this.hexas.entries()) {
           if (constructor.name === 'RecipesHexa') {
-            recipesHexa = hexa;
+            commandsHexa = hexa;
           } else if (constructor.name === 'DeploymentsHexa') {
             deploymentsHexa = hexa;
           }
         }
 
-        if (recipesHexa && deploymentsHexa) {
+        if (commandsHexa && deploymentsHexa) {
           // Check if RecipesHexa has setDeploymentPort method (it's a special case for delayed jobs)
-          const recipesHexaWithMethod = recipesHexa as unknown as {
+          const commandsHexaWithMethod = commandsHexa as unknown as {
             setDeploymentPort?: (
               registry: HexaRegistry,
               port: unknown,
             ) => Promise<void>;
           };
-          if (typeof recipesHexaWithMethod.setDeploymentPort === 'function') {
+          if (typeof commandsHexaWithMethod.setDeploymentPort === 'function') {
             const deploymentPort = deploymentsHexa.getAdapter();
-            await recipesHexaWithMethod.setDeploymentPort(this, deploymentPort);
+            await commandsHexaWithMethod.setDeploymentPort(
+              this,
+              deploymentPort,
+            );
           }
         }
       } catch {

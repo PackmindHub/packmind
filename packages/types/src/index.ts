@@ -3,7 +3,7 @@ export * from './UseCase';
 export * from './accounts';
 export * from './amplitude';
 export * from './coding-agent';
-export * from './recipes';
+export * from './commands';
 export * from './skills';
 export * from './deployments';
 export * from './git';

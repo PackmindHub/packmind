@@ -6,8 +6,8 @@ import {
   GitProviderId,
   OrganizationId,
   PackageId,
-  RecipeId,
-  RecipeVersion,
+  CommandId,
+  CommandVersion,
   SkillId,
   SkillVersion,
   SpaceId,
@@ -29,8 +29,8 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
   ): Promise<Distribution[]>;
 
-  listByRecipeId(
-    recipeId: RecipeId,
+  listByCommandId(
+    recipeId: CommandId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]>;
 
@@ -70,10 +70,10 @@ export interface IDistributionRepository {
    * This returns the latest distributed version of each unique recipe.
    * Used to generate complete recipe books that include all distributed recipes.
    */
-  findActiveRecipeVersionsByTarget(
+  findActiveCommandVersionsByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
-  ): Promise<RecipeVersion[]>;
+  ): Promise<CommandVersion[]>;
 
   /**
    * Get currently distributed standard versions for a specific target,
@@ -95,11 +95,11 @@ export interface IDistributionRepository {
    * that belongs to one of the specified packages.
    * Used to compute removed artifacts only from packages being deployed.
    */
-  findActiveRecipeVersionsByTargetAndPackages(
+  findActiveCommandVersionsByTargetAndPackages(
     organizationId: OrganizationId,
     targetId: TargetId,
     packageIds: PackageId[],
-  ): Promise<RecipeVersion[]>;
+  ): Promise<CommandVersion[]>;
 
   /**
    * Get all currently distributed skill versions for a specific target.
@@ -174,7 +174,7 @@ export interface IDistributionRepository {
     spaceId: SpaceId,
   ): Promise<{
     standardIds: StandardId[];
-    recipeIds: RecipeId[];
+    recipeIds: CommandId[];
     skillIds: SkillId[];
   }>;
 
@@ -231,8 +231,8 @@ export type OutdatedStandardDeployment = OutdatedDeploymentBase & {
   artifactId: StandardId;
 };
 
-export type OutdatedRecipeDeployment = OutdatedDeploymentBase & {
-  artifactId: RecipeId;
+export type OutdatedCommandDeployment = OutdatedDeploymentBase & {
+  artifactId: CommandId;
 };
 
 export type OutdatedSkillDeployment = OutdatedDeploymentBase & {
@@ -244,6 +244,6 @@ export type OutdatedDeploymentsByTarget = {
   targetName: string;
   gitRepoId: string;
   standards: OutdatedStandardDeployment[];
-  recipes: OutdatedRecipeDeployment[];
+  recipes: OutdatedCommandDeployment[];
   skills: OutdatedSkillDeployment[];
 };

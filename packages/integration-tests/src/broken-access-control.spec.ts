@@ -1,7 +1,7 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import { TargetNotFoundError } from '@packmind/deployments';
-import { Package, Recipe, Standard } from '@packmind/types';
+import { Package, Command, Standard } from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -50,7 +50,7 @@ describe('Broken access control - target ownership validation', () => {
     let orgAPackage: Package;
 
     beforeEach(async () => {
-      const recipe = await orgA.withRecipe({ name: 'Recipe A' });
+      const recipe = await orgA.withCommand({ name: 'Recipe A' });
       const standard = await orgA.withStandard({ name: 'Standard A' });
 
       const response = await testApp.deploymentsHexa
@@ -93,12 +93,12 @@ describe('Broken access control - target ownership validation', () => {
   });
 
   describe('publishArtifacts', () => {
-    let orgARecipe: Recipe;
+    let orgACommand: Command;
     let orgAStandard: Standard;
     let orgAPackage: Package;
 
     beforeEach(async () => {
-      orgARecipe = await orgA.withRecipe({ name: 'Recipe A' });
+      orgACommand = await orgA.withCommand({ name: 'Recipe A' });
       orgAStandard = await orgA.withStandard({ name: 'Standard A' });
 
       const response = await testApp.deploymentsHexa
@@ -109,7 +109,7 @@ describe('Broken access control - target ownership validation', () => {
           spaceId: orgA.space.id,
           name: 'Org A Package',
           description: 'Package belonging to org A',
-          recipeIds: [orgARecipe.id],
+          recipeIds: [orgACommand.id],
           standardIds: [orgAStandard.id],
         });
       orgAPackage = response.package;
@@ -118,7 +118,8 @@ describe('Broken access control - target ownership validation', () => {
     describe("when targeting another organization's target", () => {
       it('throws TargetNotFoundError', async () => {
         const dataQuery = new DataQuery(testApp);
-        const recipeVersionId = await dataQuery.getRecipeVersionId(orgARecipe);
+        const recipeVersionId =
+          await dataQuery.getCommandVersionId(orgACommand);
         const standardVersionId =
           await dataQuery.getStandardVersionId(orgAStandard);
 
@@ -138,7 +139,8 @@ describe('Broken access control - target ownership validation', () => {
     describe("when targeting own organization's target", () => {
       it('does not throw TargetNotFoundError', async () => {
         const dataQuery = new DataQuery(testApp);
-        const recipeVersionId = await dataQuery.getRecipeVersionId(orgARecipe);
+        const recipeVersionId =
+          await dataQuery.getCommandVersionId(orgACommand);
         const standardVersionId =
           await dataQuery.getStandardVersionId(orgAStandard);
 
@@ -160,7 +162,7 @@ describe('Broken access control - target ownership validation', () => {
     let orgAPackage: Package;
 
     beforeEach(async () => {
-      const recipe = await orgA.withRecipe({ name: 'Recipe A' });
+      const recipe = await orgA.withCommand({ name: 'Recipe A' });
       const standard = await orgA.withStandard({ name: 'Standard A' });
 
       const response = await testApp.deploymentsHexa

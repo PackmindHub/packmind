@@ -4,7 +4,7 @@ import {
   FileModification,
   GitCommit,
   Package,
-  Recipe,
+  Command,
   RenderMode,
   Standard,
 } from '@packmind/types';
@@ -35,7 +35,7 @@ describe('CLAUDE.md cleanup on package removal', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
 
   let commit: GitCommit;
@@ -53,7 +53,7 @@ describe('CLAUDE.md cleanup on package removal', () => {
     await dataFactory.withGitRepo();
     await dataFactory.withRenderMode([RenderMode.CLAUDE]);
 
-    recipe = await dataFactory.withRecipe({ name: 'Test Recipe' });
+    recipe = await dataFactory.withCommand({ name: 'Test Recipe' });
     standard = await dataFactory.withStandard({ name: 'Test Standard' });
 
     commit = await createGitCommit();

@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { recipeFactory } from '@packmind/commands/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -8,10 +8,10 @@ import {
   GitProviderId,
   GitRepo,
   GitRepoId,
-  Recipe,
-  RecipeId,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandId,
+  CommandVersion,
+  CommandVersionId,
   SkillVersion,
   Standard,
   StandardId,
@@ -28,9 +28,9 @@ import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAge
 import { DeployerService } from './DeployerService';
 
 // Create test helper functions
-const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
-const createTestRecipeVersionId = (id: string): RecipeVersionId =>
-  id as RecipeVersionId;
+const createTestCommandId = (id: string): CommandId => id as CommandId;
+const createTestCommandVersionId = (id: string): CommandVersionId =>
+  id as CommandVersionId;
 const createTestStandardId = (id: string): StandardId => id as StandardId;
 const createTestStandardVersionId = (id: string): StandardVersionId =>
   id as StandardVersionId;
@@ -43,7 +43,7 @@ const createTestTargetId = (id: string): TargetId => id as TargetId;
 // Mock deployer
 class MockDeployer implements ICodingAgentDeployer {
   constructor(
-    private recipeResult: FileUpdates = { createOrUpdate: [], delete: [] },
+    private commandResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private standardResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private skillResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private artifactsResult: FileUpdates = { createOrUpdate: [], delete: [] },
@@ -51,15 +51,15 @@ class MockDeployer implements ICodingAgentDeployer {
     private cleanupResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
 
-  async deployRecipes(
+  async deployCommands(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     gitRepo: GitRepo,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     target: Target,
   ): Promise<FileUpdates> {
-    return this.recipeResult;
+    return this.commandResult;
   }
 
   async deployStandards(
@@ -73,11 +73,11 @@ class MockDeployer implements ICodingAgentDeployer {
     return this.standardResult;
   }
 
-  async generateFileUpdatesForRecipes(
+  async generateFileUpdatesForCommands(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
-    return this.recipeResult;
+    return this.commandResult;
   }
 
   async generateFileUpdatesForStandards(
@@ -108,13 +108,13 @@ class MockDeployer implements ICodingAgentDeployer {
   async generateRemovalFileUpdates(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -125,7 +125,7 @@ class MockDeployer implements ICodingAgentDeployer {
   async generateAgentCleanupFileUpdates(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     artifacts: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -138,7 +138,7 @@ class MockDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
@@ -179,7 +179,7 @@ describe('DeployerService', () => {
   let repositories: MockRepositories;
   let mockGitRepo: GitRepo;
   let mockTarget: Target;
-  let mockRecipeVersions: RecipeVersion[];
+  let mockCommandVersions: CommandVersion[];
   let mockStandardVersions: StandardVersion[];
   let mockLogger: PackmindLogger;
 
@@ -204,8 +204,8 @@ describe('DeployerService', () => {
       branch: 'main',
     };
 
-    const mockRecipe: Recipe = recipeFactory({
-      id: createTestRecipeId('recipe-1'),
+    const mockCommand: Command = commandFactory({
+      id: createTestCommandId('recipe-1'),
       name: 'Test Recipe',
       slug: 'test-recipe',
       content: 'Original recipe content',
@@ -214,12 +214,12 @@ describe('DeployerService', () => {
       spaceId: createSpaceId('space-1'),
     });
 
-    mockRecipeVersions = [
+    mockCommandVersions = [
       {
-        id: createTestRecipeVersionId('recipe-version-1'),
-        recipeId: mockRecipe.id,
-        name: mockRecipe.name,
-        slug: mockRecipe.slug,
+        id: createTestCommandVersionId('recipe-version-1'),
+        recipeId: mockCommand.id,
+        name: mockCommand.name,
+        slug: mockCommand.slug,
         content: 'Recipe content',
         version: 1,
         summary: 'Test recipe summary',
@@ -265,8 +265,8 @@ describe('DeployerService', () => {
 
         registry.registerDeployer('packmind', mockDeployer);
 
-        result = await service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        result = await service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           ['packmind'],
@@ -301,8 +301,8 @@ describe('DeployerService', () => {
         registry.registerDeployer('packmind', deployer1);
         registry.registerDeployer('junie', deployer2);
 
-        result = await service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        result = await service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           ['packmind', 'junie'],
@@ -332,8 +332,8 @@ describe('DeployerService', () => {
 
         registry.registerDeployer('packmind', deployer1);
 
-        result = await service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        result = await service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           ['packmind'],
@@ -362,8 +362,8 @@ describe('DeployerService', () => {
 
         registry.registerDeployer('packmind', deployer);
 
-        result = await service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        result = await service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           ['packmind'],
@@ -386,8 +386,8 @@ describe('DeployerService', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        result = await service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        result = await service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           [],
@@ -405,13 +405,13 @@ describe('DeployerService', () => {
 
     it('propagates deployer errors', async () => {
       const errorDeployer = {
-        async deployRecipes(): Promise<FileUpdates> {
+        async deployCommands(): Promise<FileUpdates> {
           throw new Error('Deployment failed');
         },
         async deployStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
-        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async generateFileUpdatesForStandards(): Promise<FileUpdates> {
@@ -425,8 +425,8 @@ describe('DeployerService', () => {
       registry.registerDeployer('packmind', errorDeployer);
 
       await expect(
-        service.aggregateRecipeDeployments(
-          mockRecipeVersions,
+        service.aggregateCommandDeployments(
+          mockCommandVersions,
           mockGitRepo,
           [mockTarget],
           ['packmind'],
@@ -578,7 +578,7 @@ describe('DeployerService', () => {
         existingFiles.set('.cursorrules', '');
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['claude', 'cursor'],
@@ -612,13 +612,13 @@ describe('DeployerService', () => {
       });
 
       const claudeDeployer = {
-        async deployRecipes(): Promise<FileUpdates> {
+        async deployCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async deployStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
-        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async generateFileUpdatesForStandards(): Promise<FileUpdates> {
@@ -633,7 +633,7 @@ describe('DeployerService', () => {
       existingFiles.set('CLAUDE.md', 'existing claude content');
 
       await service.aggregateArtifactRendering(
-        mockRecipeVersions,
+        mockCommandVersions,
         mockStandardVersions,
         [],
         ['claude'],
@@ -641,7 +641,7 @@ describe('DeployerService', () => {
       );
 
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
-        mockRecipeVersions,
+        mockCommandVersions,
         mockStandardVersions,
         [],
       );
@@ -683,7 +683,7 @@ describe('DeployerService', () => {
         const existingFiles = new Map<string, string>();
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['agents_md', 'claude'],
@@ -710,7 +710,7 @@ describe('DeployerService', () => {
         const existingFiles = new Map<string, string>();
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           [],
@@ -743,7 +743,7 @@ describe('DeployerService', () => {
         const existingFiles = new Map<string, string>();
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['claude'],
@@ -790,7 +790,7 @@ describe('DeployerService', () => {
         const existingFiles = new Map<string, string>();
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['claude', 'cursor'],
@@ -817,13 +817,13 @@ describe('DeployerService', () => {
       });
 
       const claudeDeployer = {
-        async deployRecipes(): Promise<FileUpdates> {
+        async deployCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async deployStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
-        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async generateFileUpdatesForStandards(): Promise<FileUpdates> {
@@ -837,7 +837,7 @@ describe('DeployerService', () => {
       const existingFiles = new Map<string, string>();
 
       await service.aggregateArtifactRendering(
-        mockRecipeVersions,
+        mockCommandVersions,
         mockStandardVersions,
         [],
         ['claude'],
@@ -845,7 +845,7 @@ describe('DeployerService', () => {
       );
 
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
-        mockRecipeVersions,
+        mockCommandVersions,
         mockStandardVersions,
         [],
       );
@@ -853,13 +853,13 @@ describe('DeployerService', () => {
 
     it('propagates deployer errors', async () => {
       const errorDeployer = {
-        async deployRecipes(): Promise<FileUpdates> {
+        async deployCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async deployStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
-        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+        async generateFileUpdatesForCommands(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
         async generateFileUpdatesForStandards(): Promise<FileUpdates> {
@@ -876,7 +876,7 @@ describe('DeployerService', () => {
 
       await expect(
         service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['claude'],
@@ -917,7 +917,7 @@ describe('DeployerService', () => {
         registry.registerDeployer('agents_md', agentsMdDeployer);
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['opencode', 'agents_md'],
@@ -982,7 +982,7 @@ describe('DeployerService', () => {
         registry.registerDeployer('agents_md', agentsMdDeployer);
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['codex', 'agents_md'],
@@ -1041,7 +1041,7 @@ describe('DeployerService', () => {
         registry.registerDeployer('opencode', opencodeDeployer);
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['codex', 'opencode'],
@@ -1105,7 +1105,7 @@ describe('DeployerService', () => {
         registry.registerDeployer('agents_md', agentsMdDeployer);
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['codex', 'opencode', 'agents_md'],
@@ -1145,7 +1145,7 @@ describe('DeployerService', () => {
         registry.registerDeployer('codex', codexDeployer);
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['codex'],
@@ -1203,7 +1203,7 @@ describe('DeployerService', () => {
         const existingFiles = new Map<string, string>();
 
         result = await service.aggregateArtifactRendering(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           agents,

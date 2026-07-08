@@ -3,7 +3,7 @@ import type {
   GitProviderId,
   GitRepoId,
   PackageId,
-  RecipeId,
+  CommandId,
   SkillId,
   StandardId,
   TargetId,
@@ -11,7 +11,7 @@ import type {
 
 export type ArtifactKind = 'standard' | 'command' | 'skill';
 
-export type ArtifactId = StandardId | RecipeId | SkillId;
+export type ArtifactId = StandardId | CommandId | SkillId;
 
 export type RepoRef = {
   id: GitRepoId;

@@ -1,13 +1,13 @@
 import { CookbookService } from './CookbookService';
 import { PackmindLogger } from '@packmind/logger';
 import {
-  createRecipeId,
-  createRecipeVersionId,
-  RecipeVersion,
+  createCommandId,
+  createCommandVersionId,
+  CommandVersion,
   WithTimestamps,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
+import { commandVersionFactory } from '../../../../test/commandVersionFactory';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('CookbookService', () => {
@@ -24,13 +24,13 @@ describe('CookbookService', () => {
   });
 
   describe('buildCookbook', () => {
-    const createRecipeVersionWithTimestamp = (
-      recipeData: Partial<RecipeVersion>,
+    const createCommandVersionWithTimestamp = (
+      commandData: Partial<CommandVersion>,
       createdAt: string,
-    ): WithTimestamps<RecipeVersion> => {
-      const baseRecipe = recipeVersionFactory(recipeData);
+    ): WithTimestamps<CommandVersion> => {
+      const baseCommand = commandVersionFactory(commandData);
       return {
-        ...baseRecipe,
+        ...baseCommand,
         createdAt: new Date(createdAt),
         updatedAt: new Date(createdAt),
       };
@@ -56,12 +56,12 @@ No recipes available.
     });
 
     describe('when given recipes with summaries', () => {
-      let recipes: WithTimestamps<RecipeVersion>[];
+      let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
       beforeEach(() => {
         recipes = [
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'TDD Guide',
               slug: 'tdd-guide',
@@ -69,7 +69,7 @@ No recipes available.
             },
             '2024-01-15T10:00:00Z',
           ),
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'React Components',
               slug: 'react-components',
@@ -114,12 +114,12 @@ This cookbook contains all available coding recipes that can be used by AI agent
     });
 
     describe('when recipes have null or empty summaries', () => {
-      let recipes: WithTimestamps<RecipeVersion>[];
+      let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
       beforeEach(() => {
         recipes = [
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Git Workflow',
               slug: 'git-workflow',
@@ -127,7 +127,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
             },
             '2024-01-15T10:00:00Z',
           ),
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Debugging Tips',
               slug: 'debugging-tips',
@@ -135,7 +135,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
             },
             '2024-01-14T09:00:00Z',
           ),
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Testing Guide',
               slug: 'testing-guide',
@@ -159,12 +159,12 @@ This cookbook contains all available coding recipes that can be used by AI agent
     });
 
     describe('when recipes have mixed summary states', () => {
-      let recipes: WithTimestamps<RecipeVersion>[];
+      let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
       beforeEach(() => {
         recipes = [
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Complete Recipe',
               slug: 'complete-recipe',
@@ -172,7 +172,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
             },
             '2024-01-20T10:00:00Z',
           ),
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Incomplete Recipe',
               slug: 'incomplete-recipe',
@@ -180,7 +180,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
             },
             '2024-01-19T09:00:00Z',
           ),
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Trimmed Recipe',
               slug: 'trimmed-recipe',
@@ -204,7 +204,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
     });
 
     describe('when given a large number of recipes', () => {
-      let recipes: WithTimestamps<RecipeVersion>[];
+      let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
       beforeEach(() => {
@@ -212,10 +212,10 @@ This cookbook contains all available coding recipes that can be used by AI agent
 
         for (let i = 0; i < 5; i++) {
           recipes.push(
-            createRecipeVersionWithTimestamp(
+            createCommandVersionWithTimestamp(
               {
-                id: createRecipeVersionId(uuidv4()),
-                recipeId: createRecipeId(uuidv4()),
+                id: createCommandVersionId(uuidv4()),
+                recipeId: createCommandId(uuidv4()),
                 name: `Recipe ${i + 1}`,
                 slug: `recipe-${i + 1}`,
                 content: `Content for recipe ${i + 1}`,
@@ -291,17 +291,17 @@ This cookbook contains all available coding recipes that can be used by AI agent
       });
 
       it('sorts recipes alphabetically', () => {
-        const recipe1Index = result.indexOf('Recipe 1');
-        const recipe5Index = result.indexOf('Recipe 5');
+        const command1Index = result.indexOf('Recipe 1');
+        const command5Index = result.indexOf('Recipe 5');
 
-        expect(recipe1Index).toBeLessThan(recipe5Index);
+        expect(command1Index).toBeLessThan(command5Index);
       });
     });
 
     describe('edge cases', () => {
       it('handles recipes with special characters in names and slugs', () => {
         const recipes = [
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Recipe with "quotes" and &symbols',
               slug: 'recipe-with-quotes-and-symbols',
@@ -323,7 +323,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
           'This is a very long summary that goes on and on and contains lots of text to test how the cookbook handles lengthy descriptions without breaking the formatting or causing any issues with the generated markdown content.';
 
         const recipes = [
-          createRecipeVersionWithTimestamp(
+          createCommandVersionWithTimestamp(
             {
               name: 'Long Summary Recipe',
               slug: 'long-summary-recipe',
@@ -341,14 +341,14 @@ This cookbook contains all available coding recipes that can be used by AI agent
       });
 
       describe('when sorting recipes regardless of input order', () => {
-        let recipes: WithTimestamps<RecipeVersion>[];
+        let recipes: WithTimestamps<CommandVersion>[];
         let result1: string;
         let result2: string;
         let result3: string;
 
         beforeEach(() => {
           recipes = [
-            createRecipeVersionWithTimestamp(
+            createCommandVersionWithTimestamp(
               {
                 name: 'C Recipe',
                 slug: 'c-recipe',
@@ -356,7 +356,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
               },
               '2024-01-15T10:00:00.000Z',
             ),
-            createRecipeVersionWithTimestamp(
+            createCommandVersionWithTimestamp(
               {
                 name: 'A Recipe',
                 slug: 'a-recipe',
@@ -364,7 +364,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
               },
               '2024-01-10T10:00:00.000Z',
             ),
-            createRecipeVersionWithTimestamp(
+            createCommandVersionWithTimestamp(
               {
                 name: 'B Recipe',
                 slug: 'b-recipe',
@@ -390,17 +390,17 @@ This cookbook contains all available coding recipes that can be used by AI agent
         });
 
         it('places A Recipe before B Recipe alphabetically', () => {
-          const aRecipeIndex = result1.indexOf('A Recipe');
-          const bRecipeIndex = result1.indexOf('B Recipe');
+          const aCommandIndex = result1.indexOf('A Recipe');
+          const bCommandIndex = result1.indexOf('B Recipe');
 
-          expect(aRecipeIndex).toBeLessThan(bRecipeIndex);
+          expect(aCommandIndex).toBeLessThan(bCommandIndex);
         });
 
         it('places B Recipe before C Recipe alphabetically', () => {
-          const bRecipeIndex = result1.indexOf('B Recipe');
-          const cRecipeIndex = result1.indexOf('C Recipe');
+          const bCommandIndex = result1.indexOf('B Recipe');
+          const cCommandIndex = result1.indexOf('C Recipe');
 
-          expect(bRecipeIndex).toBeLessThan(cRecipeIndex);
+          expect(bCommandIndex).toBeLessThan(cCommandIndex);
         });
       });
     });

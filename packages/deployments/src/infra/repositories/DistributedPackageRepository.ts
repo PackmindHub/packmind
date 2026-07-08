@@ -5,7 +5,7 @@ import {
   DistributedPackageId,
   DistributionId,
   PackageId,
-  RecipeVersionId,
+  CommandVersionId,
   SkillVersionId,
   StandardVersionId,
 } from '@packmind/types';
@@ -159,9 +159,9 @@ export class DistributedPackageRepository
     }
   }
 
-  async addRecipeVersions(
+  async addCommandVersions(
     distributedPackageId: DistributedPackageId,
-    recipeVersionIds: RecipeVersionId[],
+    recipeVersionIds: CommandVersionId[],
   ): Promise<void> {
     if (recipeVersionIds.length === 0) {
       return;

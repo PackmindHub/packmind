@@ -4,7 +4,7 @@ import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { HexaRegistry, JobsService } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/commands';
+import { CommandsHexa } from '@packmind/commands';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { FastifyInstance } from 'fastify';
@@ -122,7 +122,7 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
           'HexaRegistry not initialized yet. Ensure database connection is ready.',
         );
       }
-      return fastify.hexaRegistry.get(RecipesHexa);
+      return fastify.hexaRegistry.get(CommandsHexa);
     });
     logger.debug('recipesHexa decorator added');
 
@@ -169,7 +169,7 @@ declare module 'fastify' {
     jobsService: () => JobsService;
     gitHexa: () => GitHexa;
     spacesHexa: () => SpacesHexa;
-    recipesHexa: () => RecipesHexa;
+    recipesHexa: () => CommandsHexa;
     standardsHexa: () => StandardsHexa;
     deploymentsHexa: () => DeploymentsHexa;
   }

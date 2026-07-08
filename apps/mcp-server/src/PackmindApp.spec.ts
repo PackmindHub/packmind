@@ -5,7 +5,7 @@ import { AmplitudeHexa, LinterHexa } from '@packmind/editions';
 import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
 import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/commands';
+import { CommandsHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -44,7 +44,7 @@ describe('PackmindApp MCP Server', () => {
         GitHexa,
         SpacesHexa,
         LinterHexa,
-        RecipesHexa,
+        CommandsHexa,
         StandardsHexa,
         SkillsHexa,
         CodingAgentHexa,
@@ -93,7 +93,7 @@ describe('PackmindApp MCP Server', () => {
       });
 
       it('registers RecipesHexa', () => {
-        expect(registry.get(RecipesHexa)).toBeDefined();
+        expect(registry.get(CommandsHexa)).toBeDefined();
       });
 
       it('registers StandardsHexa', () => {
@@ -135,9 +135,9 @@ describe('PackmindApp MCP Server', () => {
       });
 
       it('provides access to RecipesHexa adapter', () => {
-        const recipesHexa = registry.get(RecipesHexa);
+        const commandsHexa = registry.get(CommandsHexa);
 
-        expect(recipesHexa.getAdapter()).toBeDefined();
+        expect(commandsHexa.getAdapter()).toBeDefined();
       });
 
       it('provides access to StandardsHexa adapter', () => {

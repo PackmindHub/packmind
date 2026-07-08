@@ -1,7 +1,7 @@
 import { PMHStack, PMLink, PMText } from '@packmind/ui';
 import {
   OrganizationId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -10,7 +10,7 @@ import { usePackagesForArtifact } from '../../hooks/usePackagesForArtifact';
 import { PackagesDropdown } from './PackagesDropdown';
 
 interface PackageCountHeaderInfoProps {
-  artifactId: StandardId | RecipeId | SkillId | undefined;
+  artifactId: StandardId | CommandId | SkillId | undefined;
   artifactType: 'standard' | 'recipe' | 'skill';
   orgSlug: string | undefined;
   spaceSlug: string | undefined;

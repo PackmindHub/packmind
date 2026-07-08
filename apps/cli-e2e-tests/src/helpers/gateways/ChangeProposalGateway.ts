@@ -2,7 +2,7 @@ import {
   Gateway,
   IListChangeProposalsByArtefact,
   IListChangeProposalsBySpace,
-  RecipeId,
+  CommandId,
 } from '@packmind/types';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { IChangeProposalGateway } from '../IPackmindGateway';
@@ -17,8 +17,8 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
     );
   };
 
-  listChangeProposalsByRecipe: Gateway<
-    IListChangeProposalsByArtefact<RecipeId>
+  listChangeProposalsByCommand: Gateway<
+    IListChangeProposalsByArtefact<CommandId>
   > = async (command) => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request(

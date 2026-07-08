@@ -8,8 +8,8 @@ import {
   GitProviderId,
   OrganizationId,
   PackageId,
-  RecipeId,
-  RecipeVersion,
+  CommandId,
+  CommandVersion,
   RenderMode,
   SkillId,
   SkillVersion,
@@ -23,7 +23,7 @@ import {
   ActivePackageOperationRow,
   IDistributionRepository,
   OutdatedDeploymentsByTarget,
-  OutdatedRecipeDeployment,
+  OutdatedCommandDeployment,
   OutdatedSkillDeployment,
   OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
@@ -187,8 +187,8 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async listByRecipeId(
-    recipeId: RecipeId,
+  async listByCommandId(
+    recipeId: CommandId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]> {
     this.logger.info('Listing distributions by recipe ID and organization ID', {
@@ -564,10 +564,10 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findActiveRecipeVersionsByTarget(
+  async findActiveCommandVersionsByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
-  ): Promise<RecipeVersion[]> {
+  ): Promise<CommandVersion[]> {
     this.logger.info('Finding active recipe versions by target', {
       organizationId,
       targetId,
@@ -597,7 +597,7 @@ export class DistributionRepository implements IDistributionRepository {
         string,
         {
           operation: string;
-          recipeVersions: RecipeVersion[];
+          recipeVersions: CommandVersion[];
         }
       >();
 
@@ -614,7 +614,7 @@ export class DistributionRepository implements IDistributionRepository {
       }
 
       // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
-      const recipeVersionMap = new Map<string, RecipeVersion>();
+      const commandVersionMap = new Map<string, CommandVersion>();
 
       for (const [, data] of latestDistributionPerPackage) {
         // Skip packages whose latest distribution was a removal
@@ -624,23 +624,23 @@ export class DistributionRepository implements IDistributionRepository {
 
         for (const recipeVersion of data.recipeVersions) {
           // Only keep the first (most recent) version of each recipe
-          if (!recipeVersionMap.has(recipeVersion.recipeId)) {
-            recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
+          if (!commandVersionMap.has(recipeVersion.recipeId)) {
+            commandVersionMap.set(recipeVersion.recipeId, recipeVersion);
           }
         }
       }
 
-      const activeRecipeVersions = Array.from(recipeVersionMap.values());
+      const activeCommandVersions = Array.from(commandVersionMap.values());
 
       this.logger.info('Active recipe versions found by target', {
         organizationId,
         targetId,
         totalSuccessfulDistributions: distributions.length,
-        activeRecipeVersionsCount: activeRecipeVersions.length,
-        recipeIds: activeRecipeVersions.map((rv) => rv.recipeId),
+        activeRecipeVersionsCount: activeCommandVersions.length,
+        recipeIds: activeCommandVersions.map((rv) => rv.recipeId),
       });
 
-      return activeRecipeVersions;
+      return activeCommandVersions;
     } catch (error) {
       this.logger.error('Failed to find active recipe versions by target', {
         organizationId,
@@ -759,11 +759,11 @@ export class DistributionRepository implements IDistributionRepository {
     }
   }
 
-  async findActiveRecipeVersionsByTargetAndPackages(
+  async findActiveCommandVersionsByTargetAndPackages(
     organizationId: OrganizationId,
     targetId: TargetId,
     packageIds: PackageId[],
-  ): Promise<RecipeVersion[]> {
+  ): Promise<CommandVersion[]> {
     this.logger.info('Finding active recipe versions by target and packages', {
       organizationId,
       targetId,
@@ -800,7 +800,7 @@ export class DistributionRepository implements IDistributionRepository {
         string,
         {
           operation: string;
-          recipeVersions: RecipeVersion[];
+          recipeVersions: CommandVersion[];
         }
       >();
 
@@ -821,7 +821,7 @@ export class DistributionRepository implements IDistributionRepository {
       }
 
       // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
-      const recipeVersionMap = new Map<string, RecipeVersion>();
+      const commandVersionMap = new Map<string, CommandVersion>();
 
       for (const [, data] of latestDistributionPerPackage) {
         if (data.operation === 'remove') {
@@ -829,22 +829,22 @@ export class DistributionRepository implements IDistributionRepository {
         }
 
         for (const recipeVersion of data.recipeVersions) {
-          if (!recipeVersionMap.has(recipeVersion.recipeId)) {
-            recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
+          if (!commandVersionMap.has(recipeVersion.recipeId)) {
+            commandVersionMap.set(recipeVersion.recipeId, recipeVersion);
           }
         }
       }
 
-      const activeRecipeVersions = Array.from(recipeVersionMap.values());
+      const activeCommandVersions = Array.from(commandVersionMap.values());
 
       this.logger.info('Active recipe versions found by target and packages', {
         organizationId,
         targetId,
         packageIdsCount: packageIds.length,
-        activeRecipeVersionsCount: activeRecipeVersions.length,
+        activeRecipeVersionsCount: activeCommandVersions.length,
       });
 
-      return activeRecipeVersions;
+      return activeCommandVersions;
     } catch (error) {
       this.logger.error(
         'Failed to find active recipe versions by target and packages',
@@ -1289,7 +1289,7 @@ export class DistributionRepository implements IDistributionRepository {
     spaceId: SpaceId,
   ): Promise<{
     standardIds: StandardId[];
-    recipeIds: RecipeId[];
+    recipeIds: CommandId[];
     skillIds: SkillId[];
   }> {
     this.logger.info('Listing deployed artifact IDs by space', {
@@ -1329,7 +1329,7 @@ export class DistributionRepository implements IDistributionRepository {
           {
             operation: string;
             standardVersions: StandardVersion[];
-            recipeVersions: RecipeVersion[];
+            recipeVersions: CommandVersion[];
             skillVersions: SkillVersion[];
           }
         >
@@ -1358,7 +1358,7 @@ export class DistributionRepository implements IDistributionRepository {
 
       // Collect unique artifact IDs from active packages across all targets
       const standardIds = new Set<StandardId>();
-      const recipeIds = new Set<RecipeId>();
+      const recipeIds = new Set<CommandId>();
       const skillIds = new Set<SkillId>();
 
       for (const [, latestPerPackage] of targetPackageData) {
@@ -1527,9 +1527,9 @@ export class DistributionRepository implements IDistributionRepository {
         slug: string;
         version: number;
       };
-      type RecipeVersionRow = {
+      type CommandVersionRow = {
         distributedPackageId: string;
-        recipeId: RecipeId;
+        recipeId: CommandId;
         name: string;
         slug: string;
         version: number;
@@ -1545,7 +1545,7 @@ export class DistributionRepository implements IDistributionRepository {
       // Slim version metadata pulled from the pivot tables. Three focused
       // queries keep each join flat (no Cartesian product across the three
       // version types) and reuse the same Distribution-bound QueryBuilder.
-      const [standardRows, recipeRows, skillRows] = await Promise.all([
+      const [standardRows, commandRows, skillRows] = await Promise.all([
         this.repository
           .createQueryBuilder('distribution')
           .innerJoin('distribution.distributedPackages', 'distributedPackage')
@@ -1571,7 +1571,7 @@ export class DistributionRepository implements IDistributionRepository {
           .addSelect('recipeVersion.name', 'name')
           .addSelect('recipeVersion.slug', 'slug')
           .addSelect('recipeVersion.version', 'version')
-          .getRawMany<RecipeVersionRow>(),
+          .getRawMany<CommandVersionRow>(),
         this.repository
           .createQueryBuilder('distribution')
           .innerJoin('distribution.distributedPackages', 'distributedPackage')
@@ -1591,7 +1591,7 @@ export class DistributionRepository implements IDistributionRepository {
         targetName: string;
         gitRepoId: string;
         standards: Map<string, OutdatedStandardDeployment>;
-        recipes: Map<string, OutdatedRecipeDeployment>;
+        recipes: Map<string, OutdatedCommandDeployment>;
         skills: Map<string, OutdatedSkillDeployment>;
       };
 
@@ -1633,7 +1633,7 @@ export class DistributionRepository implements IDistributionRepository {
         });
       }
 
-      for (const rv of recipeRows) {
+      for (const rv of commandRows) {
         const dp = dpById.get(rv.distributedPackageId);
         if (!dp) continue;
         const bucket = bucketFor(dp);

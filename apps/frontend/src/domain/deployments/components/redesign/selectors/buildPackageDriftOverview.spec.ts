@@ -3,8 +3,8 @@ import {
   createGitProviderId,
   createGitRepoId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -12,13 +12,13 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
-  DeployedRecipeTargetInfo,
+  DeployedCommandTargetInfo,
   DeployedSkillTargetInfo,
   DeployedStandardTargetInfo,
   DistributionStatus,
   GitRepo,
   Package,
-  PendingRecipeInfo,
+  PendingCommandInfo,
   PendingSkillInfo,
   PendingStandardInfo,
   Target,
@@ -122,13 +122,13 @@ function makeStandardInfo(opts: {
   };
 }
 
-function makeRecipeInfo(opts: {
+function makeCommandInfo(opts: {
   id?: string;
   name?: string;
   latest: number;
   deployed: number;
-}): DeployedRecipeTargetInfo {
-  const recipeId = createRecipeId(opts.id ?? 'rcp-1');
+}): DeployedCommandTargetInfo {
+  const recipeId = createCommandId(opts.id ?? 'rcp-1');
   return {
     recipe: {
       id: recipeId,
@@ -142,7 +142,7 @@ function makeRecipeInfo(opts: {
       movedTo: null,
     },
     latestVersion: {
-      id: createRecipeVersionId('rv-latest'),
+      id: createCommandVersionId('rv-latest'),
       recipeId,
       name: opts.name ?? 'Release recipe',
       slug: 'release-recipe',
@@ -151,7 +151,7 @@ function makeRecipeInfo(opts: {
       userId: USER_ID,
     },
     deployedVersion: {
-      id: createRecipeVersionId('rv-deployed'),
+      id: createCommandVersionId('rv-deployed'),
       recipeId,
       name: opts.name ?? 'Release recipe',
       slug: 'release-recipe',
@@ -221,12 +221,12 @@ function makePendingStandard(opts: {
   };
 }
 
-function makePendingRecipe(opts: {
+function makePendingCommand(opts: {
   id?: string;
   name?: string;
-}): PendingRecipeInfo {
+}): PendingCommandInfo {
   return {
-    id: createRecipeId(opts.id ?? 'rcp-pending'),
+    id: createCommandId(opts.id ?? 'rcp-pending'),
     name: opts.name ?? 'Pending recipe',
     slug: 'pending-recipe',
   };
@@ -261,10 +261,10 @@ function distributedPackage(opts: {
   lastDistributionStatus?: DistributionStatus;
   lastDistributedAt?: string;
   standards?: DeployedStandardTargetInfo[];
-  recipes?: DeployedRecipeTargetInfo[];
+  recipes?: DeployedCommandTargetInfo[];
   skills?: DeployedSkillTargetInfo[];
   pendingStandards?: PendingStandardInfo[];
-  pendingRecipes?: PendingRecipeInfo[];
+  pendingRecipes?: PendingCommandInfo[];
   pendingSkills?: PendingSkillInfo[];
 }) {
   const packageId = createPackageId(opts.packageId ?? 'pkg-1');
@@ -465,7 +465,7 @@ describe('buildPackageDriftOverview', () => {
             distributedPackage({
               standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
               pendingRecipes: [
-                makePendingRecipe({ id: 'pend-rcp', name: 'New recipe' }),
+                makePendingCommand({ id: 'pend-rcp', name: 'New recipe' }),
               ],
             }),
           ],
@@ -517,7 +517,7 @@ describe('buildPackageDriftOverview', () => {
           packages: [
             distributedPackage({
               standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
-              recipes: [makeRecipeInfo({ latest: 2, deployed: 1 })],
+              recipes: [makeCommandInfo({ latest: 2, deployed: 1 })],
               skills: [makeSkillInfo({ latest: 1, deployed: 1 })],
             }),
           ],
@@ -647,7 +647,7 @@ describe('totalBehindInstallCount', () => {
           packages: [
             distributedPackage({
               standards: [makeStandardInfo({ latest: 3, deployed: 2 })],
-              recipes: [makeRecipeInfo({ latest: 2, deployed: 1 })],
+              recipes: [makeCommandInfo({ latest: 2, deployed: 1 })],
             }),
           ],
         }),

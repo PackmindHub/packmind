@@ -1,11 +1,11 @@
 import {
   ActiveDistributedPackagesByTarget,
-  DeployedRecipeTargetInfo,
+  DeployedCommandTargetInfo,
   DeployedSkillTargetInfo,
   DeployedStandardTargetInfo,
   GitRepo,
-  RecipeDeploymentStatus,
-  RecipeId,
+  CommandDeploymentStatus,
+  CommandId,
   SkillDeploymentStatus,
   SkillId,
   StandardDeploymentStatus,
@@ -17,13 +17,13 @@ import {
 } from '@packmind/types';
 
 export type ArtifactRollups = {
-  recipes: RecipeDeploymentStatus[];
+  recipes: CommandDeploymentStatus[];
   standards: StandardDeploymentStatus[];
   skills: SkillDeploymentStatus[];
 };
 
-type RecipeRollup = {
-  first: DeployedRecipeTargetInfo;
+type CommandRollup = {
+  first: DeployedCommandTargetInfo;
   isDeleted: boolean;
   targetDeployments: TargetDeploymentInfo[];
 };
@@ -43,7 +43,7 @@ type SkillRollup = {
 export function buildArtifactRollups(
   entries: ReadonlyArray<ActiveDistributedPackagesByTarget>,
 ): ArtifactRollups {
-  const recipes = new Map<RecipeId, RecipeRollup>();
+  const recipes = new Map<CommandId, CommandRollup>();
   const standards = new Map<StandardId, StandardRollup>();
   const skills = new Map<SkillId, SkillRollup>();
 
@@ -52,7 +52,7 @@ export function buildArtifactRollups(
     const { target, gitRepo } = entry;
     entry.packages.forEach((pkg) => {
       pkg.deployedRecipes.forEach((d) =>
-        accumulateRecipe(recipes, d, target, gitRepo),
+        accumulateCommand(recipes, d, target, gitRepo),
       );
       pkg.deployedStandards.forEach((d) =>
         accumulateStandard(standards, d, target, gitRepo),
@@ -64,15 +64,15 @@ export function buildArtifactRollups(
   }
 
   return {
-    recipes: Array.from(recipes.values()).map(toRecipeStatus),
+    recipes: Array.from(recipes.values()).map(toCommandStatus),
     standards: Array.from(standards.values()).map(toStandardStatus),
     skills: Array.from(skills.values()).map(toSkillStatus),
   };
 }
 
-function accumulateRecipe(
-  rollup: Map<RecipeId, RecipeRollup>,
-  deployment: DeployedRecipeTargetInfo,
+function accumulateCommand(
+  rollup: Map<CommandId, CommandRollup>,
+  deployment: DeployedCommandTargetInfo,
   target: Target,
   gitRepo: GitRepo,
 ): void {
@@ -148,7 +148,7 @@ function accumulateSkill(
   });
 }
 
-function toRecipeStatus(rollup: RecipeRollup): RecipeDeploymentStatus {
+function toCommandStatus(rollup: CommandRollup): CommandDeploymentStatus {
   return {
     recipe: rollup.first.recipe,
     latestVersion: rollup.first.latestVersion,

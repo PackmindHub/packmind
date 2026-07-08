@@ -2,12 +2,12 @@ import {
   DistributionStatus,
   type ActiveDistributedPackage,
   type ActiveDistributedPackagesByTarget,
-  type DeployedRecipeTargetInfo,
+  type DeployedCommandTargetInfo,
   type DeployedSkillTargetInfo,
   type DeployedStandardTargetInfo,
   type GitRepo,
   type PackageId,
-  type PendingRecipeInfo,
+  type PendingCommandInfo,
   type PendingSkillInfo,
   type PendingStandardInfo,
   type Target,
@@ -153,9 +153,9 @@ function pushStandard(
   });
 }
 
-function pushRecipe(
+function pushCommand(
   pkg: PackageAccumulator,
-  info: DeployedRecipeTargetInfo,
+  info: DeployedCommandTargetInfo,
   repo: RepoRef,
   target: TargetRef,
   branch: string,
@@ -237,9 +237,9 @@ function pushPendingStandard(
   });
 }
 
-function pushPendingRecipe(
+function pushPendingCommand(
   pkg: PackageAccumulator,
-  info: PendingRecipeInfo,
+  info: PendingCommandInfo,
   repo: RepoRef,
   target: TargetRef,
   branch: string,
@@ -345,13 +345,13 @@ export function buildPackageDriftOverview(
       for (const s of active.deployedStandards)
         pushStandard(pkg, s, repoRef, targetRef, branch);
       for (const r of active.deployedRecipes)
-        pushRecipe(pkg, r, repoRef, targetRef, branch);
+        pushCommand(pkg, r, repoRef, targetRef, branch);
       for (const k of active.deployedSkills)
         pushSkill(pkg, k, repoRef, targetRef, branch);
       for (const s of active.pendingStandards)
         pushPendingStandard(pkg, s, repoRef, targetRef, branch);
       for (const r of active.pendingRecipes)
-        pushPendingRecipe(pkg, r, repoRef, targetRef, branch);
+        pushPendingCommand(pkg, r, repoRef, targetRef, branch);
       for (const k of active.pendingSkills)
         pushPendingSkill(pkg, k, repoRef, targetRef, branch);
     }

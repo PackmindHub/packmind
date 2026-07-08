@@ -1,6 +1,6 @@
 import {
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   StandardVersion,
   SkillVersion,
   Target,
@@ -15,8 +15,8 @@ export type DeployDefaultSkillsOptions = {
 };
 
 export interface ICodingAgentDeployer {
-  deployRecipes(
-    recipeVersions: RecipeVersion[],
+  deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates>;
@@ -30,8 +30,8 @@ export interface ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates>;
-  generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates>;
   generateFileUpdatesForStandards(
     standardVersions: StandardVersion[],
@@ -41,23 +41,23 @@ export interface ICodingAgentDeployer {
   ): Promise<FileUpdates>;
   generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates>;
   generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates>;
   deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions?: SkillVersion[],
   ): Promise<FileUpdates>;

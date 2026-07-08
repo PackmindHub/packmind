@@ -1,6 +1,6 @@
-export { RecipesHexa } from './RecipesHexa';
+export { CommandsHexa } from './CommandsHexa';
 export * from './domain/useCases';
 export * from './domain/jobs';
 export * from './infra/schemas';
-export { UpdateRecipesAndGenerateSummariesCallback } from './application/jobs/UpdateRecipesAndGenerateSummariesDelayedJob';
-export { DeployRecipesCallback } from './application/jobs/DeployRecipesDelayedJob';
+export { UpdateCommandsAndGenerateSummariesCallback } from './application/jobs/UpdateCommandsAndGenerateSummariesDelayedJob';
+export { DeployCommandsCallback } from './application/jobs/DeployCommandsDelayedJob';

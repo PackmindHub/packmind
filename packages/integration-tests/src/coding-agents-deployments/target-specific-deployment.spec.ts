@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -14,9 +14,9 @@ import {
   FileUpdates,
   GitRepo,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -49,7 +49,7 @@ jest.mock('@packmind/git', () => {
 describe('Target-Specific Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...spacesSchemas,
     ...gitSchemas,
@@ -60,7 +60,7 @@ describe('Target-Specific Deployment Integration', () => {
   let testApp: TestApp;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let organization: Organization;
   let user: User;
@@ -109,7 +109,7 @@ describe('Target-Specific Deployment Integration', () => {
     };
 
     // Create test recipe about JetBrains services
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Writing Good JetBrains Services',
       content: `# Writing Good JetBrains Services
 
@@ -690,14 +690,14 @@ class MyService {
 
   describe('Example Mapping Scenario 1: Recipe distributed to jetbrains target', () => {
     describe('when deploying recipe to jetbrains/.packmind/recipes path', () => {
-      let recipeUpdates: FileUpdates;
-      let recipeFile: FileModification | undefined;
+      let commandUpdates: FileUpdates;
+      let commandFile: FileModification | undefined;
       let indexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -708,38 +708,38 @@ class MyService {
           },
         ];
 
-        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+        commandUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [jetbrainsTarget],
           ['packmind'],
         );
 
-        recipeFile = recipeUpdates.createOrUpdate.find((file) =>
+        commandFile = commandUpdates.createOrUpdate.find((file) =>
           file.path.includes('commands/writing-good-jetbrains-services.md'),
         );
 
-        indexFile = recipeUpdates.createOrUpdate.find(
+        indexFile = commandUpdates.createOrUpdate.find(
           (file) => file.path === 'jetbrains/.packmind/commands-index.md',
         );
       });
 
       it('creates two files', () => {
-        expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+        expect(commandUpdates.createOrUpdate).toHaveLength(2);
       });
 
       it('creates individual recipe file in jetbrains path', () => {
-        expect(recipeFile).toBeDefined();
+        expect(commandFile).toBeDefined();
       });
 
       it('places recipe file at correct path', () => {
-        expect(recipeFile?.path).toBe(
+        expect(commandFile?.path).toBe(
           'jetbrains/.packmind/commands/writing-good-jetbrains-services.md',
         );
       });
 
       it('includes recipe name in content', () => {
-        expect(recipeFile?.content).toContain(
+        expect(commandFile?.content).toContain(
           'Writing Good JetBrains Services',
         );
       });
@@ -760,13 +760,13 @@ class MyService {
     });
 
     describe('when deploying recipe to jetbrains path for Claude agent', () => {
-      let recipeUpdates: FileUpdates;
+      let commandUpdates: FileUpdates;
       let deployedFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -777,20 +777,20 @@ class MyService {
           },
         ];
 
-        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+        commandUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [jetbrainsTarget],
           ['claude'],
         );
 
-        deployedFile = recipeUpdates.createOrUpdate.find(
+        deployedFile = commandUpdates.createOrUpdate.find(
           (f) => f.path === `jetbrains/.claude/commands/${recipe.slug}.md`,
         );
       });
 
       it('creates two files', () => {
-        expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+        expect(commandUpdates.createOrUpdate).toHaveLength(2);
       });
 
       it('creates Claude command file', () => {
@@ -819,13 +819,13 @@ class MyService {
     });
 
     describe('when deploying recipe to jetbrains path for Cursor agent', () => {
-      let recipeUpdates: FileUpdates;
+      let commandUpdates: FileUpdates;
       let deployedFile: FileModification;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -836,18 +836,18 @@ class MyService {
           },
         ];
 
-        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+        commandUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [jetbrainsTarget],
           ['cursor'],
         );
 
-        deployedFile = recipeUpdates.createOrUpdate[0];
+        deployedFile = commandUpdates.createOrUpdate[0];
       });
 
       it('creates one file', () => {
-        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+        expect(commandUpdates.createOrUpdate).toHaveLength(1);
       });
 
       it('deploys to correct Cursor path', () => {
@@ -866,13 +866,13 @@ class MyService {
     describe('when recipe distributed to jetbrains target', () => {
       let jetbrainsUpdates: FileUpdates;
       let vscodeUpdates: FileUpdates;
-      let jetbrainsRecipeFile: FileModification | undefined;
+      let jetbrainsCommandFile: FileModification | undefined;
       let jetbrainsIndexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const jetbrainsRecipeVersions: RecipeVersion[] = [
+        const jetbrainsCommandVersions: CommandVersion[] = [
           {
-            id: 'jetbrains-recipe-version-1' as RecipeVersionId,
+            id: 'jetbrains-recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -883,21 +883,21 @@ class MyService {
           },
         ];
 
-        jetbrainsUpdates = await deployerService.aggregateRecipeDeployments(
-          jetbrainsRecipeVersions,
+        jetbrainsUpdates = await deployerService.aggregateCommandDeployments(
+          jetbrainsCommandVersions,
           gitRepo,
           [jetbrainsTarget],
           ['packmind'],
         );
 
-        vscodeUpdates = await deployerService.aggregateRecipeDeployments(
+        vscodeUpdates = await deployerService.aggregateCommandDeployments(
           [],
           gitRepo,
           [vscodeTarget],
           ['packmind'],
         );
 
-        jetbrainsRecipeFile = jetbrainsUpdates.createOrUpdate.find((file) =>
+        jetbrainsCommandFile = jetbrainsUpdates.createOrUpdate.find((file) =>
           file.path.includes('commands/writing-good-jetbrains-services.md'),
         );
 
@@ -911,15 +911,15 @@ class MyService {
       });
 
       it('creates jetbrains recipe file', () => {
-        expect(jetbrainsRecipeFile).toBeDefined();
+        expect(jetbrainsCommandFile).toBeDefined();
       });
 
       it('places jetbrains recipe file in correct path', () => {
-        expect(jetbrainsRecipeFile?.path.startsWith('jetbrains/')).toBe(true);
+        expect(jetbrainsCommandFile?.path.startsWith('jetbrains/')).toBe(true);
       });
 
       it('includes recipe content in jetbrains file', () => {
-        expect(jetbrainsRecipeFile?.content).toContain(
+        expect(jetbrainsCommandFile?.content).toContain(
           'Writing Good JetBrains Services',
         );
       });
@@ -957,15 +957,17 @@ class MyService {
   describe('Example Mapping Scenario 3: Recipe distributed to multiple targets', () => {
     describe('when recipe distributed to both jetbrains and vscode targets', () => {
       let multiTargetUpdates: FileUpdates;
-      let jetbrainsRecipeFile: FileModification | undefined;
+      let jetbrainsCommandFile: FileModification | undefined;
       let jetbrainsIndexFile: FileModification | undefined;
-      let vscodeRecipeFile: FileModification | undefined;
+      let vscodeCommandFile: FileModification | undefined;
       let vscodeIndexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const tddRecipe = await testApp.recipesHexa.getAdapter().captureRecipe({
-          name: 'Test-Driven Development (TDD) Best Practices',
-          content: `# Test-Driven Development (TDD) Best Practices
+        const tddCommand = await testApp.commandsHexa
+          .getAdapter()
+          .captureCommand({
+            name: 'Test-Driven Development (TDD) Best Practices',
+            content: `# Test-Driven Development (TDD) Best Practices
 
 ## Overview
 This recipe provides TDD best practices applicable to any IDE platform.
@@ -980,32 +982,32 @@ This recipe provides TDD best practices applicable to any IDE platform.
 - JetBrains: Use JUnit or TestNG
 - VSCode: Use Jest, Mocha, or Vitest
 `,
-          userId: user.id,
-          organizationId: organization.id,
-          spaceId: space.id.toString(),
-        });
+            userId: user.id,
+            organizationId: organization.id,
+            spaceId: space.id.toString(),
+          });
 
-        const tddRecipeVersions: RecipeVersion[] = [
+        const tddCommandVersions: CommandVersion[] = [
           {
-            id: 'tdd-recipe-version-1' as RecipeVersionId,
-            recipeId: tddRecipe.id,
-            name: tddRecipe.name,
-            slug: tddRecipe.slug,
-            content: tddRecipe.content,
-            version: tddRecipe.version,
+            id: 'tdd-recipe-version-1' as CommandVersionId,
+            recipeId: tddCommand.id,
+            name: tddCommand.name,
+            slug: tddCommand.slug,
+            content: tddCommand.content,
+            version: tddCommand.version,
             summary: 'TDD best practices for all platforms',
             userId: user.id,
           },
         ];
 
-        multiTargetUpdates = await deployerService.aggregateRecipeDeployments(
-          tddRecipeVersions,
+        multiTargetUpdates = await deployerService.aggregateCommandDeployments(
+          tddCommandVersions,
           gitRepo,
           [jetbrainsTarget, vscodeTarget],
           ['packmind'],
         );
 
-        jetbrainsRecipeFile = multiTargetUpdates.createOrUpdate.find(
+        jetbrainsCommandFile = multiTargetUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
             'jetbrains/.packmind/commands/test-driven-development-tdd-best-practices.md',
@@ -1013,7 +1015,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
         jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
           (file) => file.path === 'jetbrains/.packmind/commands-index.md',
         );
-        vscodeRecipeFile = multiTargetUpdates.createOrUpdate.find(
+        vscodeCommandFile = multiTargetUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
             'vscode/.packmind/commands/test-driven-development-tdd-best-practices.md',
@@ -1028,7 +1030,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
       });
 
       it('creates jetbrains recipe file', () => {
-        expect(jetbrainsRecipeFile).toBeDefined();
+        expect(jetbrainsCommandFile).toBeDefined();
       });
 
       it('creates jetbrains index file', () => {
@@ -1036,7 +1038,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
       });
 
       it('creates vscode recipe file', () => {
-        expect(vscodeRecipeFile).toBeDefined();
+        expect(vscodeCommandFile).toBeDefined();
       });
 
       it('creates vscode index file', () => {
@@ -1044,7 +1046,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
       });
 
       it('includes TDD recipe in jetbrains recipe file', () => {
-        expect(jetbrainsRecipeFile?.content).toContain(
+        expect(jetbrainsCommandFile?.content).toContain(
           'Test-Driven Development (TDD) Best Practices',
         );
       });
@@ -1056,7 +1058,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
       });
 
       it('includes TDD recipe in vscode recipe file', () => {
-        expect(vscodeRecipeFile?.content).toContain(
+        expect(vscodeCommandFile?.content).toContain(
           'Test-Driven Development (TDD) Best Practices',
         );
       });
@@ -1073,9 +1075,9 @@ This recipe provides TDD best practices applicable to any IDE platform.
       let jetbrainsIndexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const tddRecipeVersions: RecipeVersion[] = [
+        const tddCommandVersions: CommandVersion[] = [
           {
-            id: 'tdd-recipe-version-1' as RecipeVersionId,
+            id: 'tdd-recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: 'Test-Driven Development (TDD) Best Practices',
             slug: 'tdd-best-practices',
@@ -1086,19 +1088,20 @@ This recipe provides TDD best practices applicable to any IDE platform.
           },
         ];
 
-        await deployerService.aggregateRecipeDeployments(
-          tddRecipeVersions,
+        await deployerService.aggregateCommandDeployments(
+          tddCommandVersions,
           gitRepo,
           [jetbrainsTarget, vscodeTarget],
           ['packmind'],
         );
 
-        jetbrainsOnlyUpdates = await deployerService.aggregateRecipeDeployments(
-          tddRecipeVersions,
-          gitRepo,
-          [jetbrainsTarget],
-          ['packmind'],
-        );
+        jetbrainsOnlyUpdates =
+          await deployerService.aggregateCommandDeployments(
+            tddCommandVersions,
+            gitRepo,
+            [jetbrainsTarget],
+            ['packmind'],
+          );
 
         jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
           (file) => file.path === 'jetbrains/.packmind/commands-index.md',
@@ -1135,9 +1138,9 @@ This recipe provides TDD best practices applicable to any IDE platform.
       let indexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -1148,7 +1151,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
           },
         ];
 
-        updates = await deployerService.aggregateRecipeDeployments(
+        updates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [jetbrainsTarget],
@@ -1182,9 +1185,9 @@ This recipe provides TDD best practices applicable to any IDE platform.
       let indexFile: FileModification | undefined;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -1195,7 +1198,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
           },
         ];
 
-        updates = await deployerService.aggregateRecipeDeployments(
+        updates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [rootTarget],

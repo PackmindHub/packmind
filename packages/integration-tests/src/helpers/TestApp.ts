@@ -9,7 +9,7 @@ import {
   JobsService,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/commands';
+import { CommandsHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -36,7 +36,7 @@ const testJwtService = {
 
 export class TestApp {
   public accountsHexa!: AccountsHexa;
-  public recipesHexa!: RecipesHexa;
+  public commandsHexa!: CommandsHexa;
   public standardsHexa!: StandardsHexa;
   public skillsHexa!: SkillsHexa;
   public spacesHexa!: SpacesHexa;
@@ -70,7 +70,7 @@ export class TestApp {
     this._registry.register(LlmHexa);
     this._registry.register(GitHexa);
     this._registry.register(LinterHexa);
-    this._registry.register(RecipesHexa);
+    this._registry.register(CommandsHexa);
     this._registry.register(StandardsHexa);
     this._registry.register(SkillsHexa);
     this._registry.register(CodingAgentHexa);
@@ -83,7 +83,7 @@ export class TestApp {
     await this._registry.init(this.dataSource);
 
     this.accountsHexa = this._registry.get(AccountsHexa);
-    this.recipesHexa = this._registry.get(RecipesHexa);
+    this.commandsHexa = this._registry.get(CommandsHexa);
     this.standardsHexa = this._registry.get(StandardsHexa);
     this.skillsHexa = this._registry.get(SkillsHexa);
     this.spacesHexa = this._registry.get(SpacesHexa);

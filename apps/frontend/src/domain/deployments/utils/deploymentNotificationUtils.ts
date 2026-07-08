@@ -40,10 +40,10 @@ export interface DeploymentAnalysis {
  * and returns appropriate notification data
  */
 export function analyzeDeploymentResults(
-  recipesDistributions: Distribution[] = [],
+  commandsDistributions: Distribution[] = [],
   standardsDistributions: Distribution[] = [],
 ): DeploymentNotificationResult {
-  const allDeployments = [...recipesDistributions, ...standardsDistributions];
+  const allDeployments = [...commandsDistributions, ...standardsDistributions];
 
   if (allDeployments.length === 0) {
     return {
@@ -247,10 +247,10 @@ function getDeploymentAnalysis(
  * Returns an array of notifications to be displayed individually
  */
 export function createSeparateDeploymentNotifications(
-  recipesDistributions: Distribution[] = [],
+  commandsDistributions: Distribution[] = [],
   standardsDistributions: Distribution[] = [],
 ): DeploymentNotificationResult[] {
-  const allDeployments = [...recipesDistributions, ...standardsDistributions];
+  const allDeployments = [...commandsDistributions, ...standardsDistributions];
 
   if (allDeployments.length === 0) {
     return [
@@ -323,15 +323,15 @@ export function createSeparateDeploymentNotifications(
 }
 
 export function createDeploymentSummary(
-  recipesDistributions: Distribution[] = [],
+  commandsDistributions: Distribution[] = [],
   standardsDistributions: Distribution[] = [],
 ): string {
   const parts: string[] = [];
 
-  if (recipesDistributions.length > 0) {
-    const recipeNames = [
+  if (commandsDistributions.length > 0) {
+    const commandNames = [
       ...new Set(
-        recipesDistributions.flatMap((d) =>
+        commandsDistributions.flatMap((d) =>
           d.distributedPackages.flatMap(
             (dp) =>
               dp.recipeVersions?.map((rv: { name: string }) => rv.name) || [],
@@ -339,8 +339,10 @@ export function createDeploymentSummary(
         ),
       ),
     ];
-    if (recipeNames.length > 0) {
-      parts.push(`${recipeNames.length} recipe(s): ${recipeNames.join(', ')}`);
+    if (commandNames.length > 0) {
+      parts.push(
+        `${commandNames.length} recipe(s): ${commandNames.join(', ')}`,
+      );
     }
   }
 

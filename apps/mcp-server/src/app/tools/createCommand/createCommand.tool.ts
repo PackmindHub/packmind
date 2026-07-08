@@ -5,7 +5,7 @@ import {
   COMMAND_WORKFLOW_STEP_ORDER,
   COMMAND_WORKFLOW_STEPS,
   CommandWorkflowStep,
-} from '../../prompts/packmind-recipe-workflow';
+} from '../../prompts/packmind-command-workflow';
 import { registerMcpTool, ToolDependencies } from '../types';
 
 const isCommandWorkflowStep = (value: string): value is CommandWorkflowStep =>

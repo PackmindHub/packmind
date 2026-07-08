@@ -16,7 +16,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../standards/api/queries/StandardsQueries';
 import { getSkillsBySpaceQueryOptions } from '../../skills/api/queries/SkillsQueries';
-import { getRecipesBySpaceQueryOptions } from '../../recipes/api/queries/RecipesQueries';
+import { getCommandsBySpaceQueryOptions } from '../../commands/api/queries/CommandsQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useGetUsersInMyOrganizationQuery } from '../api/queries/UserQueries';
@@ -67,7 +67,7 @@ export const GetStartedWithPackmindWidget: React.FC<
     ...getSkillsBySpaceQueryOptions(organization?.id, firstSpace?.id),
   });
   const { data: commands, isLoading: isLoadingCommands } = useQuery({
-    ...getRecipesBySpaceQueryOptions(organization?.id, firstSpace?.id),
+    ...getCommandsBySpaceQueryOptions(organization?.id, firstSpace?.id),
   });
   const { data: packagesResponse, isLoading: isLoadingPackages } =
     useListPackagesBySpaceQuery(firstSpace?.id, organization?.id);

@@ -67,7 +67,7 @@ export function createHexaInjector<T>(HexaClass: HexaConstructor<T>) {
 
 export const InjectAccountsAdapter = () => Inject(ACCOUNTS_ADAPTER_TOKEN);
 export const InjectDeploymentAdapter = () => Inject(DEPLOYMENT_ADAPTER_TOKEN);
-export const InjectRecipesAdapter = () => Inject(RECIPES_ADAPTER_TOKEN);
+export const InjectCommandsAdapter = () => Inject(RECIPES_ADAPTER_TOKEN);
 export const InjectSkillsAdapter = () => Inject(SKILLS_ADAPTER_TOKEN);
 export const InjectStandardsAdapter = () => Inject(STANDARDS_ADAPTER_TOKEN);
 export const InjectGitAdapter = () => Inject(GIT_ADAPTER_TOKEN);

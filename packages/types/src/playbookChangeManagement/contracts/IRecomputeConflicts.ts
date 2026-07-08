@@ -1,4 +1,4 @@
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
@@ -8,7 +8,7 @@ import { ChangeProposalId } from '../ChangeProposalId';
 
 export type RecomputeConflictsCommand = PackmindCommand & {
   spaceId: SpaceId;
-  artefactId: StandardId | RecipeId | SkillId;
+  artefactId: StandardId | CommandId | SkillId;
   decisions: Record<ChangeProposalId, ChangeProposalDecision>;
 };
 

@@ -3,18 +3,18 @@ import {
   AddArtefactsToPackageCommand,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
-  Recipe,
-  RecipeId,
+  Command,
+  CommandId,
   Skill,
   SkillId,
   Space,
@@ -39,7 +39,7 @@ describe('AddArtefactsToPackageUseCase', () => {
   let mockPackageService: jest.Mocked<PackageService>;
   let mockPackageRepository: jest.Mocked<PackageRepository>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -48,8 +48,8 @@ describe('AddArtefactsToPackageUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
   const spaceId = createSpaceId(uuidv4());
   const packageId = createPackageId(uuidv4());
-  const recipeId1 = createRecipeId(uuidv4());
-  const recipeId2 = createRecipeId(uuidv4());
+  const commandId1 = createCommandId(uuidv4());
+  const commandId2 = createCommandId(uuidv4());
   const standardId1 = createStandardId(uuidv4());
   const standardId2 = createStandardId(uuidv4());
   const skillId1 = createSkillId(uuidv4());
@@ -84,7 +84,7 @@ describe('AddArtefactsToPackageUseCase', () => {
     isDefaultSpace: true,
   });
 
-  const buildRecipe = (id: RecipeId, spaceIdParam: SpaceId): Recipe => ({
+  const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command => ({
     id,
     name: `Recipe ${id}`,
     slug: `recipe-${id}`,
@@ -127,7 +127,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
   beforeEach(() => {
     mockPackageRepository = {
-      addRecipes: jest.fn(),
+      addCommands: jest.fn(),
       addStandards: jest.fn(),
       addSkills: jest.fn(),
       findById: jest.fn(),
@@ -165,9 +165,9 @@ describe('AddArtefactsToPackageUseCase', () => {
       }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
-    mockRecipesPort = {
-      getRecipeByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      getCommandByIdInternal: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getStandard: jest.fn(),
@@ -183,7 +183,7 @@ describe('AddArtefactsToPackageUseCase', () => {
       mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       stubbedLogger,
@@ -211,8 +211,8 @@ describe('AddArtefactsToPackageUseCase', () => {
         });
 
         const mockSpace = buildSpace();
-        const mockRecipe1 = buildRecipe(recipeId1, spaceId);
-        const mockRecipe2 = buildRecipe(recipeId2, spaceId);
+        const mockCommand1 = buildCommand(commandId1, spaceId);
+        const mockCommand2 = buildCommand(commandId2, spaceId);
         const mockStandard1 = buildStandard(standardId1, spaceId);
         const mockStandard2 = buildStandard(standardId2, spaceId);
 
@@ -220,13 +220,13 @@ describe('AddArtefactsToPackageUseCase', () => {
           .mockResolvedValueOnce(existingPackage)
           .mockResolvedValueOnce({
             ...existingPackage,
-            recipes: [recipeId1, recipeId2],
+            recipes: [commandId1, commandId2],
             standards: [standardId1, standardId2],
           });
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal
-          .mockResolvedValueOnce(mockRecipe1)
-          .mockResolvedValueOnce(mockRecipe2);
+        mockCommandsPort.getCommandByIdInternal
+          .mockResolvedValueOnce(mockCommand1)
+          .mockResolvedValueOnce(mockCommand2);
         mockStandardsPort.getStandard
           .mockResolvedValueOnce(mockStandard1)
           .mockResolvedValueOnce(mockStandard2);
@@ -236,7 +236,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1, recipeId2],
+          recipeIds: [commandId1, commandId2],
           standardIds: [standardId1, standardId2],
         };
 
@@ -244,7 +244,7 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('returns updated package with recipes', () => {
-        expect(result.package.recipes).toEqual([recipeId1, recipeId2]);
+        expect(result.package.recipes).toEqual([commandId1, commandId2]);
       });
 
       it('returns updated package with standards', () => {
@@ -252,9 +252,9 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('calls addRecipes with correct arguments', () => {
-        expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
+        expect(mockPackageRepository.addCommands).toHaveBeenCalledWith(
           packageId,
-          [recipeId1, recipeId2],
+          [commandId1, commandId2],
         );
       });
 
@@ -282,17 +282,17 @@ describe('AddArtefactsToPackageUseCase', () => {
         });
 
         const mockSpace = buildSpace();
-        const mockRecipe1 = buildRecipe(recipeId1, spaceId);
+        const mockCommand1 = buildCommand(commandId1, spaceId);
 
         mockPackageService.findById
           .mockResolvedValueOnce(existingPackage)
           .mockResolvedValueOnce({
             ...existingPackage,
-            recipes: [recipeId1],
+            recipes: [commandId1],
           });
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValueOnce(
-          mockRecipe1,
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValueOnce(
+          mockCommand1,
         );
 
         const command: AddArtefactsToPackageCommand = {
@@ -300,20 +300,20 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         result = await useCase.execute(command);
       });
 
       it('returns updated package with recipes', () => {
-        expect(result.package.recipes).toEqual([recipeId1]);
+        expect(result.package.recipes).toEqual([commandId1]);
       });
 
       it('calls addRecipes with correct arguments', () => {
-        expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
+        expect(mockPackageRepository.addCommands).toHaveBeenCalledWith(
           packageId,
-          [recipeId1],
+          [commandId1],
         );
       });
 
@@ -376,11 +376,11 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('does not call recipes port', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+        expect(mockCommandsPort.getCommandByIdInternal).not.toHaveBeenCalled();
       });
 
       it('does not call addRecipes', () => {
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -393,24 +393,24 @@ describe('AddArtefactsToPackageUseCase', () => {
           description: 'Package description',
           spaceId,
           createdBy: userId,
-          recipes: [recipeId1],
+          recipes: [commandId1],
           standards: [standardId1],
         });
 
         const mockSpace = buildSpace();
-        const mockRecipe2 = buildRecipe(recipeId2, spaceId);
+        const mockCommand2 = buildCommand(commandId2, spaceId);
         const mockStandard2 = buildStandard(standardId2, spaceId);
 
         mockPackageService.findById
           .mockResolvedValueOnce(existingPackage)
           .mockResolvedValueOnce({
             ...existingPackage,
-            recipes: [recipeId1, recipeId2],
+            recipes: [commandId1, commandId2],
             standards: [standardId1, standardId2],
           });
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValueOnce(
-          mockRecipe2,
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValueOnce(
+          mockCommand2,
         );
         mockStandardsPort.getStandard.mockResolvedValueOnce(mockStandard2);
 
@@ -419,7 +419,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1, recipeId2],
+          recipeIds: [commandId1, commandId2],
           standardIds: [standardId1, standardId2],
         };
 
@@ -427,12 +427,14 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('calls getRecipeByIdInternal only for new recipe', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledTimes(1);
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledTimes(
+          1,
+        );
       });
 
       it('fetches only the new recipe', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId2,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId2,
         );
       });
 
@@ -445,9 +447,9 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('calls addRecipes with only new recipe', () => {
-        expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
+        expect(mockPackageRepository.addCommands).toHaveBeenCalledWith(
           packageId,
-          [recipeId2],
+          [commandId2],
         );
       });
 
@@ -468,7 +470,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           description: 'Package description',
           spaceId,
           createdBy: userId,
-          recipes: [recipeId1],
+          recipes: [commandId1],
           standards: [standardId1],
         });
 
@@ -482,7 +484,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [standardId1],
         };
 
@@ -490,7 +492,7 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('does not call getRecipeByIdInternal', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+        expect(mockCommandsPort.getCommandByIdInternal).not.toHaveBeenCalled();
       });
 
       it('does not call getStandard', () => {
@@ -498,7 +500,7 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('does not call addRecipes', () => {
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
 
       it('does not call addStandards', () => {
@@ -519,7 +521,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [standardId1],
         };
 
@@ -543,7 +545,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
 
       it('does not call addStandards', async () => {
@@ -565,7 +567,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -588,7 +590,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -613,7 +615,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -636,7 +638,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -665,7 +667,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -681,7 +683,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -703,14 +705,14 @@ describe('AddArtefactsToPackageUseCase', () => {
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(null);
 
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -718,7 +720,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe id', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe with id ${recipeId1} not found`,
+          `Recipe with id ${commandId1} not found`,
         );
       });
 
@@ -726,8 +728,8 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
@@ -735,7 +737,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -755,18 +757,18 @@ describe('AddArtefactsToPackageUseCase', () => {
           standards: [],
         });
         const mockSpace = buildSpace();
-        const mockRecipe = buildRecipe(recipeId1, differentSpaceId);
+        const mockCommand = buildCommand(commandId1, differentSpaceId);
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(mockCommand);
 
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -774,7 +776,7 @@ describe('AddArtefactsToPackageUseCase', () => {
 
       it('throws error with recipe and space ids', async () => {
         await expect(executePromise).rejects.toThrow(
-          `Recipe ${recipeId1} does not belong to space ${spaceId}`,
+          `Recipe ${commandId1} does not belong to space ${spaceId}`,
         );
       });
 
@@ -782,8 +784,8 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
@@ -791,7 +793,7 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+        expect(mockPackageRepository.addCommands).not.toHaveBeenCalled();
       });
     });
 
@@ -916,14 +918,14 @@ describe('AddArtefactsToPackageUseCase', () => {
           standards: [],
         });
         const mockSpace = buildSpace();
-        const mockRecipe1 = buildRecipe(recipeId1, spaceId);
+        const mockCommand1 = buildCommand(commandId1, spaceId);
 
         mockPackageService.findById
           .mockResolvedValueOnce(existingPackage)
           .mockResolvedValueOnce(null);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValueOnce(
-          mockRecipe1,
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValueOnce(
+          mockCommand1,
         );
 
         const command: AddArtefactsToPackageCommand = {
@@ -931,7 +933,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         executePromise = useCase.execute(command);
@@ -947,9 +949,9 @@ describe('AddArtefactsToPackageUseCase', () => {
         await executePromise.catch(() => {
           /* expected rejection */
         });
-        expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
+        expect(mockPackageRepository.addCommands).toHaveBeenCalledWith(
           packageId,
-          [recipeId1],
+          [commandId1],
         );
       });
     });
@@ -1159,13 +1161,13 @@ describe('AddArtefactsToPackageUseCase', () => {
           description: 'Package description',
           spaceId,
           createdBy: userId,
-          recipes: [recipeId1],
+          recipes: [commandId1],
           standards: [standardId1],
           skills: [skillId1],
         });
 
         const mockSpace = buildSpace();
-        const mockRecipe2 = buildRecipe(recipeId2, spaceId);
+        const mockCommand2 = buildCommand(commandId2, spaceId);
         const mockStandard2 = buildStandard(standardId2, spaceId);
         const mockSkill2 = buildSkill(skillId2, spaceId);
 
@@ -1173,13 +1175,13 @@ describe('AddArtefactsToPackageUseCase', () => {
           .mockResolvedValueOnce(existingPackage)
           .mockResolvedValueOnce({
             ...existingPackage,
-            recipes: [recipeId1, recipeId2],
+            recipes: [commandId1, commandId2],
             standards: [standardId1, standardId2],
             skills: [skillId1, skillId2],
           });
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValueOnce(
-          mockRecipe2,
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValueOnce(
+          mockCommand2,
         );
         mockStandardsPort.getStandard.mockResolvedValueOnce(mockStandard2);
         mockSkillsPort.getSkill.mockResolvedValueOnce(mockSkill2);
@@ -1189,7 +1191,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1, recipeId2],
+          recipeIds: [commandId1, commandId2],
           standardIds: [standardId1, standardId2],
           skillIds: [skillId1, skillId2],
         };
@@ -1198,11 +1200,11 @@ describe('AddArtefactsToPackageUseCase', () => {
       });
 
       it('returns added commands', () => {
-        expect(result.added.commands).toEqual([recipeId2]);
+        expect(result.added.commands).toEqual([commandId2]);
       });
 
       it('returns skipped commands', () => {
-        expect(result.skipped.commands).toEqual([recipeId1]);
+        expect(result.skipped.commands).toEqual([commandId1]);
       });
 
       it('returns added standards', () => {
@@ -1233,7 +1235,7 @@ describe('AddArtefactsToPackageUseCase', () => {
           organizationId,
           spaceId,
           packageId,
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(

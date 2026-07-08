@@ -71,7 +71,7 @@ describe('listCommands.tool', () => {
 
   it('returns formatted list of commands sorted by slug', async () => {
     const mockCommandsAdapter = {
-      listRecipesBySpace: jest.fn().mockResolvedValue([
+      listCommandsBySpace: jest.fn().mockResolvedValue([
         { slug: 'command-b', name: 'Command B' },
         { slug: 'command-a', name: 'Command A' },
       ]),
@@ -115,7 +115,7 @@ describe('listCommands.tool', () => {
     }));
 
     const mockCommandsAdapter = {
-      listRecipesBySpace: jest.fn().mockResolvedValue(mockCommands),
+      listCommandsBySpace: jest.fn().mockResolvedValue(mockCommands),
     };
 
     const mockSpacesAdapter = {
@@ -146,7 +146,7 @@ describe('listCommands.tool', () => {
   describe('when no commands found', () => {
     it('returns message', async () => {
       const mockCommandsAdapter = {
-        listRecipesBySpace: jest.fn().mockResolvedValue([]),
+        listCommandsBySpace: jest.fn().mockResolvedValue([]),
       };
 
       const mockSpacesAdapter = {
@@ -183,7 +183,7 @@ describe('listCommands.tool', () => {
 
   it('tracks analytics event on success', async () => {
     const mockCommandsAdapter = {
-      listRecipesBySpace: jest
+      listCommandsBySpace: jest
         .fn()
         .mockResolvedValue([{ slug: 'command-a', name: 'Command A' }]),
     };
@@ -232,7 +232,7 @@ describe('listCommands.tool', () => {
   describe('when adapter throws error', () => {
     it('returns error message', async () => {
       const mockCommandsAdapter = {
-        listRecipesBySpace: jest
+        listCommandsBySpace: jest
           .fn()
           .mockRejectedValue(new Error('Database error')),
       };

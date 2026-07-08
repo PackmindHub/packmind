@@ -1,7 +1,7 @@
 import {
   ArtifactType,
   FileModification,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
@@ -25,7 +25,7 @@ type ArtifactConfig<V> = {
 };
 
 export function buildArtifactMetadataMap(params: {
-  recipes: ArtifactConfig<RecipeVersion>;
+  recipes: ArtifactConfig<CommandVersion>;
   standards: ArtifactConfig<StandardVersion>;
   skills: ArtifactConfig<SkillVersion>;
 }): ArtifactMetadataMap {

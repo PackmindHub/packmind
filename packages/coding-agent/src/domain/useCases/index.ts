@@ -1,2 +1,2 @@
-export * from './IPrepareRecipesDeploymentUseCase';
+export * from './IPrepareCommandsDeploymentUseCase';
 export * from './IPrepareStandardsDeploymentUseCase';

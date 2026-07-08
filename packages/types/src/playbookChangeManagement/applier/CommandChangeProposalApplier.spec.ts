@@ -6,19 +6,19 @@ import { createChangeProposalFactory } from './testHelpers';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
 import {
-  RecipeVersion,
-  createRecipeVersionId,
-} from '../../recipes/RecipeVersion';
-import { createRecipeId } from '../../recipes/RecipeId';
+  CommandVersion,
+  createCommandVersionId,
+} from '../../commands/CommandVersion';
+import { createCommandId } from '../../commands/CommandId';
 import { createUserId } from '../../accounts/User';
 
-const changeProposalFactory = createChangeProposalFactory(createRecipeId);
+const changeProposalFactory = createChangeProposalFactory(createCommandId);
 
-const recipeVersionFactory = (
-  overrides?: Partial<RecipeVersion>,
-): RecipeVersion => ({
-  id: createRecipeVersionId(uuidv4()),
-  recipeId: createRecipeId(uuidv4()),
+const commandVersionFactory = (
+  overrides?: Partial<CommandVersion>,
+): CommandVersion => ({
+  id: createCommandVersionId(uuidv4()),
+  recipeId: createCommandId(uuidv4()),
   name: 'Test Command',
   slug: 'test-command',
   content: 'Test content',
@@ -66,7 +66,7 @@ describe('CommandChangeProposalApplier', () => {
   describe('applyChangeProposals', () => {
     describe('updateCommandName', () => {
       it('overrides the name with the new value', () => {
-        const source = recipeVersionFactory({ name: 'Original Name' });
+        const source = commandVersionFactory({ name: 'Original Name' });
         const proposal = changeProposalFactory({
           type: ChangeProposalType.updateCommandName,
           payload: { oldValue: 'Original Name', newValue: 'Updated Name' },
@@ -80,7 +80,7 @@ describe('CommandChangeProposalApplier', () => {
       });
 
       it('applies multiple name changes sequentially', () => {
-        const source = recipeVersionFactory({ name: 'First' });
+        const source = commandVersionFactory({ name: 'First' });
         const proposals = [
           changeProposalFactory({
             type: ChangeProposalType.updateCommandName,
@@ -103,7 +103,7 @@ describe('CommandChangeProposalApplier', () => {
 
     describe('updateCommandDescription', () => {
       it('applies diff to merge the description', () => {
-        const source = recipeVersionFactory({
+        const source = commandVersionFactory({
           content: 'line1\nline2\nline3',
         });
         const proposal = changeProposalFactory({
@@ -122,7 +122,7 @@ describe('CommandChangeProposalApplier', () => {
       });
 
       it('throws ChangeProposalConflictError on conflict', () => {
-        const source = recipeVersionFactory({
+        const source = commandVersionFactory({
           content: 'line1\nchanged-by-someone\nline3',
         });
         const proposal = changeProposalFactory({
@@ -141,7 +141,7 @@ describe('CommandChangeProposalApplier', () => {
 
     describe('unsupported type', () => {
       it('returns source unchanged for unsupported change proposal types', () => {
-        const source = recipeVersionFactory();
+        const source = commandVersionFactory();
         const proposal = changeProposalFactory({
           type: ChangeProposalType.updateStandardName,
           payload: { oldValue: 'Old', newValue: 'New' },

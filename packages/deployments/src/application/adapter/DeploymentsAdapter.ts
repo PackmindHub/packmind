@@ -55,8 +55,8 @@ import {
   InstallPackagesCommand,
   InstallPackagesResponse,
   IPullContentResponse,
-  IRecipesPort,
-  IRecipesPortName,
+  ICommandsPort,
+  ICommandsPortName,
   ISkillsPort,
   ISkillsPortName,
   ISpacesPort,
@@ -70,7 +70,7 @@ import {
   ListActiveDistributedPackagesBySpaceResponse,
   ListDriftedPackagesByOrgCommand,
   ListDriftedPackagesByOrgResponse,
-  ListDistributionsByRecipeCommand,
+  ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   ListPackagesCommand,
@@ -123,7 +123,7 @@ import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositor
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
 import { ListActiveDistributedPackagesBySpaceUseCase } from '../useCases/ListActiveDistributedPackagesBySpaceUseCase';
 import { ListDriftedPackagesByOrgUseCase } from '../useCases/ListDriftedPackagesByOrgUseCase';
-import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
+import { ListDistributionsByCommandUseCase } from '../useCases/ListDistributionsByCommandUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUseCase } from '../useCases/listPackages/ListPackagesUseCase';
@@ -153,7 +153,7 @@ export class DeploymentsAdapter
 {
   private deploymentsDelayedJobs: IDeploymentsDelayedJobs | null = null;
   private gitPort: IGitPort | null = null;
-  private recipesPort: IRecipesPort | null = null;
+  private commandsPort: ICommandsPort | null = null;
   private codingAgentPort: ICodingAgentPort | null = null;
   private standardsPort: IStandardsPort | null = null;
   private skillsPort: ISkillsPort | null = null;
@@ -165,7 +165,7 @@ export class DeploymentsAdapter
   private _publishPackagesUseCase!: PublishPackagesUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
-  private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
+  private _listDistributionsByCommandUseCase!: ListDistributionsByCommandUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
   private _listDistributionsBySkillUseCase!: ListDistributionsBySkillUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
@@ -216,7 +216,7 @@ export class DeploymentsAdapter
    */
   public async initialize(ports: {
     [IGitPortName]: IGitPort;
-    [IRecipesPortName]: IRecipesPort;
+    [ICommandsPortName]: ICommandsPort;
     [ICodingAgentPortName]: ICodingAgentPort;
     [IStandardsPortName]: IStandardsPort;
     [ISkillsPortName]: ISkillsPort;
@@ -227,7 +227,7 @@ export class DeploymentsAdapter
   }): Promise<void> {
     // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
-    this.recipesPort = ports[IRecipesPortName];
+    this.commandsPort = ports[ICommandsPortName];
     this.codingAgentPort = ports[ICodingAgentPortName];
     this.standardsPort = ports[IStandardsPortName];
     this.skillsPort = ports[ISkillsPortName];
@@ -242,7 +242,7 @@ export class DeploymentsAdapter
     // Step 3: Validate all required ports are set
     if (
       !this.gitPort &&
-      !this.recipesPort &&
+      !this.commandsPort &&
       !this.codingAgentPort &&
       !this.standardsPort &&
       !this.skillsPort &&
@@ -267,7 +267,7 @@ export class DeploymentsAdapter
     );
 
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.gitPort,
@@ -281,7 +281,7 @@ export class DeploymentsAdapter
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this,
@@ -299,8 +299,8 @@ export class DeploymentsAdapter
       this.distributionRepository,
     );
 
-    this._listDistributionsByRecipeUseCase =
-      new ListDistributionsByRecipeUseCase(this.distributionRepository);
+    this._listDistributionsByCommandUseCase =
+      new ListDistributionsByCommandUseCase(this.distributionRepository);
 
     this._listDistributionsByStandardUseCase =
       new ListDistributionsByStandardUseCase(this.distributionRepository);
@@ -368,7 +368,7 @@ export class DeploymentsAdapter
 
     this._pullAllContentUseCase = new PullContentUseCase(
       this.deploymentsServices.getPackageService(),
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.codingAgentPort,
@@ -382,7 +382,7 @@ export class DeploymentsAdapter
 
     this._installPackagesUseCase = new InstallPackagesUseCase(
       this.deploymentsServices.getPackageService(),
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.codingAgentPort,
@@ -394,7 +394,7 @@ export class DeploymentsAdapter
 
     this._renderPackageAsPluginUseCase = new RenderPackageAsPluginUseCase(
       this.deploymentsServices.getPackageService(),
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.spacesPort,
@@ -428,7 +428,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.skillsPort,
       this.standardsPort,
-      this.recipesPort,
+      this.commandsPort,
       this.spacesPort,
       this.accountsPort,
     );
@@ -436,14 +436,14 @@ export class DeploymentsAdapter
     this._getDashboardKpiUseCase = new GetDashboardKpiUseCase(
       this.distributionRepository,
       this.standardsPort,
-      this.recipesPort,
+      this.commandsPort,
       this.skillsPort,
     );
 
     this._getDashboardNonLiveUseCase = new GetDashboardNonLiveUseCase(
       this.distributionRepository,
       this.standardsPort,
-      this.recipesPort,
+      this.commandsPort,
       this.skillsPort,
     );
 
@@ -461,7 +461,7 @@ export class DeploymentsAdapter
         this.deploymentsServices.getRepositories().getPackageRepository(),
         this.deploymentsServices.getRepositories().getTargetRepository(),
         this.standardsPort,
-        this.recipesPort,
+        this.commandsPort,
         this.skillsPort,
         this.gitPort,
       );
@@ -487,7 +487,7 @@ export class DeploymentsAdapter
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
     );
@@ -496,7 +496,7 @@ export class DeploymentsAdapter
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       ports.eventEmitterService,
@@ -517,14 +517,14 @@ export class DeploymentsAdapter
       this.spacesPort,
       this.accountsPort,
       this.deploymentsServices,
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
     );
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.deploymentsServices.getRepositories().getPackageRepository(),
@@ -538,7 +538,7 @@ export class DeploymentsAdapter
     this._notifyArtefactsDistributionUseCase =
       new NotifyArtefactsDistributionUseCase(
         this.accountsPort,
-        this.recipesPort,
+        this.commandsPort,
         this.standardsPort,
         this.skillsPort,
         this.distributionRepository,
@@ -558,7 +558,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getTargetService(),
       this.distributionRepository,
       this.distributedPackageRepository,
-      this.recipesPort,
+      this.commandsPort,
       this.standardsPort,
       this.skillsPort,
       this.gitPort,
@@ -599,7 +599,7 @@ export class DeploymentsAdapter
   public isReady(): boolean {
     return (
       this.gitPort != null &&
-      this.recipesPort != null &&
+      this.commandsPort != null &&
       this.codingAgentPort != null &&
       this.standardsPort != null &&
       this.spacesPort != null &&
@@ -637,10 +637,10 @@ export class DeploymentsAdapter
     return this._listDeploymentsByPackageUseCase.execute(command);
   }
 
-  listDistributionsByRecipe(
-    command: ListDistributionsByRecipeCommand,
+  listDistributionsByCommand(
+    command: ListDistributionsByCommandCommand,
   ): Promise<Distribution[]> {
-    return this._listDistributionsByRecipeUseCase.execute(command);
+    return this._listDistributionsByCommandUseCase.execute(command);
   }
 
   listDistributionsByStandard(

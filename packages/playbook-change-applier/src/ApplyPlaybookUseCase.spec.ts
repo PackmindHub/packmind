@@ -5,21 +5,21 @@ import {
   ApplyPlaybookResponse,
   ChangeProposalType,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   Organization,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   Skill,
   Space,
   Standard,
   StandardVersion,
   User,
   createOrganizationId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createRuleId,
   createSkillId,
   createSkillFileId,
@@ -39,7 +39,7 @@ describe('ApplyPlaybookUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let result: ApplyPlaybookResponse;
@@ -104,17 +104,17 @@ describe('ApplyPlaybookUseCase', () => {
       updateStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
-    recipesPort = {
-      captureRecipe: jest.fn().mockResolvedValue({
-        id: createRecipeId(uuidv4()),
+    commandsPort = {
+      captureCommand: jest.fn().mockResolvedValue({
+        id: createCommandId(uuidv4()),
         slug: 'my-command',
-      } as Recipe),
-      hardDeleteRecipe: jest.fn().mockResolvedValue(undefined),
-      hardDeleteRecipeVersion: jest.fn().mockResolvedValue(undefined),
-      getRecipeByIdInternal: jest.fn(),
-      getRecipeVersion: jest.fn(),
-      updateRecipeFromUI: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+      } as Command),
+      hardDeleteCommand: jest.fn().mockResolvedValue(undefined),
+      hardDeleteCommandVersion: jest.fn().mockResolvedValue(undefined),
+      getCommandByIdInternal: jest.fn(),
+      getCommandVersion: jest.fn(),
+      updateCommandFromUI: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     spacesPort = {
       getSpaceById: jest.fn().mockImplementation((id) => {
@@ -130,7 +130,7 @@ describe('ApplyPlaybookUseCase', () => {
       accountsPort,
       skillsPort,
       standardsPort,
-      recipesPort,
+      commandsPort,
       spacesPort,
       stubbedLogger,
     );
@@ -351,7 +351,7 @@ describe('ApplyPlaybookUseCase', () => {
   describe('when a proposal fails', () => {
     describe('when second of two proposals fails', () => {
       beforeEach(async () => {
-        recipesPort.captureRecipe.mockRejectedValueOnce(
+        commandsPort.captureCommand.mockRejectedValueOnce(
           new Error('Duplicate slug'),
         );
 
@@ -441,7 +441,7 @@ describe('ApplyPlaybookUseCase', () => {
 
     describe('when last of three proposals fails', () => {
       beforeEach(async () => {
-        recipesPort.captureRecipe.mockRejectedValueOnce(new Error('fail'));
+        commandsPort.captureCommand.mockRejectedValueOnce(new Error('fail'));
 
         const command = buildCommand({
           proposals: [
@@ -549,13 +549,13 @@ describe('ApplyPlaybookUseCase', () => {
       });
 
       it('never attempts to create the third artifact', () => {
-        expect(recipesPort.captureRecipe).not.toHaveBeenCalled();
+        expect(commandsPort.captureCommand).not.toHaveBeenCalled();
       });
     });
 
     describe('when rollback hard-delete fails', () => {
       beforeEach(async () => {
-        recipesPort.captureRecipe.mockRejectedValueOnce(
+        commandsPort.captureCommand.mockRejectedValueOnce(
           new Error('creation failed'),
         );
         skillsPort.hardDeleteSkill.mockRejectedValueOnce(
@@ -705,20 +705,20 @@ describe('ApplyPlaybookUseCase', () => {
       version: 2,
     };
 
-    const recipeId = createRecipeId('existing-recipe');
-    const recipeVersionId = createRecipeVersionId('recipe-ver-1');
-    const newRecipeVersionId = createRecipeVersionId('recipe-ver-2');
+    const recipeId = createCommandId('existing-recipe');
+    const recipeVersionId = createCommandVersionId('recipe-ver-1');
+    const newCommandVersionId = createCommandVersionId('recipe-ver-2');
 
-    const recipe: Recipe = {
+    const recipe: Command = {
       id: recipeId,
       name: 'My Command',
       slug: 'my-command',
       version: 1,
       spaceId,
       organizationId,
-    } as Recipe;
+    } as Command;
 
-    const recipeVersion: RecipeVersion = {
+    const recipeVersion: CommandVersion = {
       id: recipeVersionId,
       recipeId,
       name: 'My Command',
@@ -728,9 +728,9 @@ describe('ApplyPlaybookUseCase', () => {
       userId,
     };
 
-    const newRecipeVersion: RecipeVersion = {
+    const newCommandVersion: CommandVersion = {
       ...recipeVersion,
-      id: newRecipeVersionId,
+      id: newCommandVersionId,
       name: 'New Command',
       version: 2,
     };
@@ -826,14 +826,14 @@ describe('ApplyPlaybookUseCase', () => {
 
     describe('when submitting a mixed batch (create + update)', () => {
       beforeEach(async () => {
-        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
-        recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
-        recipesPort.updateRecipeFromUI.mockResolvedValue({
+        commandsPort.getCommandByIdInternal.mockResolvedValue(recipe);
+        commandsPort.getCommandVersion.mockResolvedValue(recipeVersion);
+        commandsPort.updateCommandFromUI.mockResolvedValue({
           recipe: { ...recipe, version: 2 },
         });
-        recipesPort.getRecipeVersion
+        commandsPort.getCommandVersion
           .mockResolvedValueOnce(recipeVersion)
-          .mockResolvedValueOnce(newRecipeVersion);
+          .mockResolvedValueOnce(newCommandVersion);
 
         result = await useCase.execute(
           buildCommand({
@@ -927,7 +927,9 @@ describe('ApplyPlaybookUseCase', () => {
           id: stdId,
         } as Standard);
 
-        recipesPort.captureRecipe.mockRejectedValue(new Error('create failed'));
+        commandsPort.captureCommand.mockRejectedValue(
+          new Error('create failed'),
+        );
 
         result = await useCase.execute(
           buildCommand({
@@ -976,7 +978,7 @@ describe('ApplyPlaybookUseCase', () => {
           new Error('rollback failed'),
         );
 
-        recipesPort.captureRecipe.mockRejectedValue(
+        commandsPort.captureCommand.mockRejectedValue(
           new Error('original error'),
         );
 
@@ -1282,7 +1284,7 @@ describe('ApplyPlaybookUseCase', () => {
   describe('remove proposal types', () => {
     describe('when submitting only remove proposals', () => {
       const stdId = createStandardId('existing-std');
-      const recipeId = createRecipeId('existing-recipe');
+      const recipeId = createCommandId('existing-recipe');
       const skillId = createSkillId('existing-skill');
 
       beforeEach(async () => {
@@ -1337,7 +1339,7 @@ describe('ApplyPlaybookUseCase', () => {
       });
 
       it('does not delete recipe', () => {
-        expect(recipesPort.hardDeleteRecipe).not.toHaveBeenCalled();
+        expect(commandsPort.hardDeleteCommand).not.toHaveBeenCalled();
       });
 
       it('does not delete skill', () => {
@@ -1442,7 +1444,7 @@ describe('ApplyPlaybookUseCase', () => {
       });
 
       it('forwards directUpdate to captureRecipe', () => {
-        expect(recipesPort.captureRecipe.mock.calls[0][0]).toHaveProperty(
+        expect(commandsPort.captureCommand.mock.calls[0][0]).toHaveProperty(
           'directUpdate',
           true,
         );

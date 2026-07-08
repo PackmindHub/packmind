@@ -1,13 +1,13 @@
 import {
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
   createStandardVersionId,
   createUserId,
   FileModification,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
@@ -24,16 +24,16 @@ describe('ArtifactMetadataUtils', () => {
 
   describe('buildArtifactMetadataMap', () => {
     describe('with all three artifact types', () => {
-      const recipeId = createRecipeId('recipe-1');
+      const recipeId = createCommandId('recipe-1');
       const standardId = createStandardId('standard-1');
       const skillId = createSkillId('skill-1');
 
       let result: ReturnType<typeof buildArtifactMetadataMap>;
 
       beforeEach(() => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: createRecipeVersionId('rv-1'),
+            id: createCommandVersionId('rv-1'),
             recipeId,
             name: 'My Recipe',
             slug: 'my-recipe',
@@ -116,11 +116,11 @@ describe('ArtifactMetadataUtils', () => {
     });
 
     it('skips entries without matching spaceId', () => {
-      const recipeId = createRecipeId('recipe-no-space');
+      const recipeId = createCommandId('recipe-no-space');
 
-      const recipeVersions: RecipeVersion[] = [
+      const recipeVersions: CommandVersion[] = [
         {
-          id: createRecipeVersionId('rv-1'),
+          id: createCommandVersionId('rv-1'),
           recipeId,
           name: 'Orphan Recipe',
           slug: 'orphan-recipe',
@@ -169,7 +169,7 @@ describe('ArtifactMetadataUtils', () => {
 
   describe('enrichFileModificationsWithMetadata', () => {
     describe('with matching metadata', () => {
-      const recipeId = createRecipeId('recipe-1');
+      const recipeId = createCommandId('recipe-1');
       const standardId = createStandardId('standard-1');
 
       let files: FileModification[];
@@ -196,7 +196,7 @@ describe('ArtifactMetadataUtils', () => {
             packageIdMap: new Map([[recipeId as string, ['pkg-1']]]),
             versions: [
               {
-                id: createRecipeVersionId('rv-1'),
+                id: createCommandVersionId('rv-1'),
                 recipeId,
                 name: 'R',
                 slug: 'r-slug',
@@ -325,7 +325,7 @@ describe('ArtifactMetadataUtils', () => {
 
   describe('flattenArtifactMetadataMap', () => {
     describe('with all three artifact types populated', () => {
-      const recipeId = createRecipeId('recipe-flat-1');
+      const recipeId = createCommandId('recipe-flat-1');
       const standardId = createStandardId('standard-flat-1');
       const skillId = createSkillId('skill-flat-1');
 
@@ -338,7 +338,7 @@ describe('ArtifactMetadataUtils', () => {
             packageIdMap: new Map([[recipeId as string, ['pkg-1', 'pkg-2']]]),
             versions: [
               {
-                id: createRecipeVersionId('rv-flat-1'),
+                id: createCommandVersionId('rv-flat-1'),
                 recipeId,
                 name: 'Recipe',
                 slug: 'recipe-slug',

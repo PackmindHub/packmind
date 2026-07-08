@@ -18,10 +18,10 @@ export const useGetGroupedChangeProposalsQuery = (_spaceId?: string) =>
   noopQuery;
 export const useListChangeProposalsByStandardQuery = (_id?: string) =>
   noopQuery;
-export const useListChangeProposalsByRecipeQuery = (_id?: string) => noopQuery;
+export const useListChangeProposalsByCommandQuery = (_id?: string) => noopQuery;
 export const useListChangeProposalsBySkillQuery = (_id?: string) => noopQuery;
 export const useCreateChangeProposalMutation = () => noopMutation;
-export const useApplyRecipeChangeProposalsMutation = () => noopMutation;
+export const useApplyCommandChangeProposalsMutation = () => noopMutation;
 export const useApplyStandardChangeProposalsMutation = () => noopMutation;
 export const useApplySkillChangeProposalsMutation = () => noopMutation;
 export const useApplyCreationChangeProposalsMutation = () => noopMutation;

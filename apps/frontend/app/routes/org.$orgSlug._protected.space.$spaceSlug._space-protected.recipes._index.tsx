@@ -9,6 +9,6 @@ export function clientLoader({
   return redirect(routes.space.toCommands(params.orgSlug, params.spaceSlug));
 }
 
-export default function RecipesIndexRedirectRouteModule() {
+export default function CommandsIndexRedirectRouteModule() {
   return null;
 }

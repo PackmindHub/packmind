@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { ContinueDeployer, DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/commands';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -14,9 +14,9 @@ import {
   IGitPort,
   IStandardsPort,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -31,7 +31,7 @@ import { TestApp } from '../helpers/TestApp';
 describe('Continue Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...spacesSchemas,
     ...gitSchemas,
@@ -44,7 +44,7 @@ describe('Continue Deployment Integration', () => {
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let organization: Organization;
   let user: User;
@@ -85,7 +85,7 @@ describe('Continue Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for Continue',
       content: 'This is test recipe content for Continue deployment',
       organizationId: organization.id,
@@ -142,7 +142,7 @@ describe('Continue Deployment Integration', () => {
       createOrUpdate: FileModification[];
       delete: { path: string }[];
     };
-    let recipeFile: FileModification | undefined;
+    let commandFile: FileModification | undefined;
 
     beforeEach(async () => {
       defaultTarget = {
@@ -153,9 +153,9 @@ describe('Continue Deployment Integration', () => {
       };
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      const recipeVersions: RecipeVersion[] = [
+      const recipeVersions: CommandVersion[] = [
         {
-          id: 'recipe-version-1' as RecipeVersionId,
+          id: 'recipe-version-1' as CommandVersionId,
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -167,14 +167,14 @@ describe('Continue Deployment Integration', () => {
         },
       ];
 
-      fileUpdates = await deployerService.aggregateRecipeDeployments(
+      fileUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
         ['continue'],
       );
 
-      recipeFile = fileUpdates.createOrUpdate.find((file) =>
+      commandFile = fileUpdates.createOrUpdate.find((file) =>
         file.path.startsWith('.continue/prompts/'),
       );
     });
@@ -206,33 +206,33 @@ describe('Continue Deployment Integration', () => {
     });
 
     it('creates recipe file in .continue/prompts/', () => {
-      expect(recipeFile).toBeDefined();
+      expect(commandFile).toBeDefined();
     });
 
     it('uses correct path for recipe file', () => {
-      expect(recipeFile?.path).toBe(`.continue/prompts/${recipe.slug}.md`);
+      expect(commandFile?.path).toBe(`.continue/prompts/${recipe.slug}.md`);
     });
 
     it('includes frontmatter delimiter', () => {
-      expect(recipeFile?.content).toContain('---');
+      expect(commandFile?.content).toContain('---');
     });
 
     it('includes recipe description in frontmatter', () => {
-      expect(recipeFile?.content).toContain(
+      expect(commandFile?.content).toContain(
         "description: 'Test recipe for Continue deployment with detailed instructions'",
       );
     });
 
     it('includes recipe name in frontmatter', () => {
-      expect(recipeFile?.content).toContain(`name: '${recipe.name}'`);
+      expect(commandFile?.content).toContain(`name: '${recipe.name}'`);
     });
 
     it('includes invokable set to true in frontmatter', () => {
-      expect(recipeFile?.content).toContain('invokable: true');
+      expect(commandFile?.content).toContain('invokable: true');
     });
 
     it('includes recipe content', () => {
-      expect(recipeFile?.content).toContain(recipe.content);
+      expect(commandFile?.content).toContain(recipe.content);
     });
   });
 
@@ -242,7 +242,7 @@ describe('Continue Deployment Integration', () => {
       createOrUpdate: FileModification[];
       delete: { path: string }[];
     };
-    let recipe2: Recipe;
+    let command2: Command;
 
     beforeEach(async () => {
       defaultTarget = {
@@ -254,7 +254,7 @@ describe('Continue Deployment Integration', () => {
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       // Create second recipe
-      recipe2 = await testApp.recipesHexa.getAdapter().captureRecipe({
+      command2 = await testApp.commandsHexa.getAdapter().captureCommand({
         name: 'Second Recipe for Continue',
         content: 'This is the second recipe content',
         organizationId: organization.id,
@@ -262,9 +262,9 @@ describe('Continue Deployment Integration', () => {
         spaceId: space.id.toString(),
       });
 
-      const recipeVersions: RecipeVersion[] = [
+      const recipeVersions: CommandVersion[] = [
         {
-          id: 'recipe-version-1' as RecipeVersionId,
+          id: 'recipe-version-1' as CommandVersionId,
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -274,18 +274,18 @@ describe('Continue Deployment Integration', () => {
           userId: user.id,
         },
         {
-          id: 'recipe-version-2' as RecipeVersionId,
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: recipe2.content,
-          version: recipe2.version,
+          id: 'recipe-version-2' as CommandVersionId,
+          recipeId: command2.id,
+          name: command2.name,
+          slug: command2.slug,
+          content: command2.content,
+          version: command2.version,
           summary: 'Second recipe summary',
           userId: user.id,
         },
       ];
 
-      fileUpdates = await deployerService.aggregateRecipeDeployments(
+      fileUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
@@ -310,7 +310,7 @@ describe('Continue Deployment Integration', () => {
 
     it('creates second recipe command file at correct path', () => {
       const secondFile = fileUpdates.createOrUpdate.find(
-        (f) => f.path === `.continue/prompts/${recipe2.slug}.md`,
+        (f) => f.path === `.continue/prompts/${command2.slug}.md`,
       );
       expect(secondFile).toBeDefined();
     });
@@ -489,9 +489,9 @@ describe('Continue Deployment Integration', () => {
       };
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      const recipeVersions: RecipeVersion[] = [
+      const recipeVersions: CommandVersion[] = [
         {
-          id: 'recipe-version-1' as RecipeVersionId,
+          id: 'recipe-version-1' as CommandVersionId,
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -517,7 +517,7 @@ describe('Continue Deployment Integration', () => {
       ];
 
       // Deploy recipes first
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
+      const commandUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
@@ -534,7 +534,7 @@ describe('Continue Deployment Integration', () => {
         );
 
       // Simulate the file merging that DeployerService does
-      const allUpdates = [recipeUpdates, standardsUpdates];
+      const allUpdates = [commandUpdates, standardsUpdates];
       pathMap = new Map<string, FileModification>();
 
       for (const update of allUpdates) {
@@ -563,18 +563,18 @@ describe('Continue Deployment Integration', () => {
     });
 
     describe('recipe file content', () => {
-      let recipeFile: FileModification | undefined;
+      let commandFile: FileModification | undefined;
 
       beforeEach(() => {
-        recipeFile = pathMap.get(`.continue/prompts/${recipe.slug}.md`);
+        commandFile = pathMap.get(`.continue/prompts/${recipe.slug}.md`);
       });
 
       it('includes frontmatter delimiter', () => {
-        expect(recipeFile?.content).toContain('---');
+        expect(commandFile?.content).toContain('---');
       });
 
       it('includes recipe description in frontmatter', () => {
-        expect(recipeFile?.content).toContain(
+        expect(commandFile?.content).toContain(
           "description: 'Test recipe for combined deployment'",
         );
       });
@@ -607,7 +607,7 @@ describe('Continue Deployment Integration', () => {
     it('returns no file updates for empty recipe list', async () => {
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await continueDeployer.deployRecipes(
+      const fileUpdates = await continueDeployer.deployCommands(
         [],
         gitRepo,
         defaultTarget,
@@ -625,7 +625,7 @@ describe('Continue Deployment Integration', () => {
       beforeEach(async () => {
         jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-        fileUpdates = await continueDeployer.deployRecipes(
+        fileUpdates = await continueDeployer.deployCommands(
           [],
           gitRepo,
           defaultTarget,

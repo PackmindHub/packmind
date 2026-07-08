@@ -2,7 +2,7 @@ import { DistributedPackageId } from './DistributedPackageId';
 import { DistributionId } from './DistributionId';
 import { Package, PackageId } from './Package';
 import { StandardVersion } from '../standards/StandardVersion';
-import { RecipeVersion } from '../recipes/RecipeVersion';
+import { CommandVersion } from '../commands/CommandVersion';
 import { SkillVersion } from '../skills/SkillVersion';
 import type { Distribution } from './Distribution';
 import { DistributionOperation } from './DistributionOperation';
@@ -12,7 +12,7 @@ export type DistributedPackage = {
   distributionId: DistributionId;
   packageId: PackageId;
   standardVersions: StandardVersion[];
-  recipeVersions: RecipeVersion[];
+  recipeVersions: CommandVersion[];
   skillVersions: SkillVersion[];
   operation: DistributionOperation; // Required - 'add' or 'remove'
   package?: Package; // Optional - loaded via relation

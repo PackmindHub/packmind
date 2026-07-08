@@ -1,7 +1,7 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { SpaceId } from '../../spaces';
 import { StandardId } from '../../standards';
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { ChangeProposalType } from '../../playbookChangeManagement/ChangeProposalType';
 import { ChangeProposalPayload } from '../../playbookChangeManagement/ChangeProposalPayload';
@@ -10,7 +10,7 @@ import { TargetId } from '../../deployments';
 export type ApplyPlaybookProposalItem = {
   spaceId: SpaceId;
   type: ChangeProposalType;
-  artefactId: StandardId | RecipeId | SkillId | null;
+  artefactId: StandardId | CommandId | SkillId | null;
   payload: ChangeProposalPayload<ChangeProposalType>;
   targetId?: TargetId;
 };
@@ -26,12 +26,12 @@ export type ApplyPlaybookResponse =
       success: true;
       created: {
         standards: Array<{ id: StandardId; slug: string }>;
-        commands: Array<{ id: RecipeId; slug: string }>;
+        commands: Array<{ id: CommandId; slug: string }>;
         skills: Array<{ id: SkillId; slug: string }>;
       };
       updated: {
         standards: StandardId[];
-        commands: RecipeId[];
+        commands: CommandId[];
         skills: SkillId[];
       };
     }

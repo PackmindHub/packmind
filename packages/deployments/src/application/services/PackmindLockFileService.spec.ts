@@ -1,6 +1,6 @@
 import {
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createStandardId,
@@ -8,7 +8,7 @@ import {
   createUserId,
   FileModification,
   PackmindLockFile,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
@@ -31,13 +31,13 @@ describe('PackmindLockFileService', () => {
   });
 
   describe('buildLockFile', () => {
-    const recipeId = createRecipeId('recipe-1');
+    const recipeId = createCommandId('recipe-1');
     const standardId = createStandardId('standard-1');
     const skillId = createSkillId('skill-1');
 
-    const recipeVersions: RecipeVersion[] = [
+    const recipeVersions: CommandVersion[] = [
       {
-        id: createRecipeVersionId('rv-1'),
+        id: createCommandVersionId('rv-1'),
         recipeId,
         name: 'My Recipe',
         slug: 'my-recipe',

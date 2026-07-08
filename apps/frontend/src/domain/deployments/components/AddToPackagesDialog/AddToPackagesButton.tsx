@@ -3,7 +3,7 @@ import { LuPackagePlus } from 'react-icons/lu';
 import { PMButton, PMIcon } from '@packmind/ui';
 import {
   OrganizationId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -16,7 +16,7 @@ import {
 type ArtifactType = 'standard' | 'recipe' | 'skill';
 
 interface AddToPackagesButtonProps {
-  artifactId: StandardId | RecipeId | SkillId;
+  artifactId: StandardId | CommandId | SkillId;
   artifactType: ArtifactType;
   artifactKindLabel: AddToPackagesArtifactKind;
   organizationId: OrganizationId;

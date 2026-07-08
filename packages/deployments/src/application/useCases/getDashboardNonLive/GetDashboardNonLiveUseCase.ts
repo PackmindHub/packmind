@@ -4,7 +4,7 @@ import {
   DashboardNonLiveResponse,
   IGetDashboardNonLive,
   IStandardsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   OrganizationId,
   SpaceId,
@@ -17,7 +17,7 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly standardsPort: IStandardsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -39,7 +39,7 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
         organizationId,
         command.userId,
       ),
-      this.recipesPort.listRecipesBySpace({
+      this.commandsPort.listCommandsBySpace({
         spaceId,
         organizationId,
         userId: command.userId,
@@ -56,7 +56,7 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
     ]);
 
     const deployedStandardIds = new Set(deployedIds.standardIds);
-    const deployedRecipeIds = new Set(deployedIds.recipeIds);
+    const deployedCommandIds = new Set(deployedIds.recipeIds);
     const deployedSkillIds = new Set(deployedIds.skillIds);
 
     return {
@@ -64,7 +64,7 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
         .filter((s) => !deployedStandardIds.has(s.id))
         .map((s) => ({ id: s.id, name: s.name })),
       recipes: recipes
-        .filter((r) => !deployedRecipeIds.has(r.id))
+        .filter((r) => !deployedCommandIds.has(r.id))
         .map((r) => ({ id: r.id, name: r.name })),
       skills: skills
         .filter((s) => !deployedSkillIds.has(s.id))

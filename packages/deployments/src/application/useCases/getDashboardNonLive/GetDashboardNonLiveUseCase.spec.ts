@@ -1,19 +1,19 @@
 import {
   IStandardsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   createOrganizationId,
   createUserId,
   createSpaceId,
   createStandardId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   GetDashboardNonLiveCommand,
   DashboardNonLiveResponse,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { standardFactory } from '@packmind/standards/test';
-import { recipeFactory } from '@packmind/commands/test';
+import { commandFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
 import { GetDashboardNonLiveUseCase } from './GetDashboardNonLiveUseCase';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
@@ -22,7 +22,7 @@ describe('GetDashboardNonLiveUseCase', () => {
   let useCase: GetDashboardNonLiveUseCase;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   const logger = stubLogger();
 
@@ -45,9 +45,9 @@ describe('GetDashboardNonLiveUseCase', () => {
       listStandardsBySpace: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
-    mockRecipesPort = {
-      listRecipesBySpace: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      listCommandsBySpace: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockSkillsPort = {
       listSkillsBySpace: jest.fn(),
@@ -56,7 +56,7 @@ describe('GetDashboardNonLiveUseCase', () => {
     useCase = new GetDashboardNonLiveUseCase(
       mockDistributionRepository,
       mockStandardsPort,
-      mockRecipesPort,
+      mockCommandsPort,
       mockSkillsPort,
       logger,
     );
@@ -67,8 +67,8 @@ describe('GetDashboardNonLiveUseCase', () => {
   describe('when some artifacts are not deployed', () => {
     const deployedStandardId = createStandardId('std-deployed');
     const nonDeployedStandardId = createStandardId('std-not-deployed');
-    const deployedRecipeId = createRecipeId('rec-deployed');
-    const nonDeployedRecipeId = createRecipeId('rec-not-deployed');
+    const deployedCommandId = createCommandId('rec-deployed');
+    const nonDeployedCommandId = createCommandId('rec-not-deployed');
     const deployedSkillId = createSkillId('skill-deployed');
     const nonDeployedSkillId = createSkillId('skill-not-deployed');
 
@@ -80,12 +80,12 @@ describe('GetDashboardNonLiveUseCase', () => {
       id: nonDeployedStandardId,
       name: 'Non-Deployed Standard',
     });
-    const deployedRecipe = recipeFactory({
-      id: deployedRecipeId,
+    const deployedCommand = commandFactory({
+      id: deployedCommandId,
       name: 'Deployed Recipe',
     });
-    const nonDeployedRecipe = recipeFactory({
-      id: nonDeployedRecipeId,
+    const nonDeployedCommand = commandFactory({
+      id: nonDeployedCommandId,
       name: 'Non-Deployed Recipe',
     });
     const deployedSkill = skillFactory({
@@ -106,9 +106,9 @@ describe('GetDashboardNonLiveUseCase', () => {
         deployedStandard,
         nonDeployedStandard,
       ]);
-      mockRecipesPort.listRecipesBySpace.mockResolvedValue([
-        deployedRecipe,
-        nonDeployedRecipe,
+      mockCommandsPort.listCommandsBySpace.mockResolvedValue([
+        deployedCommand,
+        nonDeployedCommand,
       ]);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([
         deployedSkill,
@@ -117,7 +117,7 @@ describe('GetDashboardNonLiveUseCase', () => {
       mockDistributionRepository.listDeployedArtifactIdsBySpace.mockResolvedValue(
         {
           standardIds: [deployedStandardId],
-          recipeIds: [deployedRecipeId],
+          recipeIds: [deployedCommandId],
           skillIds: [deployedSkillId],
         },
       );
@@ -133,7 +133,7 @@ describe('GetDashboardNonLiveUseCase', () => {
 
     it('returns only non-deployed recipes', () => {
       expect(result.recipes).toEqual([
-        { id: nonDeployedRecipeId, name: 'Non-Deployed Recipe' },
+        { id: nonDeployedCommandId, name: 'Non-Deployed Recipe' },
       ]);
     });
 
@@ -153,7 +153,7 @@ describe('GetDashboardNonLiveUseCase', () => {
 
     beforeEach(async () => {
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
-      mockRecipesPort.listRecipesBySpace.mockResolvedValue([]);
+      mockCommandsPort.listCommandsBySpace.mockResolvedValue([]);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([]);
       mockDistributionRepository.listDeployedArtifactIdsBySpace.mockResolvedValue(
         {
@@ -181,7 +181,7 @@ describe('GetDashboardNonLiveUseCase', () => {
 
   describe('when all artifacts are deployed', () => {
     const standardId = createStandardId('std-1');
-    const recipeId = createRecipeId('rec-1');
+    const recipeId = createCommandId('rec-1');
     const skillId = createSkillId('skill-1');
 
     let result: DashboardNonLiveResponse;
@@ -190,8 +190,8 @@ describe('GetDashboardNonLiveUseCase', () => {
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([
         standardFactory({ id: standardId }),
       ]);
-      mockRecipesPort.listRecipesBySpace.mockResolvedValue([
-        recipeFactory({ id: recipeId }),
+      mockCommandsPort.listCommandsBySpace.mockResolvedValue([
+        commandFactory({ id: recipeId }),
       ]);
       mockSkillsPort.listSkillsBySpace.mockResolvedValue([
         skillFactory({ id: skillId }),

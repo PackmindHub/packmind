@@ -24,14 +24,14 @@ export function registerGetCommandDetailsTool(
         throw new Error('User context is required to get command by slug');
       }
 
-      const recipesHexa = fastify.recipesHexa();
+      const commandsHexa = fastify.recipesHexa();
 
       try {
         const organizationId = createOrganizationId(userContext.organizationId);
 
-        const command = await recipesHexa
+        const command = await commandsHexa
           .getAdapter()
-          .findRecipeBySlug(slug, organizationId);
+          .findCommandBySlug(slug, organizationId);
 
         if (!command) {
           return {
