@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
 import { GitProviderId, GitRepoId, OrganizationId } from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
@@ -50,15 +55,12 @@ export const useGetRepositoriesByProviderQuery = (
   });
 };
 
-export const useGetAvailableRepositoriesQuery = (
-  providerId: GitProviderId,
-  page?: number,
-) => {
+export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
   const { organization } = useAuthContext();
 
-  return useQuery({
-    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId, page],
-    queryFn: () => {
+  return useInfiniteQuery({
+    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
+    queryFn: ({ pageParam }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch available repositories',
@@ -67,18 +69,25 @@ export const useGetAvailableRepositoriesQuery = (
       return gitProviderGateway.getAvailableRepositories({
         organizationId: organization.id,
         gitProviderId: providerId,
-        page,
+        page: pageParam,
       });
     },
-    // The API returns bare repositories; the UI wants a fullName, so derive it
-    // here once instead of in every consumer.
+    initialPageParam: 1,
+    // Offer the next page only while the provider reports more pages; returning
+    // undefined flips hasNextPage to false so the UI can hide "Load more".
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.availablePages
+        ? lastPage.currentPage + 1
+        : undefined,
+    // Flatten every loaded page into a single list and derive fullName once, so
+    // consumers can filter across all repositories fetched so far.
     select: (data) => ({
-      currentPage: data.currentPage,
-      availablePages: data.availablePages,
-      repositories: data.repositories.map((repo) => ({
-        ...repo,
-        fullName: `${repo.owner}/${repo.name}`,
-      })),
+      repositories: data.pages.flatMap((page) =>
+        page.repositories.map((repo) => ({
+          ...repo,
+          fullName: `${repo.owner}/${repo.name}`,
+        })),
+      ),
     }),
     enabled: !!organization?.id && !!providerId,
   });
