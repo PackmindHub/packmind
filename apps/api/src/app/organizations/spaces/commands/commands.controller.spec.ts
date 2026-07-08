@@ -20,11 +20,11 @@ describe('OrganizationsSpacesRecipesController', () => {
 
   beforeEach(() => {
     commandsService = {
-      getRecipesBySpace: jest.fn(),
-      getRecipeById: jest.fn(),
-      getRecipeVersionsById: jest.fn(),
-      updateRecipeFromUI: jest.fn(),
-      deleteRecipe: jest.fn(),
+      getCommandsBySpace: jest.fn(),
+      getCommandById: jest.fn(),
+      getCommandVersionsById: jest.fn(),
+      updateCommandFromUI: jest.fn(),
+      deleteCommand: jest.fn(),
       getLatestVersionNumber: jest.fn(),
     } as unknown as jest.Mocked<CommandsService>;
 
@@ -70,7 +70,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       let result: Command[];
 
       beforeEach(async () => {
-        commandsService.getRecipesBySpace.mockResolvedValue(mockCommands);
+        commandsService.getCommandsBySpace.mockResolvedValue(mockCommands);
         result = await controller.getCommands(orgId, spaceId, request);
       });
 
@@ -79,7 +79,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(commandsService.getRecipesBySpace).toHaveBeenCalledWith(
+        expect(commandsService.getCommandsBySpace).toHaveBeenCalledWith(
           spaceId,
           orgId,
           userId,
@@ -105,7 +105,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       } as unknown as AuthenticatedRequest;
       const error = new Error('Database error');
 
-      commandsService.getRecipesBySpace.mockRejectedValue(error);
+      commandsService.getCommandsBySpace.mockRejectedValue(error);
 
       await expect(
         controller.getCommands(orgId, spaceId, request),
@@ -131,7 +131,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       let result: Command[];
 
       beforeEach(async () => {
-        commandsService.getRecipesBySpace.mockResolvedValue([]);
+        commandsService.getCommandsBySpace.mockResolvedValue([]);
         result = await controller.getCommands(orgId, spaceId, request);
       });
 
@@ -140,7 +140,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(commandsService.getRecipesBySpace).toHaveBeenCalledWith(
+        expect(commandsService.getCommandsBySpace).toHaveBeenCalledWith(
           spaceId,
           orgId,
           userId,
@@ -179,7 +179,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       let result: Command;
 
       beforeEach(async () => {
-        commandsService.getRecipeById.mockResolvedValue(mockCommand);
+        commandsService.getCommandById.mockResolvedValue(mockCommand);
         result = await controller.getCommandById(
           orgId,
           spaceId,
@@ -193,7 +193,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(commandsService.getRecipeById).toHaveBeenCalledWith(
+        expect(commandsService.getCommandById).toHaveBeenCalledWith(
           recipeId,
           orgId,
           spaceId,
@@ -220,7 +220,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      commandsService.getRecipeById.mockResolvedValue(null);
+      commandsService.getCommandById.mockResolvedValue(null);
 
       await expect(
         controller.getCommandById(orgId, spaceId, recipeId, request),
@@ -246,7 +246,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       } as unknown as AuthenticatedRequest;
       const error = new Error('Database error');
 
-      commandsService.getRecipeById.mockRejectedValue(error);
+      commandsService.getCommandById.mockRejectedValue(error);
 
       await expect(
         controller.getCommandById(orgId, spaceId, recipeId, request),
@@ -282,7 +282,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       let result: typeof mockVersions;
 
       beforeEach(async () => {
-        commandsService.getRecipeVersionsById.mockResolvedValue(mockVersions);
+        commandsService.getCommandVersionsById.mockResolvedValue(mockVersions);
         result = await controller.getCommandVersionsById(
           orgId,
           spaceId,
@@ -295,7 +295,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(commandsService.getRecipeVersionsById).toHaveBeenCalledWith(
+        expect(commandsService.getCommandVersionsById).toHaveBeenCalledWith(
           recipeId,
         );
       });
@@ -306,7 +306,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       const spaceId = createSpaceId('space-456');
       const recipeId = createCommandId('recipe-1');
 
-      commandsService.getRecipeVersionsById.mockResolvedValue([]);
+      commandsService.getCommandVersionsById.mockResolvedValue([]);
 
       await expect(
         controller.getCommandVersionsById(orgId, spaceId, recipeId),
@@ -319,7 +319,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       const recipeId = createCommandId('recipe-1');
       const error = new Error('Database error');
 
-      commandsService.getRecipeVersionsById.mockRejectedValue(error);
+      commandsService.getCommandVersionsById.mockRejectedValue(error);
 
       await expect(
         controller.getCommandVersionsById(orgId, spaceId, recipeId),
@@ -362,7 +362,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       let result: Command;
 
       beforeEach(async () => {
-        commandsService.updateRecipeFromUI.mockResolvedValue(
+        commandsService.updateCommandFromUI.mockResolvedValue(
           mockUpdatedCommand,
         );
         result = await controller.updateCommand(
@@ -379,7 +379,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(commandsService.updateRecipeFromUI).toHaveBeenCalledWith({
+        expect(commandsService.updateCommandFromUI).toHaveBeenCalledWith({
           recipeId,
           spaceId,
           organizationId: orgId,
@@ -415,7 +415,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       } as unknown as AuthenticatedRequest;
       const error = new Error('Database error');
 
-      commandsService.updateRecipeFromUI.mockRejectedValue(error);
+      commandsService.updateCommandFromUI.mockRejectedValue(error);
 
       await expect(
         controller.updateCommand(orgId, spaceId, recipeId, updateData, request),
@@ -447,7 +447,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         `Recipe ${recipeId} does not belong to space ${spaceId}`,
       );
 
-      commandsService.updateRecipeFromUI.mockRejectedValue(error);
+      commandsService.updateCommandFromUI.mockRejectedValue(error);
 
       await expect(
         controller.updateCommand(orgId, spaceId, recipeId, updateData, request),
@@ -477,11 +477,11 @@ describe('OrganizationsSpacesRecipesController', () => {
         clientSource: 'ui',
       } as unknown as AuthenticatedRequest;
 
-      commandsService.deleteRecipe.mockResolvedValue(undefined);
+      commandsService.deleteCommand.mockResolvedValue(undefined);
 
       await controller.deleteCommand(orgId, spaceId, recipeId, request);
 
-      expect(commandsService.deleteRecipe).toHaveBeenCalledWith(
+      expect(commandsService.deleteCommand).toHaveBeenCalledWith(
         recipeId,
         spaceId,
         orgId,
@@ -508,7 +508,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      commandsService.deleteRecipe.mockRejectedValue(
+      commandsService.deleteCommand.mockRejectedValue(
         new Error('Database error'),
       );
 
@@ -538,7 +538,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         `Recipe ${recipeId} does not belong to space ${spaceId}`,
       );
 
-      commandsService.deleteRecipe.mockRejectedValue(error);
+      commandsService.deleteCommand.mockRejectedValue(error);
 
       await expect(
         controller.deleteCommand(orgId, spaceId, recipeId, request),
