@@ -1,10 +1,16 @@
-import { PMBox, PMButton, PMHStack, PMIcon, PMVStack } from '@packmind/ui';
-import { useState } from 'react';
+import {
+  PMButton,
+  PMCloseButton,
+  PMDialog,
+  PMHStack,
+  PMIcon,
+  PMPortal,
+} from '@packmind/ui';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
-import { LuBook, LuChevronDown, LuChevronRight } from 'react-icons/lu';
+import { LuBook } from 'react-icons/lu';
 
 interface StandardExample {
   title: string;
@@ -319,60 +325,60 @@ const STANDARD_EXAMPLES = [
   CLEAN_ARCHITECTURE_EXAMPLE,
 ];
 
-interface StandardExampleDisclosureProps {
+interface StandardExampleDialogButtonProps {
   example: StandardExample;
 }
 
-const StandardExampleDisclosure = ({
+const StandardExampleDialogButton = ({
   example,
-}: StandardExampleDisclosureProps) => {
-  const [open, setOpen] = useState(false);
-
+}: StandardExampleDialogButtonProps) => {
   return (
-    <PMBox width="fit-content">
-      <PMButton
-        size="xs"
-        variant="secondary"
-        w="fit-content"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-      >
-        <PMHStack gap={1} align="center">
+    <PMDialog.Root
+      size="xl"
+      placement="center"
+      motionPreset="slide-in-bottom"
+      scrollBehavior="inside"
+    >
+      <PMDialog.Trigger asChild>
+        <PMButton size="xs" variant="secondary" w="fit-content">
           <PMIcon>
             <LuBook />
-          </PMIcon>
+          </PMIcon>{' '}
           Example: {example.buttonLabel}
-          <PMIcon fontSize="xs">
-            {open ? <LuChevronDown /> : <LuChevronRight />}
-          </PMIcon>
-        </PMHStack>
-      </PMButton>
-      {open && (
-        <PMBox
-          marginTop={3}
-          paddingLeft={4}
-          borderLeft="1px solid"
-          borderColor="border.tertiary"
-        >
-          <MarkdownEditorProvider>
-            <MarkdownEditor
-              defaultValue={example.content}
-              readOnly
-              paddingVariant="none"
-            />
-          </MarkdownEditorProvider>
-        </PMBox>
-      )}
-    </PMBox>
+        </PMButton>
+      </PMDialog.Trigger>
+      <PMPortal>
+        <PMDialog.Backdrop />
+        <PMDialog.Positioner>
+          <PMDialog.Content>
+            <PMDialog.Header>
+              <PMDialog.Title>Standard Example: {example.title}</PMDialog.Title>
+              <PMDialog.CloseTrigger asChild>
+                <PMCloseButton />
+              </PMDialog.CloseTrigger>
+            </PMDialog.Header>
+            <PMDialog.Body>
+              <MarkdownEditorProvider>
+                <MarkdownEditor
+                  defaultValue={example.content}
+                  readOnly
+                  paddingVariant="none"
+                />
+              </MarkdownEditorProvider>
+            </PMDialog.Body>
+          </PMDialog.Content>
+        </PMDialog.Positioner>
+      </PMPortal>
+    </PMDialog.Root>
   );
 };
 
 export const StandardExampleDialog = () => {
   return (
-    <PMVStack mt={4} gap={2} align="flex-start">
+    <PMHStack mt={4} gap={2}>
       {STANDARD_EXAMPLES.map((example) => (
-        <StandardExampleDisclosure key={example.title} example={example} />
+        <StandardExampleDialogButton key={example.title} example={example} />
       ))}
-    </PMVStack>
+    </PMHStack>
   );
 };

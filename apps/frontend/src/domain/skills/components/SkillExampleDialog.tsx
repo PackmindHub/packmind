@@ -1,22 +1,19 @@
 import {
-  PMBox,
   PMButton,
+  PMCloseButton,
+  PMDialog,
   PMHStack,
   PMIcon,
+  PMPortal,
   PMTabs,
-  PMVStack,
+  PMTabsTrigger,
+  PMTabsContent,
 } from '@packmind/ui';
-import { useState } from 'react';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
-import {
-  LuBook,
-  LuChevronDown,
-  LuChevronRight,
-  LuExternalLink,
-} from 'react-icons/lu';
+import { LuBook, LuExternalLink } from 'react-icons/lu';
 
 interface SkillExample {
   title: string;
@@ -514,125 +511,122 @@ git diff {BASE_SHA}..{HEAD_SHA}
 const SKILL_EXAMPLES = [USING_GIT_WORKTREES_EXAMPLE];
 const SKILL_EXAMPLES_WITH_TABS = [REQUESTING_CODE_REVIEW_EXAMPLE];
 
-interface ExampleDisclosureButtonProps {
-  buttonLabel: string;
-  open: boolean;
-  onToggle: () => void;
-}
-
-const ExampleDisclosureButton = ({
-  buttonLabel,
-  open,
-  onToggle,
-}: ExampleDisclosureButtonProps) => {
-  return (
-    <PMButton
-      size="xs"
-      variant="secondary"
-      w="fit-content"
-      onClick={onToggle}
-      aria-expanded={open}
-    >
-      <PMHStack gap={1} align="center">
-        <PMIcon>
-          <LuBook />
-        </PMIcon>
-        Example: {buttonLabel}
-        <PMIcon fontSize="xs">
-          {open ? <LuChevronDown /> : <LuChevronRight />}
-        </PMIcon>
-      </PMHStack>
-    </PMButton>
-  );
-};
-
-interface SkillExampleDisclosureProps {
+interface SkillExampleDialogButtonProps {
   example: SkillExample;
 }
 
-const SkillExampleDisclosure = ({ example }: SkillExampleDisclosureProps) => {
-  const [open, setOpen] = useState(false);
-
+const SkillExampleDialogButton = ({
+  example,
+}: SkillExampleDialogButtonProps) => {
   return (
-    <PMBox width="fit-content">
-      <ExampleDisclosureButton
-        buttonLabel={example.buttonLabel}
-        open={open}
-        onToggle={() => setOpen((value) => !value)}
-      />
-      {open && (
-        <PMBox
-          marginTop={3}
-          paddingLeft={4}
-          borderLeft="1px solid"
-          borderColor="border.tertiary"
-        >
-          <MarkdownEditorProvider>
-            <MarkdownEditor
-              defaultValue={example.content}
-              readOnly
-              paddingVariant="none"
-            />
-          </MarkdownEditorProvider>
-        </PMBox>
-      )}
-    </PMBox>
+    <PMDialog.Root
+      size="xl"
+      placement="center"
+      motionPreset="slide-in-bottom"
+      scrollBehavior="inside"
+    >
+      <PMDialog.Trigger asChild>
+        <PMButton size="xs" variant="secondary" w="fit-content">
+          <PMIcon>
+            <LuBook />
+          </PMIcon>{' '}
+          Example: {example.buttonLabel}
+        </PMButton>
+      </PMDialog.Trigger>
+      <PMPortal>
+        <PMDialog.Backdrop />
+        <PMDialog.Positioner>
+          <PMDialog.Content>
+            <PMDialog.Header>
+              <PMDialog.Title>Skill Example: {example.title}</PMDialog.Title>
+              <PMDialog.CloseTrigger asChild>
+                <PMCloseButton />
+              </PMDialog.CloseTrigger>
+            </PMDialog.Header>
+            <PMDialog.Body>
+              <MarkdownEditorProvider>
+                <MarkdownEditor
+                  defaultValue={example.content}
+                  readOnly
+                  paddingVariant="none"
+                />
+              </MarkdownEditorProvider>
+            </PMDialog.Body>
+          </PMDialog.Content>
+        </PMDialog.Positioner>
+      </PMPortal>
+    </PMDialog.Root>
   );
 };
 
-interface SkillExampleWithTabsDisclosureProps {
+interface SkillExampleWithTabsDialogButtonProps {
   example: SkillExampleWithTabs;
 }
 
-const SkillExampleWithTabsDisclosure = ({
+const SkillExampleWithTabsDialogButton = ({
   example,
-}: SkillExampleWithTabsDisclosureProps) => {
-  const [open, setOpen] = useState(false);
-
+}: SkillExampleWithTabsDialogButtonProps) => {
   return (
-    <PMBox width="fit-content">
-      <ExampleDisclosureButton
-        buttonLabel={example.buttonLabel}
-        open={open}
-        onToggle={() => setOpen((value) => !value)}
-      />
-      {open && (
-        <PMBox
-          marginTop={3}
-          paddingLeft={4}
-          borderLeft="1px solid"
-          borderColor="border.tertiary"
-        >
-          <PMTabs
-            defaultValue={example.tabs[0].label}
-            tabs={example.tabs.map((tab) => ({
-              value: tab.label,
-              triggerLabel: tab.label,
-              content: (
-                <MarkdownEditorProvider>
-                  <MarkdownEditor
-                    defaultValue={tab.content}
-                    readOnly
-                    paddingVariant="none"
-                  />
-                </MarkdownEditorProvider>
-              ),
-            }))}
-          />
-        </PMBox>
-      )}
-    </PMBox>
+    <PMDialog.Root
+      size="xl"
+      placement="center"
+      motionPreset="slide-in-bottom"
+      scrollBehavior="inside"
+    >
+      <PMDialog.Trigger asChild>
+        <PMButton size="xs" variant="secondary" w="fit-content">
+          <PMIcon>
+            <LuBook />
+          </PMIcon>{' '}
+          Example: {example.buttonLabel}
+        </PMButton>
+      </PMDialog.Trigger>
+      <PMPortal>
+        <PMDialog.Backdrop />
+        <PMDialog.Positioner>
+          <PMDialog.Content>
+            <PMDialog.Header>
+              <PMDialog.Title>Skill Example: {example.title}</PMDialog.Title>
+              <PMDialog.CloseTrigger asChild>
+                <PMCloseButton />
+              </PMDialog.CloseTrigger>
+            </PMDialog.Header>
+            <PMDialog.Body>
+              <PMTabs
+                defaultValue={example.tabs[0].label}
+                tabs={example.tabs.map((tab) => ({
+                  value: tab.label,
+                  triggerLabel: tab.label,
+                  content: (
+                    <MarkdownEditorProvider>
+                      <MarkdownEditor
+                        defaultValue={tab.content}
+                        readOnly
+                        paddingVariant="none"
+                      />
+                    </MarkdownEditorProvider>
+                  ),
+                }))}
+              />
+            </PMDialog.Body>
+          </PMDialog.Content>
+        </PMDialog.Positioner>
+      </PMPortal>
+    </PMDialog.Root>
   );
 };
 
 export const SkillExampleDialog = () => {
   return (
-    <PMVStack mt={4} gap={2} align="flex-start">
+    <PMHStack mt={4} gap={2}>
       {SKILL_EXAMPLES.map((example) => (
-        <SkillExampleDisclosure key={example.title} example={example} />
+        <SkillExampleDialogButton key={example.title} example={example} />
       ))}
       {SKILL_EXAMPLES_WITH_TABS.map((example) => (
-        <SkillExampleWithTabsDisclosure key={example.title} example={example} />
+        <SkillExampleWithTabsDialogButton
+          key={example.title}
+          example={example}
+        />
       ))}
       <PMButton variant="tertiary" size={'xs'} asChild w="fit-content">
         <a
@@ -646,6 +640,6 @@ export const SkillExampleDialog = () => {
           Explore awesome-claude-skills
         </a>
       </PMButton>
-    </PMVStack>
+    </PMHStack>
   );
 };
