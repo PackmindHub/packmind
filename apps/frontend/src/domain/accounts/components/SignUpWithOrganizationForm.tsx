@@ -143,8 +143,9 @@ export default function SignUpWithOrganizationForm() {
             },
             {
               onSuccess: () => {
-                // Redirect to create organization page after successful registration and login
-                navigate('/sign-up/create-organization');
+                // Redirect to the app root after successful registration and login.
+                // The index route sends authenticated users to their org dashboard.
+                navigate('/');
               },
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);

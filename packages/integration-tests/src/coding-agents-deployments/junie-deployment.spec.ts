@@ -170,7 +170,6 @@ describe('Junie Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe for deployment',
             userId: user.id,
           },
         ];
@@ -219,7 +218,6 @@ describe('Junie Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -258,9 +256,9 @@ describe('Junie Deployment Integration', () => {
         expect(sectionContent).toContain('# Packmind Standards');
       });
 
-      it('contains standard summary', () => {
+      it('contains standard description', () => {
         const sectionContent = guidelinesFile?.sections[0].content;
-        expect(sectionContent).toContain('Test standard for deployment :');
+        expect(sectionContent).toContain(`${standard.description} :`);
       });
 
       it('contains first rule content', () => {
@@ -299,7 +297,6 @@ describe('Junie Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe for deployment',
             userId: user.id,
           },
         ];
@@ -312,7 +309,6 @@ describe('Junie Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -408,7 +404,6 @@ describe('Junie Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe for deployment',
             userId: user.id,
           },
         ];
@@ -456,7 +451,6 @@ describe('Junie Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -551,7 +545,6 @@ describe('Junie Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe',
             userId: user.id,
           },
         ];

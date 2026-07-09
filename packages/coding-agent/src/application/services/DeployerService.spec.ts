@@ -222,7 +222,6 @@ describe('DeployerService', () => {
         slug: mockRecipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Test recipe summary',
         userId: createTestUserId('user-1'),
       },
     ];
@@ -246,7 +245,6 @@ describe('DeployerService', () => {
         slug: mockStandard.slug,
         description: 'Standard description',
         version: 1,
-        summary: 'Test standard summary',
         userId: createTestUserId('user-1'),
         scope: 'backend',
       },

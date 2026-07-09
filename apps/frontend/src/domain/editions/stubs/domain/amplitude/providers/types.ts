@@ -39,9 +39,6 @@ export type AnalyticsEventMap = {
     otherDetails?: string;
     selectedAgent: StartTrialCommandAgents;
   };
-  default_skills_downloaded: {
-    agent: CodingAgent;
-  };
   skill_downloaded: {
     agent: CodingAgent;
     skillId: string;

@@ -22,7 +22,6 @@ import {
 } from '../queryKeys';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import {
   CHANGE_PROPOSALS_QUERY_SCOPE,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
@@ -126,9 +125,6 @@ export const useCreateStandardMutation = () => {
       // Deployments overview (new standard can be distributed)
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: async (error, variables, context) => {
@@ -387,10 +383,6 @@ export const useCreateStandardsFromSamplesMutation = () => {
 
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: async (error, variables, context) => {

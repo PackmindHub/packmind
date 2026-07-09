@@ -47,9 +47,8 @@ describe('RecipeVersionService', () => {
           recipeId: createRecipeId(uuidv4()),
           name: 'Test Recipe',
           slug: 'test-recipe',
-          content: 'Test recipe content for summary generation',
+          content: 'Test recipe content',
           version: 1,
-          summary: 'Pre-generated summary from use case',
           userId: createUserId(uuidv4()),
         };
 
@@ -63,7 +62,7 @@ describe('RecipeVersionService', () => {
         result = await service.addRecipeVersion(inputData);
       });
 
-      it('saves version with provided summary', () => {
+      it('saves the version', () => {
         expect(mockRepository.add).toHaveBeenCalledWith(
           expect.objectContaining({
             ...inputData,
@@ -77,62 +76,6 @@ describe('RecipeVersionService', () => {
 
       it('calls repository.add exactly once', () => {
         expect(mockRepository.add).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('when summary generation fails', () => {
-      beforeEach(() => {
-        service = new RecipeVersionService(mockRepository, stubbedLogger);
-      });
-
-      let inputData: Omit<RecipeVersion, 'id'>;
-      let savedVersion: RecipeVersion;
-      let result: RecipeVersion;
-
-      beforeEach(async () => {
-        inputData = {
-          recipeId: createRecipeId(uuidv4()),
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-          content: 'Test recipe content',
-          version: 1,
-          summary: null, // No summary provided
-          userId: createUserId(uuidv4()),
-        };
-
-        savedVersion = {
-          id: createRecipeVersionId(uuidv4()),
-          ...inputData,
-        };
-
-        mockRepository.add.mockResolvedValue(savedVersion);
-
-        result = await service.addRecipeVersion(inputData);
-      });
-
-      it('saves version without summary', () => {
-        expect(mockRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            ...inputData,
-            summary: null,
-          }),
-        );
-      });
-
-      it('returns version with null summary', () => {
-        expect(result).toEqual(savedVersion);
-      });
-
-      it('calls repository.add only once', () => {
-        expect(mockRepository.add).toHaveBeenCalledTimes(1);
-      });
-
-      it('returns version without summary', () => {
-        expect(result).toEqual(savedVersion);
-      });
-
-      it('returns version with null summary on generation failure', () => {
-        expect(result.summary).toBeNull();
       });
     });
   });

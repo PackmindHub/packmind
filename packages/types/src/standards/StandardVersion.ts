@@ -11,7 +11,6 @@ export type StandardVersion = {
   slug: string;
   description: string;
   version: number;
-  summary?: string | null;
   gitCommit?: GitCommit;
   userId?: UserId | null; // User who created this version through Web UI, null for git commits
   scope: string | null;

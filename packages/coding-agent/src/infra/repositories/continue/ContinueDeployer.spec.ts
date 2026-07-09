@@ -65,7 +65,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -91,7 +90,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -117,7 +115,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -145,7 +142,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -159,7 +155,7 @@ describe('ContinueDeployer', () => {
         expect(commandFile.path).toBe('.continue/prompts/test-recipe.md');
       });
 
-      it('includes frontmatter with description from summary', async () => {
+      it('includes frontmatter with description from name', async () => {
         const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
@@ -172,7 +168,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -183,9 +178,7 @@ describe('ContinueDeployer', () => {
         );
 
         const commandFile = result.createOrUpdate[0];
-        expect(commandFile.content).toContain(
-          "description: 'A test recipe summary'",
-        );
+        expect(commandFile.content).toContain("description: 'Test Recipe'");
       });
 
       it('includes frontmatter with name', async () => {
@@ -201,7 +194,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -228,7 +220,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -255,7 +246,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -269,7 +259,7 @@ describe('ContinueDeployer', () => {
         expect(commandFile.content).toContain('This is the recipe content');
       });
 
-      describe('when summary is missing', () => {
+      describe('when generating the recipe description', () => {
         it('uses recipe name as description', async () => {
           const recipe = recipeFactory({
             name: 'Test Recipe',
@@ -347,7 +337,6 @@ describe('ContinueDeployer', () => {
           slug: recipe1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
-          summary: 'Recipe 1 summary',
           userId: createUserId('user-1'),
         };
 
@@ -358,7 +347,6 @@ describe('ContinueDeployer', () => {
           slug: recipe2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
-          summary: 'Recipe 2 summary',
           userId: createUserId('user-1'),
         };
 
@@ -389,7 +377,6 @@ describe('ContinueDeployer', () => {
           slug: recipe1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
-          summary: 'Recipe 1 summary',
           userId: createUserId('user-1'),
         };
 
@@ -400,7 +387,6 @@ describe('ContinueDeployer', () => {
           slug: recipe2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
-          summary: 'Recipe 2 summary',
           userId: createUserId('user-1'),
         };
 
@@ -433,7 +419,6 @@ describe('ContinueDeployer', () => {
           slug: recipe1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
-          summary: 'Recipe 1 summary',
           userId: createUserId('user-1'),
         };
 
@@ -444,7 +429,6 @@ describe('ContinueDeployer', () => {
           slug: recipe2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
-          summary: 'Recipe 2 summary',
           userId: createUserId('user-1'),
         };
 
@@ -477,7 +461,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [
@@ -509,7 +492,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -541,7 +523,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -572,7 +553,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -602,7 +582,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -632,7 +611,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -662,7 +640,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -692,7 +669,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -724,7 +700,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -756,7 +731,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -788,7 +762,6 @@ describe('ContinueDeployer', () => {
             slug: standard.slug,
             description: standard.description,
             version: 1,
-            summary: 'A test standard summary',
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -805,7 +778,7 @@ describe('ContinueDeployer', () => {
         });
       });
 
-      it('includes frontmatter with description from summary', async () => {
+      it('includes frontmatter with description', async () => {
         const standard = standardFactory({
           name: 'Test Standard',
           slug: 'test-standard',
@@ -819,7 +792,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -833,7 +805,7 @@ describe('ContinueDeployer', () => {
 
         const standardFile = result.createOrUpdate[0];
         expect(standardFile.content).toContain(
-          "description: 'A test standard summary'",
+          `description: '${standard.description}'`,
         );
       });
 
@@ -851,7 +823,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -881,7 +852,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [
@@ -914,7 +884,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [
@@ -947,7 +916,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -981,7 +949,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A global standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [{ content: 'Always use consistent formatting' }] as Rule[],
@@ -1011,7 +978,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'A global standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1028,12 +994,12 @@ describe('ContinueDeployer', () => {
       });
     });
 
-    describe('when summary is not available', () => {
-      describe('when description is null', () => {
+    describe('when generating the standard description', () => {
+      describe('when description is empty', () => {
         it('uses standard name as description', async () => {
           const standard = standardFactory({
-            name: 'Standard Without Summary',
-            slug: 'standard-without-summary',
+            name: 'Standard Without Description',
+            slug: 'standard-without-description',
             scope: '**/*.ts',
           });
 
@@ -1062,8 +1028,8 @@ describe('ContinueDeployer', () => {
         });
       });
 
-      describe('when description exists but summary does not', () => {
-        it('uses standard name as description', async () => {
+      describe('when description exists', () => {
+        it('uses standard description', async () => {
           const standard = standardFactory({
             name: 'Standard With Description Only',
             slug: 'standard-with-description-only',
@@ -1075,9 +1041,8 @@ describe('ContinueDeployer', () => {
             standardId: standard.id,
             name: standard.name,
             slug: standard.slug,
-            description: 'This is a description that should not be used',
+            description: 'This is a description that should be used',
             version: 1,
-            summary: null,
             userId: createUserId('user-1'),
             scope: standard.scope,
             rules: [] as Rule[],
@@ -1091,7 +1056,7 @@ describe('ContinueDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            `description: '${standard.name}'`,
+            `description: '${standardVersion.description}'`,
           );
         });
       });
@@ -1139,7 +1104,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1151,7 +1115,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1191,7 +1154,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1203,7 +1165,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1245,7 +1206,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1257,7 +1217,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1299,7 +1258,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1311,7 +1269,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1351,7 +1308,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1363,7 +1319,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1405,7 +1360,6 @@ describe('ContinueDeployer', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: 1,
-            summary: 'Frontend standard',
             userId: createUserId('user-1'),
             scope: standard1.scope,
             rules: [] as Rule[],
@@ -1417,7 +1371,6 @@ describe('ContinueDeployer', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: 1,
-            summary: 'Backend standard',
             userId: createUserId('user-1'),
             scope: standard2.scope,
             rules: [] as Rule[],
@@ -1454,7 +1407,6 @@ describe('ContinueDeployer', () => {
         slug: recipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Recipe summary',
         userId: createUserId('user-1'),
       };
 
@@ -1480,7 +1432,6 @@ describe('ContinueDeployer', () => {
         slug: recipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Recipe summary',
         userId: createUserId('user-1'),
       };
 
@@ -1504,7 +1455,6 @@ describe('ContinueDeployer', () => {
         slug: recipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Recipe summary',
         userId: createUserId('user-1'),
       };
 
@@ -1555,7 +1505,6 @@ describe('ContinueDeployer', () => {
         slug: standard.slug,
         description: standard.description,
         version: 1,
-        summary: 'Test standard',
         userId: createUserId('user-1'),
         scope: standard.scope,
         rules: [] as Rule[],
@@ -1585,7 +1534,6 @@ describe('ContinueDeployer', () => {
         slug: recipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Recipe summary',
         userId: createUserId('user-1'),
       };
 
@@ -1607,7 +1555,6 @@ describe('ContinueDeployer', () => {
         slug: recipe.slug,
         content: 'Recipe content',
         version: 1,
-        summary: 'Recipe summary',
         userId: createUserId('user-1'),
       };
 
@@ -1638,7 +1585,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1649,7 +1595,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'Test standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1682,7 +1627,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1693,7 +1637,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'Test standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1730,7 +1673,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1741,7 +1683,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'Test standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1774,7 +1715,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1796,7 +1736,6 @@ describe('ContinueDeployer', () => {
           slug: recipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1823,7 +1762,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'Test standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1848,7 +1786,6 @@ describe('ContinueDeployer', () => {
           slug: standard.slug,
           description: standard.description,
           version: 1,
-          summary: 'Test standard',
           userId: createUserId('user-1'),
           scope: standard.scope,
           rules: [] as Rule[],
@@ -1883,7 +1820,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1894,7 +1830,6 @@ describe('ContinueDeployer', () => {
           slug: installedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1932,7 +1867,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1943,7 +1877,6 @@ describe('ContinueDeployer', () => {
           slug: installedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1983,7 +1916,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -1994,7 +1926,6 @@ describe('ContinueDeployer', () => {
           slug: installedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2031,7 +1962,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2064,7 +1994,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2095,7 +2024,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2126,7 +2054,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2160,7 +2087,6 @@ describe('ContinueDeployer', () => {
           slug: removedStandard.slug,
           description: removedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: removedStandard.scope,
           rules: [] as Rule[],
@@ -2179,7 +2105,6 @@ describe('ContinueDeployer', () => {
           slug: installedStandard.slug,
           description: installedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: installedStandard.scope,
           rules: [] as Rule[],
@@ -2221,7 +2146,6 @@ describe('ContinueDeployer', () => {
           slug: removedStandard.slug,
           description: removedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: removedStandard.scope,
           rules: [] as Rule[],
@@ -2257,7 +2181,6 @@ describe('ContinueDeployer', () => {
           slug: removedStandard.slug,
           description: removedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: removedStandard.scope,
           rules: [] as Rule[],
@@ -2292,7 +2215,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2309,7 +2231,6 @@ describe('ContinueDeployer', () => {
           slug: installedStandard.slug,
           description: installedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: installedStandard.scope,
           rules: [] as Rule[],
@@ -2348,7 +2269,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2365,7 +2285,6 @@ describe('ContinueDeployer', () => {
           slug: installedStandard.slug,
           description: installedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: installedStandard.scope,
           rules: [] as Rule[],
@@ -2402,7 +2321,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2419,7 +2337,6 @@ describe('ContinueDeployer', () => {
           slug: installedStandard.slug,
           description: installedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: installedStandard.scope,
           rules: [] as Rule[],
@@ -2456,7 +2373,6 @@ describe('ContinueDeployer', () => {
           slug: removedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2473,7 +2389,6 @@ describe('ContinueDeployer', () => {
           slug: installedStandard.slug,
           description: installedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: installedStandard.scope,
           rules: [] as Rule[],
@@ -2513,7 +2428,6 @@ describe('ContinueDeployer', () => {
           slug: removedStandard.slug,
           description: removedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: removedStandard.scope,
           rules: [] as Rule[],
@@ -2531,7 +2445,6 @@ describe('ContinueDeployer', () => {
           slug: installedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -2569,7 +2482,6 @@ describe('ContinueDeployer', () => {
           slug: removedStandard.slug,
           description: removedStandard.description,
           version: 1,
-          summary: 'Standard summary',
           userId: createUserId('user-1'),
           scope: removedStandard.scope,
           rules: [] as Rule[],
@@ -2587,7 +2499,6 @@ describe('ContinueDeployer', () => {
           slug: installedRecipe.slug,
           content: 'Recipe content',
           version: 1,
-          summary: 'Recipe summary',
           userId: createUserId('user-1'),
         };
 

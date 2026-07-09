@@ -16,7 +16,7 @@ describe('StandardsIndexService', () => {
           {
             name: 'Test Standard',
             slug: 'test-standard',
-            summary: 'A test standard for testing',
+            description: 'A test standard for testing',
           },
         ];
         result = service.buildStandardsIndex(standardVersions);
@@ -45,62 +45,62 @@ describe('StandardsIndexService', () => {
           {
             name: 'Standard One',
             slug: 'standard-one',
-            summary: 'First standard summary',
+            description: 'First standard description',
           },
           {
             name: 'Standard Two',
             slug: 'standard-two',
-            summary: 'Second standard summary',
+            description: 'Second standard description',
           },
         ];
         result = service.buildStandardsIndex(standardVersions);
       });
 
-      it('lists the first standard with its summary', () => {
+      it('lists the first standard with its description', () => {
         expect(result).toContain(
-          '- [Standard One](./standards/standard-one.md) : First standard summary',
+          '- [Standard One](./standards/standard-one.md) : First standard description',
         );
       });
 
-      it('lists the second standard with its summary', () => {
+      it('lists the second standard with its description', () => {
         expect(result).toContain(
-          '- [Standard Two](./standards/standard-two.md) : Second standard summary',
+          '- [Standard Two](./standards/standard-two.md) : Second standard description',
         );
       });
     });
 
-    describe('when summary is null', () => {
-      it('uses standard name as summary', () => {
+    describe('when description is null', () => {
+      it('uses standard name as description', () => {
         const standardVersions = [
           {
-            name: 'Standard Without Summary',
-            slug: 'no-summary',
-            summary: null,
+            name: 'Standard Without Description',
+            slug: 'no-description',
+            description: null,
           },
         ];
 
         const result = service.buildStandardsIndex(standardVersions);
 
         expect(result).toContain(
-          '- [Standard Without Summary](./standards/no-summary.md) : Standard Without Summary',
+          '- [Standard Without Description](./standards/no-description.md) : Standard Without Description',
         );
       });
     });
 
-    describe('when summary is empty string', () => {
-      it('uses standard name as summary', () => {
+    describe('when description is empty string', () => {
+      it('uses standard name as description', () => {
         const standardVersions = [
           {
-            name: 'Standard With Empty Summary',
-            slug: 'empty-summary',
-            summary: '  ',
+            name: 'Standard With Empty Description',
+            slug: 'empty-description',
+            description: '  ',
           },
         ];
 
         const result = service.buildStandardsIndex(standardVersions);
 
         expect(result).toContain(
-          '- [Standard With Empty Summary](./standards/empty-summary.md) : Standard With Empty Summary',
+          '- [Standard With Empty Description](./standards/empty-description.md) : Standard With Empty Description',
         );
       });
     });
@@ -113,17 +113,17 @@ describe('StandardsIndexService', () => {
           {
             name: 'Zebra Standard',
             slug: 'zebra',
-            summary: 'Last alphabetically',
+            description: 'Last alphabetically',
           },
           {
             name: 'Apple Standard',
             slug: 'apple',
-            summary: 'First alphabetically',
+            description: 'First alphabetically',
           },
           {
             name: 'Middle Standard',
             slug: 'middle',
-            summary: 'Middle alphabetically',
+            description: 'Middle alphabetically',
           },
         ];
 

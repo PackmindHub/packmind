@@ -43,7 +43,6 @@ export class CreateStandardWithPackagesUseCase
       spaceId,
       name,
       description,
-      summary,
       scope,
       rules,
       packageSlugs = [],
@@ -78,7 +77,6 @@ export class CreateStandardWithPackagesUseCase
       await this.createStandardWithExamplesUseCase.createStandardWithExamples({
         name,
         description,
-        summary: summary || null,
         rules,
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),

@@ -46,7 +46,6 @@ const standardRuleSchema = z.object({
 type SaveStandardInput = {
   name: string;
   description: string;
-  summary?: string;
   rules?: Array<{
     content: string;
     examples?: Array<{ positive: string; negative: string; language: string }>;
@@ -75,13 +74,6 @@ export function registerSaveStandardTool(
           .describe(
             'A description of the standard, one paragraph maximum, explaining the purpose, context, and when applicable. It sets the context for the rules in the standard. It must NOT contain code examples',
           ),
-        summary: z
-          .string()
-          .min(1)
-          .optional()
-          .describe(
-            'A concise sentence describing the intent of this standard and when it is relevant to apply its rules.',
-          ),
         rules: z
           .array(standardRuleSchema)
           .optional()
@@ -95,7 +87,7 @@ export function registerSaveStandardTool(
       },
     },
     async (input: SaveStandardInput) => {
-      const { name, description, summary, rules = [], packageSlugs } = input;
+      const { name, description, rules = [], packageSlugs } = input;
       if (!userContext) {
         throw new Error('User context is required to create standards');
       }
@@ -152,7 +144,6 @@ export function registerSaveStandardTool(
           .createStandardWithPackages({
             name,
             description,
-            summary,
             rules: processedRules,
             organizationId: createOrganizationId(userContext.organizationId),
             userId: createUserId(userContext.userId),

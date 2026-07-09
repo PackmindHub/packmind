@@ -10,11 +10,6 @@ import {
   setCrispUserInfo,
 } from '@packmind/proprietary/frontend/services/vendors/CrispService';
 import { SkeletonLayout } from '../../src/domain/organizations/components/SkeletonLayout';
-import { OnboardingIntentModal } from '../../src/domain/accounts/components/OnboardingIntentModal';
-import {
-  useGetOnboardingStatusQuery,
-  useCompleteOnboardingMutation,
-} from '../../src/domain/accounts/api/queries/OnboardingQueries';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 import type { MiddlewareFunction } from 'react-router';
 
@@ -30,11 +25,8 @@ const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 export default function AuthenticatedLayout() {
   const { data: me, isLoading } = useGetMeQuery();
-  const { data: onboardingStatus } = useGetOnboardingStatusQuery();
-  const completeOnboardingMutation = useCompleteOnboardingMutation();
   const navigate = useNavigate();
   const params = useParams();
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const contentAreaRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
@@ -65,25 +57,6 @@ export default function AuthenticatedLayout() {
   );
 
   useAuthErrorHandler();
-
-  // Show modal based on server state
-  useEffect(() => {
-    if (!me?.authenticated || !onboardingStatus) return;
-
-    if (onboardingStatus.showOnboarding) {
-      setShowOnboardingModal(true);
-    }
-  }, [me?.authenticated, onboardingStatus]);
-
-  const handleOnboardingComplete = () => {
-    completeOnboardingMutation.mutate();
-    setShowOnboardingModal(false);
-  };
-
-  const handleOnboardingSkip = () => {
-    completeOnboardingMutation.mutate();
-    setShowOnboardingModal(false);
-  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -131,14 +104,6 @@ export default function AuthenticatedLayout() {
           </div>
         </PMBox>
       </PMHStack>
-      <OnboardingIntentModal
-        open={showOnboardingModal}
-        onComplete={handleOnboardingComplete}
-        onSkip={handleOnboardingSkip}
-        stepsToShow={
-          onboardingStatus?.stepsToShow ?? ['welcome', 'playbook', 'build']
-        }
-      />
     </SidebarCollapseProvider>
   );
 }

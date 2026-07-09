@@ -52,7 +52,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
 
   // Filter repositories based on search term
   const filteredRepos =
-    availableRepos?.filter(
+    availableRepos?.repositories.filter(
       (repo) =>
         repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         repo.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||

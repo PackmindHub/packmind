@@ -29,7 +29,6 @@ import { Standard, createStandardId } from '@packmind/types';
 import { StandardVersion, createStandardVersionId } from '@packmind/types';
 import { Rule } from '@packmind/types';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { CreateStandardUseCase } from './CreateStandardUseCase';
@@ -45,7 +44,6 @@ describe('CreateStandardUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -112,11 +110,6 @@ describe('CreateStandardUseCase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock GenerateStandardSummaryDelayedJob
-    generateStandardSummaryDelayedJob = {
-      addJob: jest.fn(),
-    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
-
     // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
@@ -135,7 +128,6 @@ describe('CreateStandardUseCase', () => {
     } as unknown as jest.Mocked<IRuleRepository>;
 
     stubbedLogger = stubLogger();
-    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     standardService.listStandardsBySpace.mockResolvedValue([]);
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
@@ -145,7 +137,6 @@ describe('CreateStandardUseCase', () => {
       accountsPort,
       standardService,
       standardVersionService,
-      generateStandardSummaryDelayedJob,
       eventEmitterService,
       ruleRepository,
       stubbedLogger,
@@ -294,32 +285,6 @@ describe('CreateStandardUseCase', () => {
       it('creates standard version with version 1', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({ version: 1 }),
-        );
-      });
-
-      it('queues standard summary generation job with correct parameters', () => {
-        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: inputData.userId,
-            organizationId: inputData.organizationId,
-            standardVersion: expect.objectContaining({
-              standardId: createdStandard.id,
-              name: inputData.name,
-              slug: 'test-standard',
-              description: inputData.description,
-              version: 1,
-              summary: null,
-              scope: null,
-            }),
-            rules: expect.arrayContaining([
-              expect.objectContaining({
-                content: 'Rule 1: Use proper naming conventions',
-              }),
-              expect.objectContaining({
-                content: 'Rule 2: Write comprehensive tests',
-              }),
-            ]),
-          }),
         );
       });
     });
@@ -655,81 +620,6 @@ describe('CreateStandardUseCase', () => {
       });
     });
 
-    describe('when summary generation fails', () => {
-      let inputData: CreateStandardCommand;
-      let createdStandard: Standard;
-      let result: CreateStandardResponse;
-
-      beforeEach(async () => {
-        inputData = {
-          name: 'Test Standard',
-          description: 'Test description',
-          rules: [{ content: 'Test rule' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
-
-        createdStandard = standardFactory();
-        const createdStandardVersion = standardVersionFactory();
-
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdStandardVersion,
-        );
-
-        result = await createStandardUseCase.execute(inputData);
-      });
-
-      it('returns created standard', () => {
-        expect(result).toEqual({ standard: createdStandard });
-      });
-
-      it('queues summary generation job', () => {
-        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledTimes(
-          1,
-        );
-      });
-    });
-
-    describe('with scope parameter', () => {
-      describe('when scope is provided', () => {
-        it('passes scope to summary generation job', async () => {
-          const inputData: CreateStandardCommand = {
-            name: 'Scoped Standard',
-            description: 'A standard with scope',
-            rules: [{ content: 'Test rule for TypeScript files' }],
-            organizationId: testOrganizationId,
-            userId: testUserId.toString(),
-            spaceId: createSpaceId(uuidv4()),
-            scope: 'src/**/*.ts',
-          };
-
-          const createdStandard = standardFactory({ scope: 'src/**/*.ts' });
-          const createdStandardVersion = standardVersionFactory({
-            standardId: createdStandard.id,
-            scope: 'src/**/*.ts',
-          });
-
-          standardService.addStandard.mockResolvedValue(createdStandard);
-          standardVersionService.addStandardVersion.mockResolvedValue(
-            createdStandardVersion,
-          );
-
-          await createStandardUseCase.execute(inputData);
-
-          expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
-            expect.objectContaining({
-              standardVersion: expect.objectContaining({
-                scope: 'src/**/*.ts',
-              }),
-            }),
-          );
-        });
-      });
-    });
-
     describe('event emission', () => {
       describe('when standard is created with rules', () => {
         let inputData: CreateStandardCommand;
@@ -875,7 +765,6 @@ describe('CreateStandardUseCase', () => {
       let createStandardUseCase: CreateStandardUseCase;
       let standardService: jest.Mocked<StandardService>;
       let standardVersionService: jest.Mocked<StandardVersionService>;
-      let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
       let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
       let ruleRepository: jest.Mocked<IRuleRepository>;
       let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -900,15 +789,7 @@ describe('CreateStandardUseCase', () => {
           prepareForGitPublishing: jest.fn(),
         } as unknown as jest.Mocked<StandardVersionService>;
 
-        generateStandardSummaryDelayedJob = {
-          addJob: jest.fn(),
-        } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
-
         stubbedLogger = stubLogger();
-
-        generateStandardSummaryDelayedJob.addJob.mockResolvedValue(
-          'job-id-123',
-        );
 
         // Default slug mock: lowercased with hyphens
         (slug as jest.MockedFunction<typeof slug>).mockImplementation(
@@ -932,7 +813,6 @@ describe('CreateStandardUseCase', () => {
           accountsPort,
           standardService,
           standardVersionService,
-          generateStandardSummaryDelayedJob,
           eventEmitterService,
           ruleRepository,
           stubbedLogger,

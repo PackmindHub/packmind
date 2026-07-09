@@ -3,15 +3,16 @@ import { LuPackagePlus, LuSearch } from 'react-icons/lu';
 import {
   PMBox,
   PMButton,
-  PMButtonGroup,
   PMCheckbox,
   PMCloseButton,
-  PMDialog,
+  PMDrawer,
   PMHStack,
+  PMHeading,
   PMIcon,
   PMInput,
   PMInputGroup,
   PMLink,
+  PMPortal,
   PMSkeleton,
   PMText,
   PMVStack,
@@ -359,67 +360,81 @@ export const AddToPackagesDialog = ({
   })();
 
   return (
-    <PMDialog.Root
+    <PMDrawer.Root
       closeOnInteractOutside={!isPending}
       open={open}
       onOpenChange={handleOpenChange}
-      size="lg"
-      scrollBehavior="inside"
+      placement="end"
+      size="md"
     >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content>
-          <PMDialog.Header>
-            <PMVStack alignItems="flex-start" gap={1}>
-              <PMDialog.Title>Add to packages</PMDialog.Title>
-              <PMText variant="small" color="secondary">
-                {subtitle}
-              </PMText>
-            </PMVStack>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <PMVStack gap={4} alignItems="stretch">
-              {showSearchAndCta ? (
-                <PMInputGroup startElement={<LuSearch />}>
-                  <PMInput
-                    placeholder="Search packages..."
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    disabled={isPending}
-                    aria-label="Search packages"
-                  />
-                </PMInputGroup>
-              ) : null}
-              {renderListBody()}
-            </PMVStack>
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButtonGroup size="sm">
-              <PMDialog.Trigger asChild>
-                <PMButton variant="tertiary" disabled={isPending}>
+      <PMPortal>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header
+              borderBottom="1px solid"
+              borderColor="border.tertiary"
+            >
+              <PMVStack alignItems="flex-start" gap={1} flex={1}>
+                <PMHeading size="md">Add to packages</PMHeading>
+                <PMText variant="small" color="secondary">
+                  {subtitle}
+                </PMText>
+              </PMVStack>
+              <PMDrawer.CloseTrigger asChild>
+                <PMCloseButton size="sm" disabled={isPending} />
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
+            <PMDrawer.Body padding={5}>
+              <PMVStack gap={4} alignItems="stretch">
+                {showSearchAndCta ? (
+                  <PMInputGroup startElement={<LuSearch />}>
+                    <PMInput
+                      placeholder="Search packages..."
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      disabled={isPending}
+                      aria-label="Search packages"
+                    />
+                  </PMInputGroup>
+                ) : null}
+                {renderListBody()}
+              </PMVStack>
+            </PMDrawer.Body>
+            <PMBox
+              borderTop="1px solid"
+              borderColor="border.tertiary"
+              paddingX={5}
+              paddingY={3}
+            >
+              <PMHStack justify="space-between" align="center">
+                <PMButton
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => handleOpenChange({ open: false })}
+                  disabled={isPending}
+                >
                   Cancel
                 </PMButton>
-              </PMDialog.Trigger>
-              {showSearchAndCta ? (
-                <PMButton
-                  variant="primary"
-                  onClick={handleSubmit}
-                  loading={isPending}
-                  disabled={isSubmitDisabled}
-                >
-                  <PMIcon>
-                    <LuPackagePlus />
-                  </PMIcon>
-                  {submitLabel}
-                </PMButton>
-              ) : null}
-            </PMButtonGroup>
-          </PMDialog.Footer>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
-    </PMDialog.Root>
+                {showSearchAndCta ? (
+                  <PMButton
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSubmit}
+                    loading={isPending}
+                    disabled={isSubmitDisabled}
+                  >
+                    <PMIcon>
+                      <LuPackagePlus />
+                    </PMIcon>
+                    {submitLabel}
+                  </PMButton>
+                ) : null}
+              </PMHStack>
+            </PMBox>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
+      </PMPortal>
+    </PMDrawer.Root>
   );
 };

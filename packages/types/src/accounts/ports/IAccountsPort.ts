@@ -5,8 +5,6 @@ import {
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
-  CompleteUserOnboardingCommand,
-  CompleteUserOnboardingResponse,
   CreateCliLoginCodeCommand,
   CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
@@ -23,10 +21,7 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
-  GetOrganizationOnboardingStatusCommand,
   GetUserByIdCommand,
-  GetUserOnboardingStatusCommand,
-  GetUserOnboardingStatusResponse,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   ListOrganizationUsersCommand,
@@ -35,7 +30,6 @@ import {
   ListUserOrganizationsResponse,
   Organization,
   OrganizationId,
-  OrganizationOnboardingStatus,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
   RenameOrganizationCommand,
@@ -162,19 +156,6 @@ export interface IAccountsPort {
   validatePasswordResetToken(
     command: ValidatePasswordResetTokenCommand,
   ): Promise<ValidatePasswordResetTokenResponse>;
-
-  // Onboarding operations
-  getOrganizationOnboardingStatus(
-    command: GetOrganizationOnboardingStatusCommand,
-  ): Promise<OrganizationOnboardingStatus>;
-
-  getUserOnboardingStatus(
-    command: GetUserOnboardingStatusCommand,
-  ): Promise<GetUserOnboardingStatusResponse>;
-
-  completeUserOnboarding(
-    command: CompleteUserOnboardingCommand,
-  ): Promise<CompleteUserOnboardingResponse>;
 
   // CLI login operations
   createCliLoginCode(

@@ -3,6 +3,7 @@ import { GitProviderId } from '../GitProvider';
 
 export type ListAvailableReposCommand = PackmindCommand & {
   gitProviderId: GitProviderId;
+  page?: number;
 };
 
 export type ExternalRepository = {
@@ -15,7 +16,13 @@ export type ExternalRepository = {
   stars: number;
 };
 
+export type ListAvailableReposResponse = {
+  currentPage: number;
+  availablePages: number;
+  repositories: ExternalRepository[];
+};
+
 export type IListAvailableReposUseCase = IUseCase<
   ListAvailableReposCommand,
-  ExternalRepository[]
+  ListAvailableReposResponse
 >;

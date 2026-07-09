@@ -6,7 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "adm-zip": "^0.5.16",
     "@packmind/accounts": "workspace:*",
     "@packmind/coding-agent": "workspace:*",
     "@packmind/git": "workspace:*",
@@ -25,7 +24,6 @@
     "archiver": "^7.0.1"
   },
   "devDependencies": {
-    "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^6.0.3"
   }
 }

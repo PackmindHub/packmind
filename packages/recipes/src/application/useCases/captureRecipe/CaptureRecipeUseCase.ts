@@ -5,7 +5,6 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
-  AiNotConfigured,
   CaptureRecipeCommand,
   CaptureRecipeResponse,
   CommandCreatedEvent,
@@ -16,14 +15,11 @@ import {
   IAccountsPort,
   ICaptureRecipeUseCase,
   ISpacesPort,
-  OrganizationId,
-  Recipe,
   RecipeSlugAlreadyExistsError,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
 import { RecipeService } from '../../services/RecipeService';
-import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 
 const origin = 'CaptureRecipeUseCase';
@@ -40,7 +36,6 @@ export class CaptureRecipeUseCase
     accountsPort: IAccountsPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
-    private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {
     super(spacesPort, accountsPort, new PackmindLogger(origin));
@@ -134,20 +129,12 @@ export class CaptureRecipeUseCase
         spaceId,
       });
 
-      const summary = await this.computeSummary(
-        organizationId,
-        command,
-        recipe,
-        initialVersion,
-      );
-
       const recipeVersion = await this.recipeVersionService.addRecipeVersion({
         recipeId: recipe.id,
         name,
         slug: recipeSlug,
         content,
         version: initialVersion,
-        summary,
         gitCommit: undefined,
         userId,
       });
@@ -155,7 +142,6 @@ export class CaptureRecipeUseCase
         versionId: recipeVersion.id,
         recipeId: recipe.id,
         version: initialVersion,
-        hasSummary: !!recipeVersion.summary,
       });
 
       this.logger.info('CaptureRecipe process completed successfully', {
@@ -190,56 +176,6 @@ export class CaptureRecipeUseCase
       });
       throw error;
     }
-  }
-
-  private async computeSummary(
-    organizationId: OrganizationId,
-    captureRecipeCommand: CaptureRecipeCommand,
-    recipe: Recipe,
-    initialVersion: number,
-  ) {
-    const shouldGenerateSummary =
-      !captureRecipeCommand.summary ||
-      captureRecipeCommand.summary.trim() === '';
-
-    if (!shouldGenerateSummary) {
-      return captureRecipeCommand.summary;
-    }
-
-    try {
-      return await this.recipeSummaryService.createRecipeSummary(
-        organizationId,
-        {
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: initialVersion,
-          userId: recipe.userId,
-        },
-      );
-    } catch (summaryError) {
-      if (summaryError instanceof AiNotConfigured) {
-        this.logger.warn(
-          'AI service not configured - proceeding without summary',
-          {
-            error: summaryError.message,
-          },
-        );
-      } else {
-        const errorMessage =
-          summaryError instanceof Error
-            ? summaryError.message
-            : String(summaryError);
-        this.logger.error(
-          'Failed to generate summary, proceeding without summary',
-          {
-            error: errorMessage,
-          },
-        );
-      }
-    }
-    return null;
   }
 
   private resolveSlug(

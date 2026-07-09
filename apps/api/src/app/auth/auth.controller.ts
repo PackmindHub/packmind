@@ -46,10 +46,6 @@ import {
   EmailAlreadyExistsError,
   InvalidDisplayNameError,
 } from '@packmind/accounts';
-import {
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
-} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
 import { Public } from '@packmind/node-utils';
@@ -175,32 +171,6 @@ export class AuthController {
         path: '/',
       });
 
-      // Set onboarding completion status cookie if user has an organization
-      if (result.organization) {
-        try {
-          const onboardingStatus = await this.authService.getOnboardingStatus(
-            result.user.id,
-            result.organization.id,
-          );
-          response.cookie(
-            'onboarding_completed',
-            String(onboardingStatus.hasDeployed),
-            {
-              httpOnly: true,
-              secure: isSecure,
-              sameSite: 'strict',
-              maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-              path: '/',
-            },
-          );
-        } catch (error) {
-          this.logger.warn('Failed to fetch onboarding status during sign-in', {
-            userId: result.user.id,
-            error: getErrorMessage(error),
-          });
-        }
-      }
-
       this.logger.log(`POST /auth/signin - User signed in successfully`, {
         userId: result.user.id,
         email: maskEmail(result.user.email),
@@ -253,12 +223,6 @@ export class AuthController {
       sameSite: 'strict',
       expires: new Date(0), // Expire the cookie immediately
     });
-    response.cookie('onboarding_completed', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      expires: new Date(0), // Expire the cookie immediately
-    });
     return { message: 'Sign out successful' };
   }
 
@@ -298,34 +262,6 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
         path: '/',
       });
-
-      // Update onboarding completion status cookie for the new organization
-      try {
-        const payload = this.authService.verifyToken(accessToken);
-        const onboardingStatus = await this.authService.getOnboardingStatus(
-          payload.user.userId,
-          request.organizationId,
-        );
-        response.cookie(
-          'onboarding_completed',
-          String(onboardingStatus.hasDeployed),
-          {
-            httpOnly: true,
-            secure: isSecure,
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-            path: '/',
-          },
-        );
-      } catch (error) {
-        this.logger.warn(
-          'Failed to fetch onboarding status during organization selection',
-          {
-            organizationId: request.organizationId,
-            error: getErrorMessage(error),
-          },
-        );
-      }
 
       this.logger.log(
         'POST /auth/selectOrganization - Organization selected successfully',
@@ -570,15 +506,6 @@ export class AuthController {
           maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
           path: '/',
         });
-
-        // Set onboarding completion status cookie (always false for new accounts)
-        response.cookie('onboarding_completed', 'false', {
-          httpOnly: true,
-          secure: isSecure,
-          sameSite: 'strict',
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-          path: '/',
-        });
       }
 
       this.logger.log(
@@ -810,80 +737,6 @@ export class AuthController {
         throw new HttpException(error.message, HttpStatus.GONE);
       }
 
-      throw error;
-    }
-  }
-
-  @Get('onboarding-status')
-  @HttpCode(HttpStatus.OK)
-  async getOnboardingStatus(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<GetUserOnboardingStatusResponse> {
-    this.logger.log('GET /auth/onboarding-status - Getting onboarding status', {
-      userId: request.user.userId,
-      organizationId: request.organization.id,
-    });
-
-    try {
-      const result = await this.authService.getUserOnboardingStatus(request);
-
-      this.logger.log(
-        'GET /auth/onboarding-status - Onboarding status retrieved successfully',
-        {
-          userId: request.user.userId,
-          organizationId: request.organization.id,
-          showOnboarding: result.showOnboarding,
-        },
-      );
-
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'GET /auth/onboarding-status - Failed to get onboarding status',
-        {
-          userId: request.user.userId,
-          organizationId: request.organization.id,
-          error: getErrorMessage(error),
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Post('complete-onboarding')
-  @HttpCode(HttpStatus.OK)
-  async completeOnboarding(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<CompleteUserOnboardingResponse> {
-    this.logger.log(
-      'POST /auth/complete-onboarding - Completing user onboarding',
-      {
-        userId: request.user.userId,
-        organizationId: request.organization.id,
-      },
-    );
-
-    try {
-      const result = await this.authService.completeUserOnboarding(request);
-
-      this.logger.log(
-        'POST /auth/complete-onboarding - User onboarding completed successfully',
-        {
-          userId: request.user.userId,
-          organizationId: request.organization.id,
-        },
-      );
-
-      return result;
-    } catch (error) {
-      this.logger.error(
-        'POST /auth/complete-onboarding - Failed to complete user onboarding',
-        {
-          userId: request.user.userId,
-          organizationId: request.organization.id,
-          error: getErrorMessage(error),
-        },
-      );
       throw error;
     }
   }
