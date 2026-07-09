@@ -168,17 +168,8 @@ describe('GitlabProvider', () => {
         });
       });
 
-      it('returns mapped repositories with correct format', () => {
+      it('returns mapped repositories ordered alphabetically by full name', () => {
         expect(result.repositories).toEqual([
-          {
-            name: 'test-repo',
-            owner: 'testuser', // Single level namespace
-            description: 'Test repository',
-            private: true,
-            defaultBranch: 'main',
-            language: undefined,
-            stars: 5,
-          },
           {
             name: 'public-repo',
             owner: 'testorg/subgroup', // Multi-level namespace
@@ -187,6 +178,15 @@ describe('GitlabProvider', () => {
             defaultBranch: 'master',
             language: undefined,
             stars: 0,
+          },
+          {
+            name: 'test-repo',
+            owner: 'testuser', // Single level namespace
+            description: 'Test repository',
+            private: true,
+            defaultBranch: 'main',
+            language: undefined,
+            stars: 5,
           },
         ]);
       });
