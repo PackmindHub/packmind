@@ -1311,9 +1311,6 @@ importers:
       '@packmind/types':
         specifier: workspace:*
         version: link:../types
-      bullmq:
-        specifier: ^5.58.2
-        version: 5.77.6
       slug:
         specifier: ^11.0.0
         version: 11.0.1

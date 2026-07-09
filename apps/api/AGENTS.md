@@ -47,7 +47,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 # Standard: NestJS Module Hierarchy
 
-Enforce a NestJS module structure where AppModule configures all hierarchical routes via RouterModule.register() and each resource lives in its own module with empty @Controller() paths, URL-mirroring directories, explicit parent IDs (using @Param('orgId')), and command-object service inputs to improve maintainability, scalability, and separation of concerns. :
+Establish a consistent NestJS module structure in the API application where each resource is encapsulated in its own module with proper hierarchical organization to enhance maintainability, scalabilit... :
 * Accept a single typed Command object as the input parameter in service methods instead of multiple individual parameters to enforce explicit intent and maintain consistency with the hexagonal architecture
 * Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays to ensure a single source of truth for the entire API route structure
 * Create a dedicated NestJS module for each resource type, preventing controllers from handling sub-resource routes to maintain clear separation of concerns
@@ -61,7 +61,7 @@ Full standard is available here for further request: [NestJS Module Hierarchy](.
 
 # Standard: REST API Endpoint Design
 
-Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
+Conventions for designing REST API endpoints that are predictable, self-documenting, and aligned with distinct business actions. Favors dedicated action endpoints over generic status updates, and rout... :
 * Create one endpoint per business action rather than a single endpoint handling multiple actions via request body
 * Only include resource IDs from the ownership chain in the route — omit IDs of related but non-parent resources
 * Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body

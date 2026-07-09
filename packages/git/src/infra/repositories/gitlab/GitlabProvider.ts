@@ -2,6 +2,7 @@ import {
   CheckAuthFailureReason,
   CheckAuthResult,
   IGitProvider,
+  ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
@@ -9,6 +10,8 @@ import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
 
 const origin = 'GitlabProvider';
+
+const PROJECTS_PER_PAGE = 100;
 
 export class GitlabProvider implements IGitProvider {
   private readonly client: AxiosInstance;
@@ -38,17 +41,9 @@ export class GitlabProvider implements IGitProvider {
     });
   }
 
-  async listAvailableRepositories(): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+  async listAvailableRepositories(
+    page = 1,
+  ): Promise<ListAvailableRepositoriesResult> {
     try {
       this.logger.debug('Fetching GitLab projects');
 
@@ -60,7 +55,8 @@ export class GitlabProvider implements IGitProvider {
           membership: true,
           archived: false,
           order_by: 'last_activity_at', // Use last_activity_at like the working example
-          per_page: 100,
+          per_page: PROJECTS_PER_PAGE,
+          page,
         },
       });
 
@@ -68,9 +64,12 @@ export class GitlabProvider implements IGitProvider {
         projectCount: response.data?.length || 0,
       });
 
+      // GitLab reports the page count in the `x-total-pages` header.
+      const totalPages = totalPagesFromHeader(response.headers, page);
+
       if (!response.data || !Array.isArray(response.data)) {
         this.logger.warn('GitLab API returned no data or non-array data');
-        return [];
+        return { repositories: [], totalPages };
       }
 
       this.logger.debug('Processing GitLab projects', {
@@ -176,7 +175,7 @@ export class GitlabProvider implements IGitProvider {
         totalCount: mappedProjects.length,
       });
 
-      return mappedProjects;
+      return { repositories: mappedProjects, totalPages };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
@@ -274,6 +273,18 @@ export class GitlabProvider implements IGitProvider {
       );
     }
   }
+}
+
+// GitLab returns the total page count in the `x-total-pages` response header.
+// When it is missing or unparseable we fall back to the current page.
+function totalPagesFromHeader(
+  headers: Record<string, unknown> | undefined,
+  currentPage: number,
+): number {
+  const raw = headers?.['x-total-pages'];
+  const parsed =
+    typeof raw === 'string' || typeof raw === 'number' ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : currentPage;
 }
 
 function mapGitlabAuthError(error: unknown): CheckAuthFailureReason {

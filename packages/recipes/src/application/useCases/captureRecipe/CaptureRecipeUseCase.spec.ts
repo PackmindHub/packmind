@@ -29,7 +29,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
 import { RecipeService } from '../../services/RecipeService';
-import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { CaptureRecipeUseCase } from './CaptureRecipeUseCase';
 
@@ -44,7 +43,6 @@ describe('CaptureRecipeUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
   let recipeVersionService: jest.Mocked<RecipeVersionService>;
-  let recipeSummaryService: jest.Mocked<RecipeSummaryService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -88,10 +86,6 @@ describe('CaptureRecipeUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    recipeSummaryService = {
-      createRecipeSummary: jest.fn().mockResolvedValue('AI-generated summary'),
-    } as unknown as jest.Mocked<RecipeSummaryService>;
-
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -104,7 +98,6 @@ describe('CaptureRecipeUseCase', () => {
       accountsPort,
       recipeService,
       recipeVersionService,
-      recipeSummaryService,
       eventEmitterService,
       stubbedLogger,
     );
@@ -459,7 +452,7 @@ describe('CaptureRecipeUseCase', () => {
     });
 
     describe('when summary is provided', () => {
-      it('uses provided summary without calling recipeSummaryService', async () => {
+      it('composes provided summary into the recipe content', async () => {
         const command: CaptureRecipeCommand = {
           name: 'Test Recipe',
           spaceId,
@@ -493,43 +486,6 @@ describe('CaptureRecipeUseCase', () => {
           slug: 'test-recipe',
           content: expectedContent,
           version: 1,
-          summary: command.summary,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-
-        await captureRecipeUseCase.execute(command);
-
-        expect(recipeSummaryService.createRecipeSummary).not.toHaveBeenCalled();
-      });
-
-      it('passes provided summary to RecipeVersionService', async () => {
-        const command: CaptureRecipeCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: 'Provided summary',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const createdRecipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: command.summary,
-          version: 1,
-        });
-
-        const createdRecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-          version: 1,
         });
 
         recipeService.addRecipe.mockResolvedValue(createdRecipe);
@@ -545,7 +501,6 @@ describe('CaptureRecipeUseCase', () => {
           slug: 'test-recipe',
           content: command.summary,
           version: 1,
-          summary: command.summary,
           gitCommit: undefined,
           userId: createUserId(userId),
         });
@@ -609,249 +564,6 @@ describe('CaptureRecipeUseCase', () => {
             slug: 'test-recipe-2',
           }),
         );
-      });
-    });
-
-    describe('when summary is empty', () => {
-      it('calls recipeSummaryService to generate summary', async () => {
-        const command: CaptureRecipeCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdRecipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdRecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-          version: 1,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureRecipeUseCase.execute(command);
-
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
-          expect.any(String), // organizationId
-          {
-            recipeId: createdRecipe.id,
-            name: createdRecipe.name,
-            slug: createdRecipe.slug,
-            content: createdRecipe.content,
-            version: 1,
-            userId: createdRecipe.userId,
-          },
-        );
-      });
-
-      it('uses generated summary in RecipeVersionService', async () => {
-        const command: CaptureRecipeCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdRecipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdRecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-          version: 1,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureRecipeUseCase.execute(command);
-
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
-          recipeId: createdRecipe.id,
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-          summary: generatedSummary,
-          gitCommit: undefined,
-          userId: createUserId(userId),
-        });
-      });
-    });
-
-    describe('when summary is not provided', () => {
-      it('calls recipeSummaryService to generate summary', async () => {
-        const command: CaptureRecipeCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdRecipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdRecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-          version: 1,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureRecipeUseCase.execute(command);
-
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
-          expect.any(String), // organizationId
-          {
-            recipeId: createdRecipe.id,
-            name: createdRecipe.name,
-            slug: createdRecipe.slug,
-            content: createdRecipe.content,
-            version: 1,
-            userId: createdRecipe.userId,
-          },
-        );
-      });
-    });
-
-    describe('when summary generation fails with AiNotConfigured', () => {
-      it('logs warning and proceeds with null summary', async () => {
-        const command: CaptureRecipeCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const createdRecipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdRecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-          version: 1,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockRejectedValue(
-          new Error('AI service not configured'),
-        );
-
-        const result = await captureRecipeUseCase.execute(command);
-
-        expect(result).toEqual(createdRecipe);
-      });
-
-      describe('when AI service fails', () => {
-        it('passes null summary to RecipeVersionService', async () => {
-          const command: CaptureRecipeCommand = {
-            name: 'Test Recipe',
-            spaceId,
-            summary: '',
-            whenToUse: [],
-            contextValidationCheckpoints: [],
-            steps: [],
-            organizationId,
-            userId,
-          };
-
-          const createdRecipe = recipeFactory({
-            id: createRecipeId(uuidv4()),
-            name: command.name,
-            slug: 'test-recipe',
-            content: '',
-            version: 1,
-          });
-
-          const createdRecipeVersion = recipeVersionFactory({
-            id: createRecipeVersionId(uuidv4()),
-            recipeId: createdRecipe.id,
-            version: 1,
-          });
-
-          recipeService.addRecipe.mockResolvedValue(createdRecipe);
-          recipeVersionService.addRecipeVersion.mockResolvedValue(
-            createdRecipeVersion,
-          );
-          recipeSummaryService.createRecipeSummary.mockRejectedValue(
-            new Error('AI service not configured'),
-          );
-
-          await captureRecipeUseCase.execute(command);
-
-          expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
-            recipeId: createdRecipe.id,
-            name: command.name,
-            slug: 'test-recipe',
-            content: '',
-            version: 1,
-            summary: null,
-            gitCommit: undefined,
-            userId: createUserId(userId),
-          });
-        });
       });
     });
 

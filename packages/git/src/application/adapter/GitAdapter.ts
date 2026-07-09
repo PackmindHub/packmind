@@ -25,6 +25,8 @@ import {
   IDeploymentPortName,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
   IGitPort,
+  ListAvailableReposCommand,
+  ListAvailableReposResponse,
   ListProvidersCommand,
   ListProvidersResponse,
   OrganizationGitHubApp,
@@ -334,18 +336,10 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     });
   }
 
-  public listAvailableRepos(gitProviderId: GitProviderId): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
-    return this._listAvailableRepos.execute({ gitProviderId });
+  public listAvailableRepos(
+    command: ListAvailableReposCommand,
+  ): Promise<ListAvailableReposResponse> {
+    return this._listAvailableRepos.execute(command);
   }
 
   public checkBranchExists(

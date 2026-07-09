@@ -9,7 +9,6 @@ export type UpdateRecipeFromUICommand = PackmindCommand & {
   recipeId: RecipeId;
   name: string;
   content: string;
-  summary?: string;
   userId: UserId;
   spaceId: SpaceId;
   organizationId: OrganizationId;

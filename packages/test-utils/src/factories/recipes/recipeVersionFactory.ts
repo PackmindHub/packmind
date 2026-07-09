@@ -23,8 +23,6 @@ export const recipeVersionFactory: Factory<RecipeVersion> = (
 4. Repeat the cycle
 5. Keep tests small and focused`,
       version: 1,
-      summary:
-        'Complete TDD workflow with red-green-refactor cycle for quality code development.',
       userId: null, // Default to null (git commits), can be overridden
     },
     {
@@ -39,8 +37,6 @@ export const recipeVersionFactory: Factory<RecipeVersion> = (
 4. Add repository methods for persistence
 5. Write comprehensive tests`,
       version: 1,
-      summary:
-        'Systematic approach for implementing data models with proper typing and testing.',
       userId: null, // Default to null (git commits), can be overridden
     },
     {
@@ -55,8 +51,6 @@ export const recipeVersionFactory: Factory<RecipeVersion> = (
 4. Implement the functional component
 5. Export and test your component`,
       version: 1,
-      summary:
-        'Step-by-step guide for creating and testing React functional components.',
       userId: null, // Default to null (git commits), can be overridden
     },
     {

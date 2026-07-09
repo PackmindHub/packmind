@@ -39,7 +39,6 @@ describe('createStandard.tool', () => {
   let toolHandler: (params: {
     name: string;
     description: string;
-    summary?: string;
     rules?: Array<{
       content: string;
       examples?: Array<{
@@ -151,7 +150,7 @@ describe('createStandard.tool', () => {
   });
 
   describe('success scenarios', () => {
-    describe('when creating standard with name, description, summary, and rules with examples', () => {
+    describe('when creating standard with name, description, and rules with examples', () => {
       let result: { content: { type: string; text: string }[] };
 
       beforeEach(async () => {
@@ -173,7 +172,6 @@ describe('createStandard.tool', () => {
         result = await toolHandler({
           name: 'Test Standard',
           description: 'A comprehensive test standard',
-          summary: 'Use this for testing',
           rules: [
             {
               content: 'Use TypeScript for type safety',
@@ -205,7 +203,6 @@ describe('createStandard.tool', () => {
         ).toHaveBeenCalledWith({
           name: 'Test Standard',
           description: 'A comprehensive test standard',
-          summary: 'Use this for testing',
           rules: [
             {
               content: 'Use TypeScript for type safety',
@@ -281,7 +278,6 @@ describe('createStandard.tool', () => {
         ).toHaveBeenCalledWith({
           name: 'Empty Standard',
           description: 'A standard without rules',
-          summary: undefined,
           rules: [],
           organizationId: 'org-123',
           userId: 'user-123',
@@ -299,58 +295,6 @@ describe('createStandard.tool', () => {
             {
               type: 'text',
               text: "Standard 'empty-standard' has been created successfully with 0 rules and 0 examples.",
-            },
-          ],
-        });
-      });
-    });
-
-    describe('when creating standard without summary (optional field)', () => {
-      let result: { content: { type: string; text: string }[] };
-
-      beforeEach(async () => {
-        const mockStandard = {
-          slug: 'no-summary-standard',
-          name: 'No Summary Standard',
-        };
-
-        mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
-          mockStandard,
-        );
-
-        mockFastify.standardsHexa.mockReturnValue({
-          getAdapter: () => mockStandardsAdapter,
-        });
-
-        registerSaveStandardTool(dependencies, mcpServer);
-
-        result = await toolHandler({
-          name: 'No Summary Standard',
-          description: 'A standard without summary',
-          rules: [
-            {
-              content: 'Always write clean code',
-            },
-          ],
-        });
-      });
-
-      it('calls createStandardWithPackages with undefined summary', () => {
-        expect(
-          mockStandardsAdapter.createStandardWithPackages,
-        ).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: undefined,
-          }),
-        );
-      });
-
-      it('returns success message', () => {
-        expect(result).toEqual({
-          content: [
-            {
-              type: 'text',
-              text: "Standard 'no-summary-standard' has been created successfully with 1 rules and 0 examples.",
             },
           ],
         });

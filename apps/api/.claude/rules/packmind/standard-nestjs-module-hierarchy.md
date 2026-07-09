@@ -5,12 +5,12 @@ paths:
   - "**/*.module.ts"
   - "**/*.service.ts"
 alwaysApply: false
-description: 'Enforce a NestJS module structure where AppModule configures all hierarchical routes via RouterModule.register() and each resource lives in its own module with empty @Controller() paths, URL-mirroring directories, explicit parent IDs (using @Param(''orgId'')), and command-object service inputs to improve maintainability, scalability, and separation of concerns.'
+description: 'Establish a consistent NestJS module structure in the API application where each resource is encapsulated in its own module with proper hierarchical organization to enhance maintainability, scalability, and clear separation of concerns across the codebase. This standard applies to all modules (new and existing) in apps/api/src/app/ and ensures that the module structure mirrors the URL hierarchy, making it easier to navigate and understand the application''s architecture.'
 ---
 
 # Standard: NestJS Module Hierarchy
 
-Enforce a NestJS module structure where AppModule configures all hierarchical routes via RouterModule.register() and each resource lives in its own module with empty @Controller() paths, URL-mirroring directories, explicit parent IDs (using @Param('orgId')), and command-object service inputs to improve maintainability, scalability, and separation of concerns. :
+Establish a consistent NestJS module structure in the API application where each resource is encapsulated in its own module with proper hierarchical organization to enhance maintainability, scalabilit... :
 * Accept a single typed Command object as the input parameter in service methods instead of multiple individual parameters to enforce explicit intent and maintain consistency with the hexagonal architecture
 * Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays to ensure a single source of truth for the entire API route structure
 * Create a dedicated NestJS module for each resource type, preventing controllers from handling sub-resource routes to maintain clear separation of concerns

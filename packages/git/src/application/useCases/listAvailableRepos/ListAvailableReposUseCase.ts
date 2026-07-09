@@ -1,27 +1,17 @@
 import { GitProviderService } from '../../GitProviderService';
-import { GitProviderId } from '@packmind/types';
+import {
+  IListAvailableReposUseCase,
+  ListAvailableReposCommand,
+  ListAvailableReposResponse,
+} from '@packmind/types';
 
-export interface ListAvailableReposUseCaseInput {
-  gitProviderId: GitProviderId;
-}
-
-export interface ExternalRepository {
-  name: string;
-  owner: string;
-  description?: string;
-  private: boolean;
-  defaultBranch: string;
-  language?: string;
-  stars: number;
-}
-
-export class ListAvailableReposUseCase {
+export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
   constructor(private readonly gitProviderService: GitProviderService) {}
 
   async execute(
-    input: ListAvailableReposUseCaseInput,
-  ): Promise<ExternalRepository[]> {
-    const { gitProviderId } = input;
+    command: ListAvailableReposCommand,
+  ): Promise<ListAvailableReposResponse> {
+    const { gitProviderId, page } = command;
 
     // Business rule: gitProviderId is required
     if (!gitProviderId) {
@@ -48,6 +38,6 @@ export class ListAvailableReposUseCase {
     }
 
     // Delegate to service for technical operation
-    return this.gitProviderService.getAvailableRepos(gitProviderId);
+    return this.gitProviderService.getAvailableRepos(gitProviderId, page ?? 1);
   }
 }

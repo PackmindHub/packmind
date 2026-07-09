@@ -9,8 +9,6 @@ import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
-  CompleteUserOnboardingCommand,
-  CompleteUserOnboardingResponse,
   CreateCliLoginCodeCommand,
   CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
@@ -24,15 +22,11 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
-  GetOrganizationOnboardingStatusCommand,
   GetUserByIdCommand,
-  GetUserOnboardingStatusCommand,
-  GetUserOnboardingStatusResponse,
   IAccountsPort,
   IActivateUserAccountUseCase,
   IChangeUserRoleUseCase,
   ICheckEmailAvailabilityUseCase,
-  ICompleteUserOnboardingUseCase,
   IUpdateUserDisplayNameUseCase,
   ICreateCliLoginCodeUseCase,
   ICreateInvitationsUseCase,
@@ -46,9 +40,7 @@ import {
   IGetOrganizationByIdUseCase,
   IGetOrganizationByNameUseCase,
   IGetOrganizationBySlugUseCase,
-  IGetOrganizationOnboardingStatusUseCase,
   IGetUserByIdUseCase,
-  IGetUserOnboardingStatusUseCase,
   IGitPort,
   IGitPortName,
   IListOrganizationUserStatusesUseCase,
@@ -81,7 +73,6 @@ import {
   ListUserOrganizationsResponse,
   Organization,
   OrganizationId,
-  OrganizationOnboardingStatus,
   RenameOrganizationCommand,
   RenameOrganizationResponse,
   UpdateUserDisplayNameCommand,
@@ -132,7 +123,6 @@ import { GetCurrentApiKeyUseCase } from '../useCases/getCurrentApiKey/GetCurrent
 import { GetOrganizationByIdUseCase } from '../useCases/getOrganizationById/GetOrganizationByIdUseCase';
 import { GetOrganizationByNameUseCase } from '../useCases/getOrganizationByName/GetOrganizationByNameUseCase';
 import { GetOrganizationBySlugUseCase } from '../useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase';
-import { GetOrganizationOnboardingStatusUseCase } from '../useCases/getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
 import { GetUserByIdUseCase } from '../useCases/getUserById/GetUserByIdUseCase';
 import { ListOrganizationUserStatusesUseCase } from '../useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
 import { ListOrganizationUsersUseCase } from '../useCases/listOrganizationUsers/ListOrganizationUsersUseCase';
@@ -144,8 +134,6 @@ import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganizatio
 import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
 import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
 import { StartTrialUseCase } from '../useCases/startTrial/StartTrialUseCase';
-import { GetUserOnboardingStatusUseCase } from '../useCases/getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
-import { CompleteUserOnboardingUseCase } from '../useCases/completeUserOnboarding/CompleteUserOnboardingUseCase';
 import { UpdateUserDisplayNameUseCase } from '../useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase';
 
 const origin = 'AccountsAdapter';
@@ -183,14 +171,11 @@ export class AccountsAdapter
   private _requestPasswordReset!: IRequestPasswordResetUseCase;
   private _resetPassword!: IResetPasswordUseCase;
   private _validatePasswordResetToken!: IValidatePasswordResetTokenUseCase;
-  private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
   private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
   private _startTrial!: IStartTrial;
   private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
   private _activateTrialAccount!: IActivateTrialAccountUseCase;
-  private _getUserOnboardingStatus!: IGetUserOnboardingStatusUseCase;
-  private _completeUserOnboarding!: ICompleteUserOnboardingUseCase;
   private _updateUserDisplayName!: IUpdateUserDisplayNameUseCase;
 
   constructor(
@@ -330,25 +315,6 @@ export class AccountsAdapter
     this._validatePasswordResetToken = new ValidatePasswordResetTokenUseCase(
       this.accountsServices.getPasswordResetTokenService(),
       this.accountsServices.getUserService(),
-    );
-    this._getOrganizationOnboardingStatus =
-      new GetOrganizationOnboardingStatusUseCase(
-        this,
-        this.accountsServices.getUserService(),
-        this.gitPort ?? null,
-        this.standardsPort ?? null,
-        this.spacesPort ?? null,
-        this.deploymentPort ?? null,
-      );
-
-    // User onboarding use cases
-    this._getUserOnboardingStatus = new GetUserOnboardingStatusUseCase(
-      this,
-      this.accountsServices.getUserMetadataService(),
-    );
-    this._completeUserOnboarding = new CompleteUserOnboardingUseCase(
-      this,
-      this.accountsServices.getUserMetadataService(),
     );
     this._updateUserDisplayName = new UpdateUserDisplayNameUseCase(
       this,
@@ -596,24 +562,6 @@ export class AccountsAdapter
     command: ValidatePasswordResetTokenCommand,
   ): Promise<ValidatePasswordResetTokenResponse> {
     return this._validatePasswordResetToken.execute(command);
-  }
-
-  public async getOrganizationOnboardingStatus(
-    command: GetOrganizationOnboardingStatusCommand,
-  ): Promise<OrganizationOnboardingStatus> {
-    return this._getOrganizationOnboardingStatus.execute(command);
-  }
-
-  public async getUserOnboardingStatus(
-    command: GetUserOnboardingStatusCommand,
-  ): Promise<GetUserOnboardingStatusResponse> {
-    return this._getUserOnboardingStatus.execute(command);
-  }
-
-  public async completeUserOnboarding(
-    command: CompleteUserOnboardingCommand,
-  ): Promise<CompleteUserOnboardingResponse> {
-    return this._completeUserOnboarding.execute(command);
   }
 
   // CLI login use cases

@@ -1,7 +1,6 @@
 import { AddRuleToStandardUseCase } from './AddRuleToStandardUseCase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { Standard, createStandardId } from '@packmind/types';
 import { StandardVersion } from '@packmind/types';
@@ -42,7 +41,6 @@ describe('AddRuleToStandardUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -102,11 +100,6 @@ describe('AddRuleToStandardUseCase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock GenerateStandardSummaryDelayedJob
-    generateStandardSummaryDelayedJob = {
-      addJob: jest.fn(),
-    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
-
     // Mock RuleRepository
     ruleRepository = {
       add: jest.fn(),
@@ -131,9 +124,6 @@ describe('AddRuleToStandardUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    // Setup default mock implementations
-    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
-
     addRuleToStandardUseCase = new AddRuleToStandardUseCase(
       spacesPort,
       accountsPort,
@@ -141,7 +131,6 @@ describe('AddRuleToStandardUseCase', () => {
       standardVersionService,
       ruleRepository,
       ruleExampleRepository,
-      generateStandardSummaryDelayedJob,
       eventEmitterService,
       undefined, // linterAdapter
       stubbedLogger,
@@ -269,34 +258,6 @@ describe('AddRuleToStandardUseCase', () => {
             userId,
             scope: existingStandard.scope,
           },
-        );
-      });
-
-      it('queues summary generation job for the new version', () => {
-        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId,
-            standardVersion: expect.objectContaining({
-              standardId: existingStandard.id,
-              name: existingStandard.name,
-              slug: existingStandard.slug,
-              description: existingStandard.description,
-              version: 3,
-              scope: existingStandard.scope,
-            }),
-            rules: expect.arrayContaining([
-              expect.objectContaining({
-                content: 'Use assertive names for test cases',
-              }),
-              expect.objectContaining({
-                content: 'Clean mocks after each test',
-              }),
-              expect.objectContaining({
-                content:
-                  'Use descriptive test names that explain expected behavior',
-              }),
-            ]),
-          }),
         );
       });
 

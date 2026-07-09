@@ -123,22 +123,9 @@ export interface IInvitationPage extends IPackmindPage {
   activateAccount(password: string): Promise<IDashboardPage>;
 }
 
-export interface IStartTrialPage extends IPackmindPage {
-  continueToAgentSelection(): Promise<IStartTrialAgentSelectorPage>;
-}
-
-export interface IStartTrialAgentSelectorPage extends IPackmindPage {
-  selectAgent(agentValue: string): Promise<IStartTrialAgentPage>;
-}
-
 export interface IMcpConfig {
   url: string;
   token: string;
-}
-
-export interface IStartTrialAgentPage extends IPackmindPage {
-  getMcpConfig(): Promise<IMcpConfig>;
-  createAccount(): Promise<IActivateAccountPage>;
 }
 
 export interface IActivateAccountPage extends IPackmindPage {
@@ -163,9 +150,6 @@ export interface IPageFactory {
   getSettingsPage(): Promise<ISettingsPage>;
   getGitSettingsPage(): Promise<IGitSettingsPage>;
   getInvitationPage(token: string): Promise<IInvitationPage>;
-  getStartTrialPage(): Promise<IStartTrialPage>;
-  getStartTrialAgentSelectorPage(): Promise<IStartTrialAgentSelectorPage>;
-  getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage>;
   getActivateAccountPage(): Promise<IActivateAccountPage>;
   getSpaceSettingsPage(): Promise<ISpaceSettingsPage>;
 }

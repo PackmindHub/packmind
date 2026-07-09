@@ -63,7 +63,6 @@ export interface IStandardsPort {
   createStandardWithExamples(params: {
     name: string;
     description: string;
-    summary: string | null;
     rules: RuleWithExamples[];
     organizationId: OrganizationId;
     userId: UserId;

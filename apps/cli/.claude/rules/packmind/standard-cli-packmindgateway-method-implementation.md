@@ -3,12 +3,12 @@ name: 'CLI Gateway Implementation'
 paths:
   - "apps/cli/src/infra/repositories/*Gateway.ts"
 alwaysApply: false
-description: 'Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent.'
+description: 'When adding new methods to the PackmindGateway class in the CLI application, use the PackmindHttpClient abstraction to avoid code duplication and maintain consistency. The older methods contain extensive boilerplate (manual API key decoding, JWT parsing, duplicated error handling) that should not be replicated.'
 ---
 
 # Standard: CLI Gateway Implementation
 
-Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent. :
+When adding new methods to the PackmindGateway class in the CLI application, use the PackmindHttpClient abstraction to avoid code duplication and maintain consistency. The older methods contain extens... :
 * Define the method return type using `Promise<ResponseType>` for type safety
 * Gateway implementations methods should always be typed using `Gateway<UseCase>`
 * Gateway interfaces should only expose `Gateway<UseCase>`

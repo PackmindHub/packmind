@@ -45,10 +45,8 @@ import {
   UpdateStandardCommand,
   UserId,
 } from '@packmind/types';
-import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { GetRuleExamplesCommand } from '../../domain/useCases';
-import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsServices } from '../services/StandardsServices';
 import { AddRuleToStandardUseCase } from '../useCases/addRuleToStandard/AddRuleToStandardUseCase';
 import { CreateRuleExampleUseCase } from '../useCases/createRuleExample/CreateRuleExampleUseCase';
@@ -76,7 +74,6 @@ const origin = 'StandardsAdapter';
 export class StandardsAdapter
   implements IBaseAdapter<IStandardsPort>, IStandardsPort
 {
-  private standardDelayedJobs: IStandardDelayedJobs | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private linterPort: ILinterPort | null = null;
@@ -139,23 +136,12 @@ export class StandardsAdapter
     this.llmPort = ports[ILlmPortName];
     this.eventEmitterService = ports.eventEmitterService;
 
-    this.standardDelayedJobs = await this.buildDelayedJobs(
-      ports.jobsService,
-      ports[ISpacesPortName],
-    );
-
-    // Set llmPort to services
-    if (this.llmPort) {
-      this.services.setLlmPort(this.llmPort);
-    }
-
     if (
       !this.accountsPort ||
       !this.spacesPort ||
       !this.linterPort ||
       !this.deploymentsPort ||
       !this.llmPort ||
-      !this.standardDelayedJobs ||
       !this.eventEmitterService
     ) {
       throw new Error(
@@ -222,13 +208,11 @@ export class StandardsAdapter
       this.services.getStandardService(),
     );
 
-    // Use cases that depend on delayed jobs (required)
     this._createStandard = new CreateStandardUseCase(
       this.spacesPort,
       this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
-      this.standardDelayedJobs.standardSummaryDelayedJob,
       this.eventEmitterService,
       this.repositories.getRuleRepository(),
     );
@@ -240,7 +224,6 @@ export class StandardsAdapter
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
-      this.standardDelayedJobs.standardSummaryDelayedJob,
       this.eventEmitterService,
     );
 
@@ -251,7 +234,6 @@ export class StandardsAdapter
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
-      this.standardDelayedJobs.standardSummaryDelayedJob,
       this.eventEmitterService,
       this.linterPort,
     );
@@ -260,7 +242,6 @@ export class StandardsAdapter
     this._createStandardWithExamples = new CreateStandardWithExamplesUseCase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
-      this.services.getStandardSummaryService(),
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
       this.eventEmitterService,
@@ -314,39 +295,6 @@ export class StandardsAdapter
   }
 
   /**
-   * Build delayed jobs from JobsService.
-   * This is called internally during initialize().
-   */
-  private async buildDelayedJobs(
-    jobsService: JobsService,
-    spacesPort: ISpacesPort,
-  ): Promise<IStandardDelayedJobs> {
-    this.logger.debug('Building standards delayed jobs');
-
-    const jobFactory = new GenerateStandardSummaryJobFactory(
-      this.repositories,
-      this.services.getStandardSummaryService(),
-      this.services.getStandardVersionService(),
-      spacesPort,
-    );
-
-    jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
-
-    await jobFactory.createQueue();
-
-    if (!jobFactory.delayedJob) {
-      throw new Error(
-        'StandardsAdapter: Failed to create delayed job for standard summary',
-      );
-    }
-
-    this.logger.debug('Standards delayed jobs built successfully');
-    return {
-      standardSummaryDelayedJob: jobFactory.delayedJob,
-    };
-  }
-
-  /**
    * Check if adapter is ready (all required ports and services set).
    */
   public isReady(): boolean {
@@ -354,8 +302,7 @@ export class StandardsAdapter
       this.accountsPort != null &&
       this.spacesPort != null &&
       this.linterPort != null &&
-      this.deploymentsPort != null &&
-      this.standardDelayedJobs != null
+      this.deploymentsPort != null
     );
   }
 
@@ -490,7 +437,6 @@ export class StandardsAdapter
   async createStandardWithExamples(params: {
     name: string;
     description: string;
-    summary: string | null;
     rules: import('@packmind/types').RuleWithExamples[];
     organizationId: OrganizationId;
     userId: UserId;
@@ -516,7 +462,6 @@ export class StandardsAdapter
   async createStandardWithPackages(params: {
     name: string;
     description: string;
-    summary?: string;
     scope?: string | null;
     rules: import('@packmind/types').RuleWithExamples[];
     organizationId: OrganizationId;

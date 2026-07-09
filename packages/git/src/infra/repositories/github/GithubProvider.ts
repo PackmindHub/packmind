@@ -2,13 +2,16 @@ import {
   CheckAuthFailureReason,
   CheckAuthResult,
   IGitProvider,
+  ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
-import axios, { AxiosInstance, isAxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 
 const origin = 'GithubProvider';
+
+const REPOS_PER_PAGE = 100;
 
 export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
@@ -44,30 +47,22 @@ export class GithubProvider implements IGitProvider {
     );
   }
 
-  async listAvailableRepositories(): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+  async listAvailableRepositories(
+    page = 1,
+  ): Promise<ListAvailableRepositoriesResult> {
     try {
       // Installation tokens authenticate as the App installation, not a user,
       // so `/user/repos` returns nothing. GitHub returns the same repo shape
       // from both endpoints, only the envelope differs (array vs.
       // `{ repositories: [...] }`).
       const kind = this.resolver.getKind();
-      const rawRepos =
+      const { rawRepos, totalPages } =
         kind === 'installation'
-          ? await this.fetchInstallationRepos()
-          : await this.fetchUserRepos();
+          ? await this.fetchInstallationRepos(page)
+          : await this.fetchUserRepos(page);
 
       if (!Array.isArray(rawRepos)) {
-        return [];
+        return { repositories: [], totalPages: 1 };
       }
 
       const baseRepos = rawRepos.filter(
@@ -112,7 +107,7 @@ export class GithubProvider implements IGitProvider {
               return repo.permissions.push === true;
             });
 
-      return filteredRepos.map((repo) => ({
+      const repositories = filteredRepos.map((repo) => ({
         name: repo.name,
         owner: repo.owner.login,
         description: repo.description || undefined,
@@ -121,6 +116,8 @@ export class GithubProvider implements IGitProvider {
         language: repo.language || undefined,
         stars: repo.stargazers_count,
       }));
+
+      return { repositories, totalPages };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
@@ -129,23 +126,41 @@ export class GithubProvider implements IGitProvider {
     }
   }
 
-  private async fetchUserRepos(): Promise<unknown> {
+  private async fetchUserRepos(
+    page: number,
+  ): Promise<{ rawRepos: unknown; totalPages: number }> {
     const response = await this.client.get('/user/repos', {
       params: {
         sort: 'updated',
-        per_page: 100,
+        per_page: REPOS_PER_PAGE,
+        page,
       },
     });
-    return response.data;
+    // `/user/repos` has no total count in its body, so the page count comes
+    // from the RFC 5988 `Link` header (`rel="last"`).
+    return {
+      rawRepos: response.data,
+      totalPages: totalPagesFromLinkHeader(response, page),
+    };
   }
 
-  private async fetchInstallationRepos(): Promise<unknown> {
+  private async fetchInstallationRepos(
+    page: number,
+  ): Promise<{ rawRepos: unknown; totalPages: number }> {
     const response = await this.client.get('/installation/repositories', {
       params: {
-        per_page: 100,
+        per_page: REPOS_PER_PAGE,
+        page,
       },
     });
-    return response.data?.repositories;
+    // The installation endpoint reports `total_count`, so we can derive the
+    // page count directly rather than parsing the `Link` header.
+    const totalCount = response.data?.total_count;
+    const totalPages =
+      typeof totalCount === 'number' && totalCount > 0
+        ? Math.ceil(totalCount / REPOS_PER_PAGE)
+        : 1;
+    return { rawRepos: response.data?.repositories, totalPages };
   }
 
   async checkAuth(): Promise<CheckAuthResult> {
@@ -241,6 +256,31 @@ export class GithubProvider implements IGitProvider {
       );
     }
   }
+}
+
+// Extract the last-page number from GitHub's `Link` header, e.g.
+// `<https://api.github.com/user/repos?page=3&per_page=100>; rel="last"`.
+// When absent (single page) the current page is the last one.
+function totalPagesFromLinkHeader(
+  response: AxiosResponse,
+  currentPage: number,
+): number {
+  const link = response.headers?.['link'] ?? response.headers?.['Link'];
+  if (typeof link !== 'string') {
+    return currentPage;
+  }
+
+  const lastMatch = link
+    .split(',')
+    .map((part) => part.trim())
+    .find((part) => /rel="last"/.test(part));
+  if (!lastMatch) {
+    return currentPage;
+  }
+
+  const pageMatch = lastMatch.match(/[?&]page=(\d+)/);
+  const lastPage = pageMatch ? Number(pageMatch[1]) : NaN;
+  return Number.isFinite(lastPage) && lastPage > 0 ? lastPage : currentPage;
 }
 
 function mapGithubAuthError(error: unknown): CheckAuthFailureReason {

@@ -8,12 +8,13 @@ import {
   CheckDirectoryExistenceResult,
   CheckProviderAuthCommand,
   CheckProviderAuthResponse,
-  ExternalRepository,
   FetchFileContentInput,
   FetchFileContentOutput,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
+  ListAvailableReposCommand,
+  ListAvailableReposResponse,
   ListProvidersCommand,
   ListProvidersResponse,
 } from '../contracts';
@@ -199,14 +200,14 @@ export interface IGitPort {
   ): Promise<void>;
 
   /**
-   * List available repositories from a git provider
+   * List available repositories from a git provider, one page at a time.
    *
-   * @param gitProviderId - The git provider ID
-   * @returns Promise of array of available repositories
+   * @param command - Includes the git provider ID and optional page number
+   * @returns Promise of the requested page plus total page count
    */
   listAvailableRepos(
-    gitProviderId: GitProviderId,
-  ): Promise<ExternalRepository[]>;
+    command: ListAvailableReposCommand,
+  ): Promise<ListAvailableReposResponse>;
 
   /**
    * Check if a branch exists in a repository

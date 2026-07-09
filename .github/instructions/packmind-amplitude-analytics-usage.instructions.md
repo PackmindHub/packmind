@@ -3,7 +3,7 @@ applyTo: '**'
 ---
 # Standard: Amplitude analytics usage
 
-Define Amplitude analytics event and property naming conventions (snake_case events ending with a verb, lowerCamelCase properties) for cloud-only, EU-hosted, non-PII tracking across CLI, MCP, and web app interfaces to standardize behavior insights collection. :
+* We use Amplitude to get insights about users' behavior when using our product with the different UI (CLI / MCP / web app). :
 * Event name ends with the verb (e.g 'standard_created', 'user_signed_up')
 * Property name should be in lower camel case
 * Tracked event name should be snake cased

@@ -3,12 +3,12 @@ name: 'Integration Tests Structure and Patterns'
 paths:
   - "Integration test files in packages/integration-tests/src/**/*.spec.ts"
 alwaysApply: false
-description: 'Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage.'
+description: 'Define testing patterns for integration tests in the Packmind monorepo to ensure consistent organization, proper resource management, and comprehensive test coverage using hexagonal architecture principles.'
 ---
 
 # Standard: Integration Tests Structure and Patterns
 
-Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage. :
+Define testing patterns for integration tests in the Packmind monorepo to ensure consistent organization, proper resource management, and comprehensive test coverage using hexagonal architecture princ... :
 * Access domain adapters through testContext.testApp.<domain>Hexa.getAdapter() hexagonal architecture pattern
 * Clean up database connections in afterEach with datasource.destroy() when datasource is initialized in beforeEach
 * Clear all mocks in afterEach using jest.clearAllMocks() to prevent inter-test pollution

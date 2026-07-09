@@ -22,7 +22,6 @@ import { Standard, StandardVersion, Rule } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardService } from '../../services/StandardService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { CreateStandardWithExamplesUseCase } from './CreateStandardWithExamplesUseCase';
 
@@ -30,7 +29,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
   let usecase: CreateStandardWithExamplesUseCase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let standardSummaryService: jest.Mocked<StandardSummaryService>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let linterAdapter: jest.Mocked<ILinterPort>;
@@ -60,11 +58,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
       getLatestStandardVersion: jest.fn(),
       getStandardVersionById: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
-
-    // Mock StandardSummaryService
-    standardSummaryService = {
-      createStandardSummary: jest.fn(),
-    } as unknown as jest.Mocked<StandardSummaryService>;
 
     // Mock RuleExampleRepository
     ruleExampleRepository = {
@@ -113,7 +106,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
     usecase = new CreateStandardWithExamplesUseCase(
       standardService,
       standardVersionService,
-      standardSummaryService,
       ruleExampleRepository,
       ruleRepository,
       eventEmitterService,
@@ -130,7 +122,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
     const baseRequest = {
       name: 'Test Standard',
       description: 'A test standard for unit testing',
-      summary: null,
       organizationId,
       userId,
       scope: null,
@@ -168,9 +159,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
         standardService.listStandardsBySpace.mockResolvedValue([]);
         standardService.addStandard.mockResolvedValue(mockStandard);
-        standardSummaryService.createStandardSummary.mockResolvedValue(
-          'Generated summary',
-        );
         standardVersionService.addStandardVersion.mockResolvedValue(
           mockStandardVersion,
         );
@@ -207,7 +195,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
               { content: 'Limit line length to 100 characters', examples: [] },
             ],
             scope: null,
-            summary: 'Generated summary',
             userId,
           }),
         );
@@ -260,9 +247,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
       standardVersionService.addStandardVersion.mockResolvedValue(
         mockStandardVersion,
       );
@@ -339,9 +323,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
       standardVersionService.addStandardVersion.mockResolvedValue(
         mockStandardVersion,
       );
@@ -412,9 +393,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
       standardVersionService.addStandardVersion.mockResolvedValue(
         mockStandardVersion,
       );
@@ -481,9 +459,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
           existingStandards,
         );
         standardService.addStandard.mockResolvedValue(mockStandard);
-        standardSummaryService.createStandardSummary.mockResolvedValue(
-          'Generated summary',
-        );
         standardVersionService.addStandardVersion.mockResolvedValue(
           mockStandardVersion,
         );
@@ -541,9 +516,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
 
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
       standardVersionService.addStandardVersion.mockResolvedValue(
         mockStandardVersion,
       );
@@ -571,224 +543,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
       );
     });
 
-    describe('when AI summary generation fails', () => {
-      it('creates standard version with null summary', async () => {
-        const rules: RuleWithExamples[] = [
-          { content: 'Use consistent indentation' },
-        ];
-
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-          userId,
-          scope: null,
-        });
-
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId: mockStandard.id,
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-        });
-
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardSummaryService.createStandardSummary.mockRejectedValue(
-          new Error('AI service unavailable'),
-        );
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-
-        await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
-        });
-
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null,
-          }),
-        );
-      });
-    });
-
-    describe('when summary is provided', () => {
-      const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' },
-      ];
-      const providedSummary = 'This is a custom summary provided by the user';
-
-      beforeEach(async () => {
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-          userId,
-          scope: null,
-        });
-
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId: mockStandard.id,
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-        });
-
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-
-        await usecase.createStandardWithExamples({
-          ...baseRequest,
-          summary: providedSummary,
-          rules,
-        });
-      });
-
-      it('does not call summary generation service', () => {
-        expect(
-          standardSummaryService.createStandardSummary,
-        ).not.toHaveBeenCalled();
-      });
-
-      it('passes provided summary to addStandardVersion', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: providedSummary,
-          }),
-        );
-      });
-    });
-
-    describe('when summary is not provided', () => {
-      describe('when summary is null', () => {
-        const rules: RuleWithExamples[] = [
-          { content: 'Use consistent indentation' },
-        ];
-
-        beforeEach(async () => {
-          const mockStandard = standardFactory({
-            id: createStandardId(uuidv4()),
-            name: baseRequest.name,
-            slug: 'test-standard',
-            description: baseRequest.description,
-            version: 1,
-            userId,
-            scope: null,
-          });
-
-          const mockStandardVersion = standardVersionFactory({
-            id: createStandardVersionId(uuidv4()),
-            standardId: mockStandard.id,
-            name: baseRequest.name,
-            slug: 'test-standard',
-            description: baseRequest.description,
-            version: 1,
-          });
-
-          standardService.listStandardsBySpace.mockResolvedValue([]);
-          standardService.addStandard.mockResolvedValue(mockStandard);
-          standardSummaryService.createStandardSummary.mockResolvedValue(
-            'Generated summary',
-          );
-          standardVersionService.addStandardVersion.mockResolvedValue(
-            mockStandardVersion,
-          );
-
-          await usecase.createStandardWithExamples({
-            ...baseRequest,
-            rules,
-          });
-        });
-
-        it('calls summary generation service', () => {
-          expect(
-            standardSummaryService.createStandardSummary,
-          ).toHaveBeenCalled();
-        });
-
-        it('passes generated summary to addStandardVersion', () => {
-          expect(
-            standardVersionService.addStandardVersion,
-          ).toHaveBeenCalledWith(
-            expect.objectContaining({
-              summary: 'Generated summary',
-            }),
-          );
-        });
-      });
-
-      describe('when summary is whitespace only', () => {
-        const rules: RuleWithExamples[] = [
-          { content: 'Use consistent indentation' },
-        ];
-
-        beforeEach(async () => {
-          const mockStandard = standardFactory({
-            id: createStandardId(uuidv4()),
-            name: baseRequest.name,
-            slug: 'test-standard',
-            description: baseRequest.description,
-            version: 1,
-            userId,
-            scope: null,
-          });
-
-          const mockStandardVersion = standardVersionFactory({
-            id: createStandardVersionId(uuidv4()),
-            standardId: mockStandard.id,
-            name: baseRequest.name,
-            slug: 'test-standard',
-            description: baseRequest.description,
-            version: 1,
-          });
-
-          standardService.listStandardsBySpace.mockResolvedValue([]);
-          standardService.addStandard.mockResolvedValue(mockStandard);
-          standardSummaryService.createStandardSummary.mockResolvedValue(
-            'Generated summary',
-          );
-          standardVersionService.addStandardVersion.mockResolvedValue(
-            mockStandardVersion,
-          );
-
-          await usecase.createStandardWithExamples({
-            ...baseRequest,
-            summary: '   ',
-            rules,
-          });
-        });
-
-        it('calls summary generation service', () => {
-          expect(
-            standardSummaryService.createStandardSummary,
-          ).toHaveBeenCalled();
-        });
-
-        it('passes generated summary to addStandardVersion', () => {
-          expect(
-            standardVersionService.addStandardVersion,
-          ).toHaveBeenCalledWith(
-            expect.objectContaining({
-              summary: 'Generated summary',
-            }),
-          );
-        });
-      });
-    });
-
     describe('when standard creation fails', () => {
       it('throws error', async () => {
         const rules: RuleWithExamples[] = [
@@ -803,7 +557,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
         await expect(
           usecase.createStandardWithExamples({
             ...baseRequest,
-            summary: null,
             rules,
           }),
         ).rejects.toThrow('Database connection failed');
@@ -1175,7 +928,6 @@ describe('CreateStandardWithExamplesUseCase', () => {
           const usecaseWithoutLinter = new CreateStandardWithExamplesUseCase(
             standardService,
             standardVersionService,
-            standardSummaryService,
             ruleExampleRepository,
             ruleRepository,
             eventEmitterService,

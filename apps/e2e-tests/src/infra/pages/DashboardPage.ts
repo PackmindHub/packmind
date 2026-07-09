@@ -6,18 +6,14 @@ export class DashboardPage
   extends AbstractPackmindAppPage
   implements IDashboardPage
 {
-  async skipOnboardingModal(): Promise<void> {
-    const skipLink = this.page.getByTestId('OnboardingWelcome.SkipLink');
-    await skipLink.click();
-    await skipLink.waitFor({ state: 'hidden' });
-  }
-
   async expectWelcomeMessage(): Promise<void> {
-    await this.skipOnboardingModal();
+    // After sign-up + auto-login the user lands on the org's default space
+    // overview page. Wait for that landing before asserting the heading.
+    await this.waitForLoaded();
     await expect(this.page.locator('h1')).toContainText('Overview');
   }
 
-  expectedUrl(): string {
-    return '/org/**';
+  expectedUrl(): RegExp {
+    return /\/org\/[^/]+\/space\/[^/]+/;
   }
 }
