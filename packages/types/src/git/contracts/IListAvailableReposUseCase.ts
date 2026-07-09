@@ -19,6 +19,10 @@ export type ExternalRepository = {
 export type ListAvailableReposResponse = {
   currentPage: number;
   availablePages: number;
+  // The last provider page fetched to build this batch. Because inaccessible
+  // repos are filtered out, one requested page may span several provider pages;
+  // callers resume pagination from `lastLoadedPage + 1`, not `currentPage + 1`.
+  lastLoadedPage: number;
   repositories: ExternalRepository[];
 };
 

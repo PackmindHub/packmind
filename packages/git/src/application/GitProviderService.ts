@@ -78,9 +78,14 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     // Always filters for write-only repositories
-    const { repositories, totalPages } =
+    const { repositories, totalPages, lastLoadedPage } =
       await providerInstance.listAvailableRepositories(page);
-    return { currentPage: page, availablePages: totalPages, repositories };
+    return {
+      currentPage: page,
+      availablePages: totalPages,
+      lastLoadedPage,
+      repositories,
+    };
   }
 
   async checkProviderAuth(

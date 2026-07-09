@@ -83,6 +83,7 @@ const reposResponse = (
 ): ListAvailableReposResponse => ({
   currentPage: 1,
   availablePages: 1,
+  lastLoadedPage: 1,
   repositories,
 });
 

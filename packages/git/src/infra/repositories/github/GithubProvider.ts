@@ -4,6 +4,7 @@ import {
   IGitProvider,
   ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
+import { ExternalRepository } from '@packmind/types';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
@@ -56,74 +57,103 @@ export class GithubProvider implements IGitProvider {
       // from both endpoints, only the envelope differs (array vs.
       // `{ repositories: [...] }`).
       const kind = this.resolver.getKind();
-      const { rawRepos, totalPages } =
-        kind === 'installation'
-          ? await this.fetchInstallationRepos(page)
-          : await this.fetchUserRepos(page);
 
-      if (!Array.isArray(rawRepos)) {
-        return { repositories: [], totalPages: 1 };
-      }
+      const repositories: ExternalRepository[] = [];
+      let currentPage = page;
+      let totalPages = page;
+      let lastLoadedPage = page;
 
-      const baseRepos = rawRepos.filter(
-        (repo) => repo && repo.name && repo.owner && repo.owner.login,
+      // Filtering out repos we lack write access to means a single provider
+      // page can yield far fewer than REPOS_PER_PAGE results — sometimes just
+      // one. Keep pulling provider pages until we have a full page worth of
+      // accessible repos or run out of pages, so "load more" returns a
+      // consistent batch instead of a confusing trickle.
+      do {
+        const { rawRepos, totalPages: pageTotalPages } =
+          kind === 'installation'
+            ? await this.fetchInstallationRepos(currentPage)
+            : await this.fetchUserRepos(currentPage);
+
+        totalPages = pageTotalPages;
+        lastLoadedPage = currentPage;
+        repositories.push(...this.mapAccessibleRepos(rawRepos, kind));
+
+        currentPage += 1;
+      } while (
+        repositories.length < REPOS_PER_PAGE &&
+        lastLoadedPage < totalPages
       );
 
-      // For `/user/repos` the response includes read-only repos the user has
-      // visibility into, so we filter by `permissions.push === true`.
-      // For `/installation/repositories` GitHub already only returns repos
-      // the App was explicitly granted access to. The per-repo `permissions`
-      // object for installation tokens does not reliably reflect the App's
-      // contents:write grant (e.g. `push` may be false or absent), so the
-      // same filter would silently drop every repo — the bug we are fixing.
-      // Trust the App-installation list as-is.
-      const filteredRepos =
-        kind === 'installation'
-          ? baseRepos
-          : baseRepos.filter((repo) => {
-              if (!repo.permissions) {
-                this.logger.warn(
-                  'Repository missing permissions object, excluding from results',
-                  {
-                    repoName: repo.name,
-                    owner: repo.owner?.login,
-                  },
-                );
-                return false;
-              }
-
-              if (typeof repo.permissions.push !== 'boolean') {
-                this.logger.warn(
-                  'Repository permissions.push is not a boolean, excluding from results',
-                  {
-                    repoName: repo.name,
-                    owner: repo.owner?.login,
-                    pushValue: repo.permissions.push,
-                  },
-                );
-                return false;
-              }
-
-              return repo.permissions.push === true;
-            });
-
-      const repositories = filteredRepos.map((repo) => ({
-        name: repo.name,
-        owner: repo.owner.login,
-        description: repo.description || undefined,
-        private: repo.private,
-        defaultBranch: repo.default_branch,
-        language: repo.language || undefined,
-        stars: repo.stargazers_count,
-      }));
-
-      return { repositories, totalPages };
+      return { repositories, totalPages, lastLoadedPage };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw new Error('Failed to fetch repositories from GitHub');
     }
+  }
+
+  // Validates, access-filters and maps one raw provider page into the shared
+  // ExternalRepository shape.
+  private mapAccessibleRepos(
+    rawRepos: unknown,
+    kind: 'user' | 'installation',
+  ): ExternalRepository[] {
+    if (!Array.isArray(rawRepos)) {
+      return [];
+    }
+
+    const baseRepos = rawRepos.filter(
+      (repo) => repo && repo.name && repo.owner && repo.owner.login,
+    );
+
+    // For `/user/repos` the response includes read-only repos the user has
+    // visibility into, so we filter by `permissions.push === true`.
+    // For `/installation/repositories` GitHub already only returns repos
+    // the App was explicitly granted access to. The per-repo `permissions`
+    // object for installation tokens does not reliably reflect the App's
+    // contents:write grant (e.g. `push` may be false or absent), so the
+    // same filter would silently drop every repo — the bug we are fixing.
+    // Trust the App-installation list as-is.
+    const filteredRepos =
+      kind === 'installation'
+        ? baseRepos
+        : baseRepos.filter((repo) => {
+            if (!repo.permissions) {
+              this.logger.warn(
+                'Repository missing permissions object, excluding from results',
+                {
+                  repoName: repo.name,
+                  owner: repo.owner?.login,
+                },
+              );
+              return false;
+            }
+
+            if (typeof repo.permissions.push !== 'boolean') {
+              this.logger.warn(
+                'Repository permissions.push is not a boolean, excluding from results',
+                {
+                  repoName: repo.name,
+                  owner: repo.owner?.login,
+                  pushValue: repo.permissions.push,
+                },
+              );
+              return false;
+            }
+
+            return repo.permissions.push === true;
+          });
+
+    return filteredRepos.map((repo) => ({
+      name: repo.name,
+      owner: repo.owner.login,
+      description: repo.description || undefined,
+      private: repo.private,
+      defaultBranch: repo.default_branch,
+      language: repo.language || undefined,
+      stars: repo.stargazers_count,
+    }));
   }
 
   private async fetchUserRepos(
