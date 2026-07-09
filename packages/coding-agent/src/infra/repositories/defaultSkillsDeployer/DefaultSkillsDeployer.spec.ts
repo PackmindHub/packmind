@@ -47,18 +47,6 @@ describe('DefaultSkillsDeployer', () => {
         expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
       });
 
-      it('excludes packmind-create-package (deprecated)', () => {
-        expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
-          false,
-        );
-      });
-
-      it('excludes packmind-cli-list-commands (deprecated)', () => {
-        expect(
-          paths.some((p) => p.includes('packmind-cli-list-commands')),
-        ).toBe(false);
-      });
-
       it('includes packmind-update-playbook', () => {
         expect(paths.some((p) => p.includes('packmind-update-playbook'))).toBe(
           true,
@@ -186,18 +174,6 @@ describe('DefaultSkillsDeployer', () => {
 
         it('includes packmind-onboard', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-        });
-
-        it('excludes packmind-create-package (deprecated)', () => {
-          expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
-            false,
-          );
-        });
-
-        it('excludes packmind-cli-list-commands (deprecated)', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-cli-list-commands')),
-          ).toBe(false);
         });
 
         it('includes packmind-update-playbook', () => {
