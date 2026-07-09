@@ -2,14 +2,12 @@ import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
 import { MembershipResolutionService } from './MembershipResolutionService';
 import { InvitationService } from './InvitationService';
-import { ApiKeyService, IJwtService } from './ApiKeyService';
+import { ApiKeyService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
-import { TrialActivationService } from './TrialActivationService';
 import { UserMetadataService } from './UserMetadataService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
-import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
 import { PackmindLogger } from '@packmind/logger';
 import { SmtpMailService } from '@packmind/node-utils';
 
@@ -27,12 +25,10 @@ export class EnhancedAccountsServices {
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly userMetadataService: UserMetadataService;
   private readonly apiKeyService?: ApiKeyService;
-  private readonly trialActivationService?: TrialActivationService;
 
   constructor(
     private readonly accountsRepositories: IAccountsRepositories,
     apiKeyService?: ApiKeyService,
-    jwtService?: IJwtService,
   ) {
     const logger = new PackmindLogger('EnhancedAccountsServices');
     // Initialize standard services
@@ -62,17 +58,8 @@ export class EnhancedAccountsServices {
     // Store optional API key service if provided
     this.apiKeyService = apiKeyService;
 
-    // Initialize trial activation service if JWT service is provided
-    if (jwtService) {
-      this.trialActivationService = new TrialActivationService(
-        this.accountsRepositories.getTrialActivationRepository(),
-        jwtService,
-      );
-    }
-
     logger.info('EnhancedAccountsServices initialized', {
       hasApiKeyService: !!this.apiKeyService,
-      hasTrialActivationService: !!this.trialActivationService,
     });
   }
 
@@ -110,13 +97,5 @@ export class EnhancedAccountsServices {
 
   getCliLoginCodeRepository(): ICliLoginCodeRepository {
     return this.accountsRepositories.getCliLoginCodeRepository();
-  }
-
-  getTrialActivationService(): TrialActivationService | undefined {
-    return this.trialActivationService;
-  }
-
-  getTrialActivationRepository(): ITrialActivationRepository {
-    return this.accountsRepositories.getTrialActivationRepository();
   }
 }

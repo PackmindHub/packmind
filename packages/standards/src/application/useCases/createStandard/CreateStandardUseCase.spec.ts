@@ -66,7 +66,6 @@ describe('CreateStandardUseCase', () => {
           userId: testUserId,
         },
       ],
-      trial: false,
       active: true,
     };
 

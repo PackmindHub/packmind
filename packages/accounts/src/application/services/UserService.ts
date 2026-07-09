@@ -44,7 +44,6 @@ export class UserService {
     email: string,
     password: string | undefined,
     organizationId: OrganizationId,
-    options?: { trial?: boolean },
   ): Promise<User> {
     this.logger.info('Creating user', {
       email: maskEmail(email),
@@ -82,7 +81,6 @@ export class UserService {
         passwordHash,
         active: true,
         memberships: [membership],
-        trial: options?.trial ?? false,
       };
 
       const createdUser = await this.userRepository.add(user);
@@ -127,7 +125,6 @@ export class UserService {
       passwordHash: null,
       active: false,
       memberships: [],
-      trial: false,
     };
 
     const createdUser = await this.userRepository.add(newUser);
@@ -214,7 +211,6 @@ export class UserService {
       passwordHash: null,
       active: true,
       memberships: [],
-      trial: false,
     };
 
     const createdUser = await this.userRepository.add(newUser);

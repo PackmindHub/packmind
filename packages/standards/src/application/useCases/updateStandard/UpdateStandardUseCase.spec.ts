@@ -134,7 +134,6 @@ describe('UpdateStandardUseCase', () => {
       passwordHash: 'hashed-password',
       active: true,
       memberships: [mockMembership],
-      trial: false,
     };
 
     accountsAdapter = {

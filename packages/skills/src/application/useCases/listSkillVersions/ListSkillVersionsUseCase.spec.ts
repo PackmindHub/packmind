@@ -33,7 +33,6 @@ describe('ListSkillVersionsUseCase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
-    trial: false,
   };
 
   const mockOrganization: Organization = {

@@ -1,6 +1,4 @@
 import {
-  ActivateTrialAccountCommand,
-  ActivateTrialAccountResult,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   ChangeUserRoleCommand,
@@ -16,8 +14,6 @@ import {
   ExchangeCliLoginCodeResponse,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
-  GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResponse,
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
   GetCurrentApiKeyCommand,
@@ -48,8 +44,6 @@ import {
   SignInUserResponse,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
-  StartTrialCommand,
-  StartTrialResult,
   UpdateUserDisplayNameCommand,
   UpdateUserDisplayNameResponse,
   User,
@@ -171,17 +165,6 @@ export interface IAccountsPort {
   exchangeCliLoginCode(
     command: ExchangeCliLoginCodeCommand,
   ): Promise<ExchangeCliLoginCodeResponse>;
-
-  // Trial operations
-  startTrial(command: StartTrialCommand): Promise<StartTrialResult>;
-
-  generateTrialActivationToken(
-    command: GenerateTrialActivationTokenCommand,
-  ): Promise<GenerateTrialActivationTokenResponse>;
-
-  activateTrialAccount(
-    command: ActivateTrialAccountCommand,
-  ): Promise<ActivateTrialAccountResult>;
 
   // User profile operations
   updateUserDisplayName(

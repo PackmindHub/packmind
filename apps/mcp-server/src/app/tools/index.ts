@@ -11,6 +11,5 @@ export { registerCreateCommandTool } from './createCommand/createCommand.tool';
 export { registerSaveStandardTool } from './saveStandard/saveStandard.tool';
 export { registerCreateStandardRuleTool } from './createStandardRule/createStandardRule.tool';
 export { registerOnboardingTool } from './onboarding/onboarding.tool';
-export { registerGenerateTrialActivationUrlTool } from './generateTrialActivationUrl/generateTrialActivationUrl.tool';
 export { registerInstallPackageTool } from './installPackage/installPackage.tool';
 export { registerRenderPackageTool } from './renderPackage/renderPackage.tool';
