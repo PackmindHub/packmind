@@ -72,11 +72,14 @@ export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
       });
     },
     initialPageParam: 1,
-    // Offer the next page only while the provider reports more pages; returning
-    // undefined flips hasNextPage to false so the UI can hide "Load more".
+    // Resume from the last provider page actually consumed, not the requested
+    // page: filtering out inaccessible repos can make one request span several
+    // provider pages, so lastLoadedPage + 1 avoids re-fetching the pages we
+    // already drained. Returning undefined flips hasNextPage to false so the UI
+    // can hide "Load more".
     getNextPageParam: (lastPage) =>
-      lastPage.currentPage < lastPage.availablePages
-        ? lastPage.currentPage + 1
+      lastPage.lastLoadedPage < lastPage.availablePages
+        ? lastPage.lastLoadedPage + 1
         : undefined,
     // Flatten every loaded page into a single list and derive fullName once, so
     // consumers can filter across all repositories fetched so far.
