@@ -121,9 +121,12 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
       const trackedGroups = Array.from(groupMap.values())
         .filter(matchesGroup)
         .sort((a, b) => a.fullName.localeCompare(b.fullName));
-      const untrackedRepos = Array.from(untrackedMap.values())
-        .filter(matchesRepo)
-        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+      // Keep the provider's order (GitHub: most recently updated first,
+      // GitLab: most recent activity first) so paginated "Load more" results
+      // append to the bottom instead of splicing into an alphabetical list.
+      const untrackedRepos = Array.from(untrackedMap.values()).filter(
+        matchesRepo,
+      );
 
       return { trackedGroups, untrackedRepos, repoCount, totalRepos };
     }, [available.data, selection.tuples, filter]);
