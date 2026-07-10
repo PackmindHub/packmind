@@ -18,6 +18,8 @@ export type GetPackageSummaryResponse = {
   slug: string;
   description: string;
   recipes: SummarizedArtifact[];
+  // Command-named twin of `recipes` (superset for recipes→commands rename); same value.
+  commands: SummarizedArtifact[];
   standards: SummarizedArtifact[];
   skills: SummarizedArtifact[];
 };

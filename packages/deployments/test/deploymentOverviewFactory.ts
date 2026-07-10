@@ -47,6 +47,7 @@ export const createDeployedCommandTargetInfo = (
 
   return {
     recipe,
+    command: recipe,
     deployedVersion,
     latestVersion,
     isUpToDate: false,

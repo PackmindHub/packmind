@@ -15,6 +15,8 @@ export type ListActiveDistributedPackagesBySpaceCommand = SpaceMemberCommand;
 
 export type PackageArtifactCounts = {
   recipes: number;
+  // Command-named twin of `recipes` (superset for recipes→commands rename); same value.
+  commands: number;
   standards: number;
   skills: number;
 };
@@ -43,9 +45,13 @@ export type ActiveDistributedPackage = {
   lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
   deployedRecipes: DeployedCommandTargetInfo[];
+  // Command-named twin of `deployedRecipes` (superset); same value.
+  deployedCommands: DeployedCommandTargetInfo[];
   deployedStandards: DeployedStandardTargetInfo[];
   deployedSkills: DeployedSkillTargetInfo[];
   pendingRecipes: PendingCommandInfo[];
+  // Command-named twin of `pendingRecipes` (superset); same value.
+  pendingCommands: PendingCommandInfo[];
   pendingStandards: PendingStandardInfo[];
   pendingSkills: PendingSkillInfo[];
 };

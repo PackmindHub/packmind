@@ -59,13 +59,17 @@ export class GetDashboardNonLiveUseCase implements IGetDashboardNonLive {
     const deployedCommandIds = new Set(deployedIds.recipeIds);
     const deployedSkillIds = new Set(deployedIds.skillIds);
 
+    const nonLiveCommands = recipes
+      .filter((r) => !deployedCommandIds.has(r.id))
+      .map((r) => ({ id: r.id, name: r.name }));
+
     return {
       standards: standards
         .filter((s) => !deployedStandardIds.has(s.id))
         .map((s) => ({ id: s.id, name: s.name })),
-      recipes: recipes
-        .filter((r) => !deployedCommandIds.has(r.id))
-        .map((r) => ({ id: r.id, name: r.name })),
+      recipes: nonLiveCommands,
+      // Command-named twin of `recipes` (superset); same value.
+      commands: nonLiveCommands,
       skills: skills
         .filter((s) => !deployedSkillIds.has(s.id))
         .map((s) => ({ id: s.id, name: s.name, slug: s.slug })),

@@ -29,6 +29,14 @@ import { OrganizationAccessGuard } from '../../guards/organization-access.guard'
 const origin = 'OrganizationsSpacesRecipesController';
 
 /**
+ * Wire response for command versions. SUPERSET for the recipes→commands
+ * rename: keeps the persisted `recipeId` field AND adds a command-named twin
+ * `commandId` carrying the same value. The persisted `CommandVersion` entity is
+ * never modified — the twin is added at the controller boundary.
+ */
+type CommandVersionResponse = CommandVersion & { commandId: CommandId };
+
+/**
  * Controller for space-scoped recipe routes within organizations
  * Actual path: /organizations/:orgId/spaces/:spaceId/recipes (inherited via RouterModule in AppModule)
  *
@@ -451,7 +459,7 @@ export class OrganizationsSpacesCommandsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Param('id') id: CommandId,
-  ): Promise<CommandVersion[]> {
+  ): Promise<CommandVersionResponse[]> {
     this.logger.info(
       'GET /organizations/:orgId/spaces/:spaceId/recipes/:id/versions - Fetching recipe versions',
       {
@@ -476,7 +484,11 @@ export class OrganizationsSpacesCommandsController {
           `No versions found for recipe with id ${id}`,
         );
       }
-      return versions;
+      // Superset: add command-named twin `commandId` beside `recipeId`.
+      return versions.map((version) => ({
+        ...version,
+        commandId: version.recipeId,
+      }));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

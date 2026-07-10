@@ -15,6 +15,8 @@ export type ArtifactKpi = {
 export type DashboardKpiResponse = {
   standards: ArtifactKpi;
   recipes: ArtifactKpi;
+  // Command-named twin of `recipes` (superset for recipes→commands rename); same value.
+  commands: ArtifactKpi;
   skills: ArtifactKpi;
 };
 

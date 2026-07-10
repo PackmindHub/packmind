@@ -436,7 +436,7 @@ describe('InstallPackagesUseCase', () => {
       expect(response.sourceArtifacts).toEqual({
         skillsCount: 3,
         standardsCount: 2,
-        commandsCount: 0,
+        commandsCount: 1,
         recipesCount: 1,
       });
     });

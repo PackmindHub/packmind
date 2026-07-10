@@ -290,8 +290,13 @@ describe('OrganizationsSpacesRecipesController', () => {
         );
       });
 
-      it('returns recipe versions', () => {
-        expect(result).toEqual(mockVersions);
+      it('returns recipe versions with command-named twin field', () => {
+        expect(result).toEqual(
+          mockVersions.map((version) => ({
+            ...version,
+            commandId: version.recipeId,
+          })),
+        );
       });
 
       it('calls service with correct params', () => {

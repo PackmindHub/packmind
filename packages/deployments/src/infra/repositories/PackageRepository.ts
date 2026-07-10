@@ -539,6 +539,8 @@ export class PackageRepository
         const id = row.package_id as PackageId;
         counts.set(id, {
           recipes: commandCounts.get(id) ?? 0,
+          // Command-named twin of `recipes` (superset); same value.
+          commands: commandCounts.get(id) ?? 0,
           standards: standardCounts.get(id) ?? 0,
           skills: skillCounts.get(id) ?? 0,
         });
