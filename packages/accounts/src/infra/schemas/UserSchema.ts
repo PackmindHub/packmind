@@ -35,10 +35,6 @@ export const UserSchema = new EntitySchema<
       type: 'boolean',
       default: true,
     },
-    trial: {
-      type: 'boolean',
-      default: false,
-    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

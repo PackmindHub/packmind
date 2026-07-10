@@ -1,5 +1,4 @@
 import {
-  IActivateAccountPage,
   ICliSetupPage,
   IDashboardPage,
   IGitSettingsPage,
@@ -27,7 +26,6 @@ import { PackagePage } from './pages/PackagePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
 import { InvitationPage } from './pages/InvitationPage';
-import { ActivateAccountPage } from './pages/ActivateAccountPage';
 import { SpaceSettingsPage } from './pages/SpaceSettingsPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
@@ -83,10 +81,6 @@ export class PageFactory implements IPageFactory {
   async getInvitationPage(token: string): Promise<IInvitationPage> {
     await this.page.goto(`/activate?token=${token}`);
     return this.getPageInstance(InvitationPage);
-  }
-
-  async getActivateAccountPage(): Promise<IActivateAccountPage> {
-    return this.getPageInstance(ActivateAccountPage);
   }
 
   async getSpaceSettingsPage(): Promise<ISpaceSettingsPage> {

@@ -47,7 +47,6 @@ describe('DeleteRuleExampleUseCase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
-    trial: false,
   };
   const organization: Organization = {
     id: organizationId,

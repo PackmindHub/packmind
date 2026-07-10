@@ -29,6 +29,7 @@ describe('ListAvailableReposUseCase', () => {
   const emptyResponse: ListAvailableReposResponse = {
     currentPage: 1,
     availablePages: 1,
+    lastLoadedPage: 1,
     repositories: [],
   };
 
@@ -137,6 +138,7 @@ describe('ListAvailableReposUseCase', () => {
         mockGitProviderService.getAvailableRepos.mockResolvedValue({
           currentPage: 1,
           availablePages: 2,
+          lastLoadedPage: 1,
           repositories: [
             {
               name: 'repo-a',

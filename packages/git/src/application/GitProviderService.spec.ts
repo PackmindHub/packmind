@@ -154,6 +154,7 @@ describe('GitProviderService', () => {
         mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue({
           repositories: mockRepos,
           totalPages: 1,
+          lastLoadedPage: 1,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-1'),
@@ -174,6 +175,33 @@ describe('GitProviderService', () => {
 
       it('returns the repositories', () => {
         expect(result.repositories).toEqual(mockRepos);
+      });
+    });
+
+    describe('when the provider fetched several pages to fill one batch', () => {
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.getAvailableRepos>
+      >;
+
+      beforeEach(async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue({
+          repositories: [],
+          totalPages: 10,
+          lastLoadedPage: 3,
+        });
+        result = await gitProviderService.getAvailableRepos(
+          createGitProviderId('provider-1'),
+          1,
+        );
+      });
+
+      it('forwards the last provider page consumed', () => {
+        expect(result.lastLoadedPage).toBe(3);
+      });
+
+      it('keeps the requested page as the current page', () => {
+        expect(result.currentPage).toBe(1);
       });
     });
 
@@ -200,6 +228,7 @@ describe('GitProviderService', () => {
         mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue({
           repositories: mockRepos,
           totalPages: 1,
+          lastLoadedPage: 1,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-2'),
@@ -260,6 +289,7 @@ describe('GitProviderService', () => {
         mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue({
           repositories: mockRepos,
           totalPages: 1,
+          lastLoadedPage: 1,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-3'),

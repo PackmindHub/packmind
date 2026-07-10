@@ -66,7 +66,6 @@ describe('AddGitRepoUseCase', () => {
           role: 'admin',
         },
       ],
-      trial: false,
     };
 
     const organization: Organization = {

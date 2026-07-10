@@ -22,7 +22,6 @@ export const userFactory: Factory<User> = (user?: Partial<User>) => {
     passwordHash: 'hashedpassword123',
     active: true,
     memberships: [organizationMembership],
-    trial: false,
     ...user,
   };
 };

@@ -23,8 +23,6 @@ describe('DefaultSkillsDeployer', () => {
           expect(deployedSlugs).toEqual(
             expect.arrayContaining([
               'packmind-onboard',
-              'packmind-create-package',
-              'packmind-cli-list-commands',
               'packmind-update-playbook',
             ]),
           );
@@ -47,18 +45,6 @@ describe('DefaultSkillsDeployer', () => {
 
       it('includes packmind-onboard', () => {
         expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-      });
-
-      it('includes packmind-create-package', () => {
-        expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
-          true,
-        );
-      });
-
-      it('includes packmind-cli-list-commands', () => {
-        expect(
-          paths.some((p) => p.includes('packmind-cli-list-commands')),
-        ).toBe(true);
       });
 
       it('includes packmind-update-playbook', () => {
@@ -188,18 +174,6 @@ describe('DefaultSkillsDeployer', () => {
 
         it('includes packmind-onboard', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
-        });
-
-        it('includes packmind-create-package', () => {
-          expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
-            true,
-          );
-        });
-
-        it('includes packmind-cli-list-commands', () => {
-          expect(
-            paths.some((p) => p.includes('packmind-cli-list-commands')),
-          ).toBe(true);
         });
 
         it('includes packmind-update-playbook', () => {

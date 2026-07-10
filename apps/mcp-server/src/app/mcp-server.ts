@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { EventTrackingAdapter } from '@packmind/amplitude';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { createUserId, IEventTrackingPort } from '@packmind/types';
+import { IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
   registerSaveCommandTool,
@@ -17,7 +17,6 @@ import {
   registerSaveStandardTool,
   registerCreateStandardRuleTool,
   registerOnboardingTool,
-  registerGenerateTrialActivationUrlTool,
   registerInstallPackageTool,
   registerRenderPackageTool,
 } from './tools';
@@ -79,28 +78,6 @@ export async function createMCPServer(
   registerOnboardingTool(toolDependencies, mcpServer);
   registerInstallPackageTool(toolDependencies, mcpServer);
   registerRenderPackageTool(toolDependencies, mcpServer);
-
-  // Register trial activation tool only for trial users (fetch fresh data from DB)
-  if (userContext) {
-    try {
-      const accountsAdapter = fastify.accountsHexa().getAdapter();
-      const user = await accountsAdapter.getUserById(
-        createUserId(userContext.userId),
-      );
-
-      if (user?.trial) {
-        registerGenerateTrialActivationUrlTool(toolDependencies, mcpServer);
-        logger.info('Trial activation tool registered for trial user', {
-          userId: userContext.userId,
-        });
-      }
-    } catch (error) {
-      logger.error('Failed to check user trial status', {
-        userId: userContext.userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
 
   return mcpServer;
 }

@@ -1,4 +1,4 @@
-import { SignUpWithOrganizationCommand, SpaceType } from '@packmind/types';
+import { SpaceType } from '@packmind/types';
 
 export interface IPackmindPage {
   waitForLoaded(): Promise<void>;
@@ -123,20 +123,6 @@ export interface IInvitationPage extends IPackmindPage {
   activateAccount(password: string): Promise<IDashboardPage>;
 }
 
-export interface IMcpConfig {
-  url: string;
-  token: string;
-}
-
-export interface IActivateAccountPage extends IPackmindPage {
-  activateAccount(
-    userData: Pick<
-      SignUpWithOrganizationCommand,
-      'organizationName' | 'email' | 'password'
-    >,
-  ): Promise<IDashboardPage>;
-}
-
 export interface IPageFactory {
   getSignupPage(): Promise<ISignUpPage>;
   getSignupFormPage(): Promise<ISignUpPage>;
@@ -150,6 +136,5 @@ export interface IPageFactory {
   getSettingsPage(): Promise<ISettingsPage>;
   getGitSettingsPage(): Promise<IGitSettingsPage>;
   getInvitationPage(token: string): Promise<IInvitationPage>;
-  getActivateAccountPage(): Promise<IActivateAccountPage>;
   getSpaceSettingsPage(): Promise<ISpaceSettingsPage>;
 }
