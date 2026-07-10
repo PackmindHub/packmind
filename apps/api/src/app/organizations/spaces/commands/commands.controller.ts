@@ -302,16 +302,19 @@ export class OrganizationsSpacesCommandsController {
   async deleteCommandsBatch(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: { recipeIds: CommandId[] },
+    @Body() body: { commandIds?: CommandId[]; recipeIds?: CommandId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<void> {
     const userId = request.user.userId;
 
-    if (!body.recipeIds || !Array.isArray(body.recipeIds)) {
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const ids = body.commandIds ?? body.recipeIds;
+
+    if (!ids || !Array.isArray(ids)) {
       throw new BadRequestException('recipeIds must be an array');
     }
 
-    if (body.recipeIds.length === 0) {
+    if (ids.length === 0) {
       throw new BadRequestException('recipeIds array cannot be empty');
     }
 
@@ -320,15 +323,15 @@ export class OrganizationsSpacesCommandsController {
       {
         organizationId,
         spaceId,
-        recipeIds: body.recipeIds,
-        count: body.recipeIds.length,
+        recipeIds: ids,
+        count: ids.length,
         userId,
       },
     );
 
     try {
       await this.commandsService.deleteCommandsBatch(
-        body.recipeIds,
+        ids,
         spaceId,
         userId,
         organizationId,
@@ -340,7 +343,7 @@ export class OrganizationsSpacesCommandsController {
         {
           organizationId,
           spaceId,
-          count: body.recipeIds.length,
+          count: ids.length,
           userId,
         },
       );
@@ -352,7 +355,7 @@ export class OrganizationsSpacesCommandsController {
         {
           organizationId,
           spaceId,
-          recipeIds: body.recipeIds,
+          recipeIds: ids,
           error: errorMessage,
         },
       );

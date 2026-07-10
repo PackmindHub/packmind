@@ -239,13 +239,17 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: CommandId[];
+      commandIds?: CommandId[];
+      recipeIds?: CommandId[];
       standardIds: StandardId[];
       skillIds?: SkillId[];
       originSkill?: string;
     },
   ): Promise<CreatePackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds ?? [];
 
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/packages - Creating package',
@@ -263,7 +267,7 @@ export class OrganizationsSpacesPackagesController {
         spaceId,
         name: body.name,
         description: body.description,
-        recipeIds: body.recipeIds,
+        recipeIds,
         standardIds: body.standardIds,
         skillIds: body.skillIds,
         originSkill: body.originSkill,
@@ -299,12 +303,16 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: CommandId[];
+      commandIds?: CommandId[];
+      recipeIds?: CommandId[];
       standardIds: StandardId[];
       skillsIds?: SkillId[];
     },
   ): Promise<UpdatePackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds ?? [];
 
     this.logger.info(
       'PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId - Updating package',
@@ -324,7 +332,7 @@ export class OrganizationsSpacesPackagesController {
         packageId,
         name: body.name,
         description: body.description,
-        recipeIds: body.recipeIds,
+        recipeIds,
         standardIds: body.standardIds,
         skillsIds: body.skillsIds ?? [],
       });
@@ -357,9 +365,12 @@ export class OrganizationsSpacesPackagesController {
     @Param('packageId') packageId: PackageId,
     @Req() request: AuthenticatedRequest,
     @Body()
-    body: AddArtefactsToPackageCommand,
+    body: AddArtefactsToPackageCommand & { commandIds?: CommandId[] },
   ): Promise<AddArtefactsToPackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds;
 
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/add-artifacts',
@@ -372,7 +383,7 @@ export class OrganizationsSpacesPackagesController {
       organizationId,
       packageId: packageId,
       standardIds: body.standardIds,
-      recipeIds: body.recipeIds,
+      recipeIds,
       skillIds: body.skillIds,
       originSkill: body.originSkill,
     });

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
@@ -25,6 +25,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       getCommandVersionsById: jest.fn(),
       updateCommandFromUI: jest.fn(),
       deleteCommand: jest.fn(),
+      deleteCommandsBatch: jest.fn(),
       getLatestVersionNumber: jest.fn(),
     } as unknown as jest.Mocked<CommandsService>;
 
@@ -549,6 +550,92 @@ describe('OrganizationsSpacesRecipesController', () => {
       ).rejects.toThrow(
         `Recipe ${recipeId} does not belong to space ${spaceId}`,
       );
+    });
+  });
+
+  describe('deleteCommandsBatch', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const userId = createUserId('user-1');
+    const commandIds = [createCommandId('recipe-1'), createCommandId('recipe-2')];
+    const request = {
+      user: { userId, name: 'Test User' },
+      clientSource: 'ui',
+    } as unknown as AuthenticatedRequest;
+
+    it('accepts the legacy recipeIds key', async () => {
+      commandsService.deleteCommandsBatch.mockResolvedValue(undefined);
+
+      await controller.deleteCommandsBatch(
+        orgId,
+        spaceId,
+        { recipeIds: commandIds },
+        request,
+      );
+
+      expect(commandsService.deleteCommandsBatch).toHaveBeenCalledWith(
+        commandIds,
+        spaceId,
+        userId,
+        orgId,
+        'ui',
+      );
+    });
+
+    it('accepts the new commandIds key', async () => {
+      commandsService.deleteCommandsBatch.mockResolvedValue(undefined);
+
+      await controller.deleteCommandsBatch(
+        orgId,
+        spaceId,
+        { commandIds },
+        request,
+      );
+
+      expect(commandsService.deleteCommandsBatch).toHaveBeenCalledWith(
+        commandIds,
+        spaceId,
+        userId,
+        orgId,
+        'ui',
+      );
+    });
+
+    it('prefers commandIds over recipeIds when both are present', async () => {
+      commandsService.deleteCommandsBatch.mockResolvedValue(undefined);
+      const recipeIds = [createCommandId('legacy-1')];
+
+      await controller.deleteCommandsBatch(
+        orgId,
+        spaceId,
+        { commandIds, recipeIds },
+        request,
+      );
+
+      expect(commandsService.deleteCommandsBatch).toHaveBeenCalledWith(
+        commandIds,
+        spaceId,
+        userId,
+        orgId,
+        'ui',
+      );
+    });
+
+    it('throws BadRequestException when neither key is provided', async () => {
+      await expect(
+        controller.deleteCommandsBatch(orgId, spaceId, {}, request),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException when the array is empty', async () => {
+      await expect(
+        controller.deleteCommandsBatch(
+          orgId,
+          spaceId,
+          { commandIds: [] },
+          request,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
