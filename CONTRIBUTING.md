@@ -18,6 +18,18 @@ docker compose --profile=dev up
 
 The app should be available at [http://localhost:4200](http://localhost:4200)
 
+> **Nx state in Docker:** the containers keep their Nx cache and project
+> graph in a dedicated `dev-nx` Docker volume, isolated from the host's
+> `.nx/` directory. This prevents the Linux/Alpine containers and your
+> host (e.g. macOS) from sharing — and corrupting — the same Nx store. To
+> reset only the containers' Nx state, run:
+>
+> ```shell
+> docker volume ls -q --filter name=dev-nx | xargs -r docker volume rm -f
+> ```
+>
+> For a full reset (including the database), use `docker compose down -v`.
+
 ## Migrating an existing checkout from npm to pnpm
 
 If you previously worked with npm, run the one-shot migration script from the
