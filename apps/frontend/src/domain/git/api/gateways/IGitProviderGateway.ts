@@ -4,6 +4,7 @@ import {
   GitProviderId,
   GitProviderWithoutToken,
   GitRepoId,
+  IListAvailableReposUseCase,
   IListProvidersUseCase,
   NewGateway,
   OrganizationId,
@@ -13,7 +14,6 @@ import {
   GitRepoUI,
   CreateGitProviderForm,
   AddRepositoryForm,
-  AvailableRepository,
 } from '../../types/GitProviderTypes';
 import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
@@ -67,10 +67,7 @@ export interface IGitProviderGateway {
     organizationId: OrganizationId,
     providerId: GitProviderId,
   ): Promise<GitRepoUI[]>;
-  getAvailableRepositories(
-    organizationId: OrganizationId,
-    providerId: GitProviderId,
-  ): Promise<AvailableRepository[]>;
+  getAvailableRepositories: NewGateway<IListAvailableReposUseCase>;
   addRepositoryToProvider(
     organizationId: OrganizationId,
     providerId: GitProviderId,

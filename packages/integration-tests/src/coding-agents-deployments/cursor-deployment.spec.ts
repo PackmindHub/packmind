@@ -167,8 +167,6 @@ describe('Cursor Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary:
-              'Test recipe for Cursor deployment with detailed instructions',
             userId: user.id,
           },
         ];
@@ -223,7 +221,6 @@ describe('Cursor Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for Cursor deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -267,9 +264,9 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorStandardFile?.content).toContain('alwaysApply: false');
       });
 
-      it('includes standard summary', () => {
+      it('includes standard description', () => {
         expect(cursorStandardFile?.content).toContain(
-          'Test standard for Cursor deployment :',
+          `${standard.description} :`,
         );
       });
 
@@ -318,7 +315,6 @@ describe('Cursor Deployment Integration', () => {
             slug: globalStandard.slug,
             description: globalStandard.description,
             version: globalStandard.version,
-            summary: 'Global standard for all files',
             userId: user.id,
             scope: globalStandard.scope,
           },
@@ -352,9 +348,9 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorStandardFile.content).not.toContain('globs:');
       });
 
-      it('includes standard summary', () => {
+      it('includes standard description', () => {
         expect(cursorStandardFile.content).toContain(
-          'Global standard for all files :',
+          `${globalStandard.description} :`,
         );
       });
 
@@ -384,7 +380,6 @@ describe('Cursor Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe for combined deployment',
             userId: user.id,
           },
         ];
@@ -397,7 +392,6 @@ describe('Cursor Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for combined deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -535,7 +529,6 @@ describe('Cursor Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'First test recipe',
             userId: user.id,
           },
           {
@@ -545,7 +538,6 @@ describe('Cursor Deployment Integration', () => {
             slug: command2.slug,
             content: command2.content,
             version: command2.version,
-            summary: 'Second test recipe',
             userId: user.id,
           },
         ];
@@ -630,7 +622,6 @@ describe('Cursor Deployment Integration', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: standard1.version,
-            summary: 'Frontend standard',
             userId: user.id,
             scope: standard1.scope,
           },
@@ -641,7 +632,6 @@ describe('Cursor Deployment Integration', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: standard2.version,
-            summary: 'Backend standard',
             userId: user.id,
             scope: standard2.scope,
           },
@@ -677,8 +667,8 @@ describe('Cursor Deployment Integration', () => {
         expect(frontendFile?.content).toContain('alwaysApply: false');
       });
 
-      it('includes summary for frontend standard', () => {
-        expect(frontendFile?.content).toContain('Frontend standard :');
+      it('includes description for frontend standard', () => {
+        expect(frontendFile?.content).toContain(`${standard1.description} :`);
       });
 
       it('includes rule for frontend standard', () => {
@@ -703,8 +693,8 @@ describe('Cursor Deployment Integration', () => {
         expect(backendFile?.content).toContain('alwaysApply: true');
       });
 
-      it('includes summary for backend standard', () => {
-        expect(backendFile?.content).toContain('Backend standard :');
+      it('includes description for backend standard', () => {
+        expect(backendFile?.content).toContain(`${standard2.description} :`);
       });
 
       it('includes rule for backend standard', () => {

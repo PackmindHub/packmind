@@ -55,7 +55,7 @@ No recipes available.
       });
     });
 
-    describe('when given recipes with summaries', () => {
+    describe('when given recipes', () => {
       let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
@@ -65,7 +65,6 @@ No recipes available.
             {
               name: 'TDD Guide',
               slug: 'tdd-guide',
-              summary: 'Complete TDD workflow for quality development.',
             },
             '2024-01-15T10:00:00Z',
           ),
@@ -73,7 +72,6 @@ No recipes available.
             {
               name: 'React Components',
               slug: 'react-components',
-              summary: 'Step-by-step guide for React components.',
             },
             '2024-01-10T09:00:00Z',
           ),
@@ -98,10 +96,10 @@ This cookbook contains all available coding recipes that can be used by AI agent
         expect(reactIndex).toBeLessThan(tddIndex);
       });
 
-      it('formats recipe entries with correct links and summaries', () => {
+      it('formats recipe entries with correct links and recipe name as description', () => {
         const expectedList = [
-          '- [React Components](recipes/react-components.md) : Step-by-step guide for React components.',
-          '- [TDD Guide](recipes/tdd-guide.md) : Complete TDD workflow for quality development.',
+          '- [React Components](recipes/react-components.md) : React Components',
+          '- [TDD Guide](recipes/tdd-guide.md) : TDD Guide',
         ].join('\n');
         expect(result).toContain(expectedList);
       });
@@ -113,7 +111,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
       });
     });
 
-    describe('when recipes have null or empty summaries', () => {
+    describe('when recipes have varied names', () => {
       let recipes: WithTimestamps<CommandVersion>[];
       let result: string;
 
@@ -123,7 +121,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
             {
               name: 'Git Workflow',
               slug: 'git-workflow',
-              summary: null, // No summary
             },
             '2024-01-15T10:00:00Z',
           ),
@@ -131,7 +128,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
             {
               name: 'Debugging Tips',
               slug: 'debugging-tips',
-              summary: '', // Empty summary
             },
             '2024-01-14T09:00:00Z',
           ),
@@ -139,7 +135,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
             {
               name: 'Testing Guide',
               slug: 'testing-guide',
-              summary: '   ', // Whitespace only summary
             },
             '2024-01-13T08:00:00Z',
           ),
@@ -148,56 +143,11 @@ This cookbook contains all available coding recipes that can be used by AI agent
         result = cookbookService.buildCookbook(recipes);
       });
 
-      it('uses recipe name as description for null, empty, or whitespace-only summary', () => {
+      it('uses recipe name as description', () => {
         const expectedList = [
           '- [Debugging Tips](recipes/debugging-tips.md) : Debugging Tips',
           '- [Git Workflow](recipes/git-workflow.md) : Git Workflow',
           '- [Testing Guide](recipes/testing-guide.md) : Testing Guide',
-        ].join('\n');
-        expect(result).toContain(expectedList);
-      });
-    });
-
-    describe('when recipes have mixed summary states', () => {
-      let recipes: WithTimestamps<CommandVersion>[];
-      let result: string;
-
-      beforeEach(() => {
-        recipes = [
-          createCommandVersionWithTimestamp(
-            {
-              name: 'Complete Recipe',
-              slug: 'complete-recipe',
-              summary: 'This recipe has a proper summary.',
-            },
-            '2024-01-20T10:00:00Z',
-          ),
-          createCommandVersionWithTimestamp(
-            {
-              name: 'Incomplete Recipe',
-              slug: 'incomplete-recipe',
-              summary: null,
-            },
-            '2024-01-19T09:00:00Z',
-          ),
-          createCommandVersionWithTimestamp(
-            {
-              name: 'Trimmed Recipe',
-              slug: 'trimmed-recipe',
-              summary: '  Summary with extra spaces  ',
-            },
-            '2024-01-18T08:00:00Z',
-          ),
-        ];
-
-        result = cookbookService.buildCookbook(recipes);
-      });
-
-      it('handles mixed summary states correctly', () => {
-        const expectedList = [
-          '- [Complete Recipe](recipes/complete-recipe.md) : This recipe has a proper summary.',
-          '- [Incomplete Recipe](recipes/incomplete-recipe.md) : Incomplete Recipe',
-          '- [Trimmed Recipe](recipes/trimmed-recipe.md) : Summary with extra spaces',
         ].join('\n');
         expect(result).toContain(expectedList);
       });
@@ -220,7 +170,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
                 slug: `recipe-${i + 1}`,
                 content: `Content for recipe ${i + 1}`,
                 version: 1,
-                summary: `Summary for recipe ${i + 1}`,
               },
               `2024-01-${(15 + i).toString().padStart(2, '0')}T10:00:00Z`,
             ),
@@ -270,26 +219,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
         expect(result).toContain('recipes/recipe-5.md');
       });
 
-      it('includes recipe 1 summary', () => {
-        expect(result).toContain('Summary for recipe 1');
-      });
-
-      it('includes recipe 2 summary', () => {
-        expect(result).toContain('Summary for recipe 2');
-      });
-
-      it('includes recipe 3 summary', () => {
-        expect(result).toContain('Summary for recipe 3');
-      });
-
-      it('includes recipe 4 summary', () => {
-        expect(result).toContain('Summary for recipe 4');
-      });
-
-      it('includes recipe 5 summary', () => {
-        expect(result).toContain('Summary for recipe 5');
-      });
-
       it('sorts recipes alphabetically', () => {
         const command1Index = result.indexOf('Recipe 1');
         const command5Index = result.indexOf('Recipe 5');
@@ -305,7 +234,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
             {
               name: 'Recipe with "quotes" and &symbols',
               slug: 'recipe-with-quotes-and-symbols',
-              summary: 'A recipe with special characters.',
             },
             '2024-01-15T10:00:00Z',
           ),
@@ -314,29 +242,7 @@ This cookbook contains all available coding recipes that can be used by AI agent
         const result = cookbookService.buildCookbook(recipes);
 
         expect(result).toContain(
-          '- [Recipe with "quotes" and &symbols](recipes/recipe-with-quotes-and-symbols.md) : A recipe with special characters.',
-        );
-      });
-
-      it('handles very long summaries correctly', () => {
-        const longSummary =
-          'This is a very long summary that goes on and on and contains lots of text to test how the cookbook handles lengthy descriptions without breaking the formatting or causing any issues with the generated markdown content.';
-
-        const recipes = [
-          createCommandVersionWithTimestamp(
-            {
-              name: 'Long Summary Recipe',
-              slug: 'long-summary-recipe',
-              summary: longSummary,
-            },
-            '2024-01-15T10:00:00Z',
-          ),
-        ];
-
-        const result = cookbookService.buildCookbook(recipes);
-
-        expect(result).toContain(
-          `- [Long Summary Recipe](recipes/long-summary-recipe.md) : ${longSummary}`,
+          '- [Recipe with "quotes" and &symbols](recipes/recipe-with-quotes-and-symbols.md) : Recipe with "quotes" and &symbols',
         );
       });
 
@@ -352,7 +258,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
               {
                 name: 'C Recipe',
                 slug: 'c-recipe',
-                summary: null,
               },
               '2024-01-15T10:00:00.000Z',
             ),
@@ -360,7 +265,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
               {
                 name: 'A Recipe',
                 slug: 'a-recipe',
-                summary: null,
               },
               '2024-01-10T10:00:00.000Z',
             ),
@@ -368,7 +272,6 @@ This cookbook contains all available coding recipes that can be used by AI agent
               {
                 name: 'B Recipe',
                 slug: 'b-recipe',
-                summary: null,
               },
               '2024-01-20T10:00:00.000Z',
             ),

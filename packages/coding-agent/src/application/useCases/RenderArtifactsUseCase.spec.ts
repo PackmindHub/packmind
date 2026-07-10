@@ -28,7 +28,6 @@ describe('RenderArtifactsUseCase', () => {
       slug: 'test-recipe',
       content: '# Test Recipe Content',
       version: 1,
-      summary: 'Test recipe summary',
       userId: 'user-1' as UserId,
     },
   ];
@@ -41,7 +40,6 @@ describe('RenderArtifactsUseCase', () => {
       slug: 'test-standard',
       description: 'Test standard description',
       version: 1,
-      summary: 'Test standard summary',
       userId: 'user-1' as UserId,
       scope: 'test',
     },

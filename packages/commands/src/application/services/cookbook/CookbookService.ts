@@ -76,16 +76,11 @@ This cookbook contains all available coding recipes that can be used by AI agent
   private getCommandDescription(
     recipe: WithTimestamps<CommandVersion>,
   ): string {
-    // If summary is null or empty, use the recipe name
-    if (!recipe.summary || recipe.summary.trim() === '') {
-      this.logger.debug('Using recipe name as description', {
-        recipeId: recipe.id,
-        recipeName: recipe.name,
-      });
-      return recipe.name;
-    }
-
-    return recipe.summary.trim();
+    this.logger.debug('Using recipe name as description', {
+      recipeId: recipe.id,
+      recipeName: recipe.name,
+    });
+    return recipe.name;
   }
 
   private generateFooter(): string {

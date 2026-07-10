@@ -498,8 +498,7 @@ ${GenericStandardSectionWriter.formatStandardContent({
       recipeName: recipeVersion.name,
     });
 
-    // Use summary if available, otherwise fall back to name
-    const description = recipeVersion.summary?.trim() || recipeVersion.name;
+    const description = recipeVersion.name;
 
     // Generate frontmatter with YAML format
     const frontmatter = `---

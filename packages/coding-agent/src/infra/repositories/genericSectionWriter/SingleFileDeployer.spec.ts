@@ -78,7 +78,6 @@ describe('SingleFileDeployer', () => {
         slug: 'test-recipe',
         content: '# Test Recipe Content',
         version: 1,
-        summary: 'Test recipe summary',
         userId: createUserId('user-1'),
       },
     ];
@@ -131,18 +130,17 @@ describe('SingleFileDeployer', () => {
         slug: 'test-standard',
         description: 'Test standard description',
         version: 1,
-        summary: 'Test standard summary',
         userId: createUserId('user-1'),
         scope: 'test',
       },
     ];
 
-    describe('when standard has null summary but existing description', () => {
+    describe('when standard has a description', () => {
       let result: FileUpdates;
       let sectionContent: string;
 
       beforeEach(async () => {
-        const standardWithNullSummary: StandardVersion[] = [
+        const standardWithDescription: StandardVersion[] = [
           {
             id: createStandardVersionId('standard-version-1'),
             standardId: createStandardId('standard-1'),
@@ -150,7 +148,6 @@ describe('SingleFileDeployer', () => {
             slug: 'standard-without-summary',
             description: 'This is the description',
             version: 1,
-            summary: null,
             userId: createUserId('user-1'),
             scope: 'test',
           },
@@ -159,7 +156,7 @@ describe('SingleFileDeployer', () => {
         mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
         result = await deployer.deployStandards(
-          standardWithNullSummary,
+          standardWithDescription,
           mockGitRepo,
           vscodeTarget,
         );
@@ -193,7 +190,7 @@ describe('SingleFileDeployer', () => {
       });
     });
 
-    describe('when standard has long description (over 200 chars) and null summary', () => {
+    describe('when standard has long description (over 200 chars)', () => {
       let result: FileUpdates;
       let sectionContent: string;
 
@@ -206,7 +203,6 @@ describe('SingleFileDeployer', () => {
             slug: 'standard-long-description',
             description: 'A'.repeat(250),
             version: 1,
-            summary: null,
             userId: createUserId('user-1'),
             scope: 'test',
           },
@@ -245,59 +241,7 @@ describe('SingleFileDeployer', () => {
       });
     });
 
-    describe('when standard has long summary (over 200 chars)', () => {
-      let result: FileUpdates;
-      let sectionContent: string;
-
-      beforeEach(async () => {
-        const standardWithLongSummary: StandardVersion[] = [
-          {
-            id: createStandardVersionId('standard-version-1'),
-            standardId: createStandardId('standard-1'),
-            name: 'Standard With Long Summary',
-            slug: 'standard-long-summary',
-            description: 'Short description',
-            version: 1,
-            summary: 'B'.repeat(250),
-            userId: createUserId('user-1'),
-            scope: 'test',
-          },
-        ];
-
-        mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
-        result = await deployer.deployStandards(
-          standardWithLongSummary,
-          mockGitRepo,
-          vscodeTarget,
-        );
-        sectionContent = result.createOrUpdate[0].sections![0].content;
-      });
-
-      it('returns one createOrUpdate entry', () => {
-        expect(result.createOrUpdate).toHaveLength(1);
-      });
-
-      it('does not truncate the summary', () => {
-        expect(sectionContent).toContain(`${'B'.repeat(250)} :`);
-      });
-
-      it('includes no rules defined message', () => {
-        expect(sectionContent).toContain('* No rules defined yet.');
-      });
-
-      it('includes link to full standard', () => {
-        expect(sectionContent).toContain(
-          'Full standard is available here for further request: [Standard With Long Summary](.packmind/standards/standard-long-summary.md)',
-        );
-      });
-
-      it('does not include ellipsis', () => {
-        expect(sectionContent).not.toContain('...');
-      });
-    });
-
-    describe('when standard has multiline description and null summary', () => {
+    describe('when standard has multiline description', () => {
       let result: FileUpdates;
       let sectionContent: string;
 
@@ -311,7 +255,6 @@ describe('SingleFileDeployer', () => {
             description:
               'First line of description\nSecond line should not appear\nThird line also not',
             version: 1,
-            summary: null,
             userId: createUserId('user-1'),
             scope: 'test',
           },
@@ -354,12 +297,12 @@ describe('SingleFileDeployer', () => {
       });
     });
 
-    describe('when standard has both null summary and null description', () => {
+    describe('when standard has null description', () => {
       let result: FileUpdates;
       let sectionContent: string;
 
       beforeEach(async () => {
-        const standardWithNullEverything: StandardVersion[] = [
+        const standardWithNullDescription: StandardVersion[] = [
           {
             id: createStandardVersionId('standard-version-1'),
             standardId: createStandardId('standard-1'),
@@ -367,7 +310,6 @@ describe('SingleFileDeployer', () => {
             slug: 'standard-name-only',
             description: null as unknown as string,
             version: 1,
-            summary: null,
             userId: createUserId('user-1'),
             scope: 'test',
           },
@@ -376,7 +318,7 @@ describe('SingleFileDeployer', () => {
         mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
         result = await deployer.deployStandards(
-          standardWithNullEverything,
+          standardWithNullDescription,
           mockGitRepo,
           vscodeTarget,
         );
@@ -438,7 +380,6 @@ describe('SingleFileDeployer', () => {
         slug,
         description: `${name} description`,
         version: 1,
-        summary: `${name} summary`,
         userId: createUserId('user-1'),
         scope: 'test',
       });
@@ -639,7 +580,6 @@ describe('SingleFileDeployer', () => {
         slug: 'test-recipe',
         content: '# Test Recipe Content',
         version: 1,
-        summary: 'Test recipe summary',
         userId: createUserId('user-1'),
       },
     ];
@@ -652,7 +592,6 @@ describe('SingleFileDeployer', () => {
         slug: 'test-standard',
         description: 'Test standard description',
         version: 1,
-        summary: 'Test standard summary',
         userId: createUserId('user-1'),
         scope: 'test',
       },
@@ -907,18 +846,21 @@ describe('SingleFileDeployer', () => {
       });
     });
 
-    describe('when standard has null summary', () => {
+    describe('when standard has null description', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        const standardWithNullSummary = [
+        const standardWithNullDescription = [
           {
             ...mockStandardVersions[0],
-            summary: null,
+            description: null as unknown as string,
           },
         ];
 
-        result = await deployer.deployArtifacts([], standardWithNullSummary);
+        result = await deployer.deployArtifacts(
+          [],
+          standardWithNullDescription,
+        );
       });
 
       it('returns one createOrUpdate entry', () => {
@@ -969,7 +911,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-recipe',
           content: '# Removed Recipe',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -1023,7 +964,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1096,7 +1036,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1110,7 +1049,6 @@ describe('SingleFileDeployer', () => {
           slug: 'installed-standard',
           description: 'Installed',
           version: 1,
-          summary: 'Installed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1165,7 +1103,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-recipe',
           content: '# Removed Recipe',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -1177,7 +1114,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1250,7 +1186,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-recipe',
           content: '# Removed Recipe',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -1263,7 +1198,6 @@ describe('SingleFileDeployer', () => {
           slug: 'installed-standard',
           description: 'Installed',
           version: 1,
-          summary: 'Installed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1318,7 +1252,6 @@ describe('SingleFileDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -1332,7 +1265,6 @@ describe('SingleFileDeployer', () => {
           slug: 'installed-recipe',
           content: '# Installed Recipe',
           version: 1,
-          summary: 'Installed',
           userId: createUserId('user-1'),
         },
       ];

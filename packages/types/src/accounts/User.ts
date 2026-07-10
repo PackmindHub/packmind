@@ -22,7 +22,6 @@ export type User = {
   passwordHash: string | null;
   active: boolean;
   memberships: UserOrganizationMembership[];
-  trial: boolean;
   createdAt?: Date;
 };
 

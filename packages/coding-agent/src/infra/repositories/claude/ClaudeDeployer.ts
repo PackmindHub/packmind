@@ -107,7 +107,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     path: string;
     content: string;
   } {
-    const description = recipeVersion.summary?.trim() || recipeVersion.name;
+    const description = recipeVersion.name;
 
     const frontmatter = `---
 description: '${escapeSingleQuotes(description)}'
@@ -594,7 +594,7 @@ ${recipeVersion.content}`;
         link: `../../../.packmind/standards/${standardVersion.slug}.md`,
       });
 
-    const summary = standardVersion.summary?.trim() || standardVersion.name;
+    const summary = standardVersion.description?.trim() || standardVersion.name;
 
     let frontmatter: string;
 

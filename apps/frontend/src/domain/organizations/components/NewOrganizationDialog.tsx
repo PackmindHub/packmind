@@ -2,10 +2,16 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import {
   PMField,
-  PMDialog,
+  PMDrawer,
+  PMPortal,
+  PMBox,
   PMButton,
   PMCloseButton,
+  PMHStack,
+  PMHeading,
   PMInput,
+  PMText,
+  PMVStack,
   pmToaster,
 } from '@packmind/ui';
 import { useCreateOrganizationMutation } from '../../accounts/api/queries/AccountsQueries';
@@ -27,6 +33,10 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
   const navigate = useNavigate();
   const createOrganizationMutation = useCreateOrganizationMutation();
   const selectOrganizationMutation = useSelectOrganizationMutation();
+
+  const isPending =
+    createOrganizationMutation.isPending ||
+    selectOrganizationMutation.isPending;
 
   const handleOrganizationCreation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,81 +83,87 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
     }
   };
 
+  const handleClose = () => {
+    if (isPending) return;
+    setOpen(false);
+    setNewOrgaName('');
+  };
+
   return (
-    <PMDialog.Root
+    <PMDrawer.Root
       open={open}
-      onOpenChange={(details: { open: boolean }) => {
-        if (
-          !createOrganizationMutation.isPending &&
-          !selectOrganizationMutation.isPending
-        ) {
-          setOpen(details.open);
-          if (!details.open) {
-            setNewOrgaName('');
-          }
-        }
+      onOpenChange={(e) => {
+        if (!e.open) handleClose();
       }}
-      size={'lg'}
-      scrollBehavior={'inside'}
       closeOnInteractOutside={false}
+      placement="end"
+      size="md"
     >
-      <form onSubmit={handleOrganizationCreation}>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Create new organization</PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMField.Root required>
-                <PMField.Label>
-                  Organization Name <PMField.RequiredIndicator />
-                </PMField.Label>
-                <PMInput
-                  value={newOrgaName}
-                  onChange={(e) => setNewOrgaName(e.target.value)}
-                  maxLength={ORG_NAME_MAX_LENGTH}
-                  placeholder="Enter organization name"
-                  required
-                  disabled={
-                    createOrganizationMutation.isPending ||
-                    selectOrganizationMutation.isPending
-                  }
-                />
-              </PMField.Root>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMDialog.Trigger asChild>
-                <PMButton
-                  variant="tertiary"
-                  disabled={
-                    createOrganizationMutation.isPending ||
-                    selectOrganizationMutation.isPending
-                  }
-                >
-                  Close
-                </PMButton>
-              </PMDialog.Trigger>
-              <PMButton
-                variant="primary"
-                type="submit"
-                loading={
-                  createOrganizationMutation.isPending ||
-                  selectOrganizationMutation.isPending
-                }
+      <PMPortal>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <form onSubmit={handleOrganizationCreation}>
+              <PMDrawer.Header
+                borderBottom="1px solid"
+                borderColor="border.tertiary"
               >
-                {createOrganizationMutation.isPending ||
-                selectOrganizationMutation.isPending
-                  ? 'Creating...'
-                  : 'Create'}
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </form>
-    </PMDialog.Root>
+                <PMVStack gap={1} align="stretch" flex={1}>
+                  <PMHeading size="md">Create new organization</PMHeading>
+                  <PMText fontSize="xs" color="faded">
+                    Set up a new organization to collaborate with your team.
+                  </PMText>
+                </PMVStack>
+                <PMDrawer.CloseTrigger asChild>
+                  <PMCloseButton size="sm" />
+                </PMDrawer.CloseTrigger>
+              </PMDrawer.Header>
+
+              <PMDrawer.Body padding={5}>
+                <PMField.Root required>
+                  <PMField.Label>
+                    Organization Name <PMField.RequiredIndicator />
+                  </PMField.Label>
+                  <PMInput
+                    value={newOrgaName}
+                    onChange={(e) => setNewOrgaName(e.target.value)}
+                    maxLength={ORG_NAME_MAX_LENGTH}
+                    placeholder="Enter organization name"
+                    required
+                    disabled={isPending}
+                  />
+                </PMField.Root>
+              </PMDrawer.Body>
+
+              <PMBox
+                borderTop="1px solid"
+                borderColor="border.tertiary"
+                paddingX={5}
+                paddingY={3}
+              >
+                <PMHStack justify="space-between" align="center">
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={handleClose}
+                    disabled={isPending}
+                  >
+                    Close
+                  </PMButton>
+                  <PMButton
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    loading={isPending}
+                  >
+                    {isPending ? 'Creating...' : 'Create'}
+                  </PMButton>
+                </PMHStack>
+              </PMBox>
+            </form>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
+      </PMPortal>
+    </PMDrawer.Root>
   );
 };

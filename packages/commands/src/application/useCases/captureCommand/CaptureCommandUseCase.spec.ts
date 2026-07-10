@@ -29,7 +29,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { commandFactory } from '../../../../test/commandFactory';
 import { commandVersionFactory } from '../../../../test/commandVersionFactory';
 import { CommandService } from '../../services/CommandService';
-import { CommandSummaryService } from '../../services/CommandSummaryService';
 import { CommandVersionService } from '../../services/CommandVersionService';
 import { CaptureCommandUseCase } from './CaptureCommandUseCase';
 
@@ -44,7 +43,6 @@ describe('CaptureRecipeUseCase', () => {
   let spacesPort: jest.Mocked<ISpacesPort>;
   let commandService: jest.Mocked<CommandService>;
   let commandVersionService: jest.Mocked<CommandVersionService>;
-  let commandSummaryService: jest.Mocked<CommandSummaryService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -88,10 +86,6 @@ describe('CaptureRecipeUseCase', () => {
 
     stubbedLogger = stubLogger();
 
-    commandSummaryService = {
-      createCommandSummary: jest.fn().mockResolvedValue('AI-generated summary'),
-    } as unknown as jest.Mocked<CommandSummaryService>;
-
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -104,7 +98,6 @@ describe('CaptureRecipeUseCase', () => {
       accountsPort,
       commandService,
       commandVersionService,
-      commandSummaryService,
       eventEmitterService,
       stubbedLogger,
     );
@@ -432,7 +425,6 @@ describe('CaptureRecipeUseCase', () => {
       spaceId = createSpaceId(uuidv4());
 
       user = {
-        trial: false,
         id: userId,
         email: 'test@example.com',
         passwordHash: 'hashed_password',
@@ -459,7 +451,7 @@ describe('CaptureRecipeUseCase', () => {
     });
 
     describe('when summary is provided', () => {
-      it('uses provided summary without calling recipeSummaryService', async () => {
+      it('composes provided summary into the recipe content', async () => {
         const command: CaptureCommandCommand = {
           name: 'Test Recipe',
           spaceId,
@@ -493,45 +485,6 @@ describe('CaptureRecipeUseCase', () => {
           slug: 'test-recipe',
           content: expectedContent,
           version: 1,
-          summary: command.summary,
-        });
-
-        commandService.addCommand.mockResolvedValue(createdCommand);
-        commandVersionService.addCommandVersion.mockResolvedValue(
-          createdCommandVersion,
-        );
-
-        await captureCommandUseCase.execute(command);
-
-        expect(
-          commandSummaryService.createCommandSummary,
-        ).not.toHaveBeenCalled();
-      });
-
-      it('passes provided summary to RecipeVersionService', async () => {
-        const command: CaptureCommandCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: 'Provided summary',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const createdCommand = commandFactory({
-          id: createCommandId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: command.summary,
-          version: 1,
-        });
-
-        const createdCommandVersion = commandVersionFactory({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: createdCommand.id,
-          version: 1,
         });
 
         commandService.addCommand.mockResolvedValue(createdCommand);
@@ -547,7 +500,6 @@ describe('CaptureRecipeUseCase', () => {
           slug: 'test-recipe',
           content: command.summary,
           version: 1,
-          summary: command.summary,
           gitCommit: undefined,
           userId: createUserId(userId),
         });
@@ -611,249 +563,6 @@ describe('CaptureRecipeUseCase', () => {
             slug: 'test-recipe-2',
           }),
         );
-      });
-    });
-
-    describe('when summary is empty', () => {
-      it('calls recipeSummaryService to generate summary', async () => {
-        const command: CaptureCommandCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdCommand = commandFactory({
-          id: createCommandId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdCommandVersion = commandVersionFactory({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: createdCommand.id,
-          version: 1,
-        });
-
-        commandService.addCommand.mockResolvedValue(createdCommand);
-        commandVersionService.addCommandVersion.mockResolvedValue(
-          createdCommandVersion,
-        );
-        commandSummaryService.createCommandSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureCommandUseCase.execute(command);
-
-        expect(commandSummaryService.createCommandSummary).toHaveBeenCalledWith(
-          expect.any(String), // organizationId
-          {
-            recipeId: createdCommand.id,
-            name: createdCommand.name,
-            slug: createdCommand.slug,
-            content: createdCommand.content,
-            version: 1,
-            userId: createdCommand.userId,
-          },
-        );
-      });
-
-      it('uses generated summary in RecipeVersionService', async () => {
-        const command: CaptureCommandCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdCommand = commandFactory({
-          id: createCommandId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdCommandVersion = commandVersionFactory({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: createdCommand.id,
-          version: 1,
-        });
-
-        commandService.addCommand.mockResolvedValue(createdCommand);
-        commandVersionService.addCommandVersion.mockResolvedValue(
-          createdCommandVersion,
-        );
-        commandSummaryService.createCommandSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureCommandUseCase.execute(command);
-
-        expect(commandVersionService.addCommandVersion).toHaveBeenCalledWith({
-          recipeId: createdCommand.id,
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-          summary: generatedSummary,
-          gitCommit: undefined,
-          userId: createUserId(userId),
-        });
-      });
-    });
-
-    describe('when summary is not provided', () => {
-      it('calls recipeSummaryService to generate summary', async () => {
-        const command: CaptureCommandCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const generatedSummary = 'AI-generated summary';
-        const createdCommand = commandFactory({
-          id: createCommandId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdCommandVersion = commandVersionFactory({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: createdCommand.id,
-          version: 1,
-        });
-
-        commandService.addCommand.mockResolvedValue(createdCommand);
-        commandVersionService.addCommandVersion.mockResolvedValue(
-          createdCommandVersion,
-        );
-        commandSummaryService.createCommandSummary.mockResolvedValue(
-          generatedSummary,
-        );
-
-        await captureCommandUseCase.execute(command);
-
-        expect(commandSummaryService.createCommandSummary).toHaveBeenCalledWith(
-          expect.any(String), // organizationId
-          {
-            recipeId: createdCommand.id,
-            name: createdCommand.name,
-            slug: createdCommand.slug,
-            content: createdCommand.content,
-            version: 1,
-            userId: createdCommand.userId,
-          },
-        );
-      });
-    });
-
-    describe('when summary generation fails with AiNotConfigured', () => {
-      it('logs warning and proceeds with null summary', async () => {
-        const command: CaptureCommandCommand = {
-          name: 'Test Recipe',
-          spaceId,
-          summary: '',
-          whenToUse: [],
-          contextValidationCheckpoints: [],
-          steps: [],
-          organizationId,
-          userId,
-        };
-
-        const createdCommand = commandFactory({
-          id: createCommandId(uuidv4()),
-          name: command.name,
-          slug: 'test-recipe',
-          content: '',
-          version: 1,
-        });
-
-        const createdCommandVersion = commandVersionFactory({
-          id: createCommandVersionId(uuidv4()),
-          recipeId: createdCommand.id,
-          version: 1,
-        });
-
-        commandService.addCommand.mockResolvedValue(createdCommand);
-        commandVersionService.addCommandVersion.mockResolvedValue(
-          createdCommandVersion,
-        );
-        commandSummaryService.createCommandSummary.mockRejectedValue(
-          new Error('AI service not configured'),
-        );
-
-        const result = await captureCommandUseCase.execute(command);
-
-        expect(result).toEqual(createdCommand);
-      });
-
-      describe('when AI service fails', () => {
-        it('passes null summary to RecipeVersionService', async () => {
-          const command: CaptureCommandCommand = {
-            name: 'Test Recipe',
-            spaceId,
-            summary: '',
-            whenToUse: [],
-            contextValidationCheckpoints: [],
-            steps: [],
-            organizationId,
-            userId,
-          };
-
-          const createdCommand = commandFactory({
-            id: createCommandId(uuidv4()),
-            name: command.name,
-            slug: 'test-recipe',
-            content: '',
-            version: 1,
-          });
-
-          const createdCommandVersion = commandVersionFactory({
-            id: createCommandVersionId(uuidv4()),
-            recipeId: createdCommand.id,
-            version: 1,
-          });
-
-          commandService.addCommand.mockResolvedValue(createdCommand);
-          commandVersionService.addCommandVersion.mockResolvedValue(
-            createdCommandVersion,
-          );
-          commandSummaryService.createCommandSummary.mockRejectedValue(
-            new Error('AI service not configured'),
-          );
-
-          await captureCommandUseCase.execute(command);
-
-          expect(commandVersionService.addCommandVersion).toHaveBeenCalledWith({
-            recipeId: createdCommand.id,
-            name: command.name,
-            slug: 'test-recipe',
-            content: '',
-            version: 1,
-            summary: null,
-            gitCommit: undefined,
-            userId: createUserId(userId),
-          });
-        });
       });
     });
 

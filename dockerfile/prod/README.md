@@ -78,14 +78,13 @@ Enables OpenAI integration for AI-powered features:
 - `OPENAI_API_KEY=your_api_key`: Enables OpenAI API calls for AI features
 - Unset or empty: AI features will be disabled
 
-**Note**: This affects both the API and MCP server services. Make sure you have a valid OpenAI API key if you want to use AI-powered features.
+**Note**: This affects the API service. Make sure you have a valid OpenAI API key if you want to use AI-powered features.
 
 ## Images
 
 The production deployment uses these open-source images:
 
 - `packmind/api:${PACKMIND_TAG:-latest}` - API backend service
-- `packmind/mcp:${PACKMIND_TAG:-latest}` - MCP (Model Context Protocol) server
 - `packmind/frontend:${PACKMIND_TAG:-latest}` - Frontend web application
 
 The `PACKMIND_TAG` environment variable can be set to deploy specific versions (defaults to `latest`).

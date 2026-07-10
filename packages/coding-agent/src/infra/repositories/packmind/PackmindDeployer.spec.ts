@@ -74,7 +74,6 @@ describe('PackmindDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -119,12 +118,12 @@ describe('PackmindDeployer', () => {
         expect(commandsIndexFile?.content).toContain('## Available Commands');
       });
 
-      it('creates commands index with recipe link and summary', () => {
+      it('creates commands index with recipe link and name', () => {
         const commandsIndexFile = result.createOrUpdate.find(
           (f) => f.path === '.packmind/commands-index.md',
         );
         expect(commandsIndexFile?.content).toContain(
-          '- [Test Recipe](commands/test-recipe.md) : A test recipe summary',
+          '- [Test Recipe](commands/test-recipe.md) : Test Recipe',
         );
       });
     });
@@ -161,7 +160,6 @@ describe('PackmindDeployer', () => {
             slug: zebraCommand.slug,
             content: 'Zebra content',
             version: 1,
-            summary: 'Last alphabetically',
             userId: createUserId('user-1'),
           },
           {
@@ -171,7 +169,6 @@ describe('PackmindDeployer', () => {
             slug: appleCommand.slug,
             content: 'Apple content',
             version: 2,
-            summary: 'First alphabetically',
             userId: createUserId('user-1'),
           },
         ];
@@ -246,7 +243,6 @@ describe('PackmindDeployer', () => {
           slug: standard.slug,
           description: 'This is the standard description',
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: 'backend',
         };
@@ -314,12 +310,12 @@ describe('PackmindDeployer', () => {
         expect(standardsIndexFile?.content).toContain('## Available Standards');
       });
 
-      it('creates standards index with standard link and summary', () => {
+      it('creates standards index with standard link and description', () => {
         const standardsIndexFile = result.createOrUpdate.find(
           (f) => f.path === '.packmind/standards-index.md',
         );
         expect(standardsIndexFile?.content).toContain(
-          '- [Test Standard](./standards/test-standard.md) : A test standard summary',
+          '- [Test Standard](./standards/test-standard.md) : This is the standard description',
         );
       });
     });
@@ -346,7 +342,6 @@ describe('PackmindDeployer', () => {
           slug: standard.slug,
           description: 'This standard has rules',
           version: 1,
-          summary: 'Standard with rules summary',
           userId: createUserId('user-1'),
           scope: 'backend',
           rules: [
@@ -418,7 +413,6 @@ describe('PackmindDeployer', () => {
         slug: standard.slug,
         description: 'Description without scope',
         version: 1,
-        summary: null,
         userId: createUserId('user-1'),
         scope: null,
       };
@@ -469,7 +463,6 @@ describe('PackmindDeployer', () => {
             slug: zebraStandard.slug,
             description: 'Zebra description',
             version: 1,
-            summary: 'Last alphabetically',
             userId: createUserId('user-1'),
             scope: null,
           },
@@ -480,7 +473,6 @@ describe('PackmindDeployer', () => {
             slug: appleStandard.slug,
             description: 'Apple description',
             version: 2,
-            summary: 'First alphabetically',
             userId: createUserId('user-1'),
             scope: 'frontend',
           },
@@ -573,7 +565,6 @@ describe('PackmindDeployer', () => {
           slug: standard.slug,
           description: 'Standard without rules initially',
           version: 1,
-          summary: 'Test summary',
           userId: createUserId('user-1'),
           scope: 'backend',
         };
@@ -615,7 +606,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-recipe',
           content: '# Removed Recipe',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -697,7 +687,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-recipe',
           content: '# Removed Recipe',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -710,7 +699,6 @@ describe('PackmindDeployer', () => {
           slug: 'installed-recipe',
           content: '# Installed Recipe',
           version: 1,
-          summary: 'Installed',
           userId: createUserId('user-1'),
         },
       ];
@@ -764,7 +752,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -847,7 +834,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -861,7 +847,6 @@ describe('PackmindDeployer', () => {
           slug: 'installed-standard',
           description: 'Installed',
           version: 1,
-          summary: 'Installed',
           userId: createUserId('user-1'),
           scope: 'test',
         },
@@ -916,7 +901,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-recipe-1',
           content: '# Removed Recipe 1',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
         {
@@ -926,7 +910,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-recipe-2',
           content: '# Removed Recipe 2',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
         },
       ];
@@ -938,7 +921,6 @@ describe('PackmindDeployer', () => {
           slug: 'removed-standard',
           description: 'Removed',
           version: 1,
-          summary: 'Removed',
           userId: createUserId('user-1'),
           scope: 'test',
         },

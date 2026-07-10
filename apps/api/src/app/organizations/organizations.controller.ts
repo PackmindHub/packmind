@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  OrganizationOnboardingStatus,
   IPullContentResponse,
   InstallPackagesResponse,
   InvalidArtifactIdError,
@@ -82,46 +81,6 @@ export class OrganizationsController {
       message: 'Organization routing active',
       organizationId: orgId,
     };
-  }
-
-  /**
-   * Get onboarding status for an organization
-   * GET /organizations/:orgId/onboarding-status
-   */
-  @Get('onboarding-status')
-  async getOnboardingStatus(
-    @Param('orgId') organizationId: OrganizationId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<OrganizationOnboardingStatus> {
-    const userId = request.user.userId;
-
-    this.logger.info(
-      'GET /organizations/:orgId/onboarding-status - Fetching onboarding status',
-      {
-        organizationId,
-        userId,
-      },
-    );
-
-    try {
-      return await this.accountsAdapter.getOrganizationOnboardingStatus({
-        userId,
-        organizationId,
-        source: request.clientSource,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/onboarding-status - Failed to fetch onboarding status',
-        {
-          organizationId,
-          userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
   }
 
   /**

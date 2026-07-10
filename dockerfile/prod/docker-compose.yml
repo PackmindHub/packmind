@@ -24,7 +24,7 @@ x-openai-config: &openai-config
 # 1. Create a ./certs/ directory next to this docker-compose.yml file
 # 2. Place your CA certificate(s) in PEM format as ./certs/ca-bundle.pem
 #    (combine multiple certificates: cat cert1.pem cert2.pem > ca-bundle.pem)
-# 3. Uncomment the certificate-related lines in the api and mcp-server services below
+# 3. Uncomment the certificate-related lines in the api service below
 
 services:
   # Infrastructure services
@@ -83,35 +83,6 @@ services:
       - redis
     restart: unless-stopped
 
-  mcp-server:
-    image: packmind/mcp:${PACKMIND_TAG:-latest}
-    container_name: packmind-mcp
-    ports:
-      - '3001:3001'
-    environment:
-      <<: [*database-url, *redis-config, *openai-config]
-      RATE_LIMIT_MAX_REQUESTS: 10000
-      # Uncomment the next line to enable custom CA certificates:
-      # NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem
-    # Uncomment the next 2 lines to mount custom CA certificates:
-    # volumes:
-    #   - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro
-    secrets:
-      - encryption_key
-      - mcp_jwt_secret_key
-    entrypoint: []
-    command:
-      - sh
-      - -c
-      - |
-        export ENCRYPTION_KEY="$(cat /run/secrets/encryption_key)"
-        export MCP_JWT_SECRET_KEY="$(cat /run/secrets/mcp_jwt_secret_key)"
-        exec node main.js
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-
   frontend:
     image: packmind/frontend:${PACKMIND_TAG:-latest}
     container_name: packmind-frontend
@@ -122,7 +93,6 @@ services:
       - '${FRONTEND_PUBLIC_PORT:-8081}:${FRONTEND_CONTAINER_PORT:-80}'
     depends_on:
       - api
-      - mcp-server
     restart: unless-stopped
 
 # Secrets definition - files are read from the host filesystem

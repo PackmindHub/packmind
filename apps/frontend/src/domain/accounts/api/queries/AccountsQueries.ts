@@ -4,7 +4,6 @@ import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
   GET_USERS_IN_MY_ORGANIZATION_KEY,
-  GET_ONBOARDING_STATUS_KEY,
   GET_ME_KEY,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
@@ -77,9 +76,6 @@ export const useInviteUsersMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: GET_USERS_IN_MY_ORGANIZATION_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
   });
@@ -164,15 +160,6 @@ export const useRenameOrganizationMutation = () => {
       console.error('Error renaming organization:', error);
     },
   });
-};
-
-export const getOnboardingStatusQueryOptions = (orgId: string) => ({
-  queryKey: [GET_ONBOARDING_STATUS_KEY],
-  queryFn: () => organizationGateway.getOnboardingStatus(orgId),
-});
-
-export const useGetOnboardingStatusQuery = (orgId: string) => {
-  return useQuery(getOnboardingStatusQueryOptions(orgId));
 };
 
 const UPDATE_PROFILE_MUTATION_KEY = 'updateProfile';

@@ -43,10 +43,6 @@ export const CommandVersionSchema = new EntitySchema<
     version: {
       type: 'int',
     },
-    summary: {
-      type: 'text',
-      nullable: true,
-    },
     git_commit_id: {
       type: 'uuid',
       nullable: true,

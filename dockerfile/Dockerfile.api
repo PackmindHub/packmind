@@ -27,7 +27,7 @@ RUN corepack enable && corepack prepare pnpm@11.5.0 --activate && \
 USER node
 
 # Copy optimized API package.json + the workspace lockfile so transitive
-# versions are pinned for reproducible builds (mirrors the mcp-server image)
+# versions are pinned for reproducible builds
 COPY --chown=node:node apps/api/*package*.json package.json
 COPY --chown=node:node pnpm-lock.yaml ./
 RUN pnpm install --prod --ignore-scripts

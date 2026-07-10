@@ -189,8 +189,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary:
-              'Test recipe for GitHub Copilot deployment with detailed instructions',
             userId: user.id,
           },
         ];
@@ -215,7 +213,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
       it('includes description in YAML frontmatter', () => {
         expect(fileUpdates.createOrUpdate[0].content).toContain(
-          "description: 'Test recipe for GitHub Copilot deployment with detailed instructions'",
+          `description: '${recipe.name}'`,
         );
       });
 
@@ -252,7 +250,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for GitHub Copilot deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -294,9 +291,9 @@ describe('GitHub Copilot Deployment Integration', () => {
         );
       });
 
-      it('includes standard summary', () => {
+      it('includes standard description', () => {
         expect(copilotStandardFile?.content).toContain(
-          'Test standard for GitHub Copilot deployment :',
+          `${standard.description} :`,
         );
       });
 
@@ -345,7 +342,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: globalStandard.slug,
             description: globalStandard.description,
             version: globalStandard.version,
-            summary: 'Global standard for all files',
             userId: user.id,
             scope: globalStandard.scope,
           },
@@ -375,9 +371,9 @@ describe('GitHub Copilot Deployment Integration', () => {
         expect(copilotStandardFile.content).toContain("applyTo: '**'");
       });
 
-      it('includes standard summary', () => {
+      it('includes standard description', () => {
         expect(copilotStandardFile.content).toContain(
-          'Global standard for all files :',
+          `${globalStandard.description} :`,
         );
       });
 
@@ -407,7 +403,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe for combined deployment',
             userId: user.id,
           },
         ];
@@ -420,7 +415,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'Test standard for combined deployment',
             userId: user.id,
             scope: standard.scope,
           },
@@ -499,7 +493,6 @@ describe('GitHub Copilot Deployment Integration', () => {
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary: 'Test recipe for deployment',
           userId: user.id,
         },
       ];
@@ -524,7 +517,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     it('includes description in YAML frontmatter', async () => {
       expect(fileUpdates.createOrUpdate[0].content).toContain(
-        "description: 'Test recipe for deployment'",
+        `description: '${recipe.name}'`,
       );
     });
 
@@ -615,7 +608,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe',
             userId: user.id,
           },
         ];
@@ -641,7 +633,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
 
       it('includes description in YAML frontmatter', () => {
-        expect(copilotFile.content).toContain("description: 'Test recipe'");
+        expect(copilotFile.content).toContain(`description: '${recipe.name}'`);
       });
 
       it('includes agent mode in YAML frontmatter', () => {
@@ -691,7 +683,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: standard1.version,
-            summary: 'Frontend standard',
             userId: user.id,
             scope: standard1.scope,
           },
@@ -702,7 +693,6 @@ describe('GitHub Copilot Deployment Integration', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: standard2.version,
-            summary: 'Backend standard',
             userId: user.id,
             scope: standard2.scope,
           },
@@ -736,8 +726,8 @@ describe('GitHub Copilot Deployment Integration', () => {
         );
       });
 
-      it('includes summary in frontend standard', () => {
-        expect(frontendFile?.content).toContain('Frontend standard :');
+      it('includes description in frontend standard', () => {
+        expect(frontendFile?.content).toContain(`${standard1.description} :`);
       });
 
       it('includes rule in frontend standard', () => {
@@ -758,8 +748,8 @@ describe('GitHub Copilot Deployment Integration', () => {
         expect(backendFile?.content).toContain("applyTo: '**'");
       });
 
-      it('includes summary in backend standard', () => {
-        expect(backendFile?.content).toContain('Backend standard :');
+      it('includes description in backend standard', () => {
+        expect(backendFile?.content).toContain(`${standard2.description} :`);
       });
 
       it('includes rule in backend standard', () => {
@@ -1201,7 +1191,6 @@ See reference.md and forms.md for more information.`,
               slug: recipe.slug,
               content: recipe.content,
               version: recipe.version,
-              summary: 'Test recipe',
               userId: user.id,
             },
           ];
@@ -1214,7 +1203,6 @@ See reference.md and forms.md for more information.`,
               slug: standard.slug,
               description: standard.description,
               version: standard.version,
-              summary: 'Test standard',
               userId: user.id,
               scope: standard.scope,
             },
@@ -1632,7 +1620,6 @@ See reference.md and forms.md for more information.`,
                 slug: recipe.slug,
                 content: recipe.content,
                 version: recipe.version,
-                summary: 'Test recipe',
                 userId: user.id,
               },
             ];
@@ -1645,7 +1632,6 @@ See reference.md and forms.md for more information.`,
                 slug: standard.slug,
                 description: standard.description,
                 version: standard.version,
-                summary: 'Test standard',
                 userId: user.id,
                 scope: standard.scope,
               },

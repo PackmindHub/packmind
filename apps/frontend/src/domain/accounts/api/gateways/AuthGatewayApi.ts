@@ -5,25 +5,13 @@ import {
   SignUpWithOrganizationResponse,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
-  NewGateway,
-  NewPackmindCommandBody,
-  IGetMcpTokenUseCase,
-  IGetMcpUrlUseCase,
-  GetMcpTokenCommand,
-  GetMcpTokenResponse,
-  GetMcpUrlCommand,
-  GetMcpUrlResponse,
   CreateCliLoginCodeResponse,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
 } from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
-  ActivateTrialAccountCommand,
-  ActivateTrialAccountResult,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   ResetPasswordCommand,
@@ -77,36 +65,6 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
 
   async getMe(): Promise<MeResponse> {
     return this._api.get<MeResponse>(`${this._endpoint}/me`);
-  }
-
-  getMcpToken: NewGateway<IGetMcpTokenUseCase> = async ({
-    organizationId,
-  }: NewPackmindCommandBody<GetMcpTokenCommand>) => {
-    return this._api.get<GetMcpTokenResponse>(
-      `/organizations/${organizationId}/mcp/token`,
-    );
-  };
-
-  getMcpURL: NewGateway<IGetMcpUrlUseCase> = async ({
-    organizationId,
-  }: NewPackmindCommandBody<GetMcpUrlCommand>) => {
-    return this._api.get<GetMcpUrlResponse>(
-      `/organizations/${organizationId}/mcp/url`,
-    );
-  };
-
-  async getMcpConfig(command: { organizationId: string }): Promise<{
-    token: string;
-    url: string;
-    configs: {
-      cursor: object;
-      vscode: object;
-      continue: object;
-      claude: object;
-      generic: object;
-    };
-  }> {
-    return this._api.get(`/organizations/${command.organizationId}/mcp/config`);
   }
 
   async generateApiKey(): Promise<GenerateApiKeyResponse> {
@@ -165,15 +123,6 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     );
   }
 
-  async activateTrialAccount(
-    request: ActivateTrialAccountCommand,
-  ): Promise<ActivateTrialAccountResult> {
-    return this._api.post<ActivateTrialAccountResult>(
-      `${this._endpoint}/activate-trial-account`,
-      request,
-    );
-  }
-
   async selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse> {
@@ -186,19 +135,6 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
   async createCliLoginCode(): Promise<CreateCliLoginCodeResponse> {
     return this._api.post<CreateCliLoginCodeResponse>(
       `${this._endpoint}/cli-login-code`,
-      {},
-    );
-  }
-
-  async getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse> {
-    return this._api.get<GetUserOnboardingStatusResponse>(
-      `${this._endpoint}/onboarding-status`,
-    );
-  }
-
-  async completeOnboarding(): Promise<CompleteUserOnboardingResponse> {
-    return this._api.post<CompleteUserOnboardingResponse>(
-      `${this._endpoint}/complete-onboarding`,
       {},
     );
   }

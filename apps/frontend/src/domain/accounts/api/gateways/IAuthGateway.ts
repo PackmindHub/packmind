@@ -7,19 +7,13 @@ import {
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
-  IGetMcpTokenUseCase,
-  IGetMcpUrlUseCase,
-  NewGateway,
   CreateCliLoginCodeResponse,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
 } from '@packmind/types';
 import {
   PublicGateway,
   Gateway,
   ICheckEmailAvailabilityUseCase,
   IActivateUserAccountUseCase,
-  IActivateTrialAccountUseCase,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
   IValidatePasswordResetTokenUseCase,
@@ -98,19 +92,6 @@ export interface IAuthGateway {
   checkEmailAvailability: PublicGateway<ICheckEmailAvailabilityUseCase>;
   signOut(): Promise<SignOutResponse>;
   getMe(): Promise<MeResponse>;
-  getMcpToken: NewGateway<IGetMcpTokenUseCase>;
-  getMcpURL: NewGateway<IGetMcpUrlUseCase>;
-  getMcpConfig(command: { organizationId: OrganizationId }): Promise<{
-    token: string;
-    url: string;
-    configs: {
-      cursor: object;
-      vscode: object;
-      continue: object;
-      claude: object;
-      generic: object;
-    };
-  }>;
   generateApiKey: Gateway<IGenerateApiKeyUseCase>;
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;
@@ -120,13 +101,10 @@ export interface IAuthGateway {
     token: string,
   ): Promise<ValidatePasswordResetResponse>;
   resetPassword: PublicGateway<IResetPasswordUseCase>;
-  activateTrialAccount: PublicGateway<IActivateTrialAccountUseCase>;
   selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;
   createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
-  getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse>;
-  completeOnboarding(): Promise<CompleteUserOnboardingResponse>;
   getSocialProviders(): Promise<{ providers: string[] }>;
   updateProfile(body: {
     displayName?: string | null;

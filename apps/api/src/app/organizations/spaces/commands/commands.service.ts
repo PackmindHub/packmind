@@ -80,7 +80,6 @@ export class CommandsService {
   ): Promise<Command> {
     return this.commandsAdapter.captureCommand({
       ...recipe,
-      summary: recipe.summary ?? undefined,
       organizationId,
       userId,
       spaceId,

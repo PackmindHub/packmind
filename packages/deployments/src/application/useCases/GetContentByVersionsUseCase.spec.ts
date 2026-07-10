@@ -51,7 +51,6 @@ const createUserWithMembership = (
       role,
     },
   ],
-  trial: false,
 });
 
 describe('GetContentByVersionsUseCase', () => {

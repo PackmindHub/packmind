@@ -61,7 +61,6 @@ const createUserWithMembership = (
       role,
     },
   ],
-  trial: false,
 });
 
 describe('PullContentUseCase', () => {
@@ -981,88 +980,6 @@ describe('PullContentUseCase', () => {
               targetId: undefined,
             }),
           );
-        });
-      });
-    });
-
-    describe('handling README.md for trial users', () => {
-      let testPackage: PackageWithArtefacts;
-
-      beforeEach(() => {
-        testPackage = {
-          id: createPackageId('test-package-id'),
-          slug: 'test-package',
-          name: 'Test Package',
-          description: 'Test package description',
-          spaceId: createSpaceId('space-1'),
-          createdBy: createUserId('user-1'),
-          recipes: [],
-          standards: [],
-          skills: [],
-        };
-
-        packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue(
-          [testPackage],
-        );
-
-        commandsPort.listCommandVersions.mockResolvedValue([]);
-        standardsPort.getLatestStandardVersion.mockResolvedValue(null);
-        skillsPort.getLatestSkillVersion.mockResolvedValue(null);
-
-        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
-          createOrUpdate: [],
-          delete: [],
-        } as FileUpdates);
-      });
-
-      describe('when user is a trial user', () => {
-        beforeEach(() => {
-          const trialUser: User = {
-            id: createUserId(command.userId),
-            email: `${command.userId}@packmind.test`,
-            passwordHash: null,
-            active: true,
-            memberships: [
-              {
-                userId: createUserId(command.userId),
-                organizationId: organization.id,
-                role: 'member',
-              },
-            ],
-            trial: true,
-          };
-          accountsPort.getUserById.mockResolvedValue(trialUser);
-        });
-
-        it('includes README.md with playbook content in file updates', async () => {
-          const result = await useCase.execute(command);
-
-          const readmeFile = result.fileUpdates.createOrUpdate.find(
-            (file) => file.path === '.packmind/README.md',
-          );
-          expect(readmeFile?.content?.split('\n')).toEqual(
-            expect.arrayContaining([
-              '# Packmind playbook',
-              '## How to contribute?',
-            ]),
-          );
-        });
-      });
-
-      describe('when user is not a trial user', () => {
-        beforeEach(() => {
-          accountsPort.getUserById.mockResolvedValue(
-            createUserWithMembership(command.userId, organization, 'member'),
-          );
-        });
-
-        it('does not include README.md in file updates', async () => {
-          const result = await useCase.execute(command);
-
-          const readmeFile = result.fileUpdates.createOrUpdate.find(
-            (file) => file.path === '.packmind/README.md',
-          );
-          expect(readmeFile).toBeUndefined();
         });
       });
     });

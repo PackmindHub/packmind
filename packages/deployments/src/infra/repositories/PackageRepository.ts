@@ -16,7 +16,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { CommandSchema } from '@packmind/commands';
-import { StandardSchema, StandardVersionSchema } from '@packmind/standards';
+import { StandardSchema } from '@packmind/standards';
 import { SkillSchema } from '@packmind/skills';
 import { SpaceSchema } from '@packmind/spaces';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
@@ -442,24 +442,8 @@ export class PackageRepository
         : Promise.resolve<Skill[]>([]),
     ]);
 
-    const standardVersionsWithSummary =
-      standardsEntities.length > 0
-        ? await this.repository.manager
-            .getRepository(StandardVersionSchema)
-            .find({ where: { standardId: In(uniqueStandardIds) } })
-        : [];
-
-    const summaryMap = new Map<string, string>();
-    for (const sv of standardVersionsWithSummary) {
-      if (sv.summary) {
-        summaryMap.set(`${sv.standardId}:${sv.version}`, sv.summary);
-      }
-    }
-
     const standards: Standard[] = standardsEntities.map((standard) => ({
       ...standard,
-      summary:
-        summaryMap.get(`${standard.id}:${standard.version}`) || undefined,
     }));
 
     const commandsMap = new Map<string, Command>(recipes.map((r) => [r.id, r]));

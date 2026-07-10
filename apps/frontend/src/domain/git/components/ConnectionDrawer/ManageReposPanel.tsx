@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   PMAlert,
   PMBox,
+  PMButton,
   PMHStack,
   PMIcon,
   PMInput,
@@ -83,7 +84,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
         group.trackedBranches.push(t.branch);
       }
 
-      for (const r of available.data ?? []) {
+      for (const r of available.data?.repositories ?? []) {
         const group = groupMap.get(r.fullName);
         if (group) {
           group.defaultBranch = r.defaultBranch;
@@ -96,7 +97,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
       }
 
       const untrackedMap = new Map<string, UntrackedRepo>();
-      for (const r of available.data ?? []) {
+      for (const r of available.data?.repositories ?? []) {
         if (groupMap.has(r.fullName)) continue;
         untrackedMap.set(r.fullName, {
           key: r.fullName,
@@ -120,9 +121,12 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
       const trackedGroups = Array.from(groupMap.values())
         .filter(matchesGroup)
         .sort((a, b) => a.fullName.localeCompare(b.fullName));
-      const untrackedRepos = Array.from(untrackedMap.values())
-        .filter(matchesRepo)
-        .sort((a, b) => a.fullName.localeCompare(b.fullName));
+      // Keep the provider's order (GitHub: most recently updated first,
+      // GitLab: most recent activity first) so paginated "Load more" results
+      // append to the bottom instead of splicing into an alphabetical list.
+      const untrackedRepos = Array.from(untrackedMap.values()).filter(
+        matchesRepo,
+      );
 
       return { trackedGroups, untrackedRepos, repoCount, totalRepos };
     }, [available.data, selection.tuples, filter]);
@@ -288,6 +292,27 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
               />
             ))}
           </>
+        )}
+
+        {available.hasNextPage && (
+          <PMBox
+            paddingX={3}
+            paddingY={2.5}
+            borderTop="1px solid"
+            borderColor="border.tertiary"
+            textAlign="center"
+          >
+            <PMButton
+              variant="tertiary"
+              size="xs"
+              onClick={() => available.fetchNextPage()}
+              loading={available.isFetchingNextPage}
+              disabled={available.isFetchingNextPage}
+              data-testid="manage-repos-load-more"
+            >
+              Load more repositories
+            </PMButton>
+          </PMBox>
         )}
       </PMBox>
 

@@ -113,7 +113,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
       // Set adapters on services for backward compatibility
       this.standardsServices.setLinterAdapter(linterPort);
-      this.standardsServices.setLlmPort(llmPort);
 
       // Initialize adapter with all ports and services
       // Delayed jobs are built internally by the adapter

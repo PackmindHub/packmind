@@ -141,13 +141,17 @@ describe('GitProviderService', () => {
           stars: 42,
         },
       ];
-      let result: typeof mockRepos;
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.getAvailableRepos>
+      >;
 
       beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
-        mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue(
-          mockRepos,
-        );
+        mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue({
+          repositories: mockRepos,
+          totalPages: 1,
+          lastLoadedPage: 1,
+        });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-1'),
         );
@@ -162,11 +166,38 @@ describe('GitProviderService', () => {
       it('lists available repositories', () => {
         expect(
           mockGithubProviderInstance.listAvailableRepositories,
-        ).toHaveBeenCalledWith();
+        ).toHaveBeenCalledWith(1);
       });
 
       it('returns the repositories', () => {
-        expect(result).toEqual(mockRepos);
+        expect(result.repositories).toEqual(mockRepos);
+      });
+    });
+
+    describe('when the provider fetched several pages to fill one batch', () => {
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.getAvailableRepos>
+      >;
+
+      beforeEach(async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue({
+          repositories: [],
+          totalPages: 10,
+          lastLoadedPage: 3,
+        });
+        result = await gitProviderService.getAvailableRepos(
+          createGitProviderId('provider-1'),
+          1,
+        );
+      });
+
+      it('forwards the last provider page consumed', () => {
+        expect(result.lastLoadedPage).toBe(3);
+      });
+
+      it('keeps the requested page as the current page', () => {
+        expect(result.currentPage).toBe(1);
       });
     });
 
@@ -182,15 +213,19 @@ describe('GitProviderService', () => {
           stars: 15,
         },
       ];
-      let result: typeof mockRepos;
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.getAvailableRepos>
+      >;
 
       beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           mockGitlabProvider,
         );
-        mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue(
-          mockRepos,
-        );
+        mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue({
+          repositories: mockRepos,
+          totalPages: 1,
+          lastLoadedPage: 1,
+        });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-2'),
         );
@@ -211,11 +246,11 @@ describe('GitProviderService', () => {
       it('lists available repositories', () => {
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
-        ).toHaveBeenCalledWith();
+        ).toHaveBeenCalledWith(1);
       });
 
       it('returns the repositories', () => {
-        expect(result).toEqual(mockRepos);
+        expect(result.repositories).toEqual(mockRepos);
       });
     });
 
@@ -239,15 +274,19 @@ describe('GitProviderService', () => {
           stars: 8,
         },
       ];
-      let result: typeof mockRepos;
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.getAvailableRepos>
+      >;
 
       beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           selfHostedGitlabProvider,
         );
-        mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue(
-          mockRepos,
-        );
+        mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue({
+          repositories: mockRepos,
+          totalPages: 1,
+          lastLoadedPage: 1,
+        });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-3'),
         );
@@ -272,11 +311,11 @@ describe('GitProviderService', () => {
       it('lists available repositories', () => {
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
-        ).toHaveBeenCalledWith();
+        ).toHaveBeenCalledWith(1);
       });
 
       it('returns the repositories', () => {
-        expect(result).toEqual(mockRepos);
+        expect(result.repositories).toEqual(mockRepos);
       });
     });
 

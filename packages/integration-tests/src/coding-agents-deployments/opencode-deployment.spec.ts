@@ -151,7 +151,6 @@ describe('OpenCode Deployment Integration', () => {
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary: 'Test recipe summary',
           userId: user.id,
         },
       ];
@@ -217,7 +216,6 @@ describe('OpenCode Deployment Integration', () => {
           slug: standard.slug,
           description: standard.description,
           version: standard.version,
-          summary: 'Test standard summary',
           userId: user.id,
           scope: standard.scope,
         },

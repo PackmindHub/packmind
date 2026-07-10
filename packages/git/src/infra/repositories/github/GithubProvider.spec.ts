@@ -97,12 +97,13 @@ describe('GithubProvider', () => {
           params: {
             sort: 'updated',
             per_page: 100,
+            page: 1,
           },
         });
       });
 
       it('returns formatted repository list', () => {
-        expect(result).toEqual([
+        expect(result.repositories).toEqual([
           {
             name: 'test-repo',
             owner: 'test-owner',
@@ -122,6 +123,10 @@ describe('GithubProvider', () => {
             stars: 0,
           },
         ]);
+      });
+
+      it('reports the requested page as the last loaded page', () => {
+        expect(result.lastLoadedPage).toBe(1);
       });
     });
 
@@ -160,7 +165,7 @@ describe('GithubProvider', () => {
 
       const result = await githubProvider.listAvailableRepositories();
 
-      expect(result).toEqual([
+      expect(result.repositories).toEqual([
         {
           name: 'valid-repo',
           owner: 'test-owner',
@@ -180,7 +185,123 @@ describe('GithubProvider', () => {
 
         const result = await githubProvider.listAvailableRepositories();
 
-        expect(result).toEqual([]);
+        expect(result.repositories).toEqual([]);
+      });
+    });
+
+    describe('pagination', () => {
+      it('requests the given page', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+        await githubProvider.listAvailableRepositories(3);
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user/repos', {
+          params: { sort: 'updated', per_page: 100, page: 3 },
+        });
+      });
+
+      describe('when the Link header advertises more pages', () => {
+        it('reports the last page as the total', async () => {
+          mockAxiosInstance.get.mockResolvedValue({
+            data: [],
+            headers: {
+              link: '<https://api.github.com/user/repos?page=2&per_page=100>; rel="next", <https://api.github.com/user/repos?page=5&per_page=100>; rel="last"',
+            },
+          });
+
+          const result = await githubProvider.listAvailableRepositories(1);
+
+          expect(result.totalPages).toBe(5);
+        });
+      });
+
+      describe('when there is no Link header', () => {
+        it('reports the current page as the total', async () => {
+          mockAxiosInstance.get.mockResolvedValue({ data: [] });
+
+          const result = await githubProvider.listAvailableRepositories(2);
+
+          expect(result.totalPages).toBe(2);
+        });
+      });
+
+      describe('with an installation token', () => {
+        it('derives the total page count from total_count', async () => {
+          const installationProvider = new GithubProvider(
+            stubResolver('installation'),
+            mockLogger,
+          );
+          mockAxiosInstance.get.mockResolvedValue({
+            data: { total_count: 250, repositories: [] },
+          });
+
+          const result =
+            await installationProvider.listAvailableRepositories(1);
+
+          expect(result.totalPages).toBe(3);
+        });
+      });
+    });
+
+    describe('when access filtering leaves pages under-filled', () => {
+      const writableRepo = (name: string) => ({
+        name,
+        owner: { login: 'test-owner' },
+        description: null,
+        private: false,
+        default_branch: 'main',
+        language: null,
+        stargazers_count: 0,
+        permissions: { pull: true, push: true, admin: false },
+      });
+      const linkToLastPage = (lastPage: number) => ({
+        link: `<https://api.github.com/user/repos?page=${lastPage}&per_page=100>; rel="last"`,
+      });
+
+      beforeEach(() => {
+        // Each provider page contributes a single accessible repo, so the loop
+        // must pull all three pages before it runs out of pages.
+        mockAxiosInstance.get
+          .mockResolvedValueOnce({
+            data: [writableRepo('repo-1')],
+            headers: linkToLastPage(3),
+          })
+          .mockResolvedValueOnce({
+            data: [writableRepo('repo-2')],
+            headers: linkToLastPage(3),
+          })
+          .mockResolvedValueOnce({
+            data: [writableRepo('repo-3')],
+            headers: {},
+          });
+      });
+
+      it('accumulates accessible repos across provider pages', async () => {
+        const result = await githubProvider.listAvailableRepositories(1);
+
+        expect(result.repositories.map((repo) => repo.name)).toEqual([
+          'repo-1',
+          'repo-2',
+          'repo-3',
+        ]);
+      });
+
+      it('reports the last provider page it consumed', async () => {
+        const result = await githubProvider.listAvailableRepositories(1);
+
+        expect(result.lastLoadedPage).toBe(3);
+      });
+
+      it('requests each provider page in order', async () => {
+        await githubProvider.listAvailableRepositories(1);
+
+        expect(mockAxiosInstance.get).toHaveBeenNthCalledWith(
+          3,
+          '/user/repos',
+          {
+            params: { sort: 'updated', per_page: 100, page: 3 },
+          },
+        );
       });
     });
 
@@ -243,7 +364,7 @@ describe('GithubProvider', () => {
 
         const result = await githubProvider.listAvailableRepositories();
 
-        expect(result).toEqual([
+        expect(result.repositories).toEqual([
           {
             name: 'writable-repo',
             owner: 'test-owner',
@@ -291,7 +412,7 @@ describe('GithubProvider', () => {
 
           const result = await githubProvider.listAvailableRepositories();
 
-          expect(result).toEqual([
+          expect(result.repositories).toEqual([
             {
               name: 'repo-with-permissions',
               owner: 'test-owner',
@@ -330,7 +451,7 @@ describe('GithubProvider', () => {
 
           const result = await githubProvider.listAvailableRepositories();
 
-          expect(result).toEqual([]);
+          expect(result.repositories).toEqual([]);
         });
       });
     });
@@ -384,13 +505,14 @@ describe('GithubProvider', () => {
             {
               params: {
                 per_page: 100,
+                page: 1,
               },
             },
           );
         });
 
         it('unwraps the repositories envelope and returns formatted list', () => {
-          expect(result).toEqual([
+          expect(result.repositories).toEqual([
             {
               name: 'app-repo',
               owner: 'app-owner',
@@ -410,7 +532,7 @@ describe('GithubProvider', () => {
 
           const result = await installationProvider.listAvailableRepositories();
 
-          expect(result).toEqual([]);
+          expect(result.repositories).toEqual([]);
         });
       });
 
@@ -449,7 +571,7 @@ describe('GithubProvider', () => {
 
           const result = await installationProvider.listAvailableRepositories();
 
-          expect(result.map((r) => r.name)).toEqual([
+          expect(result.repositories.map((r) => r.name)).toEqual([
             'app-repo-no-perms',
             'app-repo-push-false',
           ]);

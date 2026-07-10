@@ -68,7 +68,6 @@ jobs:
             The following Docker images have been built and pushed to Docker Hub:
             - `packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
             - `packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
-            - `packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
 
             All images are also available with the `latest` tag.
           draft: false

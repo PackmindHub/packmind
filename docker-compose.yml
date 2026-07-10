@@ -171,8 +171,6 @@ services:
       CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
-      MCP_HOSTNAME: 'mcp-server'
-      MCP_PORT: 3001
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '1000'
 
@@ -246,48 +244,6 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-
-  mcp-server:
-    image: node:24.15.0-alpine3.23
-    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-mcp-server
-    working_dir: /packmind
-    entrypoint: >
-      sh -lc '
-        set -eu
-        if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
-          cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
-        fi && \
-        if [ -n "${CI:-}" ]; then
-          echo "[mcp] CI mode -> WITHOUT daemon"
-          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
-        fi
-        if [ -S /nx-sock/d.sock ]; then
-          echo "[mcp] Daemon OK -> WITH daemon"
-          exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
-        else
-          echo "[mcp] Daemon NOT reachable -> WITHOUT daemon"
-          export NX_DAEMON=false; exec ./node_modules/.bin/nx run mcp-server:serve:development --host=0.0.0.0 --verbose
-        fi
-      '
-    environment:
-      <<: *nx-env
-      CI: ${CI:-}
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
-      REDIS_URI: redis://redis:6379
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
-    volumes:
-      - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-nx-sock:/nx-sock
-    depends_on:
-      nx-daemon:
-        condition: service_healthy
-        required: false
-      run-migrations:
-        condition: service_completed_successfully
 
   nginx:
     image: nginx:alpine

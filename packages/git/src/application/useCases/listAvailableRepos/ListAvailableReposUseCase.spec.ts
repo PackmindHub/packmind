@@ -1,6 +1,7 @@
 import {
   GitProvider,
   GitProviderId,
+  ListAvailableReposResponse,
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
@@ -19,6 +20,18 @@ describe('ListAvailableReposUseCase', () => {
   const organizationId = createOrganizationId(
     '19fe905e-ccc6-45ab-b484-d08dd991f9c0',
   );
+
+  const baseCommand = {
+    userId: 'user-1',
+    organizationId,
+  };
+
+  const emptyResponse: ListAvailableReposResponse = {
+    currentPage: 1,
+    availablePages: 1,
+    lastLoadedPage: 1,
+    repositories: [],
+  };
 
   const tokenProvider: GitProvider = {
     id: providerId,
@@ -63,29 +76,52 @@ describe('ListAvailableReposUseCase', () => {
 
       it('rejects', async () => {
         await expect(
-          useCase.execute({ gitProviderId: providerId }),
+          useCase.execute({ ...baseCommand, gitProviderId: providerId }),
         ).rejects.toThrow('Git provider token not configured');
       });
 
       it('does not call getAvailableRepos', async () => {
         await useCase
-          .execute({ gitProviderId: providerId })
+          .execute({ ...baseCommand, gitProviderId: providerId })
           .catch(() => undefined);
         expect(mockGitProviderService.getAvailableRepos).not.toHaveBeenCalled();
       });
     });
 
     describe('when the token is present', () => {
-      it('delegates to getAvailableRepos', async () => {
+      it('delegates to getAvailableRepos for the first page by default', async () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue(
           tokenProvider,
         );
-        mockGitProviderService.getAvailableRepos.mockResolvedValue([]);
+        mockGitProviderService.getAvailableRepos.mockResolvedValue(
+          emptyResponse,
+        );
 
-        await useCase.execute({ gitProviderId: providerId });
+        await useCase.execute({ ...baseCommand, gitProviderId: providerId });
 
         expect(mockGitProviderService.getAvailableRepos).toHaveBeenCalledWith(
           providerId,
+          1,
+        );
+      });
+
+      it('forwards the requested page', async () => {
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          tokenProvider,
+        );
+        mockGitProviderService.getAvailableRepos.mockResolvedValue(
+          emptyResponse,
+        );
+
+        await useCase.execute({
+          ...baseCommand,
+          gitProviderId: providerId,
+          page: 3,
+        });
+
+        expect(mockGitProviderService.getAvailableRepos).toHaveBeenCalledWith(
+          providerId,
+          3,
         );
       });
     });
@@ -99,26 +135,39 @@ describe('ListAvailableReposUseCase', () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue(
           appProvider,
         );
-        mockGitProviderService.getAvailableRepos.mockResolvedValue([
-          {
-            name: 'repo-a',
-            owner: 'acme',
-            private: false,
-            defaultBranch: 'main',
-            stars: 0,
-          },
-        ]);
+        mockGitProviderService.getAvailableRepos.mockResolvedValue({
+          currentPage: 1,
+          availablePages: 2,
+          lastLoadedPage: 1,
+          repositories: [
+            {
+              name: 'repo-a',
+              owner: 'acme',
+              private: false,
+              defaultBranch: 'main',
+              stars: 0,
+            },
+          ],
+        });
 
-        result = await useCase.execute({ gitProviderId: providerId });
+        result = await useCase.execute({
+          ...baseCommand,
+          gitProviderId: providerId,
+        });
       });
 
       it('returns the repos', () => {
-        expect(result).toHaveLength(1);
+        expect(result.repositories).toHaveLength(1);
+      });
+
+      it('returns the total page count', () => {
+        expect(result.availablePages).toBe(2);
       });
 
       it('delegates to getAvailableRepos', () => {
         expect(mockGitProviderService.getAvailableRepos).toHaveBeenCalledWith(
           providerId,
+          1,
         );
       });
     });
@@ -129,6 +178,7 @@ describe('ListAvailableReposUseCase', () => {
       it('rejects', async () => {
         await expect(
           useCase.execute({
+            ...baseCommand,
             gitProviderId: undefined as unknown as GitProviderId,
           }),
         ).rejects.toThrow('Git provider ID is required');
@@ -140,7 +190,7 @@ describe('ListAvailableReposUseCase', () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue(null);
 
         await expect(
-          useCase.execute({ gitProviderId: providerId }),
+          useCase.execute({ ...baseCommand, gitProviderId: providerId }),
         ).rejects.toThrow('Git provider not found');
       });
     });
@@ -153,7 +203,7 @@ describe('ListAvailableReposUseCase', () => {
         });
 
         await expect(
-          useCase.execute({ gitProviderId: providerId }),
+          useCase.execute({ ...baseCommand, gitProviderId: providerId }),
         ).rejects.toThrow('Git provider source not configured');
       });
     });

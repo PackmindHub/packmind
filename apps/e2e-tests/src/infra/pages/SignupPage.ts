@@ -20,22 +20,7 @@ export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
       .getByTestId(SignUpWithOrganizationFormDataTestIds.Submit)
       .click();
 
-    // Wait for redirect to onboarding reason page
-    await this.page.waitForURL('**/sign-up/create-organization');
-    // Skip the onboarding reason step
-    await this.page.getByTestId('CreateOrganizationForm.SubmitButton').click();
-
-    // Wait for redirect to onboarding reason page
-    await this.page.waitForURL('**/sign-up/onboarding-reason');
-
-    // Select the first onboarding reason option
-    await this.page
-      .getByText('Keeping instructions under control as our setup grows')
-      .click();
-
-    // Click the continue button
-    await this.page.getByTestId('OnboardingReason.ContinueButton').click();
-
+    // After sign-up + auto-login the user lands directly on the org dashboard.
     return this.pageFactory.getDashboardPage();
   }
 

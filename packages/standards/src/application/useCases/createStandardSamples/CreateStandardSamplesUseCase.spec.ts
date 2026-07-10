@@ -198,7 +198,6 @@ describe('CreateStandardSamplesUseCase', () => {
         expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
           name: 'Java Best Practices',
           description: 'Java coding standards',
-          summary: 'Essential Java coding practices for robust applications',
           rules: [
             {
               content: 'Use try-with-resources',
@@ -225,7 +224,6 @@ describe('CreateStandardSamplesUseCase', () => {
         expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
           name: 'Spring Best Practices',
           description: 'Spring framework standards',
-          summary: 'Core Spring framework patterns for maintainable code',
           rules: [
             {
               content: 'Use constructor injection',

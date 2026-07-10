@@ -35,7 +35,6 @@ import {
 } from '@packmind/types';
 import { ICommandsDelayedJobs } from '../../domain/jobs/ICommandsDelayedJobs';
 import { DeployCommandsJobFactory } from '../../infra/jobs/DeployCommandsJobFactory';
-import { UpdateCommandsAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateCommandsAndGenerateSummariesJobFactory';
 import { CommandsServices } from '../services/CommandsServices';
 import { CaptureCommandUseCase } from '../useCases/captureCommand/CaptureCommandUseCase';
 import { CaptureCommandWithPackagesUseCase } from '../useCases/captureCommandWithPackages/CaptureCommandWithPackagesUseCase';
@@ -58,7 +57,6 @@ export class CommandsAdapter
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
-  private llmPort: ILlmPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private commandsDelayedJobs: ICommandsDelayedJobs | null = null;
@@ -103,12 +101,6 @@ export class CommandsAdapter
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
-    this.llmPort = ports[ILlmPortName];
-
-    // Set llmPort to services
-    if (this.llmPort) {
-      this.commandsServices.setLlmPort(this.llmPort);
-    }
 
     // Step 2: Build delayed jobs
     this.commandsDelayedJobs = await this.buildDelayedJobs(
@@ -129,7 +121,6 @@ export class CommandsAdapter
       this.accountsPort,
       this.commandsServices.getCommandService(),
       this.commandsServices.getCommandVersionService(),
-      this.commandsServices.getCommandSummaryService(),
       ports.eventEmitterService,
     );
 
@@ -145,7 +136,6 @@ export class CommandsAdapter
       this.accountsPort,
       this.commandsServices.getCommandService(),
       this.commandsServices.getCommandVersionService(),
-      this.commandsServices.getCommandSummaryService(),
       ports.eventEmitterService,
     );
 
@@ -197,30 +187,11 @@ export class CommandsAdapter
   ): Promise<ICommandsDelayedJobs> {
     this.logger.info('Building recipes delayed jobs');
 
-    // Create UpdateRecipesAndGenerateSummaries job factory
-    const updateCommandsJobFactory =
-      new UpdateCommandsAndGenerateSummariesJobFactory(
-        this.commandsServices.getCommandService(),
-        this.commandsServices.getCommandVersionService(),
-        this.commandsServices.getCommandSummaryService(),
-        this.spacesPort!,
-      );
-    await updateCommandsJobFactory.createQueue();
-
     // Create DeployRecipes job factory
     const deployCommandsJobFactory = new DeployCommandsJobFactory(
       deploymentPort,
     );
     await deployCommandsJobFactory.createQueue();
-
-    // Register job factories with JobsService
-    this.logger.debug(
-      'Registering UpdateRecipesAndGenerateSummaries job queue',
-    );
-    jobsService.registerJobQueue(
-      updateCommandsJobFactory.getQueueName(),
-      updateCommandsJobFactory,
-    );
 
     this.logger.debug('Registering DeployRecipes job queue');
     jobsService.registerJobQueue(
@@ -231,8 +202,6 @@ export class CommandsAdapter
     this.logger.info('Recipes delayed jobs built and registered successfully');
 
     return {
-      updateRecipesAndGenerateSummariesDelayedJob:
-        updateCommandsJobFactory.getDelayedJob(),
       deployRecipesDelayedJob: deployCommandsJobFactory.getDelayedJob(),
     };
   }

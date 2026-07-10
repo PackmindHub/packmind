@@ -54,7 +54,6 @@ const createUserWithMembership = (
       role,
     },
   ],
-  trial: false,
 });
 
 describe('GetDeployedContentUseCase', () => {

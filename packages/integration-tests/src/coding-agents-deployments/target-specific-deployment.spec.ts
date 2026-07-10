@@ -198,7 +198,6 @@ class MyService {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'IDE code quality standards',
             userId: user.id,
             scope: standard.scope,
           },
@@ -264,7 +263,6 @@ class MyService {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'IDE code quality standards',
             userId: user.id,
             scope: standard.scope,
           },
@@ -362,7 +360,6 @@ class MyService {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'IDE code quality standards',
             userId: user.id,
             scope: standard.scope,
           },
@@ -392,8 +389,8 @@ class MyService {
         expect(deployedFile.content).toContain(standard.name);
       });
 
-      it('includes summary in content', () => {
-        expect(deployedFile.content).toContain('IDE code quality standards :');
+      it('includes description in content', () => {
+        expect(deployedFile.content).toContain(`${standard.description} :`);
       });
 
       it('includes first rule', () => {
@@ -438,7 +435,6 @@ class MyService {
             slug: standard.slug,
             description: standard.description,
             version: standard.version,
-            summary: 'IDE code quality standards',
             userId: user.id,
             scope: standard.scope,
           },
@@ -548,7 +544,6 @@ class MyService {
             slug: universalStandard.slug,
             description: universalStandard.description,
             version: universalStandard.version,
-            summary: 'Universal testing standards for all platforms',
             userId: user.id,
             scope: universalStandard.scope,
           },
@@ -638,7 +633,6 @@ class MyService {
             slug: 'universal-testing-standards',
             description: 'Testing standards applicable to JetBrains and VSCode',
             version: 1,
-            summary: 'Universal testing standards',
             userId: user.id,
             scope: 'universal',
           },
@@ -703,7 +697,6 @@ class MyService {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'JetBrains services best practices',
             userId: user.id,
           },
         ];
@@ -772,7 +765,6 @@ class MyService {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'JetBrains services best practices',
             userId: user.id,
           },
         ];
@@ -807,9 +799,9 @@ class MyService {
         expect(deployedFile?.content).toContain('---');
       });
 
-      it('includes description in frontmatter', () => {
+      it('includes recipe name as description in frontmatter', () => {
         expect(deployedFile?.content).toContain(
-          "description: 'JetBrains services best practices'",
+          `description: '${recipe.name}'`,
         );
       });
 
@@ -831,7 +823,6 @@ class MyService {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'JetBrains services best practices',
             userId: user.id,
           },
         ];
@@ -878,7 +869,6 @@ class MyService {
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'JetBrains services best practices',
             userId: user.id,
           },
         ];
@@ -995,7 +985,6 @@ This recipe provides TDD best practices applicable to any IDE platform.
             slug: tddCommand.slug,
             content: tddCommand.content,
             version: tddCommand.version,
-            summary: 'TDD best practices for all platforms',
             userId: user.id,
           },
         ];
@@ -1083,7 +1072,6 @@ This recipe provides TDD best practices applicable to any IDE platform.
             slug: 'tdd-best-practices',
             content: `# TDD Best Practices\n\nApplicable to JetBrains and VSCode.`,
             version: 1,
-            summary: 'TDD best practices',
             userId: user.id,
           },
         ];
@@ -1146,7 +1134,6 @@ This recipe provides TDD best practices applicable to any IDE platform.
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe',
             userId: user.id,
           },
         ];
@@ -1193,7 +1180,6 @@ This recipe provides TDD best practices applicable to any IDE platform.
             slug: recipe.slug,
             content: recipe.content,
             version: recipe.version,
-            summary: 'Test recipe',
             userId: user.id,
           },
         ];

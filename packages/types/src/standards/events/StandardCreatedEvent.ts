@@ -6,10 +6,9 @@ import { StandardId } from '../StandardId';
  * Method used to create a standard.
  * - 'blank': Created via form in web app
  * - 'sample': Created from a sample template
- * - 'mcp': Created via MCP tool
  * - 'cli': Created via CLI command
  */
-export type StandardCreationMethod = 'blank' | 'sample' | 'mcp' | 'cli';
+export type StandardCreationMethod = 'blank' | 'sample' | 'cli';
 
 export interface StandardCreatedPayload {
   standardId: StandardId;

@@ -58,7 +58,6 @@ describe('JunieDeployer', () => {
           slug: recipe.slug,
           content: 'This is the recipe content',
           version: 1,
-          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
         };
 
@@ -134,7 +133,6 @@ describe('JunieDeployer', () => {
           slug: standard.slug,
           description: 'This is the standard description',
           version: 1,
-          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: 'backend',
         };
@@ -226,7 +224,6 @@ describe('JunieDeployer', () => {
           slug: standard.slug,
           description: 'Standard description',
           version: 1,
-          summary: 'Test summary',
           userId: createUserId('user-1'),
           scope: 'backend',
         };
@@ -283,7 +280,6 @@ describe('JunieDeployer', () => {
             slug: standard1.slug,
             description: 'Standard one description',
             version: 1,
-            summary: 'Standard one summary',
             userId: createUserId('user-1'),
             scope: 'backend',
           },
@@ -294,7 +290,6 @@ describe('JunieDeployer', () => {
             slug: standard2.slug,
             description: 'Standard two description',
             version: 1,
-            summary: 'Standard two summary',
             userId: createUserId('user-1'),
             scope: 'frontend',
           },

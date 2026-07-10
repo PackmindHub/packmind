@@ -134,7 +134,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         standardVersions.map((standardVersion) => ({
           name: standardVersion.name,
           slug: standardVersion.slug,
-          summary: standardVersion.summary,
+          description: standardVersion.description,
         })),
       );
 
@@ -229,7 +229,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         standardVersions.map((standardVersion) => ({
           name: standardVersion.name,
           slug: standardVersion.slug,
-          summary: standardVersion.summary,
+          description: standardVersion.description,
         })),
       );
 
@@ -334,7 +334,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
           standardVersions.map((standardVersion) => ({
             name: standardVersion.name,
             slug: standardVersion.slug,
-            summary: standardVersion.summary,
+            description: standardVersion.description,
           })),
         );
       fileUpdates.createOrUpdate.push({

@@ -114,9 +114,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
         PackmindEventEmitterService,
       );
 
-      // Set llmPort on services
-      this.commandsServices.setLlmPort(llmPort);
-
       // Initialize adapter with all dependencies
       // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({
