@@ -73,16 +73,10 @@ If your infrastructure uses self-signed certificates or custom Certificate Autho
    cat cert1.pem cert2.pem > certs/ca-bundle.pem
    ```
 
-3. Edit `docker-compose.yml` and uncomment the certificate lines in both `api` and `mcp-server` services:
+3. Edit `docker-compose.yml` and uncomment the certificate lines in the `api` service:
 
    ```yaml
    api:
-     environment:
-       NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem # Uncomment this line
-     volumes:
-       - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro # Uncomment these 2 lines
-
-   mcp-server:
      environment:
        NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem # Uncomment this line
      volumes:
@@ -133,7 +127,7 @@ Once configured, social login buttons (Google, Microsoft, GitHub) will appear on
 
 #### With Docker Compose
 
-You can override both `api` and `mcp` sections of the `docker-compose.yaml` file.
+You can override the `api` section of the `docker-compose.yaml` file.
 
 Here is an example of how to add the `SMTP_FROM` variable to Docker Compose.
 

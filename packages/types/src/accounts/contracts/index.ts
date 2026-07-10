@@ -13,8 +13,6 @@ export * from './ICreateOrganizationUseCase';
 export * from './IGenerateApiKeyUseCase';
 export * from './IGenerateUserTokenUseCase';
 export * from './IGetCurrentApiKeyUseCase';
-export * from './IGetMcpTokenUseCase';
-export * from './IGetMcpUrlUseCase';
 export * from './IGetOrganizationByIdUseCase';
 export * from './IGetOrganizationByNameUseCase';
 export * from './IGetOrganizationBySlugUseCase';

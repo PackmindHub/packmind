@@ -5,5 +5,3 @@ export * from './SidebarAccountsMenuDataTestIds';
 export * from './SettingsPageDataTestIds';
 export * from './CliAuthenticationDataTestIds';
 export * from './UsersPageDataTestIds';
-export * from './StartTrialAgentPageDataTestIds';
-export * from './PreInstallationInfoDataTestIds';

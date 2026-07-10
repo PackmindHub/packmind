@@ -49,8 +49,8 @@ export const SetupLocalEnvironment: React.FunctionComponent = () => {
   return (
     <PMVStack width="full" alignItems="stretch" gap={4}>
       <PMText as="p">
-        Copy and run this command in your terminal to install the CLI and MCP
-        server automatically:
+        Copy and run this command in your terminal to install and configure the
+        Packmind CLI automatically:
       </PMText>
 
       {createCliLoginCodeMutation.isPending && (

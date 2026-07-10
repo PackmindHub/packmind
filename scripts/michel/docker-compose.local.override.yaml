@@ -26,12 +26,5 @@ services:
         condition: service_started
       redis:
         condition: service_started
-  mcp-server:
-    user: root
-    depends_on:
-      postgres:
-        condition: service_started
-      redis:
-        condition: service_started
   frontend:
     user: root

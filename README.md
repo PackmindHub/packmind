@@ -81,24 +81,6 @@ Then, in your favorite ai coding agent, run:
 
 To create your first standards and commands from your codebase.
 
-## Option 2: Connect MCP server
-
-The MCP server allows you to create and manage standards and commands directly from your AI agent (GitHub Copilot, Claude Code, Cursor, etc.).
-
-1. Go to **Account Settings** in Packmind
-2. Copy your MCP Access token
-3. Configure your AI agent with:
-   - MCP server URL: `{PACKMIND_URL}/mcp`
-   - Your MCP access token
-
-Once set up, open your AI agent and use this prompt:
-
-```
-Start packmind onboarding
-```
-
-Your AI agent will guide you through creating your first coding standard interactively.
-
 # Documentation
 
 Available here: [https://docs.packmind.com](https://docs.packmind.com).

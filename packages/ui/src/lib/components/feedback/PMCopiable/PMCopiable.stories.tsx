@@ -74,7 +74,7 @@ export const WithTextArea = () => (
         {
           name: 'packmind-server',
           command: 'npx',
-          args: ['@packmind/mcp-server'],
+          args: ['@packmind/cli'],
           env: {
             PACKMIND_API_TOKEN: 'your-token-here',
           },
@@ -89,7 +89,7 @@ export const WithTextArea = () => (
             {
               name: 'packmind-server',
               command: 'npx',
-              args: ['@packmind/mcp-server'],
+              args: ['@packmind/cli'],
               env: {
                 PACKMIND_API_TOKEN: 'your-token-here',
               },

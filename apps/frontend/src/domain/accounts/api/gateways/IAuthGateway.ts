@@ -7,9 +7,6 @@ import {
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
-  IGetMcpTokenUseCase,
-  IGetMcpUrlUseCase,
-  NewGateway,
   CreateCliLoginCodeResponse,
 } from '@packmind/types';
 import {
@@ -95,19 +92,6 @@ export interface IAuthGateway {
   checkEmailAvailability: PublicGateway<ICheckEmailAvailabilityUseCase>;
   signOut(): Promise<SignOutResponse>;
   getMe(): Promise<MeResponse>;
-  getMcpToken: NewGateway<IGetMcpTokenUseCase>;
-  getMcpURL: NewGateway<IGetMcpUrlUseCase>;
-  getMcpConfig(command: { organizationId: OrganizationId }): Promise<{
-    token: string;
-    url: string;
-    configs: {
-      cursor: object;
-      vscode: object;
-      continue: object;
-      claude: object;
-      generic: object;
-    };
-  }>;
   generateApiKey: Gateway<IGenerateApiKeyUseCase>;
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;

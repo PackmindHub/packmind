@@ -24,9 +24,6 @@ on:
       frontend-artifact:
         description: 'Frontend build artifact name'
         value: ${{ jobs.build-frontend.outputs.artifact-name }}
-      mcp-server-artifact:
-        description: 'MCP Server build artifact name'
-        value: ${{ jobs.build-mcp-server.outputs.artifact-name }}
       cli-artifact:
         description: 'CLI build artifact name'
         value: ${{ jobs.build-cli.outputs.artifact-name }}
@@ -144,52 +141,6 @@ jobs:
         with:
           name: frontend-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: apps/frontend/build/client
-
-  build-mcp-server:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
-    outputs:
-      artifact-name: mcp-server-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-      - name: Cache pnpm supply-chain verification
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pnpm
-          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile --prefer-offline
-      - name: Generate tsconfig
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-        run: node scripts/select-tsconfig.mjs
-      - name: Build MCP Server
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx build mcp-server
-      - name: Test MCP Server
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx test mcp-server
-      - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
-      - run: cp pnpm-lock.yaml dist/apps/mcp-server/.
-
-      - name: Upload MCP-Server build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mcp-server-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
-          path: dist/apps/mcp-server/
 
   build-packages:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}

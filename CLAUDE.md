@@ -13,13 +13,13 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Directory Structure
 
-- `apps/` - Deployable applications (API, frontend, CLI, MCP server, e2e tests, docs)
+- `apps/` - Deployable applications (API, frontend, CLI, e2e tests, docs)
 - `packages/` - Reusable domain and infrastructure packages shared across apps
 - `.github/workflows/` - CI/CD pipelines for build, test, quality checks, and deployment
 
 ## Local Development Environment
 
-Local development uses Docker Compose to run all services (API, frontend, database, Redis, mcp-Server, Postgresq).
+Local development uses Docker Compose to run all services (API, frontend, database, Redis, Postgresq).
 This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
 ## Working with Nx
 

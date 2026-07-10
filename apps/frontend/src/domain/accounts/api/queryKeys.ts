@@ -7,9 +7,6 @@ export enum AccountQueryKeys {
   GET_USERS_IN_MY_ORGANIZATION = 'get-users-in-my-organization',
   GET_USER_STATUSES = 'get-user-statuses',
   GET_USER_ORGANIZATIONS = 'get-user-organizations',
-  GET_MCP_TOKEN = 'get-mcp-token',
-  GET_MCP_URL = 'get-mcp-url',
-  GET_MCP_CONFIG = 'get-mcp-config',
   GET_CURRENT_API_KEY = 'get-current-api-key',
   VALIDATE_INVITATION = 'validate-invitation',
   VALIDATE_PASSWORD_RESET_TOKEN = 'validate-password-reset-token',
@@ -40,24 +37,6 @@ export const GET_USER_ORGANIZATIONS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   ACCOUNTS_QUERY_SCOPE,
   AccountQueryKeys.GET_USER_ORGANIZATIONS,
-] as const;
-
-export const GET_MCP_TOKEN_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  ACCOUNTS_QUERY_SCOPE,
-  AccountQueryKeys.GET_MCP_TOKEN,
-] as const;
-
-export const GET_MCP_URL_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  ACCOUNTS_QUERY_SCOPE,
-  AccountQueryKeys.GET_MCP_URL,
-] as const;
-
-export const GET_MCP_CONFIG_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  ACCOUNTS_QUERY_SCOPE,
-  AccountQueryKeys.GET_MCP_CONFIG,
 ] as const;
 
 export const GET_CURRENT_API_KEY_KEY = [

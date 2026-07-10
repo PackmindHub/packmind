@@ -15,7 +15,6 @@ import { authGateway } from '../gateways';
 import { getMeQueryOptions } from './UserQueries';
 import {
   GET_ME_KEY,
-  GET_MCP_URL_KEY,
   GET_CURRENT_API_KEY_KEY,
   VALIDATE_INVITATION_KEY,
   VALIDATE_PASSWORD_RESET_TOKEN_KEY,
@@ -25,7 +24,6 @@ import {
   ACCOUNTS_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
-import { useAuthContext } from '../../hooks/useAuthContext';
 
 type SignInRequest = SignInUserCommand;
 
@@ -33,7 +31,6 @@ const SIGN_UP_WITH_ORGANIZATION_MUTATION_KEY = 'signUpWithOrganization';
 const SIGN_IN_MUTATION_KEY = 'signIn';
 const SIGN_OUT_MUTATION_KEY = 'signOut';
 const SELECT_ORGANIZATION_MUTATION_KEY = 'selectOrganization';
-const GET_MCP_TOKEN_MUTATION_KEY = 'getMcpToken';
 const GENERATE_API_KEY_MUTATION_KEY = 'generateApiKey';
 const CHECK_EMAIL_AVAILABILITY_MUTATION_KEY = 'checkEmailAvailability';
 const ACTIVATE_USER_ACCOUNT_MUTATION_KEY = 'activateUserAccount';
@@ -107,43 +104,6 @@ export const useSignOutMutation = () => {
     onError: (error) => {
       console.error('Error signing out user:', error);
     },
-  });
-};
-
-export const useGetMcpTokenMutation = () => {
-  const { organization } = useAuthContext();
-
-  return useMutation({
-    mutationKey: [GET_MCP_TOKEN_MUTATION_KEY],
-    mutationFn: async () => {
-      if (!organization?.id) {
-        throw new Error('Organization ID is required to get MCP token');
-      }
-      return authGateway.getMcpToken({ organizationId: organization.id });
-    },
-    onSuccess: (data) => {
-      console.log('MCP access token retrieved successfully:', data);
-    },
-    onError: (error) => {
-      console.error('Error retrieving MCP access token:', error);
-    },
-  });
-};
-
-export const useGetMcpURLQuery = () => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: GET_MCP_URL_KEY,
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error('Organization ID is required to get MCP URL');
-      }
-      return authGateway.getMcpURL({ organizationId: organization.id });
-    },
-    enabled: !!organization?.id,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
   });
 };
 

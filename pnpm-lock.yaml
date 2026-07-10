@@ -591,12 +591,6 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
 
-  apps/mcp-server:
-    dependencies:
-      semver:
-        specifier: ^7.8.1
-        version: 7.8.1
-
   packages/accounts:
     dependencies:
       '@packmind/logger':

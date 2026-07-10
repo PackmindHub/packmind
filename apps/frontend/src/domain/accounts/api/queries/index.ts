@@ -1,8 +1,6 @@
 export {
   useSignUpWithOrganizationMutation,
   useSignInMutation,
-  useGetMcpURLQuery,
-  useGetMcpTokenMutation,
   useCheckEmailAvailabilityMutation,
   useRequestPasswordResetMutation,
   useResetPasswordMutation,

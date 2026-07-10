@@ -44,11 +44,11 @@ variable "VERSION_SUFFIX" {
 // ============================================================================
 
 group "default" {
-  targets = ["api", "frontend", "mcp"]
+  targets = ["api", "frontend"]
 }
 
 group "release" {
-  targets = ["api-release", "frontend-release", "mcp-release"]
+  targets = ["api-release", "frontend-release"]
 }
 
 // ============================================================================
@@ -104,21 +104,3 @@ target "frontend-release" {
   inherits = ["frontend", "_platforms-release"]
 }
 
-// ============================================================================
-// MCP Server Target
-// ============================================================================
-
-target "mcp" {
-  inherits   = ["_common"]
-  dockerfile = "dockerfile/Dockerfile.mcp"
-  tags = [
-    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
-    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:latest${VERSION_SUFFIX}",
-    notequal("", SHA) ? "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${SHA}" : "",
-  ]
-  platforms = ["linux/amd64"]
-}
-
-target "mcp-release" {
-  inherits = ["mcp", "_platforms-release"]
-}
