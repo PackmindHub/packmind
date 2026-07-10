@@ -2,13 +2,17 @@ import {
   CheckAuthFailureReason,
   CheckAuthResult,
   IGitProvider,
+  ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
+import { ExternalRepository } from '@packmind/types';
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
 
 const origin = 'GitlabProvider';
+
+const PROJECTS_PER_PAGE = 100;
 
 export class GitlabProvider implements IGitProvider {
   private readonly client: AxiosInstance;
@@ -38,145 +42,41 @@ export class GitlabProvider implements IGitProvider {
     });
   }
 
-  async listAvailableRepositories(): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+  async listAvailableRepositories(
+    page = 1,
+  ): Promise<ListAvailableRepositoriesResult> {
     try {
       this.logger.debug('Fetching GitLab projects');
 
-      // Try different approaches to get projects, starting with membership
+      const repositories: ExternalRepository[] = [];
+      let currentPage = page;
+      let totalPages = page;
+      let lastLoadedPage = page;
 
-      // Use the same approach as the working GitLab provider
-      const response = await this.client.get('/projects', {
-        params: {
-          membership: true,
-          archived: false,
-          order_by: 'last_activity_at', // Use last_activity_at like the working example
-          per_page: 100,
-        },
-      });
+      // Filtering out projects we lack write access to means a single provider
+      // page can yield far fewer than PROJECTS_PER_PAGE results. Keep pulling
+      // provider pages until we have a full page worth of accessible projects
+      // or run out of pages, so "load more" returns a consistent batch instead
+      // of a confusing trickle.
+      do {
+        const { rawProjects, totalPages: pageTotalPages } =
+          await this.fetchProjectsPage(currentPage);
 
-      this.logger.debug('GitLab API response received', {
-        projectCount: response.data?.length || 0,
-      });
+        totalPages = pageTotalPages;
+        lastLoadedPage = currentPage;
+        repositories.push(...this.mapAccessibleProjects(rawProjects));
 
-      if (!response.data || !Array.isArray(response.data)) {
-        this.logger.warn('GitLab API returned no data or non-array data');
-        return [];
-      }
-
-      this.logger.debug('Processing GitLab projects', {
-        totalProjects: response.data.length,
-      });
-
-      // First filter: basic project validation
-      const validProjects = response.data.filter((project: GitlabProject) => {
-        const isValid = project && project.name && project.namespace;
-        if (!isValid) {
-          this.logger.debug('Invalid project structure found', {
-            projectId: project?.id,
-          });
-        }
-        return isValid;
-      });
-
-      this.logger.debug('Valid projects after basic filtering', {
-        validCount: validProjects.length,
-      });
-
-      // Filter projects by write access - write access is mandatory
-      const accessibleProjects = validProjects.filter(
-        (project: GitlabProject) => {
-          // Check access level for push permissions
-          const projectAccess =
-            project.permissions?.project_access?.access_level || 0;
-          const groupAccess =
-            project.permissions?.group_access?.access_level || 0;
-          const maxAccessLevel = Math.max(projectAccess, groupAccess);
-
-          this.logger.debug('Checking project access level', {
-            projectName: project.name,
-            accessLevel: maxAccessLevel,
-            requiredLevel: MIN_PUSH_ACCESS_LEVEL,
-          });
-
-          // If no permissions object is present, exclude the project for security
-          // This ensures we only work with repositories where permissions are clearly defined
-          if (!project.permissions) {
-            this.logger.debug(
-              'Project has no permissions object, excluding from results',
-              {
-                projectName: project.name,
-              },
-            );
-            return false;
-          }
-
-          if (maxAccessLevel < MIN_PUSH_ACCESS_LEVEL) {
-            this.logger.debug(
-              'Project excluded due to insufficient access level',
-              {
-                projectName: project.name,
-                accessLevel: maxAccessLevel,
-                requiredLevel: MIN_PUSH_ACCESS_LEVEL,
-              },
-            );
-            return false;
-          }
-
-          this.logger.debug('Project included', {
-            projectName: project.name,
-            accessLevel: maxAccessLevel,
-          });
-
-          return true;
-        },
-      );
-
-      this.logger.debug('Accessible projects after access filtering', {
-        accessibleCount: accessibleProjects.length,
-      });
-
-      const mappedProjects = accessibleProjects.map(
-        (project: GitlabProject) => {
-          // Extract owner from path_with_namespace by removing the project name
-          // e.g., "promyze/sandbox/protomind" -> owner: "promyze/sandbox", name: "protomind"
-          const pathParts = project.path_with_namespace.split('/');
-          const projectPathName = pathParts.pop(); // Remove and get the last part (URL-friendly project name)
-          const ownerPath = pathParts.join('/'); // Join the remaining parts as the owner
-
-          this.logger.debug('Mapping GitLab project', {
-            displayName: project.name,
-            pathWithNamespace: project.path_with_namespace,
-            extractedOwner: ownerPath,
-            extractedRepo: projectPathName,
-          });
-
-          return {
-            name: projectPathName || project.name, // Use path-friendly name from path_with_namespace
-            owner: ownerPath, // Use the full namespace path as owner
-            description: project.description || undefined,
-            private: project.visibility !== 'public',
-            defaultBranch: project.default_branch,
-            language: undefined, // GitLab API doesn't provide primary language in projects list
-            stars: project.star_count,
-          };
-        },
+        currentPage += 1;
+      } while (
+        repositories.length < PROJECTS_PER_PAGE &&
+        lastLoadedPage < totalPages
       );
 
       this.logger.info('GitLab projects retrieved successfully', {
-        totalCount: mappedProjects.length,
+        totalCount: repositories.length,
       });
 
-      return mappedProjects;
+      return { repositories, totalPages, lastLoadedPage };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
@@ -184,6 +84,138 @@ export class GitlabProvider implements IGitProvider {
       });
       throw new Error('Failed to fetch repositories from GitLab');
     }
+  }
+
+  private async fetchProjectsPage(
+    page: number,
+  ): Promise<{ rawProjects: unknown; totalPages: number }> {
+    // Use the same approach as the working GitLab provider, starting with
+    // membership.
+    const response = await this.client.get('/projects', {
+      params: {
+        membership: true,
+        archived: false,
+        order_by: 'last_activity_at', // Use last_activity_at like the working example
+        per_page: PROJECTS_PER_PAGE,
+        page,
+      },
+    });
+
+    this.logger.debug('GitLab API response received', {
+      projectCount: response.data?.length || 0,
+    });
+
+    // GitLab reports the page count in the `x-total-pages` header.
+    return {
+      rawProjects: response.data,
+      totalPages: totalPagesFromHeader(response.headers, page),
+    };
+  }
+
+  // Validates, access-filters and maps one raw provider page into the shared
+  // ExternalRepository shape.
+  private mapAccessibleProjects(rawProjects: unknown): ExternalRepository[] {
+    if (!rawProjects || !Array.isArray(rawProjects)) {
+      this.logger.warn('GitLab API returned no data or non-array data');
+      return [];
+    }
+
+    this.logger.debug('Processing GitLab projects', {
+      totalProjects: rawProjects.length,
+    });
+
+    // First filter: basic project validation
+    const validProjects = rawProjects.filter((project: GitlabProject) => {
+      const isValid = project && project.name && project.namespace;
+      if (!isValid) {
+        this.logger.debug('Invalid project structure found', {
+          projectId: project?.id,
+        });
+      }
+      return isValid;
+    });
+
+    this.logger.debug('Valid projects after basic filtering', {
+      validCount: validProjects.length,
+    });
+
+    // Filter projects by write access - write access is mandatory
+    const accessibleProjects = validProjects.filter(
+      (project: GitlabProject) => {
+        // Check access level for push permissions
+        const projectAccess =
+          project.permissions?.project_access?.access_level || 0;
+        const groupAccess =
+          project.permissions?.group_access?.access_level || 0;
+        const maxAccessLevel = Math.max(projectAccess, groupAccess);
+
+        this.logger.debug('Checking project access level', {
+          projectName: project.name,
+          accessLevel: maxAccessLevel,
+          requiredLevel: MIN_PUSH_ACCESS_LEVEL,
+        });
+
+        // If no permissions object is present, exclude the project for security
+        // This ensures we only work with repositories where permissions are clearly defined
+        if (!project.permissions) {
+          this.logger.debug(
+            'Project has no permissions object, excluding from results',
+            {
+              projectName: project.name,
+            },
+          );
+          return false;
+        }
+
+        if (maxAccessLevel < MIN_PUSH_ACCESS_LEVEL) {
+          this.logger.debug(
+            'Project excluded due to insufficient access level',
+            {
+              projectName: project.name,
+              accessLevel: maxAccessLevel,
+              requiredLevel: MIN_PUSH_ACCESS_LEVEL,
+            },
+          );
+          return false;
+        }
+
+        this.logger.debug('Project included', {
+          projectName: project.name,
+          accessLevel: maxAccessLevel,
+        });
+
+        return true;
+      },
+    );
+
+    this.logger.debug('Accessible projects after access filtering', {
+      accessibleCount: accessibleProjects.length,
+    });
+
+    return accessibleProjects.map((project: GitlabProject) => {
+      // Extract owner from path_with_namespace by removing the project name
+      // e.g., "promyze/sandbox/protomind" -> owner: "promyze/sandbox", name: "protomind"
+      const pathParts = project.path_with_namespace.split('/');
+      const projectPathName = pathParts.pop(); // Remove and get the last part (URL-friendly project name)
+      const ownerPath = pathParts.join('/'); // Join the remaining parts as the owner
+
+      this.logger.debug('Mapping GitLab project', {
+        displayName: project.name,
+        pathWithNamespace: project.path_with_namespace,
+        extractedOwner: ownerPath,
+        extractedRepo: projectPathName,
+      });
+
+      return {
+        name: projectPathName || project.name, // Use path-friendly name from path_with_namespace
+        owner: ownerPath, // Use the full namespace path as owner
+        description: project.description || undefined,
+        private: project.visibility !== 'public',
+        defaultBranch: project.default_branch,
+        language: undefined, // GitLab API doesn't provide primary language in projects list
+        stars: project.star_count,
+      };
+    });
   }
 
   async checkAuth(): Promise<CheckAuthResult> {
@@ -274,6 +306,18 @@ export class GitlabProvider implements IGitProvider {
       );
     }
   }
+}
+
+// GitLab returns the total page count in the `x-total-pages` response header.
+// When it is missing or unparseable we fall back to the current page.
+function totalPagesFromHeader(
+  headers: Record<string, unknown> | undefined,
+  currentPage: number,
+): number {
+  const raw = headers?.['x-total-pages'];
+  const parsed =
+    typeof raw === 'string' || typeof raw === 'number' ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : currentPage;
 }
 
 function mapGitlabAuthError(error: unknown): CheckAuthFailureReason {

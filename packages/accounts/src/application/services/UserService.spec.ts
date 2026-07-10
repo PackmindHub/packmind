@@ -1157,10 +1157,6 @@ describe('UserService', () => {
         expect(result.memberships).toEqual([]);
       });
 
-      it('creates user with trial false', () => {
-        expect(result.trial).toBe(false);
-      });
-
       it('saves user to repository', () => {
         expect(mockUserRepository.add).toHaveBeenCalled();
       });

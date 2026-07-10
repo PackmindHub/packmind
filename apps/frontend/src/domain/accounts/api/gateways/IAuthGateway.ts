@@ -8,15 +8,12 @@ import {
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
   CreateCliLoginCodeResponse,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
 } from '@packmind/types';
 import {
   PublicGateway,
   Gateway,
   ICheckEmailAvailabilityUseCase,
   IActivateUserAccountUseCase,
-  IActivateTrialAccountUseCase,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
   IValidatePasswordResetTokenUseCase,
@@ -104,13 +101,10 @@ export interface IAuthGateway {
     token: string,
   ): Promise<ValidatePasswordResetResponse>;
   resetPassword: PublicGateway<IResetPasswordUseCase>;
-  activateTrialAccount: PublicGateway<IActivateTrialAccountUseCase>;
   selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;
   createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
-  getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse>;
-  completeOnboarding(): Promise<CompleteUserOnboardingResponse>;
   getSocialProviders(): Promise<{ providers: string[] }>;
   updateProfile(body: {
     displayName?: string | null;

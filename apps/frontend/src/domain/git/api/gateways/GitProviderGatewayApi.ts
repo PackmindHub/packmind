@@ -6,7 +6,9 @@ import {
   GitProviderId,
   GitProviderWithoutToken,
   GitRepoId,
+  IListAvailableReposUseCase,
   IListProvidersUseCase,
+  ListAvailableReposResponse,
   ListProvidersResponse,
   NewGateway,
   OrganizationId,
@@ -16,7 +18,6 @@ import {
   GitRepoUI,
   CreateGitProviderForm,
   AddRepositoryForm,
-  AvailableRepository,
 } from '../../types/GitProviderTypes';
 import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
@@ -181,34 +182,16 @@ export class GitProviderGatewayApi
     );
   }
 
-  async getAvailableRepositories(
-    organizationId: OrganizationId,
-    providerId: GitProviderId,
-  ): Promise<AvailableRepository[]> {
-    const repos = await this._api.get<
-      {
-        name: string;
-        owner: string;
-        description?: string;
-        private: boolean;
-        defaultBranch: string;
-        language?: string;
-        stars: number;
-      }[]
-    >(
-      `${this._endpoint}/${organizationId}/git/providers/${providerId}/available-repos`,
+  getAvailableRepositories: NewGateway<IListAvailableReposUseCase> = async ({
+    organizationId,
+    gitProviderId,
+    page,
+  }) => {
+    const query = page ? `?page=${page}` : '';
+    return await this._api.get<ListAvailableReposResponse>(
+      `${this._endpoint}/${organizationId}/git/providers/${gitProviderId}/available-repos${query}`,
     );
-    return repos.map((repo) => ({
-      name: repo.name,
-      owner: repo.owner,
-      fullName: `${repo.owner}/${repo.name}`,
-      description: repo.description,
-      private: repo.private,
-      defaultBranch: repo.defaultBranch,
-      language: repo.language,
-      stars: repo.stars,
-    }));
-  }
+  };
 
   async addRepositoryToProvider(
     organizationId: OrganizationId,

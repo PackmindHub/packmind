@@ -2,13 +2,17 @@ import {
   CheckAuthFailureReason,
   CheckAuthResult,
   IGitProvider,
+  ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
+import { ExternalRepository } from '@packmind/types';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
-import axios, { AxiosInstance, isAxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 
 const origin = 'GithubProvider';
+
+const REPOS_PER_PAGE = 100;
 
 export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
@@ -44,83 +48,43 @@ export class GithubProvider implements IGitProvider {
     );
   }
 
-  async listAvailableRepositories(): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+  async listAvailableRepositories(
+    page = 1,
+  ): Promise<ListAvailableRepositoriesResult> {
     try {
       // Installation tokens authenticate as the App installation, not a user,
       // so `/user/repos` returns nothing. GitHub returns the same repo shape
       // from both endpoints, only the envelope differs (array vs.
       // `{ repositories: [...] }`).
       const kind = this.resolver.getKind();
-      const rawRepos =
-        kind === 'installation'
-          ? await this.fetchInstallationRepos()
-          : await this.fetchUserRepos();
 
-      if (!Array.isArray(rawRepos)) {
-        return [];
-      }
+      const repositories: ExternalRepository[] = [];
+      let currentPage = page;
+      let totalPages = page;
+      let lastLoadedPage = page;
 
-      const baseRepos = rawRepos.filter(
-        (repo) => repo && repo.name && repo.owner && repo.owner.login,
+      // Filtering out repos we lack write access to means a single provider
+      // page can yield far fewer than REPOS_PER_PAGE results — sometimes just
+      // one. Keep pulling provider pages until we have a full page worth of
+      // accessible repos or run out of pages, so "load more" returns a
+      // consistent batch instead of a confusing trickle.
+      do {
+        const { rawRepos, totalPages: pageTotalPages } =
+          kind === 'installation'
+            ? await this.fetchInstallationRepos(currentPage)
+            : await this.fetchUserRepos(currentPage);
+
+        totalPages = pageTotalPages;
+        lastLoadedPage = currentPage;
+        repositories.push(...this.mapAccessibleRepos(rawRepos, kind));
+
+        currentPage += 1;
+      } while (
+        repositories.length < REPOS_PER_PAGE &&
+        lastLoadedPage < totalPages
       );
 
-      // For `/user/repos` the response includes read-only repos the user has
-      // visibility into, so we filter by `permissions.push === true`.
-      // For `/installation/repositories` GitHub already only returns repos
-      // the App was explicitly granted access to. The per-repo `permissions`
-      // object for installation tokens does not reliably reflect the App's
-      // contents:write grant (e.g. `push` may be false or absent), so the
-      // same filter would silently drop every repo — the bug we are fixing.
-      // Trust the App-installation list as-is.
-      const filteredRepos =
-        kind === 'installation'
-          ? baseRepos
-          : baseRepos.filter((repo) => {
-              if (!repo.permissions) {
-                this.logger.warn(
-                  'Repository missing permissions object, excluding from results',
-                  {
-                    repoName: repo.name,
-                    owner: repo.owner?.login,
-                  },
-                );
-                return false;
-              }
-
-              if (typeof repo.permissions.push !== 'boolean') {
-                this.logger.warn(
-                  'Repository permissions.push is not a boolean, excluding from results',
-                  {
-                    repoName: repo.name,
-                    owner: repo.owner?.login,
-                    pushValue: repo.permissions.push,
-                  },
-                );
-                return false;
-              }
-
-              return repo.permissions.push === true;
-            });
-
-      return filteredRepos.map((repo) => ({
-        name: repo.name,
-        owner: repo.owner.login,
-        description: repo.description || undefined,
-        private: repo.private,
-        defaultBranch: repo.default_branch,
-        language: repo.language || undefined,
-        stars: repo.stargazers_count,
-      }));
+      return { repositories, totalPages, lastLoadedPage };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
@@ -129,23 +93,104 @@ export class GithubProvider implements IGitProvider {
     }
   }
 
-  private async fetchUserRepos(): Promise<unknown> {
+  // Validates, access-filters and maps one raw provider page into the shared
+  // ExternalRepository shape.
+  private mapAccessibleRepos(
+    rawRepos: unknown,
+    kind: 'user' | 'installation',
+  ): ExternalRepository[] {
+    if (!Array.isArray(rawRepos)) {
+      return [];
+    }
+
+    const baseRepos = rawRepos.filter(
+      (repo) => repo && repo.name && repo.owner && repo.owner.login,
+    );
+
+    // For `/user/repos` the response includes read-only repos the user has
+    // visibility into, so we filter by `permissions.push === true`.
+    // For `/installation/repositories` GitHub already only returns repos
+    // the App was explicitly granted access to. The per-repo `permissions`
+    // object for installation tokens does not reliably reflect the App's
+    // contents:write grant (e.g. `push` may be false or absent), so the
+    // same filter would silently drop every repo — the bug we are fixing.
+    // Trust the App-installation list as-is.
+    const filteredRepos =
+      kind === 'installation'
+        ? baseRepos
+        : baseRepos.filter((repo) => {
+            if (!repo.permissions) {
+              this.logger.warn(
+                'Repository missing permissions object, excluding from results',
+                {
+                  repoName: repo.name,
+                  owner: repo.owner?.login,
+                },
+              );
+              return false;
+            }
+
+            if (typeof repo.permissions.push !== 'boolean') {
+              this.logger.warn(
+                'Repository permissions.push is not a boolean, excluding from results',
+                {
+                  repoName: repo.name,
+                  owner: repo.owner?.login,
+                  pushValue: repo.permissions.push,
+                },
+              );
+              return false;
+            }
+
+            return repo.permissions.push === true;
+          });
+
+    return filteredRepos.map((repo) => ({
+      name: repo.name,
+      owner: repo.owner.login,
+      description: repo.description || undefined,
+      private: repo.private,
+      defaultBranch: repo.default_branch,
+      language: repo.language || undefined,
+      stars: repo.stargazers_count,
+    }));
+  }
+
+  private async fetchUserRepos(
+    page: number,
+  ): Promise<{ rawRepos: unknown; totalPages: number }> {
     const response = await this.client.get('/user/repos', {
       params: {
         sort: 'updated',
-        per_page: 100,
+        per_page: REPOS_PER_PAGE,
+        page,
       },
     });
-    return response.data;
+    // `/user/repos` has no total count in its body, so the page count comes
+    // from the RFC 5988 `Link` header (`rel="last"`).
+    return {
+      rawRepos: response.data,
+      totalPages: totalPagesFromLinkHeader(response, page),
+    };
   }
 
-  private async fetchInstallationRepos(): Promise<unknown> {
+  private async fetchInstallationRepos(
+    page: number,
+  ): Promise<{ rawRepos: unknown; totalPages: number }> {
     const response = await this.client.get('/installation/repositories', {
       params: {
-        per_page: 100,
+        per_page: REPOS_PER_PAGE,
+        page,
       },
     });
-    return response.data?.repositories;
+    // The installation endpoint reports `total_count`, so we can derive the
+    // page count directly rather than parsing the `Link` header.
+    const totalCount = response.data?.total_count;
+    const totalPages =
+      typeof totalCount === 'number' && totalCount > 0
+        ? Math.ceil(totalCount / REPOS_PER_PAGE)
+        : 1;
+    return { rawRepos: response.data?.repositories, totalPages };
   }
 
   async checkAuth(): Promise<CheckAuthResult> {
@@ -241,6 +286,31 @@ export class GithubProvider implements IGitProvider {
       );
     }
   }
+}
+
+// Extract the last-page number from GitHub's `Link` header, e.g.
+// `<https://api.github.com/user/repos?page=3&per_page=100>; rel="last"`.
+// When absent (single page) the current page is the last one.
+function totalPagesFromLinkHeader(
+  response: AxiosResponse,
+  currentPage: number,
+): number {
+  const link = response.headers?.['link'] ?? response.headers?.['Link'];
+  if (typeof link !== 'string') {
+    return currentPage;
+  }
+
+  const lastMatch = link
+    .split(',')
+    .map((part) => part.trim())
+    .find((part) => /rel="last"/.test(part));
+  if (!lastMatch) {
+    return currentPage;
+  }
+
+  const pageMatch = lastMatch.match(/[?&]page=(\d+)/);
+  const lastPage = pageMatch ? Number(pageMatch[1]) : NaN;
+  return Number.isFinite(lastPage) && lastPage > 0 ? lastPage : currentPage;
 }
 
 function mapGithubAuthError(error: unknown): CheckAuthFailureReason {

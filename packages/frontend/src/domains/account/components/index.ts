@@ -1,4 +1,3 @@
-export * from './ActivateTrialAccountFormDataTestIds';
 export * from './ActivationFormDataTestIds';
 export * from './SignUpWithOrganizationFormDataTestIds';
 export * from './SignUpOptionsDataTestIds';

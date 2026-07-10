@@ -3,34 +3,21 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 
-// Onboarding routes that should remain accessible after org creation
-const ONBOARDING_ROUTES = [
-  '/sign-up/create-organization',
-  '/sign-up/onboarding-reason',
-];
-
 /**
  * Loader for sign-up routes - redirects authenticated users who have completed sign-up
  * If user is authenticated with an organization, they shouldn't access sign-up pages
- * Exception: onboarding routes are accessible for users who just created an org
  */
-export async function clientLoader({ request }: LoaderFunctionArgs) {
+export async function clientLoader(_args: LoaderFunctionArgs) {
   try {
-    const url = new URL(request.url);
-    const isOnboardingRoute = ONBOARDING_ROUTES.some((route) =>
-      url.pathname.startsWith(route),
-    );
-
     // Check if user is authenticated
     const me = await queryClient.ensureQueryData(getMeQueryOptions());
 
     // If authenticated with an organization, redirect to org home
-    // UNLESS they're on an onboarding route (completing post-signup flow)
-    if (me?.authenticated && me.organization && !isOnboardingRoute) {
+    if (me?.authenticated && me.organization) {
       throw redirect(`/org/${me.organization.slug}`);
     }
 
-    // User is not authenticated, has no organization, or is on onboarding route - allow access
+    // User is not authenticated or has no organization - allow access
     return null;
   } catch (error) {
     // If error is a redirect, rethrow it

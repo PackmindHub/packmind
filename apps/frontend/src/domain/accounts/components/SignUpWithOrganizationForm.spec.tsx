@@ -400,10 +400,8 @@ describe('SignUpWithOrganizationForm', () => {
         onSignInSuccess({});
       });
 
-      it('navigates to create organization page', () => {
-        expect(mockNavigate).toHaveBeenCalledWith(
-          '/sign-up/create-organization',
-        );
+      it('navigates to the app root', () => {
+        expect(mockNavigate).toHaveBeenCalledWith('/');
       });
     });
 

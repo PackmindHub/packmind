@@ -32,7 +32,6 @@ export type CreateStandardVersionData = {
     oldRuleId?: RuleId;
   }>;
   scope: string | null;
-  summary?: string | null;
   userId?: UserId | null; // User who created this version through Web UI, null for git commits
   organizationId?: OrganizationId; // Organization context for copying detection programs
 };
@@ -59,7 +58,6 @@ export class StandardVersionService {
       standardId: standardVersionData.standardId,
       version: standardVersionData.version,
       rulesCount: standardVersionData.rules.length,
-      hasSummary: !!standardVersionData.summary,
     });
 
     try {
@@ -74,7 +72,6 @@ export class StandardVersionService {
         description: standardVersionData.description,
         version: standardVersionData.version,
         scope: standardVersionData.scope,
-        summary: standardVersionData.summary,
         userId: standardVersionData.userId,
       };
       const savedVersion =

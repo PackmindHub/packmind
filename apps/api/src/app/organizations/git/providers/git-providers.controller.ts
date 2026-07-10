@@ -29,6 +29,7 @@ import {
   GitRepoId,
   GitProviderHasRepositoriesError,
   InvalidGitProviderCredentialsError,
+  ListAvailableReposResponse,
   ListProvidersResponse,
   OrganizationId,
 } from '@packmind/types';
@@ -370,39 +371,42 @@ export class GitProvidersController {
   async listAvailableRepos(
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') gitProviderId: GitProviderId,
-  ): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
+    @Request() req: AuthenticatedRequest,
+    @Query('page') page?: string,
+  ): Promise<ListAvailableReposResponse> {
+    const parsedPage = page ? Number(page) : undefined;
     this.logger.info(
       'GET /organizations/:orgId/git/providers/:id/available-repos - Fetching available repositories with write access',
       {
         organizationId,
         gitProviderId,
+        page: parsedPage,
       },
     );
 
     try {
-      const repositories =
-        await this.gitProvidersService.listAvailableRepos(gitProviderId);
+      const response = await this.gitProvidersService.listAvailableRepos({
+        gitProviderId,
+        organizationId,
+        userId: req.user.userId,
+        page:
+          parsedPage !== undefined && Number.isFinite(parsedPage)
+            ? parsedPage
+            : undefined,
+      });
 
       this.logger.info(
         'GET /organizations/:orgId/git/providers/:id/available-repos - Successfully fetched available repositories',
         {
           organizationId,
           gitProviderId,
-          repositoryCount: repositories.length,
+          currentPage: response.currentPage,
+          availablePages: response.availablePages,
+          repositoryCount: response.repositories.length,
         },
       );
 
-      return repositories;
+      return response;
     } catch (error) {
       this.logger.error(
         'GET /organizations/:orgId/git/providers/:id/available-repos - Error fetching available repositories',

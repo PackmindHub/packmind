@@ -6,7 +6,6 @@ import {
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IOrganizationGateway } from './IOrganizationGateway';
 import {
-  OrganizationOnboardingStatus,
   ICreateInvitationsUseCase,
   CreateInvitationsCommand,
   CreateInvitationsResponse,
@@ -71,12 +70,4 @@ export class OrganizationGatewayApi
       { name },
     );
   };
-
-  async getOnboardingStatus(
-    orgId: string,
-  ): Promise<OrganizationOnboardingStatus> {
-    return this._api.get<OrganizationOnboardingStatus>(
-      `${this._endpoint}/${encodeURIComponent(orgId)}/onboarding-status`,
-    );
-  }
 }

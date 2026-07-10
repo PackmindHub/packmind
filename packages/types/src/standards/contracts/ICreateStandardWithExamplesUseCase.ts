@@ -8,7 +8,6 @@ export type CreateStandardWithExamplesCommand = PackmindCommand & {
   spaceId: SpaceId;
   name: string;
   description: string;
-  summary: string | null;
   scope: string | null;
   rules: RuleWithExamples[];
   /**

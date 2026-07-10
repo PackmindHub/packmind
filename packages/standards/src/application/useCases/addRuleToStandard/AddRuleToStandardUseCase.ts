@@ -1,6 +1,5 @@
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import {
   AddRuleToStandardCommand,
@@ -48,7 +47,6 @@ export class AddRuleToStandardUseCase
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
-    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly linterAdapter?: ILinterPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -161,13 +159,6 @@ export class AddRuleToStandardUseCase
         versionId: newStandardVersion.id,
         totalRulesCount: allRules.length,
         addedRuleContent: ruleContent.substring(0, 50) + '...',
-      });
-
-      await this.generateStandardSummaryDelayedJob.addJob({
-        userId,
-        organizationId,
-        standardVersion: newStandardVersion,
-        rules: allRules,
       });
 
       await this.validateDetectionProgramsForStandardVersion(

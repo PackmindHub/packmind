@@ -30,7 +30,6 @@ export const createMockStandardVersion = (
   slug: 'test-standard',
   version: 1,
   description: 'Test standard description',
-  summary: null,
   userId: createUserId('test-user-id'),
   scope: null,
   ...standardVersion,

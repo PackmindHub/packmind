@@ -81,18 +81,7 @@ This standard book contains all available coding standards that can be used by A
   private getStandardDescription(
     standard: WithTimestamps<StandardVersion>,
   ): string {
-    // Use the summary if available (AI-generated for better readability)
-    const trimmedSummary = standard.summary?.trim();
-    if (trimmedSummary && trimmedSummary !== '') {
-      this.logger.debug('Using AI-generated summary as description', {
-        standardId: standard.id,
-        standardName: standard.name,
-        summaryLength: trimmedSummary.length,
-      });
-      return trimmedSummary;
-    }
-
-    // Fall back to the description if available
+    // Use the description if available
     const trimmedDescription = standard.description?.trim();
     if (trimmedDescription && trimmedDescription !== '') {
       this.logger.debug('Using standard description as description', {

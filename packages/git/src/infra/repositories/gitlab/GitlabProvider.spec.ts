@@ -163,12 +163,13 @@ describe('GitlabProvider', () => {
             archived: false,
             order_by: 'last_activity_at',
             per_page: 100,
+            page: 1,
           },
         });
       });
 
       it('returns mapped repositories with correct format', () => {
-        expect(result).toEqual([
+        expect(result.repositories).toEqual([
           {
             name: 'test-repo',
             owner: 'testuser', // Single level namespace
@@ -188,6 +189,10 @@ describe('GitlabProvider', () => {
             stars: 0,
           },
         ]);
+      });
+
+      it('reports the requested page as the last loaded page', () => {
+        expect(result.lastLoadedPage).toBe(1);
       });
     });
 
@@ -236,11 +241,11 @@ describe('GitlabProvider', () => {
       });
 
       it('filters out projects without write access', () => {
-        expect(result).toHaveLength(1);
+        expect(result.repositories).toHaveLength(1);
       });
 
       it('includes only maintainer-level repositories', () => {
-        expect(result[0].name).toBe('maintainer-repo');
+        expect(result.repositories[0].name).toBe('maintainer-repo');
       });
     });
 
@@ -280,11 +285,11 @@ describe('GitlabProvider', () => {
       });
 
       it('returns one repository', () => {
-        expect(result).toHaveLength(1);
+        expect(result.repositories).toHaveLength(1);
       });
 
       it('correctly maps nested namespace path', () => {
-        expect(result[0]).toEqual({
+        expect(result.repositories[0]).toEqual({
           name: 'protomind', // Uses the path-friendly name from path_with_namespace
           owner: 'promyze/sandbox', // Should extract the full namespace path
           description: 'Nested project',
@@ -302,7 +307,69 @@ describe('GitlabProvider', () => {
 
         const result = await gitlabProvider.listAvailableRepositories();
 
-        expect(result).toEqual([]);
+        expect(result.repositories).toEqual([]);
+      });
+    });
+
+    describe('when access filtering leaves pages under-filled', () => {
+      const writableProject = (id: number, name: string) => ({
+        id,
+        name,
+        description: null,
+        default_branch: 'main',
+        visibility: 'private',
+        star_count: 0,
+        path_with_namespace: `user/${name}`,
+        namespace: { name: 'User', path: 'user', full_path: 'user' },
+        permissions: { project_access: { access_level: 40 } }, // MAINTAINER
+      });
+
+      beforeEach(() => {
+        // Each provider page contributes a single accessible project, so the
+        // loop must pull all three pages before it runs out of pages.
+        mockAxiosInstance.get
+          .mockResolvedValueOnce({
+            data: [writableProject(1, 'project-1')],
+            headers: { 'x-total-pages': '3' },
+          })
+          .mockResolvedValueOnce({
+            data: [writableProject(2, 'project-2')],
+            headers: { 'x-total-pages': '3' },
+          })
+          .mockResolvedValueOnce({
+            data: [writableProject(3, 'project-3')],
+            headers: { 'x-total-pages': '3' },
+          });
+      });
+
+      it('accumulates accessible projects across provider pages', async () => {
+        const result = await gitlabProvider.listAvailableRepositories(1);
+
+        expect(result.repositories.map((repo) => repo.name)).toEqual([
+          'project-1',
+          'project-2',
+          'project-3',
+        ]);
+      });
+
+      it('reports the last provider page it consumed', async () => {
+        const result = await gitlabProvider.listAvailableRepositories(1);
+
+        expect(result.lastLoadedPage).toBe(3);
+      });
+
+      it('requests each provider page in order', async () => {
+        await gitlabProvider.listAvailableRepositories(1);
+
+        expect(mockAxiosInstance.get).toHaveBeenNthCalledWith(3, '/projects', {
+          params: {
+            membership: true,
+            archived: false,
+            order_by: 'last_activity_at',
+            per_page: 100,
+            page: 3,
+          },
+        });
       });
     });
 
@@ -313,6 +380,47 @@ describe('GitlabProvider', () => {
         await expect(
           gitlabProvider.listAvailableRepositories(),
         ).rejects.toThrow('Failed to fetch repositories from GitLab');
+      });
+    });
+
+    describe('pagination', () => {
+      it('requests the given page', async () => {
+        mockAxiosInstance.get.mockResolvedValue({ data: [], headers: {} });
+
+        await gitlabProvider.listAvailableRepositories(4);
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/projects', {
+          params: {
+            membership: true,
+            archived: false,
+            order_by: 'last_activity_at',
+            per_page: 100,
+            page: 4,
+          },
+        });
+      });
+
+      describe('when the x-total-pages header is present', () => {
+        it('reports it as the total page count', async () => {
+          mockAxiosInstance.get.mockResolvedValue({
+            data: [],
+            headers: { 'x-total-pages': '7' },
+          });
+
+          const result = await gitlabProvider.listAvailableRepositories(1);
+
+          expect(result.totalPages).toBe(7);
+        });
+      });
+
+      describe('when the x-total-pages header is missing', () => {
+        it('falls back to the current page', async () => {
+          mockAxiosInstance.get.mockResolvedValue({ data: [], headers: {} });
+
+          const result = await gitlabProvider.listAvailableRepositories(2);
+
+          expect(result.totalPages).toBe(2);
+        });
       });
     });
   });

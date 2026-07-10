@@ -8,16 +8,13 @@ import {
   IAccountsPort,
   ISpacesPort,
   IUpdateStandardUseCase,
-  OrganizationId,
   RuleAddedEvent,
   RuleDeletedEvent,
   RuleExample,
   RuleId,
   StandardUpdatedEvent,
-  StandardVersion,
   UpdateStandardCommand,
   UpdateStandardResponse,
-  UserId,
   createOrganizationId,
   createSpaceId,
   createStandardId,
@@ -26,7 +23,6 @@ import {
 } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import {
   CreateStandardVersionData,
@@ -49,7 +45,6 @@ export class UpdateStandardUseCase
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
-    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -237,13 +232,6 @@ export class UpdateStandardUseCase
           standardVersionData,
         );
 
-      await this.generateStandardSummary(
-        brandedUserId,
-        brandedOrganizationId,
-        newStandardVersion,
-        rulesWithExamples,
-      );
-
       this.logger.info('Standard updated successfully', {
         standardId,
         newVersion: nextVersion,
@@ -328,20 +316,6 @@ export class UpdateStandardUseCase
       });
       throw error;
     }
-  }
-
-  public async generateStandardSummary(
-    userId: UserId,
-    organizationId: OrganizationId,
-    newStandardVersion: StandardVersion,
-    rulesWithExamples: Array<{ content: string; examples: RuleExample[] }>,
-  ) {
-    await this.generateStandardSummaryDelayedJob.addJob({
-      userId,
-      organizationId,
-      standardVersion: newStandardVersion,
-      rules: rulesWithExamples,
-    });
   }
 
   private hasContentChanged(

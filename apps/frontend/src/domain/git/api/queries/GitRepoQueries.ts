@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
 import { GitProviderId, GitRepoId, OrganizationId } from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
@@ -12,7 +17,6 @@ import {
 } from '../queryKeys';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
-import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 
 export const useGetGitReposQuery = () => {
@@ -53,19 +57,40 @@ export const useGetRepositoriesByProviderQuery = (
 export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
   const { organization } = useAuthContext();
 
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
-    queryFn: () => {
+    queryFn: ({ pageParam }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch available repositories',
         );
       }
-      return gitProviderGateway.getAvailableRepositories(
-        organization.id,
-        providerId,
-      );
+      return gitProviderGateway.getAvailableRepositories({
+        organizationId: organization.id,
+        gitProviderId: providerId,
+        page: pageParam,
+      });
     },
+    initialPageParam: 1,
+    // Resume from the last provider page actually consumed, not the requested
+    // page: filtering out inaccessible repos can make one request span several
+    // provider pages, so lastLoadedPage + 1 avoids re-fetching the pages we
+    // already drained. Returning undefined flips hasNextPage to false so the UI
+    // can hide "Load more".
+    getNextPageParam: (lastPage) =>
+      lastPage.lastLoadedPage < lastPage.availablePages
+        ? lastPage.lastLoadedPage + 1
+        : undefined,
+    // Flatten every loaded page into a single list and derive fullName once, so
+    // consumers can filter across all repositories fetched so far.
+    select: (data) => ({
+      repositories: data.pages.flatMap((page) =>
+        page.repositories.map((repo) => ({
+          ...repo,
+          fullName: `${repo.owner}/${repo.name}`,
+        })),
+      ),
+    }),
     enabled: !!organization?.id && !!providerId,
   });
 };
@@ -101,9 +126,6 @@ export const useAddRepositoryMutation = () => {
       // Deployment overviews (new repo can have targets)
       await queryClient.invalidateQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: (error) => {

@@ -161,8 +161,6 @@ describe('Continue Deployment Integration', () => {
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary:
-            'Test recipe for Continue deployment with detailed instructions',
           userId: user.id,
         },
       ];
@@ -217,10 +215,8 @@ describe('Continue Deployment Integration', () => {
       expect(recipeFile?.content).toContain('---');
     });
 
-    it('includes recipe description in frontmatter', () => {
-      expect(recipeFile?.content).toContain(
-        "description: 'Test recipe for Continue deployment with detailed instructions'",
-      );
+    it('includes recipe name as description in frontmatter', () => {
+      expect(recipeFile?.content).toContain(`description: '${recipe.name}'`);
     });
 
     it('includes recipe name in frontmatter', () => {
@@ -270,7 +266,6 @@ describe('Continue Deployment Integration', () => {
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary: 'First recipe summary',
           userId: user.id,
         },
         {
@@ -280,7 +275,6 @@ describe('Continue Deployment Integration', () => {
           slug: recipe2.slug,
           content: recipe2.content,
           version: recipe2.version,
-          summary: 'Second recipe summary',
           userId: user.id,
         },
       ];
@@ -341,7 +335,6 @@ describe('Continue Deployment Integration', () => {
           slug: standard.slug,
           description: standard.description,
           version: standard.version,
-          summary: 'Test standard for Continue deployment',
           userId: user.id,
           scope: standard.scope,
         },
@@ -386,9 +379,9 @@ describe('Continue Deployment Integration', () => {
       });
     });
 
-    it('includes frontmatter with description from summary', () => {
+    it('includes frontmatter with standard description', () => {
       expect(standardFile?.content).toContain(
-        "description: 'Test standard for Continue deployment'",
+        `description: '${standard.description}'`,
       );
     });
 
@@ -447,7 +440,6 @@ describe('Continue Deployment Integration', () => {
           slug: globalStandard.slug,
           description: globalStandard.description,
           version: globalStandard.version,
-          summary: 'Global standard for all files',
           userId: user.id,
           scope: globalStandard.scope,
         },
@@ -497,7 +489,6 @@ describe('Continue Deployment Integration', () => {
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary: 'Test recipe for combined deployment',
           userId: user.id,
         },
       ];
@@ -510,7 +501,6 @@ describe('Continue Deployment Integration', () => {
           slug: standard.slug,
           description: standard.description,
           version: standard.version,
-          summary: 'Test standard for combined deployment',
           userId: user.id,
           scope: standard.scope,
         },
@@ -573,10 +563,8 @@ describe('Continue Deployment Integration', () => {
         expect(recipeFile?.content).toContain('---');
       });
 
-      it('includes recipe description in frontmatter', () => {
-        expect(recipeFile?.content).toContain(
-          "description: 'Test recipe for combined deployment'",
-        );
+      it('includes recipe name as description in frontmatter', () => {
+        expect(recipeFile?.content).toContain(`description: '${recipe.name}'`);
       });
     });
 
@@ -700,7 +688,6 @@ describe('Continue Deployment Integration', () => {
             slug: standard1.slug,
             description: standard1.description,
             version: standard1.version,
-            summary: 'Frontend standard',
             userId: user.id,
             scope: standard1.scope,
           },
@@ -711,7 +698,6 @@ describe('Continue Deployment Integration', () => {
             slug: standard2.slug,
             description: standard2.description,
             version: standard2.version,
-            summary: 'Backend standard',
             userId: user.id,
             scope: standard2.scope,
           },

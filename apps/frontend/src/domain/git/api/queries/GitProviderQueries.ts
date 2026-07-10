@@ -12,7 +12,6 @@ import {
   GIT_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
-import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { routes } from '../../../../shared/utils/routes';
@@ -95,9 +94,6 @@ export const useCreateGitProviderMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: GET_GIT_PROVIDERS_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: (error) => {

@@ -3,9 +3,7 @@ import {
   StandardVersionService,
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
 import {
-  AiNotConfigured,
   CreateStandardWithExamplesCommand,
   createOrganizationId,
   createRuleExampleId,
@@ -19,7 +17,6 @@ import {
   RuleAddedEvent,
   RuleExample,
   RuleWithExamples,
-  Standard,
   StandardCreatedEvent,
   StandardId,
   StandardVersionId,
@@ -42,7 +39,6 @@ export class CreateStandardWithExamplesUseCase {
   constructor(
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
-    private readonly standardSummaryService: StandardSummaryService,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly ruleRepository: IRuleRepository,
     private readonly eventEmitterService: PackmindEventEmitterService,
@@ -64,7 +60,6 @@ export class CreateStandardWithExamplesUseCase {
     const {
       name,
       description,
-      summary,
       rules,
       organizationId: orgId,
       userId: uid,
@@ -140,28 +135,6 @@ export class CreateStandardWithExamplesUseCase {
       // Process rules and prepare examples
       const processedRules = await this.processRulesWithExamples(rules);
 
-      // Use provided summary or generate one if null/empty
-      let finalSummary: string | null = summary || null;
-      if (!summary || summary.trim() === '') {
-        finalSummary = await this.generateStandardVersionSummary(
-          organizationId,
-          standard,
-          name,
-          standardSlug,
-          description,
-          initialVersion,
-          scope,
-          processedRules.map((r) => ({
-            content: r.content,
-            examples: r.examples,
-          })),
-        );
-      } else {
-        this.logger.info('Summary passed in input, will not be computed', {
-          standardId: standard.id,
-        });
-      }
-
       this.logger.info(
         'Creating initial standard version with rules and examples',
       );
@@ -173,7 +146,6 @@ export class CreateStandardWithExamplesUseCase {
         version: initialVersion,
         rules: processedRules,
         scope,
-        summary: finalSummary,
         userId, // Track the user who created this standard
       };
 
@@ -329,63 +301,6 @@ export class CreateStandardWithExamplesUseCase {
     });
 
     return processedRules;
-  }
-
-  private async generateStandardVersionSummary(
-    organizationId: OrganizationId,
-    standard: Standard,
-    name: string,
-    standardSlug: string,
-    description: string,
-    initialVersion: number,
-    scope: string | null,
-    rules: { content: string; examples: RuleExample[] }[],
-  ) {
-    // Generate summary for the standard version (reusing logic from CreateStandardUseCase)
-    let summary: string | null = null;
-    try {
-      this.logger.info('Generating summary for standard version', {
-        rulesCount: rules.length,
-      });
-
-      summary = await this.standardSummaryService.createStandardSummary(
-        organizationId,
-        {
-          standardId: standard.id,
-          name,
-          slug: standardSlug,
-          description,
-          version: initialVersion,
-          summary: null,
-          scope,
-        },
-        rules,
-      );
-      this.logger.info('Summary generated successfully', {
-        summaryLength: summary.length,
-      });
-    } catch (summaryError) {
-      if (summaryError instanceof AiNotConfigured) {
-        this.logger.warn(
-          'AI service not configured - proceeding without summary',
-          {
-            error: summaryError.message,
-          },
-        );
-      } else {
-        const errorMessage =
-          summaryError instanceof Error
-            ? summaryError.message
-            : String(summaryError);
-        this.logger.error(
-          'Failed to generate summary, proceeding without summary',
-          {
-            error: errorMessage,
-          },
-        );
-      }
-    }
-    return summary;
   }
 
   private async assessRulesDetections(
