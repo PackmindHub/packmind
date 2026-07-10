@@ -95,25 +95,15 @@ describe('GithubProvider', () => {
       it('calls the correct API endpoint with expected parameters', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user/repos', {
           params: {
-            sort: 'full_name',
-            direction: 'asc',
+            sort: 'updated',
             per_page: 100,
             page: 1,
           },
         });
       });
 
-      it('returns the repository list ordered alphabetically by full name', () => {
+      it('returns formatted repository list', () => {
         expect(result.repositories).toEqual([
-          {
-            name: 'another-repo',
-            owner: 'test-owner',
-            description: undefined,
-            private: true,
-            defaultBranch: 'master',
-            language: undefined,
-            stars: 0,
-          },
           {
             name: 'test-repo',
             owner: 'test-owner',
@@ -122,6 +112,15 @@ describe('GithubProvider', () => {
             defaultBranch: 'main',
             language: 'TypeScript',
             stars: 42,
+          },
+          {
+            name: 'another-repo',
+            owner: 'test-owner',
+            description: undefined,
+            private: true,
+            defaultBranch: 'master',
+            language: undefined,
+            stars: 0,
           },
         ]);
       });
@@ -190,36 +189,6 @@ describe('GithubProvider', () => {
       });
     });
 
-    describe('when the provider returns repos out of order', () => {
-      it('sorts the result alphabetically by owner/name', async () => {
-        const repo = (owner: string, name: string) => ({
-          name,
-          owner: { login: owner },
-          description: null,
-          private: false,
-          default_branch: 'main',
-          language: null,
-          stargazers_count: 0,
-          permissions: { pull: true, push: true, admin: false },
-        });
-        mockAxiosInstance.get.mockResolvedValue({
-          data: [
-            repo('acme', 'zebra'),
-            repo('acme', 'apple'),
-            repo('abex', 'yak'),
-          ],
-        });
-
-        const result = await githubProvider.listAvailableRepositories();
-
-        expect(result.repositories.map((r) => `${r.owner}/${r.name}`)).toEqual([
-          'abex/yak',
-          'acme/apple',
-          'acme/zebra',
-        ]);
-      });
-    });
-
     describe('pagination', () => {
       it('requests the given page', async () => {
         mockAxiosInstance.get.mockResolvedValue({ data: [] });
@@ -227,12 +196,7 @@ describe('GithubProvider', () => {
         await githubProvider.listAvailableRepositories(3);
 
         expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user/repos', {
-          params: {
-            sort: 'full_name',
-            direction: 'asc',
-            per_page: 100,
-            page: 3,
-          },
+          params: { sort: 'updated', per_page: 100, page: 3 },
         });
       });
 
@@ -335,12 +299,7 @@ describe('GithubProvider', () => {
           3,
           '/user/repos',
           {
-            params: {
-              sort: 'full_name',
-              direction: 'asc',
-              per_page: 100,
-              page: 3,
-            },
+            params: { sort: 'updated', per_page: 100, page: 3 },
           },
         );
       });

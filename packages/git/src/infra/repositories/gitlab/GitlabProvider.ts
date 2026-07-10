@@ -5,7 +5,6 @@ import {
   ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
 import { ExternalRepository } from '@packmind/types';
-import { byFullName } from '../byFullName';
 import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
@@ -72,11 +71,6 @@ export class GitlabProvider implements IGitProvider {
         repositories.length < PROJECTS_PER_PAGE &&
         lastLoadedPage < totalPages
       );
-
-      // GitLab's `/projects` endpoint has no order key matching our
-      // `owner/name` full name, so sort the batch ourselves to return an
-      // alphabetical response.
-      repositories.sort(byFullName);
 
       this.logger.info('GitLab projects retrieved successfully', {
         totalCount: repositories.length,

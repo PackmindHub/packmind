@@ -5,7 +5,6 @@ import {
   ListAvailableRepositoriesResult,
 } from '../../../domain/repositories/IGitProvider';
 import { ExternalRepository } from '@packmind/types';
-import { byFullName } from '../byFullName';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
@@ -85,11 +84,6 @@ export class GithubProvider implements IGitProvider {
         lastLoadedPage < totalPages
       );
 
-      // Guarantee an alphabetical response even for the installation endpoint,
-      // which offers no server-side sort. `/user/repos` is already ordered by
-      // `full_name`, so this is a no-op there.
-      repositories.sort(byFullName);
-
       return { repositories, totalPages, lastLoadedPage };
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
@@ -167,12 +161,7 @@ export class GithubProvider implements IGitProvider {
   ): Promise<{ rawRepos: unknown; totalPages: number }> {
     const response = await this.client.get('/user/repos', {
       params: {
-        // Sort by `owner/repo` ascending so provider pages arrive in the same
-        // alphabetical order the UI lists them in. This keeps "load more"
-        // appending to the bottom of the list instead of splicing repos into
-        // the middle.
-        sort: 'full_name',
-        direction: 'asc',
+        sort: 'updated',
         per_page: REPOS_PER_PAGE,
         page,
       },
