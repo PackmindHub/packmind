@@ -25,7 +25,7 @@ The app should be available at [http://localhost:4200](http://localhost:4200)
 > reset only the containers' Nx state, run:
 >
 > ```shell
-> docker volume ls -q --filter name=dev-nx | xargs -r docker volume rm -f
+> docker volume ls -q --filter name='dev-nx$' | xargs docker volume rm -f
 > ```
 >
 > For a full reset (including the database), use `docker compose down -v`.

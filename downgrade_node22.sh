@@ -11,7 +11,8 @@ docker compose down
 echo "🗑️  Suppression des volumes Docker dev-nx-sock et dev-node_modules..."
 docker volume rm dev-nx-sock dev-node_modules 2>/dev/null || true
 echo "🗑️  Suppression du volume Nx des containers (dev-nx)..."
-docker volume ls -q --filter name=dev-nx | xargs -r docker volume rm -f 2>/dev/null || true
+nx_volumes="$(docker volume ls -q --filter name='dev-nx$')"
+[ -n "$nx_volumes" ] && docker volume rm -f $nx_volumes 2>/dev/null || true
 
 # 2. Reset Nx (tant que node_modules et .nx existent encore)
 echo ""
