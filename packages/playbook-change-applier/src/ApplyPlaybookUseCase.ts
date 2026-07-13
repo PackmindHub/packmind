@@ -10,6 +10,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
   ChangeProposalType,
+  CollectionItemAddPayload,
   DiffService,
   IAccountsPort,
   IRecipesPort,
@@ -22,6 +23,8 @@ import {
   ScalarUpdatePayload,
   RecipeId,
   RecipeVersion,
+  SkillFile,
+  SkillFileContentUpdatePayload,
   SkillId,
   SkillVersionWithFiles,
   StandardId,
@@ -42,7 +45,12 @@ import {
   camelToKebab,
   sortAdditionalPropertiesKeys,
 } from '@packmind/types';
-import { DESCRIPTION_MAX_LENGTH, SkillValidationError } from '@packmind/skills';
+import {
+  DESCRIPTION_MAX_LENGTH,
+  SKILL_FILE_MAX_CONTENT_LENGTH,
+  SkillValidationError,
+  validateSkillFileContent,
+} from '@packmind/skills';
 import { IChangesProposalApplier } from './appliers/IChangesProposalApplier';
 import { StandardChangesApplier } from './appliers/StandardChangesApplier';
 import { CommandChangesApplier } from './appliers/CommandChangesApplier';
@@ -181,11 +189,14 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           const descriptionError = error.errors.find(
             (e) => e.field === 'description',
           );
+          const contentError = error.errors.find((e) => e.field === 'content');
           error.message = descriptionError
             ? `A submitted skill has a description longer than ${DESCRIPTION_MAX_LENGTH} characters. Edit your skill and upload it again.`
-            : `A submitted skill is invalid: ${error.errors
-                .map((e) => e.message)
-                .join('; ')}. Edit your skill and upload it again.`;
+            : contentError
+              ? `A submitted skill has a file that is empty or exceeds ${SKILL_FILE_MAX_CONTENT_LENGTH} characters. Edit your skill and upload it again.`
+              : `A submitted skill is invalid: ${error.errors
+                  .map((e) => e.message)
+                  .join('; ')}. Edit your skill and upload it again.`;
           throw error;
         }
         return {
@@ -287,20 +298,44 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
 
     if (step.itemType === 'skill') {
       for (const proposal of step.proposals) {
-        if (proposal.type !== ChangeProposalType.updateSkillDescription) {
+        if (proposal.type === ChangeProposalType.updateSkillDescription) {
+          const payload = proposal.payload as ScalarUpdatePayload;
+          if (
+            typeof payload.newValue === 'string' &&
+            payload.newValue.length > DESCRIPTION_MAX_LENGTH
+          ) {
+            throw new SkillValidationError([
+              {
+                field: 'description',
+                message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
+              },
+            ]);
+          }
           continue;
         }
-        const payload = proposal.payload as ScalarUpdatePayload;
-        if (
-          typeof payload.newValue === 'string' &&
-          payload.newValue.length > DESCRIPTION_MAX_LENGTH
-        ) {
-          throw new SkillValidationError([
-            {
-              field: 'description',
-              message: `description must not exceed ${DESCRIPTION_MAX_LENGTH} characters`,
-            },
-          ]);
+
+        if (proposal.type === ChangeProposalType.updateSkillPrompt) {
+          const payload = proposal.payload as ScalarUpdatePayload;
+          validateSkillFileContent(payload.newValue);
+          continue;
+        }
+
+        if (proposal.type === ChangeProposalType.addSkillFile) {
+          const payload = proposal.payload as CollectionItemAddPayload<
+            Omit<SkillFile, 'id' | 'skillVersionId'>
+          >;
+          if (!payload.item.isBase64 && payload.item.path.endsWith('.md')) {
+            validateSkillFileContent(payload.item.content);
+          }
+          continue;
+        }
+
+        if (proposal.type === ChangeProposalType.updateSkillFileContent) {
+          const payload = proposal.payload as SkillFileContentUpdatePayload;
+          if (!payload.isBase64) {
+            validateSkillFileContent(payload.newValue);
+          }
+          continue;
         }
       }
     }

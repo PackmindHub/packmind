@@ -1161,6 +1161,77 @@ describe('ApplyPlaybookUseCase', () => {
       });
     });
 
+    describe('when an updateSkillPrompt proposal exceeds the max content length', () => {
+      const skillId = createSkillId('existing-skill');
+      const skillVersionId = createSkillVersionId('skill-ver-1');
+
+      const skillVersion: SkillVersion = {
+        id: skillVersionId,
+        skillId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'A short description',
+        prompt: 'Do things',
+        version: 1,
+        userId,
+      };
+
+      beforeEach(() => {
+        skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+        skillsPort.getSkillFiles.mockResolvedValue([]);
+      });
+
+      describe('when the new prompt exceeds 300,000 characters', () => {
+        const oversizedPrompt = 'a'.repeat(300_001);
+
+        it('throws an error with an actionable message', async () => {
+          await expect(
+            useCase.execute(
+              buildCommand({
+                proposals: [
+                  {
+                    spaceId,
+                    type: ChangeProposalType.updateSkillPrompt,
+                    artefactId: skillId,
+                    payload: {
+                      oldValue: 'Do things',
+                      newValue: oversizedPrompt,
+                    },
+                  },
+                ],
+              }),
+            ),
+          ).rejects.toThrow(
+            /A submitted skill has a file that is empty or exceeds 300000 characters\. Edit your skill and upload it again\./,
+          );
+        });
+
+        it('does not save the new version', async () => {
+          await useCase
+            .execute(
+              buildCommand({
+                proposals: [
+                  {
+                    spaceId,
+                    type: ChangeProposalType.updateSkillPrompt,
+                    artefactId: skillId,
+                    payload: {
+                      oldValue: 'Do things',
+                      newValue: oversizedPrompt,
+                    },
+                  },
+                ],
+              }),
+            )
+            .catch(() => {
+              /* expected rejection ignored */
+            });
+
+          expect(skillsPort.saveSkillVersion).not.toHaveBeenCalled();
+        });
+      });
+    });
+
     describe('when updating a non-description field on a legacy skill whose existing description exceeds 1024 chars', () => {
       const skillId = createSkillId('legacy-skill');
       const skillVersionId = createSkillVersionId('legacy-ver-1');

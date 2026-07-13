@@ -182,8 +182,73 @@ describe('parseSkillDirectory', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'SKILL.md body (prompt) cannot be empty.',
+        error:
+          'SKILL.md body (prompt) is invalid: File content cannot be empty.',
       });
+    });
+  });
+
+  describe('when SKILL.md body exceeds 300,000 characters', () => {
+    it('returns an error', () => {
+      const longBody = 'a'.repeat(300_001);
+      const content = [
+        '---',
+        'name: My Skill',
+        'description: A description',
+        '---',
+        longBody,
+      ].join('\n');
+
+      const result = parseSkillDirectory([buildSkillMdFile(content)]);
+
+      expect(result).toEqual({
+        success: false,
+        error:
+          'SKILL.md body (prompt) is invalid: File content exceeds the maximum length of 300000 characters.',
+      });
+    });
+  });
+
+  describe('when a supporting .md file exceeds 300,000 characters', () => {
+    it('returns an error', () => {
+      const longContent = 'a'.repeat(300_001);
+      const result = parseSkillDirectory([
+        buildSkillMdFile(),
+        buildSupportingFile('references/x.md', longContent),
+      ]);
+
+      expect(result).toEqual({
+        success: false,
+        error:
+          'File "references/x.md" is invalid: File content exceeds the maximum length of 300000 characters.',
+      });
+    });
+  });
+
+  describe('when a supporting .md file is empty', () => {
+    it('returns an error', () => {
+      const result = parseSkillDirectory([
+        buildSkillMdFile(),
+        buildSupportingFile('references/x.md', ''),
+      ]);
+
+      expect(result).toEqual({
+        success: false,
+        error:
+          'File "references/x.md" is invalid: File content cannot be empty.',
+      });
+    });
+  });
+
+  describe('when a supporting non-.md file exceeds 300,000 characters', () => {
+    it('accepts the skill without applying the character cap', () => {
+      const longContent = 'a'.repeat(300_001);
+      const result = parseSkillDirectory([
+        buildSkillMdFile(),
+        buildSupportingFile('script.py', longContent),
+      ]);
+
+      expect(result.success).toBe(true);
     });
   });
 

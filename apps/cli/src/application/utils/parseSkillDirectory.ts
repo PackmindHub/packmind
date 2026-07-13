@@ -3,7 +3,11 @@ import {
   parseSkillMdContent,
   CLAUDE_CODE_ADDITIONAL_FIELDS,
 } from '@packmind/node-utils';
-import { DESCRIPTION_MAX_LENGTH } from '@packmind/skills';
+import {
+  DESCRIPTION_MAX_LENGTH,
+  SkillValidationError,
+  validateSkillFileContent,
+} from '@packmind/skills';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -82,11 +86,38 @@ export function parseSkillDirectory(
     };
   }
 
-  if (body.trim().length === 0) {
-    return {
-      success: false,
-      error: 'SKILL.md body (prompt) cannot be empty.',
-    };
+  try {
+    validateSkillFileContent(body);
+  } catch (error) {
+    if (error instanceof SkillValidationError) {
+      return {
+        success: false,
+        error: `SKILL.md body (prompt) is invalid: ${error.errors
+          .map((e) => e.message)
+          .join('; ')}.`,
+      };
+    }
+    throw error;
+  }
+
+  const supportingMdFiles = files.filter(
+    (f) =>
+      f.relativePath !== SKILL_MD_FILENAME && f.relativePath.endsWith('.md'),
+  );
+  for (const mdFile of supportingMdFiles) {
+    try {
+      validateSkillFileContent(mdFile.content);
+    } catch (error) {
+      if (error instanceof SkillValidationError) {
+        return {
+          success: false,
+          error: `File "${mdFile.relativePath}" is invalid: ${error.errors
+            .map((e) => e.message)
+            .join('; ')}.`,
+        };
+      }
+      throw error;
+    }
   }
 
   const payload: NewSkillPayload = {
