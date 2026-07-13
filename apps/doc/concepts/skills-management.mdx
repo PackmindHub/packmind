@@ -118,6 +118,44 @@ You can view all versions of a skill in the Packmind web app:
 
 Each version includes a timestamp, allowing you to track when changes were made.
 
+## Editing a Skill
+
+You can edit a skill's Markdown content directly from the Packmind web app, without going through the CLI.
+
+### What You Can Edit
+
+- **SKILL.md body** — the instructions section is editable
+- **Supporting Markdown files** — any other `.md` file included in the skill is editable
+- **Non-Markdown files** — templates, scripts, and other non-`.md` files remain read-only
+- **SKILL.md frontmatter** — fields like `name`, `description`, `license`, and `compatibility` are read-only and are not shown in the edit view
+
+### Who Can Edit
+
+Editing is restricted to:
+
+- Organization admins
+- Space admins
+- The skill's original creator
+
+Other space members can view the skill but cannot edit it.
+
+### How to Edit
+
+1. Navigate to **Skills** in the main menu
+2. Click on the skill you want to edit
+3. Select the file you want to change from the **Files** list
+4. Make your changes and save
+
+<Info>
+  Content can't be empty and can't exceed 300,000 characters. This limit applies
+  whether you edit from the web app, upload via the CLI, or apply a submitted
+  change.
+</Info>
+
+### Versioning
+
+Saving your edit creates a new version of the skill, attributed to you as the editor—even if you weren't the skill's original creator. If you save without making any actual changes, no new version is created.
+
 ## Deleting Skills
 
 You can delete skills that are no longer needed through the Packmind web app.
