@@ -134,9 +134,8 @@ export const isPreviewable = (path: string): boolean => {
 };
 
 /**
- * A file can be edited in place from the UI only if it is a Markdown file
- * (strictly `.md`, matching the server-side check in
- * UpdateSkillFileFromUIUseCase) and is not base64-encoded (binary) content.
+ * Strictly `.md`, matching the server-side check in UpdateSkillFileFromUIUseCase.
+ * Callers must also check `!file.isBase64` separately before allowing edits.
  */
 export const isEditableMarkdownFile = (path: string): boolean =>
   path.endsWith('.md');
