@@ -1,5 +1,5 @@
-import type { MouseEvent } from 'react';
-import { LuCopy, LuDownload } from 'react-icons/lu';
+import { useEffect, useState, type MouseEvent } from 'react';
+import { LuCopy, LuDownload, LuPencil } from 'react-icons/lu';
 import {
   PMTabs,
   PMButton,
@@ -14,28 +14,44 @@ import {
   PMTooltip,
   PMBreadcrumb,
 } from '@packmind/ui';
-import type { SkillFile } from '@packmind/types';
+import type { SkillFile, SkillId } from '@packmind/types';
 import {
   getFileLanguage,
   getMimeType,
+  isEditableMarkdownFile,
   isPreviewable,
 } from '../utils/fileTreeUtils';
+import { SkillFileEditor } from './SkillFileEditor';
 
 interface ISkillFilePreviewProps {
   file: SkillFile | null;
   clipboardContent?: string;
-  rawContent?: string;
   transformLinkUri?: (href: string) => string;
   onLinkClick?: (href: string, event: MouseEvent<HTMLAnchorElement>) => void;
+  skillId?: SkillId;
+  skillSlug?: string;
+  skillVersion?: number;
+  canEdit?: boolean;
 }
 
 export const SkillFilePreview = ({
   file,
   clipboardContent,
-  rawContent,
   transformLinkUri,
   onLinkClick,
+  skillId,
+  skillSlug,
+  skillVersion,
+  canEdit = false,
 }: ISkillFilePreviewProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Exit edit mode whenever the selected file changes (e.g. navigating to
+  // another file via the sidebar or an in-content link).
+  useEffect(() => {
+    setIsEditing(false);
+  }, [file?.path]);
+
   if (!file) {
     return (
       <PMEmptyState
@@ -51,6 +67,13 @@ export const SkillFilePreview = ({
   const lowerPath = file.path.toLowerCase();
   const isMarkdown = markdownExtensions.some((ext) => lowerPath.endsWith(ext));
   const fileName = file.path.split('/').pop() ?? 'file';
+
+  const canEditFile =
+    canEdit &&
+    !file.isBase64 &&
+    isEditableMarkdownFile(file.path) &&
+    !!skillId &&
+    !!skillSlug;
 
   const handleDownload = () => {
     let blob: Blob;
@@ -90,11 +113,7 @@ export const SkillFilePreview = ({
   );
 
   const renderCodeContent = () => (
-    <PMCodeMirror
-      value={rawContent ?? file.content}
-      language={language}
-      readOnly
-    />
+    <PMCodeMirror value={file.content} language={language} readOnly />
   );
 
   const renderNonPreviewableContent = () => (
@@ -109,6 +128,20 @@ export const SkillFilePreview = ({
   );
 
   const renderFileContent = () => {
+    if (isEditing && canEditFile && skillId && skillSlug) {
+      return (
+        <SkillFileEditor
+          skillId={skillId}
+          skillSlug={skillSlug}
+          filePath={file.path}
+          initialContent={file.content}
+          currentVersion={skillVersion}
+          onCancel={() => setIsEditing(false)}
+          onSaved={() => setIsEditing(false)}
+        />
+      );
+    }
+
     if (!canPreview) {
       return renderNonPreviewableContent();
     }
@@ -144,33 +177,47 @@ export const SkillFilePreview = ({
     <PMVStack align="stretch" gap={2} width="full">
       <PMHStack justify="space-between" align="center">
         <PMBreadcrumb segments={file.path.split('/')} interactive={false} />
-        <PMHStack gap={2}>
-          <PMTooltip label="Download file">
-            <PMIconButton
-              aria-label="Download file"
-              size="sm"
-              variant="tertiary"
-              onClick={handleDownload}
-            >
-              <LuDownload />
-            </PMIconButton>
-          </PMTooltip>
-          <PMCopiable.Root value={clipboardContent ?? file.content}>
-            <PMTooltip label="Copy to clipboard">
-              <PMCopiable.Trigger asChild>
+        {!isEditing && (
+          <PMHStack gap={2}>
+            {canEditFile && (
+              <PMTooltip label="Edit file">
                 <PMIconButton
-                  aria-label="Copy to clipboard"
+                  aria-label="Edit file"
                   size="sm"
                   variant="tertiary"
+                  onClick={() => setIsEditing(true)}
                 >
-                  <PMCopiable.Indicator>
-                    <LuCopy />
-                  </PMCopiable.Indicator>
+                  <LuPencil />
                 </PMIconButton>
-              </PMCopiable.Trigger>
+              </PMTooltip>
+            )}
+            <PMTooltip label="Download file">
+              <PMIconButton
+                aria-label="Download file"
+                size="sm"
+                variant="tertiary"
+                onClick={handleDownload}
+              >
+                <LuDownload />
+              </PMIconButton>
             </PMTooltip>
-          </PMCopiable.Root>
-        </PMHStack>
+            <PMCopiable.Root value={clipboardContent ?? file.content}>
+              <PMTooltip label="Copy to clipboard">
+                <PMCopiable.Trigger asChild>
+                  <PMIconButton
+                    aria-label="Copy to clipboard"
+                    size="sm"
+                    variant="tertiary"
+                  >
+                    <PMCopiable.Indicator>
+                      <LuCopy />
+                    </PMCopiable.Indicator>
+                  </PMIconButton>
+                </PMCopiable.Trigger>
+              </PMTooltip>
+            </PMCopiable.Root>
+          </PMHStack>
+        )}
       </PMHStack>
 
       {renderFileContent()}

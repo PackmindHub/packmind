@@ -7,6 +7,8 @@ import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePr
 import { SkillFrontmatterInfo } from '../../src/domain/skills/components/SkillFrontmatterInfo';
 import { buildSkillMdContent } from '../../src/domain/skills/utils/skillMdUtils';
 import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLinkUtils';
+import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
+import { useGetSpaceMembersQuery } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
@@ -26,6 +28,19 @@ export default function SkillFilesRouteModule() {
   const navigate = useNavigate();
   const { skill, files, latestVersion } =
     useOutletContext<ISkillDetailsOutletContext>();
+  const { user, organization } = useAuthContext();
+  const { data: spaceMembersData } = useGetSpaceMembersQuery(skill.spaceId);
+
+  // Client-side gate for UX only — mirrors UpdateSkillFileFromUIUseCase's
+  // permission check (space admin, org admin, or the skill's creator). The
+  // server remains the source of truth and returns 403 if this is ever wrong.
+  const currentUserMember = spaceMembersData?.members?.find(
+    (member) => member.userId === user?.id,
+  );
+  const isSpaceAdmin = currentUserMember?.role === 'admin';
+  const isOrgAdmin = organization?.role === 'admin';
+  const isCreator = skill.userId === user?.id;
+  const canEditSkillFiles = isSpaceAdmin || isOrgAdmin || isCreator;
 
   // Create virtual SKILL.md file (content is body only — frontmatter is shown separately)
   const skillMdFile = useMemo<SkillFile>(
@@ -107,13 +122,12 @@ export default function SkillFilesRouteModule() {
                 ? skillMdClipboardContent
                 : undefined
             }
-            rawContent={
-              selectedFile?.path === SKILL_MD_FILENAME
-                ? skillMdClipboardContent
-                : undefined
-            }
             transformLinkUri={transformLinkUri}
             onLinkClick={handleLinkClick}
+            skillId={skill.id}
+            skillSlug={skill.slug}
+            skillVersion={latestVersion.version}
+            canEdit={canEditSkillFiles}
           />
         </PMVStack>
       </PMVStack>

@@ -1,4 +1,9 @@
-import { getFileLanguage, getMimeType, isPreviewable } from './fileTreeUtils';
+import {
+  getFileLanguage,
+  getMimeType,
+  isEditableMarkdownFile,
+  isPreviewable,
+} from './fileTreeUtils';
 
 describe('fileTreeUtils', () => {
   describe('getFileLanguage', () => {
@@ -116,6 +121,28 @@ describe('fileTreeUtils', () => {
       it('handles deeply nested paths', () => {
         expect(getMimeType('a/b/c/d/image.png')).toBe('image/png');
       });
+    });
+  });
+
+  describe('isEditableMarkdownFile', () => {
+    it('returns true for .md files', () => {
+      expect(isEditableMarkdownFile('SKILL.md')).toBe(true);
+    });
+
+    it('returns true for nested .md files', () => {
+      expect(isEditableMarkdownFile('references/notes.md')).toBe(true);
+    });
+
+    it('returns false for .mdx files', () => {
+      expect(isEditableMarkdownFile('page.mdx')).toBe(false);
+    });
+
+    it('returns false for .mdc files', () => {
+      expect(isEditableMarkdownFile('page.mdc')).toBe(false);
+    });
+
+    it('returns false for non-markdown files', () => {
+      expect(isEditableMarkdownFile('index.ts')).toBe(false);
     });
   });
 });
