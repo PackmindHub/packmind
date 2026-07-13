@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { minimatch } from 'minimatch';
 
-import { normalizeLineEndings } from '../../application/utils/normalizeLineEndings';
+import { normalizeLineEndings } from '@packmind/node-utils';
 import { isBinaryFile } from './binaryDetection';
 import { modeToPermissionStringOrDefault } from './permissions';
 

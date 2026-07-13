@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { normalizeLineEndings } from './normalizeLineEndings';
+import { normalizeLineEndings } from '@packmind/node-utils';
 
 const FRONTMATTER_DELIMITER = '---';
 

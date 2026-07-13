@@ -1,6 +1,5 @@
 import { MultiFileCodingAgent } from '@packmind/types';
-
-import { normalizeLineEndings } from './normalizeLineEndings';
+import { normalizeLineEndings } from '@packmind/node-utils';
 
 export type ParsedStandardMd = {
   name: string;

@@ -1,6 +1,10 @@
 import { SkillValidationError } from '../errors/SkillValidationError';
 import { SkillParser } from '../parser/SkillParser';
-import { SkillValidator } from './SkillValidator';
+import {
+  SkillValidator,
+  SKILL_FILE_MAX_CONTENT_LENGTH,
+  validateSkillFileContent,
+} from './SkillValidator';
 
 describe('SkillValidator', () => {
   let validator: SkillValidator;
@@ -476,6 +480,46 @@ license: MIT
           'name field is missing',
         );
       });
+    });
+  });
+});
+
+describe('validateSkillFileContent', () => {
+  describe('when content is a normal non-empty string', () => {
+    it('does not throw', () => {
+      expect(() => validateSkillFileContent('# My Skill\n')).not.toThrow();
+    });
+  });
+
+  describe('when content is an empty string', () => {
+    it('throws SkillValidationError', () => {
+      expect(() => validateSkillFileContent('')).toThrow(SkillValidationError);
+    });
+  });
+
+  describe('when content is whitespace only', () => {
+    it('throws SkillValidationError', () => {
+      expect(() => validateSkillFileContent('   \n\t  ')).toThrow(
+        SkillValidationError,
+      );
+    });
+  });
+
+  describe('when content length is exactly the max allowed length', () => {
+    it('does not throw', () => {
+      const content = 'a'.repeat(SKILL_FILE_MAX_CONTENT_LENGTH);
+
+      expect(() => validateSkillFileContent(content)).not.toThrow();
+    });
+  });
+
+  describe('when content length exceeds the max allowed length by one', () => {
+    it('throws SkillValidationError', () => {
+      const content = 'a'.repeat(SKILL_FILE_MAX_CONTENT_LENGTH + 1);
+
+      expect(() => validateSkillFileContent(content)).toThrow(
+        SkillValidationError,
+      );
     });
   });
 });

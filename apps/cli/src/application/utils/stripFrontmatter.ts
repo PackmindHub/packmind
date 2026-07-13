@@ -1,4 +1,4 @@
-import { normalizeLineEndings } from './normalizeLineEndings';
+import { normalizeLineEndings } from '@packmind/node-utils';
 
 const FRONTMATTER_DELIMITER = '---';
 

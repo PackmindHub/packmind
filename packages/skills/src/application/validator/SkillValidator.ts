@@ -10,7 +10,31 @@ import {
 export const NAME_MAX_LENGTH = 64;
 export const DESCRIPTION_MAX_LENGTH = 1024;
 export const COMPATIBILITY_MAX_LENGTH = 500;
+export const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
 const ALLOWED_SHELL_VALUES = ['bash', 'powershell'] as const;
+
+/**
+ * Validates the raw content of a skill file and throws if invalid.
+ *
+ * @param content - The raw file content to validate
+ * @throws {SkillValidationError} If the content is empty or exceeds the maximum length
+ */
+export function validateSkillFileContent(content: string): void {
+  if (content.trim().length === 0) {
+    throw new SkillValidationError([
+      { field: 'content', message: 'File content cannot be empty' },
+    ]);
+  }
+
+  if (content.length > SKILL_FILE_MAX_CONTENT_LENGTH) {
+    throw new SkillValidationError([
+      {
+        field: 'content',
+        message: `File content exceeds the maximum length of ${SKILL_FILE_MAX_CONTENT_LENGTH} characters`,
+      },
+    ]);
+  }
+}
 
 /**
  * Regular expression for valid skill names:

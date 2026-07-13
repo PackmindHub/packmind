@@ -1,4 +1,4 @@
-import { normalizeLineEndings } from './normalizeLineEndings';
+import { normalizeLineEndings } from '@packmind/node-utils';
 
 export type LenientStandardResult = {
   name: string;
