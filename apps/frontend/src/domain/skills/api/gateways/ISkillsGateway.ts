@@ -6,6 +6,7 @@ import {
   SkillVersion,
   SkillWithFiles,
   SpaceId,
+  UpdateSkillFileFromUIResponse,
 } from '@packmind/types';
 
 export interface ISkillsGateway {
@@ -35,4 +36,10 @@ export interface ISkillsGateway {
     spaceId: SpaceId,
     skillIds: SkillId[],
   ): Promise<DeleteSkillsBatchResponse>;
+  updateSkillFile(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+    params: { filePath: string; content: string },
+  ): Promise<UpdateSkillFileFromUIResponse>;
 }

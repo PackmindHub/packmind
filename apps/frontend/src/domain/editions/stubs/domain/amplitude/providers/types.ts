@@ -18,7 +18,7 @@ export type AnalyticsEventMap = {
     method: 'email' | 'github' | 'gitlab' | 'google' | 'sso';
   };
   artifact_updated: {
-    artifactType: 'recipe' | 'standard';
+    artifactType: 'recipe' | 'standard' | 'skill';
     id: string;
     from: number;
     to: number;

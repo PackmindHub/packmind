@@ -230,3 +230,58 @@ export const useDeleteSkillsBatchMutation = () => {
     },
   });
 };
+
+const UPDATE_SKILL_FILE_MUTATION_KEY = 'updateSkillFile';
+
+export const useUpdateSkillFileMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [UPDATE_SKILL_FILE_MUTATION_KEY],
+    mutationFn: async ({
+      skillId,
+      slug,
+      filePath,
+      content,
+    }: {
+      skillId: SkillId;
+      slug: string;
+      filePath: string;
+      content: string;
+    }) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return skillsGateway.updateSkillFile(organization.id, spaceId, skillId, {
+        filePath,
+        content,
+      });
+    },
+    onSuccess: async (_, variables) => {
+      // Invalidate the skill by id (file content changed)
+      await queryClient.invalidateQueries({
+        queryKey: getSkillByIdKey(spaceId, variables.skillId),
+      });
+
+      // Invalidate the skill by slug (same skill accessed via slug route)
+      await queryClient.invalidateQueries({
+        queryKey: getSkillBySlugKey(spaceId, variables.slug),
+      });
+
+      // Invalidate the skill versions (a new version may have been created)
+      await queryClient.invalidateQueries({
+        queryKey: getSkillVersionsKey(spaceId, variables.skillId),
+      });
+
+      // Invalidate the skills list (version/summary might have changed)
+      await queryClient.invalidateQueries({
+        queryKey: getSkillsBySpaceKey(spaceId),
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating skill file:', error);
+    },
+  });
+};

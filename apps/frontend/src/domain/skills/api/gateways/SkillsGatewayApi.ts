@@ -6,6 +6,7 @@ import {
   SkillVersion,
   SkillWithFiles,
   SpaceId,
+  UpdateSkillFileFromUIResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISkillsGateway } from './ISkillsGateway';
@@ -75,6 +76,18 @@ export class SkillsGatewayApi
     return this._api.post<DeleteSkillsBatchResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/skills/delete`,
       { skillIds },
+    );
+  }
+
+  async updateSkillFile(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+    params: { filePath: string; content: string },
+  ): Promise<UpdateSkillFileFromUIResponse> {
+    return this._api.patch<UpdateSkillFileFromUIResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}/file`,
+      params,
     );
   }
 }
