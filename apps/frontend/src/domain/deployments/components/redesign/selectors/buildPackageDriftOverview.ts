@@ -164,8 +164,8 @@ function pushCommand(
   const artifact = ensureArtifact(
     pkg,
     'command',
-    info.recipe.id,
-    info.recipe.name,
+    info.command.id,
+    info.command.name,
     info.latestVersion.version,
     { isDeleted, isPending: false },
   );
@@ -344,13 +344,13 @@ export function buildPackageDriftOverview(
       });
       for (const s of active.deployedStandards)
         pushStandard(pkg, s, repoRef, targetRef, branch);
-      for (const r of active.deployedRecipes)
+      for (const r of active.deployedCommands)
         pushCommand(pkg, r, repoRef, targetRef, branch);
       for (const k of active.deployedSkills)
         pushSkill(pkg, k, repoRef, targetRef, branch);
       for (const s of active.pendingStandards)
         pushPendingStandard(pkg, s, repoRef, targetRef, branch);
-      for (const r of active.pendingRecipes)
+      for (const r of active.pendingCommands)
         pushPendingCommand(pkg, r, repoRef, targetRef, branch);
       for (const k of active.pendingSkills)
         pushPendingSkill(pkg, k, repoRef, targetRef, branch);

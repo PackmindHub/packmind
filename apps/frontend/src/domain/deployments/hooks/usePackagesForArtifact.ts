@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useListPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 import {
   OrganizationId,
-  Package,
+  PackageResponse,
   CommandId,
   SkillId,
   SpaceId,
@@ -19,10 +19,10 @@ interface UsePackagesForArtifactParams {
 }
 
 export function getArtifactPackages(
-  packages: Package[] | undefined,
+  packages: PackageResponse[] | undefined,
   artifactId: StandardId | CommandId | SkillId,
   artifactType: ArtifactType,
-): Package[] {
+): PackageResponse[] {
   if (!packages) return [];
 
   return packages.filter((pkg) => {
@@ -30,7 +30,7 @@ export function getArtifactPackages(
       case 'standard':
         return pkg.standards?.includes(artifactId as StandardId);
       case 'recipe':
-        return pkg.recipes?.includes(artifactId as CommandId);
+        return pkg.commands?.includes(artifactId as CommandId);
       case 'skill':
         return pkg.skills?.includes(artifactId as SkillId);
     }

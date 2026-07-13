@@ -67,7 +67,7 @@ export const useDeployCommand = () => {
 
       // Deploy the recipe using the RecipeVersionId
       const deployments = await publishMutation.mutateAsync({
-        recipeVersionIds: [recipeVersionId],
+        commandVersionIds: [recipeVersionId],
         targetIds: targetIds,
       });
 
@@ -137,12 +137,12 @@ export const useDeployCommand = () => {
             throw new Error('No valid recipe versions found for deployment');
           }
 
-          const recipeVersionIds = validResults.map(
+          const commandVersionIds = validResults.map(
             (result) => result.recipeVersionId as CommandVersionId,
           );
 
           const deployments = await publishMutation.mutateAsync({
-            recipeVersionIds,
+            commandVersionIds,
             targetIds,
           });
 

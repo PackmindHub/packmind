@@ -27,6 +27,7 @@ export const createCommandDeploymentStatus = (
   const recipe = commandFactory();
   return {
     recipe,
+    command: recipe,
     latestVersion: commandVersionFactory({ recipeId: recipe.id }),
     deployments: [createRepositoryDeploymentInfo()],
     targetDeployments: [createTargetDeploymentInfo()],

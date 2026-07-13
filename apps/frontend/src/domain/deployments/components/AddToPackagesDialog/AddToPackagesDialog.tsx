@@ -81,7 +81,7 @@ function buildArtefactEntry(
     case 'standard':
       return { packageId, standardIds: ids as StandardId[] };
     case 'recipe':
-      return { packageId, recipeIds: ids as CommandId[] };
+      return { packageId, commandIds: ids as CommandId[] };
     case 'skill':
       return { packageId, skillIds: ids as SkillId[] };
   }

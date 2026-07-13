@@ -129,18 +129,20 @@ function makeCommandInfo(opts: {
   deployed: number;
 }): DeployedCommandTargetInfo {
   const recipeId = createCommandId(opts.id ?? 'rcp-1');
+  const command = {
+    id: recipeId,
+    name: opts.name ?? 'Release recipe',
+    slug: 'release-recipe',
+    content: '',
+    version: opts.latest,
+    gitCommit: undefined,
+    userId: USER_ID,
+    spaceId: SPACE_ID,
+    movedTo: null,
+  };
   return {
-    recipe: {
-      id: recipeId,
-      name: opts.name ?? 'Release recipe',
-      slug: 'release-recipe',
-      content: '',
-      version: opts.latest,
-      gitCommit: undefined,
-      userId: USER_ID,
-      spaceId: SPACE_ID,
-      movedTo: null,
-    },
+    recipe: command,
+    command,
     latestVersion: {
       id: createCommandVersionId('rv-latest'),
       recipeId,
@@ -276,8 +278,10 @@ function distributedPackage(opts: {
     lastDistributedAt: opts.lastDistributedAt ?? '2026-01-01T00:00:00Z',
     deployedStandards: opts.standards ?? [],
     deployedRecipes: opts.recipes ?? [],
+    deployedCommands: opts.recipes ?? [],
     deployedSkills: opts.skills ?? [],
     pendingRecipes: opts.pendingRecipes ?? [],
+    pendingCommands: opts.pendingRecipes ?? [],
     pendingStandards: opts.pendingStandards ?? [],
     pendingSkills: opts.pendingSkills ?? [],
   };

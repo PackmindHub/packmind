@@ -37,6 +37,8 @@ export interface DeployedCommandTargetInfo {
 
 export interface CommandDeploymentStatus {
   recipe: Command;
+  // Command-named twin of `recipe` (superset for recipes→commands rename); same value.
+  command: Command;
   latestVersion: CommandVersion;
   deployments: RepositoryDeploymentInfo[];
   targetDeployments: TargetDeploymentInfo[];

@@ -51,7 +51,7 @@ export function buildArtifactRollups(
     if (!entry.gitRepo) continue;
     const { target, gitRepo } = entry;
     entry.packages.forEach((pkg) => {
-      pkg.deployedRecipes.forEach((d) =>
+      pkg.deployedCommands.forEach((d) =>
         accumulateCommand(recipes, d, target, gitRepo),
       );
       pkg.deployedStandards.forEach((d) =>
@@ -83,13 +83,13 @@ function accumulateCommand(
     isUpToDate: deployment.isUpToDate,
     deploymentDate: deployment.deploymentDate,
   };
-  const existing = rollup.get(deployment.recipe.id);
+  const existing = rollup.get(deployment.command.id);
   if (existing) {
     existing.targetDeployments.push(targetDeployment);
     if (deployment.isDeleted) existing.isDeleted = true;
     return;
   }
-  rollup.set(deployment.recipe.id, {
+  rollup.set(deployment.command.id, {
     first: deployment,
     isDeleted: !!deployment.isDeleted,
     targetDeployments: [targetDeployment],
@@ -150,7 +150,8 @@ function accumulateSkill(
 
 function toCommandStatus(rollup: CommandRollup): CommandDeploymentStatus {
   return {
-    recipe: rollup.first.recipe,
+    recipe: rollup.first.command,
+    command: rollup.first.command,
     latestVersion: rollup.first.latestVersion,
     deployments: [],
     targetDeployments: rollup.targetDeployments,

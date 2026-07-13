@@ -332,10 +332,10 @@ export const useDeployCommandsMutation = () => {
   return useMutation({
     mutationKey: [DEPLOY_RECIPES_MUTATION_KEY],
     mutationFn: async ({
-      recipeVersionIds,
+      commandVersionIds,
       targetIds,
     }: {
-      recipeVersionIds: CommandVersionId[];
+      commandVersionIds: CommandVersionId[];
       targetIds: TargetId[];
     }) => {
       if (!organization?.id) {
@@ -344,7 +344,7 @@ export const useDeployCommandsMutation = () => {
       console.log('Publishing recipes to targets...');
       return deploymentsGateways.publishCommands({
         organizationId: organization.id,
-        recipeVersionIds,
+        recipeVersionIds: commandVersionIds,
         targetIds,
       });
     },
@@ -781,7 +781,7 @@ export type AddArtefactsToPackagesOutcome =
 export type AddArtefactsToPackagesEntry = {
   packageId: PackageId;
   standardIds?: StandardId[];
-  recipeIds?: CommandId[];
+  commandIds?: CommandId[];
   skillIds?: SkillId[];
 };
 
@@ -811,7 +811,7 @@ export const useAddArtefactsToPackagesMutation = () => {
             spaceId,
             packageId: entry.packageId,
             standardIds: entry.standardIds,
-            recipeIds: entry.recipeIds,
+            recipeIds: entry.commandIds,
             skillIds: entry.skillIds,
           }),
         ),

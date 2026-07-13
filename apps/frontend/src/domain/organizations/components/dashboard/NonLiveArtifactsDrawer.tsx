@@ -55,7 +55,7 @@ export const NonLiveArtifactsDrawer = ({
   );
 
   const nonLiveStandards = nonLiveData?.standards ?? [];
-  const nonLiveCommands = nonLiveData?.recipes ?? [];
+  const nonLiveCommands = nonLiveData?.commands ?? [];
   const nonLiveSkills = nonLiveData?.skills ?? [];
 
   const standardColumns: PMTableColumn[] = [

@@ -212,7 +212,7 @@ const buildCommandBlocks = (
 
       return (
         <PMVStack
-          key={`recipe-${recipe.recipe.id}`}
+          key={`recipe-${recipe.command.id}`}
           align="stretch"
           backgroundColor={'blue.1000'}
           gap={4}
@@ -226,14 +226,14 @@ const buildCommandBlocks = (
                   to={routes.space.toCommand(
                     orgSlug,
                     spaceSlug,
-                    recipe.recipe.id,
+                    recipe.command.id,
                   )}
                 >
-                  {recipe.recipe.name}
+                  {recipe.command.name}
                 </Link>
               </PMLink>
             ) : (
-              recipe.recipe.name
+              recipe.command.name
             )}
             {isDeleted && (
               <PMBadge colorPalette="gray" size="sm" ml={2}>
@@ -411,9 +411,11 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
     const base = !normalizedSearch
       ? recipes
       : recipes.filter((r) =>
-          r.recipe.name.toLowerCase().includes(normalizedSearch),
+          r.command.name.toLowerCase().includes(normalizedSearch),
         );
-    return [...base].sort((a, b) => a.recipe.name.localeCompare(b.recipe.name));
+    return [...base].sort((a, b) =>
+      a.command.name.localeCompare(b.command.name),
+    );
   }, [recipes, normalizedSearch]);
 
   const filteredStandards = useMemo(() => {

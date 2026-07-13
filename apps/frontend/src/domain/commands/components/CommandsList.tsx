@@ -83,7 +83,7 @@ export const CommandsList = ({
       await deleteBatchMutation.mutateAsync({
         organizationId: organization.id,
         spaceId,
-        recipeIds: selectedIds,
+        commandIds: selectedIds,
       });
       unselectAll();
       setDeleteAlert({
