@@ -6,6 +6,8 @@ import {
   INotifyDistributionUseCase,
   IUploadSkillUseCase,
   IListUserSpaces,
+  IListSkillVersionsUseCase,
+  SkillVersion,
 } from '@packmind/types';
 import { IPackmindApi } from '../../domain/api/IPackmindApi';
 import { APIRequestContext, expect } from '@playwright/test';
@@ -116,6 +118,13 @@ export class PackmindApi implements IPackmindApi {
       { files: command.files },
       201,
     );
+  };
+
+  listSkillVersions: Gateway<IListSkillVersionsUseCase> = async (command) => {
+    const versions = await this.get<SkillVersion[]>(
+      `/spaces/${command.spaceId}/skills/${command.skillId}/versions`,
+    );
+    return { versions };
   };
 
   private async get<T>(url: string, expectedStatus = 200): Promise<T> {

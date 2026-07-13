@@ -47,6 +47,15 @@ export interface ISkillsPage extends IPackmindAppPage {
   moveToSpace(spaceName: string): Promise<void>;
   moveToSpaceExpectingError(spaceName: string): Promise<string>;
   hasNoSkills(): Promise<boolean>;
+  openSkill(name: string): Promise<ISkillFilePage>;
+}
+
+export interface ISkillFilePage extends IPackmindAppPage {
+  clickEdit(): Promise<void>;
+  replaceEditorContent(content: string): Promise<void>;
+  clickSave(): Promise<void>;
+  readDisplayedContent(): Promise<string>;
+  getVersionNumber(): Promise<number>;
 }
 
 export interface IStandardPage extends IPackmindAppPage {
@@ -150,6 +159,7 @@ export interface IPageFactory {
   getCliSetupPage(): Promise<ICliSetupPage>;
   getUsersSettingsPage(): Promise<IUsersSettingsPage>;
   getSkillsPage(): Promise<ISkillsPage>;
+  getSkillFilePage(): Promise<ISkillFilePage>;
   getStandardsPage(): Promise<IStandardsPage>;
   getPackagesPage(): Promise<IPackagesPage>;
   getPackagePage(): Promise<IPackagePage>;

@@ -1,4 +1,4 @@
-import { ISkillsPage } from '../../domain/pages';
+import { ISkillFilePage, ISkillsPage } from '../../domain/pages';
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
 
 export class SkillsPage extends AbstractPackmindAppPage implements ISkillsPage {
@@ -64,6 +64,15 @@ export class SkillsPage extends AbstractPackmindAppPage implements ISkillsPage {
 
   async hasNoSkills(): Promise<boolean> {
     return this.page.getByText('No skills yet').isVisible();
+  }
+
+  async openSkill(name: string): Promise<ISkillFilePage> {
+    const row = this.page
+      .locator('table tbody tr')
+      .filter({ has: this.page.getByRole('link', { name }) });
+    await row.getByRole('link', { name }).click();
+
+    return this.pageFactory.getSkillFilePage();
   }
 
   expectedUrl(): RegExp {

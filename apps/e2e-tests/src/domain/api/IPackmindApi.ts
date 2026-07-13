@@ -5,6 +5,7 @@ import {
   INotifyDistributionUseCase,
   IUploadSkillUseCase,
   IListUserSpaces,
+  IListSkillVersionsUseCase,
 } from '@packmind/types';
 
 export interface IPackmindApi {
@@ -13,4 +14,5 @@ export interface IPackmindApi {
   createPackage: Gateway<ICreatePackageUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
   uploadSkill: Gateway<IUploadSkillUseCase>;
+  listSkillVersions: Gateway<IListSkillVersionsUseCase>;
 }

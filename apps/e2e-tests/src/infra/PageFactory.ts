@@ -10,6 +10,7 @@ import {
   IPageFactory,
   ISettingsPage,
   ISignUpPage,
+  ISkillFilePage,
   ISkillsPage,
   ISpaceSettingsPage,
   IStandardsPage,
@@ -24,6 +25,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CliSetupPage } from './pages/CliSetupPage';
 import { UsersSettingsPage } from './pages/UsersSettingsPage';
 import { SkillsPage } from './pages/SkillsPage';
+import { SkillFilePage } from './pages/SkillFilePage';
 import { StandardsPage } from './pages/StandardsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { PackagePage } from './pages/PackagePage';
@@ -64,6 +66,10 @@ export class PageFactory implements IPageFactory {
 
   getSkillsPage(): Promise<ISkillsPage> {
     return this.getPageInstance(SkillsPage);
+  }
+
+  getSkillFilePage(): Promise<ISkillFilePage> {
+    return this.getPageInstance(SkillFilePage);
   }
 
   getStandardsPage(): Promise<IStandardsPage> {
