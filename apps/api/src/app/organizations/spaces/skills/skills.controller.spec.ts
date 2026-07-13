@@ -1,20 +1,28 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { SkillParseError, SkillValidationError } from '@packmind/skills';
+import {
+  SkillParseError,
+  SkillValidationError,
+  SkillEditForbiddenError,
+  SkillFileNotEditableError,
+} from '@packmind/skills';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSkillId,
+  createSkillVersionId,
   createSpaceId,
   createUserId,
   DeleteSkillResponse,
   Skill,
+  SkillVersion,
   UploadSkillFileInput,
 } from '@packmind/types';
 import { OrganizationsSpacesSkillsController } from './skills.controller';
@@ -31,6 +39,7 @@ describe('OrganizationsSpacesSkillsController', () => {
       uploadSkill: jest.fn(),
       deleteSkill: jest.fn(),
       getLatestVersionNumber: jest.fn(),
+      updateSkillFile: jest.fn(),
     } as unknown as jest.Mocked<SkillsService>;
 
     logger = stubLogger();
@@ -709,6 +718,129 @@ describe('OrganizationsSpacesSkillsController', () => {
         await expect(
           controller.getSkillLatestVersion(orgId, spaceId, skillId, request),
         ).rejects.toThrow(NotFoundException);
+      });
+    });
+  });
+
+  describe('updateSkillFile', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const skillId = createSkillId('skill-789');
+    const userId = createUserId('user-1');
+    const body = { filePath: 'SKILL.md', content: 'Updated content' };
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+      clientSource: 'ui',
+    } as unknown as AuthenticatedRequest;
+
+    const mockSkillVersion: SkillVersion = {
+      id: createSkillVersionId('version-2'),
+      skillId,
+      version: 2,
+      userId,
+      name: 'Test Skill',
+      slug: 'test-skill',
+      description: 'A test skill',
+      prompt: 'Test prompt',
+    };
+
+    describe('when the update succeeds', () => {
+      it('returns the use case response', async () => {
+        const response = {
+          skillVersion: mockSkillVersion,
+          versionCreated: true,
+        };
+        skillsService.updateSkillFile.mockResolvedValue(response);
+
+        const result = await controller.updateSkillFile(
+          orgId,
+          spaceId,
+          skillId,
+          body,
+          request,
+        );
+
+        expect(result).toEqual(response);
+      });
+
+      it('calls service with a command built from route params and request user', async () => {
+        skillsService.updateSkillFile.mockResolvedValue({
+          skillVersion: mockSkillVersion,
+          versionCreated: true,
+        });
+
+        await controller.updateSkillFile(
+          orgId,
+          spaceId,
+          skillId,
+          body,
+          request,
+        );
+
+        expect(skillsService.updateSkillFile).toHaveBeenCalledWith({
+          skillId,
+          spaceId,
+          organizationId: orgId,
+          userId,
+          filePath: body.filePath,
+          content: body.content,
+          source: 'ui',
+        });
+      });
+    });
+
+    describe('when the file content fails validation', () => {
+      it('throws BadRequestException', async () => {
+        const error = new SkillValidationError([
+          { field: 'content', message: 'content cannot be empty' },
+        ]);
+        skillsService.updateSkillFile.mockRejectedValue(error);
+
+        await expect(
+          controller.updateSkillFile(orgId, spaceId, skillId, body, request),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when the file is not editable from the UI', () => {
+      it('throws BadRequestException', async () => {
+        const error = new SkillFileNotEditableError('logo.png');
+        skillsService.updateSkillFile.mockRejectedValue(error);
+
+        await expect(
+          controller.updateSkillFile(orgId, spaceId, skillId, body, request),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when the user is not allowed to edit the skill', () => {
+      it('throws ForbiddenException', async () => {
+        const error = new SkillEditForbiddenError(userId, skillId);
+        skillsService.updateSkillFile.mockRejectedValue(error);
+
+        await expect(
+          controller.updateSkillFile(orgId, spaceId, skillId, body, request),
+        ).rejects.toThrow(ForbiddenException);
+      });
+    });
+
+    describe('when an unexpected error occurs', () => {
+      it('propagates the error unchanged', async () => {
+        const error = new Error('Skill not found');
+        skillsService.updateSkillFile.mockRejectedValue(error);
+
+        await expect(
+          controller.updateSkillFile(orgId, spaceId, skillId, body, request),
+        ).rejects.toThrow('Skill not found');
       });
     });
   });

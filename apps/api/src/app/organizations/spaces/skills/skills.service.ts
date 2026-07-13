@@ -13,6 +13,8 @@ import {
   SkillVersion,
   SkillWithFiles,
   SpaceId,
+  UpdateSkillFileFromUICommand,
+  UpdateSkillFileFromUIResponse,
   UploadSkillFileInput,
   UploadSkillResponse,
   UserId,
@@ -92,6 +94,12 @@ export class SkillsService {
       userId,
     });
     return result.versions;
+  }
+
+  async updateSkillFile(
+    command: UpdateSkillFileFromUICommand,
+  ): Promise<UpdateSkillFileFromUIResponse> {
+    return this.skillsHexa.getAdapter().updateSkillFileFromUI(command);
   }
 
   async deleteSkill(

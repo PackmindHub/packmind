@@ -9,6 +9,7 @@ import {
   Skill,
   SkillFile,
   SkillVersion,
+  UpdateSkillFileFromUICommand,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 
@@ -18,6 +19,7 @@ describe('SkillsService', () => {
     getSkillById: jest.Mock;
     getLatestSkillVersionUseCase: jest.Mock;
     getSkillFiles: jest.Mock;
+    updateSkillFileFromUI: jest.Mock;
   };
   let skillsHexa: jest.Mocked<SkillsHexa>;
 
@@ -31,6 +33,7 @@ describe('SkillsService', () => {
       getSkillById: jest.fn(),
       getLatestSkillVersionUseCase: jest.fn(),
       getSkillFiles: jest.fn(),
+      updateSkillFileFromUI: jest.fn(),
     };
 
     skillsHexa = {
@@ -207,6 +210,55 @@ describe('SkillsService', () => {
 
         expect(mockAdapter.getSkillFiles).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('updateSkillFile', () => {
+    const command: UpdateSkillFileFromUICommand = {
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+      filePath: 'SKILL.md',
+      content: 'Updated content',
+    };
+
+    const skillVersionId = createSkillVersionId('version-2');
+
+    const mockSkillVersion: SkillVersion = {
+      id: skillVersionId,
+      skillId,
+      version: 2,
+      userId,
+      name: 'Test Skill',
+      slug: 'test-skill',
+      description: 'A test skill',
+      prompt: 'Test prompt',
+    };
+
+    it('returns the adapter response', async () => {
+      mockAdapter.updateSkillFileFromUI.mockResolvedValue({
+        skillVersion: mockSkillVersion,
+        versionCreated: true,
+      });
+
+      const result = await service.updateSkillFile(command);
+
+      expect(result).toEqual({
+        skillVersion: mockSkillVersion,
+        versionCreated: true,
+      });
+    });
+
+    it('calls adapter with the command', async () => {
+      mockAdapter.updateSkillFileFromUI.mockResolvedValue({
+        skillVersion: mockSkillVersion,
+        versionCreated: true,
+      });
+
+      await service.updateSkillFile(command);
+
+      expect(mockAdapter.updateSkillFileFromUI).toHaveBeenCalledWith(command);
     });
   });
 });

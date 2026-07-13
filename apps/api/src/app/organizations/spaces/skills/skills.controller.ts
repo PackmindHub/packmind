@@ -3,10 +3,12 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
   Res,
@@ -15,7 +17,12 @@ import {
 import { Response } from 'express';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { SkillValidationError, SkillParseError } from '@packmind/skills';
+import {
+  SkillValidationError,
+  SkillParseError,
+  SkillEditForbiddenError,
+  SkillFileNotEditableError,
+} from '@packmind/skills';
 import {
   CodingAgent,
   CodingAgents,
@@ -26,6 +33,7 @@ import {
   SkillVersion,
   SkillWithFiles,
   SpaceId,
+  UpdateSkillFileFromUIResponse,
   UploadSkillFileInput,
   UploadSkillResponse,
   UserId,
@@ -314,6 +322,57 @@ export class OrganizationsSpacesSkillsController {
       }
 
       if (error instanceof SkillParseError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Update a skill file's content from the UI
+   * PATCH /organizations/:orgId/spaces/:spaceId/skills/:skillId/file
+   */
+  @Patch(':skillId/file')
+  async updateSkillFile(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Body() body: { filePath: string; content: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<UpdateSkillFileFromUIResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces/:spaceId/skills/:skillId/file - Updating skill file',
+      { organizationId, spaceId, skillId, filePath: body.filePath },
+    );
+
+    try {
+      return await this.skillsService.updateSkillFile({
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+        filePath: body.filePath,
+        content: body.content,
+        source: request.clientSource,
+      });
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'PATCH /organizations/:orgId/spaces/:spaceId/skills/:skillId/file - Failed to update skill file',
+        { organizationId, spaceId, skillId, error: errorMessage },
+      );
+
+      if (error instanceof SkillEditForbiddenError) {
+        throw new ForbiddenException(error.message);
+      }
+
+      if (
+        error instanceof SkillFileNotEditableError ||
+        error instanceof SkillValidationError
+      ) {
         throw new BadRequestException(error.message);
       }
 
