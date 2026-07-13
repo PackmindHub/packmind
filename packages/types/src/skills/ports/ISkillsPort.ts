@@ -10,6 +10,8 @@ import { SkillVersionId } from '../SkillVersionId';
 import { SaveSkillVersionCommand } from '../contracts/SaveSkillVersionUseCase';
 import {
   DeleteSkillCommand,
+  UpdateSkillFileFromUICommand,
+  UpdateSkillFileFromUIResponse,
   UploadSkillCommand,
   UploadSkillResponse,
 } from '../contracts';
@@ -38,6 +40,9 @@ export interface ISkillsPort {
   ): Promise<Skill | null>;
   getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
   saveSkillVersion(command: SaveSkillVersionCommand): Promise<SkillVersion>;
+  updateSkillFileFromUI(
+    command: UpdateSkillFileFromUICommand,
+  ): Promise<UpdateSkillFileFromUIResponse>;
   uploadSkill(command: UploadSkillCommand): Promise<UploadSkillResponse>;
   deleteSkill(command: DeleteSkillCommand): Promise<{ success: boolean }>;
   hardDeleteSkill(skillId: SkillId): Promise<void>;

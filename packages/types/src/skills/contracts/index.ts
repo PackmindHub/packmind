@@ -11,3 +11,4 @@ export * from './GetSkillVersionContract';
 export * from './GetLatestSkillVersionContract';
 export * from './UploadSkillUseCase';
 export * from './SaveSkillVersionUseCase';
+export * from './UpdateSkillFileFromUIUseCase';

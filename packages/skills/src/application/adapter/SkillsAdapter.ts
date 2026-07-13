@@ -32,6 +32,8 @@ import {
   SkillVersionId,
   SpaceId,
   UpdateSkillCommand,
+  UpdateSkillFileFromUICommand,
+  UpdateSkillFileFromUIResponse,
   UploadSkillCommand,
   UserId,
   UploadSkillResponse,
@@ -53,6 +55,7 @@ import { ListSkillsBySpaceUseCase } from '../useCases/listSkillsBySpace/ListSkil
 import { ListSkillVersionsUseCase } from '../useCases/listSkillVersions/ListSkillVersionsUseCase';
 import { SaveSkillVersionUseCase } from '../useCases/saveSkillVersion/SaveSkillVersionUseCase';
 import { UpdateSkillUseCase } from '../useCases/updateSkill/UpdateSkillUseCase';
+import { UpdateSkillFileFromUIUseCase } from '../useCases/updateSkillFileFromUI/UpdateSkillFileFromUIUseCase';
 import { UploadSkillUseCase } from '../useCases/uploadSkill/UploadSkillUseCase';
 
 const origin = 'SkillsAdapter';
@@ -76,6 +79,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   private _getLatestSkillVersion!: GetLatestSkillVersionUseCase;
   private _listSkillVersions!: ListSkillVersionsUseCase;
   private _saveSkillVersion!: SaveSkillVersionUseCase;
+  private _updateSkillFileFromUI!: UpdateSkillFileFromUIUseCase;
 
   constructor(
     private readonly services: SkillsServices,
@@ -201,6 +205,15 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillFileService(),
     );
 
+    this._updateSkillFileFromUI = new UpdateSkillFileFromUIUseCase(
+      this.spacesPort,
+      this.accountsPort,
+      this.services.getSkillService(),
+      this.services.getSkillVersionService(),
+      this.services.getSkillFileService(),
+      this.eventEmitterService,
+    );
+
     this.logger.info('SkillsAdapter initialized successfully');
   }
 
@@ -311,6 +324,18 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._saveSkillVersion.execute(command);
+  }
+
+  async updateSkillFileFromUI(
+    command: UpdateSkillFileFromUICommand,
+  ): Promise<UpdateSkillFileFromUIResponse> {
+    this.logger.info('updateSkillFileFromUI called via port', {
+      skillId: command.skillId,
+      filePath: command.filePath,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._updateSkillFileFromUI.execute(command);
   }
 
   // ========================================================================
