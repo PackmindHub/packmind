@@ -6,8 +6,11 @@ import { expect } from '@playwright/test';
 testWithApi.describe('editing a skill file', () => {
   let skill: Skill;
 
-  testWithApi.beforeEach(async ({ packmindApi }) => {
+  testWithApi.beforeEach(async ({ packmindApi, dashboardPage }) => {
+    testWithApi.setTimeout(60_000);
+
     skill = await apiSkillFactory(packmindApi);
+    await dashboardPage.reload();
   });
 
   testWithApi(

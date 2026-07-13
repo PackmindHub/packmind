@@ -25,7 +25,28 @@ export abstract class AbstractPackmindAppPage
   }
 
   async openSkills(): Promise<ISkillsPage> {
-    await this.page.getByRole('link', { name: 'Skills' }).click();
+    // The Skills link lives under a space's nav section. On org-only
+    // routes (settings/setup/profile) no space is active, so the link is
+    // not rendered in the sidebar — open the default space drawer first
+    // to reveal it.
+    const skillsLink = this.page.getByTestId(
+      SidebarNavigationDataTestId.SkillsLink,
+    );
+
+    if (!(await skillsLink.first().isVisible())) {
+      await this.page
+        .getByTestId(SidebarNavigationDataTestId.DefaultSpaceRow)
+        .click();
+      const openDrawer = this.page.locator(
+        '[role="dialog"][data-state="open"]',
+      );
+      await openDrawer.waitFor({ state: 'visible' });
+      await openDrawer
+        .getByTestId(SidebarNavigationDataTestId.SkillsLink)
+        .click();
+    } else {
+      await skillsLink.click();
+    }
 
     return this.pageFactory.getSkillsPage();
   }

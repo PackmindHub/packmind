@@ -7,7 +7,7 @@ export async function apiSkillFactory(
 ): Promise<Skill> {
   const { spaces } = await packmindApi.listSpaces({});
   const spaceId = overrides?.spaceId ?? spaces[0].id;
-  const name = overrides?.name ?? 'Test Skill';
+  const name = overrides?.name ?? 'test-skill';
 
   const content = `---
 name: ${name}
