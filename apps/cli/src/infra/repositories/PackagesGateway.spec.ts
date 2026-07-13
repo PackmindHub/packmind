@@ -91,7 +91,7 @@ describe('PackagesGateway', () => {
           `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
           {
             method: 'POST',
-            body: { packageId, spaceId, recipeIds: ['cmd-1'] },
+            body: { packageId, spaceId, commandIds: ['cmd-1'] },
           },
         );
       });
