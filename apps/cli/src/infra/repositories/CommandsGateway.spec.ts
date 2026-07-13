@@ -135,9 +135,7 @@ describe('CommandsGateway', () => {
         const result = await gateway.list({ spaceId });
 
         expect(result).toEqual({
-          recipes: [
-            { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
-          ],
+          recipes: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
         });
       });
 
@@ -149,9 +147,7 @@ describe('CommandsGateway', () => {
         const result = await gateway.list({ spaceId });
 
         expect(result).toEqual({
-          recipes: [
-            { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
-          ],
+          recipes: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
         });
       });
     });

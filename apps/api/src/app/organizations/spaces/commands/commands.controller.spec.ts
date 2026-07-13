@@ -557,7 +557,10 @@ describe('OrganizationsSpacesRecipesController', () => {
     const orgId = createOrganizationId('org-123');
     const spaceId = createSpaceId('space-456');
     const userId = createUserId('user-1');
-    const commandIds = [createCommandId('recipe-1'), createCommandId('recipe-2')];
+    const commandIds = [
+      createCommandId('recipe-1'),
+      createCommandId('recipe-2'),
+    ];
     const request = {
       user: { userId, name: 'Test User' },
       clientSource: 'ui',
