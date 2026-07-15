@@ -75,3 +75,5 @@ videos/
 .sprite
 .env.michel
 .claude/skills/michel-*/
+
+.nx/migrate-runs
