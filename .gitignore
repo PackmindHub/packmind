@@ -16,7 +16,6 @@ dist/
 docs/
 tmp/
 apps/api/.env
-apps/mcp-server/.env
 .env
 .cache/
 
@@ -52,7 +51,6 @@ test-results/
 compose.env
 .mcp.json
 !scripts/michel/.mcp.json
-apps/mcp-server/key.pem
 
 # Git worktrees
 .worktrees/

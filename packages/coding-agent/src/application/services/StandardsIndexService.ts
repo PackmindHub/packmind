@@ -3,7 +3,7 @@ export class StandardsIndexService {
     standardVersions: Array<{
       name: string;
       slug: string;
-      summary?: string | null;
+      description?: string | null;
     }>,
   ): string {
     const sortedStandardVersions = [...standardVersions].sort((a, b) =>
@@ -29,7 +29,7 @@ This standards index contains all available coding standards that can be used by
     standardVersions: Array<{
       name: string;
       slug: string;
-      summary?: string | null;
+      description?: string | null;
     }>,
   ): string {
     if (standardVersions.length === 0) {
@@ -44,7 +44,7 @@ This standards index contains all available coding standards that can be used by
   private formatStandardEntry(standardVersion: {
     name: string;
     slug: string;
-    summary?: string | null;
+    description?: string | null;
   }): string {
     const fileName = `${standardVersion.slug}.md`;
     const relativePath = `./standards/${fileName}`;
@@ -55,13 +55,16 @@ This standards index contains all available coding standards that can be used by
 
   private getStandardDescription(standardVersion: {
     name: string;
-    summary?: string | null;
+    description?: string | null;
   }): string {
-    if (!standardVersion.summary || standardVersion.summary.trim() === '') {
+    if (
+      !standardVersion.description ||
+      standardVersion.description.trim() === ''
+    ) {
       return standardVersion.name;
     }
 
-    return standardVersion.summary.trim();
+    return standardVersion.description.trim();
   }
 
   private generateFooter(): string {

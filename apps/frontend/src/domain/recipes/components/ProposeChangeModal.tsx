@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import {
   PMAlert,
+  PMBox,
   PMButton,
-  PMButtonGroup,
   PMCloseButton,
-  PMDialog,
+  PMDrawer,
   PMField,
+  PMHStack,
   PMInput,
+  PMPortal,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
@@ -81,59 +83,70 @@ export const ProposeChangeModal = ({
   };
 
   return (
-    <PMDialog.Root
+    <PMDrawer.Root
       open={open}
       onOpenChange={handleOpenChange}
+      placement="end"
       size="md"
-      placement="center"
-      motionPreset="slide-in-bottom"
     >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content>
-          <PMDialog.Header>
-            <PMDialog.Title>Propose a name change</PMDialog.Title>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton size="sm" />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <PMVStack gap={4} align="stretch">
-              {error && (
-                <PMAlert.Root status="error">
-                  <PMAlert.Indicator />
-                  <PMAlert.Title>{error}</PMAlert.Title>
-                </PMAlert.Root>
-              )}
-              <PMField.Root>
-                <PMField.Label>Command name</PMField.Label>
-                <PMInput
-                  value={proposedName}
-                  onChange={(e) => setProposedName(e.target.value)}
-                />
-              </PMField.Root>
-            </PMVStack>
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButtonGroup size="sm">
-              <PMButton
-                variant="tertiary"
-                onClick={() => handleOpenChange({ open: false })}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                variant="primary"
-                onClick={handleSubmit}
-                loading={createChangeProposalMutation.isPending}
-                disabled={!hasChanged}
-              >
-                Submit proposal
-              </PMButton>
-            </PMButtonGroup>
-          </PMDialog.Footer>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
-    </PMDialog.Root>
+      <PMPortal>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header
+              borderBottom="1px solid"
+              borderColor="border.tertiary"
+            >
+              <PMDrawer.Title>Propose a name change</PMDrawer.Title>
+              <PMDrawer.CloseTrigger asChild>
+                <PMCloseButton size="sm" />
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
+            <PMDrawer.Body padding={5}>
+              <PMVStack gap={4} align="stretch">
+                {error && (
+                  <PMAlert.Root status="error">
+                    <PMAlert.Indicator />
+                    <PMAlert.Title>{error}</PMAlert.Title>
+                  </PMAlert.Root>
+                )}
+                <PMField.Root>
+                  <PMField.Label>Command name</PMField.Label>
+                  <PMInput
+                    value={proposedName}
+                    onChange={(e) => setProposedName(e.target.value)}
+                  />
+                </PMField.Root>
+              </PMVStack>
+            </PMDrawer.Body>
+            <PMBox
+              borderTop="1px solid"
+              borderColor="border.tertiary"
+              paddingX={5}
+              paddingY={3}
+            >
+              <PMHStack justify="space-between" align="center">
+                <PMButton
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => handleOpenChange({ open: false })}
+                >
+                  Cancel
+                </PMButton>
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSubmit}
+                  loading={createChangeProposalMutation.isPending}
+                  disabled={!hasChanged}
+                >
+                  Submit proposal
+                </PMButton>
+              </PMHStack>
+            </PMBox>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
+      </PMPortal>
+    </PMDrawer.Root>
   );
 };

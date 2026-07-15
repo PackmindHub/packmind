@@ -16,7 +16,6 @@ export { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseC
 export { GetOrganizationByIdUseCase } from './getOrganizationById/GetOrganizationByIdUseCase';
 export { GetOrganizationByNameUseCase } from './getOrganizationByName/GetOrganizationByNameUseCase';
 export { GetOrganizationBySlugUseCase } from './getOrganizationBySlug/GetOrganizationBySlugUseCase';
-export { GetOrganizationOnboardingStatusUseCase } from './getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
 export { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
 export { ListOrganizationUsersUseCase } from './listOrganizationUsers/ListOrganizationUsersUseCase';
 export { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
@@ -31,5 +30,3 @@ export { SignUpWithOrganizationUseCase } from './signUpWithOrganization/SignUpWi
 export { ValidateInvitationTokenUseCase } from './validateInvitationToken/ValidateInvitationTokenUseCase';
 export { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';
 export { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
-export { GetUserOnboardingStatusUseCase } from './getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
-export { CompleteUserOnboardingUseCase } from './completeUserOnboarding/CompleteUserOnboardingUseCase';

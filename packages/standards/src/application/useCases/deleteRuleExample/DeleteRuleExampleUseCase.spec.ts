@@ -47,7 +47,6 @@ describe('DeleteRuleExampleUseCase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
-    trial: false,
   };
   const organization: Organization = {
     id: organizationId,
@@ -100,7 +99,6 @@ describe('DeleteRuleExampleUseCase', () => {
       findByStandardId: jest.fn(),
       findLatestByStandardId: jest.fn(),
       findByStandardIdAndVersion: jest.fn(),
-      updateSummary: jest.fn(),
       add: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),

@@ -1,17 +1,9 @@
-import {
-  command,
-  restPositionals,
-  string,
-  option,
-  flag,
-  optional,
-} from 'cmd-ts';
+import { command, restPositionals, string, option, flag } from 'cmd-ts';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  formatCommand,
   logConsole,
   logErrorConsole,
   logWarningConsole,
@@ -262,15 +254,11 @@ async function installDefaultSkillsIfAtGitRoot(params: {
 export async function installHandler({
   installPath,
   packages,
-  list,
-  show,
   status,
   skipInstalledAt,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
-  list: boolean;
-  show: ParsedPackageSlug | undefined;
   status: boolean;
   skipInstalledAt: boolean;
 }): Promise<void> {
@@ -287,19 +275,6 @@ export async function installHandler({
     };
     await statusHandler({}, deps);
     return;
-  }
-
-  if (list) {
-    logErrorConsole('Command "packmind-cli install --list" has been removed.');
-    logConsole(`Use ${formatCommand('packmind-cli packages list')} instead.`);
-    process.exit(1);
-  }
-
-  if (show) {
-    const showCommand = `packmind-cli packages show ${displayableParsedPackageSlug(show)}`;
-    logErrorConsole('Command "packmind-cli install --show" has been removed.');
-    logConsole(`Use ${formatCommand(showCommand)} instead.`);
-    process.exit(1);
   }
 
   const cwd = installPath
@@ -488,15 +463,6 @@ export const installCommand = command({
       long: 'status',
       description:
         'Show status of all packmind.json files and their packages in the workspace',
-    }),
-    list: flag({
-      long: 'list',
-      description: '[Deprecated] List available packages',
-    }),
-    show: option({
-      type: optional(PackageSlugArgType),
-      long: 'show',
-      description: '[Deprecated] Show details of a specific package',
     }),
     skipInstalledAt: flag({
       long: 'skip-installed-at',

@@ -22,7 +22,6 @@ import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router';
 import { isPackmindError } from '../../../../services/api/errors/PackmindError';
-import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
@@ -359,9 +358,6 @@ export const useDeployRecipesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
       });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
-      });
     },
     onError: async (error, variables, context) => {
       console.error('Error publishing recipes to git');
@@ -405,9 +401,6 @@ export const useDeployStandardsMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: async (error, variables, context) => {
@@ -464,9 +457,6 @@ export const useDeployPackagesMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: async (error, variables, context) => {

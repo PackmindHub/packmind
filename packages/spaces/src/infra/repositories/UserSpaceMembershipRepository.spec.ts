@@ -76,7 +76,6 @@ describe('UserSpaceMembershipRepository', () => {
       email: `${uuidv4()}@test.com`,
       passwordHash: null,
       active: true,
-      trial: false,
     });
     await fixture.datasource
       .getRepository(UserOrganizationMembershipSchema)
@@ -401,7 +400,6 @@ describe('UserSpaceMembershipRepository', () => {
         displayName: overrides.displayName ?? null,
         passwordHash: null,
         active: true,
-        trial: false,
       });
       await fixture.datasource
         .getRepository(UserOrganizationMembershipSchema)

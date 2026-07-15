@@ -1,12 +1,5 @@
 import { CodingAgent, StartTrialCommandAgents } from '@packmind/types';
 
-export enum McpUnavailableReason {
-  CantUseMcp = 'cant-use-mcp',
-  DontWantMcp = 'dont-want-mcp',
-  DontKnowMcp = 'dont-know-mcp',
-  Other = 'other',
-}
-
 export type AnalyticsEventMap = {
   page_view: {
     path: string;
@@ -23,22 +16,7 @@ export type AnalyticsEventMap = {
     from: number;
     to: number;
   };
-  mcp_configuration_card_clicked: {
-    agent: string;
-  };
   cli_login_done: Record<string, never>;
-  mcp_installed: {
-    method: 'cli' | 'magic-link' | 'json' | 'install-cli';
-    agent: StartTrialCommandAgents;
-  };
-  onboarding_prompt_copied: {
-    agent: StartTrialCommandAgents;
-  };
-  mcp_unavailable_feedback: {
-    reason: McpUnavailableReason;
-    otherDetails?: string;
-    selectedAgent: StartTrialCommandAgents;
-  };
   default_skills_downloaded: {
     agent: CodingAgent;
   };
@@ -64,8 +42,7 @@ export type AnalyticsEventMap = {
       | 'installNpm'
       | 'installHomebrew'
       | 'cliInit'
-      | 'cliStartAnalysis'
-      | 'mcpStartAnalysis';
+      | 'cliStartAnalysis';
   };
 };
 

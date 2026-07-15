@@ -33,14 +33,6 @@ export default defineConfig(() => {
     };
   }
 
-  if (process.env.MCP_HOSTNAME && process.env.MCP_PORT) {
-    proxy['/mcp'] = {
-      target: `http://${process.env.MCP_HOSTNAME}:${process.env.MCP_PORT}`,
-      changeOrigin: true,
-      ws: true,
-    };
-  }
-
   return {
     root: __dirname,
     cacheDir: '../../node_modules/.vite/apps/frontend',

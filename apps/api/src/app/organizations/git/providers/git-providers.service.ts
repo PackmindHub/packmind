@@ -21,6 +21,8 @@ import {
   GitRepoId,
   IDeploymentPort,
   IGitPort,
+  ListAvailableReposCommand,
+  ListAvailableReposResponse,
   ListProvidersCommand,
   ListProvidersResponse,
   OrganizationGitHubApp,
@@ -523,9 +525,14 @@ export class GitProvidersService {
     provider: GitProvider,
     command: CompleteGithubAppInstallCommand,
   ): Promise<void> {
-    let availableRepos: Awaited<ReturnType<IGitPort['listAvailableRepos']>>;
+    let availableRepos: ListAvailableReposResponse['repositories'];
     try {
-      availableRepos = await this.gitAdapter.listAvailableRepos(provider.id);
+      const response = await this.gitAdapter.listAvailableRepos({
+        gitProviderId: provider.id,
+        userId: String(command.userId),
+        organizationId: String(command.organizationId),
+      });
+      availableRepos = response.repositories;
     } catch (error) {
       this.logger.warn(
         'Failed to list available repos after GitHub App install',
@@ -642,18 +649,10 @@ export class GitProvidersService {
     return this.gitAdapter.getOrganizationRepositories(organizationId);
   }
 
-  async listAvailableRepos(gitProviderId: GitProviderId): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
-    return this.gitAdapter.listAvailableRepos(gitProviderId);
+  async listAvailableRepos(
+    command: ListAvailableReposCommand,
+  ): Promise<ListAvailableReposResponse> {
+    return this.gitAdapter.listAvailableRepos(command);
   }
 
   async checkProviderAuth(

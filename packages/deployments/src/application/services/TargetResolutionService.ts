@@ -279,10 +279,12 @@ export class TargetResolutionService {
         // Check if token can access the repo
         // Wrap in try-catch to handle expired/invalid tokens gracefully
         try {
-          const availableRepos = await this.gitPort.listAvailableRepos(
-            provider.id,
-          );
-          const canAccess = availableRepos.some(
+          const availableRepos = await this.gitPort.listAvailableRepos({
+            gitProviderId: provider.id,
+            userId,
+            organizationId,
+          });
+          const canAccess = availableRepos.repositories.some(
             (r) =>
               r.owner.toLowerCase() === owner.toLowerCase() &&
               r.name.toLowerCase() === repo.toLowerCase(),

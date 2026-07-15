@@ -60,7 +60,6 @@ const createUserWithMembership = (
       role,
     },
   ],
-  trial: false,
 });
 
 const createSpaceMembership = (

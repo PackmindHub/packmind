@@ -81,6 +81,7 @@
         "pages": [
           "governance/distribution",
           "governance/git-repository-connection",
+          "governance/marketplaces",
           "governance/overview"
         ]
       },

@@ -528,7 +528,6 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
           spaceId: proposal.spaceId,
           name: payload.name,
           description: payload.description,
-          summary: null,
           scope: this.normalizeScope(payload.scope),
           rules: payload.rules.map((r) => ({ content: r.content })),
           ...(directUpdate !== undefined && { directUpdate }),

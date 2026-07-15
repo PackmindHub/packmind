@@ -41,14 +41,8 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
   }
 
   public static extractSummaryOrDescription(item: {
-    summary?: string | null;
     description?: string | null;
   }): string | null {
-    const summary = item.summary?.trim();
-    if (summary) {
-      return summary;
-    }
-
     const description = item.description?.trim();
     if (!description) {
       return null;

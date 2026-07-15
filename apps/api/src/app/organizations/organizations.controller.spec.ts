@@ -24,9 +24,7 @@ describe('OrganizationsController', () => {
 
   beforeEach(() => {
     const logger = stubLogger();
-    mockAccountsAdapter = {
-      getOrganizationOnboardingStatus: jest.fn(),
-    } as unknown as jest.Mocked<IAccountsPort>;
+    mockAccountsAdapter = {} as unknown as jest.Mocked<IAccountsPort>;
 
     mockDeploymentAdapter = {
       pullAllContent: jest.fn(),
@@ -68,42 +66,6 @@ describe('OrganizationsController', () => {
       const result = await controller.getOrganizationInfo(orgId);
 
       expect(result.organizationId).toBe(orgId);
-    });
-  });
-
-  describe('getOnboardingStatus', () => {
-    const orgId = createOrganizationId('org-123');
-    const mockRequest = {
-      organization: { id: orgId },
-      user: { userId: 'user-123' },
-    } as AuthenticatedRequest;
-    const mockStatus = {
-      hasConnectedGitProvider: true,
-      hasConnectedGitRepo: true,
-      hasCreatedStandard: false,
-      hasDeployed: false,
-      hasInvitedColleague: true,
-    };
-    let result: typeof mockStatus;
-
-    beforeEach(async () => {
-      mockAccountsAdapter.getOrganizationOnboardingStatus.mockResolvedValue(
-        mockStatus,
-      );
-      result = await controller.getOnboardingStatus(orgId, mockRequest);
-    });
-
-    it('returns onboarding status', () => {
-      expect(result).toEqual(mockStatus);
-    });
-
-    it('calls adapter with correct params', () => {
-      expect(
-        mockAccountsAdapter.getOrganizationOnboardingStatus,
-      ).toHaveBeenCalledWith({
-        userId: 'user-123',
-        organizationId: orgId,
-      });
     });
   });
 

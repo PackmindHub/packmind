@@ -16,17 +16,13 @@ import {
   PMAlert,
   PMTabs,
 } from '@packmind/ui';
-import { LuTerminal, LuFileCode, LuDownload } from 'react-icons/lu';
-import { CodingAgent } from '@packmind/types';
+import { LuTerminal, LuFileCode } from 'react-icons/lu';
 
 import {
   CopiableTextField,
   CopiableTextarea,
 } from '../../../shared/components/inputs';
 import { useCreateCliLoginCodeMutation } from '../../accounts/api/queries/AuthQueries';
-import { DownloadDefaultSkillsPopover } from './DownloadDefaultSkillsPopover';
-import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
-import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import {
   HOMEBREW_INSTALL_COMMAND,
   NPM_INSTALL_COMMAND,
@@ -99,12 +95,8 @@ const AccordionItemHeader: React.FC<AccordionItemHeaderProps> = ({
 
 export const SkillsLearnMoreContent: React.FC = () => {
   const loginCodeMutation = useCreateCliLoginCodeMutation();
-  const analytics = useAnalytics();
   const [selectedOs, setSelectedOs] = useState<'macos-linux' | 'windows'>(
     detectUserOs,
-  );
-  const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
-    null,
   );
 
   useEffect(() => {
@@ -117,31 +109,6 @@ export const SkillsLearnMoreContent: React.FC = () => {
   const handleRegenerateCode = useCallback(() => {
     loginCodeMutation.mutate();
   }, [loginCodeMutation]);
-
-  const handleDownloadSkillsForAgent = useCallback(
-    async (agent: CodingAgent) => {
-      setDownloadingAgent(agent);
-      analytics.track('default_skills_downloaded', { agent });
-      try {
-        const response = await fetch(`/api/v0/skills/${agent}`);
-        if (!response.ok) {
-          throw new Error(`Download failed: ${response.statusText}`);
-        }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `packmind-${agent}-default-skills.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error(`Failed to download ${agent} skills zip:`, error);
-      } finally {
-        setDownloadingAgent(null);
-      }
-    },
-    [analytics],
-  );
 
   const installCommand = useMemo(
     () =>
@@ -356,35 +323,6 @@ export const SkillsLearnMoreContent: React.FC = () => {
             <PMAccordion.ItemIndicator />
             <AccordionItemHeader
               stepNumber={2}
-              icon={LuDownload}
-              title="Get Packmind skills collection"
-              description="Bootstrap with default skills from Packmind"
-            />
-          </PMAccordion.ItemTrigger>
-          <PMAccordion.ItemContent p={6}>
-            <PMVStack align="flex-start" gap={2} width="full">
-              <DownloadDefaultSkillsContent
-                downloadingAgent={downloadingAgent}
-                onDownload={handleDownloadSkillsForAgent}
-              />
-            </PMVStack>
-          </PMAccordion.ItemContent>
-        </PMAccordion.Item>
-
-        <PMAccordion.Item
-          value="step-3"
-          backgroundColor="background.primary"
-          mt={4}
-          p={2}
-          border={'solid 1px'}
-          borderColor={'border.tertiary'}
-          borderRadius={'md'}
-          _open={{ borderColor: 'blue.500' }}
-        >
-          <PMAccordion.ItemTrigger cursor="pointer">
-            <PMAccordion.ItemIndicator />
-            <AccordionItemHeader
-              stepNumber={3}
               icon={LuFileCode}
               title="Create a skill"
               description="Ask your agent"

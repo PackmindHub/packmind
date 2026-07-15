@@ -48,7 +48,6 @@ describe('StandardBookService', () => {
             name: 'TypeScript Guidelines',
             slug: 'typescript-guidelines',
             description: 'Test standard version description',
-            summary: null,
           },
           '2023-01-01',
         ),
@@ -73,30 +72,7 @@ describe('StandardBookService', () => {
       );
     });
 
-    describe('when AI-generated summary is available', () => {
-      it('uses summary instead of description', () => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'TypeScript Guidelines',
-              slug: 'typescript-guidelines',
-              description: 'Detailed description of TypeScript guidelines',
-              summary:
-                'Enforce consistent TypeScript configuration across projects to maintain code quality when developing features.',
-            },
-            '2023-01-01',
-          ),
-        ];
-
-        const result = standardBookService.buildStandardBook(standardVersions);
-
-        expect(result).toContain(
-          '- [TypeScript Guidelines](./standards/typescript-guidelines.md) : Enforce consistent TypeScript configuration across projects to maintain code quality when developing features.',
-        );
-      });
-    });
-
-    describe('when summary is null or empty', () => {
+    describe('when description is available', () => {
       let result: string;
 
       beforeEach(() => {
@@ -106,7 +82,6 @@ describe('StandardBookService', () => {
               name: 'React Guidelines',
               slug: 'react-guidelines',
               description: 'React component best practices',
-              summary: null,
             },
             '2023-01-01',
           ),
@@ -115,7 +90,6 @@ describe('StandardBookService', () => {
               name: 'Node Guidelines',
               slug: 'node-guidelines',
               description: 'Node.js development standards',
-              summary: '',
             },
             '2023-01-02',
           ),
@@ -124,101 +98,72 @@ describe('StandardBookService', () => {
         result = standardBookService.buildStandardBook(standardVersions);
       });
 
-      describe('when summary is null', () => {
-        it('falls back to description', () => {
-          expect(result).toContain(
-            '- [React Guidelines](./standards/react-guidelines.md) : React component best practices',
-          );
-        });
-      });
-
-      describe('when summary is empty string', () => {
-        it('falls back to description', () => {
-          expect(result).toContain(
-            '- [Node Guidelines](./standards/node-guidelines.md) : Node.js development standards',
-          );
-        });
-      });
-    });
-
-    describe('when both summary and description are unavailable', () => {
-      it('falls back to standard name', () => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Empty Standard',
-              slug: 'empty-standard',
-              description: '',
-              summary: null,
-            },
-            '2023-01-01',
-          ),
-        ];
-
-        const result = standardBookService.buildStandardBook(standardVersions);
-
+      it('uses description for the first standard', () => {
         expect(result).toContain(
-          '- [Empty Standard](./standards/empty-standard.md) : Empty Standard',
+          '- [React Guidelines](./standards/react-guidelines.md) : React component best practices',
+        );
+      });
+
+      it('uses description for the second standard', () => {
+        expect(result).toContain(
+          '- [Node Guidelines](./standards/node-guidelines.md) : Node.js development standards',
         );
       });
     });
 
-    describe('when description is null or empty', () => {
-      let result: string;
+    describe('when description is unavailable', () => {
+      describe('when description is empty', () => {
+        it('falls back to standard name', () => {
+          const standardVersions: WithTimestamps<StandardVersion>[] = [
+            createStandardVersionWithTimestamp(
+              {
+                name: 'Empty Standard',
+                slug: 'empty-standard',
+                description: '',
+              },
+              '2023-01-01',
+            ),
+          ];
 
-      beforeEach(() => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Summary Only Standard',
-              slug: 'summary-only-standard',
-              description: '',
-              summary:
-                'Apply modern JavaScript patterns to ensure code maintainability and performance.',
-            },
-            '2023-01-01',
-          ),
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Another Summary Only',
-              slug: 'another-summary-only',
-              description: null as unknown as string, // Simulating null description
-              summary:
-                'Implement secure authentication flows when building user management systems.',
-            },
-            '2023-01-02',
-          ),
-        ];
+          const result =
+            standardBookService.buildStandardBook(standardVersions);
 
-        result = standardBookService.buildStandardBook(standardVersions);
-      });
-
-      describe('when description is empty string', () => {
-        it('uses summary', () => {
           expect(result).toContain(
-            '- [Summary Only Standard](./standards/summary-only-standard.md) : Apply modern JavaScript patterns to ensure code maintainability and performance.',
+            '- [Empty Standard](./standards/empty-standard.md) : Empty Standard',
           );
         });
       });
 
       describe('when description is null', () => {
-        it('uses summary', () => {
+        it('falls back to standard name', () => {
+          const standardVersions: WithTimestamps<StandardVersion>[] = [
+            createStandardVersionWithTimestamp(
+              {
+                name: 'Null Description Standard',
+                slug: 'null-description-standard',
+                description: null as unknown as string,
+              },
+              '2023-01-02',
+            ),
+          ];
+
+          const result =
+            standardBookService.buildStandardBook(standardVersions);
+
           expect(result).toContain(
-            '- [Another Summary Only](./standards/another-summary-only.md) : Implement secure authentication flows when building user management systems.',
+            '- [Null Description Standard](./standards/null-description-standard.md) : Null Description Standard',
           );
         });
       });
     });
 
-    it('handles summary with only whitespace as empty', () => {
+    it('handles description with only whitespace as empty', () => {
       const standardVersions: WithTimestamps<StandardVersion>[] = [
         createStandardVersionWithTimestamp(
           {
-            name: 'Whitespace Summary Standard',
-            slug: 'whitespace-summary-standard',
-            description:
-              'Should use this description instead of whitespace summary',
-            summary: '   \n\t   ', // Only whitespace
+            name: 'Whitespace Description Standard',
+            slug: 'whitespace-description-standard',
+            description: '   \n\t   ', // Only whitespace
           },
           '2023-01-01',
         ),
@@ -227,72 +172,8 @@ describe('StandardBookService', () => {
       const result = standardBookService.buildStandardBook(standardVersions);
 
       expect(result).toContain(
-        '- [Whitespace Summary Standard](./standards/whitespace-summary-standard.md) : Should use this description instead of whitespace summary',
+        '- [Whitespace Description Standard](./standards/whitespace-description-standard.md) : Whitespace Description Standard',
       );
-    });
-
-    describe('when mixing summary and description availability', () => {
-      let result: string;
-
-      beforeEach(() => {
-        const standardVersions: WithTimestamps<StandardVersion>[] = [
-          createStandardVersionWithTimestamp(
-            {
-              name: 'With Summary',
-              slug: 'with-summary',
-              description:
-                'This is a very detailed and long description that explains the standard in great detail with lots of technical specifications and implementation notes.',
-              summary: 'Concise AI-generated summary that should be preferred.',
-            },
-            '2023-01-20',
-          ),
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Without Summary',
-              slug: 'without-summary',
-              description:
-                'This description should be used since no summary exists.',
-              summary: null,
-            },
-            '2023-01-15',
-          ),
-          createStandardVersionWithTimestamp(
-            {
-              name: 'Empty Everything',
-              slug: 'empty-everything',
-              description: '',
-              summary: '',
-            },
-            '2023-01-10',
-          ),
-        ];
-
-        result = standardBookService.buildStandardBook(standardVersions);
-      });
-
-      describe('when summary is available', () => {
-        it('uses summary even if description is longer and more detailed', () => {
-          expect(result).toContain(
-            '- [With Summary](./standards/with-summary.md) : Concise AI-generated summary that should be preferred.',
-          );
-        });
-      });
-
-      describe('when summary is null', () => {
-        it('uses description', () => {
-          expect(result).toContain(
-            '- [Without Summary](./standards/without-summary.md) : This description should be used since no summary exists.',
-          );
-        });
-      });
-
-      describe('when both summary and description are empty', () => {
-        it('falls back to name', () => {
-          expect(result).toContain(
-            '- [Empty Everything](./standards/empty-everything.md) : Empty Everything',
-          );
-        });
-      });
     });
 
     it('generates correct markdown for multiple standard versions', () => {
@@ -301,7 +182,6 @@ describe('StandardBookService', () => {
           {
             name: 'Code Formatting Rules',
             slug: 'code-formatting-rules',
-            summary: null, // No summary, should use description
           },
           '2023-01-15',
         ),
@@ -309,7 +189,6 @@ describe('StandardBookService', () => {
           {
             name: 'Testing Guidelines',
             slug: 'testing-guidelines',
-            summary: null, // No summary, should use description
           },
           '2023-01-10',
         ),
@@ -346,7 +225,6 @@ describe('StandardBookService', () => {
             {
               name: 'Zebra Standard',
               slug: 'zebra-standard',
-              summary: null,
             },
             '2023-01-30',
           ),
@@ -354,7 +232,6 @@ describe('StandardBookService', () => {
             {
               name: 'Alpha Standard',
               slug: 'alpha-standard',
-              summary: null,
             },
             '2023-01-10',
           ),
@@ -362,7 +239,6 @@ describe('StandardBookService', () => {
             {
               name: 'Beta Standard',
               slug: 'beta-standard',
-              summary: null,
             },
             '2023-01-20',
           ),
@@ -396,7 +272,6 @@ describe('StandardBookService', () => {
             {
               name: 'C Standard',
               slug: 'c-standard',
-              summary: null,
             },
             '2023-01-15T10:00:00.000Z',
           ),
@@ -404,7 +279,6 @@ describe('StandardBookService', () => {
             {
               name: 'A Standard',
               slug: 'a-standard',
-              summary: null,
             },
             '2023-01-10T10:00:00.000Z',
           ),
@@ -412,7 +286,6 @@ describe('StandardBookService', () => {
             {
               name: 'B Standard',
               slug: 'b-standard',
-              summary: null,
             },
             '2023-01-20T10:00:00.000Z',
           ),

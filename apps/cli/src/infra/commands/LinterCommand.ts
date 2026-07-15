@@ -1,16 +1,19 @@
 import { command, flag, option, optional, positional, string } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
-import { lintHandler, LintHandlerDependencies, Loggers } from './lintHandler';
-import { logWarningConsole } from '../utils/consoleLogger';
+import {
+  lintHandler,
+  LintHandlerArgs,
+  LintHandlerDependencies,
+  Loggers,
+} from './lintHandler';
 import { Logger } from './customParameters/Logger';
 import { RuleID } from './customParameters/RuleID';
-import { DiffModeType } from './customParameters/DiffModeType';
 import { LevelType } from './customParameters/LevelType';
+import { DiffMode } from '../../domain/entities/DiffMode';
 
 export const lintCommand = command({
   name: 'lint',
@@ -57,12 +60,6 @@ export const lintCommand = command({
       description:
         'Skip linting and exit with status code 0 if PACKMIND_API_KEY_V3 is not set',
     }),
-    diff: option({
-      long: 'diff',
-      description:
-        '[Deprecated: use --changed-files or --changed-lines] Filter violations by git diff (files | lines)',
-      type: optional(DiffModeType),
-    }),
     changedFiles: flag({
       long: 'changed-files',
       description: 'Only lint files that have changed',
@@ -84,19 +81,6 @@ export const lintCommand = command({
       );
     }
 
-    if (args.diff) {
-      const replacement =
-        args.diff === DiffMode.FILES ? '--changed-files' : '--changed-lines';
-      logWarningConsole(`--diff is deprecated. Use ${replacement} instead.`);
-    }
-
-    let diff = args.diff;
-    if (args.changedFiles) {
-      diff = DiffMode.FILES;
-    } else if (args.changedLines) {
-      diff = DiffMode.LINES;
-    }
-
     const packmindLogger = new PackmindLogger(
       'PackmindCLI',
       args.debug ? LogLevel.DEBUG : LogLevel.INFO,
@@ -113,6 +97,13 @@ export const lintCommand = command({
       exit: (code: number) => process.exit(code),
     };
 
-    await lintHandler({ ...args, diff }, deps);
+    const handlerArgs: LintHandlerArgs = args;
+    if (args.changedFiles) {
+      handlerArgs.diff = DiffMode.FILES;
+    } else if (args.changedLines) {
+      handlerArgs.diff = DiffMode.LINES;
+    }
+
+    await lintHandler(handlerArgs, deps);
   },
 });

@@ -7,12 +7,7 @@ import {
   AbstractRepository,
   getErrorMessage,
 } from '@packmind/node-utils';
-import {
-  SpaceId,
-  StandardId,
-  StandardVersion,
-  StandardVersionId,
-} from '@packmind/types';
+import { SpaceId, StandardId, StandardVersion } from '@packmind/types';
 
 const origin = 'StandardVersionRepository';
 
@@ -177,20 +172,5 @@ export class StandardVersionRepository
       );
       throw error;
     }
-  }
-
-  async updateSummary(
-    standardVersionId: StandardVersionId,
-    summary: string,
-  ): Promise<number | undefined> {
-    const result = await this.repository.update(
-      {
-        id: standardVersionId,
-      },
-      {
-        summary,
-      },
-    );
-    return result.affected;
   }
 }

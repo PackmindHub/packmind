@@ -114,9 +114,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         PackmindEventEmitterService,
       );
 
-      // Set llmPort on services
-      this.recipesServices.setLlmPort(llmPort);
-
       // Initialize adapter with all dependencies
       // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({

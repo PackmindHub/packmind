@@ -38,7 +38,6 @@ const createUserWithMembership = (
       role,
     },
   ],
-  trial: false,
 });
 
 describe('TrackPluginDeletedUseCase', () => {

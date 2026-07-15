@@ -68,27 +68,6 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  mcp-server:
-    image: packmind-mcp-local
-    container_name: packmind-local-mcp
-    ports:
-      - '3011:3001'
-    environment:
-      <<: [*database-url, *redis-config]
-      ENCRYPTION_KEY: local-dev-encryption-key
-      MCP_JWT_SECRET_KEY: local-dev-mcp-jwt-secret
-      RATE_LIMIT_MAX_REQUESTS: 10000
-    networks:
-      default:
-        aliases:
-          - packmind-mcp
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    restart: unless-stopped
-
   frontend:
     image: packmind-frontend-local
     container_name: packmind-local-frontend
@@ -96,7 +75,6 @@ services:
       - '8091:8080'
     depends_on:
       - api
-      - mcp-server
     restart: unless-stopped
 
 volumes:

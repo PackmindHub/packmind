@@ -5,7 +5,6 @@ import { UserOrganizationMembershipSchema } from './UserOrganizationMembershipSc
 import { CliLoginCodeSchema } from './CliLoginCodeSchema';
 import { InvitationSchema } from './InvitationSchema';
 import { PasswordResetTokenSchema } from './PasswordResetTokenSchema';
-import { TrialActivationSchema } from './TrialActivationSchema';
 import { UserMetadataSchema } from './UserMetadataSchema';
 
 export {
@@ -15,7 +14,6 @@ export {
   CliLoginCodeSchema,
   InvitationSchema,
   PasswordResetTokenSchema,
-  TrialActivationSchema,
   UserMetadataSchema,
 };
 export const accountsSchemas = [
@@ -25,6 +23,5 @@ export const accountsSchemas = [
   CliLoginCodeSchema,
   InvitationSchema,
   PasswordResetTokenSchema,
-  TrialActivationSchema,
   UserMetadataSchema,
 ];

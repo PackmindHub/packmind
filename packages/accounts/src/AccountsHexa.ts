@@ -19,10 +19,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AccountsAdapter } from './application/adapter/AccountsAdapter';
-import {
-  ApiKeyService,
-  IJwtService,
-} from './application/services/ApiKeyService';
+import { ApiKeyService } from './application/services/ApiKeyService';
 import { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 import { AccountsRepositories } from './infra/repositories/AccountsRepositories';
 
@@ -41,7 +38,6 @@ const origin = 'AccountsHexa';
  */
 export type AccountsHexaOpts = BaseHexaOpts & {
   apiKeyService?: ApiKeyService;
-  jwtService?: IJwtService;
 };
 
 const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
@@ -64,7 +60,6 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
       this.accountsServices = new EnhancedAccountsServices(
         this.accountsRepositories,
         opts?.apiKeyService,
-        opts?.jwtService,
       );
 
       this.adapter = new AccountsAdapter(this.accountsServices);

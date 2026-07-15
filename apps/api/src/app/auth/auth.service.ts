@@ -7,11 +7,6 @@ import {
   UserId,
   createUserId,
   IAccountsPort,
-  ActivateTrialAccountCommand,
-  ActivateTrialAccountResult,
-  createTrialActivationToken,
-  GetUserOnboardingStatusResponse,
-  CompleteUserOnboardingResponse,
   SocialProvider,
   SOCIAL_PROVIDER_DISPLAY_NAMES,
   SignInSocialUserResponse,
@@ -765,72 +760,6 @@ export class AuthService {
   }
 
   /**
-   * Activates a trial account using an activation token
-   * Sets email, password, and organization name for the trial user
-   */
-  async activateTrialAccount(request: {
-    activationToken: string;
-    email: string;
-    password: string;
-    organizationName: string;
-  }): Promise<ActivateTrialAccountResult & { authToken?: string }> {
-    this.logger.log('Attempting to activate trial account', {
-      token: this.maskToken(request.activationToken),
-      email: maskEmail(request.email),
-    });
-
-    try {
-      const command: ActivateTrialAccountCommand = {
-        activationToken: createTrialActivationToken(request.activationToken),
-        email: request.email,
-        password: request.password,
-        organizationName: request.organizationName,
-      };
-
-      const result = await this.accountsAdapter.activateTrialAccount(command);
-
-      // Generate auth token for auto-login (same as signin flow)
-      let authToken: string | undefined;
-      if (result.user && result.organization) {
-        // Create JWT payload (same structure as signin)
-        const payload = {
-          user: {
-            name: result.user.email,
-            userId: result.user.id,
-          },
-          organization: {
-            id: result.organization.id,
-            name: result.organization.name,
-            slug: result.organization.slug,
-            role: 'admin' as UserOrganizationRole,
-          },
-          memberships: result.user.memberships,
-        };
-
-        authToken = this.jwtService.sign(payload);
-      }
-
-      this.logger.log('Trial account activated successfully', {
-        userId: String(result.user.id),
-        email: maskEmail(result.user.email),
-        organizationId: String(result.organization.id),
-      });
-
-      return {
-        ...result,
-        authToken,
-      };
-    } catch (error) {
-      this.logger.error('Failed to activate trial account', {
-        token: this.maskToken(request.activationToken),
-        email: maskEmail(request.email),
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
-  /**
    * Resets a user's password using a valid token and generates auth token for auto-login
    */
   async resetPassword(request: {
@@ -963,46 +892,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Gets the onboarding status for a user's organization
-   * @param userId User ID
-   * @param organizationId Organization ID
-   * @returns Onboarding status including hasDeployed flag
-   */
-  async getOnboardingStatus(
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<{ hasDeployed: boolean }> {
-    this.logger.log('Fetching onboarding status', {
-      userId,
-      organizationId,
-    });
-
-    try {
-      const status = await this.accountsAdapter.getOrganizationOnboardingStatus(
-        {
-          userId,
-          organizationId,
-        },
-      );
-
-      this.logger.log('Onboarding status fetched successfully', {
-        userId,
-        organizationId,
-        hasDeployed: status.hasDeployed,
-      });
-
-      return { hasDeployed: status.hasDeployed };
-    } catch (error) {
-      this.logger.error('Failed to fetch onboarding status', {
-        userId,
-        organizationId,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
   async updateUserDisplayName(
     req: AuthenticatedRequest,
     displayName: string | null,
@@ -1041,76 +930,5 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     return this.jwtService.verify<JwtPayload>(token);
-  }
-
-  /**
-   * Gets the user onboarding status for the authenticated user
-   * @param req Authenticated request containing user and organization info
-   * @returns User onboarding status including steps to show
-   */
-  async getUserOnboardingStatus(
-    req: AuthenticatedRequest,
-  ): Promise<GetUserOnboardingStatusResponse> {
-    this.logger.log('Getting user onboarding status', {
-      userId: req.user.userId,
-      organizationId: req.organization.id,
-    });
-
-    try {
-      const result = await this.accountsAdapter.getUserOnboardingStatus({
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      this.logger.log('User onboarding status retrieved successfully', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        showOnboarding: result.showOnboarding,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to get user onboarding status', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Marks the user onboarding as completed
-   * @param req Authenticated request containing user and organization info
-   * @returns Success status
-   */
-  async completeUserOnboarding(
-    req: AuthenticatedRequest,
-  ): Promise<CompleteUserOnboardingResponse> {
-    this.logger.log('Completing user onboarding', {
-      userId: req.user.userId,
-      organizationId: req.organization.id,
-    });
-
-    try {
-      const result = await this.accountsAdapter.completeUserOnboarding({
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      this.logger.log('User onboarding completed successfully', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to complete user onboarding', {
-        userId: req.user.userId,
-        organizationId: req.organization.id,
-        error: getErrorMessage(error),
-      });
-      throw error;
-    }
   }
 }

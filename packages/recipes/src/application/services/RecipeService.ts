@@ -301,7 +301,6 @@ export class RecipeService {
           slug: version.slug,
           content: version.content,
           version: version.version,
-          summary: version.summary,
           gitCommit: version.gitCommit,
           userId: version.userId,
         }));

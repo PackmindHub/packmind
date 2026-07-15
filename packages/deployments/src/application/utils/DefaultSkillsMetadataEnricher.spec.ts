@@ -81,22 +81,6 @@ describe('DefaultSkillsMetadataEnricher', () => {
         ).toBe(true);
       });
 
-      it('covers packmind-create-package', () => {
-        expect(
-          result.createOrUpdate.some(
-            (f) => f.artifactSlug === 'packmind-create-package',
-          ),
-        ).toBe(true);
-      });
-
-      it('covers packmind-cli-list-commands', () => {
-        expect(
-          result.createOrUpdate.some(
-            (f) => f.artifactSlug === 'packmind-cli-list-commands',
-          ),
-        ).toBe(true);
-      });
-
       it('covers packmind-update-playbook', () => {
         expect(
           result.createOrUpdate.some(

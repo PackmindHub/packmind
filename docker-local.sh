@@ -32,9 +32,6 @@ PACKMIND_EDITION=${PACKMIND_EDITION:-oss} node scripts/select-tsconfig.mjs
 echo "📦 Building frontend..."
 ./node_modules/.bin/nx build frontend --configuration=production
 
-echo "📦 Building MCP server..."
-./node_modules/.bin/nx build mcp-server --configuration=production
-
 echo "📦 Building API..."
 ./node_modules/.bin/nx build api --configuration=production
 
@@ -52,10 +49,6 @@ echo "🐳 Building Docker images..."
 # Build API image
 echo "📦 Building API Docker image..."
 docker build -f dockerfile/Dockerfile.api -t packmind-api-local .
-
-# Build MCP Server image
-echo "📦 Building MCP Server Docker image..."
-docker build -f dockerfile/Dockerfile.mcp -t packmind-mcp-local .
 
 # Build Frontend image
 echo "📦 Building Frontend Docker image..."
@@ -80,9 +73,7 @@ echo ""
 echo "📍 Service URLs:"
 echo "   Frontend: http://localhost:8091"
 echo "   API:      http://localhost:8091/api"
-echo "   MCP:      http://localhost:8091/mcp"
 echo "   API direct:      http://localhost:3010"
-echo "   MCP direct:      http://localhost:3011"
 echo "   PostgreSQL:      localhost:5442"
 echo "   Redis:           localhost:6389"
 echo ""

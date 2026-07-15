@@ -13,7 +13,7 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Directory Structure
 
-- `apps/` - Deployable applications (API, frontend, CLI, MCP server, e2e tests, docs)
+- `apps/` - Deployable applications (API, frontend, CLI, e2e tests, docs)
 - `packages/` - Reusable domain and infrastructure packages shared across apps
 - `.github/workflows/` - CI/CD pipelines for build, test, quality checks, and deployment
 

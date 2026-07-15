@@ -12,7 +12,7 @@ import {
 import { useGetDashboardKpiQuery } from '../../../deployments/api/queries/DeploymentsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { LuInfo, LuRadio } from 'react-icons/lu';
-import { NonLiveArtifactsModal, ArtifactTab } from './NonLiveArtifactsModal';
+import { NonLiveArtifactsDrawer, ArtifactTab } from './NonLiveArtifactsDrawer';
 
 export const DashboardKPI = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -283,7 +283,7 @@ export const DashboardKPI = () => {
         </PMBox>
       </PMHStack>
 
-      <NonLiveArtifactsModal
+      <NonLiveArtifactsDrawer
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         defaultTab={selectedTab}

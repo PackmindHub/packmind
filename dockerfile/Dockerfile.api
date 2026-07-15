@@ -10,7 +10,7 @@ RUN apk update && \
     apk add --no-cache \
         openssl=3.5.7-r0 \
         bash=5.3.3-r1 \
-        ca-certificates=20260413-r0 && \
+        ca-certificates=20260611-r0 && \
     rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
 
 # Use the existing node user from the base image
@@ -27,7 +27,7 @@ RUN corepack enable && corepack prepare pnpm@11.5.0 --activate && \
 USER node
 
 # Copy optimized API package.json + the workspace lockfile so transitive
-# versions are pinned for reproducible builds (mirrors the mcp-server image)
+# versions are pinned for reproducible builds
 COPY --chown=node:node apps/api/*package*.json package.json
 COPY --chown=node:node pnpm-lock.yaml ./
 RUN pnpm install --prod --ignore-scripts

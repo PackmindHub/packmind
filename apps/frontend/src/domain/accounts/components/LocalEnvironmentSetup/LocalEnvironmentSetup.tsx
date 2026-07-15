@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { PMTabs, PMVStack } from '@packmind/ui';
 import { useCliLoginCode } from './hooks';
-import { InstallCliStep, AuthenticateStep, ConnectAiStep } from './steps';
+import { InstallCliStep, AuthenticateStep } from './steps';
 
 const TabContent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <PMVStack align="flex-start" gap={4} paddingTop={4}>
@@ -35,15 +35,6 @@ export const LocalEnvironmentSetup: React.FC = () => {
         content: (
           <TabContent>
             <AuthenticateStep />
-          </TabContent>
-        ),
-      },
-      {
-        value: 'connect-ai',
-        triggerLabel: '3. Connect AI',
-        content: (
-          <TabContent>
-            <ConnectAiStep />
           </TabContent>
         ),
       },

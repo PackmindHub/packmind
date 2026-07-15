@@ -56,7 +56,7 @@ export class GetPackageSummaryUseCase
 
     const standards: SummarizedArtifact[] = pkg.standards.map((standard) => ({
       name: standard.name,
-      summary: standard.summary,
+      summary: undefined,
     }));
 
     const skills: SummarizedArtifact[] = pkg.skills.map((skill) => ({

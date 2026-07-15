@@ -51,7 +51,6 @@ import { OrganizationGitModule } from './organizations/git/git.module';
 import { OrganizationGitProvidersModule } from './organizations/git/providers/git-providers.module';
 import { OrganizationGitRepositoriesModule } from './organizations/git/repositories/git-repositories.module';
 import { OrganizationLlmModule } from './organizations/llm/llm.module';
-import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationPluginsModule } from './organizations/plugins/plugins.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
 import {
@@ -61,9 +60,7 @@ import {
 import { CliVersionLoggerMiddleware } from './shared/middleware/CliVersionLoggerMiddleware';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { PlaybookModule } from './organizations/playbook/playbook.module';
-import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
-import { TrialModule } from './trial/trial.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -132,19 +129,9 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     AmplitudeModule,
     LinterModule,
     ImportLegacyModule,
-    TrialModule,
-    PublicSkillsModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
-      {
-        path: 'quick-start',
-        module: TrialModule,
-      },
-      {
-        path: 'skills',
-        module: PublicSkillsModule,
-      },
       {
         path: 'organizations/:orgId',
         module: OrganizationsModule,
@@ -152,10 +139,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'users',
             module: OrganizationsUsersModule,
-          },
-          {
-            path: 'mcp',
-            module: OrganizationMcpModule,
           },
           {
             path: 'deployments',

@@ -1,14 +1,10 @@
 import {
-  ActivateTrialAccountCommand,
-  ActivateTrialAccountResult,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
-  CompleteUserOnboardingCommand,
-  CompleteUserOnboardingResponse,
   CreateCliLoginCodeCommand,
   CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
@@ -18,8 +14,6 @@ import {
   ExchangeCliLoginCodeResponse,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
-  GenerateTrialActivationTokenCommand,
-  GenerateTrialActivationTokenResponse,
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
   GetCurrentApiKeyCommand,
@@ -27,10 +21,7 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
-  GetOrganizationOnboardingStatusCommand,
   GetUserByIdCommand,
-  GetUserOnboardingStatusCommand,
-  GetUserOnboardingStatusResponse,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   ListOrganizationUsersCommand,
@@ -39,7 +30,6 @@ import {
   ListUserOrganizationsResponse,
   Organization,
   OrganizationId,
-  OrganizationOnboardingStatus,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
   RenameOrganizationCommand,
@@ -54,8 +44,6 @@ import {
   SignInUserResponse,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
-  StartTrialCommand,
-  StartTrialResult,
   UpdateUserDisplayNameCommand,
   UpdateUserDisplayNameResponse,
   User,
@@ -169,19 +157,6 @@ export interface IAccountsPort {
     command: ValidatePasswordResetTokenCommand,
   ): Promise<ValidatePasswordResetTokenResponse>;
 
-  // Onboarding operations
-  getOrganizationOnboardingStatus(
-    command: GetOrganizationOnboardingStatusCommand,
-  ): Promise<OrganizationOnboardingStatus>;
-
-  getUserOnboardingStatus(
-    command: GetUserOnboardingStatusCommand,
-  ): Promise<GetUserOnboardingStatusResponse>;
-
-  completeUserOnboarding(
-    command: CompleteUserOnboardingCommand,
-  ): Promise<CompleteUserOnboardingResponse>;
-
   // CLI login operations
   createCliLoginCode(
     command: CreateCliLoginCodeCommand,
@@ -190,17 +165,6 @@ export interface IAccountsPort {
   exchangeCliLoginCode(
     command: ExchangeCliLoginCodeCommand,
   ): Promise<ExchangeCliLoginCodeResponse>;
-
-  // Trial operations
-  startTrial(command: StartTrialCommand): Promise<StartTrialResult>;
-
-  generateTrialActivationToken(
-    command: GenerateTrialActivationTokenCommand,
-  ): Promise<GenerateTrialActivationTokenResponse>;
-
-  activateTrialAccount(
-    command: ActivateTrialAccountCommand,
-  ): Promise<ActivateTrialAccountResult>;
 
   // User profile operations
   updateUserDisplayName(

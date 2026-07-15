@@ -15,4 +15,3 @@ export { GetStandardVersionUseCase } from './getStandardVersion/GetStandardVersi
 export { ListStandardsBySpaceUseCase } from './listStandardsBySpace/ListStandardsBySpaceUseCase';
 export { ListStandardVersionsUseCase } from './listStandardVersions/ListStandardVersionsUseCase';
 export { UpdateStandardUseCase } from './updateStandard/UpdateStandardUseCase';
-export { UpdateStandardVersionSummaryUseCase } from './updateStandardVersionSummary/UpdateStandardVersionSummaryUseCase';
