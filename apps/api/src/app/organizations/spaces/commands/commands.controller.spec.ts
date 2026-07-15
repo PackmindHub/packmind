@@ -604,41 +604,47 @@ describe('OrganizationsSpacesRecipesController', () => {
       );
     });
 
-    it('prefers commandIds over recipeIds when both are present', async () => {
-      commandsService.deleteCommandsBatch.mockResolvedValue(undefined);
-      const recipeIds = [createCommandId('legacy-1')];
+    describe('when both commandIds and recipeIds are present', () => {
+      it('prefers commandIds over recipeIds', async () => {
+        commandsService.deleteCommandsBatch.mockResolvedValue(undefined);
+        const recipeIds = [createCommandId('legacy-1')];
 
-      await controller.deleteCommandsBatch(
-        orgId,
-        spaceId,
-        { commandIds, recipeIds },
-        request,
-      );
-
-      expect(commandsService.deleteCommandsBatch).toHaveBeenCalledWith(
-        commandIds,
-        spaceId,
-        userId,
-        orgId,
-        'ui',
-      );
-    });
-
-    it('throws BadRequestException when neither key is provided', async () => {
-      await expect(
-        controller.deleteCommandsBatch(orgId, spaceId, {}, request),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException when the array is empty', async () => {
-      await expect(
-        controller.deleteCommandsBatch(
+        await controller.deleteCommandsBatch(
           orgId,
           spaceId,
-          { commandIds: [] },
+          { commandIds, recipeIds },
           request,
-        ),
-      ).rejects.toThrow(BadRequestException);
+        );
+
+        expect(commandsService.deleteCommandsBatch).toHaveBeenCalledWith(
+          commandIds,
+          spaceId,
+          userId,
+          orgId,
+          'ui',
+        );
+      });
+    });
+
+    describe('when neither key is provided', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.deleteCommandsBatch(orgId, spaceId, {}, request),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('when the array is empty', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.deleteCommandsBatch(
+            orgId,
+            spaceId,
+            { commandIds: [] },
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
     });
   });
 

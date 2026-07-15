@@ -35,7 +35,7 @@ describe('CommandsAliasController', () => {
     expect(controller).toBeInstanceOf(OrganizationsSpacesCommandsController);
   });
 
-  it('inherits the base route handlers', async () => {
+  describe('inherits the base route handlers', () => {
     const orgId = createOrganizationId('org-123');
     const spaceId = createSpaceId('space-456');
     const userId = createUserId('user-1');
@@ -53,16 +53,24 @@ describe('CommandsAliasController', () => {
     const request = {
       user: { userId, name: 'Test User' },
     } as unknown as AuthenticatedRequest;
+    let result: Command[];
 
-    commandsService.getCommandsBySpace.mockResolvedValue(mockCommands);
+    beforeEach(async () => {
+      commandsService.getCommandsBySpace.mockResolvedValue(mockCommands);
 
-    const result = await controller.getCommands(orgId, spaceId, request);
+      result = await controller.getCommands(orgId, spaceId, request);
+    });
 
-    expect(result).toEqual(mockCommands);
-    expect(commandsService.getCommandsBySpace).toHaveBeenCalledWith(
-      spaceId,
-      orgId,
-      userId,
-    );
+    it('returns the commands from the service', () => {
+      expect(result).toEqual(mockCommands);
+    });
+
+    it('delegates to the service with the space, organization and user ids', () => {
+      expect(commandsService.getCommandsBySpace).toHaveBeenCalledWith(
+        spaceId,
+        orgId,
+        userId,
+      );
+    });
   });
 });

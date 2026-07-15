@@ -139,15 +139,21 @@ describe('CommandsGateway', () => {
         });
       });
 
-      it('falls back to the legacy `recipes` field when `commands` is absent', async () => {
-        mockHttpClient.request.mockResolvedValue({
-          recipes: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
-        });
+      describe('when `commands` is absent', () => {
+        it('falls back to the legacy `recipes` field', async () => {
+          mockHttpClient.request.mockResolvedValue({
+            recipes: [
+              { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+            ],
+          });
 
-        const result = await gateway.list({ spaceId });
+          const result = await gateway.list({ spaceId });
 
-        expect(result).toEqual({
-          recipes: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
+          expect(result).toEqual({
+            recipes: [
+              { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+            ],
+          });
         });
       });
     });
