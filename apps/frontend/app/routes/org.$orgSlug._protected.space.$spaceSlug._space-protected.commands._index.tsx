@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { PMPage, PMVStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
-import { RecipesList } from '../../src/domain/recipes/components/RecipesList';
-import { RecipesCreateButton } from '../../src/domain/recipes/components/RecipesCreateButton';
+import { CommandsList } from '../../src/domain/commands/components/CommandsList';
+import { CommandsCreateButton } from '../../src/domain/commands/components/CommandsCreateButton';
 
 export default function OrgCommandsIndex() {
   const { organization } = useAuthContext();
@@ -21,7 +21,7 @@ export default function OrgCommandsIndex() {
       actions={
         !isEmpty &&
         spaceSlug && (
-          <RecipesCreateButton
+          <CommandsCreateButton
             orgSlug={organization.slug}
             spaceSlug={spaceSlug}
           />
@@ -29,7 +29,7 @@ export default function OrgCommandsIndex() {
       }
     >
       <PMVStack align="stretch" gap={6}>
-        <RecipesList
+        <CommandsList
           key={spaceSlug}
           orgSlug={organization.slug}
           onEmptyStateChange={setIsEmpty}

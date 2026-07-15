@@ -2,7 +2,7 @@ export * from './dataSources/testDatasource';
 export * from './factories/factory';
 export * from './factories/randomIn';
 export * from './factories/git';
-export * from './factories/recipes';
+export * from './factories/commands';
 export * from './factories/standards';
 export * from './factories/deployments';
 export * from './logger/stubLogger';

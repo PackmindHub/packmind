@@ -57,15 +57,15 @@ export const DistributedPackageSchema = new EntitySchema<DistributedPackage>({
     },
     recipeVersions: {
       type: 'many-to-many',
-      target: 'RecipeVersion',
+      target: 'CommandVersion',
       joinTable: {
-        name: 'distributed_package_recipe_versions',
+        name: 'distributed_package_command_versions',
         joinColumn: {
           name: 'distributed_package_id',
           referencedColumnName: 'id',
         },
         inverseJoinColumn: {
-          name: 'recipe_version_id',
+          name: 'command_version_id',
           referencedColumnName: 'id',
         },
       },

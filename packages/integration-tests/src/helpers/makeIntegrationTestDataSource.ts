@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { accountsSchemas } from '@packmind/accounts';
-import { recipesSchemas } from '@packmind/recipes';
+import { commandsSchemas } from '@packmind/commands';
 import { standardsSchemas } from '@packmind/standards';
 import { spacesSchemas } from '@packmind/spaces';
 import { gitSchemas } from '@packmind/git';
@@ -10,7 +10,7 @@ import { skillsSchemas } from '@packmind/skills';
 
 export const integrationTestSchemas = [
   ...accountsSchemas,
-  ...recipesSchemas,
+  ...commandsSchemas,
   ...standardsSchemas,
   ...spacesSchemas,
   ...gitSchemas,

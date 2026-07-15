@@ -5,7 +5,7 @@ import {
   FileUpdates,
   GitRepo,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -34,8 +34,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     this.standardsIndexService = new StandardsIndexService();
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     _gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -150,8 +150,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for commands (Packmind)', {
       commandsCount: recipeVersions.length,
@@ -262,7 +262,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
@@ -348,12 +348,12 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -430,7 +430,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {

@@ -1,5 +1,5 @@
 import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
-import { SpaceId, RecipeId } from '@packmind/types';
+import { SpaceId, CommandId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
@@ -8,11 +8,11 @@ import {
 } from '@packmind/types';
 import {
   IGetPackageByIdUseCase,
-  IPublishRecipes,
+  IPublishCommands,
   IPublishStandards,
   IPublishPackages,
   IListDeploymentsByPackage,
-  IListDistributionsByRecipe,
+  IListDistributionsByCommand,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
@@ -29,10 +29,10 @@ import {
   IGetDashboardNonLive,
   PackageId,
   ListDeploymentsByPackageCommand,
-  ListDistributionsByRecipeCommand,
+  ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
-  PublishRecipesCommand,
+  PublishCommandsCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
   GetTargetsByOrganizationCommand,
@@ -68,14 +68,15 @@ export class DeploymentsGatewayApi
     );
   };
 
-  listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe> = async ({
-    organizationId,
-    recipeId,
-  }: NewPackmindCommandBody<ListDistributionsByRecipeCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/distributions/recipe/${recipeId}`,
-    );
-  };
+  listDistributionsByCommandId: NewGateway<IListDistributionsByCommand> =
+    async ({
+      organizationId,
+      recipeId,
+    }: NewPackmindCommandBody<ListDistributionsByCommandCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/deployments/distributions/recipe/${recipeId}`,
+      );
+    };
 
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard> =
     async ({
@@ -179,11 +180,11 @@ export class DeploymentsGatewayApi
     );
   };
 
-  publishRecipes: NewGateway<IPublishRecipes> = async ({
+  publishCommands: NewGateway<IPublishCommands> = async ({
     organizationId,
     targetIds,
     recipeVersionIds,
-  }: NewPackmindCommandBody<PublishRecipesCommand>) => {
+  }: NewPackmindCommandBody<PublishCommandsCommand>) => {
     return this._api.post(
       `${this._endpoint}/${organizationId}/deployments/recipes/publish`,
       { targetIds, recipeVersionIds },

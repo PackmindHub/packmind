@@ -1,5 +1,5 @@
 import { spaceFactory } from '@packmind/spaces/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { groupArtefactBySpaces } from './groupArtefactsBySpaces';
 
 describe('groupArtefactsBySpaces', () => {
@@ -7,9 +7,9 @@ describe('groupArtefactsBySpaces', () => {
   const spaceB = spaceFactory({ name: 'Second' });
 
   const artefacts = [
-    recipeFactory({ spaceId: spaceA.id, slug: 'command-a' }),
-    recipeFactory({ spaceId: spaceB.id, slug: 'command-b' }),
-    recipeFactory({ spaceId: spaceA.id, slug: 'command-c' }),
+    commandFactory({ spaceId: spaceA.id, slug: 'command-a' }),
+    commandFactory({ spaceId: spaceB.id, slug: 'command-b' }),
+    commandFactory({ spaceId: spaceA.id, slug: 'command-c' }),
   ];
 
   it('groups the artefacts by spaces', () => {
@@ -23,7 +23,7 @@ describe('groupArtefactsBySpaces', () => {
 
   it('excludes artefacts that do not belong to the provided spaces', () => {
     const groups = groupArtefactBySpaces(
-      [...artefacts, recipeFactory(), recipeFactory()],
+      [...artefacts, commandFactory(), commandFactory()],
       [spaceA, spaceB],
     );
 
@@ -48,7 +48,7 @@ describe('groupArtefactsBySpaces', () => {
   it('sorts the artefacts based on the slug', () => {
     const space = spaceFactory();
     const artefacts = ['c', 'a', 'b'].map((slug) =>
-      recipeFactory({ slug, spaceId: space.id }),
+      commandFactory({ slug, spaceId: space.id }),
     );
 
     const groups = groupArtefactBySpaces(artefacts, [space]);

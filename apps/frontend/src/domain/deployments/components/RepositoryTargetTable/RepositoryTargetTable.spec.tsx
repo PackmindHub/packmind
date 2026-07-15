@@ -8,7 +8,7 @@ import { AuthProvider } from '../../../../providers/AuthProvider';
 import { RepositoryTargetTable } from './RepositoryTargetTable';
 import {
   createActivePackage,
-  createDeployedRecipeTargetInfo,
+  createDeployedCommandTargetInfo,
   createDeployedStandardTargetInfo,
   packageFactory,
 } from '@packmind/deployments/test';
@@ -55,16 +55,16 @@ const target = { id: createTargetId('target-1'), name: 'Production' };
 
 describe('RepositoryTargetTable', () => {
   it('renders one pm-table per package group', () => {
-    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const commandA = createDeployedCommandTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
     const groups: ActiveDistributedPackage[] = [
       createActivePackage({
         package: packageFactory({
           name: 'alpha',
-          recipes: [recipeA.recipe.id],
+          recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [recipeA],
+        deployedRecipes: [commandA],
       }),
       createActivePackage({
         package: packageFactory({
@@ -88,16 +88,16 @@ describe('RepositoryTargetTable', () => {
   });
 
   it('renders both package names in the DOM', () => {
-    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const commandA = createDeployedCommandTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
     const groups: ActiveDistributedPackage[] = [
       createActivePackage({
         package: packageFactory({
           name: 'alpha',
-          recipes: [recipeA.recipe.id],
+          recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [recipeA],
+        deployedRecipes: [commandA],
       }),
       createActivePackage({
         package: packageFactory({
@@ -122,15 +122,17 @@ describe('RepositoryTargetTable', () => {
   });
 
   it('renders no pm-table when mode hides every artifact', () => {
-    const upToDateRecipe = createDeployedRecipeTargetInfo({ isUpToDate: true });
+    const upToDateCommand = createDeployedCommandTargetInfo({
+      isUpToDate: true,
+    });
 
     const groups: ActiveDistributedPackage[] = [
       createActivePackage({
         package: packageFactory({
           name: 'alpha',
-          recipes: [upToDateRecipe.recipe.id],
+          recipes: [upToDateCommand.recipe.id],
         }),
-        deployedRecipes: [upToDateRecipe],
+        deployedRecipes: [upToDateCommand],
       }),
     ];
 
@@ -148,16 +150,16 @@ describe('RepositoryTargetTable', () => {
   });
 
   it('renders package groups in the order provided', () => {
-    const recipeA = createDeployedRecipeTargetInfo({ isUpToDate: false });
+    const commandA = createDeployedCommandTargetInfo({ isUpToDate: false });
     const standardB = createDeployedStandardTargetInfo({ isUpToDate: false });
 
     const groups: ActiveDistributedPackage[] = [
       createActivePackage({
         package: packageFactory({
           name: 'alpha',
-          recipes: [recipeA.recipe.id],
+          recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [recipeA],
+        deployedRecipes: [commandA],
       }),
       createActivePackage({
         package: packageFactory({

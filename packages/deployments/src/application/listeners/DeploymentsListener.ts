@@ -30,7 +30,7 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
     this.logger.info('Handling RecipeDeletedEvent', { recipeId: id });
 
     try {
-      await this.adapter.removeRecipeFromAllPackages(id);
+      await this.adapter.removeCommandFromAllPackages(id);
       this.logger.info('Recipe removed from all packages successfully', {
         recipeId: id,
       });

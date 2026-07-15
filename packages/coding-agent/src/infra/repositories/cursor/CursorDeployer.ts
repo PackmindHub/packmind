@@ -9,7 +9,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillFileOutput,
   SkillVersion,
   StandardVersion,
@@ -54,8 +54,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -73,7 +73,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
-      const commandFile = this.generateCursorCommandForRecipe(recipe);
+      const commandFile = this.generateCursorCommandForCommand(recipe);
       const targetPrefixedPath = getTargetPrefixedPath(
         commandFile.path,
         target,
@@ -142,8 +142,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for recipes (Cursor)', {
       recipesCount: recipeVersions.length,
@@ -156,7 +156,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
-      const commandFile = this.generateCursorCommandForRecipe(recipe);
+      const commandFile = this.generateCursorCommandForCommand(recipe);
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
@@ -280,7 +280,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
@@ -300,7 +300,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     // Generate individual command files for each recipe
     for (const recipe of recipeVersions) {
-      const commandFile = this.generateCursorCommandForRecipe(recipe);
+      const commandFile = this.generateCursorCommandForCommand(recipe);
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
@@ -357,12 +357,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -398,8 +398,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
     }
 
     // Clean up legacy packmind commands subdirectory when recipes are removed
-    const hasRemovedRecipes = removed.recipeVersions.length > 0;
-    if (hasRemovedRecipes) {
+    const hasRemovedCommands = removed.recipeVersions.length > 0;
+    if (hasRemovedCommands) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.LEGACY_COMMANDS_PATH}/`,
         type: DeleteItemType.Directory,
@@ -428,7 +428,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {
@@ -486,7 +486,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
   /**
    * Generate Cursor command file for a specific recipe
    */
-  private generateCursorCommandForRecipe(recipe: RecipeVersion): {
+  private generateCursorCommandForCommand(recipe: CommandVersion): {
     path: string;
     content: string;
   } {

@@ -1,5 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { RecipeVersionId } from '../../recipes';
+import { CommandVersionId } from '../../commands';
 import { SkillVersionId } from '../../skills';
 import { StandardVersionId } from '../../standards';
 import { TargetId } from '../TargetId';
@@ -10,7 +10,7 @@ import { PackageId } from '../Package';
  * Command to publish recipes, standards, and skills artifacts to targets
  */
 export type PublishArtifactsCommand = PackmindCommand & {
-  recipeVersionIds: RecipeVersionId[];
+  recipeVersionIds: CommandVersionId[];
   standardVersionIds: StandardVersionId[];
   skillVersionIds?: SkillVersionId[];
   targetIds: TargetId[];

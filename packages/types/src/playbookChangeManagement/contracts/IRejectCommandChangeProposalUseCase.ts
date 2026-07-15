@@ -1,12 +1,12 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalId } from '../ChangeProposalId';
 import { SpaceId } from '../../spaces';
 
 export type RejectCommandChangeProposalCommand = PackmindCommand & {
   spaceId: SpaceId;
-  recipeId: RecipeId;
+  recipeId: CommandId;
   changeProposalId: ChangeProposalId;
 };
 

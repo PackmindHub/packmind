@@ -24,7 +24,7 @@ const createMockDeployer = (
   overrides?: Partial<ICodingAgentDeployer>,
 ): jest.Mocked<ICodingAgentDeployer> =>
   ({
-    deployRecipes: jest.fn(),
+    deployCommands: jest.fn(),
     deployStandards: jest.fn(),
     deploySkills: jest.fn(),
     generateFileUpdatesForRecipes: jest.fn(),

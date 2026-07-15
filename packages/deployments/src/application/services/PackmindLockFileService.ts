@@ -6,7 +6,7 @@ import {
   PackmindLockFileEntry,
   PackmindLockFileEntrySource,
   PackmindLockFileFile,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   resolveArtefactFromPath,
@@ -29,7 +29,7 @@ export class PackmindLockFileService {
 
   buildLockFile(params: {
     fileModifications: FileModification[];
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
     codingAgents: CodingAgent[];
@@ -198,7 +198,7 @@ export class PackmindLockFileService {
   }
 
   private buildVersionLookup(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[],
   ): Map<string, VersionInfo> {

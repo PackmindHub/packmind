@@ -6,12 +6,12 @@ import {
   ListDriftedPackagesByOrgCommand,
   ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
-  ListDistributionsByRecipeCommand,
+  ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
-  PublishRecipesCommand,
+  PublishCommandsCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
   PackagesDeployment,
@@ -60,10 +60,10 @@ export class DeploymentsService {
     return this.deploymentAdapter.listDeploymentsByPackage(command);
   }
 
-  async listDistributionsByRecipe(
-    command: ListDistributionsByRecipeCommand,
+  async listDistributionsByCommand(
+    command: ListDistributionsByCommandCommand,
   ): Promise<Distribution[]> {
-    return this.deploymentAdapter.listDistributionsByRecipe(command);
+    return this.deploymentAdapter.listDistributionsByCommand(command);
   }
 
   async listDistributionsByStandard(
@@ -78,8 +78,8 @@ export class DeploymentsService {
     return this.deploymentAdapter.listDistributionsBySkill(command);
   }
 
-  async publishRecipes(
-    command: PublishRecipesCommand,
+  async publishCommands(
+    command: PublishCommandsCommand,
   ): Promise<Distribution[]> {
     const result: PublishArtifactsResponse =
       await this.deploymentAdapter.publishArtifacts({

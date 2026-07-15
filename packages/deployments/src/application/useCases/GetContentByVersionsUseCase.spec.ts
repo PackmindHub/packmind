@@ -8,21 +8,21 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   InvalidArtifactIdError,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   Space,
   StandardVersion,
   User,
   UserOrganizationMembership,
   createOrganizationId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -58,7 +58,7 @@ describe('GetContentByVersionsUseCase', () => {
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let logger: jest.Mocked<PackmindLogger>;
@@ -93,9 +93,9 @@ describe('GetContentByVersionsUseCase', () => {
       getRulesByVersionId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
-    recipesPort = {
-      getRecipeVersion: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      getCommandVersion: jest.fn().mockResolvedValue(null),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     accountsPort = {
       getUserById: jest.fn(),
@@ -139,7 +139,7 @@ describe('GetContentByVersionsUseCase', () => {
       renderModeConfigurationService,
       skillsPort,
       standardsPort,
-      recipesPort,
+      commandsPort,
       spacesPort,
       accountsPort,
       logger,
@@ -175,12 +175,12 @@ describe('GetContentByVersionsUseCase', () => {
 
   describe('when artifacts contain mixed types', () => {
     const spaceId = createSpaceId(uuidv4());
-    const recipeId = createRecipeId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
     const standardId = createStandardId(uuidv4());
     const skillId = createSkillId(uuidv4());
 
-    const recipeVersion: RecipeVersion = {
-      id: createRecipeVersionId(uuidv4()),
+    const recipeVersion: CommandVersion = {
+      id: createCommandVersionId(uuidv4()),
       recipeId,
       name: 'test-recipe',
       slug: 'test-recipe',
@@ -238,7 +238,7 @@ describe('GetContentByVersionsUseCase', () => {
     beforeEach(() => {
       command.artifacts = artifacts;
 
-      recipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+      commandsPort.getCommandVersion.mockResolvedValue(recipeVersion);
       standardsPort.getStandardVersionByNumber.mockResolvedValue(
         standardVersion,
       );
@@ -311,7 +311,7 @@ describe('GetContentByVersionsUseCase', () => {
     it('fetches recipe version with correct id, version, and allowedSpaceIds', async () => {
       await useCase.execute(command);
 
-      expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(recipeId, 2, [
+      expect(commandsPort.getCommandVersion).toHaveBeenCalledWith(recipeId, 2, [
         orgSpaceId,
       ]);
     });
@@ -365,7 +365,7 @@ describe('GetContentByVersionsUseCase', () => {
 
   describe('when a version is not found for an artifact', () => {
     const spaceId = createSpaceId(uuidv4());
-    const recipeId = createRecipeId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
 
     beforeEach(() => {
       command.artifacts = [
@@ -378,7 +378,7 @@ describe('GetContentByVersionsUseCase', () => {
         },
       ];
 
-      recipesPort.getRecipeVersion.mockResolvedValue(null);
+      commandsPort.getCommandVersion.mockResolvedValue(null);
     });
 
     it('skips the missing artifact and returns empty results', async () => {
@@ -567,7 +567,7 @@ describe('GetContentByVersionsUseCase', () => {
       });
 
       it('does not call getRecipeVersion', () => {
-        expect(recipesPort.getRecipeVersion).not.toHaveBeenCalled();
+        expect(commandsPort.getCommandVersion).not.toHaveBeenCalled();
       });
 
       it('does not call listSpacesByOrganization', () => {

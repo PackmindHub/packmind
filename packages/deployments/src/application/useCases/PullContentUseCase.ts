@@ -11,7 +11,7 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   IPullContentResponse,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -19,7 +19,7 @@ import {
   PackageId,
   PackageWithArtefacts,
   PullContentCommand,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   SpaceId,
   StandardVersion,
@@ -49,7 +49,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly packageService: PackageService,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly codingAgentPort: ICodingAgentPort,
@@ -106,7 +106,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         );
 
       // Fetch packages and their artifacts (skip if removal-only operation)
-      let recipeVersions: RecipeVersion[] = [];
+      let recipeVersions: CommandVersion[] = [];
       let standardVersions: StandardVersion[] = [];
       let skillVersions: SkillVersion[] = [];
       let packages: PackageWithArtefacts[] = [];
@@ -138,12 +138,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
 
         // Extract recipes, standards, and skills from packages
-        const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+        const allCommands = packages.flatMap((pkg) => pkg.recipes);
         const allStandards = packages.flatMap((pkg) => pkg.standards);
         const allSkills = packages.flatMap((pkg) => pkg.skills);
 
         // Deduplicate by ID (when multiple packages share the same artifact)
-        const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+        const recipes = [
+          ...new Map(allCommands.map((r) => [r.id, r])).values(),
+        ];
         const standards = [
           ...new Map(allStandards.map((s) => [s.id, s])).values(),
         ];
@@ -167,7 +169,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           return map;
         };
 
-        const recipePackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
+        const commandPackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
         const standardPackageIdMap = buildPackageIdMap((pkg) => pkg.standards);
         const skillPackageIdMap = buildPackageIdMap((pkg) => pkg.skills);
 
@@ -178,15 +180,17 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
 
         // Get recipe versions for recipes
-        const recipeVersionsPromises = recipes.map(async (recipe) => {
-          const versions = await this.recipesPort.listRecipeVersions(recipe.id);
+        const commandVersionsPromises = recipes.map(async (recipe) => {
+          const versions = await this.commandsPort.listCommandVersions(
+            recipe.id,
+          );
           versions.sort(
-            (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+            (a: CommandVersion, b: CommandVersion) => b.version - a.version,
           );
           return versions[0];
         });
 
-        recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
+        recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
           (rv): rv is NonNullable<typeof rv> => rv !== null,
         );
 
@@ -235,7 +239,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             spaceIdMap: new Map(
               recipes.map((r) => [r.id as string, r.spaceId as string]),
             ),
-            packageIdMap: recipePackageIdMap,
+            packageIdMap: commandPackageIdMap,
             versions: recipeVersions,
           },
           standards: {
@@ -260,7 +264,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       }
 
       // Process removed packages if previousPackagesSlugs provided
-      let removedRecipeVersions: RecipeVersion[] = [];
+      let removedCommandVersions: CommandVersion[] = [];
       let removedStandardVersions: StandardVersion[] = [];
       let removedSkillVersions: SkillVersion[] = [];
 
@@ -289,12 +293,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             removedPackageSlugs,
             command.organization.id,
           );
-          removedRecipeVersions = result.recipeVersions;
+          removedCommandVersions = result.recipeVersions;
           removedStandardVersions = result.standardVersions;
           removedSkillVersions = result.skillVersions;
 
           this.logger.info('Retrieved removed artifact versions', {
-            removedRecipesCount: removedRecipeVersions.length,
+            removedRecipesCount: removedCommandVersions.length,
             removedStandardsCount: removedStandardVersions.length,
             removedSkillsCount: removedSkillVersions.length,
           });
@@ -324,8 +328,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           // Add previous artifacts from updated packages to the removed lists
           // These will be filtered later by filterSharedArtifacts to exclude
           // artifacts that are still present in the current package content
-          removedRecipeVersions = [
-            ...removedRecipeVersions,
+          removedCommandVersions = [
+            ...removedCommandVersions,
             ...previousResult.recipeVersions,
           ];
           removedStandardVersions = [
@@ -343,7 +347,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
               previousRecipesCount: previousResult.recipeVersions.length,
               previousStandardsCount: previousResult.standardVersions.length,
               previousSkillsCount: previousResult.skillVersions.length,
-              totalRemovedRecipesCount: removedRecipeVersions.length,
+              totalRemovedRecipesCount: removedCommandVersions.length,
               totalRemovedStandardsCount: removedStandardVersions.length,
               totalRemovedSkillsCount: removedSkillVersions.length,
             },
@@ -388,8 +392,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             { count: previouslyDeployed.recipeVersions.length },
           );
 
-          removedRecipeVersions = [
-            ...removedRecipeVersions,
+          removedCommandVersions = [
+            ...removedCommandVersions,
             ...previouslyDeployed.recipeVersions,
           ];
         }
@@ -440,25 +444,25 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       // Generate deletion paths for removed artifacts (excluding shared ones)
       if (
-        removedRecipeVersions.length > 0 ||
+        removedCommandVersions.length > 0 ||
         removedStandardVersions.length > 0 ||
         removedSkillVersions.length > 0
       ) {
         const filterResult = this.filterSharedArtifacts(
-          removedRecipeVersions,
+          removedCommandVersions,
           removedStandardVersions,
           removedSkillVersions,
           recipeVersions,
           standardVersions,
           skillVersions,
         );
-        const recipeVersionsToDelete = filterResult.recipeVersionsToDelete;
+        const commandVersionsToDelete = filterResult.recipeVersionsToDelete;
         const standardVersionsToDelete = filterResult.standardVersionsToDelete;
         skillVersionsToDelete = filterResult.skillVersionsToDelete; // Assign to outer scope
 
         this.logger.info('Filtered shared artifacts from deletion', {
-          originalRemovedRecipes: removedRecipeVersions.length,
-          actualRecipesToDelete: recipeVersionsToDelete.length,
+          originalRemovedRecipes: removedCommandVersions.length,
+          actualRecipesToDelete: commandVersionsToDelete.length,
           originalRemovedStandards: removedStandardVersions.length,
           actualStandardsToDelete: standardVersionsToDelete.length,
           originalRemovedSkills: removedSkillVersions.length,
@@ -466,14 +470,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
 
         if (
-          recipeVersionsToDelete.length > 0 ||
+          commandVersionsToDelete.length > 0 ||
           standardVersionsToDelete.length > 0 ||
           skillVersionsToDelete.length > 0
         ) {
           const removalFileUpdates =
             await this.codingAgentPort.generateRemovalUpdatesForAgents({
               removed: {
-                recipeVersions: recipeVersionsToDelete,
+                recipeVersions: commandVersionsToDelete,
                 standardVersions: standardVersionsToDelete,
                 skillVersions: skillVersionsToDelete,
               },
@@ -526,11 +530,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
             if (removedAgents.length > 0) {
               const [
-                activeRecipeVersions,
+                activeCommandVersions,
                 activeStandardVersions,
                 activeSkillVersions,
               ] = await Promise.all([
-                this.distributionRepository.findActiveRecipeVersionsByTarget(
+                this.distributionRepository.findActiveCommandVersionsByTarget(
                   command.organization.id,
                   target.id,
                 ),
@@ -551,7 +555,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
                   {
                     agents: removedAgents,
                     artifacts: {
-                      recipeVersions: activeRecipeVersions,
+                      recipeVersions: activeCommandVersions,
                       standardVersions: activeStandardVersions,
                       skillVersions: activeSkillVersions,
                     },
@@ -854,19 +858,19 @@ export class PullContentUseCase extends AbstractMemberUseCase<
    * file path regardless of which package it came from.
    */
   private filterSharedArtifacts(
-    removedRecipeVersions: RecipeVersion[],
+    removedCommandVersions: CommandVersion[],
     removedStandardVersions: StandardVersion[],
     removedSkillVersions: SkillVersion[],
-    remainingRecipeVersions: RecipeVersion[],
+    remainingCommandVersions: CommandVersion[],
     remainingStandardVersions: StandardVersion[],
     remainingSkillVersions: SkillVersion[],
   ): {
-    recipeVersionsToDelete: RecipeVersion[];
+    recipeVersionsToDelete: CommandVersion[];
     standardVersionsToDelete: StandardVersion[];
     skillVersionsToDelete: SkillVersion[];
   } {
-    const remainingRecipeIds = new Set(
-      remainingRecipeVersions.map((rv) => rv.recipeId),
+    const remainingCommandIds = new Set(
+      remainingCommandVersions.map((rv) => rv.recipeId),
     );
     const remainingStandardIds = new Set(
       remainingStandardVersions.map((sv) => sv.standardId),
@@ -875,8 +879,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       remainingSkillVersions.map((skv) => skv.skillId),
     );
 
-    const recipeVersionsToDelete = removedRecipeVersions.filter(
-      (rv) => !remainingRecipeIds.has(rv.recipeId),
+    const commandVersionsToDelete = removedCommandVersions.filter(
+      (rv) => !remainingCommandIds.has(rv.recipeId),
     );
     const standardVersionsToDelete = removedStandardVersions.filter(
       (sv) => !remainingStandardIds.has(sv.standardId),
@@ -886,7 +890,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     return {
-      recipeVersionsToDelete,
+      recipeVersionsToDelete: commandVersionsToDelete,
       standardVersionsToDelete,
       skillVersionsToDelete,
     };
@@ -899,7 +903,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     removedPackageSlugs: string[],
     organizationId: OrganizationId,
   ): Promise<{
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }> {
@@ -910,25 +914,25 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     // Extract recipes, standards, and skills from removed packages
-    const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+    const allCommands = packages.flatMap((pkg) => pkg.recipes);
     const allStandards = packages.flatMap((pkg) => pkg.standards);
     const allSkills = packages.flatMap((pkg) => pkg.skills);
 
     // Deduplicate by ID (when multiple packages share the same artifact)
-    const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+    const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
     const standards = [...new Map(allStandards.map((s) => [s.id, s])).values()];
     const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
     // Get recipe versions for removed recipes
-    const recipeVersionsPromises = recipes.map(async (recipe) => {
-      const versions = await this.recipesPort.listRecipeVersions(recipe.id);
+    const commandVersionsPromises = recipes.map(async (recipe) => {
+      const versions = await this.commandsPort.listCommandVersions(recipe.id);
       versions.sort(
-        (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+        (a: CommandVersion, b: CommandVersion) => b.version - a.version,
       );
       return versions[0];
     });
 
-    const recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
+    const recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
       (rv): rv is NonNullable<typeof rv> => rv !== null,
     );
 

@@ -35,7 +35,7 @@ import {
   MigrateChangeProposalsForMovedArtefactResponse,
 } from '../contracts/IMigrateChangeProposalsForMovedArtefactUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { StandardId } from '../../standards/StandardId';
 
@@ -43,7 +43,7 @@ export const IPlaybookChangeManagementPortName =
   'IPlaybookChangeManagementPort' as const;
 
 export interface IPlaybookChangeManagementPort {
-  applyChangeProposals<T extends StandardId | RecipeId | SkillId>(
+  applyChangeProposals<T extends StandardId | CommandId | SkillId>(
     command: ApplyChangeProposalsCommand<T>,
   ): Promise<ApplyChangeProposalsResponse<T>>;
 
@@ -59,7 +59,7 @@ export interface IPlaybookChangeManagementPort {
     command: ListChangeProposalsBySpaceCommand,
   ): Promise<ListChangeProposalsBySpaceResponse>;
 
-  listChangeProposalsByArtefact<T extends StandardId | RecipeId | SkillId>(
+  listChangeProposalsByArtefact<T extends StandardId | CommandId | SkillId>(
     command: ListChangeProposalsByArtefactCommand<T>,
   ): Promise<ListChangeProposalsByArtefactResponse>;
 

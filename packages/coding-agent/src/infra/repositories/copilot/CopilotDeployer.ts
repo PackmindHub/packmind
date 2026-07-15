@@ -8,7 +8,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillFileOutput,
   SkillVersion,
   StandardVersion,
@@ -48,8 +48,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -67,7 +67,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
-      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
+      const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       const targetPrefixedPath = getTargetPrefixedPath(promptFile.path, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
@@ -121,8 +121,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for recipes (GitHub Copilot)', {
       recipesCount: recipeVersions.length,
@@ -135,7 +135,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
-      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
+      const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
         path: promptFile.path,
         content: promptFile.content,
@@ -256,7 +256,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
@@ -276,7 +276,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     // Generate individual Copilot prompt files for each recipe
     for (const recipeVersion of recipeVersions) {
-      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
+      const promptFile = this.generateCopilotPromptForCommand(recipeVersion);
       fileUpdates.createOrUpdate.push({
         path: promptFile.path,
         content: promptFile.content,
@@ -327,12 +327,12 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -391,7 +391,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {
@@ -489,7 +489,7 @@ ${GenericStandardSectionWriter.formatStandardContent({
   /**
    * Generate GitHub Copilot prompt file for a specific recipe
    */
-  private generateCopilotPromptForRecipe(recipeVersion: RecipeVersion): {
+  private generateCopilotPromptForCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
   } {

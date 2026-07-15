@@ -2,7 +2,7 @@ import {
   Distribution,
   Gateway,
   IActivateUserAccountUseCase,
-  ICaptureRecipeUseCase,
+  ICaptureCommandUseCase,
   ICreateInvitationsUseCase,
   ICreatePackageUseCase,
   ICreateStandardUseCase,
@@ -14,11 +14,11 @@ import {
   IListStandardsBySpaceUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
-  IUpdateRecipeFromUIUseCase,
+  IUpdateCommandFromUIUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IUploadSkillUseCase,
   PublicGateway,
-  RecipeId,
+  CommandId,
   Space,
   SpaceType,
 } from '@packmind/types';
@@ -40,8 +40,8 @@ export interface ISpaceGateway {
 }
 
 export interface ICommandGateway {
-  create: Gateway<ICaptureRecipeUseCase>;
-  update: Gateway<IUpdateRecipeFromUIUseCase>;
+  create: Gateway<ICaptureCommandUseCase>;
+  update: Gateway<IUpdateCommandFromUIUseCase>;
 }
 
 export interface IPackageGateway {
@@ -56,8 +56,8 @@ export interface IStandardGateway {
 
 export interface IChangeProposalGateway {
   listBySpace: Gateway<IListChangeProposalsBySpace>;
-  listChangeProposalsByRecipe: Gateway<
-    IListChangeProposalsByArtefact<RecipeId>
+  listChangeProposalsByCommand: Gateway<
+    IListChangeProposalsByArtefact<CommandId>
   >;
 }
 

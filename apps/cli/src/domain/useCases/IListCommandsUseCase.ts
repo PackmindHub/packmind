@@ -1,10 +1,10 @@
-import { IPublicUseCase, Recipe, SpaceId } from '@packmind/types';
+import { IPublicUseCase, Command, SpaceId } from '@packmind/types';
 export type ListCommandsCommand = {
   spaceId?: SpaceId;
 };
 
 export type ListCommandsResult = Pick<
-  Recipe,
+  Command,
   'id' | 'slug' | 'name' | 'spaceId'
 >[];
 

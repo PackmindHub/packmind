@@ -1,12 +1,12 @@
 import { ArtifactType } from '../deployments/FileUpdates';
-import { RecipeId } from '../recipes';
+import { CommandId } from '../commands';
 import { SkillId } from '../skills';
 import { StandardId } from '../standards';
 
 export type ArtifactTypeToIdMap = {
   standard: StandardId;
   skill: SkillId;
-  command: RecipeId;
+  command: CommandId;
 };
 
 export type ArtifactReference<T extends ArtifactType = ArtifactType> = {

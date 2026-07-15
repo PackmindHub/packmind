@@ -1,5 +1,5 @@
 import { TestApp } from './TestApp';
-import { Recipe, RecipeVersion, RecipeVersionId } from '@packmind/types';
+import { Command, CommandVersion, CommandVersionId } from '@packmind/types';
 import { Standard, StandardVersion, StandardVersionId } from '@packmind/types';
 
 export class DataQuery {
@@ -30,13 +30,13 @@ export class DataQuery {
     return standardVersion.id;
   }
 
-  async getRecipeVersion(
-    recipe: Recipe,
+  async getCommandVersion(
+    recipe: Command,
     version?: number,
-  ): Promise<RecipeVersion> {
-    const recipeVersions = await this.testApp.recipesHexa
+  ): Promise<CommandVersion> {
+    const recipeVersions = await this.testApp.commandsHexa
       .getAdapter()
-      .listRecipeVersions(recipe.id);
+      .listCommandVersions(recipe.id);
     const expectedVersion = version ?? recipe.version;
 
     for (const recipeVersion of recipeVersions) {
@@ -50,11 +50,11 @@ export class DataQuery {
     );
   }
 
-  async getRecipeVersionId(
-    recipe: Recipe,
+  async getCommandVersionId(
+    recipe: Command,
     version?: number,
-  ): Promise<RecipeVersionId> {
-    const recipeVersion = await this.getRecipeVersion(recipe, version);
+  ): Promise<CommandVersionId> {
+    const recipeVersion = await this.getCommandVersion(recipe, version);
     return recipeVersion.id;
   }
 }

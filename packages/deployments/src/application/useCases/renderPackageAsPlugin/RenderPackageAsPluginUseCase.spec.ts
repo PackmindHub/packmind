@@ -4,7 +4,7 @@ import {
   Distribution,
   DistributionStatus,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -12,8 +12,8 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   PluginRenderedEvent,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   RenderMode,
   RenderPackageAsPluginCommand,
   Skill,
@@ -28,8 +28,8 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -66,7 +66,7 @@ const createUserWithMembership = (
 
 describe('RenderPackageAsPluginUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
@@ -100,21 +100,21 @@ describe('RenderPackageAsPluginUseCase', () => {
     ...overrides,
   });
 
-  const buildRecipe = (id: string, slug: string): Recipe =>
+  const buildCommandEntity = (id: string, slug: string): Command =>
     ({
-      id: createRecipeId(id),
+      id: createCommandId(id),
       name: slug,
       slug,
       spaceId: defaultSpace.id,
-    }) as Recipe;
+    }) as Command;
 
-  const buildRecipeVersion = (
+  const buildCommandVersion = (
     recipeId: string,
     slug: string,
     content: string,
-  ): RecipeVersion => ({
-    id: createRecipeVersionId(uuidv4()),
-    recipeId: createRecipeId(recipeId),
+  ): CommandVersion => ({
+    id: createCommandVersionId(uuidv4()),
+    recipeId: createCommandId(recipeId),
     name: slug,
     slug,
     content,
@@ -201,9 +201,9 @@ describe('RenderPackageAsPluginUseCase', () => {
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<PackageService>;
 
-    recipesPort = {
-      listRecipeVersions: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      listCommandVersions: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     standardsPort = {
       getLatestStandardVersion: jest.fn().mockResolvedValue(null),
@@ -241,7 +241,7 @@ describe('RenderPackageAsPluginUseCase', () => {
     distributedPackageRepository = {
       add: jest.fn().mockResolvedValue(undefined),
       addStandardVersions: jest.fn().mockResolvedValue(undefined),
-      addRecipeVersions: jest.fn().mockResolvedValue(undefined),
+      addCommandVersions: jest.fn().mockResolvedValue(undefined),
       addSkillVersions: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
@@ -251,7 +251,7 @@ describe('RenderPackageAsPluginUseCase', () => {
 
     useCase = new RenderPackageAsPluginUseCase(
       packageService,
-      recipesPort,
+      commandsPort,
       standardsPort,
       skillsPort,
       spacesPort,
@@ -312,7 +312,10 @@ describe('RenderPackageAsPluginUseCase', () => {
 
   describe('when the package has skills and commands', () => {
     beforeEach(() => {
-      const recipes = [buildRecipe('r1', 'audit'), buildRecipe('r2', 'review')];
+      const recipes = [
+        buildCommandEntity('r1', 'audit'),
+        buildCommandEntity('r2', 'review'),
+      ];
       const skills = [buildSkill('sk1', 'threat-model')];
       const standards = [
         buildStandard('s1', 'std-one'),
@@ -324,9 +327,9 @@ describe('RenderPackageAsPluginUseCase', () => {
       packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
         buildPackage({ recipes, skills, standards }),
       ]);
-      recipesPort.listRecipeVersions.mockImplementation((id) =>
+      commandsPort.listCommandVersions.mockImplementation((id) =>
         Promise.resolve([
-          buildRecipeVersion(
+          buildCommandVersion(
             id as string,
             id === recipes[0].id ? 'audit' : 'review',
             `# ${id}`,
@@ -393,12 +396,12 @@ describe('RenderPackageAsPluginUseCase', () => {
 
   describe('tracking', () => {
     let pkg: PackageWithArtefacts;
-    let recipeVersionId: ReturnType<typeof createRecipeVersionId>;
+    let recipeVersionId: ReturnType<typeof createCommandVersionId>;
     let skillVersionId: ReturnType<typeof createSkillVersionId>;
     let standardVersionId: ReturnType<typeof createStandardVersionId>;
 
     beforeEach(() => {
-      const recipes = [buildRecipe('r1', 'audit')];
+      const recipes = [buildCommandEntity('r1', 'audit')];
       const skills = [buildSkill('sk1', 'threat-model')];
       const standards = [buildStandard('s1', 'std-one')];
       pkg = buildPackage({ recipes, skills, standards });
@@ -406,9 +409,9 @@ describe('RenderPackageAsPluginUseCase', () => {
         pkg,
       ]);
 
-      const recipeVersion = buildRecipeVersion('r1', 'audit', '# audit');
+      const recipeVersion = buildCommandVersion('r1', 'audit', '# audit');
       recipeVersionId = recipeVersion.id;
-      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
 
       const skillVersion = buildSkillVersion('sk1', 'threat-model', '# tm');
       skillVersionId = skillVersion.id;
@@ -521,7 +524,7 @@ describe('RenderPackageAsPluginUseCase', () => {
 
         it('persists the recipe version ids', () => {
           expect(
-            distributedPackageRepository.addRecipeVersions,
+            distributedPackageRepository.addCommandVersions,
           ).toHaveBeenCalledWith(distributedPackageId, [recipeVersionId]);
         });
 

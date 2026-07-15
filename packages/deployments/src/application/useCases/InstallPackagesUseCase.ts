@@ -12,13 +12,13 @@ import {
   ICodingAgentPort,
   InstallPackagesCommand,
   InstallPackagesResponse,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   OrganizationId,
   PackageWithArtefacts,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   SpaceId,
   StandardVersion,
@@ -46,7 +46,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly packageService: PackageService,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly codingAgentPort: ICodingAgentPort,
@@ -97,7 +97,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     });
 
     const mergedFileUpdates: FileUpdates = { createOrUpdate: [], delete: [] };
-    let recipeVersions: RecipeVersion[] = [];
+    let recipeVersions: CommandVersion[] = [];
     let standardVersions: StandardVersion[] = [];
     let skillVersions: SkillVersion[] = [];
     let normalizedAccessibleSlugs: string[] = [];
@@ -122,11 +122,11 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
         slugs: packages.map((p) => p.slug),
       });
 
-      const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+      const allCommands = packages.flatMap((pkg) => pkg.recipes);
       const allStandards = packages.flatMap((pkg) => pkg.standards);
       const allSkills = packages.flatMap((pkg) => pkg.skills);
 
-      const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+      const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
       const standards = [
         ...new Map(allStandards.map((s) => [s.id, s])).values(),
       ];
@@ -149,19 +149,19 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
         return map;
       };
 
-      const recipePackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
+      const commandPackageIdMap = buildPackageIdMap((pkg) => pkg.recipes);
       const standardPackageIdMap = buildPackageIdMap((pkg) => pkg.standards);
       const skillPackageIdMap = buildPackageIdMap((pkg) => pkg.skills);
 
-      const recipeVersionsPromises = recipes.map(async (recipe) => {
-        const versions = await this.recipesPort.listRecipeVersions(recipe.id);
+      const commandVersionsPromises = recipes.map(async (recipe) => {
+        const versions = await this.commandsPort.listCommandVersions(recipe.id);
         versions.sort(
-          (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+          (a: CommandVersion, b: CommandVersion) => b.version - a.version,
         );
         return versions[0];
       });
 
-      recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
+      recipeVersions = (await Promise.all(commandVersionsPromises)).filter(
         (rv): rv is NonNullable<typeof rv> => rv !== null,
       );
 
@@ -193,7 +193,7 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
           spaceIdMap: new Map(
             recipes.map((r) => [r.id as string, r.spaceId as string]),
           ),
-          packageIdMap: recipePackageIdMap,
+          packageIdMap: commandPackageIdMap,
           versions: recipeVersions,
         },
         standards: {

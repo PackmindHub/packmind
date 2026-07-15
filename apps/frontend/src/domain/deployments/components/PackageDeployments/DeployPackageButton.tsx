@@ -45,7 +45,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
             <PMDialog.Context>
               {(store) => (
                 <RunDistribution
-                  selectedRecipes={[]}
+                  selectedCommands={[]}
                   selectedStandards={[]}
                   selectedPackages={selectedPackages}
                   onDistributionComplete={(deploymentResults) => {

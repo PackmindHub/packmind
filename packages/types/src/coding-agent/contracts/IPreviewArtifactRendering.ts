@@ -1,11 +1,11 @@
-import { RecipeVersion } from '../../recipes';
+import { CommandVersion } from '../../commands';
 import { SkillVersion } from '../../skills';
 import { StandardVersion } from '../../standards';
 import { CodingAgent } from '../CodingAgent';
 
 export type PreviewArtifactRenderingCommand = {
   codingAgent: CodingAgent;
-  recipeVersions: RecipeVersion[];
+  recipeVersions: CommandVersion[];
   standardVersions: StandardVersion[];
   skillVersions: SkillVersion[];
 };

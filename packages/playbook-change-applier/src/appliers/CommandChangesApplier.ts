@@ -1,9 +1,9 @@
 import {
   CommandChangeProposalApplier,
-  IRecipesPort,
+  ICommandsPort,
   OrganizationId,
-  RecipeId,
-  RecipeVersion,
+  CommandId,
+  CommandVersion,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -11,22 +11,22 @@ import { IChangesProposalApplier } from './IChangesProposalApplier';
 
 export class CommandChangesApplier
   extends CommandChangeProposalApplier
-  implements IChangesProposalApplier<RecipeVersion>
+  implements IChangesProposalApplier<CommandVersion>
 {
   constructor(
     diffService: ConstructorParameters<typeof CommandChangeProposalApplier>[0],
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
   ) {
     super(diffService);
   }
 
-  async getVersion(artefactId: string): Promise<RecipeVersion> {
-    const recipeId = artefactId as RecipeId;
-    const recipe = await this.recipesPort.getRecipeByIdInternal(recipeId);
+  async getVersion(artefactId: string): Promise<CommandVersion> {
+    const recipeId = artefactId as CommandId;
+    const recipe = await this.commandsPort.getCommandByIdInternal(recipeId);
     if (!recipe) {
       throw new Error(`Recipe not found for ${artefactId}`);
     }
-    const version = await this.recipesPort.getRecipeVersion(
+    const version = await this.commandsPort.getCommandVersion(
       recipe.id,
       recipe.version,
       [recipe.spaceId],
@@ -38,12 +38,12 @@ export class CommandChangesApplier
   }
 
   async saveNewVersion(
-    version: RecipeVersion,
+    version: CommandVersion,
     userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
-  ): Promise<RecipeVersion> {
-    const result = await this.recipesPort.updateRecipeFromUI({
+  ): Promise<CommandVersion> {
+    const result = await this.commandsPort.updateCommandFromUI({
       recipeId: version.recipeId,
       name: version.name,
       content: version.content,
@@ -51,7 +51,7 @@ export class CommandChangesApplier
       spaceId,
       organizationId,
     });
-    const newVersion = await this.recipesPort.getRecipeVersion(
+    const newVersion = await this.commandsPort.getCommandVersion(
       result.recipe.id,
       result.recipe.version,
       [result.recipe.spaceId],

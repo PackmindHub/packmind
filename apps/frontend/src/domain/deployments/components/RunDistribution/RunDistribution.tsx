@@ -16,7 +16,7 @@ import {
   PackagesDeployment,
 } from '@packmind/types';
 import { useDeployPackage } from '../../hooks';
-import { Recipe } from '@packmind/types';
+import { Command } from '@packmind/types';
 import {
   useGetRenderModeConfigurationQuery,
   useGetTargetsByOrganizationQuery,
@@ -59,7 +59,7 @@ export const useRunDistribution = () => {
 };
 
 interface RunDistributionProps {
-  selectedRecipes: Recipe[];
+  selectedCommands: Command[];
   selectedStandards: Standard[];
   selectedPackages?: Package[];
   onDistributionComplete?: (deploymentResults: PackagesDeployment[]) => void;
@@ -67,7 +67,7 @@ interface RunDistributionProps {
 }
 
 const RunDistributionComponent: React.FC<RunDistributionProps> = ({
-  selectedRecipes,
+  selectedCommands,
   selectedStandards,
   selectedPackages = [],
   onDistributionComplete,

@@ -22,7 +22,7 @@ import {
   UpdatePackageResponse,
   OrganizationId,
   PackageId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -197,7 +197,7 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: RecipeId[];
+      recipeIds: CommandId[];
       standardIds: StandardId[];
       skillIds?: SkillId[];
       originSkill?: string;
@@ -256,7 +256,7 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: RecipeId[];
+      recipeIds: CommandId[];
       standardIds: StandardId[];
       skillsIds?: SkillId[];
     },

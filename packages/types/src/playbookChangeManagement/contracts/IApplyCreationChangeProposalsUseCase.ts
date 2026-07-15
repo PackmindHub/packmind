@@ -1,4 +1,4 @@
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { PackmindCommand } from '../../UseCase';
 import { ChangeProposalId } from '../ChangeProposalId';
@@ -14,7 +14,7 @@ export type ApplyCreationChangeProposalsCommand = PackmindCommand & {
 
 export type ApplyCreationChangeProposalsResponse = {
   created: {
-    commands: RecipeId[];
+    commands: CommandId[];
     standards: StandardId[];
     skills: SkillId[];
   };

@@ -3,7 +3,7 @@ import { createMockHttpClient } from '../../mocks/createMockHttpClient';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -84,7 +84,7 @@ describe('PackagesGateway', () => {
         await gateway.addArtefacts({
           packageId,
           spaceId,
-          recipeIds: [createRecipeId('cmd-1')],
+          recipeIds: [createCommandId('cmd-1')],
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
@@ -100,7 +100,7 @@ describe('PackagesGateway', () => {
         const result = await gateway.addArtefacts({
           packageId,
           spaceId,
-          recipeIds: [createRecipeId('cmd-1')],
+          recipeIds: [createCommandId('cmd-1')],
         });
 
         expect(result.added.commands).toEqual(['cmd-1']);

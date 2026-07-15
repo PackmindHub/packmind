@@ -5,7 +5,7 @@ import {
   GitCommit,
   Package,
   PackagesDeployment,
-  Recipe,
+  Command,
   RenderMode,
   Standard,
 } from '@packmind/types';
@@ -31,8 +31,8 @@ describe('Packmind Deployment Spec', () => {
 
   let standard1: Standard;
   let standard2: Standard;
-  let recipe1: Recipe;
-  let recipe2: Recipe;
+  let command1: Command;
+  let command2: Command;
 
   let commit: GitCommit;
   let commitToGit: jest.Mock;
@@ -51,8 +51,8 @@ describe('Packmind Deployment Spec', () => {
     standard1 = await dataFactory.withStandard({ name: 'My first standard' });
     standard2 = await dataFactory.withStandard({ name: 'My second standard' });
 
-    recipe1 = await dataFactory.withRecipe({ name: 'My first recipe' });
-    recipe2 = await dataFactory.withRecipe({ name: 'My second recipe' });
+    command1 = await dataFactory.withCommand({ name: 'My first recipe' });
+    command2 = await dataFactory.withCommand({ name: 'My second recipe' });
   });
 
   afterEach(async () => {
@@ -69,7 +69,7 @@ describe('Packmind Deployment Spec', () => {
 
   async function createPackage(
     standards: Standard[],
-    recipes: Recipe[],
+    recipes: Command[],
     name: string,
   ): Promise<Package> {
     const response = await testApp.deploymentsHexa.getAdapter().createPackage({
@@ -179,7 +179,7 @@ describe('Packmind Deployment Spec', () => {
   });
 
   describe('when distributing recipes via package', () => {
-    let recipesPackage1: Package;
+    let commandsPackage1: Package;
 
     beforeEach(async () => {
       // Mock the git commit to prevent actual git operations
@@ -188,14 +188,18 @@ describe('Packmind Deployment Spec', () => {
       const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
-      recipesPackage1 = await createPackage([], [recipe1], 'Recipes Package 1');
+      commandsPackage1 = await createPackage(
+        [],
+        [command1],
+        'Recipes Package 1',
+      );
     });
 
     describe('when distributing a single package', () => {
       let result: PackagesDeployment[];
 
       beforeEach(async () => {
-        result = await distributePackage(recipesPackage1);
+        result = await distributePackage(commandsPackage1);
       });
 
       it('creates exactly one distribution', async () => {
@@ -211,13 +215,13 @@ describe('Packmind Deployment Spec', () => {
       let result: PackagesDeployment[];
 
       beforeEach(async () => {
-        await distributePackage(recipesPackage1);
-        const recipesPackage2 = await createPackage(
+        await distributePackage(commandsPackage1);
+        const commandsPackage2 = await createPackage(
           [],
-          [recipe2],
+          [command2],
           'Recipes Package 2',
         );
-        result = await distributePackage(recipesPackage2);
+        result = await distributePackage(commandsPackage2);
       });
 
       it('creates exactly one distribution', async () => {
@@ -233,18 +237,18 @@ describe('Packmind Deployment Spec', () => {
       let result: PackagesDeployment[];
 
       beforeEach(async () => {
-        await testApp.recipesHexa.getAdapter().deleteRecipe({
+        await testApp.commandsHexa.getAdapter().deleteCommand({
           ...dataFactory.packmindCommand(),
-          recipeId: recipe1.id,
-          spaceId: recipe1.spaceId,
+          recipeId: command1.id,
+          spaceId: command1.spaceId,
         });
-        await distributePackage(recipesPackage1);
-        const recipesPackage2 = await createPackage(
+        await distributePackage(commandsPackage1);
+        const commandsPackage2 = await createPackage(
           [],
-          [recipe2],
+          [command2],
           'Recipes Package 2',
         );
-        result = await distributePackage(recipesPackage2);
+        result = await distributePackage(commandsPackage2);
       });
 
       it('creates exactly one distribution', async () => {

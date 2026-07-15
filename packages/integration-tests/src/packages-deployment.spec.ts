@@ -1,6 +1,11 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import { DistributionStatus, Package, Recipe, Standard } from '@packmind/types';
+import {
+  DistributionStatus,
+  Package,
+  Command,
+  Standard,
+} from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -12,8 +17,8 @@ describe('Package deployment integration', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
-  let recipe1: Recipe;
-  let recipe2: Recipe;
+  let command1: Command;
+  let command2: Command;
   let standard1: Standard;
   let standard2: Standard;
 
@@ -27,8 +32,8 @@ describe('Package deployment integration', () => {
     await dataFactory.withUserAndOrganization();
     await dataFactory.withGitRepo();
 
-    recipe1 = await dataFactory.withRecipe({ name: 'Recipe 1' });
-    recipe2 = await dataFactory.withRecipe({ name: 'Recipe 2' });
+    command1 = await dataFactory.withCommand({ name: 'Recipe 1' });
+    command2 = await dataFactory.withCommand({ name: 'Recipe 2' });
 
     standard1 = await dataFactory.withStandard({ name: 'Standard 1' });
     standard2 = await dataFactory.withStandard({ name: 'Standard 2' });
@@ -64,7 +69,7 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Full Package',
           description: 'Package with recipes and standards',
-          recipeIds: [recipe1.id, recipe2.id],
+          recipeIds: [command1.id, command2.id],
           standardIds: [standard1.id, standard2.id],
         });
       packageWithBoth = response.package;
@@ -129,7 +134,7 @@ describe('Package deployment integration', () => {
 
       it('includes both recipes', async () => {
         expect(fetchedPackage.recipes).toEqual(
-          expect.arrayContaining([recipe1.id, recipe2.id]),
+          expect.arrayContaining([command1.id, command2.id]),
         );
       });
 
@@ -156,7 +161,7 @@ describe('Package deployment integration', () => {
 
       it('includes the package recipes', async () => {
         expect(pkg.recipes).toEqual(
-          expect.arrayContaining([recipe1.id, recipe2.id]),
+          expect.arrayContaining([command1.id, command2.id]),
         );
       });
 
@@ -169,7 +174,7 @@ describe('Package deployment integration', () => {
   });
 
   describe('Package with only recipes', () => {
-    let recipeOnlyPackage: Package;
+    let commandOnlyPackage: Package;
     let result: Awaited<
       ReturnType<
         ReturnType<typeof testApp.deploymentsHexa.getAdapter>['publishPackages']
@@ -186,14 +191,14 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Recipe Only Package',
           description: 'Package with only recipes',
-          recipeIds: [recipe1.id],
+          recipeIds: [command1.id],
           standardIds: [],
         });
-      recipeOnlyPackage = createResponse.package;
+      commandOnlyPackage = createResponse.package;
 
       result = await testApp.deploymentsHexa.getAdapter().publishPackages({
         ...dataFactory.packmindCommand(),
-        packageIds: [recipeOnlyPackage.id],
+        packageIds: [commandOnlyPackage.id],
         targetIds: [dataFactory.target.id],
       });
 
@@ -203,7 +208,7 @@ describe('Package deployment integration', () => {
           userId: dataFactory.user.id,
           organizationId: dataFactory.organization.id,
           spaceId: dataFactory.space.id,
-          packageId: recipeOnlyPackage.id,
+          packageId: commandOnlyPackage.id,
         });
       fetchedPackage = getResponse.package;
     });
@@ -298,7 +303,7 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'First Package',
           description: 'First test package',
-          recipeIds: [recipe1.id],
+          recipeIds: [command1.id],
           standardIds: [standard1.id],
         });
 
@@ -310,7 +315,7 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Second Package',
           description: 'Second test package',
-          recipeIds: [recipe2.id],
+          recipeIds: [command2.id],
           standardIds: [standard2.id],
         });
 
@@ -342,7 +347,7 @@ describe('Package deployment integration', () => {
   });
 
   describe('when a recipe in a package is deleted', () => {
-    let packageWithRecipe: Package;
+    let packageWithCommand: Package;
     let afterDeletePackage: Package;
 
     beforeEach(async () => {
@@ -354,13 +359,13 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package with recipe to delete',
           description: 'Package containing a recipe that will be deleted',
-          recipeIds: [recipe1.id, recipe2.id],
+          recipeIds: [command1.id, command2.id],
           standardIds: [standard1.id],
         });
-      packageWithRecipe = response.package;
+      packageWithCommand = response.package;
 
-      await testApp.recipesHexa.getAdapter().deleteRecipe({
-        recipeId: recipe1.id,
+      await testApp.commandsHexa.getAdapter().deleteCommand({
+        recipeId: command1.id,
         spaceId: dataFactory.space.id,
         userId: dataFactory.user.id,
         organizationId: dataFactory.organization.id,
@@ -374,7 +379,7 @@ describe('Package deployment integration', () => {
           userId: dataFactory.user.id,
           organizationId: dataFactory.organization.id,
           spaceId: dataFactory.space.id,
-          packageId: packageWithRecipe.id,
+          packageId: packageWithCommand.id,
         });
       afterDeletePackage = afterDelete.package;
     });
@@ -384,11 +389,11 @@ describe('Package deployment integration', () => {
     });
 
     it('removes the deleted recipe from the package', async () => {
-      expect(afterDeletePackage.recipes).not.toContain(recipe1.id);
+      expect(afterDeletePackage.recipes).not.toContain(command1.id);
     });
 
     it('retains the non-deleted recipe in the package', async () => {
-      expect(afterDeletePackage.recipes).toContain(recipe2.id);
+      expect(afterDeletePackage.recipes).toContain(command2.id);
     });
   });
 
@@ -405,7 +410,7 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package with standard to delete',
           description: 'Package containing a standard that will be deleted',
-          recipeIds: [recipe1.id],
+          recipeIds: [command1.id],
           standardIds: [standard1.id, standard2.id],
         });
       packageWithStandard = response.package;

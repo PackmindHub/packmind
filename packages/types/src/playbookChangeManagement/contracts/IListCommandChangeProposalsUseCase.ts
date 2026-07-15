@@ -1,5 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { ChangeProposal } from '../ChangeProposal';
 import { SpaceId } from '../../spaces';
 
@@ -9,7 +9,7 @@ export type ChangeProposalWithOutdatedStatus = ChangeProposal & {
 
 export type ListCommandChangeProposalsCommand = PackmindCommand & {
   spaceId: SpaceId;
-  recipeId: RecipeId;
+  recipeId: CommandId;
 };
 
 export type ListCommandChangeProposalsResponse = {

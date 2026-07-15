@@ -3,9 +3,9 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   FileUpdates,
   PreviewArtifactRenderingCommand,
-  RecipeVersion,
-  RecipeVersionId,
-  RecipeId,
+  CommandVersion,
+  CommandVersionId,
+  CommandId,
   StandardVersion,
   StandardVersionId,
   StandardId,
@@ -22,9 +22,9 @@ describe('PreviewArtifactRenderingUseCase', () => {
   let mockDeployerRegistry: jest.Mocked<ICodingAgentDeployerRegistry>;
   let mockRepositories: jest.Mocked<ICodingAgentRepositories>;
 
-  const recipeVersion: RecipeVersion = {
-    id: 'rv-1' as RecipeVersionId,
-    recipeId: 'rec-1' as RecipeId,
+  const recipeVersion: CommandVersion = {
+    id: 'rv-1' as CommandVersionId,
+    recipeId: 'rec-1' as CommandId,
     name: 'Test Command',
     slug: 'test-command',
     content: '# Test command content',
@@ -48,7 +48,7 @@ describe('PreviewArtifactRenderingUseCase', () => {
       generateFileUpdatesForStandards: jest.fn(),
       generateFileUpdatesForRecipes: jest.fn(),
       generateFileUpdatesForSkills: jest.fn(),
-      deployRecipes: jest.fn(),
+      deployCommands: jest.fn(),
       deployStandards: jest.fn(),
       deploySkills: jest.fn(),
       deployArtifacts: jest.fn(),

@@ -16,12 +16,12 @@ import {
 } from '@packmind/ui';
 import { Link } from 'react-router';
 import {
-  DeployedRecipeTargetInfo,
+  DeployedCommandTargetInfo,
   DeployedStandardTargetInfo,
   DeployedSkillTargetInfo,
   DistributionStatus,
   PackageId,
-  RecipeId,
+  CommandId,
   SkillId,
   StandardId,
   TargetId,
@@ -39,10 +39,10 @@ export type PackageArtifactsTableProps = {
   packageName: string;
   packageId: PackageId;
   targetId: TargetId;
-  recipes: ReadonlyArray<DeployedRecipeTargetInfo>;
+  recipes: ReadonlyArray<DeployedCommandTargetInfo>;
   standards: ReadonlyArray<DeployedStandardTargetInfo>;
   skills: ReadonlyArray<DeployedSkillTargetInfo>;
-  pendingRecipes?: ReadonlyArray<{ id: RecipeId; name: string; slug: string }>;
+  pendingRecipes?: ReadonlyArray<{ id: CommandId; name: string; slug: string }>;
   pendingStandards?: ReadonlyArray<{
     id: StandardId;
     name: string;
@@ -215,7 +215,7 @@ const standardRoute = (ctx: RouteCtx, id: StandardId) =>
     ? routes.space.toStandard(ctx.orgSlug, ctx.spaceSlug, id)
     : undefined;
 
-const commandRoute = (ctx: RouteCtx, id: RecipeId) =>
+const commandRoute = (ctx: RouteCtx, id: CommandId) =>
   ctx.orgSlug && ctx.spaceSlug
     ? routes.space.toCommand(ctx.orgSlug, ctx.spaceSlug, id)
     : undefined;

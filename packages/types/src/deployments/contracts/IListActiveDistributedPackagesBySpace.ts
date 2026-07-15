@@ -4,12 +4,12 @@ import { TargetId } from '../TargetId';
 import { Package, PackageId } from '../Package';
 import { Target } from '../Target';
 import { DistributionStatus } from '../DistributionStatus';
-import { RecipeId } from '../../recipes';
+import { CommandId } from '../../commands';
 import { StandardId } from '../../standards';
 import { SkillId } from '../../skills';
 import { DeployedStandardTargetInfo } from '../StandardDeploymentOverview';
 import { DeployedSkillTargetInfo } from '../SkillDeploymentOverview';
-import { DeployedRecipeTargetInfo } from './IGetDeploymentOverview';
+import { DeployedCommandTargetInfo } from './IGetDeploymentOverview';
 
 export type ListActiveDistributedPackagesBySpaceCommand = SpaceMemberCommand;
 
@@ -19,8 +19,8 @@ export type PackageArtifactCounts = {
   skills: number;
 };
 
-export type PendingRecipeInfo = {
-  id: RecipeId;
+export type PendingCommandInfo = {
+  id: CommandId;
   name: string;
   slug: string;
 };
@@ -42,10 +42,10 @@ export type ActiveDistributedPackage = {
   package: Package;
   lastDistributionStatus: DistributionStatus;
   lastDistributedAt: string;
-  deployedRecipes: DeployedRecipeTargetInfo[];
+  deployedRecipes: DeployedCommandTargetInfo[];
   deployedStandards: DeployedStandardTargetInfo[];
   deployedSkills: DeployedSkillTargetInfo[];
-  pendingRecipes: PendingRecipeInfo[];
+  pendingRecipes: PendingCommandInfo[];
   pendingStandards: PendingStandardInfo[];
   pendingSkills: PendingSkillInfo[];
 };

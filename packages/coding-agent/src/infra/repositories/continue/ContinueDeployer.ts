@@ -6,7 +6,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -31,8 +31,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -110,8 +110,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for recipes (Continue)', {
       recipesCount: recipeVersions.length,
@@ -192,7 +192,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
@@ -243,12 +243,12 @@ export class ContinueDeployer implements ICodingAgentDeployer {
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -275,8 +275,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     }
 
     // Delete commands folder if all recipes are removed and something was actually removed
-    const hasRemovedRecipes = removed.recipeVersions.length > 0;
-    if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
+    const hasRemovedCommands = removed.recipeVersions.length > 0;
+    if (hasRemovedCommands && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: ContinueDeployer.ARTEFACT_PATHS.command,
         type: DeleteItemType.Directory,
@@ -314,7 +314,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {
@@ -358,7 +358,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
   /**
    * Generate Continue command file for a specific recipe
    */
-  private generateContinueCommand(recipeVersion: RecipeVersion): {
+  private generateContinueCommand(recipeVersion: CommandVersion): {
     path: string;
     content: string;
   } {

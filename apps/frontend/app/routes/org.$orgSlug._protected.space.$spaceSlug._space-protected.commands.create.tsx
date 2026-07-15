@@ -1,6 +1,6 @@
 import { PMPage } from '@packmind/ui';
 import { PMVStack } from '@packmind/ui';
-import { CreateCommand } from '../../src/domain/recipes/components/CreateCommand';
+import { CreateCommand } from '../../src/domain/commands/components/CreateCommand';
 
 export default function CreateCommandRouteModule() {
   return (

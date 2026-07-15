@@ -20,7 +20,7 @@ import {
   JobsService,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
+import { CommandsHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
@@ -70,7 +70,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       AmplitudeHexa,
       LlmHexa,
       GitHexa,
-      RecipesHexa,
+      CommandsHexa,
       LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
       StandardsHexa,
       SkillsHexa,

@@ -6,14 +6,14 @@ import {
   createGitProviderId,
   StandardVersion,
   createStandardVersionId,
-  RecipeVersion,
-  createRecipeVersionId,
+  CommandVersion,
+  createCommandVersionId,
   Target,
   createTargetId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 
 describe('AgentsMDDeployer', () => {
@@ -47,16 +47,16 @@ describe('AgentsMDDeployer', () => {
 
   describe('deployRecipes', () => {
     describe('with a single recipe', () => {
-      let result: Awaited<ReturnType<AgentsMDDeployer['deployRecipes']>>;
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployCommands']>>;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -65,7 +65,7 @@ describe('AgentsMDDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.deployRecipes(
+        result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -92,10 +92,10 @@ describe('AgentsMDDeployer', () => {
     });
 
     describe('when recipe list is empty', () => {
-      let result: Awaited<ReturnType<AgentsMDDeployer['deployRecipes']>>;
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployCommands']>>;
 
       beforeEach(async () => {
-        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+        result = await deployer.deployCommands([], mockGitRepo, mockTarget);
       });
 
       it('creates one file to update', () => {

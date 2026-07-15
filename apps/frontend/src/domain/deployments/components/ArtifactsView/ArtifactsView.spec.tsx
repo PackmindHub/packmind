@@ -5,13 +5,13 @@ import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
 import { ArtifactsView } from './ArtifactsView';
 import {
-  RecipeDeploymentStatus,
+  CommandDeploymentStatus,
   StandardDeploymentStatus,
   SkillDeploymentStatus,
 } from '@packmind/types';
 
 // Provide lightweight realistic samples
-const makeRecipe = (
+const makeCommand = (
   id: string,
   name: string,
   latest: number,
@@ -22,7 +22,7 @@ const makeRecipe = (
     repo?: { owner: string; repo: string; branch?: string };
   }>,
   options?: { isDeleted?: boolean },
-): RecipeDeploymentStatus =>
+): CommandDeploymentStatus =>
   ({
     recipe: { id, name },
     latestVersion: { version: latest },
@@ -38,7 +38,7 @@ const makeRecipe = (
       },
     })),
     ...(options?.isDeleted && { isDeleted: true }),
-  }) as unknown as RecipeDeploymentStatus;
+  }) as unknown as CommandDeploymentStatus;
 
 const makeStandard = (
   id: string,
@@ -164,11 +164,11 @@ describe('ArtifactsView', () => {
   afterEach(() => jest.clearAllMocks());
   it('renders data for recipes and standards with correct sorting by target name', () => {
     const recipes = [
-      makeRecipe('r1', 'Recipe Z', 10, [
+      makeCommand('r1', 'Recipe Z', 10, [
         { name: 'Prod', distributed: 8, up: false },
         { name: 'Alpha', distributed: 10, up: true },
       ]),
-      makeRecipe('r2', 'Recipe A', 5, [
+      makeCommand('r2', 'Recipe A', 5, [
         { name: 'Beta', distributed: 5, up: true },
       ]),
     ];
@@ -210,7 +210,7 @@ describe('ArtifactsView', () => {
     expect(tables).toHaveLength(3);
 
     // Trouve la table du recipe "Recipe Z" en détectant les lignes cibles Alpha/Prod
-    const recipeZTable = tables.find((t) => {
+    const commandZTable = tables.find((t) => {
       const cells = within(t).getAllByRole('cell');
       const targetCells = cells.filter((_, idx) => idx % 4 === 1);
       const texts = targetCells
@@ -219,9 +219,9 @@ describe('ArtifactsView', () => {
         .map((n) => n.textContent);
       return texts.includes('Alpha') && texts.includes('Prod');
     });
-    expect(recipeZTable).toBeTruthy();
+    expect(commandZTable).toBeTruthy();
 
-    const cells = within(recipeZTable as HTMLElement).getAllByRole('cell');
+    const cells = within(commandZTable as HTMLElement).getAllByRole('cell');
     const targetCells = cells.filter((_, idx) => idx % 4 === 1); // name column index 1 based on TABLE_COLUMNS order
     const targetText = targetCells
       .map((c) => within(c).queryByText(/Alpha|Prod/)?.textContent)
@@ -231,7 +231,7 @@ describe('ArtifactsView', () => {
 
   it('filters rows by status mode (outdated vs up-to-date)', () => {
     const recipes = [
-      makeRecipe('r1', 'Recipe Z', 10, [
+      makeCommand('r1', 'Recipe Z', 10, [
         { name: 'Prod', distributed: 8, up: false },
         { name: 'Alpha', distributed: 10, up: true },
       ]),
@@ -318,7 +318,7 @@ describe('ArtifactsView', () => {
 
     it('renders Deleted badge for deleted recipes', () => {
       const recipes = [
-        makeRecipe(
+        makeCommand(
           'r1',
           'Deleted Recipe',
           10,
@@ -372,7 +372,7 @@ describe('ArtifactsView', () => {
 
     it('does not render navigation link for deleted recipes', () => {
       const recipes = [
-        makeRecipe(
+        makeCommand(
           'r1',
           'Deleted Recipe',
           10,

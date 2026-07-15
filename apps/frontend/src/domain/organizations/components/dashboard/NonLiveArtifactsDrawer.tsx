@@ -55,7 +55,7 @@ export const NonLiveArtifactsDrawer = ({
   );
 
   const nonLiveStandards = nonLiveData?.standards ?? [];
-  const nonLiveRecipes = nonLiveData?.recipes ?? [];
+  const nonLiveCommands = nonLiveData?.recipes ?? [];
   const nonLiveSkills = nonLiveData?.skills ?? [];
 
   const standardColumns: PMTableColumn[] = [
@@ -101,7 +101,7 @@ export const NonLiveArtifactsDrawer = ({
       ),
   }));
 
-  const commandRows: PMTableRow[] = nonLiveRecipes.map((item) => ({
+  const commandRows: PMTableRow[] = nonLiveCommands.map((item) => ({
     key: item.id,
     name:
       orgSlug && effectiveSpaceSlug ? (
@@ -158,7 +158,7 @@ export const NonLiveArtifactsDrawer = ({
     },
     {
       value: 'commands',
-      triggerLabel: `Commands (${nonLiveRecipes.length})`,
+      triggerLabel: `Commands (${nonLiveCommands.length})`,
       content: (
         <PMBox mt={4}>
           {commandRows.length === 0 ? (

@@ -12,14 +12,14 @@ import {
   FileUpdates,
   GitRepo,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   OrganizationId,
   PackageWithArtefacts,
   PluginRenderedEvent,
-  RecipeVersion,
+  CommandVersion,
   RenderMode,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginResponse,
@@ -60,7 +60,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly packageService: PackageService,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly spacesPort: ISpacesPort,
@@ -89,7 +89,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
-    const recipeVersions = await this.fetchRecipeVersions(pkg);
+    const recipeVersions = await this.fetchCommandVersions(pkg);
     const skillVersions = await this.fetchSkillVersions(pkg);
     const standardVersions = await this.fetchStandardVersions(pkg);
 
@@ -107,7 +107,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       },
       target,
     );
-    const commandsUpdate = await deployer.deployRecipes(
+    const commandsUpdate = await deployer.deployCommands(
       recipeVersions,
       gitRepo,
       target,
@@ -157,7 +157,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
   private async trackRender(params: {
     command: RenderPackageAsPluginCommand & MemberContext;
     pkg: PackageWithArtefacts;
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
     standardVersions: StandardVersion[];
   }): Promise<string | undefined> {
@@ -211,7 +211,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     userId: UserId;
     organizationId: OrganizationId;
     gitRemoteUrl: string;
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
     standardVersions: StandardVersion[];
   }): Promise<string> {
@@ -267,7 +267,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     const standardVersionIds = standardVersions.map((v) => v.id);
 
     if (recipeVersionIds.length > 0) {
-      await this.distributedPackageRepository.addRecipeVersions(
+      await this.distributedPackageRepository.addCommandVersions(
         distributedPackage.id,
         recipeVersionIds,
       );
@@ -332,21 +332,21 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     return space?.id ?? null;
   }
 
-  private async fetchRecipeVersions(
+  private async fetchCommandVersions(
     pkg: PackageWithArtefacts,
-  ): Promise<RecipeVersion[]> {
+  ): Promise<CommandVersion[]> {
     const versions = await Promise.all(
       pkg.recipes.map(async (recipe) => {
-        const recipeVersions = await this.recipesPort.listRecipeVersions(
+        const recipeVersions = await this.commandsPort.listCommandVersions(
           recipe.id,
         );
         recipeVersions.sort(
-          (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+          (a: CommandVersion, b: CommandVersion) => b.version - a.version,
         );
         return recipeVersions[0] ?? null;
       }),
     );
-    return versions.filter((v): v is RecipeVersion => v != null);
+    return versions.filter((v): v is CommandVersion => v != null);
   }
 
   private async fetchSkillVersions(

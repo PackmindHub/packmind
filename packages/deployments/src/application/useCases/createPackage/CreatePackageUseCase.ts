@@ -8,7 +8,7 @@ import {
   CreatePackageResponse,
   IAccountsPort,
   ICreatePackageUseCase,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -32,7 +32,7 @@ export class CreatePackageUseCase
     spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -103,7 +103,7 @@ export class CreatePackageUseCase
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
-          this.recipesPort.getRecipeByIdInternal(recipeId),
+          this.commandsPort.getCommandByIdInternal(recipeId),
         ),
       );
 

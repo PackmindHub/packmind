@@ -3,14 +3,14 @@ import { useListPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 import {
   OrganizationId,
   Package,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
 } from '@packmind/types';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
-type ArtifactId = StandardId | RecipeId | SkillId;
+type ArtifactId = StandardId | CommandId | SkillId;
 
 interface UsePackagesMissingAnyArtifactParams {
   artifactIds: ArtifactId[];

@@ -3,13 +3,13 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   DeleteItemType,
   FileUpdates,
-  RecipeVersion,
+  CommandVersion,
   SkillId,
   SkillVersion,
   SkillVersionId,
   StandardVersion,
-  RecipeVersionId,
-  RecipeId,
+  CommandVersionId,
+  CommandId,
   StandardVersionId,
   StandardId,
   UserId,
@@ -23,10 +23,10 @@ describe('CodingAgentServices', () => {
   let mockDeployerService: jest.Mocked<DeployerService>;
   let mockLogger: PackmindLogger;
 
-  const mockRecipeVersions: RecipeVersion[] = [
+  const mockCommandVersions: CommandVersion[] = [
     {
-      id: 'recipe-version-1' as RecipeVersionId,
-      recipeId: 'recipe-1' as RecipeId,
+      id: 'recipe-version-1' as CommandVersionId,
+      recipeId: 'recipe-1' as CommandId,
       name: 'Test Recipe',
       slug: 'test-recipe',
       content: '# Test Recipe Content',
@@ -84,7 +84,7 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -102,7 +102,7 @@ describe('CodingAgentServices', () => {
         expect(
           mockDeployerService.aggregateArtifactRendering,
         ).toHaveBeenCalledWith(
-          mockRecipeVersions,
+          mockCommandVersions,
           mockStandardVersions,
           [],
           ['claude'],
@@ -182,7 +182,7 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: [],
             skillVersions: [],
           },
@@ -200,7 +200,7 @@ describe('CodingAgentServices', () => {
         expect(
           mockDeployerService.aggregateArtifactRendering,
         ).toHaveBeenCalledWith(
-          mockRecipeVersions,
+          mockCommandVersions,
           [],
           [],
           ['claude'],
@@ -221,7 +221,7 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -265,7 +265,7 @@ describe('CodingAgentServices', () => {
 
       await service.renderArtifacts(
         {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -281,7 +281,7 @@ describe('CodingAgentServices', () => {
       expect(
         mockDeployerService.aggregateArtifactRendering,
       ).toHaveBeenCalledWith(
-        mockRecipeVersions,
+        mockCommandVersions,
         mockStandardVersions,
         [],
         ['claude', 'agents_md'],
@@ -307,7 +307,7 @@ describe('CodingAgentServices', () => {
 
       const result = await service.renderArtifacts(
         {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -333,7 +333,7 @@ describe('CodingAgentServices', () => {
       await expect(
         service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -354,9 +354,9 @@ describe('CodingAgentServices', () => {
         delete: [],
       };
 
-      const removedRecipe: RecipeVersion = {
-        id: 'recipe-version-removed' as RecipeVersionId,
-        recipeId: 'recipe-removed' as RecipeId,
+      const removedCommand: CommandVersion = {
+        id: 'recipe-version-removed' as CommandVersionId,
+        recipeId: 'recipe-removed' as CommandId,
         name: 'Removed Recipe',
         slug: 'removed-recipe',
         content: '# Removed Recipe',
@@ -391,12 +391,12 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
           {
-            recipeVersions: [removedRecipe],
+            recipeVersions: [removedCommand],
             standardVersions: [],
             skillVersions: [],
           },
@@ -414,12 +414,12 @@ describe('CodingAgentServices', () => {
       it('calls generateRemovalFileUpdates with removed recipes', () => {
         expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
           {
-            recipeVersions: [removedRecipe],
+            recipeVersions: [removedCommand],
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -478,7 +478,7 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -506,7 +506,7 @@ describe('CodingAgentServices', () => {
             skillVersions: [],
           },
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -527,9 +527,9 @@ describe('CodingAgentServices', () => {
         delete: [],
       };
 
-      const removedRecipe: RecipeVersion = {
-        id: 'recipe-version-removed' as RecipeVersionId,
-        recipeId: 'recipe-removed' as RecipeId,
+      const removedCommand: CommandVersion = {
+        id: 'recipe-version-removed' as CommandVersionId,
+        recipeId: 'recipe-removed' as CommandId,
         name: 'Removed Recipe',
         slug: 'removed-recipe',
         content: '# Removed Recipe',
@@ -562,12 +562,12 @@ describe('CodingAgentServices', () => {
 
         await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
           {
-            recipeVersions: [removedRecipe],
+            recipeVersions: [removedCommand],
             standardVersions: [],
             skillVersions: [],
           },
@@ -597,12 +597,12 @@ describe('CodingAgentServices', () => {
       it('calls generateRemovalFileUpdates with removed artifacts', () => {
         expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
           {
-            recipeVersions: [removedRecipe],
+            recipeVersions: [removedCommand],
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -625,7 +625,7 @@ describe('CodingAgentServices', () => {
 
         result = await service.renderArtifacts(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -908,7 +908,7 @@ describe('CodingAgentServices', () => {
 
           result = await service.renderArtifacts(
             {
-              recipeVersions: mockRecipeVersions,
+              recipeVersions: mockCommandVersions,
               standardVersions: mockStandardVersions,
               skillVersions: [],
             },

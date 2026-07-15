@@ -12,7 +12,7 @@
     "paths": {
       "@packmind/git": ["packages/git/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
-      "@packmind/recipes": ["packages/recipes/src/index.ts"],
+      "@packmind/commands": ["packages/commands/src/index.ts"],
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
       "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"]

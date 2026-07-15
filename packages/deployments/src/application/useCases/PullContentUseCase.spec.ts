@@ -4,7 +4,7 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -12,8 +12,8 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   PullContentCommand,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   RenderMode,
   Skill,
   SkillVersion,
@@ -25,8 +25,8 @@ import {
   UserOrganizationMembership,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -65,7 +65,7 @@ const createUserWithMembership = (
 
 describe('PullContentUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
@@ -88,9 +88,9 @@ describe('PullContentUseCase', () => {
       getPackagesBySlugsAndSpaceWithArtefacts: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    recipesPort = {
-      listRecipeVersions: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      listCommandVersions: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     standardsPort = {
       getLatestStandardVersion: jest.fn(),
@@ -174,11 +174,11 @@ describe('PullContentUseCase', () => {
       findActiveStandardVersionsByTargetAndPackages: jest
         .fn()
         .mockResolvedValue([]),
-      findActiveRecipeVersionsByTargetAndPackages: jest
+      findActiveCommandVersionsByTargetAndPackages: jest
         .fn()
         .mockResolvedValue([]),
       findActiveRenderModesByTarget: jest.fn().mockResolvedValue([]),
-      findActiveRecipeVersionsByTarget: jest.fn().mockResolvedValue([]),
+      findActiveCommandVersionsByTarget: jest.fn().mockResolvedValue([]),
       findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
       findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
@@ -240,7 +240,7 @@ describe('PullContentUseCase', () => {
 
     useCase = new PullContentUseCase(
       packageService,
-      recipesPort,
+      commandsPort,
       standardsPort,
       skillsPort,
       codingAgentPort,
@@ -263,7 +263,7 @@ describe('PullContentUseCase', () => {
       expect(() => {
         new PullContentUseCase(
           packageService,
-          recipesPort,
+          commandsPort,
           standardsPort,
           skillsPort,
           codingAgentPort,
@@ -331,7 +331,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
@@ -386,7 +386,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
@@ -427,7 +427,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
@@ -473,7 +473,7 @@ describe('PullContentUseCase', () => {
         testPackage,
       ]);
 
-      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      commandsPort.listCommandVersions.mockResolvedValue([]);
       standardsPort.getLatestStandardVersion.mockResolvedValue(null);
 
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
@@ -538,7 +538,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
 
@@ -744,7 +744,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
@@ -828,7 +828,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
@@ -881,12 +881,12 @@ describe('PullContentUseCase', () => {
       });
 
       describe('when artifacts have metadata', () => {
-        let recipe: Recipe;
-        let recipeVersion: RecipeVersion;
+        let recipe: Command;
+        let recipeVersion: CommandVersion;
 
         beforeEach(() => {
           recipe = {
-            id: createRecipeId('recipe-1'),
+            id: createCommandId('recipe-1'),
             name: 'Test Recipe',
             slug: 'test-recipe',
             content: 'recipe content',
@@ -896,7 +896,7 @@ describe('PullContentUseCase', () => {
           };
 
           recipeVersion = {
-            id: createRecipeVersionId('rv-1'),
+            id: createCommandVersionId('rv-1'),
             recipeId: recipe.id,
             name: 'Test Recipe',
             slug: 'test-recipe',
@@ -910,7 +910,7 @@ describe('PullContentUseCase', () => {
             [testPackage],
           );
 
-          recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         });
 
         it('calls buildLockFile with flattened artifact metadata', async () => {
@@ -1028,7 +1028,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
 
@@ -1271,7 +1271,7 @@ describe('PullContentUseCase', () => {
             .mockResolvedValueOnce([currentPackage])
             .mockResolvedValueOnce([previousPackage]);
 
-          recipesPort.listRecipeVersions.mockResolvedValue([]);
+          commandsPort.listCommandVersions.mockResolvedValue([]);
           standardsPort.getLatestStandardVersion.mockResolvedValue(null);
           skillsPort.getLatestSkillVersion
             .mockResolvedValueOnce(installedSkillVersion)
@@ -1382,7 +1382,7 @@ describe('PullContentUseCase', () => {
             [testPackage],
           );
 
-          recipesPort.listRecipeVersions.mockResolvedValue([]);
+          commandsPort.listCommandVersions.mockResolvedValue([]);
           standardsPort.getLatestStandardVersion.mockResolvedValue(null);
           skillsPort.getLatestSkillVersion.mockResolvedValue(
             currentSkillVersion,
@@ -1564,7 +1564,7 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        commandsPort.listCommandVersions.mockResolvedValue([]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(
           currentStandardVersion,
         );
@@ -1641,14 +1641,14 @@ describe('PullContentUseCase', () => {
 
     describe('when git info is provided for recipe distribution history lookup', () => {
       let testPackage: PackageWithArtefacts;
-      let currentRecipe: Recipe;
-      let previouslyDeployedRecipe: Recipe;
-      let currentRecipeVersion: RecipeVersion;
-      let previouslyDeployedRecipeVersion: RecipeVersion;
+      let currentCommand: Command;
+      let previouslyDeployedCommand: Command;
+      let currentCommandVersion: CommandVersion;
+      let previouslyDeployedCommandVersion: CommandVersion;
 
       beforeEach(() => {
-        currentRecipe = {
-          id: createRecipeId('current-recipe'),
+        currentCommand = {
+          id: createCommandId('current-recipe'),
           name: 'Current Recipe',
           slug: 'current-recipe',
           content: 'Current recipe content',
@@ -1657,8 +1657,8 @@ describe('PullContentUseCase', () => {
           spaceId: createSpaceId('space-1'),
         };
 
-        previouslyDeployedRecipe = {
-          id: createRecipeId('previously-deployed-recipe'),
+        previouslyDeployedCommand = {
+          id: createCommandId('previously-deployed-recipe'),
           name: 'Previously Deployed Recipe',
           slug: 'previously-deployed-recipe',
           content: 'Previously deployed recipe content',
@@ -1667,9 +1667,9 @@ describe('PullContentUseCase', () => {
           spaceId: createSpaceId('space-1'),
         };
 
-        currentRecipeVersion = {
-          id: createRecipeVersionId('current-recipe-version'),
-          recipeId: currentRecipe.id,
+        currentCommandVersion = {
+          id: createCommandVersionId('current-recipe-version'),
+          recipeId: currentCommand.id,
           name: 'Current Recipe',
           slug: 'current-recipe',
           content: 'Current recipe content',
@@ -1677,9 +1677,9 @@ describe('PullContentUseCase', () => {
           userId: null,
         };
 
-        previouslyDeployedRecipeVersion = {
-          id: createRecipeVersionId('previously-deployed-recipe-version'),
-          recipeId: previouslyDeployedRecipe.id,
+        previouslyDeployedCommandVersion = {
+          id: createCommandVersionId('previously-deployed-recipe-version'),
+          recipeId: previouslyDeployedCommand.id,
           name: 'Previously Deployed Recipe',
           slug: 'previously-deployed-recipe',
           content: 'Previously deployed recipe content',
@@ -1694,7 +1694,7 @@ describe('PullContentUseCase', () => {
           description: 'Test package description',
           spaceId: createSpaceId('space-1'),
           createdBy: createUserId('user-1'),
-          recipes: [currentRecipe],
+          recipes: [currentCommand],
           standards: [],
           skills: [],
         };
@@ -1711,8 +1711,8 @@ describe('PullContentUseCase', () => {
           [testPackage],
         );
 
-        recipesPort.listRecipeVersions.mockResolvedValue([
-          currentRecipeVersion,
+        commandsPort.listCommandVersions.mockResolvedValue([
+          currentCommandVersion,
         ]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(null);
         skillsPort.getLatestSkillVersion.mockResolvedValue(null);
@@ -1728,7 +1728,7 @@ describe('PullContentUseCase', () => {
           targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
             {
               standardVersions: [],
-              recipeVersions: [previouslyDeployedRecipeVersion],
+              recipeVersions: [previouslyDeployedCommandVersion],
               skillVersions: [],
             },
           );
@@ -1758,7 +1758,7 @@ describe('PullContentUseCase', () => {
             expect.objectContaining({
               removed: expect.objectContaining({
                 recipeVersions: expect.arrayContaining([
-                  previouslyDeployedRecipeVersion,
+                  previouslyDeployedCommandVersion,
                 ]),
               }),
             }),
@@ -1790,14 +1790,14 @@ describe('PullContentUseCase', () => {
   describe('when removing packages with shared artifacts', () => {
     let packageA: PackageWithArtefacts;
     let packageB: PackageWithArtefacts;
-    let sharedRecipe: Recipe;
-    let uniqueRecipe: Recipe;
+    let sharedCommand: Command;
+    let uniqueCommand: Command;
     let sharedStandard: Standard;
     let uniqueStandard: Standard;
     let sharedSkill: Skill;
     let uniqueSkill: Skill;
-    let sharedRecipeVersion: RecipeVersion;
-    let uniqueRecipeVersion: RecipeVersion;
+    let sharedCommandVersion: CommandVersion;
+    let uniqueCommandVersion: CommandVersion;
     let sharedStandardVersion: StandardVersion;
     let uniqueStandardVersion: StandardVersion;
     let sharedSkillVersion: SkillVersion;
@@ -1814,8 +1814,8 @@ describe('PullContentUseCase', () => {
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
 
-      sharedRecipe = {
-        id: createRecipeId('shared-recipe-id'),
+      sharedCommand = {
+        id: createCommandId('shared-recipe-id'),
         name: 'Shared Recipe',
         slug: 'shared-recipe',
         content: 'shared content',
@@ -1824,8 +1824,8 @@ describe('PullContentUseCase', () => {
         spaceId,
       };
 
-      uniqueRecipe = {
-        id: createRecipeId('unique-recipe-id'),
+      uniqueCommand = {
+        id: createCommandId('unique-recipe-id'),
         name: 'Unique Recipe',
         slug: 'unique-recipe',
         content: 'unique content',
@@ -1878,9 +1878,9 @@ describe('PullContentUseCase', () => {
         spaceId,
       };
 
-      sharedRecipeVersion = {
-        id: createRecipeVersionId('rv-shared'),
-        recipeId: sharedRecipe.id,
+      sharedCommandVersion = {
+        id: createCommandVersionId('rv-shared'),
+        recipeId: sharedCommand.id,
         name: 'Shared Recipe',
         slug: 'shared-recipe',
         content: 'shared content',
@@ -1888,9 +1888,9 @@ describe('PullContentUseCase', () => {
         userId: null,
       };
 
-      uniqueRecipeVersion = {
-        id: createRecipeVersionId('rv-unique'),
-        recipeId: uniqueRecipe.id,
+      uniqueCommandVersion = {
+        id: createCommandVersionId('rv-unique'),
+        recipeId: uniqueCommand.id,
         name: 'Unique Recipe',
         slug: 'unique-recipe',
         content: 'unique content',
@@ -1947,7 +1947,7 @@ describe('PullContentUseCase', () => {
         description: 'Package A description',
         spaceId,
         createdBy: userId,
-        recipes: [sharedRecipe, uniqueRecipe],
+        recipes: [sharedCommand, uniqueCommand],
         standards: [sharedStandard, uniqueStandard],
         skills: [sharedSkill, uniqueSkill],
       };
@@ -1959,7 +1959,7 @@ describe('PullContentUseCase', () => {
         description: 'Package B description',
         spaceId,
         createdBy: userId,
-        recipes: [sharedRecipe],
+        recipes: [sharedCommand],
         standards: [sharedStandard],
         skills: [sharedSkill],
       };
@@ -2004,12 +2004,12 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageA])
           .mockResolvedValueOnce([packageA]);
 
-        recipesPort.listRecipeVersions
-          .mockResolvedValueOnce([sharedRecipeVersion])
-          .mockResolvedValueOnce([sharedRecipeVersion])
-          .mockResolvedValueOnce([uniqueRecipeVersion])
-          .mockResolvedValueOnce([sharedRecipeVersion])
-          .mockResolvedValueOnce([uniqueRecipeVersion]);
+        commandsPort.listCommandVersions
+          .mockResolvedValueOnce([sharedCommandVersion])
+          .mockResolvedValueOnce([sharedCommandVersion])
+          .mockResolvedValueOnce([uniqueCommandVersion])
+          .mockResolvedValueOnce([sharedCommandVersion])
+          .mockResolvedValueOnce([uniqueCommandVersion]);
 
         standardsPort.getLatestStandardVersion
           .mockResolvedValueOnce(sharedStandardVersion)
@@ -2088,7 +2088,7 @@ describe('PullContentUseCase', () => {
       beforeEach(() => {
         const packageAOnlyShared: PackageWithArtefacts = {
           ...packageA,
-          recipes: [sharedRecipe],
+          recipes: [sharedCommand],
           standards: [sharedStandard],
           skills: [sharedSkill],
         };
@@ -2104,7 +2104,9 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAOnlyShared])
           .mockResolvedValueOnce([packageAOnlyShared]);
 
-        recipesPort.listRecipeVersions.mockResolvedValue([sharedRecipeVersion]);
+        commandsPort.listCommandVersions.mockResolvedValue([
+          sharedCommandVersion,
+        ]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(
           sharedStandardVersion,
         );
@@ -2130,7 +2132,7 @@ describe('PullContentUseCase', () => {
       beforeEach(() => {
         const packageAUniqueOnly: PackageWithArtefacts = {
           ...packageA,
-          recipes: [uniqueRecipe],
+          recipes: [uniqueCommand],
           standards: [uniqueStandard],
           skills: [uniqueSkill],
         };
@@ -2153,7 +2155,9 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([packageAUniqueOnly])
           .mockResolvedValueOnce([packageAUniqueOnly]);
 
-        recipesPort.listRecipeVersions.mockResolvedValue([uniqueRecipeVersion]);
+        commandsPort.listCommandVersions.mockResolvedValue([
+          uniqueCommandVersion,
+        ]);
         standardsPort.getLatestStandardVersion.mockResolvedValue(
           uniqueStandardVersion,
         );
@@ -2205,9 +2209,9 @@ describe('PullContentUseCase', () => {
           [packageA],
         );
 
-        recipesPort.listRecipeVersions
-          .mockResolvedValueOnce([sharedRecipeVersion])
-          .mockResolvedValueOnce([uniqueRecipeVersion]);
+        commandsPort.listCommandVersions
+          .mockResolvedValueOnce([sharedCommandVersion])
+          .mockResolvedValueOnce([uniqueCommandVersion]);
 
         standardsPort.getLatestStandardVersion
           .mockResolvedValueOnce(sharedStandardVersion)
@@ -2257,7 +2261,7 @@ describe('PullContentUseCase', () => {
           codingAgentPort.generateRemovalUpdatesForAgents,
         ).toHaveBeenCalledWith({
           removed: {
-            recipeVersions: [sharedRecipeVersion, uniqueRecipeVersion],
+            recipeVersions: [sharedCommandVersion, uniqueCommandVersion],
             standardVersions: [sharedStandardVersion, uniqueStandardVersion],
             skillVersions: [sharedSkillVersion, uniqueSkillVersion],
           },
@@ -2472,10 +2476,10 @@ describe('PullContentUseCase', () => {
   });
 
   describe('when enriching file modifications with artifact metadata', () => {
-    let recipe: Recipe;
+    let recipe: Command;
     let standard: Standard;
     let skill: Skill;
-    let recipeVersion: RecipeVersion;
+    let recipeVersion: CommandVersion;
     let standardVersion: StandardVersion;
     let skillVersion: SkillVersion;
 
@@ -2484,7 +2488,7 @@ describe('PullContentUseCase', () => {
       const userId = createUserId('user-1');
 
       recipe = {
-        id: createRecipeId('recipe-enrich'),
+        id: createCommandId('recipe-enrich'),
         name: 'Enriched Recipe',
         slug: 'enriched-recipe',
         content: 'recipe content',
@@ -2516,7 +2520,7 @@ describe('PullContentUseCase', () => {
       };
 
       recipeVersion = {
-        id: createRecipeVersionId('rv-enrich'),
+        id: createCommandVersionId('rv-enrich'),
         recipeId: recipe.id,
         name: 'Enriched Recipe',
         slug: 'enriched-recipe',
@@ -2562,7 +2566,7 @@ describe('PullContentUseCase', () => {
         testPackage,
       ]);
 
-      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      commandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
       standardsPort.getLatestStandardVersion.mockResolvedValue(standardVersion);
       skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
     });
@@ -2600,19 +2604,19 @@ describe('PullContentUseCase', () => {
       it('sets artifactId on recipe file modifications', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.artifactId).toBe(recipe.id as string);
+        expect(commandFile?.artifactId).toBe(recipe.id as string);
       });
 
       it('sets spaceId on recipe file modifications', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.spaceId).toBe(recipe.spaceId as string);
+        expect(commandFile?.spaceId).toBe(recipe.spaceId as string);
       });
 
       it('sets artifactId on standard file modifications', async () => {
@@ -2654,10 +2658,10 @@ describe('PullContentUseCase', () => {
       it('sets artifactVersion on recipe file modifications', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.artifactVersion).toBe(recipeVersion.version);
+        expect(commandFile?.artifactVersion).toBe(recipeVersion.version);
       });
 
       it('sets artifactVersion on standard file modifications', async () => {
@@ -2681,10 +2685,10 @@ describe('PullContentUseCase', () => {
       it('sets packageIds on recipe file modifications', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.packageIds).toEqual(['package-enrich']);
+        expect(commandFile?.packageIds).toEqual(['package-enrich']);
       });
 
       it('sets packageIds on standard file modifications', async () => {
@@ -2722,28 +2726,28 @@ describe('PullContentUseCase', () => {
       it('does not set artifactId on files without artifactType', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.artifactId).toBeUndefined();
+        expect(commandFile?.artifactId).toBeUndefined();
       });
 
       it('does not set spaceId on files without artifactType', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.spaceId).toBeUndefined();
+        expect(commandFile?.spaceId).toBeUndefined();
       });
 
       it('does not set artifactVersion on files without artifactType', async () => {
         const result = await useCase.execute(command);
 
-        const recipeFile = result.fileUpdates.createOrUpdate.find(
+        const commandFile = result.fileUpdates.createOrUpdate.find(
           (f) => f.path === '.packmind/commands/enriched-recipe.md',
         );
-        expect(recipeFile?.artifactVersion).toBeUndefined();
+        expect(commandFile?.artifactVersion).toBeUndefined();
       });
     });
   });
@@ -2763,7 +2767,7 @@ describe('PullContentUseCase', () => {
     };
 
     beforeEach(() => {
-      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      commandsPort.listCommandVersions.mockResolvedValue([]);
       standardsPort.getLatestStandardVersion.mockResolvedValue(null);
       codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
@@ -2903,7 +2907,7 @@ describe('PullContentUseCase', () => {
         renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
           [CodingAgents.claude],
         );
-        distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
           [],
         );
         distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(

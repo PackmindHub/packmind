@@ -6,7 +6,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalPayload,
   ChangeProposalType,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -253,7 +253,7 @@ export async function playbookSubmitHandler(
       (p) => ({
         spaceId: p.spaceId as SpaceId,
         type: p.type,
-        artefactId: p.artefactId as StandardId | RecipeId | SkillId | null,
+        artefactId: p.artefactId as StandardId | CommandId | SkillId | null,
         payload: p.payload as ChangeProposalPayload<ChangeProposalType>,
         targetId: (p.targetId ?? '') as TargetId,
       }),

@@ -11,6 +11,6 @@ export function clientLoader({
   );
 }
 
-export default function RecipeDetailRedirectRouteModule() {
+export default function CommandDetailRedirectRouteModule() {
   return null;
 }

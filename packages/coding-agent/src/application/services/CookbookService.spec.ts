@@ -67,7 +67,7 @@ describe('CookbookService', () => {
     });
 
     describe('when sorting recipes alphabetically', () => {
-      let recipeLines: string[];
+      let commandLines: string[];
 
       beforeEach(() => {
         const recipes = [
@@ -87,19 +87,19 @@ describe('CookbookService', () => {
 
         const result = service.buildCookbook(recipes);
         const lines = result.split('\n');
-        recipeLines = lines.filter((line) => line.startsWith('- ['));
+        commandLines = lines.filter((line) => line.startsWith('- ['));
       });
 
       it('places Apple Recipe first', () => {
-        expect(recipeLines[0]).toContain('Apple Recipe');
+        expect(commandLines[0]).toContain('Apple Recipe');
       });
 
       it('places Middle Recipe second', () => {
-        expect(recipeLines[1]).toContain('Middle Recipe');
+        expect(commandLines[1]).toContain('Middle Recipe');
       });
 
       it('places Zebra Recipe last', () => {
-        expect(recipeLines[2]).toContain('Zebra Recipe');
+        expect(commandLines[2]).toContain('Zebra Recipe');
       });
     });
 

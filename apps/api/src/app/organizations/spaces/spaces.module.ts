@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesController } from './spaces.controller';
-import { RecipesModule } from './recipes/recipes.module';
+import { CommandsModule } from './commands/commands.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './skills/skills.module';
@@ -32,7 +32,7 @@ import { SpacesService } from '../../spaces/spaces.service';
  */
 @Module({
   imports: [
-    RecipesModule,
+    CommandsModule,
     OrganizationsSpacesStandardsModule,
     OrganizationsSpacesPackagesModule,
     OrganizationsSpacesSkillsModule,

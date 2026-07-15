@@ -9,13 +9,13 @@ import {
   createMockStandardsGateway,
 } from '../../mocks/createMockGateways';
 import { createMockSpaceService } from '../../mocks/createMockServices';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { skillFactory } from '@packmind/skills/test';
 import { standardFactory } from '@packmind/standards/test';
 
 import {
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -135,8 +135,8 @@ describe('AddToPackageUseCase', () => {
     beforeEach(() => {
       commandsGateway.list.mockResolvedValueOnce({
         recipes: [
-          recipeFactory({
-            id: createRecipeId('cmd-id-1'),
+          commandFactory({
+            id: createCommandId('cmd-id-1'),
             slug: 'cmd-1',
             name: 'Cmd 1',
           }),

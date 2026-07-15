@@ -6,7 +6,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillFile,
   SkillVersion,
   SkillVersionId,
@@ -53,8 +53,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     });
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -138,8 +138,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info(
       `Clearing recipes section for ${this.config.agentName} - single-file deployers no longer render recipes`,
@@ -284,7 +284,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
@@ -339,12 +339,12 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
   async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -384,7 +384,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   }
 
   async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {

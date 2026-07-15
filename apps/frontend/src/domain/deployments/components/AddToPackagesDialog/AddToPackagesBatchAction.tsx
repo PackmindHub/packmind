@@ -3,7 +3,7 @@ import { LuPackagePlus } from 'react-icons/lu';
 import { PMButton, PMIcon } from '@packmind/ui';
 import {
   OrganizationId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -14,7 +14,7 @@ import {
 } from './AddToPackagesDialog';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
-type ArtifactId = StandardId | RecipeId | SkillId;
+type ArtifactId = StandardId | CommandId | SkillId;
 
 interface AddToPackagesBatchActionProps {
   selectedIds: ArtifactId[];

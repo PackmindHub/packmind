@@ -3,21 +3,21 @@ import {
   createUserId,
   createOrganizationId,
   createSpaceId,
-  createRecipeId,
+  createCommandId,
   createStandardId,
   createSkillId,
   createPackageId,
   IAccountsPort,
   ISpacesPort,
-  IRecipesPort,
+  ICommandsPort,
   IStandardsPort,
   ISkillsPort,
   UpdatePackageCommand,
   Space,
-  Recipe,
+  Command,
   Standard,
   Skill,
-  RecipeId,
+  CommandId,
   StandardId,
   SkillId,
   SpaceId,
@@ -41,7 +41,7 @@ describe('UpdatePackageUseCase', () => {
   let mockServices: jest.Mocked<DeploymentsServices>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -51,7 +51,7 @@ describe('UpdatePackageUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
   const spaceId = createSpaceId(uuidv4());
   const packageId = createPackageId(uuidv4());
-  const recipeId1 = createRecipeId(uuidv4());
+  const commandId1 = createCommandId(uuidv4());
   const standardId1 = createStandardId(uuidv4());
   const skillId1 = createSkillId(uuidv4());
 
@@ -82,7 +82,7 @@ describe('UpdatePackageUseCase', () => {
     organizationId,
   });
 
-  const buildRecipe = (id: RecipeId, spaceIdParam: SpaceId): Recipe => ({
+  const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command => ({
     id,
     name: `Recipe ${id}`,
     slug: `recipe-${id}`,
@@ -160,9 +160,9 @@ describe('UpdatePackageUseCase', () => {
       }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
-    mockRecipesPort = {
-      getRecipeByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      getCommandByIdInternal: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getStandard: jest.fn(),
@@ -188,7 +188,7 @@ describe('UpdatePackageUseCase', () => {
       mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       mockEventEmitterService,
@@ -447,7 +447,7 @@ describe('UpdatePackageUseCase', () => {
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(null);
 
         const command: UpdatePackageCommand = {
           userId,
@@ -456,13 +456,13 @@ describe('UpdatePackageUseCase', () => {
           packageId,
           name: 'Updated Package',
           description: 'Updated description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillsIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe with id ${recipeId1} not found`,
+          `Recipe with id ${commandId1} not found`,
         );
       });
     });
@@ -472,11 +472,11 @@ describe('UpdatePackageUseCase', () => {
         const differentSpaceId = createSpaceId(uuidv4());
         const existingPackage = buildExistingPackage(packageId, spaceId);
         const mockSpace = buildSpace();
-        const mockRecipe = buildRecipe(recipeId1, differentSpaceId);
+        const mockCommand = buildCommand(commandId1, differentSpaceId);
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(mockCommand);
 
         const command: UpdatePackageCommand = {
           userId,
@@ -485,13 +485,13 @@ describe('UpdatePackageUseCase', () => {
           packageId,
           name: 'Updated Package',
           description: 'Updated description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillsIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe ${recipeId1} does not belong to space ${spaceId}`,
+          `Recipe ${commandId1} does not belong to space ${spaceId}`,
         );
       });
     });
@@ -781,7 +781,7 @@ describe('UpdatePackageUseCase', () => {
     describe('when a recipe is removed from the package', () => {
       it('emits ArtefactRemovedFromPackageEvent for the removed recipe', async () => {
         const existingPackage = buildExistingPackage(packageId, spaceId);
-        existingPackage.recipes = [recipeId1];
+        existingPackage.recipes = [commandId1];
         const mockSpace = buildSpace();
 
         mockPackageService.findById.mockResolvedValue(existingPackage);
@@ -820,7 +820,7 @@ describe('UpdatePackageUseCase', () => {
         expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
           expect.objectContaining({
             payload: expect.objectContaining({
-              artefactId: String(recipeId1),
+              artefactId: String(commandId1),
               spaceId,
               packageId,
               remainingPackagesCount: 0,

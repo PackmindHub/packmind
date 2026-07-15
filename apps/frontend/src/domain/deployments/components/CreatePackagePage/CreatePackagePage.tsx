@@ -20,15 +20,15 @@ import {
 } from '@packmind/ui';
 import { useNavigate, NavLink } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
+import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 import { useCreatePackageMutation } from '../../api/queries/DeploymentsQueries';
 import {
-  RecipeId,
+  CommandId,
   StandardId,
   SkillId,
-  Recipe,
+  Command,
   Standard,
   Skill,
 } from '@packmind/types';
@@ -44,13 +44,13 @@ export interface CreatePackagePageProps {
 }
 
 interface PackageFormContentProps {
-  recipes: Recipe[];
+  recipes: Command[];
   standards: Standard[];
   skills: Skill[];
-  selectedRecipeIds: RecipeId[];
+  selectedCommandIds: CommandId[];
   selectedStandardIds: StandardId[];
   selectedSkillIds: SkillId[];
-  setSelectedRecipeIds: (ids: RecipeId[]) => void;
+  setSelectedCommandIds: (ids: CommandId[]) => void;
   setSelectedStandardIds: (ids: StandardId[]) => void;
   setSelectedSkillIds: (ids: SkillId[]) => void;
   isPending: boolean;
@@ -63,10 +63,10 @@ const PackageFormContent = ({
   recipes,
   standards,
   skills,
-  selectedRecipeIds,
+  selectedCommandIds,
   selectedStandardIds,
   selectedSkillIds,
-  setSelectedRecipeIds,
+  setSelectedCommandIds,
   setSelectedStandardIds,
   setSelectedSkillIds,
   isPending,
@@ -76,7 +76,7 @@ const PackageFormContent = ({
 }: PackageFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
-  const recipeItems = recipes.map((recipe: Recipe) => ({
+  const commandItems = recipes.map((recipe: Command) => ({
     label: recipe.name,
     value: recipe.id,
   }));
@@ -91,9 +91,9 @@ const PackageFormContent = ({
     value: skill.id,
   }));
 
-  const { collection: recipeCollection, filter: filterRecipes } =
+  const { collection: commandCollection, filter: filterCommands } =
     pmUseListCollection({
-      initialItems: recipeItems,
+      initialItems: commandItems,
       filter: contains,
     });
 
@@ -109,10 +109,10 @@ const PackageFormContent = ({
       filter: contains,
     });
 
-  const recipeDisplayValue =
-    selectedRecipeIds.length === 0
+  const commandDisplayValue =
+    selectedCommandIds.length === 0
       ? 'Select commands...'
-      : `${selectedRecipeIds.length} command(s) selected`;
+      : `${selectedCommandIds.length} command(s) selected`;
 
   const standardDisplayValue =
     selectedStandardIds.length === 0
@@ -249,17 +249,17 @@ const PackageFormContent = ({
         ) : (
           <PMVStack gap={2} width="full" align="flex-start">
             <PMCombobox.Root
-              collection={recipeCollection}
+              collection={commandCollection}
               onInputValueChange={(e: { inputValue: string }) =>
-                filterRecipes(e.inputValue)
+                filterCommands(e.inputValue)
               }
               onValueChange={(details: { value: string[] }) =>
-                setSelectedRecipeIds(details.value as RecipeId[])
+                setSelectedCommandIds(details.value as CommandId[])
               }
-              value={selectedRecipeIds}
+              value={selectedCommandIds}
               multiple
               openOnClick
-              placeholder={recipeDisplayValue}
+              placeholder={commandDisplayValue}
               width="full"
               disabled={isPending}
             >
@@ -277,7 +277,7 @@ const PackageFormContent = ({
                 <PMCombobox.Positioner>
                   <PMCombobox.Content>
                     <PMCombobox.Empty>No commands found</PMCombobox.Empty>
-                    {recipeCollection.items.map((item) => (
+                    {commandCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
                         <PMCombobox.ItemIndicator />
@@ -288,15 +288,15 @@ const PackageFormContent = ({
               </PMPortal>
             </PMCombobox.Root>
 
-            {selectedRecipeIds.length > 0 && (
+            {selectedCommandIds.length > 0 && (
               <PMHStack gap={2} flexWrap="wrap" width="full">
-                {selectedRecipeIds
+                {selectedCommandIds
                   .map((recipeId) => {
                     const recipe = recipes.find((r) => r.id === recipeId);
                     return recipe ? { id: recipeId, name: recipe.name } : null;
                   })
                   .filter(
-                    (item): item is { id: RecipeId; name: string } =>
+                    (item): item is { id: CommandId; name: string } =>
                       item !== null,
                   )
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -334,8 +334,8 @@ const PackageFormContent = ({
                         ml={1}
                         flexShrink={0}
                         onClick={() =>
-                          setSelectedRecipeIds(
-                            selectedRecipeIds.filter(
+                          setSelectedCommandIds(
+                            selectedCommandIds.filter(
                               (recipeId) => recipeId !== id,
                             ),
                           )
@@ -462,10 +462,10 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   const organizationId = space?.organizationId;
 
   const {
-    data: recipesResponse,
-    isLoading: isLoadingRecipes,
-    error: recipesError,
-  } = useGetRecipesQuery();
+    data: commandsResponse,
+    isLoading: isLoadingCommands,
+    error: commandsError,
+  } = useGetCommandsQuery();
 
   const {
     data: standardsResponse,
@@ -480,14 +480,14 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedRecipeIds, setSelectedRecipeIds] = useState<RecipeId[]>([]);
+  const [selectedCommandIds, setSelectedCommandIds] = useState<CommandId[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
     [],
   );
   const [selectedSkillIds, setSelectedSkillIds] = useState<SkillId[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const recipes = (recipesResponse || []).sort((a, b) =>
+  const recipes = (commandsResponse || []).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
   const standards = (standardsResponse?.standards || []).sort((a, b) =>
@@ -516,7 +516,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         organizationId,
         name,
         description,
-        recipeIds: selectedRecipeIds,
+        recipeIds: selectedCommandIds,
         standardIds: selectedStandardIds,
         skillIds: selectedSkillIds,
       });
@@ -543,7 +543,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     }
   };
 
-  if (isLoadingSpace || isLoadingRecipes || isLoadingStandards) {
+  if (isLoadingSpace || isLoadingCommands || isLoadingStandards) {
     return (
       <PMBox display="flex" justifyContent="center" alignItems="center" p={8}>
         <PMSpinner size="lg" />
@@ -551,12 +551,12 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     );
   }
 
-  if (recipesError || standardsError) {
+  if (commandsError || standardsError) {
     return (
       <PMBox p={4}>
         <PMText color="error">
           Error loading data:{' '}
-          {String(recipesError || standardsError || 'Unknown error')}
+          {String(commandsError || standardsError || 'Unknown error')}
         </PMText>
       </PMBox>
     );
@@ -622,16 +622,16 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
               borderColor="border.primary"
               p={4}
             >
-              {isLoadingRecipes || isLoadingStandards ? null : (
+              {isLoadingCommands || isLoadingStandards ? null : (
                 <PackageFormContent
                   key={`loaded-${recipes.length}-${standards.length}-${skills.length}`}
                   recipes={recipes}
                   standards={standards}
                   skills={skills}
-                  selectedRecipeIds={selectedRecipeIds}
+                  selectedCommandIds={selectedCommandIds}
                   selectedStandardIds={selectedStandardIds}
                   selectedSkillIds={selectedSkillIds}
-                  setSelectedRecipeIds={setSelectedRecipeIds}
+                  setSelectedCommandIds={setSelectedCommandIds}
                   setSelectedStandardIds={setSelectedStandardIds}
                   setSelectedSkillIds={setSelectedSkillIds}
                   isPending={isPending}

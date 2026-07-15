@@ -82,7 +82,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
           command.organization.id,
           target.id,
         ),
-        this.distributionRepository.findActiveRecipeVersionsByTarget(
+        this.distributionRepository.findActiveCommandVersionsByTarget(
           command.organization.id,
           target.id,
         ),
@@ -135,28 +135,28 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
         command.organization.id,
       );
 
-      const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+      const allCommands = packages.flatMap((pkg) => pkg.recipes);
       const allStandards = packages.flatMap((pkg) => pkg.standards);
       const allSkills = packages.flatMap((pkg) => pkg.skills);
 
-      const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+      const recipes = [...new Map(allCommands.map((r) => [r.id, r])).values()];
       const standards = [
         ...new Map(allStandards.map((s) => [s.id, s])).values(),
       ];
       const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
 
       // Build packageIdMap per artifact type (artifact can belong to multiple packages)
-      const recipePackageIdMap = new Map<string, string[]>();
+      const commandPackageIdMap = new Map<string, string[]>();
       const standardPackageIdMap = new Map<string, string[]>();
       const skillPackageIdMap = new Map<string, string[]>();
 
       for (const pkg of packages) {
         for (const recipe of pkg.recipes) {
-          const existing = recipePackageIdMap.get(recipe.id as string);
+          const existing = commandPackageIdMap.get(recipe.id as string);
           if (existing) {
             existing.push(pkg.id as string);
           } else {
-            recipePackageIdMap.set(recipe.id as string, [pkg.id as string]);
+            commandPackageIdMap.set(recipe.id as string, [pkg.id as string]);
           }
         }
         for (const standard of pkg.standards) {
@@ -182,7 +182,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
           spaceIdMap: new Map(
             recipes.map((r) => [r.id as string, r.spaceId as string]),
           ),
-          packageIdMap: recipePackageIdMap,
+          packageIdMap: commandPackageIdMap,
           versions: recipeVersions,
         },
         standards: {

@@ -1,41 +1,41 @@
 import { GitRepo } from '../../git/GitRepo';
-import { Recipe } from '../../recipes/Recipe';
-import { RecipeVersion } from '../../recipes/RecipeVersion';
+import { Command } from '../../commands/Command';
+import { CommandVersion } from '../../commands/CommandVersion';
 import { Target } from '../Target';
 
 export interface RepositoryDeploymentStatus {
   gitRepo: GitRepo;
-  deployedRecipes: DeployedRecipeInfo[];
+  deployedRecipes: DeployedCommandInfo[];
   hasOutdatedRecipes: boolean;
 }
 
 export interface TargetDeploymentStatus {
   target: Target;
   gitRepo: GitRepo;
-  deployedRecipes: DeployedRecipeTargetInfo[];
+  deployedRecipes: DeployedCommandTargetInfo[];
   hasOutdatedRecipes: boolean;
 }
 
-export interface DeployedRecipeInfo {
-  recipe: Recipe;
-  deployedVersion: RecipeVersion;
-  latestVersion: RecipeVersion;
+export interface DeployedCommandInfo {
+  recipe: Command;
+  deployedVersion: CommandVersion;
+  latestVersion: CommandVersion;
   isUpToDate: boolean;
   deploymentDate: string;
 }
 
-export interface DeployedRecipeTargetInfo {
-  recipe: Recipe;
-  deployedVersion: RecipeVersion;
-  latestVersion: RecipeVersion;
+export interface DeployedCommandTargetInfo {
+  recipe: Command;
+  deployedVersion: CommandVersion;
+  latestVersion: CommandVersion;
   isUpToDate: boolean;
   deploymentDate: string;
   isDeleted?: boolean;
 }
 
-export interface RecipeDeploymentStatus {
-  recipe: Recipe;
-  latestVersion: RecipeVersion;
+export interface CommandDeploymentStatus {
+  recipe: Command;
+  latestVersion: CommandVersion;
   deployments: RepositoryDeploymentInfo[];
   targetDeployments: TargetDeploymentInfo[];
   hasOutdatedDeployments: boolean;
@@ -44,7 +44,7 @@ export interface RecipeDeploymentStatus {
 
 export interface RepositoryDeploymentInfo {
   gitRepo: GitRepo;
-  deployedVersion: RecipeVersion;
+  deployedVersion: CommandVersion;
   isUpToDate: boolean;
   deploymentDate: string;
 }
@@ -52,7 +52,7 @@ export interface RepositoryDeploymentInfo {
 export interface TargetDeploymentInfo {
   target: Target;
   gitRepo: GitRepo;
-  deployedVersion: RecipeVersion;
+  deployedVersion: CommandVersion;
   isUpToDate: boolean;
   deploymentDate: string;
 }

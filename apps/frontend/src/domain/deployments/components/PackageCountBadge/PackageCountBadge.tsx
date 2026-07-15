@@ -1,7 +1,7 @@
 import { PMText } from '@packmind/ui';
 import {
   OrganizationId,
-  RecipeId,
+  CommandId,
   SkillId,
   SpaceId,
   StandardId,
@@ -10,7 +10,7 @@ import { usePackagesForArtifact } from '../../hooks/usePackagesForArtifact';
 import { PackagesDropdown, formatPackageNames } from './PackagesDropdown';
 
 interface PackageCountBadgeProps {
-  artifactId: StandardId | RecipeId | SkillId | undefined;
+  artifactId: StandardId | CommandId | SkillId | undefined;
   artifactType: 'standard' | 'recipe' | 'skill';
   orgSlug: string | undefined;
   spaceSlug: string | undefined;

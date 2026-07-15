@@ -6,7 +6,7 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IOutput } from '../../../domain/repositories/IOutput';
 import { createMockOutput } from '../../../mocks/createMockRepositories';
 import { spaceFactory } from '@packmind/spaces/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { createSpaceId } from '@packmind/types';
 
 const spaceAId = createSpaceId('space-a');
@@ -51,12 +51,12 @@ describe('listCommandsHandler', () => {
     describe('when commands exist across multiple spaces', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listCommands.mockResolvedValue([
-          recipeFactory({
+          commandFactory({
             slug: 'zebra-command',
             name: 'Zebra Command',
             spaceId: spaceAId,
           }),
-          recipeFactory({
+          commandFactory({
             slug: 'alpha-command',
             name: 'Alpha Command',
             spaceId: spaceBId,
@@ -123,7 +123,7 @@ describe('listCommandsHandler', () => {
     describe('when the space exists', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.listCommands.mockResolvedValue([
-          recipeFactory({
+          commandFactory({
             slug: 'alpha-command',
             name: 'Alpha Command',
             spaceId: spaceAId,

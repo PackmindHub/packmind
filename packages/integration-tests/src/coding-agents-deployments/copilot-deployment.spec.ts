@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { CopilotDeployer, DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/recipes';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -14,9 +14,9 @@ import {
   IGitPort,
   IStandardsPort,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Skill,
   SkillVersion,
   SkillVersionId,
@@ -37,7 +37,7 @@ import { TestApp } from '../helpers/TestApp';
 describe('GitHub Copilot Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...skillsSchemas,
     ...spacesSchemas,
@@ -50,7 +50,7 @@ describe('GitHub Copilot Deployment Integration', () => {
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let skill: Skill;
   let organization: Organization;
@@ -92,7 +92,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for Copilot',
       content: 'This is test recipe content for GitHub Copilot deployment',
       organizationId: organization.id,
@@ -177,13 +177,13 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
 
     describe('when deploying recipe', () => {
-      let recipeVersions: RecipeVersion[];
+      let recipeVersions: CommandVersion[];
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
         recipeVersions = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -193,7 +193,7 @@ describe('GitHub Copilot Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await deployerService.aggregateRecipeDeployments(
+        fileUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [defaultTarget],
@@ -391,13 +391,13 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
 
     describe('when combining recipes and standards deployments', () => {
-      let recipeUpdates: FileUpdates;
+      let commandUpdates: FileUpdates;
       let standardsUpdates: FileUpdates;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -427,7 +427,7 @@ describe('GitHub Copilot Deployment Integration', () => {
           gitRepoId: gitRepo.id,
         };
 
-        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+        commandUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [combinedDefaultTarget],
@@ -443,7 +443,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
 
       it('creates one recipe file', () => {
-        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+        expect(commandUpdates.createOrUpdate).toHaveLength(1);
       });
 
       it('creates one standard file', () => {
@@ -451,7 +451,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
 
       it('creates recipe file in .github/prompts directory', () => {
-        expect(recipeUpdates.createOrUpdate[0].path).toBe(
+        expect(commandUpdates.createOrUpdate[0].path).toBe(
           `.github/prompts/${recipe.slug}.prompt.md`,
         );
       });
@@ -481,13 +481,13 @@ describe('GitHub Copilot Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    let recipeVersions: RecipeVersion[];
+    let recipeVersions: CommandVersion[];
     let fileUpdates: FileUpdates;
 
     beforeEach(async () => {
       recipeVersions = [
         {
-          id: 'recipe-version-1' as RecipeVersionId,
+          id: 'recipe-version-1' as CommandVersionId,
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -497,7 +497,7 @@ describe('GitHub Copilot Deployment Integration', () => {
         },
       ];
 
-      fileUpdates = await deployerService.aggregateRecipeDeployments(
+      fileUpdates = await deployerService.aggregateCommandDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
@@ -552,7 +552,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       beforeEach(async () => {
         jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-        fileUpdates = await copilotDeployer.deployRecipes(
+        fileUpdates = await copilotDeployer.deployCommands(
           [],
           gitRepo,
           defaultTarget,
@@ -600,9 +600,9 @@ describe('GitHub Copilot Deployment Integration', () => {
           .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
           .mockRejectedValue(new Error('GitHub API error'));
 
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -612,7 +612,7 @@ describe('GitHub Copilot Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await copilotDeployer.deployRecipes(
+        fileUpdates = await copilotDeployer.deployCommands(
           recipeVersions,
           gitRepo,
           defaultTarget,
@@ -1183,9 +1183,9 @@ See reference.md and forms.md for more information.`,
         let fileUpdates: FileUpdates;
 
         beforeEach(async () => {
-          const recipeVersions: RecipeVersion[] = [
+          const recipeVersions: CommandVersion[] = [
             {
-              id: 'recipe-version-1' as RecipeVersionId,
+              id: 'recipe-version-1' as CommandVersionId,
               recipeId: recipe.id,
               name: recipe.name,
               slug: recipe.slug,
@@ -1612,9 +1612,9 @@ See reference.md and forms.md for more information.`,
           let fileUpdates: FileUpdates;
 
           beforeEach(async () => {
-            const recipeVersions: RecipeVersion[] = [
+            const recipeVersions: CommandVersion[] = [
               {
-                id: 'recipe-version-1' as RecipeVersionId,
+                id: 'recipe-version-1' as CommandVersionId,
                 recipeId: recipe.id,
                 name: recipe.name,
                 slug: recipe.slug,
