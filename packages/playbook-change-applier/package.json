@@ -13,6 +13,6 @@
     "@packmind/test-utils": "workspace:*",
     "uuid": "^11.1.0",
     "yaml": "^2.8.3",
-    "typeorm": "0.3.28"
+    "typeorm": "0.3.29"
   }
 }
