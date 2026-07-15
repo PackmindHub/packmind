@@ -2,7 +2,7 @@
 
 ## Starting the stack:
 
-You will need node 24.15.0 and docker to start the development stack. This repo
+You will need node 24.18.0 and docker to start the development stack. This repo
 uses **pnpm 11** (pinned via `packageManager` in `package.json`); enable it through
 corepack — no global install needed. pnpm settings (overrides, `allowBuilds`,
 hoisting) live in `pnpm-workspace.yaml`, not `.npmrc` or the `package.json` `pnpm`

@@ -17,7 +17,7 @@ services:
       retries: 5
 
   install-dependencies:
-    image: node:24.15.0-alpine3.23
+    image: node:24.18.0-alpine3.23
     container_name: packmind-prod-install-deps
     volumes:
       - .:/packmind
