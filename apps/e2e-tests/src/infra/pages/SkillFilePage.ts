@@ -25,6 +25,22 @@ export class SkillFilePage
     await this.page.getByRole('button', { name: 'Edit file' }).waitFor();
   }
 
+  async clickSaveExpectingError(): Promise<string> {
+    await this.page.getByRole('button', { name: 'Save' }).click();
+
+    const alert = this.page.getByText(
+      /cannot be empty|exceeds the maximum length/,
+    );
+    await alert.waitFor();
+    return alert.innerText();
+  }
+
+  async isEditorEditable(): Promise<boolean> {
+    const editor = this.page.locator('.cm-content').first();
+    await editor.waitFor();
+    return (await editor.getAttribute('contenteditable')) === 'true';
+  }
+
   async readDisplayedContent(): Promise<string> {
     const rawTab = this.page.getByRole('tab', { name: 'Raw' });
     if (await rawTab.isVisible()) {

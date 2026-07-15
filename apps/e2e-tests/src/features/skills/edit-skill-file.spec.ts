@@ -46,4 +46,34 @@ testWithApi.describe('editing a skill file', () => {
       ]);
     },
   );
+
+  testWithApi(
+    'it rejects an empty save and keeps the editor open with no new version',
+    async ({ dashboardPage, packmindApi }) => {
+      const skillsPage = await dashboardPage.openSkills();
+      const skillFilePage = await skillsPage.openSkill(skill.name);
+
+      await skillFilePage.clickEdit();
+      await skillFilePage.replaceEditorContent('');
+      const errorMessage = await skillFilePage.clickSaveExpectingError();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(errorMessage).toContain('cannot be empty');
+
+      const stillEditable = await skillFilePage.isEditorEditable();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(stillEditable).toBe(true);
+
+      const { versions } = await packmindApi.listSkillVersions({
+        skillId: skill.id,
+        spaceId: skill.spaceId,
+      });
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(versions.map((version: SkillVersion) => version.version)).toEqual([
+        1,
+      ]);
+    },
+  );
 });

@@ -54,6 +54,8 @@ export interface ISkillFilePage extends IPackmindAppPage {
   clickEdit(): Promise<void>;
   replaceEditorContent(content: string): Promise<void>;
   clickSave(): Promise<void>;
+  clickSaveExpectingError(): Promise<string>;
+  isEditorEditable(): Promise<boolean>;
   readDisplayedContent(): Promise<string>;
   getVersionNumber(): Promise<number>;
 }
