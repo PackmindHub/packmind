@@ -19,6 +19,8 @@ export type NonLiveSkillArtifact = NonLiveArtifact & {
 export type DashboardNonLiveResponse = {
   standards: NonLiveArtifact[];
   recipes: NonLiveArtifact[];
+  // Command-named twin of `recipes` (superset for recipes→commands rename); same value.
+  commands: NonLiveArtifact[];
   skills: NonLiveSkillArtifact[];
 };
 

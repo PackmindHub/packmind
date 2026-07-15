@@ -1,11 +1,14 @@
-import { NewGateway } from '@packmind/types';
+import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
 import {
-  IGetPackageByIdUseCase,
+  GetPackageByIdCommand,
+  ListPackagesBySpaceCommand,
+  PackageResponse,
+} from '@packmind/types';
+import {
   IListDeploymentsByPackage,
   IListDistributionsByCommand,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
-  IListPackagesBySpaceUseCase,
   IListActiveDistributedPackagesBySpaceUseCase,
   IListDriftedPackagesByOrgUseCase,
   ICreatePackageUseCase,
@@ -32,12 +35,20 @@ export interface IDeploymentsGateway {
   listDistributionsByCommandId: NewGateway<IListDistributionsByCommand>;
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard>;
   listDistributionsBySkillId: NewGateway<IListDistributionsBySkill>;
-  listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
+  // Return type widened to the PackageResponse wire DTO (superset of Package)
+  // so the command-named `commands` twin is readable alongside `recipes`.
+  listPackagesBySpace: (
+    params: NewPackmindCommandBody<ListPackagesBySpaceCommand>,
+  ) => Promise<{ packages: PackageResponse[] }>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   addArtefactsToPackage: NewGateway<IAddArtefactsToPackageUseCase>;
-  getPackageById: NewGateway<IGetPackageByIdUseCase>;
+  // Return type widened to the PackageResponse wire DTO (superset of Package)
+  // so the command-named `commands` twin is readable alongside `recipes`.
+  getPackageById: (
+    params: NewPackmindCommandBody<GetPackageByIdCommand>,
+  ) => Promise<{ package: PackageResponse }>;
   publishCommands: NewGateway<IPublishCommands>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;

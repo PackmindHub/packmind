@@ -35,11 +35,15 @@ export class PackagesGateway implements IPackagesGateway {
 
   public create: Gateway<ICreatePackageUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
+    // Migrate the wire body key onto the new command surface: send `commandIds`
+    // instead of the legacy `recipeIds`. The domain command type still exposes
+    // `recipeIds`, so we remap here at the HTTP boundary.
+    const { recipeIds, ...rest } = command;
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/packages`,
       {
         method: 'POST',
-        body: command,
+        body: { ...rest, commandIds: recipeIds },
       },
     );
   };
@@ -48,13 +52,15 @@ export class PackagesGateway implements IPackagesGateway {
     command,
   ) => {
     const { organizationId } = this.httpClient.getAuthContext();
-    const { packageId, spaceId } = command;
+    // Migrate the wire body key onto the new command surface: send `commandIds`
+    // instead of the legacy `recipeIds`.
+    const { packageId, spaceId, recipeIds, ...rest } = command;
 
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
       {
         method: 'POST',
-        body: command,
+        body: { ...rest, packageId, spaceId, commandIds: recipeIds },
       },
     );
   };

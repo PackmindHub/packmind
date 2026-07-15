@@ -274,9 +274,13 @@ export const useDeleteCommandsBatchMutation = () => {
     mutationFn: async (command: {
       organizationId: OrganizationId;
       spaceId: SpaceId;
-      recipeIds: CommandId[];
+      commandIds: CommandId[];
     }) => {
-      return commandsGateway.deleteCommandsBatch(command);
+      return commandsGateway.deleteCommandsBatch({
+        organizationId: command.organizationId,
+        spaceId: command.spaceId,
+        recipeIds: command.commandIds,
+      });
     },
     onSuccess: async () => {
       // Same as useDeleteRecipeMutation

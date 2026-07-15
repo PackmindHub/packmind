@@ -11,7 +11,7 @@ import {
   PMText,
   PMTable,
 } from '@packmind/ui';
-import { Package, PackageId } from '@packmind/types';
+import { PackageResponse, PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import {
   useListPackagesBySpaceQuery,
@@ -102,7 +102,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     }
   };
 
-  const listingProps: Omit<ItemsListingProps<Package>, 'items'> = {
+  const listingProps: Omit<ItemsListingProps<PackageResponse>, 'items'> = {
     columns: [
       {
         key: 'name',
@@ -119,7 +119,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       },
     ],
     makeTableData(pkg): PMTableRow {
-      const commandsCount = pkg.recipes?.length || 0;
+      const commandsCount = pkg.commands?.length || 0;
       const standardsCount = pkg.standards?.length || 0;
       const skillsCount = pkg.skills?.length || 0;
       const totalCount = commandsCount + standardsCount + skillsCount;
@@ -176,11 +176,11 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
             return direction * a.name.localeCompare(b.name);
           case 'artifacts': {
             const totalA =
-              (a.recipes?.length || 0) +
+              (a.commands?.length || 0) +
               (a.standards?.length || 0) +
               (a.skills?.length || 0);
             const totalB =
-              (b.recipes?.length || 0) +
+              (b.commands?.length || 0) +
               (b.standards?.length || 0) +
               (b.skills?.length || 0);
             return direction * (totalA - totalB);

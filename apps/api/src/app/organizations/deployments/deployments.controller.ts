@@ -70,7 +70,7 @@ export class DeploymentsController {
     this.logger.info('OrganizationDeploymentsController initialized');
   }
 
-  @Get('recipe/:id')
+  @Get(['recipe/:id', 'command/:id'])
   async getDeploymentCommand(
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: CommandId,
@@ -190,7 +190,7 @@ export class DeploymentsController {
     }
   }
 
-  @Get('distributions/recipe/:id')
+  @Get(['distributions/recipe/:id', 'distributions/command/:id'])
   async getDistributionsByCommandId(
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: CommandId,
@@ -370,19 +370,27 @@ export class DeploymentsController {
     }
   }
 
-  @Post('recipes/publish')
+  @Post(['recipes/publish', 'commands/publish'])
   async publishCommands(
     @Param('orgId') organizationId: OrganizationId,
     @Body()
-    body: { targetIds: TargetId[]; recipeVersionIds: CommandVersionId[] },
+    body: {
+      targetIds: TargetId[];
+      commandVersionIds?: CommandVersionId[];
+      recipeVersionIds?: CommandVersionId[];
+    },
     @Req() request: AuthenticatedRequest,
   ): Promise<Distribution[]> {
+    // Accept BOTH keys: new `commandVersionIds` wins, legacy
+    // `recipeVersionIds` is the fallback.
+    const commandVersionIds = body.commandVersionIds ?? body.recipeVersionIds;
+
     this.logger.info(
       'POST /organizations/:orgId/deployments/recipes/publish - Publishing recipes',
       {
         organizationId,
         targetIdsCount: body.targetIds.length,
-        recipeVersionIdsCount: body.recipeVersionIds.length,
+        recipeVersionIdsCount: commandVersionIds?.length ?? 0,
       },
     );
 
@@ -391,7 +399,7 @@ export class DeploymentsController {
         userId: request.user.userId,
         organizationId,
         targetIds: body.targetIds,
-        recipeVersionIds: body.recipeVersionIds,
+        recipeVersionIds: commandVersionIds ?? [],
       };
 
       const deployments =

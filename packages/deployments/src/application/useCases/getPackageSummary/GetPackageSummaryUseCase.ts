@@ -69,6 +69,8 @@ export class GetPackageSummaryUseCase
       slug: pkg.slug,
       description: pkg.description,
       recipes,
+      // Command-named twin of `recipes` (superset); same value.
+      commands: recipes,
       standards,
       skills,
     };

@@ -392,7 +392,7 @@ describe('DeploymentGateway', () => {
         await gateway.getLatestVersion('command', 'cmd-1', spaceId);
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes/cmd-1/latest-version`,
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/commands/cmd-1/latest-version`,
         );
       });
     });

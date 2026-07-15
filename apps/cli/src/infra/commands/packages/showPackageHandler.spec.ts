@@ -28,7 +28,8 @@ const PACKAGE_SUMMARY_GLOBAL = {
   slug: 'backend',
   description: 'A backend package',
   standards: [{ name: 'Standard 1', summary: 'A standard' }],
-  recipes: [{ name: 'Recipe 1', summary: 'A recipe' }],
+  recipes: [{ name: 'Command 1', summary: 'A command' }],
+  commands: [{ name: 'Command 1', summary: 'A command' }],
 };
 
 const PACKAGE_SUMMARY_FRONTEND = {
@@ -36,7 +37,8 @@ const PACKAGE_SUMMARY_FRONTEND = {
   slug: 'backend',
   description: 'A frontend backend package',
   standards: [{ name: 'Frontend Standard', summary: 'A frontend standard' }],
-  recipes: [{ name: 'Frontend Recipe', summary: 'A frontend recipe' }],
+  recipes: [{ name: 'Frontend Command', summary: 'A frontend command' }],
+  commands: [{ name: 'Frontend Command', summary: 'A frontend command' }],
 };
 
 describe('showPackageHandler', () => {

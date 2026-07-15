@@ -29,6 +29,14 @@ import { OrganizationAccessGuard } from '../../guards/organization-access.guard'
 const origin = 'OrganizationsSpacesRecipesController';
 
 /**
+ * Wire response for command versions. SUPERSET for the recipes→commands
+ * rename: keeps the persisted `recipeId` field AND adds a command-named twin
+ * `commandId` carrying the same value. The persisted `CommandVersion` entity is
+ * never modified — the twin is added at the controller boundary.
+ */
+type CommandVersionResponse = CommandVersion & { commandId: CommandId };
+
+/**
  * Controller for space-scoped recipe routes within organizations
  * Actual path: /organizations/:orgId/spaces/:spaceId/recipes (inherited via RouterModule in AppModule)
  *
@@ -294,16 +302,19 @@ export class OrganizationsSpacesCommandsController {
   async deleteCommandsBatch(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: { recipeIds: CommandId[] },
+    @Body() body: { commandIds?: CommandId[]; recipeIds?: CommandId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<void> {
     const userId = request.user.userId;
 
-    if (!body.recipeIds || !Array.isArray(body.recipeIds)) {
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const ids = body.commandIds ?? body.recipeIds;
+
+    if (!ids || !Array.isArray(ids)) {
       throw new BadRequestException('recipeIds must be an array');
     }
 
-    if (body.recipeIds.length === 0) {
+    if (ids.length === 0) {
       throw new BadRequestException('recipeIds array cannot be empty');
     }
 
@@ -312,15 +323,15 @@ export class OrganizationsSpacesCommandsController {
       {
         organizationId,
         spaceId,
-        recipeIds: body.recipeIds,
-        count: body.recipeIds.length,
+        recipeIds: ids,
+        count: ids.length,
         userId,
       },
     );
 
     try {
       await this.commandsService.deleteCommandsBatch(
-        body.recipeIds,
+        ids,
         spaceId,
         userId,
         organizationId,
@@ -332,7 +343,7 @@ export class OrganizationsSpacesCommandsController {
         {
           organizationId,
           spaceId,
-          count: body.recipeIds.length,
+          count: ids.length,
           userId,
         },
       );
@@ -344,7 +355,7 @@ export class OrganizationsSpacesCommandsController {
         {
           organizationId,
           spaceId,
-          recipeIds: body.recipeIds,
+          recipeIds: ids,
           error: errorMessage,
         },
       );
@@ -451,7 +462,7 @@ export class OrganizationsSpacesCommandsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Param('id') id: CommandId,
-  ): Promise<CommandVersion[]> {
+  ): Promise<CommandVersionResponse[]> {
     this.logger.info(
       'GET /organizations/:orgId/spaces/:spaceId/recipes/:id/versions - Fetching recipe versions',
       {
@@ -476,7 +487,11 @@ export class OrganizationsSpacesCommandsController {
           `No versions found for recipe with id ${id}`,
         );
       }
-      return versions;
+      // Superset: add command-named twin `commandId` beside `recipeId`.
+      return versions.map((version) => ({
+        ...version,
+        commandId: version.recipeId,
+      }));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

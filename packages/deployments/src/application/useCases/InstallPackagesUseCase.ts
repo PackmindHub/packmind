@@ -364,7 +364,8 @@ export class InstallPackagesUseCase extends AbstractMemberUseCase<
     const sourceArtifacts = {
       skillsCount: skillVersions.length,
       standardsCount: standardVersions.length,
-      commandsCount: 0,
+      // Command-named twin of `recipesCount` (superset); carries the same value.
+      commandsCount: recipeVersions.length,
       recipesCount: recipeVersions.length,
     };
 

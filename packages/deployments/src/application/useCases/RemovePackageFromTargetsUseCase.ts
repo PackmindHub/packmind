@@ -694,11 +694,15 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       targetId,
       exclusiveArtifacts: {
         recipeVersionIds: exclusiveCommandVersionIds,
+        // Command-named twin of `recipeVersionIds` (superset); same value.
+        commandVersionIds: exclusiveCommandVersionIds,
         standardVersionIds: exclusiveStandardVersionIds,
         skillVersionIds: exclusiveSkillVersionIds,
       },
       remainingArtifacts: {
         recipeVersionIds: Array.from(remainingPackageCommandVersionIds),
+        // Command-named twin of `recipeVersionIds` (superset); same value.
+        commandVersionIds: Array.from(remainingPackageCommandVersionIds),
         standardVersionIds: Array.from(remainingPackageStandardVersionIds),
         skillVersionIds: Array.from(remainingPackageSkillVersionIds),
       },

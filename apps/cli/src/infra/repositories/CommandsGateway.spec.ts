@@ -65,7 +65,7 @@ describe('CommandsGateway', () => {
 
       it('calls the correct API endpoint with POST', () => {
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes`,
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/commands`,
           expect.objectContaining({ method: 'POST' }),
         );
       });
@@ -120,8 +120,41 @@ describe('CommandsGateway', () => {
         await gateway.list({ spaceId });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes`,
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/commands`,
         );
+      });
+    });
+
+    describe('when the API returns the command-named response field', () => {
+      it('prefers `commands` over the legacy `recipes` field', async () => {
+        mockHttpClient.request.mockResolvedValue({
+          commands: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
+          recipes: [{ id: 'legacy', slug: 'legacy', name: 'Legacy' }],
+        });
+
+        const result = await gateway.list({ spaceId });
+
+        expect(result).toEqual({
+          recipes: [{ id: 'cmd-1', slug: 'command-one', name: 'Command One' }],
+        });
+      });
+
+      describe('when `commands` is absent', () => {
+        it('falls back to the legacy `recipes` field', async () => {
+          mockHttpClient.request.mockResolvedValue({
+            recipes: [
+              { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+            ],
+          });
+
+          const result = await gateway.list({ spaceId });
+
+          expect(result).toEqual({
+            recipes: [
+              { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+            ],
+          });
+        });
       });
     });
   });

@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router';
 import { useUpdatePackageMutation } from '../../api/queries/DeploymentsQueries';
 import {
-  Package,
+  PackageResponse,
   PackageId,
   Command,
   Standard,
@@ -35,7 +35,7 @@ import {
 import { PackageEditFormContent } from './PackageEditFormContent';
 
 interface PackageEditFormBodyProps {
-  pkg: Package;
+  pkg: PackageResponse;
   allCommands: Command[];
   allStandards: Standard[];
   allSkills: Skill[];
@@ -60,7 +60,7 @@ export const PackageEditFormBody = ({
   const [editName, setEditName] = useState(pkg.name);
   const [editDescription, setEditDescription] = useState(pkg.description ?? '');
   const [selectedCommandIds, setSelectedCommandIds] = useState<CommandId[]>(
-    pkg.recipes ?? [],
+    pkg.commands ?? [],
   );
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
     pkg.standards ?? [],

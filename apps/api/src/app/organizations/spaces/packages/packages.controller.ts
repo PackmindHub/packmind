@@ -21,7 +21,9 @@ import {
   ListPackagesBySpaceResponse,
   UpdatePackageResponse,
   OrganizationId,
+  Package,
   PackageId,
+  PackageResponse,
   CommandId,
   SkillId,
   SpaceId,
@@ -32,6 +34,41 @@ import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
 const origin = 'OrganizationsSpacesPackagesController';
+
+/**
+ * Controller-level wire responses for package endpoints. SUPERSET for the
+ * recipes→commands rename: each maps the persisted `Package` (which keeps its
+ * `recipes` field) to a {@link PackageResponse} that also carries a
+ * command-named twin `commands` with the same value. The persisted entity is
+ * never modified — the twin is added here at the controller boundary.
+ */
+type GetPackageByIdApiResponse = Omit<GetPackageByIdResponse, 'package'> & {
+  package: PackageResponse;
+};
+type ListPackagesBySpaceApiResponse = Omit<
+  ListPackagesBySpaceResponse,
+  'packages'
+> & {
+  packages: PackageResponse[];
+};
+type CreatePackageApiResponse = Omit<CreatePackageResponse, 'package'> & {
+  package: PackageResponse;
+};
+type UpdatePackageApiResponse = Omit<UpdatePackageResponse, 'package'> & {
+  package: PackageResponse;
+};
+type AddArtefactsToPackageApiResponse = Omit<
+  AddArtefactsToPackageResponse,
+  'package'
+> & {
+  package: PackageResponse;
+};
+
+const toPackageResponse = (pkg: Package): PackageResponse => ({
+  ...pkg,
+  // Command-named twin of `recipes` (superset); same value.
+  commands: pkg.recipes,
+});
 
 /**
  * Controller for space-scoped package routes within organizations
@@ -67,7 +104,7 @@ export class OrganizationsSpacesPackagesController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<ListPackagesBySpaceResponse> {
+  ): Promise<ListPackagesBySpaceApiResponse> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -79,11 +116,15 @@ export class OrganizationsSpacesPackagesController {
     );
 
     try {
-      return await this.deploymentsService.listPackagesBySpace({
+      const response = await this.deploymentsService.listPackagesBySpace({
         userId,
         organizationId,
         spaceId,
       });
+      return {
+        ...response,
+        packages: response.packages.map(toPackageResponse),
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -149,7 +190,7 @@ export class OrganizationsSpacesPackagesController {
     @Param('spaceId') spaceId: SpaceId,
     @Param('packageId') packageId: PackageId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<GetPackageByIdResponse> {
+  ): Promise<GetPackageByIdApiResponse> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -162,12 +203,13 @@ export class OrganizationsSpacesPackagesController {
     );
 
     try {
-      return await this.deploymentsService.getPackageById({
+      const response = await this.deploymentsService.getPackageById({
         userId,
         organizationId,
         spaceId,
         packageId,
       });
+      return { ...response, package: toPackageResponse(response.package) };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -197,13 +239,17 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: CommandId[];
+      commandIds?: CommandId[];
+      recipeIds?: CommandId[];
       standardIds: StandardId[];
       skillIds?: SkillId[];
       originSkill?: string;
     },
-  ): Promise<CreatePackageResponse> {
+  ): Promise<CreatePackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds ?? [];
 
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/packages - Creating package',
@@ -215,17 +261,18 @@ export class OrganizationsSpacesPackagesController {
     );
 
     try {
-      return await this.deploymentsService.createPackage({
+      const response = await this.deploymentsService.createPackage({
         userId,
         organizationId,
         spaceId,
         name: body.name,
         description: body.description,
-        recipeIds: body.recipeIds,
+        recipeIds,
         standardIds: body.standardIds,
         skillIds: body.skillIds,
         originSkill: body.originSkill,
       });
+      return { ...response, package: toPackageResponse(response.package) };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -256,12 +303,16 @@ export class OrganizationsSpacesPackagesController {
     body: {
       name: string;
       description: string;
-      recipeIds: CommandId[];
+      commandIds?: CommandId[];
+      recipeIds?: CommandId[];
       standardIds: StandardId[];
       skillsIds?: SkillId[];
     },
-  ): Promise<UpdatePackageResponse> {
+  ): Promise<UpdatePackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds ?? [];
 
     this.logger.info(
       'PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId - Updating package',
@@ -274,17 +325,18 @@ export class OrganizationsSpacesPackagesController {
     );
 
     try {
-      return await this.deploymentsService.updatePackage({
+      const response = await this.deploymentsService.updatePackage({
         userId,
         organizationId,
         spaceId,
         packageId,
         name: body.name,
         description: body.description,
-        recipeIds: body.recipeIds,
+        recipeIds,
         standardIds: body.standardIds,
         skillsIds: body.skillsIds ?? [],
       });
+      return { ...response, package: toPackageResponse(response.package) };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -313,25 +365,29 @@ export class OrganizationsSpacesPackagesController {
     @Param('packageId') packageId: PackageId,
     @Req() request: AuthenticatedRequest,
     @Body()
-    body: AddArtefactsToPackageCommand,
-  ): Promise<AddArtefactsToPackageResponse> {
+    body: AddArtefactsToPackageCommand & { commandIds?: CommandId[] },
+  ): Promise<AddArtefactsToPackageApiResponse> {
     const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds;
 
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/add-artifacts',
       { organizationId, spaceId, packageId },
     );
 
-    return this.deploymentsService.addArtefactsToPackage({
+    const response = await this.deploymentsService.addArtefactsToPackage({
       userId,
       spaceId,
       organizationId,
       packageId: packageId,
       standardIds: body.standardIds,
-      recipeIds: body.recipeIds,
+      recipeIds,
       skillIds: body.skillIds,
       originSkill: body.originSkill,
     });
+    return { ...response, package: toPackageResponse(response.package) };
   }
 
   /**

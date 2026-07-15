@@ -7,7 +7,6 @@ import {
   IUpdateRenderModeConfigurationUseCase,
 } from '@packmind/types';
 import {
-  IGetPackageByIdUseCase,
   IPublishCommands,
   IPublishStandards,
   IPublishPackages,
@@ -15,7 +14,6 @@ import {
   IListDistributionsByCommand,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
-  IListPackagesBySpaceUseCase,
   IListActiveDistributedPackagesBySpaceUseCase,
   IListDriftedPackagesByOrgUseCase,
   ICreatePackageUseCase,
@@ -74,7 +72,7 @@ export class DeploymentsGatewayApi
       recipeId,
     }: NewPackmindCommandBody<ListDistributionsByCommandCommand>) => {
       return this._api.get(
-        `${this._endpoint}/${organizationId}/deployments/distributions/recipe/${recipeId}`,
+        `${this._endpoint}/${organizationId}/deployments/distributions/command/${recipeId}`,
       );
     };
 
@@ -97,7 +95,7 @@ export class DeploymentsGatewayApi
     );
   };
 
-  listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase> = async ({
+  listPackagesBySpace: IDeploymentsGateway['listPackagesBySpace'] = async ({
     spaceId,
     organizationId,
   }: {
@@ -121,7 +119,7 @@ export class DeploymentsGatewayApi
     } = params;
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages`,
-      { name, description, recipeIds, standardIds, skillIds },
+      { name, description, commandIds: recipeIds, standardIds, skillIds },
     );
   };
 
@@ -138,7 +136,7 @@ export class DeploymentsGatewayApi
     } = params;
     return this._api.patch(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
-      { name, description, recipeIds, standardIds, skillsIds },
+      { name, description, commandIds: recipeIds, standardIds, skillsIds },
     );
   };
 
@@ -162,11 +160,11 @@ export class DeploymentsGatewayApi
   }: NewPackmindCommandBody<AddArtefactsToPackageCommand>) => {
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
-      { standardIds, recipeIds, skillIds },
+      { standardIds, commandIds: recipeIds, skillIds },
     );
   };
 
-  getPackageById: NewGateway<IGetPackageByIdUseCase> = async ({
+  getPackageById: IDeploymentsGateway['getPackageById'] = async ({
     packageId,
     organizationId,
     spaceId,
@@ -186,8 +184,8 @@ export class DeploymentsGatewayApi
     recipeVersionIds,
   }: NewPackmindCommandBody<PublishCommandsCommand>) => {
     return this._api.post(
-      `${this._endpoint}/${organizationId}/deployments/recipes/publish`,
-      { targetIds, recipeVersionIds },
+      `${this._endpoint}/${organizationId}/deployments/commands/publish`,
+      { targetIds, commandVersionIds: recipeVersionIds },
     );
   };
 

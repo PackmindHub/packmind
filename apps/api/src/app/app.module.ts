@@ -32,6 +32,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { CommandsModule } from './organizations/spaces/commands/commands.module';
+import { CommandsAliasModule } from './organizations/spaces/commands/commands.alias.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
@@ -197,6 +198,15 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
                     module: OrganizationsSpacesCommandsChangeProposalsModule,
                   },
                 ],
+              },
+              {
+                // New `/commands` alias mounted alongside the legacy
+                // `/recipes` entry (same handlers via CommandsAliasController).
+                // NOTE: the `:recipeId/change-proposals` grandchild is
+                // intentionally NOT aliased in this slice — it stays under
+                // `/recipes` only and is deferred to a follow-up.
+                path: ':spaceId/commands',
+                module: CommandsAliasModule,
               },
               {
                 path: ':spaceId/standards',

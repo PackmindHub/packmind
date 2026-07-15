@@ -138,10 +138,10 @@ export async function showPackageHandler(
       logConsole('');
     }
 
-    if (pkg.recipes && pkg.recipes.length > 0) {
+    if (pkg.commands && pkg.commands.length > 0) {
       logConsole('Commands:');
-      pkg.recipes.forEach((recipe) => {
-        logConsole(`  - ${recipe.name}`);
+      pkg.commands.forEach((command) => {
+        logConsole(`  - ${command.name}`);
       });
       logConsole('');
     }

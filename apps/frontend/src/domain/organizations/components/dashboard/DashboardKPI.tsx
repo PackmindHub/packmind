@@ -27,8 +27,8 @@ export const DashboardKPI = () => {
 
   const totalStandards = kpi?.standards.total ?? 0;
   const activeStandards = kpi?.standards.active ?? 0;
-  const totalCommands = kpi?.recipes.total ?? 0;
-  const activeCommands = kpi?.recipes.active ?? 0;
+  const totalCommands = kpi?.commands.total ?? 0;
+  const activeCommands = kpi?.commands.active ?? 0;
   const totalSkills = kpi?.skills.total ?? 0;
   const activeSkills = kpi?.skills.active ?? 0;
 

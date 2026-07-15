@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useListPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 import {
   OrganizationId,
-  Package,
+  PackageResponse,
   CommandId,
   SkillId,
   SpaceId,
@@ -20,14 +20,14 @@ interface UsePackagesMissingAnyArtifactParams {
 }
 
 function getOwnedArtifactIds(
-  pkg: Package,
+  pkg: PackageResponse,
   artifactType: ArtifactType,
 ): readonly string[] {
   switch (artifactType) {
     case 'standard':
       return (pkg.standards ?? []).map((id) => id.toString());
     case 'recipe':
-      return (pkg.recipes ?? []).map((id) => id.toString());
+      return (pkg.commands ?? []).map((id) => id.toString());
     case 'skill':
       return (pkg.skills ?? []).map((id) => id.toString());
   }
@@ -49,7 +49,7 @@ export function usePackagesMissingAnyArtifact({
     useMemo(() => {
       const allPackages = packagesResponse?.packages ?? [];
       const presentArtifactIdsByPackageId: Record<string, Set<string>> = {};
-      const addable: Package[] = [];
+      const addable: PackageResponse[] = [];
 
       if (artifactIds.length === 0) {
         return {

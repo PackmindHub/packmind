@@ -212,7 +212,7 @@ export class DeploymentGateway implements IDeploymentGateway {
     const { organizationId } = this.httpClient.getAuthContext();
     const typeToPath: Record<ArtifactType, string> = {
       standard: 'standards',
-      command: 'recipes',
+      command: 'commands',
       skill: 'skills',
     };
     const pathSegment = typeToPath[type];

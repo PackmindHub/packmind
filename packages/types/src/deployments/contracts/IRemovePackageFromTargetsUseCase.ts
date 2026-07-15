@@ -26,12 +26,16 @@ export type TargetArtifactResolution = {
   /** Artifacts that only belong to the removed package and should be deleted */
   exclusiveArtifacts: {
     recipeVersionIds: CommandVersionId[];
+    // Command-named twin of `recipeVersionIds` (superset); same value.
+    commandVersionIds: CommandVersionId[];
     standardVersionIds: StandardVersionId[];
     skillVersionIds: SkillVersionId[];
   };
   /** Artifacts that belong to remaining packages and should be re-rendered */
   remainingArtifacts: {
     recipeVersionIds: CommandVersionId[];
+    // Command-named twin of `recipeVersionIds` (superset); same value.
+    commandVersionIds: CommandVersionId[];
     standardVersionIds: StandardVersionId[];
     skillVersionIds: SkillVersionId[];
   };

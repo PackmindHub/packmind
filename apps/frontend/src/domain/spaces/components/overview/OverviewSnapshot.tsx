@@ -64,8 +64,8 @@ export const OverviewSnapshot = () => {
     {
       key: 'commands',
       label: 'Commands',
-      total: kpi?.recipes.total ?? 0,
-      active: kpi?.recipes.active ?? 0,
+      total: kpi?.commands.total ?? 0,
+      active: kpi?.commands.active ?? 0,
       href:
         organization && spaceSlug
           ? routes.space.toCommands(organization.slug, spaceSlug)

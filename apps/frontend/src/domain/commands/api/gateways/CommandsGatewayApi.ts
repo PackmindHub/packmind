@@ -14,7 +14,7 @@ export class CommandsGatewayApi
   implements ICommandsGateway
 {
   constructor() {
-    super('/recipes');
+    super('/commands');
   }
 
   getVersionsById(
@@ -23,7 +23,7 @@ export class CommandsGatewayApi
     id: CommandId,
   ): Promise<CommandVersion[]> {
     return this._api.get<CommandVersion[]>(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}/versions`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands/${id}/versions`,
     );
   }
 
@@ -32,7 +32,7 @@ export class CommandsGatewayApi
     spaceId: SpaceId,
   ): Promise<Command[]> {
     return this._api.get<Command[]>(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands`,
     );
   }
 
@@ -42,7 +42,7 @@ export class CommandsGatewayApi
     id: CommandId,
   ): Promise<Command> {
     return this._api.get<Command>(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands/${id}`,
     );
   }
 
@@ -52,7 +52,7 @@ export class CommandsGatewayApi
     recipe: { name: string; content: string; slug?: string },
   ): Promise<Command> {
     return this._api.post<Command>(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands`,
       recipe,
     );
   }
@@ -64,7 +64,7 @@ export class CommandsGatewayApi
     updateData: { name: string; content: string },
   ): Promise<Command> {
     return this._api.patch<Command>(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands/${id}`,
       updateData,
     );
   }
@@ -72,7 +72,7 @@ export class CommandsGatewayApi
   deleteCommand: NewGateway<IDeleteCommandUseCase> = async (command) => {
     const { recipeId, spaceId, organizationId } = command;
     return this._api.delete(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${recipeId}`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands/${recipeId}`,
     );
   };
 
@@ -81,9 +81,9 @@ export class CommandsGatewayApi
   ) => {
     const { organizationId, spaceId, recipeIds } = command;
     return this._api.delete(
-      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      `/organizations/${organizationId}/spaces/${spaceId}/commands`,
       {
-        data: { recipeIds },
+        data: { commandIds: recipeIds },
       },
     );
   };

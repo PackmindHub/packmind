@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesController } from './spaces.controller';
 import { CommandsModule } from './commands/commands.module';
+import { CommandsAliasModule } from './commands/commands.alias.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './skills/skills.module';
@@ -33,6 +34,7 @@ import { SpacesService } from '../../spaces/spaces.service';
 @Module({
   imports: [
     CommandsModule,
+    CommandsAliasModule,
     OrganizationsSpacesStandardsModule,
     OrganizationsSpacesPackagesModule,
     OrganizationsSpacesSkillsModule,

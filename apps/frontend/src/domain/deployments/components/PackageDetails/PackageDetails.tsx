@@ -88,7 +88,7 @@ export const PackageDetails = ({
   const deletePackageMutation = useDeletePackagesBatchMutation();
 
   const pkg = packageResponse?.package;
-  const recipeIds = useMemo(() => pkg?.recipes || [], [pkg?.recipes]);
+  const recipeIds = useMemo(() => pkg?.commands || [], [pkg?.commands]);
   const standardIds = useMemo(() => pkg?.standards || [], [pkg?.standards]);
   const skillIds = useMemo(() => pkg?.skills || [], [pkg?.skills]);
   const allCommands = (commandsResponse || []).sort((a, b) =>
