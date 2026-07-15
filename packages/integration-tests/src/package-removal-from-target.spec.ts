@@ -4,7 +4,7 @@ import {
   DeleteItemType,
   GitCommit,
   Package,
-  Recipe,
+  Command,
   RenderMode,
   Standard,
   createPackageId,
@@ -21,7 +21,7 @@ describe('Package removal from target integration', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
-  let recipe1: Recipe;
+  let command1: Command;
   let standard1: Standard;
 
   let commit: GitCommit;
@@ -42,7 +42,7 @@ describe('Package removal from target integration', () => {
       RenderMode.CLAUDE,
     ]);
 
-    recipe1 = await dataFactory.withRecipe({ name: 'Recipe 1' });
+    command1 = await dataFactory.withCommand({ name: 'Recipe 1' });
     standard1 = await dataFactory.withStandard({ name: 'Standard 1' });
 
     commit = await createGitCommit();
@@ -77,7 +77,7 @@ describe('Package removal from target integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package to Remove',
           description: 'Package that will be removed',
-          recipeIds: [recipe1.id],
+          recipeIds: [command1.id],
           standardIds: [standard1.id],
         });
       packageToRemove = response.package;
@@ -181,7 +181,7 @@ describe('Package removal from target integration', () => {
     let deleteFiles: Array<{ path: string }>;
 
     beforeEach(async () => {
-      const sharedRecipe = await dataFactory.withRecipe({
+      const sharedCommand = await dataFactory.withCommand({
         name: 'Shared Recipe',
       });
 
@@ -193,7 +193,7 @@ describe('Package removal from target integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package to Remove',
           description: 'Package that will be removed',
-          recipeIds: [recipe1.id, sharedRecipe.id],
+          recipeIds: [command1.id, sharedCommand.id],
           standardIds: [],
         });
       packageToRemove = response1.package;
@@ -206,7 +206,7 @@ describe('Package removal from target integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Package to Keep',
           description: 'Package that will remain',
-          recipeIds: [sharedRecipe.id],
+          recipeIds: [sharedCommand.id],
           standardIds: [standard1.id],
         });
 
@@ -341,7 +341,7 @@ describe('Package removal from target integration', () => {
           spaceId: dataFactory.space.id,
           name: 'Test Package',
           description: 'Test package',
-          recipeIds: [recipe1.id],
+          recipeIds: [command1.id],
           standardIds: [],
         });
 

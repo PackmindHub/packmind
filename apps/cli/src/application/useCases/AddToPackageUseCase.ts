@@ -9,10 +9,10 @@ import { ItemNotFoundError } from '../../domain/errors/ItemNotFoundError';
 import { ISpaceService } from '../../domain/services/ISpaceService';
 import {
   AddArtefactsToPackageCommand,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createStandardId,
-  Recipe,
+  Command,
   Skill,
   SpaceId,
   Standard,
@@ -63,7 +63,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     if (itemType === 'standard') {
       addCommand.standardIds = ids.map(createStandardId);
     } else if (itemType === 'command') {
-      addCommand.recipeIds = ids.map(createRecipeId);
+      addCommand.recipeIds = ids.map(createCommandId);
     } else if (itemType === 'skill') {
       addCommand.skillIds = ids.map(createSkillId);
     }
@@ -135,7 +135,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
   private async findCommandBySlug(
     slug: string,
     spaceId: SpaceId,
-  ): Promise<Recipe | null> {
+  ): Promise<Command | null> {
     const commands = await this.gateway.commands.list({ spaceId });
     return commands.recipes.find((command) => command.slug === slug) ?? null;
   }

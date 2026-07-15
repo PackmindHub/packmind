@@ -3,20 +3,20 @@ import {
   createUserId,
   createOrganizationId,
   createSpaceId,
-  createRecipeId,
+  createCommandId,
   createStandardId,
   createSkillId,
   IAccountsPort,
   ISpacesPort,
-  IRecipesPort,
+  ICommandsPort,
   IStandardsPort,
   ISkillsPort,
   CreatePackageCommand,
   Space,
-  Recipe,
+  Command,
   Standard,
   Skill,
-  RecipeId,
+  CommandId,
   StandardId,
   SkillId,
   SpaceId,
@@ -36,7 +36,7 @@ describe('CreatePackageUseCase', () => {
   let mockServices: jest.Mocked<DeploymentsServices>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -44,8 +44,8 @@ describe('CreatePackageUseCase', () => {
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
   const spaceId = createSpaceId(uuidv4());
-  const recipeId1 = createRecipeId(uuidv4());
-  const recipeId2 = createRecipeId(uuidv4());
+  const commandId1 = createCommandId(uuidv4());
+  const commandId2 = createCommandId(uuidv4());
   const standardId1 = createStandardId(uuidv4());
   const standardId2 = createStandardId(uuidv4());
   const skillId1 = createSkillId(uuidv4());
@@ -77,7 +77,7 @@ describe('CreatePackageUseCase', () => {
     organizationId,
   });
 
-  const buildRecipe = (id: RecipeId, spaceIdParam: SpaceId): Recipe => ({
+  const buildCommand = (id: CommandId, spaceIdParam: SpaceId): Command => ({
     id,
     name: `Recipe ${id}`,
     slug: `recipe-${id}`,
@@ -143,9 +143,9 @@ describe('CreatePackageUseCase', () => {
       }),
     } as unknown as jest.Mocked<ISpacesPort>;
 
-    mockRecipesPort = {
-      getRecipeByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      getCommandByIdInternal: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getStandard: jest.fn(),
@@ -161,7 +161,7 @@ describe('CreatePackageUseCase', () => {
       mockSpacesPort,
       mockAccountsPort,
       mockServices,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       stubbedLogger,
@@ -180,15 +180,15 @@ describe('CreatePackageUseCase', () => {
 
       beforeEach(async () => {
         const mockSpace = buildSpace();
-        const mockRecipe1 = buildRecipe(recipeId1, spaceId);
-        const mockRecipe2 = buildRecipe(recipeId2, spaceId);
+        const mockCommand1 = buildCommand(commandId1, spaceId);
+        const mockCommand2 = buildCommand(commandId2, spaceId);
         const mockStandard1 = buildStandard(standardId1, spaceId);
         const mockStandard2 = buildStandard(standardId2, spaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal
-          .mockResolvedValueOnce(mockRecipe1)
-          .mockResolvedValueOnce(mockRecipe2);
+        mockCommandsPort.getCommandByIdInternal
+          .mockResolvedValueOnce(mockCommand1)
+          .mockResolvedValueOnce(mockCommand2);
         mockStandardsPort.getStandard
           .mockResolvedValueOnce(mockStandard1)
           .mockResolvedValueOnce(mockStandard2);
@@ -199,7 +199,7 @@ describe('CreatePackageUseCase', () => {
           description: 'Package description',
           spaceId,
           createdBy: userId,
-          recipes: [recipeId1, recipeId2],
+          recipes: [commandId1, commandId2],
           standards: [standardId1, standardId2],
         });
 
@@ -211,7 +211,7 @@ describe('CreatePackageUseCase', () => {
           spaceId,
           name: 'My Package',
           description: 'Package description',
-          recipeIds: [recipeId1, recipeId2],
+          recipeIds: [commandId1, commandId2],
           standardIds: [standardId1, standardId2],
           skillIds: [],
         };
@@ -228,14 +228,14 @@ describe('CreatePackageUseCase', () => {
       });
 
       it('retrieves recipe 1 by id', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
       it('retrieves recipe 2 by id', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId2,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId2,
         );
       });
 
@@ -256,7 +256,7 @@ describe('CreatePackageUseCase', () => {
             spaceId,
             createdBy: userId,
           }),
-          [recipeId1, recipeId2],
+          [commandId1, commandId2],
           [standardId1, standardId2],
           [],
         );
@@ -305,7 +305,7 @@ describe('CreatePackageUseCase', () => {
       });
 
       it('does not call recipes port', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+        expect(mockCommandsPort.getCommandByIdInternal).not.toHaveBeenCalled();
       });
 
       it('retrieves the standard by id', () => {
@@ -319,11 +319,11 @@ describe('CreatePackageUseCase', () => {
 
       beforeEach(async () => {
         const mockSpace = buildSpace();
-        const mockRecipe1 = buildRecipe(recipeId1, spaceId);
+        const mockCommand1 = buildCommand(commandId1, spaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValueOnce(
-          mockRecipe1,
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValueOnce(
+          mockCommand1,
         );
 
         createdPackage = packageFactory({
@@ -332,7 +332,7 @@ describe('CreatePackageUseCase', () => {
           description: 'Package description',
           spaceId,
           createdBy: userId,
-          recipes: [recipeId1],
+          recipes: [commandId1],
           standards: [],
         });
 
@@ -344,7 +344,7 @@ describe('CreatePackageUseCase', () => {
           spaceId,
           name: 'My Package',
           description: 'Package description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillIds: [],
         };
@@ -357,8 +357,8 @@ describe('CreatePackageUseCase', () => {
       });
 
       it('retrieves the recipe by id', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
@@ -407,7 +407,7 @@ describe('CreatePackageUseCase', () => {
       });
 
       it('does not call recipes port', () => {
-        expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+        expect(mockCommandsPort.getCommandByIdInternal).not.toHaveBeenCalled();
       });
 
       it('does not call standards port', () => {
@@ -642,7 +642,7 @@ describe('CreatePackageUseCase', () => {
         const mockSpace = buildSpace();
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(null);
 
         command = {
           userId,
@@ -650,7 +650,7 @@ describe('CreatePackageUseCase', () => {
           spaceId,
           name: 'My Package',
           description: 'Package description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillIds: [],
         };
@@ -658,7 +658,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe with id ${recipeId1} not found`,
+          `Recipe with id ${commandId1} not found`,
         );
       });
 
@@ -679,8 +679,8 @@ describe('CreatePackageUseCase', () => {
           // Expected to throw
         }
 
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
@@ -701,10 +701,10 @@ describe('CreatePackageUseCase', () => {
 
       beforeEach(() => {
         const mockSpace = buildSpace();
-        const mockRecipe = buildRecipe(recipeId1, differentSpaceId);
+        const mockCommand = buildCommand(commandId1, differentSpaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+        mockCommandsPort.getCommandByIdInternal.mockResolvedValue(mockCommand);
 
         command = {
           userId,
@@ -712,7 +712,7 @@ describe('CreatePackageUseCase', () => {
           spaceId,
           name: 'My Package',
           description: 'Package description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillIds: [],
         };
@@ -720,7 +720,7 @@ describe('CreatePackageUseCase', () => {
 
       it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
-          `Recipe ${recipeId1} does not belong to space ${spaceId}`,
+          `Recipe ${commandId1} does not belong to space ${spaceId}`,
         );
       });
 
@@ -741,8 +741,8 @@ describe('CreatePackageUseCase', () => {
           // Expected to throw
         }
 
-        expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
-          recipeId1,
+        expect(mockCommandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
+          commandId1,
         );
       });
 
@@ -1030,7 +1030,7 @@ describe('CreatePackageUseCase', () => {
         const error = new Error('Recipes service unavailable');
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockRecipesPort.getRecipeByIdInternal.mockRejectedValue(error);
+        mockCommandsPort.getCommandByIdInternal.mockRejectedValue(error);
 
         const command: CreatePackageCommand = {
           userId,
@@ -1038,7 +1038,7 @@ describe('CreatePackageUseCase', () => {
           spaceId,
           name: 'My Package',
           description: 'Package description',
-          recipeIds: [recipeId1],
+          recipeIds: [commandId1],
           standardIds: [],
           skillIds: [],
         };

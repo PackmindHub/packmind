@@ -1,10 +1,10 @@
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import {
   createGitProviderId,
   createGitRepoId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createRuleId,
   createSpaceId,
   createStandardId,
@@ -15,8 +15,8 @@ import {
   FileUpdates,
   GitRepo,
   IStandardsPort,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   Rule,
   Standard,
   StandardVersion,
@@ -57,8 +57,8 @@ describe('PackmindDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        const recipe: Recipe = recipeFactory({
-          id: createRecipeId('recipe-1'),
+        const recipe: Command = commandFactory({
+          id: createCommandId('recipe-1'),
           name: 'Test Recipe',
           slug: 'test-recipe',
           content: 'Original recipe content',
@@ -67,8 +67,8 @@ describe('PackmindDeployer', () => {
           spaceId: createSpaceId('space-1'),
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -77,7 +77,7 @@ describe('PackmindDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.deployRecipes(
+        result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -132,8 +132,8 @@ describe('PackmindDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        const zebraRecipe: Recipe = recipeFactory({
-          id: createRecipeId('recipe-z'),
+        const zebraCommand: Command = commandFactory({
+          id: createCommandId('recipe-z'),
           name: 'Zebra Recipe',
           slug: 'zebra-recipe',
           content: 'Original zebra content',
@@ -142,8 +142,8 @@ describe('PackmindDeployer', () => {
           spaceId: createSpaceId('space-1'),
         });
 
-        const appleRecipe: Recipe = recipeFactory({
-          id: createRecipeId('recipe-a'),
+        const appleCommand: Command = commandFactory({
+          id: createCommandId('recipe-a'),
           name: 'Apple Recipe',
           slug: 'apple-recipe',
           content: 'Original apple content',
@@ -152,28 +152,28 @@ describe('PackmindDeployer', () => {
           spaceId: createSpaceId('space-1'),
         });
 
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: createRecipeVersionId('recipe-version-z'),
-            recipeId: zebraRecipe.id,
-            name: zebraRecipe.name,
-            slug: zebraRecipe.slug,
+            id: createCommandVersionId('recipe-version-z'),
+            recipeId: zebraCommand.id,
+            name: zebraCommand.name,
+            slug: zebraCommand.slug,
             content: 'Zebra content',
             version: 1,
             userId: createUserId('user-1'),
           },
           {
-            id: createRecipeVersionId('recipe-version-a'),
-            recipeId: appleRecipe.id,
-            name: appleRecipe.name,
-            slug: appleRecipe.slug,
+            id: createCommandVersionId('recipe-version-a'),
+            recipeId: appleCommand.id,
+            name: appleCommand.name,
+            slug: appleCommand.slug,
             content: 'Apple content',
             version: 2,
             userId: createUserId('user-1'),
           },
         ];
 
-        result = await deployer.deployRecipes(
+        result = await deployer.deployCommands(
           recipeVersions,
           mockGitRepo,
           mockTarget,
@@ -199,7 +199,7 @@ describe('PackmindDeployer', () => {
       let result: FileUpdates;
 
       beforeEach(async () => {
-        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+        result = await deployer.deployCommands([], mockGitRepo, mockTarget);
       });
 
       it('creates only commands index file', () => {
@@ -598,10 +598,10 @@ describe('PackmindDeployer', () => {
 
   describe('generateRemovalFileUpdates', () => {
     describe('when recipes are removed and none remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe',
           slug: 'removed-recipe',
           content: '# Removed Recipe',
@@ -615,7 +615,7 @@ describe('PackmindDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -679,10 +679,10 @@ describe('PackmindDeployer', () => {
     });
 
     describe('when commands are removed but others remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe',
           slug: 'removed-recipe',
           content: '# Removed Recipe',
@@ -691,10 +691,10 @@ describe('PackmindDeployer', () => {
         },
       ];
 
-      const installedRecipes: RecipeVersion[] = [
+      const installedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: createRecipeId('recipe-2'),
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: createCommandId('recipe-2'),
           name: 'Installed Recipe',
           slug: 'installed-recipe',
           content: '# Installed Recipe',
@@ -708,12 +708,12 @@ describe('PackmindDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: installedRecipes,
+            recipeVersions: installedCommands,
             standardVersions: [],
             skillVersions: [],
           },
@@ -893,10 +893,10 @@ describe('PackmindDeployer', () => {
     });
 
     describe('when all commands and standards are removed and none remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
+      const removedCommands: CommandVersion[] = [
         {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: createCommandId('recipe-1'),
           name: 'Removed Recipe 1',
           slug: 'removed-recipe-1',
           content: '# Removed Recipe 1',
@@ -904,8 +904,8 @@ describe('PackmindDeployer', () => {
           userId: createUserId('user-1'),
         },
         {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: createRecipeId('recipe-2'),
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: createCommandId('recipe-2'),
           name: 'Removed Recipe 2',
           slug: 'removed-recipe-2',
           content: '# Removed Recipe 2',
@@ -931,7 +931,7 @@ describe('PackmindDeployer', () => {
       beforeEach(async () => {
         result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: removedRecipes,
+            recipeVersions: removedCommands,
             standardVersions: removedStandards,
             skillVersions: [],
           },

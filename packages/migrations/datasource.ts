@@ -8,7 +8,7 @@ register({
     '@packmind/git': ['packages/git/src/index.ts'],
     '@packmind/logger': ['packages/logger/src/index.ts'],
     '@packmind/migrations': ['packages/migrations/src/index.ts'],
-    '@packmind/recipes': ['packages/recipes/src/index.ts'],
+    '@packmind/commands': ['packages/commands/src/index.ts'],
     '@packmind/node-utils': ['packages/node-utils/src/index.ts'],
     '@packmind/test-utils': ['packages/test-utils/src/index.ts'],
     '@packmind/types': ['packages/types/src/index.ts'],

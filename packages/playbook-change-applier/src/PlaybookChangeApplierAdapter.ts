@@ -3,7 +3,7 @@ import {
   ApplyPlaybookResponse,
   IAccountsPort,
   IPlaybookChangeApplierPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -17,7 +17,7 @@ export class PlaybookChangeApplierAdapter implements IPlaybookChangeApplierPort 
     accountsPort: IAccountsPort;
     skillsPort: ISkillsPort;
     standardsPort: IStandardsPort;
-    recipesPort: IRecipesPort;
+    recipesPort: ICommandsPort;
     spacesPort: ISpacesPort;
   }): Promise<void> {
     this.applyPlaybookUseCase = new ApplyPlaybookUseCase(

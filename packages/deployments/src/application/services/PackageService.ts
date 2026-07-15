@@ -3,7 +3,7 @@ import {
   Package,
   PackageId,
   PackageWithArtefacts,
-  RecipeId,
+  CommandId,
   SpaceId,
   StandardId,
   SkillId,
@@ -175,7 +175,7 @@ export class PackageService {
 
   async createPackage(
     pkg: Omit<Package, 'recipes' | 'standards' | 'skills'>,
-    recipeIds: RecipeId[],
+    recipeIds: CommandId[],
     standardIds: StandardId[],
     skillIds: SkillId[] = [],
   ): Promise<Package> {
@@ -196,7 +196,7 @@ export class PackageService {
       };
 
       await this.packageRepository.add(packageToCreate);
-      await this.packageRepository.addRecipes(pkg.id, recipeIds);
+      await this.packageRepository.addCommands(pkg.id, recipeIds);
       await this.packageRepository.addStandards(pkg.id, standardIds);
       await this.packageRepository.addSkills(pkg.id, skillIds);
 
@@ -283,7 +283,7 @@ export class PackageService {
     packageId: PackageId,
     name: string,
     description: string,
-    recipeIds: RecipeId[],
+    recipeIds: CommandId[],
     standardIds: StandardId[],
     skillIds: SkillId[],
   ): Promise<Package> {
@@ -301,7 +301,7 @@ export class PackageService {
         name,
         description,
       );
-      await this.packageRepository.setRecipes(packageId, recipeIds);
+      await this.packageRepository.setCommands(packageId, recipeIds);
       await this.packageRepository.setStandards(packageId, standardIds);
       await this.packageRepository.setSkills(packageId, skillIds);
 

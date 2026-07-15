@@ -1,6 +1,6 @@
 import { SkillVersion } from '../../skills/SkillVersion';
 import { SkillFile } from '../../skills/SkillFile';
-import { RecipeVersion } from '../../recipes/RecipeVersion';
+import { CommandVersion } from '../../commands/CommandVersion';
 import { StandardVersion } from '../../standards/StandardVersion';
 import { ChangeProposalType } from '../ChangeProposalType';
 
@@ -9,7 +9,7 @@ export type SkillVersionWithFiles = SkillVersion & {
 };
 
 export type ApplierObjectVersions =
-  | RecipeVersion
+  | CommandVersion
   | StandardVersion
   | SkillVersionWithFiles;
 

@@ -462,7 +462,7 @@ describe('HexaRegistry', () => {
 
     describe('when destroying all hexas', () => {
       let accountsHexa: TestHexa;
-      let recipesHexa: AnotherTestHexa;
+      let commandsHexa: AnotherTestHexa;
 
       beforeEach(async () => {
         registry.register(TestHexa);
@@ -470,7 +470,7 @@ describe('HexaRegistry', () => {
         await registry.init(mockDataSource);
 
         accountsHexa = registry.get(TestHexa);
-        recipesHexa = registry.get(AnotherTestHexa);
+        commandsHexa = registry.get(AnotherTestHexa);
 
         registry.destroyAll();
       });
@@ -480,7 +480,7 @@ describe('HexaRegistry', () => {
       });
 
       it('calls destroy on AnotherTestHexa', () => {
-        expect(recipesHexa.destroyCalled).toBe(true);
+        expect(commandsHexa.destroyCalled).toBe(true);
       });
 
       it('marks registry as not initialized', () => {

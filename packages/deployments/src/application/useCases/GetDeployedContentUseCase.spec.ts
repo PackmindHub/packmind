@@ -10,8 +10,8 @@ import {
   Organization,
   OrganizationId,
   PackageWithArtefacts,
-  Recipe,
-  RecipeVersion,
+  Command,
+  CommandVersion,
   Skill,
   SkillVersion,
   Standard,
@@ -21,8 +21,8 @@ import {
   UserOrganizationMembership,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -77,7 +77,7 @@ describe('GetDeployedContentUseCase', () => {
 
     distributionRepository = {
       findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
-      findActiveRecipeVersionsByTarget: jest.fn().mockResolvedValue([]),
+      findActiveCommandVersionsByTarget: jest.fn().mockResolvedValue([]),
       findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
@@ -157,7 +157,7 @@ describe('GetDeployedContentUseCase', () => {
   describe('when target exists with deployed versions', () => {
     const spaceId = createSpaceId(uuidv4());
     const targetId = createTargetId(uuidv4());
-    const recipeId = createRecipeId(uuidv4());
+    const recipeId = createCommandId(uuidv4());
     const standardId = createStandardId(uuidv4());
     const skillId = createSkillId(uuidv4());
 
@@ -167,8 +167,8 @@ describe('GetDeployedContentUseCase', () => {
       path: '/',
     };
 
-    const recipeVersion: RecipeVersion = {
-      id: createRecipeVersionId(uuidv4()),
+    const recipeVersion: CommandVersion = {
+      id: createCommandVersionId(uuidv4()),
       recipeId,
       name: 'test-recipe',
       slug: 'test-recipe',
@@ -199,7 +199,7 @@ describe('GetDeployedContentUseCase', () => {
       userId: createUserId(uuidv4()),
     };
 
-    const recipe: Recipe = {
+    const recipe: Command = {
       id: recipeId,
       name: 'test-recipe',
       slug: 'test-recipe',
@@ -245,7 +245,7 @@ describe('GetDeployedContentUseCase', () => {
 
     beforeEach(() => {
       targetResolutionService.findTargetFromGitInfo.mockResolvedValue(target);
-      distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
         [recipeVersion],
       );
       distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
@@ -402,7 +402,7 @@ describe('GetDeployedContentUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        distributionRepository.findActiveRecipeVersionsByTarget,
+        distributionRepository.findActiveCommandVersionsByTarget,
       ).not.toHaveBeenCalled();
     });
 
@@ -427,7 +427,7 @@ describe('GetDeployedContentUseCase', () => {
       distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
-      distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      distributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
         [],
       );
       distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(

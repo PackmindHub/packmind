@@ -4,14 +4,14 @@ import {
   createUserId,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createStandardId,
   createTargetId,
   createDistributionId,
   createStandardVersionId,
-  createRecipeVersionId,
+  createCommandVersionId,
   PublishPackagesCommand,
-  IRecipesPort,
+  ICommandsPort,
   IStandardsPort,
   ISkillsPort,
   IDeploymentPort,
@@ -30,7 +30,7 @@ import { IDistributedPackageRepository } from '../../domain/repositories/IDistri
 
 describe('PublishPackagesUseCase - Integration behavior', () => {
   let useCase: PublishPackagesUseCase;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
@@ -46,9 +46,9 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
 
-    mockRecipesPort = {
-      listRecipeVersions: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      listCommandVersions: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getLatestStandardVersion: jest.fn(),
@@ -74,7 +74,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       findByDistributionId: jest.fn(),
       findByPackageId: jest.fn(),
       addStandardVersions: jest.fn(),
-      addRecipeVersions: jest.fn(),
+      addCommandVersions: jest.fn(),
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
@@ -87,7 +87,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     } as unknown as jest.Mocked<ISpacesPort>;
 
     useCase = new PublishPackagesUseCase(
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       mockDeploymentPort,
@@ -106,7 +106,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     let result: PackagesDeployment[];
 
     beforeEach(async () => {
-      const recipeId = createRecipeId(uuidv4());
+      const recipeId = createCommandId(uuidv4());
       const standardId = createStandardId(uuidv4());
       const packageId = createPackageId(uuidv4());
       const target = targetFactory({ id: targetId });
@@ -129,12 +129,12 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       };
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockRecipesPort.listRecipeVersions.mockResolvedValue([
+      mockCommandsPort.listCommandVersions.mockResolvedValue([
         {
-          id: createRecipeVersionId(uuidv4()),
+          id: createCommandVersionId(uuidv4()),
           recipeId,
           version: 1,
-        } as Awaited<ReturnType<IRecipesPort['listRecipeVersions']>>[0],
+        } as Awaited<ReturnType<ICommandsPort['listCommandVersions']>>[0],
       ]);
       mockStandardsPort.getLatestStandardVersion.mockResolvedValue({
         id: createStandardVersionId(uuidv4()),

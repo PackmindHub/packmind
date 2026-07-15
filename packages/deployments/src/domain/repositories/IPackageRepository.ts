@@ -3,7 +3,7 @@ import {
   PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
-  RecipeId,
+  CommandId,
   SpaceId,
   StandardId,
   SkillId,
@@ -32,18 +32,18 @@ export interface IPackageRepository extends IRepository<Package> {
   countArtifactsForPackagesInSpace(
     spaceId: SpaceId,
   ): Promise<Map<PackageId, PackageArtifactCounts>>;
-  addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
+  addCommands(packageId: PackageId, recipeIds: CommandId[]): Promise<void>;
   addStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
   updatePackageDetails(
     packageId: PackageId,
     name: string,
     description: string,
   ): Promise<void>;
-  setRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
+  setCommands(packageId: PackageId, recipeIds: CommandId[]): Promise<void>;
   setStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
   addSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void>;
   setSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void>;
-  removeRecipeFromAllPackages(recipeId: RecipeId): Promise<void>;
+  removeCommandFromAllPackages(recipeId: CommandId): Promise<void>;
   removeStandardFromAllPackages(standardId: StandardId): Promise<void>;
   removeSkillFromAllPackages(skillId: SkillId): Promise<void>;
 }

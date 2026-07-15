@@ -2,7 +2,7 @@ import { NewGateway } from '@packmind/types';
 import {
   IGetPackageByIdUseCase,
   IListDeploymentsByPackage,
-  IListDistributionsByRecipe,
+  IListDistributionsByCommand,
   IListDistributionsByStandard,
   IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
@@ -12,7 +12,7 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IAddArtefactsToPackageUseCase,
-  IPublishRecipes,
+  IPublishCommands,
   IPublishStandards,
   IPublishPackages,
   IGetTargetsByOrganizationUseCase,
@@ -29,7 +29,7 @@ import {
 
 export interface IDeploymentsGateway {
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage>;
-  listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe>;
+  listDistributionsByCommandId: NewGateway<IListDistributionsByCommand>;
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard>;
   listDistributionsBySkillId: NewGateway<IListDistributionsBySkill>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
@@ -38,7 +38,7 @@ export interface IDeploymentsGateway {
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   addArtefactsToPackage: NewGateway<IAddArtefactsToPackageUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
-  publishRecipes: NewGateway<IPublishRecipes>;
+  publishCommands: NewGateway<IPublishCommands>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;
   getTargetsByOrganization: NewGateway<IGetTargetsByOrganizationUseCase>;

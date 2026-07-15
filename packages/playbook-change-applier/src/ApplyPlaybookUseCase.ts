@@ -13,7 +13,7 @@ import {
   CollectionItemAddPayload,
   DiffService,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -21,21 +21,21 @@ import {
   NewSkillPayload,
   NewStandardPayload,
   ScalarUpdatePayload,
-  RecipeId,
-  RecipeVersion,
   SkillFile,
   SkillFileContentUpdatePayload,
+  CommandId,
+  CommandVersion,
   SkillId,
   SkillVersionWithFiles,
   StandardId,
   StandardVersion,
   StandardVersionId,
-  RecipeVersionId,
+  CommandVersionId,
   SkillVersionId,
   ApplierObjectVersions,
   createChangeProposalId,
   createOrganizationId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createStandardId,
   createUserId,
@@ -104,7 +104,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     accountsPort: IAccountsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly standardsPort: IStandardsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -133,12 +133,12 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
     const rollbackEntries: RollbackEntry[] = [];
     const createdIds: {
       standards: Array<{ id: StandardId; slug: string }>;
-      commands: Array<{ id: RecipeId; slug: string }>;
+      commands: Array<{ id: CommandId; slug: string }>;
       skills: Array<{ id: SkillId; slug: string }>;
     } = { standards: [], commands: [], skills: [] };
     const updatedIds: {
       standards: StandardId[];
-      commands: RecipeId[];
+      commands: CommandId[];
       skills: SkillId[];
     } = { standards: [], commands: [], skills: [] };
 
@@ -373,7 +373,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       case 'standard':
         return new StandardChangesApplier(this.diffService, this.standardsPort);
       case 'command':
-        return new CommandChangesApplier(this.diffService, this.recipesPort);
+        return new CommandChangesApplier(this.diffService, this.commandsPort);
       case 'skill':
         return new SkillChangesApplier(this.diffService, this.skillsPort);
       default:
@@ -413,7 +413,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       case 'standard':
         return (version as StandardVersion).id;
       case 'command':
-        return (version as RecipeVersion).id;
+        return (version as CommandVersion).id;
       case 'skill':
         return (version as SkillVersionWithFiles).id;
     }
@@ -422,7 +422,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   private addToIdBucket(
     bucket: {
       standards: Array<{ id: StandardId; slug: string }>;
-      commands: Array<{ id: RecipeId; slug: string }>;
+      commands: Array<{ id: CommandId; slug: string }>;
       skills: Array<{ id: SkillId; slug: string }>;
     },
     type: 'standard' | 'recipe' | 'skill',
@@ -434,7 +434,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         bucket.standards.push({ id: id as StandardId, slug });
         break;
       case 'recipe':
-        bucket.commands.push({ id: id as RecipeId, slug });
+        bucket.commands.push({ id: id as CommandId, slug });
         break;
       case 'skill':
         bucket.skills.push({ id: id as SkillId, slug });
@@ -445,7 +445,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
   private addToUpdatedBucket(
     bucket: {
       standards: StandardId[];
-      commands: RecipeId[];
+      commands: CommandId[];
       skills: SkillId[];
     },
     type: 'standard' | 'recipe' | 'skill',
@@ -456,7 +456,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         bucket.standards.push(id as StandardId);
         break;
       case 'recipe':
-        bucket.commands.push(id as RecipeId);
+        bucket.commands.push(id as CommandId);
         break;
       case 'skill':
         bucket.skills.push(id as SkillId);
@@ -540,7 +540,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
       }
       case ChangeProposalType.createCommand: {
         const payload = proposal.payload as NewCommandPayload;
-        const result = await this.recipesPort.captureRecipe({
+        const result = await this.commandsPort.captureCommand({
           userId,
           organizationId,
           source,
@@ -551,7 +551,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
         });
         return {
           type: 'recipe',
-          id: createRecipeId(result.id),
+          id: createCommandId(result.id),
           slug: result.slug,
         };
       }
@@ -574,7 +574,7 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
               );
               break;
             case 'recipe':
-              await this.recipesPort.hardDeleteRecipe(entry.id as RecipeId);
+              await this.commandsPort.hardDeleteCommand(entry.id as CommandId);
               break;
           }
         } else {
@@ -590,8 +590,8 @@ export class ApplyPlaybookUseCase extends AbstractMemberUseCase<
               );
               break;
             case 'recipe':
-              await this.recipesPort.hardDeleteRecipeVersion(
-                entry.newVersionId as RecipeVersionId,
+              await this.commandsPort.hardDeleteCommandVersion(
+                entry.newVersionId as CommandVersionId,
               );
               break;
           }

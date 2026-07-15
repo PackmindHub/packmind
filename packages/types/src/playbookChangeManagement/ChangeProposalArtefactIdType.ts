@@ -1,11 +1,11 @@
-import { RecipeId } from '../recipes/RecipeId';
+import { CommandId } from '../commands/CommandId';
 import { SkillId } from '../skills/SkillId';
 import { ChangeProposalType } from './ChangeProposalType';
 import { StandardId } from '../standards/StandardId';
 
 type CommandChangeProposalArtefactIdMap = {
-  [ChangeProposalType.updateCommandName]: RecipeId;
-  [ChangeProposalType.updateCommandDescription]: RecipeId;
+  [ChangeProposalType.updateCommandName]: CommandId;
+  [ChangeProposalType.updateCommandDescription]: CommandId;
 };
 
 type StandardChangeProposalArtefactIdMap = {
@@ -40,7 +40,7 @@ type CreationChangeProposalArtefactIdMap = {
 
 type RemoveChangeProposalArtefactIdMap = {
   [ChangeProposalType.removeStandard]: StandardId;
-  [ChangeProposalType.removeCommand]: RecipeId;
+  [ChangeProposalType.removeCommand]: CommandId;
   [ChangeProposalType.removeSkill]: SkillId;
 };
 

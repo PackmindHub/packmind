@@ -4,8 +4,8 @@ import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 import { ISpaceService } from '../../domain/services/ISpaceService';
 import { createMockSpaceService } from '../../mocks/createMockServices';
 import { spaceFactory } from '@packmind/spaces/test';
-import { createRecipeId, createSpaceId } from '@packmind/types';
-import { recipeFactory } from '@packmind/recipes/test';
+import { createCommandId, createSpaceId } from '@packmind/types';
+import { commandFactory } from '@packmind/commands/test';
 
 describe('CreateCommandFromPlaybookUseCase', () => {
   let useCase: CreateCommandFromPlaybookUseCase;
@@ -51,8 +51,8 @@ describe('CreateCommandFromPlaybookUseCase', () => {
       mockSpaceService,
     );
     mockCommandsGateway.create.mockResolvedValue(
-      recipeFactory({
-        id: createRecipeId('cmd-1'),
+      commandFactory({
+        id: createCommandId('cmd-1'),
         name: 'Test Command',
         slug: 'test-command',
       }),

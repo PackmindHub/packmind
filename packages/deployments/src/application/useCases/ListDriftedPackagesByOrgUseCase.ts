@@ -145,7 +145,7 @@ function computeDriftedTargets(
     const outdatedStandardIds = new Set(
       outdated.standards.map((s) => s.artifactId as string),
     );
-    const outdatedRecipeIds = new Set(
+    const outdatedCommandIds = new Set(
       outdated.recipes.map((r) => r.artifactId as string),
     );
     const outdatedSkillIds = new Set(
@@ -157,7 +157,7 @@ function computeDriftedTargets(
       if (!pkg) continue;
       const hasDrift =
         pkg.standards.some((id) => outdatedStandardIds.has(id)) ||
-        pkg.recipes.some((id) => outdatedRecipeIds.has(id)) ||
+        pkg.recipes.some((id) => outdatedCommandIds.has(id)) ||
         pkg.skills.some((id) => outdatedSkillIds.has(id));
       if (!hasDrift) continue;
 

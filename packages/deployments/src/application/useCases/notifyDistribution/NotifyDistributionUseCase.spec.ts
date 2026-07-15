@@ -8,15 +8,15 @@ import {
   createSpaceId,
   createGitRepoId,
   createTargetId,
-  createRecipeId,
+  createCommandId,
   createStandardId,
   createSkillId,
-  createRecipeVersionId,
+  createCommandVersionId,
   createStandardVersionId,
   createSkillVersionId,
   DEFAULT_ACTIVE_RENDER_MODES,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -26,7 +26,7 @@ import {
   Space,
   SpaceType,
   Target,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
 } from '@packmind/types';
@@ -41,7 +41,7 @@ import { v4 as uuidv4 } from 'uuid';
 describe('NotifyDistributionUseCase', () => {
   let useCase: NotifyDistributionUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
@@ -56,7 +56,7 @@ describe('NotifyDistributionUseCase', () => {
   const packageId = createPackageId(uuidv4());
   const gitRepoId = createGitRepoId(uuidv4());
   const targetId = createTargetId(uuidv4());
-  const recipeId = createRecipeId(uuidv4());
+  const recipeId = createCommandId(uuidv4());
   const standardId = createStandardId(uuidv4());
   const skillId = createSkillId(uuidv4());
 
@@ -123,8 +123,8 @@ describe('NotifyDistributionUseCase', () => {
     gitRepoId,
   });
 
-  const buildRecipeVersion = (): RecipeVersion => ({
-    id: createRecipeVersionId(uuidv4()),
+  const buildCommandVersion = (): CommandVersion => ({
+    id: createCommandVersionId(uuidv4()),
     recipeId,
     version: 1,
     name: 'Test Recipe',
@@ -166,9 +166,9 @@ describe('NotifyDistributionUseCase', () => {
       getOrganizationIdBySlug: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockRecipesPort = {
-      listRecipeVersions: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      listCommandVersions: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getLatestStandardVersion: jest.fn(),
@@ -190,7 +190,7 @@ describe('NotifyDistributionUseCase', () => {
     mockDistributedPackageRepository = {
       add: jest.fn(),
       addStandardVersions: jest.fn(),
-      addRecipeVersions: jest.fn(),
+      addCommandVersions: jest.fn(),
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
@@ -213,7 +213,7 @@ describe('NotifyDistributionUseCase', () => {
 
     useCase = new NotifyDistributionUseCase(
       mockAccountsPort,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       mockPackageRepository,
@@ -235,7 +235,7 @@ describe('NotifyDistributionUseCase', () => {
       let result: { deploymentId: string };
 
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const skillVersion = buildSkillVersion();
         const pkg = buildPackage('my-package');
@@ -244,7 +244,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
@@ -332,7 +332,7 @@ describe('NotifyDistributionUseCase', () => {
 
     describe('with multiple matching packages', () => {
       it('creates distributed packages for each match', async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg1 = buildPackage('package-1');
         const pkg2 = {
@@ -347,7 +347,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
         );
@@ -374,7 +374,7 @@ describe('NotifyDistributionUseCase', () => {
       const removedPackageId = createPackageId(uuidv4());
 
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -382,7 +382,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
         );
@@ -432,7 +432,7 @@ describe('NotifyDistributionUseCase', () => {
 
     describe('when no packages were previously active', () => {
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -440,7 +440,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
         );
@@ -480,7 +480,7 @@ describe('NotifyDistributionUseCase', () => {
 
     describe('when redistributing the same package', () => {
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -488,7 +488,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
         );
@@ -531,7 +531,7 @@ describe('NotifyDistributionUseCase', () => {
         const mySpace = buildSpace({ slug: 'my-space', name: 'My Space' });
 
         beforeEach(async () => {
-          const recipeVersion = buildRecipeVersion();
+          const recipeVersion = buildCommandVersion();
           const standardVersion = buildStandardVersion();
           const skillVersion = buildSkillVersion();
           const pkg = buildPackage('my-package', mySpace.id);
@@ -542,7 +542,9 @@ describe('NotifyDistributionUseCase', () => {
           mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
             standardVersion,
           );
-          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockCommandsPort.listCommandVersions.mockResolvedValue([
+            recipeVersion,
+          ]);
           mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
           mockDistributionRepository.add.mockImplementation((d) =>
             Promise.resolve(d),
@@ -587,7 +589,7 @@ describe('NotifyDistributionUseCase', () => {
 
         it('adds recipe versions', () => {
           expect(
-            mockDistributedPackageRepository.addRecipeVersions,
+            mockDistributedPackageRepository.addCommandVersions,
           ).toHaveBeenCalledWith(expect.any(String), expect.any(Array));
         });
 
@@ -607,7 +609,7 @@ describe('NotifyDistributionUseCase', () => {
         let pkgInMySpace: Package;
 
         beforeEach(async () => {
-          const recipeVersion = buildRecipeVersion();
+          const recipeVersion = buildCommandVersion();
           const standardVersion = buildStandardVersion();
           const skillVersion = buildSkillVersion();
           pkgInMySpace = buildPackage('shared-pkg', mySpace.id);
@@ -629,7 +631,9 @@ describe('NotifyDistributionUseCase', () => {
           mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
             standardVersion,
           );
-          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockCommandsPort.listCommandVersions.mockResolvedValue([
+            recipeVersion,
+          ]);
           mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
           mockDistributionRepository.add.mockImplementation((d) =>
             Promise.resolve(d),
@@ -695,7 +699,7 @@ describe('NotifyDistributionUseCase', () => {
 
       describe('when bare slug resolves via the default space', () => {
         beforeEach(async () => {
-          const recipeVersion = buildRecipeVersion();
+          const recipeVersion = buildCommandVersion();
           const standardVersion = buildStandardVersion();
           const skillVersion = buildSkillVersion();
           const pkg = buildPackage('my-package', globalSpaceId);
@@ -704,7 +708,9 @@ describe('NotifyDistributionUseCase', () => {
           mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
             standardVersion,
           );
-          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockCommandsPort.listCommandVersions.mockResolvedValue([
+            recipeVersion,
+          ]);
           mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
           mockDistributionRepository.add.mockImplementation((d) =>
             Promise.resolve(d),
@@ -746,7 +752,7 @@ describe('NotifyDistributionUseCase', () => {
         const mySpace = buildSpace({ slug: 'my-space', name: 'My Space' });
 
         beforeEach(async () => {
-          const recipeVersion = buildRecipeVersion();
+          const recipeVersion = buildCommandVersion();
           const standardVersion = buildStandardVersion();
           const pkg1 = buildPackage('package-1', mySpace.id);
           const pkg2 = {
@@ -763,7 +769,9 @@ describe('NotifyDistributionUseCase', () => {
           mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
             standardVersion,
           );
-          mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+          mockCommandsPort.listCommandVersions.mockResolvedValue([
+            recipeVersion,
+          ]);
           mockDistributionRepository.add.mockImplementation((d) =>
             Promise.resolve(d),
           );
@@ -794,7 +802,7 @@ describe('NotifyDistributionUseCase', () => {
       const expectedRenderModes = [RenderMode.CLAUDE, RenderMode.CURSOR];
 
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -802,7 +810,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
           buildSkillVersion(),
         );
@@ -853,7 +861,7 @@ describe('NotifyDistributionUseCase', () => {
 
     describe('when command.agents is undefined', () => {
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -861,7 +869,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
           buildSkillVersion(),
         );
@@ -911,7 +919,7 @@ describe('NotifyDistributionUseCase', () => {
 
     describe('when command.agents is an empty array', () => {
       beforeEach(async () => {
-        const recipeVersion = buildRecipeVersion();
+        const recipeVersion = buildCommandVersion();
         const standardVersion = buildStandardVersion();
         const pkg = buildPackage('my-package');
 
@@ -919,7 +927,7 @@ describe('NotifyDistributionUseCase', () => {
         mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockCommandsPort.listCommandVersions.mockResolvedValue([recipeVersion]);
         mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
           buildSkillVersion(),
         );

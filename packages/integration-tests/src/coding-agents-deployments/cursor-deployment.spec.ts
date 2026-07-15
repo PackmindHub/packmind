@@ -2,7 +2,7 @@ import { accountsSchemas } from '@packmind/accounts';
 import { CursorDeployer, DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { recipesSchemas } from '@packmind/recipes';
+import { commandsSchemas } from '@packmind/commands';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
@@ -15,9 +15,9 @@ import {
   IGitPort,
   IStandardsPort,
   Organization,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -32,7 +32,7 @@ import { TestApp } from '../helpers/TestApp';
 describe('Cursor Deployment Integration', () => {
   const fixture = createIntegrationTestFixture([
     ...accountsSchemas,
-    ...recipesSchemas,
+    ...commandsSchemas,
     ...standardsSchemas,
     ...spacesSchemas,
     ...gitSchemas,
@@ -46,7 +46,7 @@ describe('Cursor Deployment Integration', () => {
   let gitPort: IGitPort;
   let deployerService: DeployerService;
 
-  let recipe: Recipe;
+  let recipe: Command;
   let standard: Standard;
   let organization: Organization;
   let user: User;
@@ -87,7 +87,7 @@ describe('Cursor Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
       name: 'Test Recipe for Cursor',
       content: 'This is test recipe content for Cursor deployment',
       organizationId: organization.id,
@@ -159,9 +159,9 @@ describe('Cursor Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -171,7 +171,7 @@ describe('Cursor Deployment Integration', () => {
           },
         ];
 
-        fileUpdates = await deployerService.aggregateRecipeDeployments(
+        fileUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [defaultTarget],
@@ -368,13 +368,13 @@ describe('Cursor Deployment Integration', () => {
     });
 
     describe('when combining recipes and standards deployments', () => {
-      let recipeUpdates: FileUpdates;
+      let commandUpdates: FileUpdates;
       let standardsUpdates: FileUpdates;
 
       beforeEach(async () => {
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -404,7 +404,7 @@ describe('Cursor Deployment Integration', () => {
           gitRepoId: gitRepo.id,
         };
 
-        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+        commandUpdates = await deployerService.aggregateCommandDeployments(
           recipeVersions,
           gitRepo,
           [combinedTarget],
@@ -420,7 +420,7 @@ describe('Cursor Deployment Integration', () => {
       });
 
       it('creates one recipe file', () => {
-        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+        expect(commandUpdates.createOrUpdate).toHaveLength(1);
       });
 
       it('creates one standard file', () => {
@@ -428,7 +428,7 @@ describe('Cursor Deployment Integration', () => {
       });
 
       it('uses correct path for recipe command file', () => {
-        expect(recipeUpdates.createOrUpdate[0].path).toBe(
+        expect(commandUpdates.createOrUpdate[0].path).toBe(
           `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
         );
       });
@@ -462,7 +462,7 @@ describe('Cursor Deployment Integration', () => {
       let fileUpdates: FileUpdates;
 
       beforeEach(async () => {
-        fileUpdates = await cursorDeployer.deployRecipes(
+        fileUpdates = await cursorDeployer.deployCommands(
           [],
           gitRepo,
           defaultTarget,
@@ -510,10 +510,10 @@ describe('Cursor Deployment Integration', () => {
 
     describe('when deploying multiple recipes', () => {
       let fileUpdates: FileUpdates;
-      let recipe2: Recipe;
+      let command2: Command;
 
       beforeEach(async () => {
-        recipe2 = await testApp.recipesHexa.getAdapter().captureRecipe({
+        command2 = await testApp.commandsHexa.getAdapter().captureCommand({
           name: 'Second Test Recipe',
           content: 'Second recipe content for testing',
           organizationId: organization.id,
@@ -521,9 +521,9 @@ describe('Cursor Deployment Integration', () => {
           spaceId: space.id.toString(),
         });
 
-        const recipeVersions: RecipeVersion[] = [
+        const recipeVersions: CommandVersion[] = [
           {
-            id: 'recipe-version-1' as RecipeVersionId,
+            id: 'recipe-version-1' as CommandVersionId,
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -532,17 +532,17 @@ describe('Cursor Deployment Integration', () => {
             userId: user.id,
           },
           {
-            id: 'recipe-version-2' as RecipeVersionId,
-            recipeId: recipe2.id,
-            name: recipe2.name,
-            slug: recipe2.slug,
-            content: recipe2.content,
-            version: recipe2.version,
+            id: 'recipe-version-2' as CommandVersionId,
+            recipeId: command2.id,
+            name: command2.name,
+            slug: command2.slug,
+            content: command2.content,
+            version: command2.version,
             userId: user.id,
           },
         ];
 
-        fileUpdates = await cursorDeployer.deployRecipes(
+        fileUpdates = await cursorDeployer.deployCommands(
           recipeVersions,
           gitRepo,
           defaultTarget,
@@ -554,35 +554,35 @@ describe('Cursor Deployment Integration', () => {
       });
 
       it('creates command file for first recipe with correct path', () => {
-        const firstRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+        const firstCommandFile = fileUpdates.createOrUpdate.find((file) =>
           file.path.includes(recipe.slug),
         );
-        expect(firstRecipeFile?.path).toBe(
+        expect(firstCommandFile?.path).toBe(
           `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
         );
       });
 
       it('creates command file for first recipe with correct content', () => {
-        const firstRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+        const firstCommandFile = fileUpdates.createOrUpdate.find((file) =>
           file.path.includes(recipe.slug),
         );
-        expect(firstRecipeFile?.content).toBe(recipe.content);
+        expect(firstCommandFile?.content).toBe(recipe.content);
       });
 
       it('creates command file for second recipe with correct path', () => {
-        const secondRecipeFile = fileUpdates.createOrUpdate.find((file) =>
-          file.path.includes(recipe2.slug),
+        const secondCommandFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(command2.slug),
         );
-        expect(secondRecipeFile?.path).toBe(
-          `${CURSOR_COMMANDS_PATH}/${recipe2.slug}.md`,
+        expect(secondCommandFile?.path).toBe(
+          `${CURSOR_COMMANDS_PATH}/${command2.slug}.md`,
         );
       });
 
       it('creates command file for second recipe with correct content', () => {
-        const secondRecipeFile = fileUpdates.createOrUpdate.find((file) =>
-          file.path.includes(recipe2.slug),
+        const secondCommandFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(command2.slug),
         );
-        expect(secondRecipeFile?.content).toBe(recipe2.content);
+        expect(secondCommandFile?.content).toBe(command2.content);
       });
     });
 

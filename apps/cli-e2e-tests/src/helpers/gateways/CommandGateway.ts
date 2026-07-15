@@ -1,7 +1,7 @@
 import {
   Gateway,
-  ICaptureRecipeUseCase,
-  IUpdateRecipeFromUIUseCase,
+  ICaptureCommandUseCase,
+  IUpdateCommandFromUIUseCase,
 } from '@packmind/types';
 import { ICommandGateway } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
@@ -9,7 +9,7 @@ import { PackmindHttpClient } from './PackmindHttpClient';
 export class CommandGateway implements ICommandGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
 
-  create: Gateway<ICaptureRecipeUseCase> = async (command) => {
+  create: Gateway<ICaptureCommandUseCase> = async (command) => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/recipes`,
@@ -17,7 +17,7 @@ export class CommandGateway implements ICommandGateway {
     );
   };
 
-  update: Gateway<IUpdateRecipeFromUIUseCase> = async (command) => {
+  update: Gateway<IUpdateCommandFromUIUseCase> = async (command) => {
     const organizationId = this.httpClient.getOrganizationId();
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/recipes/${command.recipeId}`,

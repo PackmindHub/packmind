@@ -4,7 +4,7 @@ import { useGetPackageByIdQuery } from '../../api/queries/DeploymentsQueries';
 import { PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
+import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 import { PackageEditFormBody } from './PackageEditFormBody';
@@ -30,8 +30,8 @@ export const PackageEditForm = ({
     error,
   } = useGetPackageByIdQuery(id, spaceId, organization?.id);
 
-  const { data: recipesResponse, isLoading: isLoadingRecipes } =
-    useGetRecipesQuery();
+  const { data: commandsResponse, isLoading: isLoadingCommands } =
+    useGetCommandsQuery();
 
   const { data: standardsResponse, isLoading: isLoadingStandards } =
     useGetStandardsQuery();
@@ -40,7 +40,7 @@ export const PackageEditForm = ({
     useGetSkillsQuery();
 
   const pkg = packageResponse?.package;
-  const allRecipes = (recipesResponse || []).sort((a, b) =>
+  const allCommands = (commandsResponse || []).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
   const allStandards = (standardsResponse?.standards || []).sort((a, b) =>
@@ -94,7 +94,7 @@ export const PackageEditForm = ({
     );
   }
 
-  if (isLoadingRecipes || isLoadingStandards || isLoadingSkills) {
+  if (isLoadingCommands || isLoadingStandards || isLoadingSkills) {
     return (
       <PMPage title="Edit Package" subtitle="Loading...">
         <PMBox
@@ -113,7 +113,7 @@ export const PackageEditForm = ({
   return (
     <PackageEditFormBody
       pkg={pkg}
-      allRecipes={allRecipes}
+      allCommands={allCommands}
       allStandards={allStandards}
       allSkills={allSkills}
       id={id}

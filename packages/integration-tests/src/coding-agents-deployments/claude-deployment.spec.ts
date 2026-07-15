@@ -7,9 +7,9 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
+  Command,
+  CommandVersion,
+  CommandVersionId,
   Standard,
   StandardVersion,
   StandardVersionId,
@@ -29,7 +29,7 @@ describe(
     let gitPort: IGitPort;
     let deployerService: DeployerService;
 
-    let recipe: Recipe;
+    let recipe: Command;
     let standard: Standard;
     let user: User;
     let gitRepo: GitRepo;
@@ -47,7 +47,7 @@ describe(
       gitPort = testApp.gitHexa.getAdapter();
 
       // Create test recipe
-      recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+      recipe = await testApp.commandsHexa.getAdapter().captureCommand({
         ...testContext.basePackmindCommand,
         name: 'Test Recipe',
         content: 'This is test recipe content for deployment',
@@ -109,12 +109,12 @@ describe(
           createOrUpdate: FileModification[];
           delete: { path: string }[];
         };
-        let recipeFile: FileModification | undefined;
+        let commandFile: FileModification | undefined;
 
         beforeEach(async () => {
-          const recipeVersions: RecipeVersion[] = [
+          const recipeVersions: CommandVersion[] = [
             {
-              id: 'recipe-version-1' as RecipeVersionId,
+              id: 'recipe-version-1' as CommandVersionId,
               recipeId: recipe.id,
               name: recipe.name,
               slug: recipe.slug,
@@ -124,14 +124,14 @@ describe(
             },
           ];
 
-          fileUpdates = await deployerService.aggregateRecipeDeployments(
+          fileUpdates = await deployerService.aggregateCommandDeployments(
             recipeVersions,
             gitRepo,
             [defaultTarget],
             ['claude'],
           );
 
-          recipeFile = fileUpdates.createOrUpdate.find(
+          commandFile = fileUpdates.createOrUpdate.find(
             (file) =>
               file.path.startsWith('.claude/commands/') &&
               file.path.endsWith('.md'),
@@ -168,29 +168,29 @@ describe(
         });
 
         it('creates recipe file in .claude/commands/', () => {
-          expect(recipeFile).toBeDefined();
+          expect(commandFile).toBeDefined();
         });
 
         it('uses correct path for recipe file', () => {
-          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
-          expect(recipeFile?.content).toContain('---');
+          expect(commandFile?.content).toContain('---');
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile?.content).toContain(
+          expect(commandFile?.content).toContain(
             `description: '${recipe.name}'`,
           );
         });
 
         it('includes recipe content', () => {
-          expect(recipeFile?.content).toContain(recipe.content);
+          expect(commandFile?.content).toContain(recipe.content);
         });
 
         it('excludes standards content', () => {
-          expect(recipeFile?.content).not.toContain('## Packmind Standards');
+          expect(commandFile?.content).not.toContain('## Packmind Standards');
         });
       });
 
@@ -302,9 +302,9 @@ describe(
         let pathMap: Map<string, FileModification>;
 
         beforeEach(async () => {
-          const recipeVersions: RecipeVersion[] = [
+          const recipeVersions: CommandVersion[] = [
             {
-              id: 'recipe-version-1' as RecipeVersionId,
+              id: 'recipe-version-1' as CommandVersionId,
               recipeId: recipe.id,
               name: recipe.name,
               slug: recipe.slug,
@@ -328,8 +328,8 @@ describe(
           ];
 
           // Deploy recipes first
-          const recipeUpdates =
-            await deployerService.aggregateRecipeDeployments(
+          const commandUpdates =
+            await deployerService.aggregateCommandDeployments(
               recipeVersions,
               gitRepo,
               [defaultTarget],
@@ -346,7 +346,7 @@ describe(
             );
 
           // Simulate the file merging that DeployerService does
-          const allUpdates = [recipeUpdates, standardsUpdates];
+          const allUpdates = [commandUpdates, standardsUpdates];
           pathMap = new Map<string, FileModification>();
 
           for (const update of allUpdates) {
@@ -375,18 +375,18 @@ describe(
         });
 
         describe('recipe file content', () => {
-          let recipeFile: FileModification | undefined;
+          let commandFile: FileModification | undefined;
 
           beforeEach(() => {
-            recipeFile = pathMap.get(`.claude/commands/${recipe.slug}.md`);
+            commandFile = pathMap.get(`.claude/commands/${recipe.slug}.md`);
           });
 
           it('includes frontmatter delimiter', () => {
-            expect(recipeFile?.content).toContain('---');
+            expect(commandFile?.content).toContain('---');
           });
 
           it('includes recipe description in frontmatter', () => {
-            expect(recipeFile?.content).toContain(
+            expect(commandFile?.content).toContain(
               `description: '${recipe.name}'`,
             );
           });
@@ -429,12 +429,12 @@ describe(
           createOrUpdate: FileModification[];
           delete: { path: string }[];
         };
-        let recipeFile: FileModification;
+        let commandFile: FileModification;
 
         beforeEach(async () => {
-          const recipeVersions: RecipeVersion[] = [
+          const recipeVersions: CommandVersion[] = [
             {
-              id: 'recipe-version-1' as RecipeVersionId,
+              id: 'recipe-version-1' as CommandVersionId,
               recipeId: recipe.id,
               name: recipe.name,
               slug: recipe.slug,
@@ -444,19 +444,19 @@ describe(
             },
           ];
 
-          fileUpdates = await deployerService.aggregateRecipeDeployments(
+          fileUpdates = await deployerService.aggregateCommandDeployments(
             recipeVersions,
             gitRepo,
             [defaultTarget],
             ['claude'],
           );
 
-          const foundRecipeFile = fileUpdates.createOrUpdate.find(
+          const foundCommandFile = fileUpdates.createOrUpdate.find(
             (f) =>
               f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           );
-          assert(foundRecipeFile, 'Recipe file should exist');
-          recipeFile = foundRecipeFile;
+          assert(foundCommandFile, 'Recipe file should exist');
+          commandFile = foundCommandFile;
         });
 
         it('creates two files to update', () => {
@@ -489,27 +489,29 @@ describe(
         });
 
         it('uses correct path for recipe file', () => {
-          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
-          expect(recipeFile.content).toContain('---');
+          expect(commandFile.content).toContain('---');
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile.content).toContain(`description: '${recipe.name}'`);
+          expect(commandFile.content).toContain(
+            `description: '${recipe.name}'`,
+          );
         });
 
         it('includes recipe content', () => {
-          expect(recipeFile.content).toContain(recipe.content);
+          expect(commandFile.content).toContain(recipe.content);
         });
 
         it('excludes user content', () => {
-          expect(recipeFile.content).not.toContain('# Some User Instructions');
+          expect(commandFile.content).not.toContain('# Some User Instructions');
         });
 
         it('excludes standards content', () => {
-          expect(recipeFile.content).not.toContain('# Packmind Standards');
+          expect(commandFile.content).not.toContain('# Packmind Standards');
         });
       });
 
@@ -628,7 +630,7 @@ describe(
         beforeEach(async () => {
           jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-          fileUpdates = await claudeDeployer.deployRecipes(
+          fileUpdates = await claudeDeployer.deployCommands(
             [],
             gitRepo,
             defaultTarget,
@@ -693,16 +695,16 @@ describe(
           createOrUpdate: FileModification[];
           delete: { path: string }[];
         };
-        let recipeFile: FileModification | undefined;
+        let commandFile: FileModification | undefined;
 
         beforeEach(async () => {
           jest
             .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
             .mockRejectedValue(new Error('GitHub API error'));
 
-          const recipeVersions: RecipeVersion[] = [
+          const recipeVersions: CommandVersion[] = [
             {
-              id: 'recipe-version-1' as RecipeVersionId,
+              id: 'recipe-version-1' as CommandVersionId,
               recipeId: recipe.id,
               name: recipe.name,
               slug: recipe.slug,
@@ -712,13 +714,13 @@ describe(
             },
           ];
 
-          fileUpdates = await claudeDeployer.deployRecipes(
+          fileUpdates = await claudeDeployer.deployCommands(
             recipeVersions,
             gitRepo,
             defaultTarget,
           );
 
-          recipeFile = fileUpdates.createOrUpdate.find(
+          commandFile = fileUpdates.createOrUpdate.find(
             (f) =>
               f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
           );
@@ -744,15 +746,15 @@ describe(
         });
 
         it('sets correct recipe file path', () => {
-          expect(recipeFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
-          expect(recipeFile?.content).toContain('---');
+          expect(commandFile?.content).toContain('---');
         });
 
         it('includes recipe description in frontmatter', () => {
-          expect(recipeFile?.content).toContain(
+          expect(commandFile?.content).toContain(
             `description: '${recipe.name}'`,
           );
         });

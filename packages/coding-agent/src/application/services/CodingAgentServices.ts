@@ -6,7 +6,7 @@ import {
   FileModification,
   FileUpdates,
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -23,8 +23,8 @@ export class CodingAgentServices {
     this.logger.info('CodingAgentServices initialized');
   }
 
-  async prepareRecipesDeployment(
-    recipeVersions: RecipeVersion[],
+  async prepareCommandsDeployment(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
@@ -51,7 +51,7 @@ export class CodingAgentServices {
       return { createOrUpdate: [], delete: [] };
     }
 
-    const result = await this.deployerService.aggregateRecipeDeployments(
+    const result = await this.deployerService.aggregateCommandDeployments(
       recipeVersions,
       gitRepo,
       targets,
@@ -109,12 +109,12 @@ export class CodingAgentServices {
 
   async renderArtifacts(
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -227,7 +227,7 @@ export class CodingAgentServices {
 
   async generateAgentCleanupUpdatesForAgents(
     artifacts: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },

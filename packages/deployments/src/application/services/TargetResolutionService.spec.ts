@@ -2,15 +2,15 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   IGitPort,
   Target,
-  RecipeVersion,
+  CommandVersion,
   StandardVersion,
   SkillVersion,
   createGitRepoId,
   createGitProviderId,
   createOrganizationId,
   createTargetId,
-  createRecipeVersionId,
-  createRecipeId,
+  createCommandVersionId,
+  createCommandId,
   createStandardVersionId,
   createStandardId,
   createSkillVersionId,
@@ -60,7 +60,7 @@ describe('TargetResolutionService', () => {
 
     distributionRepository = {
       findActiveStandardVersionsByTargetAndPackages: jest.fn(),
-      findActiveRecipeVersionsByTargetAndPackages: jest.fn(),
+      findActiveCommandVersionsByTargetAndPackages: jest.fn(),
       findActiveSkillVersionsByTargetAndPackages: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
@@ -612,9 +612,9 @@ describe('TargetResolutionService', () => {
       userId: createUserId(uuidv4()),
     };
 
-    const recipeVersion: RecipeVersion = {
-      id: createRecipeVersionId(uuidv4()),
-      recipeId: createRecipeId(uuidv4()),
+    const recipeVersion: CommandVersion = {
+      id: createCommandVersionId(uuidv4()),
+      recipeId: createCommandId(uuidv4()),
       name: 'Test Recipe',
       slug: 'test-recipe',
       version: 1,
@@ -649,7 +649,7 @@ describe('TargetResolutionService', () => {
         distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
           [standardVersion],
         );
-        distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        distributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
           [recipeVersion],
         );
         distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
@@ -722,7 +722,7 @@ describe('TargetResolutionService', () => {
         );
 
         expect(
-          distributionRepository.findActiveRecipeVersionsByTargetAndPackages,
+          distributionRepository.findActiveCommandVersionsByTargetAndPackages,
         ).toHaveBeenCalledWith(organizationId, targetId, packageIds);
       });
 
@@ -812,7 +812,7 @@ describe('TargetResolutionService', () => {
         );
 
         expect(
-          distributionRepository.findActiveRecipeVersionsByTargetAndPackages,
+          distributionRepository.findActiveCommandVersionsByTargetAndPackages,
         ).not.toHaveBeenCalled();
       });
 

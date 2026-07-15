@@ -1,19 +1,19 @@
 import { AbstractChangeProposalApplier } from './AbstractChangeProposalApplier';
 import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalType } from '../ChangeProposalType';
-import { RecipeVersion } from '../../recipes/RecipeVersion';
+import { CommandVersion } from '../../commands/CommandVersion';
 import { isExpectedChangeProposalType } from './isExpectedChangeProposalType';
 import { RECIPE_CHANGE_TYPES } from './types';
 
-export class CommandChangeProposalApplier extends AbstractChangeProposalApplier<RecipeVersion> {
+export class CommandChangeProposalApplier extends AbstractChangeProposalApplier<CommandVersion> {
   areChangesApplicable(changeProposals: ChangeProposal[]): boolean {
     return this.checkChangesApplicable(changeProposals, RECIPE_CHANGE_TYPES);
   }
 
   protected applyChangeProposal(
-    source: RecipeVersion,
+    source: CommandVersion,
     changeProposal: ChangeProposal,
-  ): RecipeVersion {
+  ): CommandVersion {
     if (
       isExpectedChangeProposalType(
         changeProposal,

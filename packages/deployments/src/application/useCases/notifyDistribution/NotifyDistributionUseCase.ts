@@ -8,7 +8,7 @@ import {
   DistributionStatus,
   IAccountsPort,
   INotifyDistributionUseCase,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -17,9 +17,9 @@ import {
   OrganizationId,
   Package,
   PackageId,
-  RecipeId,
-  RecipeVersion,
-  RecipeVersionId,
+  CommandId,
+  CommandVersion,
+  CommandVersionId,
   RenderMode,
   SkillId,
   SkillVersionId,
@@ -41,7 +41,7 @@ const origin = 'NotifyDistributionUseCase';
 
 type DistributedPackageWithVersionIds = DistributedPackage & {
   _standardVersionIds: StandardVersionId[];
-  _recipeVersionIds: RecipeVersionId[];
+  _recipeVersionIds: CommandVersionId[];
   _skillVersionIds: SkillVersionId[];
 };
 
@@ -54,7 +54,7 @@ export class NotifyDistributionUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly packageRepository: IPackageRepository,
@@ -249,7 +249,7 @@ export class NotifyDistributionUseCase
       const standardVersionIds = await this.getLatestStandardVersionIds(
         pkg.standards,
       );
-      const recipeVersionIds = await this.getLatestRecipeVersionIds(
+      const recipeVersionIds = await this.getLatestCommandVersionIds(
         pkg.recipes,
       );
       const skillVersionIds = await this.getLatestSkillVersionIds(pkg.skills);
@@ -309,14 +309,14 @@ export class NotifyDistributionUseCase
     return versionIds;
   }
 
-  private async getLatestRecipeVersionIds(
-    recipeIds: RecipeId[],
-  ): Promise<RecipeVersionId[]> {
-    const versionIds: RecipeVersionId[] = [];
+  private async getLatestCommandVersionIds(
+    recipeIds: CommandId[],
+  ): Promise<CommandVersionId[]> {
+    const versionIds: CommandVersionId[] = [];
 
     for (const recipeId of recipeIds) {
-      const versions = await this.recipesPort.listRecipeVersions(recipeId);
-      const latestVersion = versions.reduce<RecipeVersion | undefined>(
+      const versions = await this.commandsPort.listCommandVersions(recipeId);
+      const latestVersion = versions.reduce<CommandVersion | undefined>(
         (latest, current) =>
           current.version > (latest?.version ?? 0) ? current : latest,
         undefined,
@@ -394,7 +394,7 @@ export class NotifyDistributionUseCase
       }
 
       if (distributedPackage._recipeVersionIds.length > 0) {
-        await this.distributedPackageRepository.addRecipeVersions(
+        await this.distributedPackageRepository.addCommandVersions(
           distributedPackage.id,
           distributedPackage._recipeVersionIds,
         );

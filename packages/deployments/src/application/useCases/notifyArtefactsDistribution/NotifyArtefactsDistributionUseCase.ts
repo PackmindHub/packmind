@@ -4,7 +4,7 @@ import {
   createDistributedPackageId,
   createDistributionId,
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -13,7 +13,7 @@ import {
   DistributionStatus,
   IAccountsPort,
   INotifyArtefactsDistribution,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   IStandardsPort,
   NotifyArtefactsDistributionCommand,
@@ -21,7 +21,7 @@ import {
   OrganizationId,
   PackageId,
   PackmindLockFileEntry,
-  RecipeVersionId,
+  CommandVersionId,
   RenderMode,
   SkillVersionId,
   StandardVersionId,
@@ -38,7 +38,7 @@ const origin = 'NotifyArtefactsDistributionUseCase';
 
 type DistributedPackageWithVersionIds = DistributedPackage & {
   _standardVersionIds: StandardVersionId[];
-  _recipeVersionIds: RecipeVersionId[];
+  _recipeVersionIds: CommandVersionId[];
   _skillVersionIds: SkillVersionId[];
 };
 
@@ -51,7 +51,7 @@ export class NotifyArtefactsDistributionUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly distributionRepository: IDistributionRepository,
@@ -160,7 +160,7 @@ export class NotifyArtefactsDistributionUseCase
 
     for (const [packageId, entries] of packageArtifactMap) {
       const standardVersionIds = await this.resolveStandardVersionIds(entries);
-      const recipeVersionIds = await this.resolveRecipeVersionIds(entries);
+      const recipeVersionIds = await this.resolveCommandVersionIds(entries);
       const skillVersionIds = await this.resolveSkillVersionIds(entries);
 
       distributedPackages.push({
@@ -236,15 +236,15 @@ export class NotifyArtefactsDistributionUseCase
     return versionIds;
   }
 
-  private async resolveRecipeVersionIds(
+  private async resolveCommandVersionIds(
     entries: PackmindLockFileEntry[],
-  ): Promise<RecipeVersionId[]> {
-    const versionIds: RecipeVersionId[] = [];
+  ): Promise<CommandVersionId[]> {
+    const versionIds: CommandVersionId[] = [];
     for (const entry of entries) {
       if (entry.type !== 'command') continue;
       const spaceId = createSpaceId(entry.spaceId);
-      const version = await this.recipesPort.getRecipeVersion(
-        createRecipeId(entry.id),
+      const version = await this.commandsPort.getCommandVersion(
+        createCommandId(entry.id),
         entry.version,
         [spaceId],
       );
@@ -323,7 +323,7 @@ export class NotifyArtefactsDistributionUseCase
       }
 
       if (distributedPackage._recipeVersionIds.length > 0) {
-        await this.distributedPackageRepository.addRecipeVersions(
+        await this.distributedPackageRepository.addCommandVersions(
           distributedPackage.id,
           distributedPackage._recipeVersionIds,
         );

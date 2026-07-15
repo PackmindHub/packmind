@@ -3,10 +3,10 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   FileUpdates,
   RenderArtifactsCommand,
-  RecipeVersion,
+  CommandVersion,
   StandardVersion,
-  RecipeVersionId,
-  RecipeId,
+  CommandVersionId,
+  CommandId,
   StandardVersionId,
   StandardId,
   UserId,
@@ -20,10 +20,10 @@ describe('RenderArtifactsUseCase', () => {
   let mockCodingAgentServices: jest.Mocked<CodingAgentServices>;
   let mockLogger: PackmindLogger;
 
-  const mockRecipeVersions: RecipeVersion[] = [
+  const mockCommandVersions: CommandVersion[] = [
     {
-      id: 'recipe-version-1' as RecipeVersionId,
-      recipeId: 'recipe-1' as RecipeId,
+      id: 'recipe-version-1' as CommandVersionId,
+      recipeId: 'recipe-1' as CommandId,
       name: 'Test Recipe',
       slug: 'test-recipe',
       content: '# Test Recipe Content',
@@ -80,7 +80,7 @@ describe('RenderArtifactsUseCase', () => {
 
         command = {
           installed: {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -105,7 +105,7 @@ describe('RenderArtifactsUseCase', () => {
       it('calls renderArtifacts with correct parameters', () => {
         expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
           {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -139,7 +139,7 @@ describe('RenderArtifactsUseCase', () => {
 
         const command: RenderArtifactsCommand = {
           installed: {
-            recipeVersions: mockRecipeVersions,
+            recipeVersions: mockCommandVersions,
             standardVersions: mockStandardVersions,
             skillVersions: [],
           },
@@ -178,7 +178,7 @@ describe('RenderArtifactsUseCase', () => {
 
       const command: RenderArtifactsCommand = {
         installed: {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -197,7 +197,7 @@ describe('RenderArtifactsUseCase', () => {
 
       expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
         {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -259,7 +259,7 @@ describe('RenderArtifactsUseCase', () => {
 
       const command: RenderArtifactsCommand = {
         installed: {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -285,7 +285,7 @@ describe('RenderArtifactsUseCase', () => {
 
       const command: RenderArtifactsCommand = {
         installed: {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },
@@ -321,7 +321,7 @@ describe('RenderArtifactsUseCase', () => {
 
       const command: RenderArtifactsCommand = {
         installed: {
-          recipeVersions: mockRecipeVersions,
+          recipeVersions: mockCommandVersions,
           standardVersions: mockStandardVersions,
           skillVersions: [],
         },

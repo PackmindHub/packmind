@@ -3,7 +3,7 @@ import {
   DeleteItemType,
   FileUpdates,
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   SkillFile,
   SkillVersion,
   SkillVersionId,
@@ -66,7 +66,7 @@ export class CodexDeployer extends SingleFileDeployer {
   }
 
   override async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
     skillFilesMap?: Map<SkillVersionId, SkillFile[]>,
@@ -94,12 +94,12 @@ export class CodexDeployer extends SingleFileDeployer {
 
   override async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -122,7 +122,7 @@ export class CodexDeployer extends SingleFileDeployer {
   }
 
   override async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {

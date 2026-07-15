@@ -4,8 +4,8 @@ import {
   PackageArtifactCounts,
   PackageId,
   PackageWithArtefacts,
-  Recipe,
-  RecipeId,
+  Command,
+  CommandId,
   SpaceId,
   Standard,
   StandardId,
@@ -15,7 +15,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RecipeSchema } from '@packmind/recipes';
+import { CommandSchema } from '@packmind/commands';
 import { StandardSchema } from '@packmind/standards';
 import { SkillSchema } from '@packmind/skills';
 import { SpaceSchema } from '@packmind/spaces';
@@ -26,9 +26,9 @@ import {
   PackageSkill,
 } from '../schemas/PackageSkillsSchema';
 import {
-  PackageRecipesSchema,
-  PackageRecipe,
-} from '../schemas/PackageRecipesSchema';
+  PackageCommandsSchema,
+  PackageCommand,
+} from '../schemas/PackageCommandsSchema';
 import {
   PackageStandardsSchema,
   PackageStandard,
@@ -78,8 +78,8 @@ export class PackageRepository
       const packageIds = packages.map((p) => p.id);
 
       // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
-      const recipeRelations: PackageRecipe[] = await this.repository.manager
-        .getRepository(PackageRecipesSchema)
+      const commandRelations: PackageCommand[] = await this.repository.manager
+        .getRepository(PackageCommandsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
@@ -99,7 +99,7 @@ export class PackageRepository
         });
 
       // Group relations by package ID
-      const recipesByPackage = recipeRelations.reduce(
+      const commandsByPackage = commandRelations.reduce(
         (acc, rel) => {
           if (!acc[rel.package_id]) acc[rel.package_id] = [];
           acc[rel.package_id].push(rel.recipe_id);
@@ -128,7 +128,7 @@ export class PackageRepository
 
       const results: Package[] = packages.map((pkg) => ({
         ...pkg,
-        recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
+        recipes: (commandsByPackage[pkg.id] || []) as CommandId[],
         standards: (standardsByPackage[pkg.id] || []) as StandardId[],
         skills: (skillsByPackage[pkg.id] || []) as SkillId[],
       }));
@@ -174,8 +174,8 @@ export class PackageRepository
       const packageIds = packages.map((p) => p.id);
 
       // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
-      const recipeRelations: PackageRecipe[] = await this.repository.manager
-        .getRepository(PackageRecipesSchema)
+      const commandRelations: PackageCommand[] = await this.repository.manager
+        .getRepository(PackageCommandsSchema)
         .find({
           where: { package_id: In(packageIds) },
         });
@@ -195,7 +195,7 @@ export class PackageRepository
         });
 
       // Group relations by package ID
-      const recipesByPackage = recipeRelations.reduce(
+      const commandsByPackage = commandRelations.reduce(
         (acc, rel) => {
           if (!acc[rel.package_id]) acc[rel.package_id] = [];
           acc[rel.package_id].push(rel.recipe_id);
@@ -224,7 +224,7 @@ export class PackageRepository
 
       const results: Package[] = packages.map((pkg) => ({
         ...pkg,
-        recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
+        recipes: (commandsByPackage[pkg.id] || []) as CommandId[],
         standards: (standardsByPackage[pkg.id] || []) as StandardId[],
         skills: (skillsByPackage[pkg.id] || []) as SkillId[],
       }));
@@ -260,10 +260,10 @@ export class PackageRepository
       }
 
       // Fetch recipe IDs separately (relationships are cleaned up when recipes are deleted)
-      const recipeRelations = await this.repository.manager
+      const commandRelations = await this.repository.manager
         .createQueryBuilder()
-        .select('pr.recipe_id', 'recipe_id')
-        .from('package_recipes', 'pr')
+        .select('pr.command_id', 'recipe_id')
+        .from('package_commands', 'pr')
         .where('pr.package_id = :packageId', { packageId: id })
         .getRawMany();
 
@@ -285,7 +285,7 @@ export class PackageRepository
 
       const result: Package = {
         ...pkg,
-        recipes: recipeRelations.map((r) => r.recipe_id) as RecipeId[],
+        recipes: commandRelations.map((r) => r.recipe_id) as CommandId[],
         standards: standardRelations.map((s) => s.standard_id) as StandardId[],
         skills: skillRelations.map((sk) => sk.skill_id) as SkillId[],
       };
@@ -403,10 +403,10 @@ export class PackageRepository
 
     const packageIds = packages.map((p) => p.id);
 
-    const [recipeRelations, standardRelations, skillRelations] =
+    const [commandRelations, standardRelations, skillRelations] =
       await Promise.all([
         this.repository.manager
-          .getRepository(PackageRecipesSchema)
+          .getRepository(PackageCommandsSchema)
           .find({ where: { package_id: In(packageIds) } }),
         this.repository.manager
           .getRepository(PackageStandardsSchema)
@@ -416,8 +416,8 @@ export class PackageRepository
           .find({ where: { package_id: In(packageIds) } }),
       ]);
 
-    const uniqueRecipeIds = [
-      ...new Set(recipeRelations.map((r) => r.recipe_id)),
+    const uniqueCommandIds = [
+      ...new Set(commandRelations.map((r) => r.recipe_id)),
     ];
     const uniqueStandardIds = [
       ...new Set(standardRelations.map((s) => s.standard_id)),
@@ -425,11 +425,11 @@ export class PackageRepository
     const uniqueSkillIds = [...new Set(skillRelations.map((s) => s.skill_id))];
 
     const [recipes, standardsEntities, skills] = await Promise.all([
-      uniqueRecipeIds.length > 0
+      uniqueCommandIds.length > 0
         ? this.repository.manager
-            .getRepository<Recipe>(RecipeSchema)
-            .find({ where: { id: In(uniqueRecipeIds) } })
-        : Promise.resolve<Recipe[]>([]),
+            .getRepository<Command>(CommandSchema)
+            .find({ where: { id: In(uniqueCommandIds) } })
+        : Promise.resolve<Command[]>([]),
       uniqueStandardIds.length > 0
         ? this.repository.manager
             .getRepository<Standard>(StandardSchema)
@@ -446,20 +446,20 @@ export class PackageRepository
       ...standard,
     }));
 
-    const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
+    const commandsMap = new Map<string, Command>(recipes.map((r) => [r.id, r]));
     const standardsMap = new Map<string, Standard>(
       standards.map((s) => [s.id, s]),
     );
     const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
 
-    const recipesByPackage = recipeRelations.reduce(
+    const commandsByPackage = commandRelations.reduce(
       (acc, rel) => {
         if (!acc[rel.package_id]) acc[rel.package_id] = [];
-        const recipe = recipesMap.get(rel.recipe_id);
+        const recipe = commandsMap.get(rel.recipe_id);
         if (recipe) acc[rel.package_id].push(recipe);
         return acc;
       },
-      {} as Record<string, Recipe[]>,
+      {} as Record<string, Command[]>,
     );
 
     const standardsByPackage = standardRelations.reduce(
@@ -484,7 +484,7 @@ export class PackageRepository
 
     return packages.map((pkg) => ({
       ...pkg,
-      recipes: recipesByPackage[pkg.id] || [],
+      recipes: commandsByPackage[pkg.id] || [],
       standards: standardsByPackage[pkg.id] || [],
       skills: skillsByPackage[pkg.id] || [],
     }));
@@ -518,19 +518,19 @@ export class PackageRepository
           .groupBy(`${alias}.package_id`)
           .getRawMany<CountRow>();
 
-      const [packageRows, recipeRows, standardRows, skillRows] =
+      const [packageRows, commandRows, standardRows, skillRows] =
         await Promise.all([
           this.repository
             .createQueryBuilder('p')
             .select('p.id', 'package_id')
             .where('p.space_id = :spaceId', { spaceId })
             .getRawMany<PackageIdRow>(),
-          junctionCount(PackageRecipesSchema, 'pr'),
+          junctionCount(PackageCommandsSchema, 'pr'),
           junctionCount(PackageStandardsSchema, 'ps'),
           junctionCount(PackageSkillsSchema, 'psk'),
         ]);
 
-      const recipeCounts = aggregate(recipeRows);
+      const commandCounts = aggregate(commandRows);
       const standardCounts = aggregate(standardRows);
       const skillCounts = aggregate(skillRows);
 
@@ -538,7 +538,7 @@ export class PackageRepository
       for (const row of packageRows) {
         const id = row.package_id as PackageId;
         counts.set(id, {
-          recipes: recipeCounts.get(id) ?? 0,
+          recipes: commandCounts.get(id) ?? 0,
           standards: standardCounts.get(id) ?? 0,
           skills: skillCounts.get(id) ?? 0,
         });
@@ -554,7 +554,10 @@ export class PackageRepository
     }
   }
 
-  async addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {
+  async addCommands(
+    packageId: PackageId,
+    recipeIds: CommandId[],
+  ): Promise<void> {
     if (recipeIds.length === 0) {
       return;
     }
@@ -573,7 +576,7 @@ export class PackageRepository
       await this.repository
         .createQueryBuilder()
         .insert()
-        .into('package_recipes')
+        .into('package_commands')
         .values(values)
         .execute();
 
@@ -659,7 +662,10 @@ export class PackageRepository
     }
   }
 
-  async setRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {
+  async setCommands(
+    packageId: PackageId,
+    recipeIds: CommandId[],
+  ): Promise<void> {
     this.logger.info('Setting recipes for package', {
       packageId,
       recipeCount: recipeIds.length,
@@ -669,7 +675,7 @@ export class PackageRepository
       await this.repository
         .createQueryBuilder()
         .delete()
-        .from('package_recipes')
+        .from('package_commands')
         .where('package_id = :packageId', { packageId })
         .execute();
 
@@ -682,7 +688,7 @@ export class PackageRepository
         await this.repository
           .createQueryBuilder()
           .insert()
-          .into('package_recipes')
+          .into('package_commands')
           .values(values)
           .execute();
       }
@@ -744,15 +750,15 @@ export class PackageRepository
     }
   }
 
-  async removeRecipeFromAllPackages(recipeId: RecipeId): Promise<void> {
+  async removeCommandFromAllPackages(recipeId: CommandId): Promise<void> {
     this.logger.info('Removing recipe from all packages', { recipeId });
 
     try {
       const result = await this.repository
         .createQueryBuilder()
         .delete()
-        .from('package_recipes')
-        .where('recipe_id = :recipeId', { recipeId })
+        .from('package_commands')
+        .where('command_id = :recipeId', { recipeId })
         .execute();
 
       this.logger.info('Recipe removed from all packages successfully', {

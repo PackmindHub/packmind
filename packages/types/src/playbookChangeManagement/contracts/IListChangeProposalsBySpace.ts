@@ -1,4 +1,4 @@
-import { RecipeId } from '../../recipes/RecipeId';
+import { CommandId } from '../../commands/CommandId';
 import { SkillId } from '../../skills/SkillId';
 import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
@@ -10,12 +10,13 @@ export type ListChangeProposalsBySpaceCommand = PackmindCommand & {
   spaceId: SpaceId;
 };
 
-export type ListProposalsOverview<T extends StandardId | RecipeId | SkillId> = {
-  artefactId: T;
-  name: string;
-  changeProposalCount: number;
-  lastContributedAt: string;
-};
+export type ListProposalsOverview<T extends StandardId | CommandId | SkillId> =
+  {
+    artefactId: T;
+    name: string;
+    changeProposalCount: number;
+    lastContributedAt: string;
+  };
 
 export type CommandCreationProposalOverview =
   PendingChangeProposal<ChangeProposalType.createCommand> & {
@@ -45,7 +46,7 @@ export type CreationProposalOverview =
 
 export type ListChangeProposalsBySpaceResponse = {
   standards: ListProposalsOverview<StandardId>[];
-  commands: ListProposalsOverview<RecipeId>[];
+  commands: ListProposalsOverview<CommandId>[];
   skills: ListProposalsOverview<SkillId>[];
   creations: CreationProposalOverview[];
 };

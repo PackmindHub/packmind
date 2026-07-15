@@ -14,7 +14,7 @@ import {
   ActiveDistributedPackagesByTarget,
   Distribution,
   PackagesDeployment,
-  PublishRecipesCommand,
+  PublishCommandsCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
   TargetId,
@@ -24,8 +24,8 @@ import {
   RenderMode,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResponse,
-  RecipeId,
-  RecipeVersionId,
+  CommandId,
+  CommandVersionId,
   StandardId,
   StandardVersionId,
   PackageId,
@@ -34,7 +34,7 @@ import {
   ListDriftedPackagesByOrgCommand,
   ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
-  ListDistributionsByRecipeCommand,
+  ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   SkillId,
@@ -71,9 +71,9 @@ export class DeploymentsController {
   }
 
   @Get('recipe/:id')
-  async getDeploymentRecipe(
+  async getDeploymentCommand(
     @Param('orgId') organizationId: OrganizationId,
-    @Param('id') id: RecipeId,
+    @Param('id') id: CommandId,
     @Req() request: AuthenticatedRequest,
   ): Promise<Distribution[]> {
     this.logger.info(
@@ -85,14 +85,14 @@ export class DeploymentsController {
     );
 
     try {
-      const command: ListDistributionsByRecipeCommand = {
+      const command: ListDistributionsByCommandCommand = {
         userId: request.user.userId,
         organizationId,
         recipeId: id,
       };
 
       const deployments =
-        await this.deploymentsService.listDistributionsByRecipe(command);
+        await this.deploymentsService.listDistributionsByCommand(command);
 
       if (!deployments || deployments.length === 0) {
         this.logger.warn(
@@ -191,9 +191,9 @@ export class DeploymentsController {
   }
 
   @Get('distributions/recipe/:id')
-  async getDistributionsByRecipeId(
+  async getDistributionsByCommandId(
     @Param('orgId') organizationId: OrganizationId,
-    @Param('id') id: RecipeId,
+    @Param('id') id: CommandId,
     @Req() request: AuthenticatedRequest,
   ): Promise<Distribution[]> {
     this.logger.info(
@@ -205,14 +205,14 @@ export class DeploymentsController {
     );
 
     try {
-      const command: ListDistributionsByRecipeCommand = {
+      const command: ListDistributionsByCommandCommand = {
         userId: request.user.userId,
         organizationId,
         recipeId: id,
       };
 
       const distributions =
-        await this.deploymentsService.listDistributionsByRecipe(command);
+        await this.deploymentsService.listDistributionsByCommand(command);
 
       if (!distributions || distributions.length === 0) {
         this.logger.warn(
@@ -371,10 +371,10 @@ export class DeploymentsController {
   }
 
   @Post('recipes/publish')
-  async publishRecipes(
+  async publishCommands(
     @Param('orgId') organizationId: OrganizationId,
     @Body()
-    body: { targetIds: TargetId[]; recipeVersionIds: RecipeVersionId[] },
+    body: { targetIds: TargetId[]; recipeVersionIds: CommandVersionId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<Distribution[]> {
     this.logger.info(
@@ -387,14 +387,15 @@ export class DeploymentsController {
     );
 
     try {
-      const command: PublishRecipesCommand = {
+      const command: PublishCommandsCommand = {
         userId: request.user.userId,
         organizationId,
         targetIds: body.targetIds,
         recipeVersionIds: body.recipeVersionIds,
       };
 
-      const deployments = await this.deploymentsService.publishRecipes(command);
+      const deployments =
+        await this.deploymentsService.publishCommands(command);
 
       this.logger.info(
         'POST /organizations/:orgId/deployments/recipes/publish - Recipes published successfully',

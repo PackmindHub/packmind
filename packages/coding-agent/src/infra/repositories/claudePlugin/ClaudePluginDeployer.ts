@@ -4,7 +4,7 @@ import {
   GitRepo,
   IGitPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -51,8 +51,8 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     void this.gitPort;
   }
 
-  async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -183,8 +183,8 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
     };
   }
 
-  async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     void recipeVersions;
     return EMPTY_UPDATES;
@@ -213,7 +213,7 @@ export class ClaudePluginDeployer implements ICodingAgentDeployer {
   }
 
   async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {

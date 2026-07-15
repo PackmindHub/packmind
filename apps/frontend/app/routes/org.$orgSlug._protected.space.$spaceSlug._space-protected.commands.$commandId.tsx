@@ -1,7 +1,7 @@
-import { OrganizationId, RecipeId } from '@packmind/types';
+import { OrganizationId, CommandId } from '@packmind/types';
 import { Outlet } from 'react-router';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
-import { getRecipeByIdOptions } from '../../src/domain/recipes/api/queries/RecipesQueries';
+import { getCommandByIdOptions } from '../../src/domain/commands/api/queries/CommandsQueries';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';
 
@@ -25,10 +25,10 @@ export async function clientLoader({
   }
 
   return queryClient.ensureQueryData(
-    getRecipeByIdOptions(
+    getCommandByIdOptions(
       me.organization.id as OrganizationId,
       space.id,
-      params.commandId as RecipeId,
+      params.commandId as CommandId,
     ),
   );
 }

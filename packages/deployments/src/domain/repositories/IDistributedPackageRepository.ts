@@ -4,7 +4,7 @@ import {
   DistributionId,
   IRepository,
   PackageId,
-  RecipeVersionId,
+  CommandVersionId,
   SkillVersionId,
   StandardVersionId,
 } from '@packmind/types';
@@ -21,9 +21,9 @@ export interface IDistributedPackageRepository extends IRepository<DistributedPa
     standardVersionIds: StandardVersionId[],
   ): Promise<void>;
 
-  addRecipeVersions(
+  addCommandVersions(
     distributedPackageId: DistributedPackageId,
-    recipeVersionIds: RecipeVersionId[],
+    recipeVersionIds: CommandVersionId[],
   ): Promise<void>;
 
   addSkillVersions(

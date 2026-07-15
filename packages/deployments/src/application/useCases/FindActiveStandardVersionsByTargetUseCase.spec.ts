@@ -22,7 +22,7 @@ describe('FindActiveStandardVersionsByTargetUseCase', () => {
       findById: jest.fn(),
       listByOrganizationId: jest.fn(),
       listByPackageId: jest.fn(),
-      listByRecipeId: jest.fn(),
+      listByCommandId: jest.fn(),
       listByStandardId: jest.fn(),
       listByTargetIds: jest.fn(),
       listByOrganizationIdWithStatus: jest.fn(),

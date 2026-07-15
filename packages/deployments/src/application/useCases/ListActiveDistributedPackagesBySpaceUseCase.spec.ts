@@ -5,7 +5,7 @@ import {
   createGitRepoId,
   createOrganizationId,
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -15,14 +15,14 @@ import {
   GitRepo,
   IAccountsPort,
   IGitPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   Package,
   PackageId,
-  Recipe,
+  Command,
   Skill,
   Standard,
   Target,
@@ -52,7 +52,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     Pick<ITargetRepository, 'findActiveInSpace'>
   >;
   let standardsPort: jest.Mocked<Pick<IStandardsPort, 'listStandardsBySpace'>>;
-  let recipesPort: jest.Mocked<Pick<IRecipesPort, 'listRecipesBySpace'>>;
+  let commandsPort: jest.Mocked<Pick<ICommandsPort, 'listRecipesBySpace'>>;
   let skillsPort: jest.Mocked<Pick<ISkillsPort, 'listSkillsBySpace'>>;
   let gitPort: jest.Mocked<Pick<IGitPort, 'getOrganizationRepositories'>>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -166,8 +166,8 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       listStandardsBySpace: jest.fn().mockResolvedValue([]),
     };
 
-    recipesPort = {
-      listRecipesBySpace: jest.fn().mockResolvedValue([]),
+    commandsPort = {
+      listCommandsBySpace: jest.fn().mockResolvedValue([]),
     };
 
     skillsPort = {
@@ -187,7 +187,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
       packageRepository as unknown as IPackageRepository,
       targetRepository as unknown as ITargetRepository,
       standardsPort as unknown as IStandardsPort,
-      recipesPort as unknown as IRecipesPort,
+      commandsPort as unknown as ICommandsPort,
       skillsPort as unknown as ISkillsPort,
       gitPort as unknown as IGitPort,
       stubbedLogger,
@@ -379,13 +379,13 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
     describe('deployment status flags', () => {
       const targetId = createTargetId(uuidv4());
-      const recipeId = createRecipeId(uuidv4());
+      const recipeId = createCommandId(uuidv4());
       const standardId = createStandardId(uuidv4());
       const skillId = createSkillId(uuidv4());
       const deploymentDate = '2026-04-01T10:00:00.000Z';
       let pkg: Package;
 
-      const buildLiveRecipe = (version: number): Recipe =>
+      const buildLiveCommand = (version: number): Command =>
         ({
           id: recipeId,
           name: 'recipe-name',
@@ -395,7 +395,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           userId,
           spaceId,
           movedTo: null,
-        }) as Recipe;
+        }) as Command;
 
       const buildLiveStandard = (version: number): Standard =>
         ({
@@ -494,8 +494,8 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
         beforeEach(async () => {
           seedDeployment(3);
-          recipesPort.listRecipesBySpace.mockResolvedValue([
-            buildLiveRecipe(3),
+          commandsPort.listCommandsBySpace.mockResolvedValue([
+            buildLiveCommand(3),
           ]);
           standardsPort.listStandardsBySpace.mockResolvedValue([
             buildLiveStandard(3),
@@ -561,8 +561,8 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
         beforeEach(async () => {
           seedDeployment(2);
-          recipesPort.listRecipesBySpace.mockResolvedValue([
-            buildLiveRecipe(5),
+          commandsPort.listCommandsBySpace.mockResolvedValue([
+            buildLiveCommand(5),
           ]);
           standardsPort.listStandardsBySpace.mockResolvedValue([
             buildLiveStandard(5),
@@ -607,7 +607,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
 
         beforeEach(async () => {
           seedDeployment(2);
-          recipesPort.listRecipesBySpace.mockResolvedValue([]);
+          commandsPort.listCommandsBySpace.mockResolvedValue([]);
           standardsPort.listStandardsBySpace.mockResolvedValue([]);
           skillsPort.listSkillsBySpace.mockResolvedValue([]);
 
@@ -644,26 +644,26 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     describe('per-package partitioning and pending', () => {
       describe('splits deployed artifacts across the packages that own them and emits pending for never-deployed ones', () => {
         let entry: Awaited<ReturnType<typeof useCase.execute>>[0];
-        let recipesEntry: (typeof entry.packages)[0] | undefined;
+        let commandsEntry: (typeof entry.packages)[0] | undefined;
         let mixedEntry: (typeof entry.packages)[0] | undefined;
         let targetId: TargetId;
-        let recipeAId: ReturnType<typeof createRecipeId>;
-        let recipeBId: ReturnType<typeof createRecipeId>;
+        let commandAId: ReturnType<typeof createCommandId>;
+        let commandBId: ReturnType<typeof createCommandId>;
         let standardId: ReturnType<typeof createStandardId>;
         let skillId: ReturnType<typeof createSkillId>;
-        let pkgRecipes: Package;
+        let pkgCommands: Package;
         let pkgMixed: Package;
 
         beforeEach(async () => {
           targetId = createTargetId(uuidv4());
-          recipeAId = createRecipeId(uuidv4());
-          recipeBId = createRecipeId(uuidv4());
+          commandAId = createCommandId(uuidv4());
+          commandBId = createCommandId(uuidv4());
           standardId = createStandardId(uuidv4());
           skillId = createSkillId(uuidv4());
 
-          pkgRecipes = buildPackage({
+          pkgCommands = buildPackage({
             name: 'pkg-recipes',
-            recipes: [recipeAId, recipeBId],
+            recipes: [commandAId, commandBId],
           });
           pkgMixed = buildPackage({
             name: 'pkg-mixed',
@@ -676,31 +676,31 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           ]);
           distributionRepository.findActivePackageOperationsBySpace.mockResolvedValue(
             [
-              activeRow(targetId, pkgRecipes.id, DistributionStatus.success),
+              activeRow(targetId, pkgCommands.id, DistributionStatus.success),
               activeRow(targetId, pkgMixed.id, DistributionStatus.success),
             ],
           );
           packageRepository.findBySpaceId.mockResolvedValue([
-            pkgRecipes,
+            pkgCommands,
             pkgMixed,
           ]);
-          recipesPort.listRecipesBySpace.mockResolvedValue([
+          commandsPort.listCommandsBySpace.mockResolvedValue([
             {
-              id: recipeAId,
+              id: commandAId,
               name: 'recipe-a',
               slug: 'recipe-a',
               content: 'a',
               version: 1,
               userId,
-            } as Recipe,
+            } as Command,
             {
-              id: recipeBId,
+              id: commandBId,
               name: 'recipe-b',
               slug: 'recipe-b',
               content: 'b',
               version: 1,
               userId,
-            } as Recipe,
+            } as Command,
           ]);
           standardsPort.listStandardsBySpace.mockResolvedValue([
             {
@@ -742,7 +742,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
                 ],
                 recipes: [
                   {
-                    artifactId: recipeAId,
+                    artifactId: commandAId,
                     artifactName: 'recipe-a',
                     artifactSlug: 'recipe-a',
                     deployedVersion: 1,
@@ -756,27 +756,27 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
           );
 
           [entry] = await useCase.execute(command);
-          recipesEntry = entry.packages.find(
-            (p) => p.packageId === pkgRecipes.id,
+          commandsEntry = entry.packages.find(
+            (p) => p.packageId === pkgCommands.id,
           );
           mixedEntry = entry.packages.find((p) => p.packageId === pkgMixed.id);
         });
 
         it('includes the recipes package entry', () => {
-          expect(recipesEntry).toBeDefined();
+          expect(commandsEntry).toBeDefined();
         });
 
         it('includes one deployed recipe for the recipes package', () => {
-          expect(recipesEntry?.deployedRecipes).toHaveLength(1);
+          expect(commandsEntry?.deployedRecipes).toHaveLength(1);
         });
 
         it('assigns the deployed recipe to the correct package', () => {
-          expect(recipesEntry?.deployedRecipes[0].recipe.id).toBe(recipeAId);
+          expect(commandsEntry?.deployedRecipes[0].recipe.id).toBe(commandAId);
         });
 
         it('lists the non-deployed recipe as pending', () => {
-          expect(recipesEntry?.pendingRecipes.map((r) => r.id)).toEqual([
-            recipeBId,
+          expect(commandsEntry?.pendingRecipes.map((r) => r.id)).toEqual([
+            commandBId,
           ]);
         });
 

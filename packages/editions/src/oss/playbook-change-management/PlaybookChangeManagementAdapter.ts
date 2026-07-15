@@ -17,7 +17,7 @@ import {
   ListChangeProposalsBySpaceResponse,
   MigrateChangeProposalsForMovedArtefactCommand,
   MigrateChangeProposalsForMovedArtefactResponse,
-  RecipeId,
+  CommandId,
   RecomputeConflictsCommand,
   RecomputeConflictsResponse,
   SkillId,
@@ -25,7 +25,7 @@ import {
 } from '@packmind/types';
 
 export class PlaybookChangeManagementAdapter implements IPlaybookChangeManagementPort {
-  applyChangeProposals<T extends StandardId | RecipeId | SkillId>(
+  applyChangeProposals<T extends StandardId | CommandId | SkillId>(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: ApplyChangeProposalsCommand<T>,
   ): Promise<ApplyChangeProposalsResponse<T>> {
@@ -60,7 +60,7 @@ export class PlaybookChangeManagementAdapter implements IPlaybookChangeManagemen
     throw new Error('Method not implemented.');
   }
 
-  listChangeProposalsByArtefact<T extends StandardId | RecipeId | SkillId>(
+  listChangeProposalsByArtefact<T extends StandardId | CommandId | SkillId>(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: ListChangeProposalsByArtefactCommand<T>,
   ): Promise<ListChangeProposalsByArtefactResponse> {

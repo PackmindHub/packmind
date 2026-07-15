@@ -15,7 +15,7 @@ import {
 } from '@packmind/ui';
 import { Link } from 'react-router';
 import {
-  RecipeDeploymentStatus,
+  CommandDeploymentStatus,
   StandardDeploymentStatus,
   SkillDeploymentStatus,
 } from '@packmind/types';
@@ -25,7 +25,7 @@ import { routes } from '../../../../shared/utils/routes';
 type ArtifactStatus = 'all' | 'outdated' | 'up-to-date';
 
 type ArtifactsViewProps = {
-  recipes: ReadonlyArray<RecipeDeploymentStatus>;
+  recipes: ReadonlyArray<CommandDeploymentStatus>;
   standards: ReadonlyArray<StandardDeploymentStatus>;
   skills: ReadonlyArray<SkillDeploymentStatus>;
   searchTerm?: string;
@@ -168,8 +168,8 @@ const formatRepoLabel = (td: {
   td.gitRepo.repo +
   (td.gitRepo.branch ? ':' + td.gitRepo.branch : '');
 
-const buildRecipeBlocks = (
-  recipes: ReadonlyArray<RecipeDeploymentStatus>,
+const buildCommandBlocks = (
+  recipes: ReadonlyArray<CommandDeploymentStatus>,
   artifactStatusFilter: ArtifactStatus,
   columns: PMTableColumn[],
   orgSlug?: string,
@@ -177,11 +177,11 @@ const buildRecipeBlocks = (
 ) =>
   recipes
     .map((recipe) => {
-      const recipeIsDeleted = recipe.isDeleted;
+      const commandIsDeleted = recipe.isDeleted;
       const rows: PMTableRow[] = filterAndSortDeployments(
         recipe.targetDeployments,
         artifactStatusFilter,
-        recipeIsDeleted,
+        commandIsDeleted,
       ).map((td) => {
         const upToDate = td.isUpToDate;
         const version = renderVersionNode(
@@ -193,7 +193,7 @@ const buildRecipeBlocks = (
         const status = renderStatusNode(
           artifactStatusFilter,
           upToDate,
-          recipeIsDeleted,
+          commandIsDeleted,
           'command',
         );
         const repoLabel = formatRepoLabel(td);
@@ -407,7 +407,7 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
   // Filter artifacts by search on artifact name
-  const filteredRecipes = useMemo(() => {
+  const filteredCommands = useMemo(() => {
     const base = !normalizedSearch
       ? recipes
       : recipes.filter((r) =>
@@ -438,16 +438,16 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   }, [skills, normalizedSearch]);
 
   // Build blocks before any early return to respect hooks order
-  const recipeBlocks = useMemo(
+  const commandBlocks = useMemo(
     () =>
-      buildRecipeBlocks(
-        filteredRecipes,
+      buildCommandBlocks(
+        filteredCommands,
         artifactStatusFilter,
         TABLE_COLUMNS,
         orgSlug,
         spaceSlug,
       ),
-    [filteredRecipes, artifactStatusFilter, orgSlug, spaceSlug],
+    [filteredCommands, artifactStatusFilter, orgSlug, spaceSlug],
   );
 
   const standardBlocks = useMemo(
@@ -474,12 +474,12 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
     [filteredSkills, artifactStatusFilter, orgSlug, spaceSlug],
   );
 
-  const visibleRecipes = useMemo(
+  const visibleCommands = useMemo(
     () =>
       artifactTypeFilter === 'all' || artifactTypeFilter === 'commands'
-        ? filteredRecipes
-        : ([] as typeof filteredRecipes),
-    [artifactTypeFilter, filteredRecipes],
+        ? filteredCommands
+        : ([] as typeof filteredCommands),
+    [artifactTypeFilter, filteredCommands],
   );
   const visibleStandards = useMemo(
     () =>
@@ -497,13 +497,13 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   );
 
   const hasAnyArtifacts =
-    (visibleRecipes?.length || 0) +
+    (visibleCommands?.length || 0) +
       (visibleStandards?.length || 0) +
       (visibleSkills?.length || 0) >
     0;
   const globalCounts = useMemo(() => {
     const totals = { upToDate: 0, outdated: 0 };
-    visibleRecipes.forEach((recipe) => {
+    visibleCommands.forEach((recipe) => {
       (recipe.targetDeployments || []).forEach((td) => {
         if (td.isUpToDate) totals.upToDate += 1;
         else totals.outdated += 1;
@@ -522,7 +522,7 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
       });
     });
     return totals;
-  }, [visibleRecipes, visibleStandards, visibleSkills]);
+  }, [visibleCommands, visibleStandards, visibleSkills]);
 
   const emptyState = getEmptyStateProps(
     hasAnyArtifacts,
@@ -542,10 +542,10 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
         />
       )}
       {(artifactTypeFilter === 'all' || artifactTypeFilter === 'commands') &&
-        recipeBlocks.length > 0 && (
+        commandBlocks.length > 0 && (
           <PMVStack gap={3} align="stretch">
             <PMHeading level="h5">Commands</PMHeading>
-            {recipeBlocks}
+            {commandBlocks}
           </PMVStack>
         )}
       {(artifactTypeFilter === 'all' || artifactTypeFilter === 'standards') &&

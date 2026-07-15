@@ -6,29 +6,29 @@ import {
 import {
   ActiveDistributedPackage,
   ActiveDistributedPackagesByTarget,
-  createRecipeVersionId,
+  createCommandVersionId,
   createSkillVersionId,
   createStandardVersionId,
   createUserId,
-  DeployedRecipeTargetInfo,
+  DeployedCommandTargetInfo,
   DeployedSkillTargetInfo,
   DeployedStandardTargetInfo,
   IAccountsPort,
   IGitPort,
   IListActiveDistributedPackagesBySpaceUseCase,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
   Package,
-  PendingRecipeInfo,
+  PendingCommandInfo,
   PendingSkillInfo,
   PendingStandardInfo,
-  Recipe,
-  RecipeId,
-  RecipeVersion,
+  Command,
+  CommandId,
+  CommandVersion,
   Skill,
   SkillId,
   SkillVersion,
@@ -41,7 +41,7 @@ import {
   ActivePackageOperationRow,
   IDistributionRepository,
   OutdatedDeploymentsByTarget,
-  OutdatedRecipeDeployment,
+  OutdatedCommandDeployment,
   OutdatedSkillDeployment,
   OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
@@ -64,7 +64,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     private readonly packageRepository: IPackageRepository,
     private readonly targetRepository: ITargetRepository,
     private readonly standardsPort: IStandardsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -82,7 +82,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
       outdatedR,
       targetsR,
       standardsR,
-      recipesR,
+      commandsR,
       skillsR,
       packagesR,
       gitReposR,
@@ -100,7 +100,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
         organizationId,
         command.userId,
       ),
-      this.recipesPort.listRecipesBySpace({
+      this.commandsPort.listCommandsBySpace({
         spaceId: command.spaceId,
         organizationId,
         userId: command.userId,
@@ -123,7 +123,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const outdatedByTarget = value(outdatedR);
     const targets = value(targetsR);
     const standards = value(standardsR);
-    const recipes = value(recipesR);
+    const recipes = value(commandsR);
     const skills = value(skillsR);
     const packages = value(packagesR);
     const gitRepos = value(gitReposR);
@@ -135,7 +135,7 @@ export class ListActiveDistributedPackagesBySpaceUseCase
     const operationsByTarget = groupActiveOpsByTarget(activeOps);
     const outdatedByTargetId = indexOutdatedByTarget(outdatedByTarget);
     const standardsById = indexById(standards);
-    const recipesById = indexById(recipes);
+    const commandsById = indexById(recipes);
     const skillsById = indexById(skills);
     const packagesById = indexById(packages);
     const gitRepoById = new Map(gitRepos.map((r) => [r.id, r]));
@@ -154,10 +154,10 @@ export class ListActiveDistributedPackagesBySpaceUseCase
           standardsById.get(deployment.artifactId),
         ),
       );
-      const deployedRecipes = outdated.recipes.map((deployment) =>
-        buildDeployedRecipeInfo(
+      const deployedCommands = outdated.recipes.map((deployment) =>
+        buildDeployedCommandInfo(
           deployment,
-          recipesById.get(deployment.artifactId),
+          commandsById.get(deployment.artifactId),
         ),
       );
       const deployedSkills = outdated.skills.map((deployment) =>
@@ -176,10 +176,10 @@ export class ListActiveDistributedPackagesBySpaceUseCase
             buildActivePackage({
               row,
               pkg: packagesById.get(row.packageId),
-              deployedRecipes,
+              deployedCommands,
               deployedStandards,
               deployedSkills,
-              recipesById,
+              commandsById,
               standardsById,
               skillsById,
             }),
@@ -193,31 +193,31 @@ export class ListActiveDistributedPackagesBySpaceUseCase
 function buildActivePackage(args: {
   row: ActivePackageOperationRow;
   pkg: Package | undefined;
-  deployedRecipes: DeployedRecipeTargetInfo[];
+  deployedCommands: DeployedCommandTargetInfo[];
   deployedStandards: DeployedStandardTargetInfo[];
   deployedSkills: DeployedSkillTargetInfo[];
-  recipesById: Map<string, Recipe>;
+  commandsById: Map<string, Command>;
   standardsById: Map<string, Standard>;
   skillsById: Map<string, Skill>;
 }): ActiveDistributedPackage | null {
   const {
     row,
     pkg,
-    deployedRecipes,
+    deployedCommands,
     deployedStandards,
     deployedSkills,
-    recipesById,
+    commandsById,
     standardsById,
     skillsById,
   } = args;
   if (!pkg) return null;
 
-  const pkgRecipeIds = new Set<RecipeId>(pkg.recipes);
+  const pkgCommandIds = new Set<CommandId>(pkg.recipes);
   const pkgStandardIds = new Set<StandardId>(pkg.standards);
   const pkgSkillIds = new Set<SkillId>(pkg.skills);
 
-  const packageDeployedRecipes = deployedRecipes.filter((r) =>
-    pkgRecipeIds.has(r.recipe.id),
+  const packageDeployedCommands = deployedCommands.filter((r) =>
+    pkgCommandIds.has(r.recipe.id),
   );
   const packageDeployedStandards = deployedStandards.filter((s) =>
     pkgStandardIds.has(s.standard.id),
@@ -226,8 +226,8 @@ function buildActivePackage(args: {
     pkgSkillIds.has(s.skill.id),
   );
 
-  const deployedRecipeIds = new Set(
-    packageDeployedRecipes.map((r) => r.recipe.id),
+  const deployedCommandIds = new Set(
+    packageDeployedCommands.map((r) => r.recipe.id),
   );
   const deployedStandardIds = new Set(
     packageDeployedStandards.map((s) => s.standard.id),
@@ -236,10 +236,10 @@ function buildActivePackage(args: {
     packageDeployedSkills.map((s) => s.skill.id),
   );
 
-  const pendingRecipes: PendingRecipeInfo[] = pkg.recipes
-    .filter((id) => !deployedRecipeIds.has(id))
-    .map((id) => recipesById.get(id))
-    .filter((r): r is Recipe => Boolean(r))
+  const pendingCommands: PendingCommandInfo[] = pkg.recipes
+    .filter((id) => !deployedCommandIds.has(id))
+    .map((id) => commandsById.get(id))
+    .filter((r): r is Command => Boolean(r))
     .map((r) => ({ id: r.id, name: r.name, slug: r.slug }));
 
   const pendingStandards: PendingStandardInfo[] = pkg.standards
@@ -259,10 +259,10 @@ function buildActivePackage(args: {
     package: pkg,
     lastDistributionStatus: row.lastDistributionStatus,
     lastDistributedAt: row.lastDistributedAt,
-    deployedRecipes: packageDeployedRecipes,
+    deployedRecipes: packageDeployedCommands,
     deployedStandards: packageDeployedStandards,
     deployedSkills: packageDeployedSkills,
-    pendingRecipes,
+    pendingRecipes: pendingCommands,
     pendingStandards,
     pendingSkills,
   };
@@ -341,10 +341,10 @@ function buildDeployedStandardInfo(
   };
 }
 
-function buildDeployedRecipeInfo(
-  deployment: OutdatedRecipeDeployment,
-  recipe: Recipe | undefined,
-): DeployedRecipeTargetInfo {
+function buildDeployedCommandInfo(
+  deployment: OutdatedCommandDeployment,
+  recipe: Command | undefined,
+): DeployedCommandTargetInfo {
   const baseId = recipe?.id ?? deployment.artifactId;
   const name = recipe?.name ?? deployment.artifactName;
   const slug = recipe?.slug ?? deployment.artifactSlug;
@@ -355,8 +355,8 @@ function buildDeployedRecipeInfo(
   const isUpToDate =
     !isDeleted && deployment.deployedVersion === latestVersionNumber;
 
-  const buildVersion = (version: number): RecipeVersion => ({
-    id: createRecipeVersionId(baseId),
+  const buildVersion = (version: number): CommandVersion => ({
+    id: createCommandVersionId(baseId),
     recipeId: baseId,
     name,
     slug,
@@ -365,17 +365,17 @@ function buildDeployedRecipeInfo(
     userId,
   });
 
-  const syntheticRecipe = {
+  const syntheticCommand = {
     id: baseId,
     name,
     slug,
     content,
     version: deployment.deployedVersion,
     userId,
-  } as Recipe;
+  } as Command;
 
   return {
-    recipe: recipe ?? syntheticRecipe,
+    recipe: recipe ?? syntheticCommand,
     deployedVersion: buildVersion(deployment.deployedVersion),
     latestVersion: buildVersion(latestVersionNumber),
     isUpToDate,

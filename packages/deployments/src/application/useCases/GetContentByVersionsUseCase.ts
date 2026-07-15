@@ -7,16 +7,16 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   InvalidArtifactIdError,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   SpaceId,
   StandardVersion,
   createOrganizationId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createStandardId,
 } from '@packmind/types';
@@ -42,7 +42,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly skillsPort: ISkillsPort,
     private readonly standardsPort: IStandardsPort,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
@@ -84,19 +84,21 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     const standardEntries = command.artifacts.filter(
       (a) => a.type === 'standard',
     );
-    const recipeEntries = command.artifacts.filter((a) => a.type === 'command');
+    const commandEntries = command.artifacts.filter(
+      (a) => a.type === 'command',
+    );
     const skillEntries = command.artifacts.filter((a) => a.type === 'skill');
 
     this.logger.info('Grouped artifacts by type', {
       standardCount: standardEntries.length,
-      recipeCount: recipeEntries.length,
+      recipeCount: commandEntries.length,
       skillCount: skillEntries.length,
     });
 
     // Step 4: Fetch specific versions for each artifact type
     const [recipeVersions, standardVersionsWithRules, skillVersions] =
       await Promise.all([
-        this.fetchRecipeVersions(recipeEntries, allowedSpaceIds),
+        this.fetchCommandVersions(commandEntries, allowedSpaceIds),
         this.fetchStandardVersionsWithRules(standardEntries, allowedSpaceIds),
         this.fetchSkillVersionsWithFiles(skillEntries, allowedSpaceIds),
       ]);
@@ -115,14 +117,16 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     });
 
     // Step 6: Enrich file modifications with artifact metadata
-    const recipeSpaceMap = new Map(recipeEntries.map((e) => [e.id, e.spaceId]));
+    const commandSpaceMap = new Map(
+      commandEntries.map((e) => [e.id, e.spaceId]),
+    );
     const standardSpaceMap = new Map(
       standardEntries.map((e) => [e.id, e.spaceId]),
     );
     const skillSpaceMap = new Map(skillEntries.map((e) => [e.id, e.spaceId]));
 
     const artifactMetadata = buildArtifactMetadataMap({
-      recipes: { spaceIdMap: recipeSpaceMap, versions: recipeVersions },
+      recipes: { spaceIdMap: commandSpaceMap, versions: recipeVersions },
       standards: {
         spaceIdMap: standardSpaceMap,
         versions: standardVersionsWithRules,
@@ -158,14 +162,14 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
     };
   }
 
-  private async fetchRecipeVersions(
+  private async fetchCommandVersions(
     entries: ArtifactVersionEntry[],
     allowedSpaceIds: SpaceId[],
-  ): Promise<RecipeVersion[]> {
+  ): Promise<CommandVersion[]> {
     const results = await Promise.all(
       entries.map(async (entry) => {
-        const recipeId = createRecipeId(entry.id);
-        const version = await this.recipesPort.getRecipeVersion(
+        const recipeId = createCommandId(entry.id);
+        const version = await this.commandsPort.getCommandVersion(
           recipeId,
           entry.version,
           allowedSpaceIds,
@@ -179,7 +183,7 @@ export class GetContentByVersionsUseCase extends AbstractMemberUseCase<
         return version;
       }),
     );
-    return results.filter((v): v is RecipeVersion => v !== null);
+    return results.filter((v): v is CommandVersion => v !== null);
   }
 
   private async fetchStandardVersionsWithRules(

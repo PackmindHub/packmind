@@ -7,13 +7,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../../../../providers/AuthProvider';
 import { PackageArtifactsTable } from './PackageArtifactsTable';
 import {
-  createDeployedRecipeTargetInfo,
+  createDeployedCommandTargetInfo,
   createDeployedStandardTargetInfo,
 } from '@packmind/deployments/test';
 import { skillFactory, skillVersionFactory } from '@packmind/skills/test';
 import {
   createPackageId,
-  createRecipeId,
+  createCommandId,
   createTargetId,
   DeployedSkillTargetInfo,
   Skill,
@@ -107,7 +107,7 @@ describe('PackageArtifactsTable', () => {
   });
 
   it('renders the package name in the header', () => {
-    const recipe = createDeployedRecipeTargetInfo();
+    const recipe = createDeployedCommandTargetInfo();
 
     renderWithProvider(
       <PackageArtifactsTable
@@ -127,7 +127,7 @@ describe('PackageArtifactsTable', () => {
   });
 
   it('renders the Package badge label in the header', () => {
-    const recipe = createDeployedRecipeTargetInfo();
+    const recipe = createDeployedCommandTargetInfo();
 
     renderWithProvider(
       <PackageArtifactsTable
@@ -147,7 +147,7 @@ describe('PackageArtifactsTable', () => {
   });
 
   it('passes one row per artifact when given a recipe, a standard, and a skill', () => {
-    const recipe = createDeployedRecipeTargetInfo();
+    const recipe = createDeployedCommandTargetInfo();
     const standard = createDeployedStandardTargetInfo();
     const skill = buildDeployedSkillTargetInfo();
 
@@ -171,10 +171,10 @@ describe('PackageArtifactsTable', () => {
 
   describe('when filtering by outdated mode', () => {
     it('filters out up-to-date artifacts before reaching the table', () => {
-      const outdatedRecipe = createDeployedRecipeTargetInfo({
+      const outdatedCommand = createDeployedCommandTargetInfo({
         isUpToDate: false,
       });
-      const upToDateRecipe = createDeployedRecipeTargetInfo({
+      const upToDateCommand = createDeployedCommandTargetInfo({
         isUpToDate: true,
       });
       const outdatedStandard = createDeployedStandardTargetInfo({
@@ -192,7 +192,7 @@ describe('PackageArtifactsTable', () => {
           targetId={TEST_TARGET_ID}
           canDistributeFromApp={true}
           isDistributeReadinessLoading={false}
-          recipes={[outdatedRecipe, upToDateRecipe]}
+          recipes={[outdatedCommand, upToDateCommand]}
           standards={[outdatedStandard, upToDateStandard]}
           skills={[]}
           mode="outdated"
@@ -205,7 +205,7 @@ describe('PackageArtifactsTable', () => {
 
   describe('when filtered rows are empty', () => {
     it('returns null instead of rendering the table', () => {
-      const upToDateRecipe = createDeployedRecipeTargetInfo({
+      const upToDateCommand = createDeployedCommandTargetInfo({
         isUpToDate: true,
       });
 
@@ -217,7 +217,7 @@ describe('PackageArtifactsTable', () => {
           targetId={TEST_TARGET_ID}
           canDistributeFromApp={true}
           isDistributeReadinessLoading={false}
-          recipes={[upToDateRecipe]}
+          recipes={[upToDateCommand]}
           standards={[]}
           skills={[]}
           mode="outdated"
@@ -228,7 +228,7 @@ describe('PackageArtifactsTable', () => {
     });
 
     it('does not render the Package badge when nothing matches the filter', () => {
-      const upToDateRecipe = createDeployedRecipeTargetInfo({
+      const upToDateCommand = createDeployedCommandTargetInfo({
         isUpToDate: true,
       });
 
@@ -240,7 +240,7 @@ describe('PackageArtifactsTable', () => {
           targetId={TEST_TARGET_ID}
           canDistributeFromApp={true}
           isDistributeReadinessLoading={false}
-          recipes={[upToDateRecipe]}
+          recipes={[upToDateCommand]}
           standards={[]}
           skills={[]}
           mode="outdated"
@@ -252,8 +252,8 @@ describe('PackageArtifactsTable', () => {
   });
 
   describe('when a pending recipe is provided', () => {
-    const pendingRecipe = {
-      id: createRecipeId('pending-recipe-1'),
+    const pendingCommand = {
+      id: createCommandId('pending-recipe-1'),
       name: 'My Pending Recipe',
       slug: 'my-pending-recipe',
     };
@@ -270,7 +270,7 @@ describe('PackageArtifactsTable', () => {
           recipes={[]}
           standards={[]}
           skills={[]}
-          pendingRecipes={[pendingRecipe]}
+          pendingRecipes={[pendingCommand]}
           mode="all"
         />,
       );
@@ -290,7 +290,7 @@ describe('PackageArtifactsTable', () => {
           recipes={[]}
           standards={[]}
           skills={[]}
-          pendingRecipes={[pendingRecipe]}
+          pendingRecipes={[pendingCommand]}
           mode="all"
         />,
       );
@@ -310,7 +310,7 @@ describe('PackageArtifactsTable', () => {
           recipes={[]}
           standards={[]}
           skills={[]}
-          pendingRecipes={[pendingRecipe]}
+          pendingRecipes={[pendingCommand]}
           mode="outdated"
         />,
       );
@@ -330,7 +330,7 @@ describe('PackageArtifactsTable', () => {
           recipes={[]}
           standards={[]}
           skills={[]}
-          pendingRecipes={[pendingRecipe]}
+          pendingRecipes={[pendingCommand]}
           mode="outdated"
         />,
       );
@@ -350,7 +350,7 @@ describe('PackageArtifactsTable', () => {
           recipes={[]}
           standards={[]}
           skills={[]}
-          pendingRecipes={[pendingRecipe]}
+          pendingRecipes={[pendingCommand]}
           mode="up-to-date"
         />,
       );

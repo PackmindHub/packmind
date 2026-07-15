@@ -1,11 +1,11 @@
-import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
-import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
+import { commandFactory } from '@packmind/commands/test/commandFactory';
+import { commandVersionFactory } from '@packmind/commands/test/commandVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
 import {
-  RecipeDeploymentStatus,
+  CommandDeploymentStatus,
   RepositoryDeploymentInfo,
   TargetDeploymentInfo,
-  DeployedRecipeTargetInfo,
+  DeployedCommandTargetInfo,
 } from '@packmind/types';
 import { targetFactory } from './targetFactory';
 
@@ -14,33 +14,33 @@ export const createRepositoryDeploymentInfo = (
 ): RepositoryDeploymentInfo => {
   return {
     gitRepo: gitRepoFactory(),
-    deployedVersion: recipeVersionFactory(),
+    deployedVersion: commandVersionFactory(),
     isUpToDate: false,
     deploymentDate: new Date().toISOString(),
     ...repositoryDeploymentInfo,
   };
 };
 
-export const createRecipeDeploymentStatus = (
-  recipeDeploymentStatus?: Partial<RecipeDeploymentStatus>,
-): RecipeDeploymentStatus => {
-  const recipe = recipeFactory();
+export const createCommandDeploymentStatus = (
+  commandDeploymentStatus?: Partial<CommandDeploymentStatus>,
+): CommandDeploymentStatus => {
+  const recipe = commandFactory();
   return {
     recipe,
-    latestVersion: recipeVersionFactory({ recipeId: recipe.id }),
+    latestVersion: commandVersionFactory({ recipeId: recipe.id }),
     deployments: [createRepositoryDeploymentInfo()],
     targetDeployments: [createTargetDeploymentInfo()],
     hasOutdatedDeployments: true,
-    ...recipeDeploymentStatus,
+    ...commandDeploymentStatus,
   };
 };
 
-export const createDeployedRecipeTargetInfo = (
-  deployedRecipeTargetInfo?: Partial<DeployedRecipeTargetInfo>,
-): DeployedRecipeTargetInfo => {
-  const recipe = recipeFactory();
-  const deployedVersion = recipeVersionFactory({ recipeId: recipe.id });
-  const latestVersion = recipeVersionFactory({
+export const createDeployedCommandTargetInfo = (
+  deployedCommandTargetInfo?: Partial<DeployedCommandTargetInfo>,
+): DeployedCommandTargetInfo => {
+  const recipe = commandFactory();
+  const deployedVersion = commandVersionFactory({ recipeId: recipe.id });
+  const latestVersion = commandVersionFactory({
     recipeId: recipe.id,
     version: deployedVersion.version + 1,
   });
@@ -51,7 +51,7 @@ export const createDeployedRecipeTargetInfo = (
     latestVersion,
     isUpToDate: false,
     deploymentDate: new Date().toISOString(),
-    ...deployedRecipeTargetInfo,
+    ...deployedCommandTargetInfo,
   };
 };
 
@@ -62,7 +62,7 @@ export const createTargetDeploymentInfo = (
   return {
     target,
     gitRepo: gitRepoFactory({ id: target.gitRepoId }),
-    deployedVersion: recipeVersionFactory(),
+    deployedVersion: commandVersionFactory(),
     isUpToDate: false,
     deploymentDate: new Date().toISOString(),
     ...targetDeploymentInfo,

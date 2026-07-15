@@ -5,7 +5,7 @@ import { ClaudePluginDeployer } from './claudePlugin/ClaudePluginDeployer';
 
 // Mock deployer for testing
 class MockDeployer implements ICodingAgentDeployer {
-  async deployRecipes(): Promise<FileUpdates> {
+  async deployCommands(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
   }
 
@@ -17,7 +17,7 @@ class MockDeployer implements ICodingAgentDeployer {
     return { createOrUpdate: [], delete: [] };
   }
 
-  async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+  async generateFileUpdatesForCommands(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
   }
 

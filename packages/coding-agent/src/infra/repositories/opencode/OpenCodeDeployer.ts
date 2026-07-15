@@ -3,7 +3,7 @@ import {
   DeleteItemType,
   FileUpdates,
   GitRepo,
-  RecipeVersion,
+  CommandVersion,
   SkillFile,
   SkillVersion,
   SkillVersionId,
@@ -39,8 +39,8 @@ export class OpenCodeDeployer extends SingleFileDeployer {
     return OpenCodeDeployer.ARTEFACT_PATHS.skill;
   }
 
-  override async deployRecipes(
-    recipeVersions: RecipeVersion[],
+  override async deployCommands(
+    recipeVersions: CommandVersion[],
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
@@ -70,8 +70,8 @@ export class OpenCodeDeployer extends SingleFileDeployer {
     return fileUpdates;
   }
 
-  override async generateFileUpdatesForRecipes(
-    recipeVersions: RecipeVersion[],
+  override async generateFileUpdatesForCommands(
+    recipeVersions: CommandVersion[],
   ): Promise<FileUpdates> {
     this.logger.info('Generating file updates for recipes (OpenCode)', {
       recipesCount: recipeVersions.length,
@@ -123,7 +123,7 @@ export class OpenCodeDeployer extends SingleFileDeployer {
   }
 
   override async deployArtifacts(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[] = [],
     skillFilesMap?: Map<SkillVersionId, SkillFile[]>,
@@ -172,12 +172,12 @@ export class OpenCodeDeployer extends SingleFileDeployer {
 
   override async generateRemovalFileUpdates(
     removed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
     installed: {
-      recipeVersions: RecipeVersion[];
+      recipeVersions: CommandVersion[];
       standardVersions: StandardVersion[];
       skillVersions: SkillVersion[];
     },
@@ -208,7 +208,7 @@ export class OpenCodeDeployer extends SingleFileDeployer {
   }
 
   override async generateAgentCleanupFileUpdates(artifacts: {
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     standardVersions: StandardVersion[];
     skillVersions: SkillVersion[];
   }): Promise<FileUpdates> {

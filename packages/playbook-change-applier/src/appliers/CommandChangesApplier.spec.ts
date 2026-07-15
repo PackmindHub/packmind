@@ -1,9 +1,9 @@
 import {
-  IRecipesPort,
-  Recipe,
-  RecipeVersion,
-  createRecipeId,
-  createRecipeVersionId,
+  ICommandsPort,
+  Command,
+  CommandVersion,
+  createCommandId,
+  createCommandVersionId,
   createUserId,
   createOrganizationId,
   createSpaceId,
@@ -13,25 +13,25 @@ import { CommandChangesApplier } from './CommandChangesApplier';
 
 describe('CommandChangesApplier', () => {
   let applier: CommandChangesApplier;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let commandsPort: jest.Mocked<ICommandsPort>;
   let diffService: DiffService;
 
-  const recipeId = createRecipeId('recipe-1');
-  const versionId = createRecipeVersionId('ver-1');
+  const recipeId = createCommandId('recipe-1');
+  const versionId = createCommandVersionId('ver-1');
   const userId = createUserId('user-1');
   const orgId = createOrganizationId('org-1');
   const spaceId = createSpaceId('space-1');
 
-  const recipe: Recipe = {
+  const recipe: Command = {
     id: recipeId,
     name: 'My Command',
     slug: 'my-command',
     version: 1,
     spaceId,
     organizationId: orgId,
-  } as Recipe;
+  } as Command;
 
-  const version: RecipeVersion = {
+  const version: CommandVersion = {
     id: versionId,
     recipeId,
     name: 'My Command',
@@ -48,20 +48,20 @@ describe('CommandChangesApplier', () => {
   beforeEach(() => {
     diffService = new DiffService();
 
-    recipesPort = {
-      getRecipeByIdInternal: jest.fn(),
-      getRecipeVersion: jest.fn(),
-      updateRecipeFromUI: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    commandsPort = {
+      getCommandByIdInternal: jest.fn(),
+      getCommandVersion: jest.fn(),
+      updateCommandFromUI: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
-    applier = new CommandChangesApplier(diffService, recipesPort);
+    applier = new CommandChangesApplier(diffService, commandsPort);
   });
 
   describe('getVersion', () => {
     describe('when recipe and version exist', () => {
       beforeEach(() => {
-        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
-        recipesPort.getRecipeVersion.mockResolvedValue(version);
+        commandsPort.getCommandByIdInternal.mockResolvedValue(recipe);
+        commandsPort.getCommandVersion.mockResolvedValue(version);
       });
 
       it('returns the recipe version', async () => {
@@ -73,7 +73,7 @@ describe('CommandChangesApplier', () => {
       it('fetches recipe by internal id', async () => {
         await applier.getVersion(recipeId);
 
-        expect(recipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
+        expect(commandsPort.getCommandByIdInternal).toHaveBeenCalledWith(
           recipeId,
         );
       });
@@ -81,7 +81,7 @@ describe('CommandChangesApplier', () => {
       it('fetches the version with correct parameters', async () => {
         await applier.getVersion(recipeId);
 
-        expect(recipesPort.getRecipeVersion).toHaveBeenCalledWith(
+        expect(commandsPort.getCommandVersion).toHaveBeenCalledWith(
           recipe.id,
           recipe.version,
           [recipe.spaceId],
@@ -91,7 +91,7 @@ describe('CommandChangesApplier', () => {
 
     describe('when recipe does not exist', () => {
       beforeEach(() => {
-        recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+        commandsPort.getCommandByIdInternal.mockResolvedValue(null);
       });
 
       it('throws an error', async () => {
@@ -103,8 +103,8 @@ describe('CommandChangesApplier', () => {
 
     describe('when version does not exist', () => {
       beforeEach(() => {
-        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
-        recipesPort.getRecipeVersion.mockResolvedValue(null);
+        commandsPort.getCommandByIdInternal.mockResolvedValue(recipe);
+        commandsPort.getCommandVersion.mockResolvedValue(null);
       });
 
       it('throws an error', async () => {
@@ -116,9 +116,9 @@ describe('CommandChangesApplier', () => {
   });
 
   describe('saveNewVersion', () => {
-    const newVersionId = createRecipeVersionId('ver-2');
-    const updatedRecipe = { ...recipe, version: 2 } as Recipe;
-    const newVersion: RecipeVersion = {
+    const newVersionId = createCommandVersionId('ver-2');
+    const updatedCommand = { ...recipe, version: 2 } as Command;
+    const newVersion: CommandVersion = {
       ...version,
       id: newVersionId,
       version: 2,
@@ -126,10 +126,10 @@ describe('CommandChangesApplier', () => {
 
     describe('when update succeeds', () => {
       beforeEach(() => {
-        recipesPort.updateRecipeFromUI.mockResolvedValue({
-          recipe: updatedRecipe,
+        commandsPort.updateCommandFromUI.mockResolvedValue({
+          recipe: updatedCommand,
         });
-        recipesPort.getRecipeVersion.mockResolvedValue(newVersion);
+        commandsPort.getCommandVersion.mockResolvedValue(newVersion);
       });
 
       it('returns the new version', async () => {
@@ -146,7 +146,7 @@ describe('CommandChangesApplier', () => {
       it('calls updateRecipeFromUI with mapped fields', async () => {
         await applier.saveNewVersion(version, userId, spaceId, orgId);
 
-        expect(recipesPort.updateRecipeFromUI).toHaveBeenCalledWith({
+        expect(commandsPort.updateCommandFromUI).toHaveBeenCalledWith({
           recipeId: version.recipeId,
           name: version.name,
           content: version.content,
@@ -159,10 +159,10 @@ describe('CommandChangesApplier', () => {
 
     describe('when fetching new version fails', () => {
       beforeEach(() => {
-        recipesPort.updateRecipeFromUI.mockResolvedValue({
-          recipe: updatedRecipe,
+        commandsPort.updateCommandFromUI.mockResolvedValue({
+          recipe: updatedCommand,
         });
-        recipesPort.getRecipeVersion.mockResolvedValue(null);
+        commandsPort.getCommandVersion.mockResolvedValue(null);
       });
 
       it('throws an error', async () => {

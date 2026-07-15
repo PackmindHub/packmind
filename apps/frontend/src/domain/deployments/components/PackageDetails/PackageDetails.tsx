@@ -31,7 +31,7 @@ import { PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
-import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
+import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
@@ -72,7 +72,7 @@ export const PackageDetails = ({
     error,
   } = useGetPackageByIdQuery(id, spaceId, organization?.id);
 
-  const { data: recipesResponse } = useGetRecipesQuery();
+  const { data: commandsResponse } = useGetCommandsQuery();
 
   const { data: standardsResponse } = useGetStandardsQuery();
 
@@ -91,7 +91,7 @@ export const PackageDetails = ({
   const recipeIds = useMemo(() => pkg?.recipes || [], [pkg?.recipes]);
   const standardIds = useMemo(() => pkg?.standards || [], [pkg?.standards]);
   const skillIds = useMemo(() => pkg?.skills || [], [pkg?.skills]);
-  const allRecipes = (recipesResponse || []).sort((a, b) =>
+  const allCommands = (commandsResponse || []).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
   const allStandards = (standardsResponse?.standards || []).sort((a, b) =>
@@ -122,10 +122,10 @@ export const PackageDetails = ({
     }
   };
 
-  const recipeTableData: PMTableRow[] = React.useMemo(() => {
+  const commandTableData: PMTableRow[] = React.useMemo(() => {
     const rows: PMTableRow[] = [];
     for (const recipeId of recipeIds) {
-      const recipe = allRecipes.find((r) => r.id === recipeId);
+      const recipe = allCommands.find((r) => r.id === recipeId);
       if (recipe) {
         rows.push({
           key: recipeId,
@@ -143,7 +143,7 @@ export const PackageDetails = ({
     return rows.sort((a, b) =>
       (a.sortName as string).localeCompare(b.sortName as string),
     );
-  }, [recipeIds, allRecipes, orgSlug, spaceSlug]);
+  }, [recipeIds, allCommands, orgSlug, spaceSlug]);
 
   const standardTableData: PMTableRow[] = React.useMemo(() => {
     const rows: PMTableRow[] = [];
@@ -193,7 +193,7 @@ export const PackageDetails = ({
     );
   }, [skillIds, allSkills]);
 
-  const recipeColumns: PMTableColumn[] = React.useMemo(
+  const commandColumns: PMTableColumn[] = React.useMemo(
     () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
@@ -255,11 +255,11 @@ export const PackageDetails = ({
     );
   }
 
-  const recipeCount = recipeTableData.length;
+  const commandCount = commandTableData.length;
   const standardCount = standardTableData.length;
   const skillCount = skillTableData.length;
   const isPackageEmpty =
-    recipeCount === 0 && standardCount === 0 && skillCount === 0;
+    commandCount === 0 && standardCount === 0 && skillCount === 0;
 
   const installCommand = `packmind-cli install @${spaceSlug}/${pkg.slug}`;
   const installAsClaudePluginCommand = `packmind-cli plugins render @${spaceSlug}/${pkg.slug}`;
@@ -421,14 +421,14 @@ export const PackageDetails = ({
                       </PMBox>
                     )}
 
-                    {recipeCount > 0 && (
+                    {commandCount > 0 && (
                       <PMBox flex={1} width="full">
                         <PMHeading size="lg" mb={4}>
-                          Commands ({recipeCount})
+                          Commands ({commandCount})
                         </PMHeading>
                         <PMTable
-                          columns={recipeColumns}
-                          data={recipeTableData}
+                          columns={commandColumns}
+                          data={commandTableData}
                           striped={true}
                           hoverable={true}
                           variant="line"

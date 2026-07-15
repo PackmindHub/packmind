@@ -8,7 +8,7 @@ import {
   AddArtefactsToPackageResponse,
   IAccountsPort,
   IAddArtefactsToPackageUseCase,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
@@ -28,7 +28,7 @@ export class AddArtefactsToPackageUseCase
     spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
@@ -82,16 +82,16 @@ export class AddArtefactsToPackageUseCase
     }
 
     // Get current artefacts to filter out duplicates
-    const currentRecipeIds = existingPackage.recipes || [];
+    const currentCommandIds = existingPackage.recipes || [];
     const currentStandardIds = existingPackage.standards || [];
     const currentSkillIds = existingPackage.skills || [];
 
     // Filter out artefacts that are already in the package
-    const newRecipeIds = recipeIds.filter(
-      (recipeId) => !currentRecipeIds.includes(recipeId),
+    const newCommandIds = recipeIds.filter(
+      (recipeId) => !currentCommandIds.includes(recipeId),
     );
-    const skippedRecipeIds = recipeIds.filter((recipeId) =>
-      currentRecipeIds.includes(recipeId),
+    const skippedCommandIds = recipeIds.filter((recipeId) =>
+      currentCommandIds.includes(recipeId),
     );
 
     const newStandardIds = standardIds.filter(
@@ -109,21 +109,21 @@ export class AddArtefactsToPackageUseCase
     );
 
     // Validate all new recipes belong to the space
-    if (newRecipeIds.length > 0) {
+    if (newCommandIds.length > 0) {
       const recipes = await Promise.all(
-        newRecipeIds.map((recipeId) =>
-          this.recipesPort.getRecipeByIdInternal(recipeId),
+        newCommandIds.map((recipeId) =>
+          this.commandsPort.getCommandByIdInternal(recipeId),
         ),
       );
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
         if (!recipe) {
-          throw new Error(`Recipe with id ${newRecipeIds[i]} not found`);
+          throw new Error(`Recipe with id ${newCommandIds[i]} not found`);
         }
         if (recipe.spaceId !== existingPackage.spaceId) {
           throw new Error(
-            `Recipe ${newRecipeIds[i]} does not belong to space ${existingPackage.spaceId}`,
+            `Recipe ${newCommandIds[i]} does not belong to space ${existingPackage.spaceId}`,
           );
         }
       }
@@ -174,8 +174,8 @@ export class AddArtefactsToPackageUseCase
       .getRepositories()
       .getPackageRepository();
 
-    if (newRecipeIds.length > 0) {
-      await packageRepository.addRecipes(packageId, newRecipeIds);
+    if (newCommandIds.length > 0) {
+      await packageRepository.addCommands(packageId, newCommandIds);
     }
 
     if (newStandardIds.length > 0) {
@@ -197,7 +197,7 @@ export class AddArtefactsToPackageUseCase
 
     this.logger.info('Artefacts added to package successfully', {
       packageId: updatedPackage.id,
-      addedRecipes: newRecipeIds.length,
+      addedRecipes: newCommandIds.length,
       addedStandards: newStandardIds.length,
       addedSkills: newSkillIds.length,
       totalRecipes: updatedPackage.recipes?.length ?? 0,
@@ -209,12 +209,12 @@ export class AddArtefactsToPackageUseCase
       package: updatedPackage,
       added: {
         standards: newStandardIds,
-        commands: newRecipeIds,
+        commands: newCommandIds,
         skills: newSkillIds,
       },
       skipped: {
         standards: skippedStandardIds,
-        commands: skippedRecipeIds,
+        commands: skippedCommandIds,
         skills: skippedSkillIds,
       },
     };

@@ -46,7 +46,7 @@ import {
   ListDriftedPackagesByOrgCommand,
   ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
-  ListDistributionsByRecipeCommand,
+  ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
   ListDistributionsBySkillCommand,
   ListPackagesBySpaceCommand,
@@ -144,8 +144,8 @@ export interface IDeploymentPort {
    * @param command - Command containing recipeId and organizationId
    * @returns Promise of Distribution entries that include versions of the specified recipe
    */
-  listDistributionsByRecipe(
-    command: ListDistributionsByRecipeCommand,
+  listDistributionsByCommand(
+    command: ListDistributionsByCommandCommand,
   ): Promise<Distribution[]>;
 
   /**

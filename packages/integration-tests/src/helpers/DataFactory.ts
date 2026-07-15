@@ -6,7 +6,7 @@ import {
   User,
   GitProvider,
   GitRepo,
-  Recipe,
+  Command,
   RenderMode,
   Space,
   Standard,
@@ -14,7 +14,7 @@ import {
 } from '@packmind/types';
 
 import { standardFactory } from '@packmind/standards/test';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 
 export class DataFactory {
@@ -130,26 +130,26 @@ export class DataFactory {
     });
   }
 
-  async withRecipe(recipe?: Partial<Recipe>): Promise<Recipe> {
+  async withCommand(recipe?: Partial<Command>): Promise<Command> {
     if (!this.user) {
       await this.withUserAndOrganization();
     }
 
     // Exclude slug from factory defaults - let captureRecipe auto-generate it from name
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { slug: _factorySlug, ...factoryDefaults } = recipeFactory({
+    const { slug: _factorySlug, ...factoryDefaults } = commandFactory({
       spaceId: this.space.id,
     });
 
     // Also exclude slug from recipe override unless explicitly provided
-    const { slug: recipeSlug, ...recipeWithoutSlug } = recipe || {};
+    const { slug: commandSlug, ...commandWithoutSlug } = recipe || {};
 
-    return this.testApp.recipesHexa.getAdapter().captureRecipe({
+    return this.testApp.commandsHexa.getAdapter().captureCommand({
       ...factoryDefaults,
       ...this.packmindCommand(),
-      ...recipeWithoutSlug,
+      ...commandWithoutSlug,
       // Only include slug if explicitly provided in the recipe parameter
-      ...(recipeSlug !== undefined ? { slug: recipeSlug } : {}),
+      ...(commandSlug !== undefined ? { slug: commandSlug } : {}),
     });
   }
 

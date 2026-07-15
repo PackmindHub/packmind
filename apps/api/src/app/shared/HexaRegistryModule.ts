@@ -17,7 +17,7 @@ import {
   BaseServiceOpts,
   HexaRegistry,
 } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
+import { CommandsHexa } from '@packmind/commands';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesManagementHexa } from '@packmind/spaces-management';
 import { SpacesHexa } from '@packmind/spaces';
@@ -31,7 +31,7 @@ import {
   ILlmPort,
   IPlaybookChangeApplierPort,
   IPlaybookChangeManagementPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   ISpacesManagementPort,
   ISpacesPort,
@@ -239,10 +239,10 @@ export class HexaRegistryModule {
     // Recipes adapter
     providers.push({
       provide: RECIPES_ADAPTER_TOKEN,
-      useFactory: (registry: HexaRegistry): IRecipesPort | null => {
+      useFactory: (registry: HexaRegistry): ICommandsPort | null => {
         try {
-          const recipesHexa = registry.get(RecipesHexa);
-          return recipesHexa.getAdapter();
+          const commandsHexa = registry.get(CommandsHexa);
+          return commandsHexa.getAdapter();
         } catch {
           // RecipesHexa not available
         }

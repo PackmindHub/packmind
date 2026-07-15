@@ -6,15 +6,15 @@ import {
   createGitProviderId,
   StandardVersion,
   createStandardVersionId,
-  RecipeVersion,
-  createRecipeVersionId,
+  CommandVersion,
+  createCommandVersionId,
   Target,
   createTargetId,
   IStandardsPort,
   Rule,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 
 describe('ContinueDeployer', () => {
@@ -53,13 +53,13 @@ describe('ContinueDeployer', () => {
   describe('deployRecipes', () => {
     describe('when deploying a single recipe', () => {
       it('creates one file update', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -68,7 +68,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -78,13 +78,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes one legacy file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -93,7 +93,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -103,13 +103,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes legacy recipes-index.md file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -118,7 +118,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -130,13 +130,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates command file at correct path', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -145,7 +145,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -156,13 +156,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('includes frontmatter with description from name', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -171,7 +171,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -182,13 +182,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('includes frontmatter with name', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -197,7 +197,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -208,13 +208,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('includes frontmatter with invokable set to true', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -223,7 +223,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -234,13 +234,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('includes recipe content in command file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -249,7 +249,7 @@ describe('ContinueDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -261,13 +261,13 @@ describe('ContinueDeployer', () => {
 
       describe('when generating the recipe description', () => {
         it('uses recipe name as description', async () => {
-          const recipe = recipeFactory({
+          const recipe = commandFactory({
             name: 'Test Recipe',
             slug: 'test-recipe',
           });
 
-          const recipeVersion: RecipeVersion = {
-            id: createRecipeVersionId('recipe-version-1'),
+          const recipeVersion: CommandVersion = {
+            id: createCommandVersionId('recipe-version-1'),
             recipeId: recipe.id,
             name: recipe.name,
             slug: recipe.slug,
@@ -276,7 +276,7 @@ describe('ContinueDeployer', () => {
             userId: createUserId('user-1'),
           };
 
-          const result = await deployer.deployRecipes(
+          const result = await deployer.deployCommands(
             [recipeVersion],
             mockGitRepo,
             mockTarget,
@@ -289,14 +289,14 @@ describe('ContinueDeployer', () => {
     });
 
     it('returns no file updates for empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+      const result = await deployer.deployCommands([], mockGitRepo, mockTarget);
 
       expect(result.createOrUpdate).toHaveLength(0);
     });
 
     describe('when deploying empty recipe list', () => {
       it('deletes one legacy file', async () => {
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [],
           mockGitRepo,
           mockTarget,
@@ -306,7 +306,7 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes legacy recipes-index.md file', async () => {
-        const result = await deployer.deployRecipes(
+        const result = await deployer.deployCommands(
           [],
           mockGitRepo,
           mockTarget,
@@ -320,38 +320,38 @@ describe('ContinueDeployer', () => {
 
     describe('when deploying multiple recipes', () => {
       it('creates file update for each recipe', async () => {
-        const recipe1 = recipeFactory({
+        const command1 = commandFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
         });
 
-        const recipe2 = recipeFactory({
+        const command2 = commandFactory({
           name: 'Test Recipe 2',
           slug: 'test-recipe-2',
         });
 
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
+        const commandVersion1: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: command1.id,
+          name: command1.name,
+          slug: command1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
+        const commandVersion2: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: command2.id,
+          name: command2.name,
+          slug: command2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
+        const result = await deployer.deployCommands(
+          [commandVersion1, commandVersion2],
           mockGitRepo,
           mockTarget,
         );
@@ -360,38 +360,38 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates first recipe command file at correct path', async () => {
-        const recipe1 = recipeFactory({
+        const command1 = commandFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
         });
 
-        const recipe2 = recipeFactory({
+        const command2 = commandFactory({
           name: 'Test Recipe 2',
           slug: 'test-recipe-2',
         });
 
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
+        const commandVersion1: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: command1.id,
+          name: command1.name,
+          slug: command1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
+        const commandVersion2: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: command2.id,
+          name: command2.name,
+          slug: command2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
+        const result = await deployer.deployCommands(
+          [commandVersion1, commandVersion2],
           mockGitRepo,
           mockTarget,
         );
@@ -402,38 +402,38 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates second recipe command file at correct path', async () => {
-        const recipe1 = recipeFactory({
+        const command1 = commandFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
         });
 
-        const recipe2 = recipeFactory({
+        const command2 = commandFactory({
           name: 'Test Recipe 2',
           slug: 'test-recipe-2',
         });
 
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
+        const commandVersion1: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: command1.id,
+          name: command1.name,
+          slug: command1.slug,
           content: 'Recipe 1 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
+        const commandVersion2: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: command2.id,
+          name: command2.name,
+          slug: command2.slug,
           content: 'Recipe 2 instructions',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
+        const result = await deployer.deployCommands(
+          [commandVersion1, commandVersion2],
           mockGitRepo,
           mockTarget,
         );
@@ -1395,13 +1395,13 @@ describe('ContinueDeployer', () => {
 
   describe('generateFileUpdatesForRecipes', () => {
     it('generates command file at correct path', async () => {
-      const recipe = recipeFactory({
+      const recipe = commandFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
@@ -1410,7 +1410,7 @@ describe('ContinueDeployer', () => {
         userId: createUserId('user-1'),
       };
 
-      const result = await deployer.generateFileUpdatesForRecipes([
+      const result = await deployer.generateFileUpdatesForCommands([
         recipeVersion,
       ]);
 
@@ -1420,13 +1420,13 @@ describe('ContinueDeployer', () => {
     });
 
     it('deletes one legacy file', async () => {
-      const recipe = recipeFactory({
+      const recipe = commandFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
@@ -1435,7 +1435,7 @@ describe('ContinueDeployer', () => {
         userId: createUserId('user-1'),
       };
 
-      const result = await deployer.generateFileUpdatesForRecipes([
+      const result = await deployer.generateFileUpdatesForCommands([
         recipeVersion,
       ]);
 
@@ -1443,13 +1443,13 @@ describe('ContinueDeployer', () => {
     });
 
     it('deletes legacy recipes-index.md file', async () => {
-      const recipe = recipeFactory({
+      const recipe = commandFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
@@ -1458,7 +1458,7 @@ describe('ContinueDeployer', () => {
         userId: createUserId('user-1'),
       };
 
-      const result = await deployer.generateFileUpdatesForRecipes([
+      const result = await deployer.generateFileUpdatesForCommands([
         recipeVersion,
       ]);
 
@@ -1469,19 +1469,19 @@ describe('ContinueDeployer', () => {
 
     describe('when no recipes', () => {
       it('returns no file updates', async () => {
-        const result = await deployer.generateFileUpdatesForRecipes([]);
+        const result = await deployer.generateFileUpdatesForCommands([]);
 
         expect(result.createOrUpdate).toHaveLength(0);
       });
 
       it('deletes one legacy file', async () => {
-        const result = await deployer.generateFileUpdatesForRecipes([]);
+        const result = await deployer.generateFileUpdatesForCommands([]);
 
         expect(result.delete).toHaveLength(1);
       });
 
       it('deletes legacy recipes-index.md file', async () => {
-        const result = await deployer.generateFileUpdatesForRecipes([]);
+        const result = await deployer.generateFileUpdatesForCommands([]);
 
         expect(result.delete[0].path).toBe(
           '.continue/rules/packmind/recipes-index.md',
@@ -1522,13 +1522,13 @@ describe('ContinueDeployer', () => {
 
   describe('deployArtifacts', () => {
     it('deletes one legacy file', async () => {
-      const recipe = recipeFactory({
+      const recipe = commandFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
@@ -1543,13 +1543,13 @@ describe('ContinueDeployer', () => {
     });
 
     it('deletes legacy recipes-index.md file', async () => {
-      const recipe = recipeFactory({
+      const recipe = commandFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
+      const recipeVersion: CommandVersion = {
+        id: createCommandVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
@@ -1567,7 +1567,7 @@ describe('ContinueDeployer', () => {
 
     describe('when deploying both recipes and standards', () => {
       it('creates two file updates', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
@@ -1578,8 +1578,8 @@ describe('ContinueDeployer', () => {
           scope: '**/*.ts',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -1609,7 +1609,7 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates recipe command file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
@@ -1620,8 +1620,8 @@ describe('ContinueDeployer', () => {
           scope: '**/*.ts',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -1655,7 +1655,7 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates standard file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
@@ -1666,8 +1666,8 @@ describe('ContinueDeployer', () => {
           scope: '**/*.ts',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -1703,13 +1703,13 @@ describe('ContinueDeployer', () => {
 
     describe('when deploying only recipes', () => {
       it('creates one file update', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -1724,13 +1724,13 @@ describe('ContinueDeployer', () => {
       });
 
       it('creates recipe command file', async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -1803,31 +1803,31 @@ describe('ContinueDeployer', () => {
   describe('generateRemovalFileUpdates', () => {
     describe('when removing recipes with other recipes remaining', () => {
       it('deletes one file', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const installedRecipe = recipeFactory({
+        const installedCommand = commandFactory({
           name: 'Installed Recipe',
           slug: 'installed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const installedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: installedRecipe.id,
-          name: installedRecipe.name,
-          slug: installedRecipe.slug,
+        const installedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: installedCommand.id,
+          name: installedCommand.name,
+          slug: installedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -1835,12 +1835,12 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: [installedRecipeVersion],
+            recipeVersions: [installedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -1850,31 +1850,31 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes removed recipe command file', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const installedRecipe = recipeFactory({
+        const installedCommand = commandFactory({
           name: 'Installed Recipe',
           slug: 'installed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const installedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: installedRecipe.id,
-          name: installedRecipe.name,
-          slug: installedRecipe.slug,
+        const installedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: installedCommand.id,
+          name: installedCommand.name,
+          slug: installedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -1882,12 +1882,12 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: [installedRecipeVersion],
+            recipeVersions: [installedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -1899,31 +1899,31 @@ describe('ContinueDeployer', () => {
       });
 
       it('does not delete commands folder', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const installedRecipe = recipeFactory({
+        const installedCommand = commandFactory({
           name: 'Installed Recipe',
           slug: 'installed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
         };
 
-        const installedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: installedRecipe.id,
-          name: installedRecipe.name,
-          slug: installedRecipe.slug,
+        const installedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-2'),
+          recipeId: installedCommand.id,
+          name: installedCommand.name,
+          slug: installedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -1931,12 +1931,12 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
           {
-            recipeVersions: [installedRecipeVersion],
+            recipeVersions: [installedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -1950,16 +1950,16 @@ describe('ContinueDeployer', () => {
 
     describe('when removing last recipe with no standards', () => {
       it('deletes recipe command file', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -1967,7 +1967,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -1982,16 +1982,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes commands folder', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -1999,7 +1999,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2012,16 +2012,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes legacy recipes-index.md', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2029,7 +2029,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2042,16 +2042,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes rules/packmind folder', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2059,7 +2059,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2203,16 +2203,16 @@ describe('ContinueDeployer', () => {
 
     describe('when removing last recipe but standards remain', () => {
       it('deletes recipe command file', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2238,7 +2238,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2257,16 +2257,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes commands folder', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2292,7 +2292,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2309,16 +2309,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('deletes legacy recipes-index', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2344,7 +2344,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2361,16 +2361,16 @@ describe('ContinueDeployer', () => {
       });
 
       it('does not delete rules/packmind folder', async () => {
-        const removedRecipe = recipeFactory({
+        const removedCommand = commandFactory({
           name: 'Removed Recipe',
           slug: 'removed-recipe',
         });
 
-        const removedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: removedRecipe.id,
-          name: removedRecipe.name,
-          slug: removedRecipe.slug,
+        const removedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: removedCommand.id,
+          name: removedCommand.name,
+          slug: removedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2396,7 +2396,7 @@ describe('ContinueDeployer', () => {
 
         const result = await deployer.generateRemovalFileUpdates(
           {
-            recipeVersions: [removedRecipeVersion],
+            recipeVersions: [removedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2433,16 +2433,16 @@ describe('ContinueDeployer', () => {
           rules: [] as Rule[],
         };
 
-        const installedRecipe = recipeFactory({
+        const installedCommand = commandFactory({
           name: 'Installed Recipe',
           slug: 'installed-recipe',
         });
 
-        const installedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: installedRecipe.id,
-          name: installedRecipe.name,
-          slug: installedRecipe.slug,
+        const installedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: installedCommand.id,
+          name: installedCommand.name,
+          slug: installedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2455,7 +2455,7 @@ describe('ContinueDeployer', () => {
             skillVersions: [],
           },
           {
-            recipeVersions: [installedRecipeVersion],
+            recipeVersions: [installedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },
@@ -2487,16 +2487,16 @@ describe('ContinueDeployer', () => {
           rules: [] as Rule[],
         };
 
-        const installedRecipe = recipeFactory({
+        const installedCommand = commandFactory({
           name: 'Installed Recipe',
           slug: 'installed-recipe',
         });
 
-        const installedRecipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: installedRecipe.id,
-          name: installedRecipe.name,
-          slug: installedRecipe.slug,
+        const installedCommandVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-1'),
+          recipeId: installedCommand.id,
+          name: installedCommand.name,
+          slug: installedCommand.slug,
           content: 'Recipe content',
           version: 1,
           userId: createUserId('user-1'),
@@ -2509,7 +2509,7 @@ describe('ContinueDeployer', () => {
             skillVersions: [],
           },
           {
-            recipeVersions: [installedRecipeVersion],
+            recipeVersions: [installedCommandVersion],
             standardVersions: [],
             skillVersions: [],
           },

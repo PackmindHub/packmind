@@ -9,7 +9,7 @@ import {
   UpdatePackageResponse,
   IAccountsPort,
   IUpdatePackageUseCase,
-  IRecipesPort,
+  ICommandsPort,
   ISpacesPort,
   IStandardsPort,
   ISkillsPort,
@@ -32,7 +32,7 @@ export class UpdatePackageUseCase
     spacesPort: ISpacesPort,
     accountsPort: IAccountsPort,
     private readonly services: DeploymentsServices,
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
@@ -80,7 +80,7 @@ export class UpdatePackageUseCase
     if (recipeIds.length > 0) {
       const recipes = await Promise.all(
         recipeIds.map((recipeId) =>
-          this.recipesPort.getRecipeByIdInternal(recipeId),
+          this.commandsPort.getCommandByIdInternal(recipeId),
         ),
       );
 
@@ -161,7 +161,7 @@ export class UpdatePackageUseCase
     const removedStandards = (existingPackage.standards ?? []).filter(
       (id) => !standardIds.includes(id),
     );
-    const removedRecipes = (existingPackage.recipes ?? []).filter(
+    const removedCommands = (existingPackage.recipes ?? []).filter(
       (id) => !recipeIds.includes(id),
     );
     const removedSkills = (existingPackage.skills ?? []).filter(
@@ -170,7 +170,7 @@ export class UpdatePackageUseCase
 
     const removedArtefacts = [
       ...removedStandards.map((id) => String(id)),
-      ...removedRecipes.map((id) => String(id)),
+      ...removedCommands.map((id) => String(id)),
       ...removedSkills.map((id) => String(id)),
     ];
 

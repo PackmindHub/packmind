@@ -3,8 +3,8 @@ import {
   createOrganizationId,
   createPackageId,
   createGitRepoId,
-  createRecipeId,
-  createRecipeVersionId,
+  createCommandId,
+  createCommandVersionId,
   createSkillId,
   createSkillVersionId,
   createSpaceId,
@@ -13,12 +13,12 @@ import {
   createTargetId,
   createUserId,
   IAccountsPort,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   IStandardsPort,
   NotifyArtefactsDistributionCommand,
   PackmindLockFile,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -33,7 +33,7 @@ import { v4 as uuidv4 } from 'uuid';
 describe('NotifyArtefactsDistributionUseCase', () => {
   let useCase: NotifyArtefactsDistributionUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockCommandsPort: jest.Mocked<ICommandsPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
@@ -47,7 +47,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   const secondPackageId = createPackageId(uuidv4());
   const gitRepoId = createGitRepoId(uuidv4());
   const targetId = createTargetId(uuidv4());
-  const recipeId = createRecipeId(uuidv4());
+  const recipeId = createCommandId(uuidv4());
   const standardId = createStandardId(uuidv4());
   const skillId = createSkillId(uuidv4());
   const spaceId = createSpaceId(uuidv4());
@@ -85,8 +85,8 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     scope: null,
   });
 
-  const buildRecipeVersion = (): RecipeVersion => ({
-    id: createRecipeVersionId(uuidv4()),
+  const buildCommandVersion = (): CommandVersion => ({
+    id: createCommandVersionId(uuidv4()),
     recipeId,
     version: 1,
     name: 'Test Recipe',
@@ -168,9 +168,9 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       getOrganizationIdBySlug: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockRecipesPort = {
-      getRecipeVersion: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
+    mockCommandsPort = {
+      getCommandVersion: jest.fn(),
+    } as unknown as jest.Mocked<ICommandsPort>;
 
     mockStandardsPort = {
       getStandardVersionByNumber: jest.fn(),
@@ -188,7 +188,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     mockDistributedPackageRepository = {
       add: jest.fn(),
       addStandardVersions: jest.fn(),
-      addRecipeVersions: jest.fn(),
+      addCommandVersions: jest.fn(),
       addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
@@ -202,7 +202,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
 
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,
-      mockRecipesPort,
+      mockCommandsPort,
       mockStandardsPort,
       mockSkillsPort,
       mockDistributionRepository,
@@ -220,18 +220,18 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   describe('execute', () => {
     describe('with a lock file containing standards, recipes, and skills', () => {
       let standardVersion: StandardVersion;
-      let recipeVersion: RecipeVersion;
+      let recipeVersion: CommandVersion;
       let skillVersion: SkillVersion;
 
       beforeEach(async () => {
         standardVersion = buildStandardVersion();
-        recipeVersion = buildRecipeVersion();
+        recipeVersion = buildCommandVersion();
         skillVersion = buildSkillVersion();
 
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
           standardVersion,
         );
-        mockRecipesPort.getRecipeVersion.mockResolvedValue(recipeVersion);
+        mockCommandsPort.getCommandVersion.mockResolvedValue(recipeVersion);
         mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(skillVersion);
 
         await useCase.execute(buildCommand());
@@ -244,7 +244,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       });
 
       it('resolves the recipe version from the lock file version number', () => {
-        expect(mockRecipesPort.getRecipeVersion).toHaveBeenCalledWith(
+        expect(mockCommandsPort.getCommandVersion).toHaveBeenCalledWith(
           recipeId,
           1,
           [spaceId],
@@ -277,7 +277,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
 
       it('saves the distributed package with the resolved recipe version ID', () => {
         expect(
-          mockDistributedPackageRepository.addRecipeVersions,
+          mockDistributedPackageRepository.addCommandVersions,
         ).toHaveBeenCalledWith(expect.anything(), [recipeVersion.id]);
       });
 
@@ -296,7 +296,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     describe('with a lock file that uses agents for render modes', () => {
       beforeEach(async () => {
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-        mockRecipesPort.getRecipeVersion.mockResolvedValue(null);
+        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
         mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
 
         await useCase.execute(
@@ -321,7 +321,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
           [secondPackageId],
         );
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
-        mockRecipesPort.getRecipeVersion.mockResolvedValue(null);
+        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
         mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
 
         await useCase.execute(buildCommand());
@@ -345,8 +345,8 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
           buildStandardVersion(),
         );
-        mockRecipesPort.getRecipeVersion.mockResolvedValue(
-          buildRecipeVersion(),
+        mockCommandsPort.getCommandVersion.mockResolvedValue(
+          buildCommandVersion(),
         );
         mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(
           buildSkillVersion(),
@@ -372,7 +372,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(
           buildStandardVersion(),
         );
-        mockRecipesPort.getRecipeVersion.mockResolvedValue(null);
+        mockCommandsPort.getCommandVersion.mockResolvedValue(null);
         mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
 
         const lockFileWithTwoPackages = buildLockFile({

@@ -8,7 +8,7 @@
   "dependencies": {
     "@packmind/accounts": "workspace:*",
     "@packmind/editions": "workspace:*",
-    "@packmind/recipes": "workspace:*",
+    "@packmind/commands": "workspace:*",
     "@packmind/git": "workspace:*",
     "@packmind/node-utils": "workspace:*",
     "@packmind/types": "workspace:*",

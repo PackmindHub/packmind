@@ -1,7 +1,7 @@
 import { CommandsGateway } from './CommandsGateway';
 import { createMockHttpClient } from '../../mocks/createMockHttpClient';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { CaptureRecipeResponse, createSpaceId } from '@packmind/types';
+import { CaptureCommandResponse, createSpaceId } from '@packmind/types';
 
 describe('CommandsGateway', () => {
   let gateway: CommandsGateway;
@@ -26,7 +26,7 @@ describe('CommandsGateway', () => {
   });
 
   describe('create', () => {
-    let result: CaptureRecipeResponse;
+    let result: CaptureCommandResponse;
 
     describe('when creating a command successfully', () => {
       const mockResponse = {

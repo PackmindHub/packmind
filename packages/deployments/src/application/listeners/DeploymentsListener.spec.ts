@@ -1,7 +1,7 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
-  createRecipeId,
+  createCommandId,
   createSkillId,
   createSpaceId,
   createStandardId,
@@ -32,17 +32,17 @@ describe('DeploymentsListener', () => {
 
     eventService = new PackmindEventEmitterService(mockDataSource);
     mockPackageRepository = {
-      removeRecipeFromAllPackages: jest.fn().mockResolvedValue(undefined),
+      removeCommandFromAllPackages: jest.fn().mockResolvedValue(undefined),
       removeSkillFromAllPackages: jest.fn().mockResolvedValue(undefined),
       removeStandardFromAllPackages: jest.fn().mockResolvedValue(undefined),
       findBySpaceId: jest.fn(),
       findByOrganizationId: jest.fn(),
       findById: jest.fn(),
       findBySlugsWithArtefacts: jest.fn(),
-      addRecipes: jest.fn(),
+      addCommands: jest.fn(),
       addStandards: jest.fn(),
       updatePackageDetails: jest.fn(),
-      setRecipes: jest.fn(),
+      setCommands: jest.fn(),
       setStandards: jest.fn(),
       add: jest.fn(),
       deleteById: jest.fn(),
@@ -59,7 +59,7 @@ describe('DeploymentsListener', () => {
   });
 
   describe('when RecipeDeletedEvent is emitted', () => {
-    const recipeId = createRecipeId('recipe-123');
+    const recipeId = createCommandId('recipe-123');
 
     it('calls removeRecipeFromAllPackages with the recipeId', async () => {
       const event = new CommandDeletedEvent({
@@ -75,12 +75,12 @@ describe('DeploymentsListener', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(
-        mockPackageRepository.removeRecipeFromAllPackages,
+        mockPackageRepository.removeCommandFromAllPackages,
       ).toHaveBeenCalledWith(recipeId);
     });
 
     describe('when multiple RecipeDeletedEvents are emitted', () => {
-      const recipeId2 = createRecipeId('recipe-456');
+      const commandId2 = createCommandId('recipe-456');
 
       beforeEach(async () => {
         eventService.emit(
@@ -94,7 +94,7 @@ describe('DeploymentsListener', () => {
 
         eventService.emit(
           new CommandDeletedEvent({
-            id: recipeId2,
+            id: commandId2,
             spaceId,
             organizationId,
             userId,
@@ -106,20 +106,20 @@ describe('DeploymentsListener', () => {
 
       it('calls removeRecipeFromAllPackages twice', async () => {
         expect(
-          mockPackageRepository.removeRecipeFromAllPackages,
+          mockPackageRepository.removeCommandFromAllPackages,
         ).toHaveBeenCalledTimes(2);
       });
 
       it('calls removeRecipeFromAllPackages with the first recipeId', async () => {
         expect(
-          mockPackageRepository.removeRecipeFromAllPackages,
+          mockPackageRepository.removeCommandFromAllPackages,
         ).toHaveBeenCalledWith(recipeId);
       });
 
       it('calls removeRecipeFromAllPackages with the second recipeId', async () => {
         expect(
-          mockPackageRepository.removeRecipeFromAllPackages,
-        ).toHaveBeenCalledWith(recipeId2);
+          mockPackageRepository.removeCommandFromAllPackages,
+        ).toHaveBeenCalledWith(commandId2);
       });
     });
   });

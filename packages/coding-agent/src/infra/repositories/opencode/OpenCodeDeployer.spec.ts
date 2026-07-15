@@ -7,14 +7,14 @@ import {
   createGitProviderId,
   StandardVersion,
   createStandardVersionId,
-  RecipeVersion,
-  createRecipeVersionId,
+  CommandVersion,
+  createCommandVersionId,
   Target,
   createTargetId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { recipeFactory } from '@packmind/recipes/test';
+import { commandFactory } from '@packmind/commands/test';
 import { standardFactory } from '@packmind/standards/test';
 import { skillVersionFactory } from '@packmind/skills/test';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
@@ -45,17 +45,17 @@ describe('OpenCodeDeployer', () => {
 
   describe('deployRecipes', () => {
     describe('with single recipe', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
-      let recipeVersion: RecipeVersion;
+      let result: Awaited<ReturnType<typeof deployer.deployCommands>>;
+      let recipeVersion: CommandVersion;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
         });
 
         recipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -65,7 +65,7 @@ describe('OpenCodeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.deployRecipes(
+        result = await deployer.deployCommands(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
@@ -99,10 +99,10 @@ describe('OpenCodeDeployer', () => {
     });
 
     describe('when recipe list is empty', () => {
-      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+      let result: Awaited<ReturnType<typeof deployer.deployCommands>>;
 
       beforeEach(async () => {
-        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+        result = await deployer.deployCommands([], mockGitRepo, mockTarget);
       });
 
       it('creates no files to update', () => {
@@ -118,18 +118,18 @@ describe('OpenCodeDeployer', () => {
   describe('generateFileUpdatesForRecipes', () => {
     describe('with single recipe', () => {
       let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+        ReturnType<typeof deployer.generateFileUpdatesForCommands>
       >;
-      let recipeVersion: RecipeVersion;
+      let recipeVersion: CommandVersion;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'My Command',
           slug: 'my-command',
         });
 
         recipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
+          id: createCommandVersionId('recipe-version-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -138,7 +138,7 @@ describe('OpenCodeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.generateFileUpdatesForRecipes([recipeVersion]);
+        result = await deployer.generateFileUpdatesForCommands([recipeVersion]);
       });
 
       it('creates the command file without target prefix', () => {
@@ -165,19 +165,19 @@ describe('OpenCodeDeployer', () => {
 
     describe('with all four OpenCode frontmatter fields', () => {
       let result: Awaited<
-        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+        ReturnType<typeof deployer.generateFileUpdatesForCommands>
       >;
       const fullFrontmatterContent =
         '---\ndescription: "Full command"\nagent: build\nmodel: gpt-4o\nsubtask: true\n---\nDo the full thing';
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Full Command',
           slug: 'full-command',
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-full'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('recipe-version-full'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -186,7 +186,7 @@ describe('OpenCodeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        result = await deployer.generateFileUpdatesForRecipes([recipeVersion]);
+        result = await deployer.generateFileUpdatesForCommands([recipeVersion]);
       });
 
       it('writes the command file with all four frontmatter fields preserved', () => {
@@ -312,9 +312,9 @@ describe('OpenCodeDeployer', () => {
       let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({ name: 'My Recipe', slug: 'my-recipe' });
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('rv-1'),
+        const recipe = commandFactory({ name: 'My Recipe', slug: 'my-recipe' });
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('rv-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -381,12 +381,12 @@ describe('OpenCodeDeployer', () => {
       >;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({
+        const recipe = commandFactory({
           name: 'Old Recipe',
           slug: 'old-recipe',
         });
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('rv-old'),
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('rv-old'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,
@@ -466,9 +466,9 @@ describe('OpenCodeDeployer', () => {
       >;
 
       beforeEach(async () => {
-        const recipe = recipeFactory({ name: 'Recipe', slug: 'recipe-1' });
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('rv-1'),
+        const recipe = commandFactory({ name: 'Recipe', slug: 'recipe-1' });
+        const recipeVersion: CommandVersion = {
+          id: createCommandVersionId('rv-1'),
           recipeId: recipe.id,
           name: recipe.name,
           slug: recipe.slug,

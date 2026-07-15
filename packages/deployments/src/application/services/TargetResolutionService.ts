@@ -4,7 +4,7 @@ import {
   IGitPort,
   OrganizationId,
   PackageId,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   StandardVersion,
   Target,
@@ -149,7 +149,7 @@ export class TargetResolutionService {
     currentPackageIds: PackageId[],
   ): Promise<{
     standardVersions: StandardVersion[];
-    recipeVersions: RecipeVersion[];
+    recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
   }> {
     try {
@@ -176,7 +176,7 @@ export class TargetResolutionService {
             target.id,
             currentPackageIds,
           ),
-          this.distributionRepository.findActiveRecipeVersionsByTargetAndPackages(
+          this.distributionRepository.findActiveCommandVersionsByTargetAndPackages(
             organizationId,
             target.id,
             currentPackageIds,

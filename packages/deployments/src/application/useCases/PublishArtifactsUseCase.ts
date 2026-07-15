@@ -6,7 +6,7 @@ import {
   PublishArtifactsResponse,
   Distribution,
   createDistributionId,
-  IRecipesPort,
+  ICommandsPort,
   ISkillsPort,
   IStandardsPort,
   ICodingAgentPort,
@@ -18,7 +18,7 @@ import {
   GitRepo,
   Target,
   TargetId,
-  RecipeVersion,
+  CommandVersion,
   SkillVersion,
   SkillVersionId,
   StandardVersion,
@@ -52,7 +52,7 @@ const origin = 'PublishArtifactsUseCase';
  */
 export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   constructor(
-    private readonly recipesPort: IRecipesPort,
+    private readonly commandsPort: ICommandsPort,
     private readonly standardsPort: IStandardsPort,
     private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
@@ -111,7 +111,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     );
 
     // Fetch recipe, standard, and skill versions
-    const recipeVersions = await this.fetchRecipeVersions(
+    const recipeVersions = await this.fetchCommandVersions(
       command.recipeVersionIds,
     );
     const standardVersions = await this.fetchStandardVersions(
@@ -141,10 +141,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
         // Get previous deployments for all targets in this repo
         const {
-          previous: previousRecipeVersions,
-          previousFromPackages: previousRecipeVersionsFromPackages,
-          combined: allRecipeVersions,
-        } = await this.collectAllRecipeVersions(
+          previous: previousCommandVersions,
+          previousFromPackages: previousCommandVersionsFromPackages,
+          combined: allCommandVersions,
+        } = await this.collectAllCommandVersions(
           command,
           targets,
           recipeVersions,
@@ -166,23 +166,23 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
         // Compute removed artifacts (previously deployed from the same packages but not in new deployment command)
         // Only compare against artifacts from the packages being deployed to avoid removing artifacts from other packages
-        const removedRecipeVersionsFromDeployedPackages =
-          this.computeRemovedRecipeVersions(
-            previousRecipeVersionsFromPackages,
+        const removedCommandVersionsFromDeployedPackages =
+          this.computeRemovedCommandVersions(
+            previousCommandVersionsFromPackages,
             recipeVersions,
           );
         // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
-        const recipeVersionsFromOtherPackages = previousRecipeVersions.filter(
+        const commandVersionsFromOtherPackages = previousCommandVersions.filter(
           (pv) =>
-            !previousRecipeVersionsFromPackages.some(
+            !previousCommandVersionsFromPackages.some(
               (pfp) => pfp.recipeId === pv.recipeId,
             ),
         );
         // Only truly remove if not still present via other packages
-        const removedRecipeVersions =
-          removedRecipeVersionsFromDeployedPackages.filter(
+        const removedCommandVersions =
+          removedCommandVersionsFromDeployedPackages.filter(
             (rrv) =>
-              !recipeVersionsFromOtherPackages.some(
+              !commandVersionsFromOtherPackages.some(
                 (rv) => rv.recipeId === rrv.recipeId,
               ),
           );
@@ -257,11 +257,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
 
         // Filter out removed recipes from installed list
-        const removedRecipeIds = new Set(
-          removedRecipeVersions.map((rv) => rv.recipeId),
+        const removedCommandIds = new Set(
+          removedCommandVersions.map((rv) => rv.recipeId),
         );
-        const filteredRecipeVersions = allRecipeVersions.filter(
-          (rv) => !removedRecipeIds.has(rv.recipeId),
+        const filteredCommandVersions = allCommandVersions.filter(
+          (rv) => !removedCommandIds.has(rv.recipeId),
         );
 
         // Load rules for all standard versions that don't have them populated
@@ -303,10 +303,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         } = await this.prepareUnifiedDeployment(
           command.userId as UserId,
           command.organizationId as OrganizationId,
-          filteredRecipeVersions,
+          filteredCommandVersions,
           standardVersionsWithRules,
           skillVersionsWithFiles,
-          removedRecipeVersions,
+          removedCommandVersions,
           removedStandardVersions,
           skillVersionsToRemove,
           gitRepo,
@@ -323,7 +323,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           recipeVersions,
           standardVersions,
           skillVersions,
-          filteredRecipeVersions,
+          filteredCommandVersions,
           standardVersionsWithRules,
           skillVersionsWithFiles,
           targets,
@@ -463,10 +463,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async prepareUnifiedDeployment(
     userId: UserId,
     organizationId: OrganizationId,
-    installedRecipeVersions: RecipeVersion[],
+    installedCommandVersions: CommandVersion[],
     installedStandardVersions: StandardVersion[],
     installedSkillVersions: SkillVersion[],
-    removedRecipeVersions: RecipeVersion[],
+    removedCommandVersions: CommandVersion[],
     removedStandardVersions: StandardVersion[],
     removedSkillVersions: SkillVersion[],
     gitRepo: GitRepo,
@@ -546,12 +546,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         userId,
         organizationId,
         installed: {
-          recipeVersions: installedRecipeVersions,
+          recipeVersions: installedCommandVersions,
           standardVersions: installedStandardVersions,
           skillVersions: installedSkillVersions,
         },
         removed: {
-          recipeVersions: removedRecipeVersions,
+          recipeVersions: removedCommandVersions,
           standardVersions: removedStandardVersions,
           skillVersions: removedSkillVersions,
         },
@@ -561,11 +561,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
       if (removedAgents.length > 0) {
         const [
-          activeRecipeVersions,
+          activeCommandVersions,
           activeStandardVersions,
           activeSkillVersions,
         ] = await Promise.all([
-          this.distributionRepository.findActiveRecipeVersionsByTarget(
+          this.distributionRepository.findActiveCommandVersionsByTarget(
             organizationId,
             target.id,
           ),
@@ -583,7 +583,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           await this.codingAgentPort.generateAgentCleanupUpdatesForAgents({
             agents: removedAgents,
             artifacts: {
-              recipeVersions: activeRecipeVersions,
+              recipeVersions: activeCommandVersions,
               standardVersions: activeStandardVersions,
               skillVersions: activeSkillVersions,
             },
@@ -628,7 +628,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
         ),
-        recipeVersions: installedRecipeVersions,
+        recipeVersions: installedCommandVersions,
         standardVersions: installedStandardVersions,
         skillVersions: installedSkillVersions,
         codingAgents: targetCodingAgents,
@@ -743,12 +743,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return map;
   }
 
-  private async fetchRecipeVersions(
+  private async fetchCommandVersions(
     recipeVersionIds: string[],
-  ): Promise<RecipeVersion[]> {
-    const versions: RecipeVersion[] = [];
+  ): Promise<CommandVersion[]> {
+    const versions: CommandVersion[] = [];
     for (const id of recipeVersionIds) {
-      const version = await this.recipesPort.getRecipeVersionById(id);
+      const version = await this.commandsPort.getCommandVersionById(id);
       if (!version) {
         throw new Error(`Command version with ID ${id} not found`);
       }
@@ -787,36 +787,36 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private async collectAllRecipeVersions(
+  private async collectAllCommandVersions(
     command: PublishArtifactsCommand,
     targets: Target[],
-    newRecipeVersions: RecipeVersion[],
+    newCommandVersions: CommandVersion[],
   ): Promise<{
-    previous: RecipeVersion[];
-    previousFromPackages: RecipeVersion[];
-    combined: RecipeVersion[];
+    previous: CommandVersion[];
+    previousFromPackages: CommandVersion[];
+    combined: CommandVersion[];
   }> {
-    const allPreviousRecipeVersions = new Map<string, RecipeVersion>();
-    const previousFromPackagesMap = new Map<string, RecipeVersion>();
+    const allPreviousCommandVersions = new Map<string, CommandVersion>();
+    const previousFromPackagesMap = new Map<string, CommandVersion>();
 
     for (const target of targets) {
       // Get all previous recipe versions (for combining)
-      const previousRecipeVersions =
-        await this.distributionRepository.findActiveRecipeVersionsByTarget(
+      const previousCommandVersions =
+        await this.distributionRepository.findActiveCommandVersionsByTarget(
           command.organizationId as OrganizationId,
           target.id,
         );
 
-      for (const recipeVersion of previousRecipeVersions) {
-        const existing = allPreviousRecipeVersions.get(recipeVersion.recipeId);
+      for (const recipeVersion of previousCommandVersions) {
+        const existing = allPreviousCommandVersions.get(recipeVersion.recipeId);
         if (!existing || recipeVersion.version > existing.version) {
-          allPreviousRecipeVersions.set(recipeVersion.recipeId, recipeVersion);
+          allPreviousCommandVersions.set(recipeVersion.recipeId, recipeVersion);
         }
       }
 
       // Get previous recipe versions filtered by packages being deployed (for removal calculation)
       const previousFromPackagesVersions =
-        await this.distributionRepository.findActiveRecipeVersionsByTargetAndPackages(
+        await this.distributionRepository.findActiveCommandVersionsByTargetAndPackages(
           command.organizationId as OrganizationId,
           target.id,
           command.packageIds,
@@ -830,9 +830,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       }
     }
 
-    const previous = Array.from(allPreviousRecipeVersions.values());
+    const previous = Array.from(allPreviousCommandVersions.values());
     const previousFromPackages = Array.from(previousFromPackagesMap.values());
-    const combined = this.combineRecipeVersions(previous, newRecipeVersions);
+    const combined = this.combineCommandVersions(previous, newCommandVersions);
     return { previous, previousFromPackages, combined };
   }
 
@@ -947,11 +947,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return { previous, previousFromPackages, combined };
   }
 
-  private combineRecipeVersions(
-    previous: RecipeVersion[],
-    newVersions: RecipeVersion[],
-  ): RecipeVersion[] {
-    const map = new Map<string, RecipeVersion>();
+  private combineCommandVersions(
+    previous: CommandVersion[],
+    newVersions: CommandVersion[],
+  ): CommandVersion[] {
+    const map = new Map<string, CommandVersion>();
     previous.forEach((rv) => map.set(rv.recipeId, rv));
     newVersions.forEach((rv) => map.set(rv.recipeId, rv));
     return Array.from(map.values()).sort((a, b) =>
@@ -987,12 +987,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
    * Computes recipe versions that were previously deployed but are no longer
    * in the current deployment (i.e., they are being removed)
    */
-  private computeRemovedRecipeVersions(
-    previousVersions: RecipeVersion[],
-    currentVersions: RecipeVersion[],
-  ): RecipeVersion[] {
-    const currentRecipeIds = new Set(currentVersions.map((rv) => rv.recipeId));
-    return previousVersions.filter((rv) => !currentRecipeIds.has(rv.recipeId));
+  private computeRemovedCommandVersions(
+    previousVersions: CommandVersion[],
+    currentVersions: CommandVersion[],
+  ): CommandVersion[] {
+    const currentCommandIds = new Set(currentVersions.map((rv) => rv.recipeId));
+    return previousVersions.filter((rv) => !currentCommandIds.has(rv.recipeId));
   }
 
   /**
@@ -1043,10 +1043,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   private buildCommitMessage(
-    recipeVersions: RecipeVersion[],
+    recipeVersions: CommandVersion[],
     standardVersions: StandardVersion[],
     skillVersions: SkillVersion[],
-    allRecipeVersions: RecipeVersion[],
+    allCommandVersions: CommandVersion[],
     allStandardVersions: StandardVersion[],
     allSkillVersions: SkillVersion[],
     targets: Target[],
@@ -1059,7 +1059,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     if (recipeVersions.length > 0) {
       parts.push(`- Updated ${recipeVersions.length} command(s)`);
-      parts.push(`- Total commands in repository: ${allRecipeVersions.length}`);
+      parts.push(
+        `- Total commands in repository: ${allCommandVersions.length}`,
+      );
     }
 
     if (standardVersions.length > 0) {
