@@ -5,9 +5,20 @@ import { PMBox } from '@packmind/ui';
 import React from 'react';
 import { ListenerManager } from '@milkdown/kit/plugin/listener';
 
+export interface IMarkdownEditorApi {
+  getMarkdown: () => string;
+}
+
 interface IMarkdownEditorProps {
   defaultValue: string;
   onMarkdownChange?: (value: string) => void;
+  /**
+   * Called once the editor is created, with a handle to read the current
+   * markdown synchronously. onMarkdownChange is debounced by the Milkdown
+   * listener plugin, so consumers that need the up-to-date content at a
+   * precise moment (e.g. on save) must read it through this handle instead.
+   */
+  onEditorReady?: (api: IMarkdownEditorApi) => void;
   readOnly?: boolean;
   paddingVariant?: 'default' | 'none';
 }
@@ -15,10 +26,13 @@ interface IMarkdownEditorProps {
 export const MarkdownEditor: React.FC<IMarkdownEditorProps> = ({
   defaultValue,
   onMarkdownChange,
+  onEditorReady,
   readOnly = false,
   paddingVariant = 'default',
 }) => {
-  useEditor((root) => {
+  const crepeRef = React.useRef<Crepe | null>(null);
+
+  const { loading } = useEditor((root) => {
     const crepe = new Crepe({
       root,
       defaultValue,
@@ -41,8 +55,16 @@ export const MarkdownEditor: React.FC<IMarkdownEditorProps> = ({
       });
     });
 
+    crepeRef.current = crepe;
     return crepe;
   });
+
+  React.useEffect(() => {
+    if (!loading && crepeRef.current && onEditorReady) {
+      const crepe = crepeRef.current;
+      onEditorReady({ getMarkdown: () => crepe.getMarkdown() });
+    }
+  }, [loading, onEditorReady]);
 
   return (
     <PMBox data-milkdown-padding-variant={paddingVariant}>

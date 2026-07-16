@@ -113,7 +113,6 @@ export default function SkillFilesRouteModule() {
           borderColor="border.tertiary"
           borderRadius="md"
           p={4}
-          overflow="hidden"
         >
           <SkillFilePreview
             file={selectedFile}

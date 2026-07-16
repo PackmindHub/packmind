@@ -1,15 +1,14 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
-import {
-  PMAlert,
-  PMButton,
-  PMCodeMirror,
-  PMHStack,
-  PMVStack,
-} from '@packmind/ui';
+import { PMAlert, PMBox, PMButton, PMHStack, PMVStack } from '@packmind/ui';
 import { SkillId } from '@packmind/types';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
+import {
+  IMarkdownEditorApi,
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../shared/components/editor/MarkdownEditor';
 
 // Mirrors packages/skills/src/application/validator/SkillValidator.ts (SKILL_FILE_MAX_CONTENT_LENGTH)
 const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
@@ -33,16 +32,38 @@ export const SkillFileEditor = ({
   onCancel,
   onSaved,
 }: ISkillFileEditorProps) => {
-  const [content, setContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  // Read the markdown synchronously from the editor on save: the editor's
+  // change events are debounced, so any state fed by them can lag behind the
+  // actual content when Save is clicked right after the last keystroke.
+  const editorApiRef = useRef<IMarkdownEditorApi | null>(null);
+  // The WYSIWYG editor normalizes markdown on load, so its output can differ
+  // from initialContent without any user edit. The no-op comparison must use
+  // the normalized baseline captured at mount, not the raw initial content.
+  const baselineContentRef = useRef<string | null>(null);
   const analytics = useAnalytics();
   const updateSkillFileMutation = useUpdateSkillFileMutation();
 
   const isSaving = updateSkillFileMutation.isPending;
 
+  const handleEditorReady = useCallback((api: IMarkdownEditorApi) => {
+    editorApiRef.current = api;
+    baselineContentRef.current = api.getMarkdown();
+    setIsEditorReady(true);
+  }, []);
+
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || !editorApiRef.current) return;
     setError(null);
+
+    const content = editorApiRef.current.getMarkdown();
+
+    if (content === (baselineContentRef.current ?? initialContent)) {
+      // No-op save: nothing changed, just exit edit mode silently.
+      onSaved();
+      return;
+    }
 
     if (content.trim().length === 0) {
       setError('File content cannot be empty.');
@@ -53,12 +74,6 @@ export const SkillFileEditor = ({
       setError(
         `File content exceeds the maximum length of ${SKILL_FILE_MAX_CONTENT_LENGTH.toLocaleString()} characters.`,
       );
-      return;
-    }
-
-    if (content === initialContent) {
-      // No-op save: nothing changed, just exit edit mode silently.
-      onSaved();
       return;
     }
 
@@ -98,14 +113,30 @@ export const SkillFileEditor = ({
         </PMAlert.Root>
       )}
 
-      <PMCodeMirror
-        value={content}
-        onChange={setContent}
-        language="markdown"
-        editable={!isSaving}
-      />
+      <PMBox
+        border="solid 1px"
+        borderColor="border.primary"
+        borderRadius="md"
+        backgroundColor="background.primary"
+      >
+        <MarkdownEditorProvider>
+          <MarkdownEditor
+            defaultValue={initialContent}
+            onEditorReady={handleEditorReady}
+          />
+        </MarkdownEditorProvider>
+      </PMBox>
 
-      <PMHStack justify="flex-end" gap={2}>
+      <PMHStack
+        justify="flex-end"
+        gap={2}
+        position="sticky"
+        bottom={0}
+        paddingY={3}
+        backgroundColor="background.secondary"
+        borderTop="solid 1px"
+        borderColor="border.primary"
+      >
         <PMButton variant="tertiary" onClick={onCancel} disabled={isSaving}>
           Cancel
         </PMButton>
@@ -113,7 +144,7 @@ export const SkillFileEditor = ({
           variant="primary"
           onClick={handleSave}
           loading={isSaving}
-          disabled={isSaving}
+          disabled={isSaving || !isEditorReady}
         >
           Save
         </PMButton>

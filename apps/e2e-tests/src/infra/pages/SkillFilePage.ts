@@ -10,11 +10,15 @@ export class SkillFilePage
   }
 
   async replaceEditorContent(content: string): Promise<void> {
-    const editor = this.page.locator('.cm-content').first();
+    const editor = this.editorLocator();
     await editor.click();
     await this.page.keyboard.press('ControlOrMeta+A');
     await this.page.keyboard.press('Backspace');
-    await this.page.keyboard.insertText(content);
+    if (content.length > 0) {
+      // ProseMirror ignores synthetic input without key events
+      // (keyboard.insertText), so type with real key events.
+      await this.page.keyboard.type(content);
+    }
   }
 
   async clickSave(): Promise<void> {
@@ -36,9 +40,17 @@ export class SkillFilePage
   }
 
   async isEditorEditable(): Promise<boolean> {
-    const editor = this.page.locator('.cm-content').first();
+    const editor = this.editorLocator();
     await editor.waitFor();
     return (await editor.getAttribute('contenteditable')) === 'true';
+  }
+
+  /**
+   * The edit mode uses the shared Milkdown WYSIWYG editor, whose editable
+   * surface is a ProseMirror contenteditable element.
+   */
+  private editorLocator() {
+    return this.page.locator('.milkdown .ProseMirror').first();
   }
 
   async readDisplayedContent(): Promise<string> {
