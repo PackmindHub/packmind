@@ -20,6 +20,7 @@
     "@codemirror/language": "^6.10.3",
     "@codemirror/legacy-modes": "^6.4.1",
     "@packmind/assets": "workspace:*",
+    "@packmind/feature-flags": "workspace:*",
     "@zag-js/checkbox": "^1.41.1"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import localDataSource from './dataSources/local';
 export * from './adapter/IBaseAdapter';
 export * from './cache/Cache';
 export * from './config/config/Configuration';
+export * from './featureFlags/isFeatureEnabled';
 export * from './database/migrationColumns';
 export * from './database/schemas';
 export * from './database/types';

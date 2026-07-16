@@ -775,6 +775,8 @@ importers:
         specifier: 0.3.28
         version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
 
+  packages/feature-flags: {}
+
   packages/frontend:
     dependencies:
       react:
@@ -935,6 +937,9 @@ importers:
 
   packages/node-utils:
     dependencies:
+      '@packmind/feature-flags':
+        specifier: workspace:*
+        version: link:../feature-flags
       '@packmind/logger':
         specifier: workspace:*
         version: link:../logger
@@ -1125,6 +1130,9 @@ importers:
       '@packmind/assets':
         specifier: workspace:*
         version: link:../assets
+      '@packmind/feature-flags':
+        specifier: workspace:*
+        version: link:../feature-flags
       '@zag-js/checkbox':
         specifier: ^1.41.1
         version: 1.41.1

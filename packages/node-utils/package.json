@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@packmind/feature-flags": "workspace:*",
     "@packmind/logger": "workspace:*",
     "@packmind/types": "workspace:*",
     "express": "^5.1.0"
