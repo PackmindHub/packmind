@@ -147,7 +147,7 @@ This displays:
 
 ### API Key Authentication (Alternative)
 
-You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instead of the interactive login flow. This is the recommended approach for:
+You can authenticate using the `PACKMIND_API_KEY` environment variable instead of the interactive login flow. This is the recommended approach for:
 
 - **CI/CD pipelines** — Automated environments where interactive login isn't possible
 - **Docker containers** — Pass the API key as an environment variable
@@ -164,10 +164,10 @@ You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instea
 
 #### Setting the Environment Variable
 
-Set the `PACKMIND_API_KEY_V3` environment variable with your API key:
+Set the `PACKMIND_API_KEY` environment variable with your API key:
 
 ```bash
-export PACKMIND_API_KEY_V3="your-api-key-here"
+export PACKMIND_API_KEY="your-api-key-here"
 ```
 
 To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.).

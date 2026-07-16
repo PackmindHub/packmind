@@ -12,7 +12,7 @@ Before running these tests, you need:
    nx build packmind-cli
    ```
 
-2. **Clean Environment**: Ensure `PACKMIND_API_KEY_V3` is not set in your `.env` file or shell environment, as tests need to control authentication state
+2. **Clean Environment**: Ensure `PACKMIND_API_KEY` is not set in your `.env` file or shell environment, as tests need to control authentication state
 
 3. **Running API** (for authenticated tests only): The API server must be running. By default, tests expect it at `http://localhost:4200`, but you can override this with the `PACKMIND_INSTANCE_URL` environment variable:
 

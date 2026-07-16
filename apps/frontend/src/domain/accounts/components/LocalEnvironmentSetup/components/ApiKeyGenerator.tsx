@@ -101,8 +101,8 @@ export const ApiKeyGenerator: React.FC<IApiKeyGeneratorProps> = ({
               <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
               <PMAlert.Description>
                 Copy this key now - it won't be shown again. Set it as the{' '}
-                <code>PACKMIND_API_KEY_V3</code> environment variable. Expires
-                on {formatExpirationDate(generatedKeyExpiresAt)}
+                <code>PACKMIND_API_KEY</code> environment variable. Expires on{' '}
+                {formatExpirationDate(generatedKeyExpiresAt)}
               </PMAlert.Description>
             </PMAlert.Content>
           </PMAlert.Root>

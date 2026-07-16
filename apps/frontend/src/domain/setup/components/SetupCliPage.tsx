@@ -65,7 +65,7 @@ const ApiKeyContent: React.FC = () => {
     <PMVStack align="stretch" gap={4} width="full">
       <SectionCard
         title="API key"
-        description="Generate an API key and set it as the PACKMIND_API_KEY_V3 environment variable. It will expire after 3 months."
+        description="Generate an API key and set it as the PACKMIND_API_KEY environment variable. It will expire after 3 months."
       >
         <ApiKeyGenerator apiKey={apiKey} />
       </SectionCard>

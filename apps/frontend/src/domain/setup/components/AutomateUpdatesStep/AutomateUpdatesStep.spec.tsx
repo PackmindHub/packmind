@@ -140,7 +140,7 @@ describe('AutomateUpdatesStep', () => {
     const panel = getActivePanel();
     expect(
       within(panel).getByText(
-        /set PACKMIND_API_KEY_V3 and PACKMIND_BOT_TOKEN in Settings → CI\/CD → Variables/i,
+        /set PACKMIND_API_KEY and PACKMIND_BOT_TOKEN in Settings → CI\/CD → Variables/i,
       ),
     ).toBeInTheDocument();
     expect(
@@ -157,7 +157,7 @@ describe('AutomateUpdatesStep', () => {
     const panel = getActivePanel();
     expect(
       within(panel).getByText(
-        /set PACKMIND_API_KEY_V3 in Settings → Secrets and variables → Actions/i,
+        /set PACKMIND_API_KEY in Settings → Secrets and variables → Actions/i,
       ),
     ).toBeInTheDocument();
   });

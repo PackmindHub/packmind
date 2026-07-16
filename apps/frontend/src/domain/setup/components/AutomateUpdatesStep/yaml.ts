@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
       - uses: packmind/update-packmind-artifacts@v1
         with:
-          api-key: \${{ secrets.PACKMIND_API_KEY_V3 }}
+          api-key: \${{ secrets.PACKMIND_API_KEY }}
 `;
 
 const GITLAB_TEMPLATE = `stages:

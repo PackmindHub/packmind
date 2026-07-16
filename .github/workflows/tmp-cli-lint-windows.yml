@@ -39,4 +39,4 @@ jobs:
       - name: Run CLI lint
         run: node dist/apps/cli/main.cjs lint .
         env:
-          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}

@@ -58,7 +58,7 @@ export const lintCommand = command({
     continueOnMissingKey: flag({
       long: 'continue-on-missing-key',
       description:
-        'Skip linting and exit with status code 0 if PACKMIND_API_KEY_V3 is not set',
+        'Skip linting and exit with status code 0 if PACKMIND_API_KEY is not set',
     }),
     changedFiles: flag({
       long: 'changed-files',

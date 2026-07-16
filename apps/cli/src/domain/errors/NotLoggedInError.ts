@@ -5,7 +5,7 @@
 export class NotLoggedInError extends Error {
   constructor() {
     super(
-      "You're not logged in to Packmind. Please either use the login command or set the PACKMIND_API_KEY_V3 environment variable (from the Settings menu in Packmind).",
+      "You're not logged in to Packmind. Please either use the login command or set the PACKMIND_API_KEY environment variable (from the Settings menu in Packmind).",
     );
     this.name = 'NotLoggedInError';
   }

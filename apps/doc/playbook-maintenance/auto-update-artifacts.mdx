@@ -64,18 +64,16 @@ When standards, commands, or skills evolve on Packmind, your repositories don't 
               fetch-depth: 0 # required so the action can diff and commit
           - uses: PackmindHub/update-packmind-artifacts@v1
             with:
-              packmind-api-key: ${{ secrets.PACKMIND_API_KEY_V3 }}
+              packmind-api-key: ${{ secrets.PACKMIND_API_KEY }}
     ```
 
     ### Configure the API key secret
 
     In your repository: **Settings → Secrets and variables → Actions → New repository secret**.
 
-    | Secret name           | Value                                         |
-    | --------------------- | --------------------------------------------- |
-    | `PACKMIND_API_KEY_V3` | The API key from your Packmind user profile   |
-
-    <Note>The `_V3` suffix is the current API key format used by Packmind — keep the name as-is.</Note>
+    | Secret name        | Value                                       |
+    | ------------------ | ------------------------------------------- |
+    | `PACKMIND_API_KEY` | The API key from your Packmind user profile |
 
     Common action inputs (branch name, PR title, target branch, Node version) are documented on the [Marketplace listing](https://github.com/marketplace/actions/update-packmind-artifacts).
 
@@ -142,14 +140,12 @@ When standards, commands, or skills evolve on Packmind, your repositories don't 
 
     In **Settings → CI/CD → Variables**, add both variables and mark them as **Masked**:
 
-    | Variable              | Value                                                                                    |
-    | --------------------- | ---------------------------------------------------------------------------------------- |
-    | `PACKMIND_API_KEY_V3` | The API key from your Packmind user profile                                              |
-    | `PACKMIND_BOT_TOKEN`  | A Project Access Token with `write_repository` and `api` scopes, role ≥ Developer       |
+    | Variable             | Value                                                                              |
+    | -------------------- | ---------------------------------------------------------------------------------- |
+    | `PACKMIND_API_KEY`   | The API key from your Packmind user profile                                        |
+    | `PACKMIND_BOT_TOKEN` | A Project Access Token with `write_repository` and `api` scopes, role ≥ Developer  |
 
     To create the token: **Settings → Access Tokens → Add new token** with scopes `write_repository` and `api`.
-
-    <Note>The `_V3` suffix is the current API key format used by Packmind — keep the name as-is.</Note>
 
     ### Schedule the job
 
@@ -191,8 +187,8 @@ The example uses `0 2 * * 1-5` — every weeknight at 02:00 UTC (03:00 Paris in 
 
 <Accordion title="Authentication error from packmind-cli">
   The API key is missing, mistyped, or revoked. Regenerate it from your Packmind
-  profile and update the `PACKMIND_API_KEY_V3` secret. Make sure the variable
-  name matches exactly — including the `_V3` suffix.
+  profile and update the `PACKMIND_API_KEY` secret. Make sure the variable name
+  matches exactly.
 </Accordion>
 
 <Accordion title="The PR/MR exists but doesn't reflect the latest changes">

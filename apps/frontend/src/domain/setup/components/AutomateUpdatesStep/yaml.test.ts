@@ -26,9 +26,9 @@ describe('buildWorkflowYaml', () => {
       );
     });
 
-    it('references the PACKMIND_API_KEY_V3 secret', () => {
+    it('references the PACKMIND_API_KEY secret', () => {
       expect(buildWorkflowYaml('github', '0 2 * * 1-5')).toContain(
-        'secrets.PACKMIND_API_KEY_V3',
+        'secrets.PACKMIND_API_KEY',
       );
     });
 
@@ -55,7 +55,7 @@ describe('buildWorkflowYaml', () => {
     });
 
     it('references PACKMIND_BOT_TOKEN for git push authentication', () => {
-      // PACKMIND_API_KEY_V3 is consumed by the CLI from the GitLab CI env
+      // PACKMIND_API_KEY is consumed by the CLI from the GitLab CI env
       // automatically, so it is not referenced literally in the YAML.
       const yaml = buildWorkflowYaml('gitlab', '0 2 * * 1-5');
       expect(yaml).toContain('PACKMIND_BOT_TOKEN');
