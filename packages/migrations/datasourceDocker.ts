@@ -10,6 +10,7 @@ register({
     '@packmind/migrations': ['packages/migrations/src/index.ts'],
     '@packmind/commands': ['packages/commands/src/index.ts'],
     '@packmind/node-utils': ['packages/node-utils/src/index.ts'],
+    '@packmind/feature-flags': ['packages/feature-flags/src/index.ts'],
     '@packmind/test-utils': ['packages/test-utils/src/index.ts'],
     '@packmind/types': ['packages/types/src/index.ts'],
     'packmind-plugin': ['tools/packmind-plugin/src/index.ts'],
