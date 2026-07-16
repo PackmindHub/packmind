@@ -9,7 +9,7 @@ One reliable way to bring Packmind up locally, confirm it's serving, and take it
 
 ## What the stack is
 
-Defined by `docker-compose.yml` at the repo root. Every service runs from the base `node:24.15.0-alpine` image with the repo bind-mounted at `/packmind` — there is **no app image to build**. Code runs via `nx serve`/`nx dev` with polling file-watchers, so **source edits hot-reload**; you almost never pass `--build`.
+Defined by `docker-compose.yml` at the repo root. Every service runs from the base `node:24.18.0-alpine3.23` image with the repo bind-mounted at `/packmind` — there is **no app image to build**. Code runs via `nx serve`/`nx dev` with polling file-watchers, so **source edits hot-reload**; you almost never pass `--build`.
 
 ### What is reachable from the host — read this before you `curl` anything
 
@@ -125,10 +125,10 @@ docker compose --profile dev down -v && docker compose --profile dev up -d
 - **Never `readelf`/`ldd`/`od`/grep `binding.js`** to "diagnose" the `.node` file. It
   tells you nothing actionable here.
 - **Never hand-roll `docker run` to replace a compose service.** Under the Michel
-  override the stack runs on **glibc** (`node:24.15.0-trixie-slim`); a manual
+  override the stack runs on **glibc** (`node:24.18.0-trixie-slim`); a manual
   `node:*-alpine` (musl) container is the **wrong libc** and fails to load every
   native addon — that error is self-inflicted, not the stack's. If you truly need a
-  one-off, use `node:24.15.0-trixie-slim` with the same volumes/env as compose.
+  one-off, use `node:24.18.0-trixie-slim` with the same volumes/env as compose.
 - **Never edit application source to make the stack boot.** A DI error / missing
   provider that shows up only under a hand-rolled or half-started boot is an artifact
   of the wrong boot path — the reset above makes it disappear. Don't "fix" it in code.

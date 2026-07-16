@@ -32,7 +32,7 @@ x-michel-watch-env: &michel-watch-env
 
 services:
   nx-daemon:
-    image: node:24.15.0-trixie-slim
+    image: node:24.18.0-trixie-slim
     environment:
       <<: *michel-watch-env
     # Wider window than the base (30x1s): a cold worker computes the project
@@ -56,13 +56,13 @@ services:
     healthcheck:
       disable: true
   frontend:
-    image: node:24.15.0-trixie-slim
+    image: node:24.18.0-trixie-slim
     environment:
       <<: *michel-watch-env
     healthcheck:
       disable: true
   install-dependencies:
-    image: node:24.15.0-trixie-slim
+    image: node:24.18.0-trixie-slim
     volumes:
       # Worker's warm glibc store (populated by scripts/michel/setup.sh before
       # the dev stack starts). Appended to the base volume list.
@@ -90,7 +90,7 @@ services:
           || { echo "[deps] FATAL: native addon failed to load (libc mismatch in dev-node_modules). Reset with: docker compose --profile dev down -v && docker compose --profile dev up -d" >&2; exit 1; }
         node scripts/select-tsconfig.mjs
   backend:
-    image: node:24.15.0-trixie-slim
+    image: node:24.18.0-trixie-slim
     environment:
       <<: *michel-watch-env
       WATCHPACK_POLLING: 'false'
@@ -141,7 +141,7 @@ services:
       backend:
         condition: service_started
   run-migrations:
-    image: node:24.15.0-trixie-slim
+    image: node:24.18.0-trixie-slim
     depends_on:
       postgres:
         condition: service_started
