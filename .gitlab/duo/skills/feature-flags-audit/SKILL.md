@@ -9,15 +9,18 @@ Produce a synthetic inventory of every feature flag declared in the Packmind cod
 
 ## Context
 
-Packmind uses a **custom, frontend-only** feature flag system. There is no third-party library (LaunchDarkly, GrowthBook, PostHog, etc.). Flags are gated by **email domain** or **exact email** via a single central registry. There is no org-based, plan-based, percentage-rollout, or runtime-override mechanism — what's in the registry file is what's live in production.
+Packmind uses a **custom** feature flag system shared by **both frontend and backend**. There is no third-party library (LaunchDarkly, GrowthBook, PostHog, etc.). Flags are gated by **email domain** or **exact email** via a single central registry. There is no org-based, plan-based, or percentage-rollout mechanism — audience targeting is email-based only. One runtime override does exist: an `FF_*` env kill-switch (see below) can force a flag fully on or off regardless of the email rule.
 
 **Canonical source of truth:**
-`packages/ui/src/lib/components/content/PMFeatureFlag/PMFeatureFlag.tsx`
+`packages/feature-flags/src/registry.ts` (the shared, browser-safe `@packmind/feature-flags` package)
 
 This file exports:
 - Flag key constants ending in `_FEATURE_KEY` (e.g. `SPACES_MANAGEMENT_FEATURE_KEY = 'spaces-management'`).
+- The `FeatureFlagKey` union of all valid flag string values.
 - `DEFAULT_FEATURE_DOMAIN_MAP`: a `Record<string, readonly string[]>` mapping each flag's **string value** to a list of allowed entries. Entries starting with `@` are domain rules (e.g. `@packmind.com` matches any user at that domain). Entries containing `@` but not starting with `@` are exact email matches.
-- The `PMFeatureFlag` React wrapper component and the `isFeatureFlagEnabled()` pure function used at call sites.
+- The `isFeatureFlagEnabled()` pure function used at call sites (defined in `packages/feature-flags/src/isFeatureFlagEnabled.ts`).
+
+The registry is consumed on both sides: the frontend imports it via `@packmind/ui` (which re-exports the keys, `DEFAULT_FEATURE_DOMAIN_MAP`, and `isFeatureFlagEnabled` for back-compat; `packages/ui/src/lib/components/content/PMFeatureFlag/PMFeatureFlag.tsx` now holds only the `PMFeatureFlag` React wrapper component). The backend evaluates the same registry through the `isFeatureEnabled(flag, { userEmail })` helper in `@packmind/node-utils` (`packages/node-utils/src/featureFlags/isFeatureEnabled.ts`), which layers the `FF_*` env kill-switch on top of the shared email-domain rule.
 
 If a flag is not declared in `DEFAULT_FEATURE_DOMAIN_MAP`, it does not exist. Do not invent flags.
 
@@ -25,7 +28,7 @@ If a flag is not declared in `DEFAULT_FEATURE_DOMAIN_MAP`, it does not exist. Do
 
 ### Step 1 — Parse the canonical registry
 
-Read `packages/ui/src/lib/components/content/PMFeatureFlag/PMFeatureFlag.tsx`. Extract:
+Read `packages/feature-flags/src/registry.ts`. Extract:
 
 1. Every exported constant whose name ends with `_FEATURE_KEY`, along with its string value. The string value is what appears as a key in `DEFAULT_FEATURE_DOMAIN_MAP` — keep the mapping (constant name ↔ string value) in memory.
 2. The full `DEFAULT_FEATURE_DOMAIN_MAP` object. For each entry, record the flag's string value and its list of allowed domains/emails.
@@ -44,15 +47,18 @@ For each flag, search the codebase for where it is consumed. Use Grep:
 
 - First pass: search for the **constant name** (e.g. `SPACES_MANAGEMENT_FEATURE_KEY`). This is the canonical import form and catches almost all usages.
 - Second pass: search for the **string value** (e.g. `'spaces-management'` or `"spaces-management"`) as a safety net. Some usages may inline the string instead of importing the constant.
+- Backend pass: search for `isFeatureEnabled(` (the backend helper call) across `apps/api/**`, `apps/mcp-server/**`, `apps/cli/**`, and `packages/**`. This is a **plain async helper call, not an injected port** — so search the function name, not an interface. A call looks like `await isFeatureEnabled('some-flag', { userEmail })`; the first argument tells you which flag is gated. (Backend call sites may currently be zero — the mechanism exists but the first real consumer may not have landed yet — so finding none is normal, not a bug.)
 
 Scope the search to:
 - `apps/frontend/src/**`
 - `apps/frontend/app/**` — the React Router v7 file-based route tree. Route modules live here (e.g. `apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx`), **not** under `src/`, and they gate flags too (typically via `isFeatureFlagEnabled(...)` to show/hide nav entries, routes, or whole pages). Omitting this directory will mis-report a live route-gated flag as an orphan.
-- `packages/**`
+- `apps/api/**`, `apps/mcp-server/**`, `apps/cli/**` — backend use cases may gate flags via `isFeatureEnabled(flag, { userEmail })`. Include these so a backend-gated flag is not mis-reported as an orphan.
+- `packages/**` — includes the shared `@packmind/feature-flags` package (registry) and `@packmind/node-utils` (the backend helper); the registry definition files are excluded below.
 
 Exclude:
-- The canonical file itself: `packages/ui/src/lib/components/content/PMFeatureFlag/PMFeatureFlag.tsx`.
-- Its co-located test file: `PMFeatureFlag.test.tsx`. (The parent barrel at `packages/ui/src/lib/components/content/index.ts` only re-exports the component and does not reference any `_FEATURE_KEY`, so it won't appear in the search — no explicit exclusion needed.)
+- The canonical registry files themselves: `packages/feature-flags/src/registry.ts` and `packages/feature-flags/src/isFeatureFlagEnabled.ts` (plus the package barrel `packages/feature-flags/src/index.ts`, which only re-exports them).
+- The backend helper definition itself: `packages/node-utils/src/featureFlags/isFeatureEnabled.ts` (it *defines* `isFeatureEnabled`; it is not a consumer). Count only *call sites* of the helper, not its declaration.
+- The `@packmind/ui` back-compat re-export shim: `packages/ui/src/lib/components/content/PMFeatureFlag/PMFeatureFlag.tsx` (now only the React wrapper + re-exports) and its co-located test file `PMFeatureFlag.test.tsx`. (The parent barrel at `packages/ui/src/lib/components/content/index.ts` re-exports for back-compat but is not a real gate.)
 - Test and spec files anywhere in the search scope: `*.test.*`, `*.spec.*`, and Storybook stories `*.stories.*`. A usage inside a test doesn't represent shipping behavior and would mislead a reader scanning the "Usage files" column. If a flag is *only* referenced from tests, treat it as an orphan (see Step 4) and note the test-only state in the description.
 - Generated/build artifacts (`dist/`, `node_modules/`).
 
@@ -147,7 +153,7 @@ Output only the report — no preamble, no "here is the table" sentence. The use
 
 - **Do not invent flags.** Only entries in `DEFAULT_FEATURE_DOMAIN_MAP` are real flags. If the user asks about a flag that isn't there, say so explicitly.
 - **Audience targeting is email-only.** Do not describe the audience as "organizations", "plans", "teams", or "percentages" — those concepts do not exist in this system. A domain like `@packmind.com` means "any user whose email is at this domain", nothing more.
-- **The registry is static.** There is no env var, no remote config, no runtime override. The file is the source of truth.
-- **The backend does not use feature flags.** Do not scan `apps/api/`, `apps/mcp-server/`, or `apps/cli/`. If you ever find a `_FEATURE_KEY` import there, flag it as unusual — it would be a violation of the established pattern.
+- **The registry is the audience source of truth, but not fully static.** There is no remote config or third-party service, but an `FF_*` env kill-switch does exist: the backend helper reads `Configuration.getConfig('FF_' + SCREAMING_SNAKE(flag))` (e.g. `FF_CHANGE_PROPOSALS_IN_WEBAPP`) — values `on`/`all`/`true` force the flag fully on, `off`/`none`/`false` force it off, and unset/empty falls through to the email-domain rule in `DEFAULT_FEATURE_DOMAIN_MAP`. So the map defines the *default* audience; an env override can win over it at runtime.
+- **The backend uses feature flags too.** Scan `apps/api/`, `apps/mcp-server/`, and `apps/cli/` for backend call sites of `isFeatureEnabled(flag, { userEmail })` (the `@packmind/node-utils` helper). This is a **plain async function call, not an injected port** — search for the function name, not an interface. Backend call sites may currently be zero (the mechanism is in place ahead of its first real consumer), so finding none is expected, not a violation.
 - **Frontend code is split across two roots.** Components and domain logic live in `apps/frontend/src/`, but React Router v7 route modules live in `apps/frontend/app/routes/`. Flags are gated in both. Searching only `src/` is the classic miss — e.g. `MARKETPLACES_FEATURE_KEY` is consumed solely in `apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx` to gate the Settings → Distribution → Marketplaces nav entry, and would look like an orphan if `app/` were skipped.
 - **`PMFeatureFlag` with empty `featureKeys={[]}` always renders.** This is a rare pattern but if you see it while reading usages, don't count it as a real gate.
