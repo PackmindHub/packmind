@@ -7,6 +7,10 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     '@packmind/accounts': join(__dirname, '../../packages/accounts/src'),
     '@packmind/commands': join(__dirname, '../../packages/commands/src'),
     '@packmind/node-utils': join(__dirname, '../../packages/node-utils/src'),
+    '@packmind/feature-flags': join(
+      __dirname,
+      '../../packages/feature-flags/src',
+    ),
     '@packmind/types': join(__dirname, '../../packages/types/src'),
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),
     '@packmind/spaces': join(__dirname, '../../packages/spaces/src'),
