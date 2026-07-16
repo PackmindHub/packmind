@@ -34,9 +34,9 @@ export const logoutCommand = command({
           logInfoConsole('No stored credentials file found.');
         }
         logConsole(
-          '\nNote: PACKMIND_API_KEY_V3 environment variable is still set.',
+          '\nNote: PACKMIND_API_KEY environment variable is still set.',
         );
-        logConsole('To fully log out, run: unset PACKMIND_API_KEY_V3');
+        logConsole('To fully log out, run: unset PACKMIND_API_KEY');
       }
     } catch (error) {
       logErrorConsole('Failed to remove credentials file.');

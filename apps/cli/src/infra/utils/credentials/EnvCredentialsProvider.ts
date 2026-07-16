@@ -4,10 +4,7 @@ import {
 } from './ICredentialsProvider';
 import { decodeApiKey } from './decodeApiKey';
 
-export const ENV_VAR_NAMES = [
-  'PACKMIND_API_KEY',
-  'PACKMIND_API_KEY_V3',
-] as const;
+export const ENV_VAR_NAMES = ['PACKMIND_API_KEY'] as const;
 
 export class EnvCredentialsProvider implements ICredentialsProvider {
   getSourceName(): string {

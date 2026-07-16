@@ -72,8 +72,7 @@ const defaultCredentialsService = new CredentialsService();
  * Loads the API key from environment variable or credentials file.
  * Priority:
  * 1. PACKMIND_API_KEY environment variable
- * 2. PACKMIND_API_KEY_V3 environment variable
- * 3. ~/.packmind/credentials.json file
+ * 2. ~/.packmind/credentials.json file
  *
  * @returns The API key or empty string if not found
  */

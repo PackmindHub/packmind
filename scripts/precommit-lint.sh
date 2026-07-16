@@ -22,7 +22,7 @@ HOST=$(echo "$OUTPUT" | grep "^Host:" | awk '{print $2}')
 ORG=$(echo "$OUTPUT" | grep "^Organization:" | awk '{print $2}')
 
 if [[ "$HOST" != "$EXPECTED_HOST" || "$ORG" != "$EXPECTED_ORG" ]]; then
-  echo "ERROR: PACKMIND_API_KEY_V3 is incorrect."
+  echo "ERROR: PACKMIND_API_KEY is incorrect."
   echo "  Expected host: $EXPECTED_HOST, got: $HOST"
   echo "  Expected org:  $EXPECTED_ORG, got: $ORG"
   exit 1

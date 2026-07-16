@@ -28,7 +28,7 @@ export const PROVIDER_METADATA: Record<AutoUpdateProvider, IProviderMetadata> =
       label: 'GitHub Actions',
       workflowFilePath: '.github/workflows/nightly-packmind-update.yml',
       cronInYaml: true,
-      secretNames: ['PACKMIND_API_KEY_V3'],
+      secretNames: ['PACKMIND_API_KEY'],
       scheduleLocationHint:
         'The schedule is set directly in the workflow file below.',
       secretsLocationPath: 'Settings → Secrets and variables → Actions',
@@ -37,7 +37,7 @@ export const PROVIDER_METADATA: Record<AutoUpdateProvider, IProviderMetadata> =
       label: 'GitLab CI',
       workflowFilePath: '.gitlab-ci.yml',
       cronInYaml: false,
-      secretNames: ['PACKMIND_API_KEY_V3', 'PACKMIND_BOT_TOKEN'],
+      secretNames: ['PACKMIND_API_KEY', 'PACKMIND_BOT_TOKEN'],
       scheduleLocationHint:
         'In GitLab: Build → Pipeline schedules → New schedule, then paste the cron expression below.',
       secretsLocationPath: 'Settings → CI/CD → Variables',

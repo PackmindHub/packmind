@@ -23,7 +23,7 @@ on:
       SONAR_TOKEN:
         required: true
         description: 'Token for SonarCloud code quality analysis'
-      PACKMIND_API_KEY_V3:
+      PACKMIND_API_KEY:
         required: false
         description: 'API key to run new packmind-cli'
 
@@ -138,10 +138,10 @@ jobs:
       - name: Make binary executable
         run: chmod +x ./cli-binary/packmind-cli-linux-x64
 
-      - name: Run Packmind CLI V3
+      - name: Run Packmind CLI
         run: ./cli-binary/packmind-cli-linux-x64 lint .
         env:
-          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
   check-cli-sync:
     if: vars.PACKMIND_EDITION == 'proprietary'

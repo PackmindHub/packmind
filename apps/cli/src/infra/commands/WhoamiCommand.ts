@@ -75,7 +75,7 @@ export const whoamiCommand = command({
         `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
       );
       logConsole(`\nCredentials are loaded from (in order of priority):`);
-      logConsole(`  1. PACKMIND_API_KEY_V3 environment variable`);
+      logConsole(`  1. PACKMIND_API_KEY environment variable`);
       logConsole(`  2. ${result.credentialsPath}`);
       process.exit(1);
     }

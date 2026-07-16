@@ -162,10 +162,10 @@ To clear stored credentials:
 packmind-cli logout
 ```
 
-This removes the credentials file. If you also have `PACKMIND_API_KEY_V3` set as an environment variable, you'll need to unset it separately:
+This removes the credentials file. If you also have `PACKMIND_API_KEY` set as an environment variable, you'll need to unset it separately:
 
 ```bash
-unset PACKMIND_API_KEY_V3
+unset PACKMIND_API_KEY
 ```
 
 ### Whoami Command
@@ -184,9 +184,9 @@ This displays:
 - User name
 - Credential expiration status
 
-### API Key Authentication (PACKMIND_API_KEY_V3)
+### API Key Authentication (PACKMIND_API_KEY)
 
-You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instead of the interactive login flow. This is the recommended approach for:
+You can authenticate using the `PACKMIND_API_KEY` environment variable instead of the interactive login flow. This is the recommended approach for:
 
 - **CI/CD pipelines** — Automated environments where interactive login isn't possible
 - **Docker containers** — Pass the API key as an environment variable
@@ -203,16 +203,16 @@ You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instea
 
 #### Setting the Environment Variable
 
-Set the `PACKMIND_API_KEY_V3` environment variable with your API key:
+Set the `PACKMIND_API_KEY` environment variable with your API key:
 
 ```bash
-export PACKMIND_API_KEY_V3="your-api-key-here"
+export PACKMIND_API_KEY="your-api-key-here"
 ```
 
 To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.):
 
 ```bash
-echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
+echo 'export PACKMIND_API_KEY="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -221,14 +221,14 @@ source ~/.zshrc
 ```yaml
 - name: Install Packmind packages
   env:
-    PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+    PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
   run: packmind-cli install
 ```
 
 <Tip>
   **Credential Priority** — When both a credentials file and the
-  `PACKMIND_API_KEY_V3` environment variable exist, the environment variable
-  takes precedence.
+  `PACKMIND_API_KEY` environment variable exist, the environment variable takes
+  precedence.
 </Tip>
 
 ## Init Command

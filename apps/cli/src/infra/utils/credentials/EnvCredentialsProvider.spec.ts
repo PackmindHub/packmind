@@ -31,7 +31,6 @@ describe('EnvCredentialsProvider', () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
     delete process.env.PACKMIND_API_KEY;
-    delete process.env.PACKMIND_API_KEY_V3;
   });
 
   afterAll(() => {
@@ -49,32 +48,9 @@ describe('EnvCredentialsProvider', () => {
       });
     });
 
-    describe('when only PACKMIND_API_KEY_V3 is set', () => {
-      it('returns the PACKMIND_API_KEY_V3 source name', () => {
-        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
-        const provider = new EnvCredentialsProvider();
-
-        expect(provider.getSourceName()).toBe(
-          'PACKMIND_API_KEY_V3 environment variable',
-        );
-      });
-    });
-
     describe('when PACKMIND_API_KEY is set', () => {
       it('returns the PACKMIND_API_KEY source name', () => {
         process.env.PACKMIND_API_KEY = createTestApiKey({});
-        const provider = new EnvCredentialsProvider();
-
-        expect(provider.getSourceName()).toBe(
-          'PACKMIND_API_KEY environment variable',
-        );
-      });
-    });
-
-    describe('when both env variables are set', () => {
-      it('prefers PACKMIND_API_KEY', () => {
-        process.env.PACKMIND_API_KEY = createTestApiKey({});
-        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
         const provider = new EnvCredentialsProvider();
 
         expect(provider.getSourceName()).toBe(
@@ -93,32 +69,21 @@ describe('EnvCredentialsProvider', () => {
       });
     });
 
-    describe('when env variables are empty', () => {
+    describe('when env variable is empty', () => {
       it('returns false', () => {
         process.env.PACKMIND_API_KEY = '';
-        process.env.PACKMIND_API_KEY_V3 = '';
         const provider = new EnvCredentialsProvider();
 
         expect(provider.hasCredentials()).toBe(false);
       });
     });
 
-    describe('when env variables are whitespace only', () => {
+    describe('when env variable is whitespace only', () => {
       it('returns false', () => {
         process.env.PACKMIND_API_KEY = '   ';
-        process.env.PACKMIND_API_KEY_V3 = '   ';
         const provider = new EnvCredentialsProvider();
 
         expect(provider.hasCredentials()).toBe(false);
-      });
-    });
-
-    describe('when PACKMIND_API_KEY_V3 is set', () => {
-      it('returns true', () => {
-        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
-        const provider = new EnvCredentialsProvider();
-
-        expect(provider.hasCredentials()).toBe(true);
       });
     });
 
@@ -151,7 +116,7 @@ describe('EnvCredentialsProvider', () => {
     });
 
     it('returns credentials with host from API key', () => {
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({
+      process.env.PACKMIND_API_KEY = createTestApiKey({
         host: 'https://custom.host.com',
       });
       const provider = new EnvCredentialsProvider();
@@ -162,7 +127,7 @@ describe('EnvCredentialsProvider', () => {
     });
 
     it('returns credentials with user name from JWT', () => {
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({
+      process.env.PACKMIND_API_KEY = createTestApiKey({
         user: { name: 'John Doe', userId: 'user-123' },
       });
       const provider = new EnvCredentialsProvider();
@@ -173,7 +138,7 @@ describe('EnvCredentialsProvider', () => {
     });
 
     it('returns credentials with organization name from JWT', () => {
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({
+      process.env.PACKMIND_API_KEY = createTestApiKey({
         organization: {
           id: 'org-123',
           name: 'My Organization',
@@ -190,7 +155,7 @@ describe('EnvCredentialsProvider', () => {
 
     it('returns credentials with expiration date from JWT', () => {
       const expTimestamp = Math.floor(Date.now() / 1000) + 3600;
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({ exp: expTimestamp });
+      process.env.PACKMIND_API_KEY = createTestApiKey({ exp: expTimestamp });
       const provider = new EnvCredentialsProvider();
 
       const credentials = provider.loadCredentials();
@@ -200,7 +165,7 @@ describe('EnvCredentialsProvider', () => {
 
     it('returns credentials with the original API key', () => {
       const apiKey = createTestApiKey({});
-      process.env.PACKMIND_API_KEY_V3 = apiKey;
+      process.env.PACKMIND_API_KEY = apiKey;
       const provider = new EnvCredentialsProvider();
 
       const credentials = provider.loadCredentials();
@@ -210,58 +175,12 @@ describe('EnvCredentialsProvider', () => {
 
     describe('when JWT has no exp claim', () => {
       it('returns undefined expiresAt', () => {
-        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
+        process.env.PACKMIND_API_KEY = createTestApiKey({});
         const provider = new EnvCredentialsProvider();
 
         const credentials = provider.loadCredentials();
 
         expect(credentials?.expiresAt).toBeUndefined();
-      });
-    });
-
-    describe('when both env variables are set', () => {
-      let credentials: ReturnType<EnvCredentialsProvider['loadCredentials']>;
-      const preferredKey = createTestApiKey({
-        host: 'https://preferred.host.com',
-      });
-
-      beforeEach(() => {
-        const fallbackKey = createTestApiKey({
-          host: 'https://fallback.host.com',
-        });
-        process.env.PACKMIND_API_KEY = preferredKey;
-        process.env.PACKMIND_API_KEY_V3 = fallbackKey;
-        const provider = new EnvCredentialsProvider();
-        credentials = provider.loadCredentials();
-      });
-
-      it('returns the API key from PACKMIND_API_KEY', () => {
-        expect(credentials?.apiKey).toBe(preferredKey);
-      });
-
-      it('returns the host from PACKMIND_API_KEY', () => {
-        expect(credentials?.host).toBe('https://preferred.host.com');
-      });
-    });
-
-    describe('when only PACKMIND_API_KEY_V3 is set', () => {
-      let credentials: ReturnType<EnvCredentialsProvider['loadCredentials']>;
-      const fallbackKey = createTestApiKey({
-        host: 'https://fallback.host.com',
-      });
-
-      beforeEach(() => {
-        process.env.PACKMIND_API_KEY_V3 = fallbackKey;
-        const provider = new EnvCredentialsProvider();
-        credentials = provider.loadCredentials();
-      });
-
-      it('falls back to PACKMIND_API_KEY_V3 for the API key', () => {
-        expect(credentials?.apiKey).toBe(fallbackKey);
-      });
-
-      it('falls back to PACKMIND_API_KEY_V3 for the host', () => {
-        expect(credentials?.host).toBe('https://fallback.host.com');
       });
     });
   });
