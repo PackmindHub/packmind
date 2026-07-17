@@ -2,28 +2,52 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Param,
   Body,
   Request,
   Query,
   ConflictException,
+  ForbiddenException,
+  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   CheckDirectoryExistenceResult,
+  GetTrackedRepositoryResponse,
   GitProviderId,
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
+  NoTrackedRepositoryError,
   OrganizationId,
+  RepositoryAlreadyTrackedError,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  OrganizationAdminRequiredError,
+} from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
 interface AddGitRepoDto {
   gitProviderId: GitProviderId;
+  owner: string;
+  repo: string;
+  branch: string;
+}
+
+interface SetTrackedRepositoryDto {
+  owner: string;
+  repo: string;
+  branch: string;
+  origin: 'init' | 'track';
+  providerVendor?: string;
+  gitRemoteUrl?: string;
+}
+
+interface UpdateTrackedBranchDto {
   owner: string;
   repo: string;
   branch: string;
@@ -83,6 +107,120 @@ export class GitRepositoriesController {
 
       throw error;
     }
+  }
+
+  @Get('tracked-repository')
+  async getTrackedRepository(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+  ): Promise<GetTrackedRepositoryResponse> {
+    const userId = req.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/git/repositories/tracked-repository - Fetching tracked repository',
+      { organizationId, owner, repo },
+    );
+
+    await this.assertTrackingFeatureEnabled(userId);
+
+    try {
+      return await this.gitRepositoriesService.getTrackedRepository(
+        userId,
+        organizationId,
+        owner,
+        repo,
+      );
+    } catch (error) {
+      throw this.mapTrackingError(error);
+    }
+  }
+
+  @Post('tracked-repository')
+  async setTrackedRepository(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: SetTrackedRepositoryDto,
+  ): Promise<GitRepo> {
+    const userId = req.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/git/repositories/tracked-repository - Setting tracked repository',
+      { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
+    );
+
+    await this.assertTrackingFeatureEnabled(userId);
+
+    try {
+      return await this.gitRepositoriesService.setTrackedRepository(
+        userId,
+        organizationId,
+        dto.owner,
+        dto.repo,
+        dto.branch,
+        dto.origin,
+        dto.providerVendor,
+        dto.gitRemoteUrl,
+      );
+    } catch (error) {
+      throw this.mapTrackingError(error);
+    }
+  }
+
+  @Put('tracked-repository')
+  async updateTrackedBranch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: UpdateTrackedBranchDto,
+  ): Promise<GitRepo> {
+    const userId = req.user.userId;
+
+    this.logger.info(
+      'PUT /organizations/:orgId/git/repositories/tracked-repository - Updating tracked branch',
+      { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
+    );
+
+    await this.assertTrackingFeatureEnabled(userId);
+
+    try {
+      return await this.gitRepositoriesService.updateTrackedBranch(
+        userId,
+        organizationId,
+        dto.owner,
+        dto.repo,
+        dto.branch,
+      );
+    } catch (error) {
+      throw this.mapTrackingError(error);
+    }
+  }
+
+  private async assertTrackingFeatureEnabled(
+    userId: AuthenticatedRequest['user']['userId'],
+  ): Promise<void> {
+    const enabled =
+      await this.gitRepositoriesService.isTrackingFeatureEnabled(userId);
+
+    if (!enabled) {
+      // Kill-switch: behave as if the feature does not exist.
+      throw new NotFoundException('Cannot GET /tracked-repository');
+    }
+  }
+
+  private mapTrackingError(error: unknown): unknown {
+    if (
+      error instanceof RepositoryAlreadyTrackedError ||
+      error instanceof NoTrackedRepositoryError
+    ) {
+      return new ConflictException(error.message);
+    }
+
+    if (error instanceof OrganizationAdminRequiredError) {
+      return new ForbiddenException(error.message);
+    }
+
+    return error;
   }
 
   @Get()
