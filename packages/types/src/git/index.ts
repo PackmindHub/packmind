@@ -5,4 +5,5 @@ export * from './GitRepo';
 export * from './OrganizationGitHubApp';
 export * from './errors';
 export * from './contracts';
+export * from './events';
 export * from './ports';

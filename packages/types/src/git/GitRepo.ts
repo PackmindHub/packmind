@@ -7,4 +7,5 @@ export type GitRepo = {
   repo: string;
   branch: string;
   providerId: GitProviderId;
+  isTracked: boolean;
 };

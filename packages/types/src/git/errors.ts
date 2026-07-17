@@ -197,6 +197,47 @@ export class GitProviderDisplayNameNotEditableError extends Error {
 }
 
 /**
+ * Error thrown when attempting to track a repository that already has a
+ * different branch tracked for the same (organization, owner, repo).
+ */
+export class RepositoryAlreadyTrackedError extends Error {
+  constructor(
+    public readonly owner: string,
+    public readonly repo: string,
+    public readonly trackedBranch: string,
+  ) {
+    super(
+      `Repository ${owner}/${repo} is already tracked on branch '${trackedBranch}'`,
+    );
+    this.name = 'RepositoryAlreadyTrackedError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, RepositoryAlreadyTrackedError);
+    }
+  }
+}
+
+/**
+ * Error thrown when attempting to update the tracked branch of a repository
+ * that has nothing tracked yet.
+ */
+export class NoTrackedRepositoryError extends Error {
+  constructor(
+    public readonly owner: string,
+    public readonly repo: string,
+  ) {
+    super(
+      'Nothing is tracked yet — run `packmind init` or `packmind track` to start tracking.',
+    );
+    this.name = 'NoTrackedRepositoryError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, NoTrackedRepositoryError);
+    }
+  }
+}
+
+/**
  * Error thrown when attempting to use a git remote URL with an unsupported provider
  */
 export class UnsupportedGitProviderError extends Error {
