@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { LuX } from 'react-icons/lu';
-import { PMBadge, PMBox, PMIcon, PMText, pmToaster } from '@packmind/ui';
+import { Link as RouterLink } from 'react-router';
+import {
+  PMBadge,
+  PMBox,
+  PMIcon,
+  PMLink,
+  PMText,
+  pmToaster,
+} from '@packmind/ui';
 import {
   OrganizationId,
   PackageResponse,
@@ -16,6 +24,9 @@ import {
 import { usePackagesForArtifact } from '../../hooks/usePackagesForArtifact';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../../shared/utils/routes';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
 type ArtifactId = StandardId | CommandId | SkillId;
@@ -29,9 +40,10 @@ interface MembershipChipsProps {
 }
 
 /**
- * Inline, removable package chips for an artifact row in a list. The × asks
- * for confirmation only when the package is live on a target (it keeps
- * shipping until the next sync); otherwise it removes right away.
+ * Inline, removable package chips for an artifact row in a list. The package
+ * name links to the package page. The × asks for confirmation only when the
+ * package is live on a target (it keeps shipping until the next sync);
+ * otherwise it removes right away.
  */
 export const MembershipChips = ({
   artifactId,
@@ -52,6 +64,8 @@ export const MembershipChips = ({
   const { getDeployedTargets } = usePackageDeploymentStatus(spaceId);
   const { mutateAsync: removeArtefacts } =
     useRemoveArtefactsFromPackageMutation();
+  const { organization } = useAuthContext();
+  const { spaceSlug } = useCurrentSpace();
 
   if (isLoading || isError) return null;
 
@@ -108,9 +122,41 @@ export const MembershipChips = ({
       <PMBox display="flex" flexWrap="wrap" gap={1}>
         {packages.map((pkg) => (
           <PMBadge key={pkg.id} variant="subtle" size="sm">
-            <PMText variant="small" truncate maxWidth="160px" title={pkg.name}>
-              {pkg.name}
-            </PMText>
+            {organization?.slug && spaceSlug ? (
+              <PMLink
+                asChild
+                variant="plain"
+                fontSize="xs"
+                lineHeight="shorter"
+                color="text.primary"
+                _hover={{ textDecoration: 'underline', color: 'text.primary' }}
+                display="inline-block"
+                maxWidth="160px"
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+                title={pkg.name}
+              >
+                <RouterLink
+                  to={routes.space.toPackage(
+                    organization.slug,
+                    spaceSlug,
+                    pkg.id.toString(),
+                  )}
+                >
+                  {pkg.name}
+                </RouterLink>
+              </PMLink>
+            ) : (
+              <PMText
+                variant="small"
+                truncate
+                maxWidth="160px"
+                title={pkg.name}
+              >
+                {pkg.name}
+              </PMText>
+            )}
             <PMBox
               as="button"
               display="inline-flex"
