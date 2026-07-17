@@ -6,7 +6,9 @@ export type GetTrackedRepositoryCommand = PackmindCommand & {
   repo: string;
 };
 
-export type GetTrackedRepositoryResponse = GitRepo | null;
+export type GetTrackedRepositoryResponse = {
+  gitRepo: GitRepo | null;
+};
 
 export type IGetTrackedRepositoryUseCase = IUseCase<
   GetTrackedRepositoryCommand,

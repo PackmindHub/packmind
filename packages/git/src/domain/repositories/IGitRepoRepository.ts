@@ -1,5 +1,6 @@
 import { GitRepo } from '@packmind/types';
 import { GitProviderId } from '@packmind/types';
+import { GitRepoId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
@@ -19,5 +20,11 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
   ): Promise<GitRepo | null>;
   findByProviderId(providerId: GitProviderId): Promise<GitRepo[]>;
   findByOrganizationId(organizationId: OrganizationId): Promise<GitRepo[]>;
+  findTrackedByOwnerRepoInOrganization(
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+  ): Promise<GitRepo | null>;
+  updateTracked(gitRepoId: GitRepoId, isTracked: boolean): Promise<GitRepo>;
   list(organizationId?: OrganizationId): Promise<GitRepo[]>;
 }

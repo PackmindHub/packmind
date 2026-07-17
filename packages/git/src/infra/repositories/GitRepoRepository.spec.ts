@@ -233,6 +233,110 @@ describe('GitRepoRepository', () => {
     });
   });
 
+  describe('findTrackedByOwnerRepoInOrganization', () => {
+    it('returns the tracked repo for the owner/repo in the organization', async () => {
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'widgets',
+          branch: 'main',
+          providerId: testProvider.id,
+          isTracked: true,
+        }),
+      );
+
+      const found =
+        await gitRepoRepository.findTrackedByOwnerRepoInOrganization(
+          testOrganization.id,
+          'acme',
+          'widgets',
+        );
+
+      expect(found).toMatchObject({
+        owner: 'acme',
+        repo: 'widgets',
+        branch: 'main',
+        isTracked: true,
+      });
+    });
+
+    it('returns null when no branch is tracked for the owner/repo', async () => {
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'widgets',
+          branch: 'main',
+          providerId: testProvider.id,
+          isTracked: false,
+        }),
+      );
+
+      const found =
+        await gitRepoRepository.findTrackedByOwnerRepoInOrganization(
+          testOrganization.id,
+          'acme',
+          'widgets',
+        );
+
+      expect(found).toBeNull();
+    });
+
+    it('does not return a tracked repo from another organization', async () => {
+      const otherOrganization = await organizationRepository.save({
+        id: createOrganizationId(uuidv4()),
+        name: 'Other Organization',
+        slug: 'other-organization',
+      });
+      const otherProvider = await gitProviderRepository.save(
+        gitProviderFactory({ organizationId: otherOrganization.id }),
+      );
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'widgets',
+          branch: 'main',
+          providerId: otherProvider.id,
+          isTracked: true,
+        }),
+      );
+
+      const found =
+        await gitRepoRepository.findTrackedByOwnerRepoInOrganization(
+          testOrganization.id,
+          'acme',
+          'widgets',
+        );
+
+      expect(found).toBeNull();
+    });
+  });
+
+  describe('updateTracked', () => {
+    it('sets the tracked flag to true', async () => {
+      const gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: false }),
+      );
+
+      const updated = await gitRepoRepository.updateTracked(gitRepo.id, true);
+
+      expect(updated.isTracked).toBe(true);
+      const reloaded = await gitRepoRepository.findById(gitRepo.id);
+      expect(reloaded?.isTracked).toBe(true);
+    });
+
+    it('clears the tracked flag to false', async () => {
+      const gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+      );
+
+      const updated = await gitRepoRepository.updateTracked(gitRepo.id, false);
+
+      expect(updated.isTracked).toBe(false);
+      const reloaded = await gitRepoRepository.findById(gitRepo.id);
+      expect(reloaded?.isTracked).toBe(false);
+    });
+  });
+
   describe('list with organization ID', () => {
     let gitRepo: GitRepo;
     let gitReposByOrg: GitRepo[];
