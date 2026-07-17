@@ -2,7 +2,6 @@ import { PMAlertDialog, PMButton, PMHStack, PMBadge } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
-import { AddToPackagesButton } from '../../deployments/components/AddToPackagesDialog';
 import { DownloadSkillPopover } from './DownloadSkillPopover';
 
 type SkillActionsProps = {
@@ -42,15 +41,6 @@ export const SkillActions = ({
         skillId={skillId}
         organizationId={organizationId}
         spaceId={spaceId}
-      />
-      <AddToPackagesButton
-        artifactId={skillId}
-        artifactType="skill"
-        artifactKindLabel="skill"
-        organizationId={organizationId}
-        spaceId={spaceId}
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
       />
       {pendingCount > 0 && (
         <PMButton

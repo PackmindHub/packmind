@@ -24,7 +24,7 @@ import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import { PackageCountBadge } from '../../deployments/components/PackageCountBadge';
+import { MembershipChips } from '../../deployments/components/MembershipChips';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
@@ -340,11 +340,10 @@ export const StandardsList = ({
           }
         : {}),
       packages: (
-        <PackageCountBadge
+        <MembershipChips
           artifactId={standard.id}
           artifactType="standard"
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
+          artifactName={standard.name}
           spaceId={spaceId}
           organizationId={organization?.id}
         />

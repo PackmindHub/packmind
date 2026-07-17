@@ -22,10 +22,8 @@ import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import {
-  PackageCountBadge,
-  formatPackageNames,
-} from '../../deployments/components/PackageCountBadge';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { MembershipChips } from '../../deployments/components/MembershipChips';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { AddToPackagesBatchAction } from '../../deployments/components/AddToPackagesDialog';
@@ -230,11 +228,10 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             }
           : {}),
         packages: (
-          <PackageCountBadge
+          <MembershipChips
             artifactId={skill.id}
             artifactType="skill"
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
+            artifactName={skill.name}
             spaceId={spaceId}
             organizationId={organization?.id}
           />
