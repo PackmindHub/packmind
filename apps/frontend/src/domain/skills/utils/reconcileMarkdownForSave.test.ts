@@ -202,6 +202,168 @@ describe('reconcileMarkdownForSave', () => {
     });
   });
 
+  describe('with serializer escaping and padding noise in an unchanged table', () => {
+    it('keeps the original table bytes', () => {
+      const oldValue =
+        '# Skill\n\n| Option | Directories |\n|--------|-------------|\n| Packages (packages/*) | `packages/*/src/**` |\n';
+      const newValueFromEditor =
+        '# Skill\n\n| Option                 | Directories          |\n| ---------------------- | -------------------- |\n| Packages (packages/\\*) | `packages/*/src/**`  |\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe(oldValue);
+    });
+  });
+
+  describe('with bold re-serialized as split emphasis runs around inline code', () => {
+    it('keeps the original paragraph bytes', () => {
+      const oldValue =
+        '# Skill\n\nGrep terms, **scoped to the `{target_domains}` directories only**. Then stop.\n';
+      const newValueFromEditor =
+        '# Skill\n\nGrep terms, **scoped to the** **`{target_domains}`** **directories only**. Then stop.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe(oldValue);
+    });
+  });
+
+  describe('with a tight nested list re-serialized as loose with different markers', () => {
+    it('keeps the original nested list bytes', () => {
+      const oldValue =
+        '# Skill\n\n1. **Rules** — each rule block:\n   - Rule number and title\n   - Each `## Example N` with its narrative\n2. Other point.\n';
+      const newValueFromEditor =
+        '# Skill\n\n1. **Rules** — each rule block:\n\n   * Rule number and title\n\n   * Each `## Example N` with its narrative\n\n2. Other point.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe(oldValue);
+    });
+  });
+
+  describe('with two headings edited far apart plus spacing noise', () => {
+    it('changes exactly the two heading lines and nothing else', () => {
+      const oldValue =
+        '## Reference\n\nIntro paragraph.\n\n## 1. Parse the EM Spec\n\nLaunch an agent. Replace:\n- `{summary}` with the summary\n- `{domains}` with the domains\n\nClosing paragraph.\n- The report file path\n';
+      // Milkdown: edits both headings, inserts a blank line between the
+      // paragraph and its contiguous list, changes bullet markers, and adds
+      // trailing blank lines at EOF.
+      const newValueFromEditor =
+        '## References\n\nIntro paragraph.\n\n## 1. Parse the EM Specs\n\nLaunch an agent. Replace:\n\n* `{summary}` with the summary\n\n* `{domains}` with the domains\n\nClosing paragraph.\n\n* The report file path\n\n\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe(
+        oldValue
+          .replace('## Reference\n', '## References\n')
+          .replace('## 1. Parse the EM Spec\n', '## 1. Parse the EM Specs\n'),
+      );
+    });
+  });
+
+  describe('with a genuine spacing edit inside an inline code span', () => {
+    it('uses the edited version, not the old bytes', () => {
+      const oldValue = '# Skill\n\nRun `foo  --bar` now.\n';
+      const newValueFromEditor = '# Skill\n\nRun `foo --bar` now.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('`foo --bar`');
+      expect(result).not.toContain('`foo  --bar`');
+    });
+  });
+
+  describe('with emphasis genuinely replaced by an escaped literal', () => {
+    it('detects star emphasis turned into literal stars', () => {
+      const oldValue = '# Skill\n\nRate it *star* please.\n';
+      const newValueFromEditor = '# Skill\n\nRate it \\*star\\* please.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('\\*star\\*');
+    });
+
+    it('detects a literal backtick turned into a code span', () => {
+      const oldValue = '# Skill\n\nType \\`x\\` here.\n';
+      const newValueFromEditor = '# Skill\n\nType `x` here.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('Type `x` here.');
+    });
+  });
+
+  describe('with an ordered list renumbered to a different start', () => {
+    it('uses the new numbering', () => {
+      const oldValue = '# Skill\n\n1. alpha\n2. beta\n';
+      const newValueFromEditor = '# Skill\n\n5. alpha\n6. beta\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('5. alpha');
+    });
+  });
+
+  describe('with leading blank lines in the original document', () => {
+    it('preserves them when an edit exists elsewhere', () => {
+      const oldValue = '\n\n# Skill\n\nParagraph.\n';
+      const newValueFromEditor = '# Skills\n\nParagraph.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe('\n\n# Skills\n\nParagraph.\n');
+    });
+  });
+
+  describe('with a genuine hard break added by the user', () => {
+    it('detects the hard break and uses the edited version', () => {
+      const oldValue = '# Skill\n\nline one line two\n';
+      const newValueFromEditor = '# Skill\n\nline one\\\nline two\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('line one\\\nline two');
+    });
+  });
+
+  describe('with a soft-wrapped paragraph joined by the editor', () => {
+    it('keeps the original wrapping as noise', () => {
+      const oldValue = '# Skill\n\nline one\nline two\n';
+      const newValueFromEditor = '# Skill\n\nline one line two\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toBe(oldValue);
+    });
+  });
+
+  describe('with an untouched hard break alongside an edit elsewhere', () => {
+    it('keeps the original hard-break bytes', () => {
+      const oldValue = '# Skill\n\nline one\\\nline two\n\nOther paragraph.\n';
+      const newValueFromEditor =
+        '# Skill\n\nline one\\\nline two\n\nOther paragraph EDITED.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('line one\\\nline two');
+      expect(result).toContain('Other paragraph EDITED.');
+      expect(result).not.toContain('Other paragraph.\n');
+    });
+  });
+
+  describe('with a genuine user edit adding bold to one word', () => {
+    it('detects the change and uses the edited version', () => {
+      const oldValue = '# Skill\n\nThis point is important to remember.\n';
+      const newValueFromEditor =
+        '# Skill\n\nThis point is **important** to remember.\n';
+
+      const result = reconcileMarkdownForSave(oldValue, newValueFromEditor);
+
+      expect(result).toContain('**important**');
+      expect(result).not.toContain('is important to');
+    });
+  });
+
   describe('with a fenced code block containing internal blank lines', () => {
     it('preserves the code block exactly, untouched, alongside an edited paragraph', () => {
       const codeBlock = '```ts\nfunction a() {\n\n  return 1;\n}\n```';
