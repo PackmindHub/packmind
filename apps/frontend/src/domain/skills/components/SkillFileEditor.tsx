@@ -144,7 +144,7 @@ export const SkillFileEditor = ({
       </PMBox>
 
       <PMHStack
-        justify="flex-end"
+        justify="center"
         gap={2}
         position="sticky"
         bottom={0}
