@@ -19,6 +19,12 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          # PAT with `workflow` scope: the default GITHUB_TOKEN is a GitHub App
+          # token and is refused when a push touches .github/workflows/* files.
+          token: ${{ secrets.PACKMIND_BOT_PAT }}
+          # Force a pristine tree so a stale self-hosted runner workspace can't
+          # leak unrelated changes (e.g. build.yml) into the artifacts commit.
+          clean: true
 
       - name: Update Packmind artifacts
         uses: PackmindHub/update-packmind-artifacts@v1
