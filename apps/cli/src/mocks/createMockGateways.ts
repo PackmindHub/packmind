@@ -8,6 +8,7 @@ import { IStandardsGateway } from '../domain/repositories/IStandardsGateway';
 import { IPackagesGateway } from '../domain/repositories/IPackagesGateway';
 import { IDeploymentGateway } from '../domain/repositories/IDeploymentGateway';
 import { IOrganizationGateway } from '../domain/repositories/IOrganizationGateway';
+import { IRepositoryTrackingGateway } from '../domain/repositories/IRepositoryTrackingGateway';
 
 export type MockPackmindGatewayOverrides = {
   changeProposals?: jest.Mocked<IChangeProposalGateway>;
@@ -19,6 +20,7 @@ export type MockPackmindGatewayOverrides = {
   packages?: jest.Mocked<IPackagesGateway>;
   deployment?: jest.Mocked<IDeploymentGateway>;
   organization?: jest.Mocked<IOrganizationGateway>;
+  repositoryTracking?: jest.Mocked<IRepositoryTrackingGateway>;
 };
 
 export function createMockPackmindGateway(
@@ -34,6 +36,18 @@ export function createMockPackmindGateway(
     packages: createMockPackagesGateway(),
     deployment: createMockDeploymentGateway(),
     organization: createMockOrganizationGateway(),
+    repositoryTracking: createMockRepositoryTrackingGateway(),
+    ...overrides,
+  };
+}
+
+export function createMockRepositoryTrackingGateway(
+  overrides?: Partial<jest.Mocked<IRepositoryTrackingGateway>>,
+): jest.Mocked<IRepositoryTrackingGateway> {
+  return {
+    getTrackedRepository: jest.fn(),
+    setTrackedRepository: jest.fn(),
+    updateTrackedBranch: jest.fn(),
     ...overrides,
   };
 }

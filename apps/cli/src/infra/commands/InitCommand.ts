@@ -30,6 +30,8 @@ export const initCommand = command({
         packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
       ensureCliVersion: packmindCliHexa.ensureCliVersion.bind(packmindCliHexa),
       cliVersion: CLI_VERSION,
+      isTTY: Boolean(process.stdin.isTTY),
+      trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
     });
 
     if (!result.success) {
