@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
-import { PMAlert, PMBox, PMButton, PMHStack, PMVStack } from '@packmind/ui';
+import {
+  PMAlert,
+  PMBox,
+  PMButton,
+  PMHStack,
+  PMVStack,
+  pmToaster,
+} from '@packmind/ui';
 import { SkillId } from '@packmind/types';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
@@ -89,6 +96,11 @@ export const SkillFileEditor = ({
           id: skillId,
           from: currentVersion ?? response.skillVersion.version - 1,
           to: response.skillVersion.version,
+        });
+        pmToaster.create({
+          type: 'success',
+          title: 'File saved',
+          description: 'Your changes have been saved.',
         });
       }
 

@@ -12,6 +12,7 @@ import { SkillFileEditor } from './SkillFileEditor';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 
 const mockTrack = jest.fn();
+const mockToasterCreate = jest.fn();
 
 jest.mock(
   '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
@@ -19,6 +20,11 @@ jest.mock(
     useAnalytics: () => ({ track: mockTrack }),
   }),
 );
+
+jest.mock('@packmind/ui', () => ({
+  ...jest.requireActual('@packmind/ui'),
+  pmToaster: { create: (...args: unknown[]) => mockToasterCreate(...args) },
+}));
 
 jest.mock('../../../shared/components/editor/MarkdownEditorWithMode', () => ({
   MarkdownEditorWithMode: ({
@@ -203,6 +209,36 @@ describe('SkillFileEditor', () => {
         to: 2,
       });
     });
+
+    it('shows a success toast', async () => {
+      const skillVersion = {
+        id: createSkillVersionId('version-2'),
+        skillId,
+        version: 2,
+        userId: createUserId('user-1'),
+        name: 'My skill',
+        slug: 'my-skill',
+        description: 'desc',
+        prompt: 'Updated content',
+      };
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        skillVersion,
+        versionCreated: true,
+      });
+      mockUseUpdateSkillFileMutation.mockReturnValue(
+        createMockMutation({ mutateAsync: mockMutateAsync }),
+      );
+      renderWithProviders(<SkillFileEditor {...defaultProps} />);
+      typeContent('Updated content');
+
+      await clickSave();
+
+      expect(mockToasterCreate).toHaveBeenCalledWith({
+        type: 'success',
+        title: 'File saved',
+        description: 'Your changes have been saved.',
+      });
+    });
   });
 
   describe('when the mutation fails', () => {
@@ -304,6 +340,14 @@ describe('SkillFileEditor', () => {
       await clickSave();
 
       expect(onSaved).toHaveBeenCalled();
+    });
+
+    it('does not show a toast', async () => {
+      renderWithProviders(<SkillFileEditor {...defaultProps} />);
+
+      await clickSave();
+
+      expect(mockToasterCreate).not.toHaveBeenCalled();
     });
   });
 
