@@ -3,7 +3,6 @@ import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/pr
 import { PMAlert, PMBox, PMButton, PMHStack, PMVStack } from '@packmind/ui';
 import { SkillId } from '@packmind/types';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
-import { reconcileMarkdownForSave } from '../utils/reconcileMarkdownForSave';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 import {
   IMarkdownEditorWithModeApi,
@@ -76,22 +75,12 @@ export const SkillFileEditor = ({
       return;
     }
 
-    // The WYSIWYG editor normalizes markdown formatting on load; reconcile
-    // its output against the original so unedited regions keep their
-    // original formatting. On failure, fall back to the raw editor content.
-    let reconciledContent: string;
-    try {
-      reconciledContent = reconcileMarkdownForSave(initialContent, content);
-    } catch {
-      reconciledContent = content;
-    }
-
     try {
       const response = await updateSkillFileMutation.mutateAsync({
         skillId,
         slug: skillSlug,
         filePath,
-        content: reconciledContent,
+        content,
       });
 
       if (response.versionCreated && response.skillVersion) {
