@@ -29,6 +29,8 @@ import {
   SpaceId,
   StandardId,
   AddArtefactsToPackageCommand,
+  RemoveArtefactsFromPackageCommand,
+  RemoveArtefactsFromPackageResponse,
 } from '@packmind/types';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -59,6 +61,12 @@ type UpdatePackageApiResponse = Omit<UpdatePackageResponse, 'package'> & {
 };
 type AddArtefactsToPackageApiResponse = Omit<
   AddArtefactsToPackageResponse,
+  'package'
+> & {
+  package: PackageResponse;
+};
+type RemoveArtefactsFromPackageApiResponse = Omit<
+  RemoveArtefactsFromPackageResponse,
   'package'
 > & {
   package: PackageResponse;
@@ -386,6 +394,41 @@ export class OrganizationsSpacesPackagesController {
       recipeIds,
       skillIds: body.skillIds,
       originSkill: body.originSkill,
+    });
+    return { ...response, package: toPackageResponse(response.package) };
+  }
+
+  /**
+   * Remove artifacts from an existing package (membership only)
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/remove-artifacts
+   */
+  @Post(':packageId/remove-artifacts')
+  async removeArtefactsFromPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: RemoveArtefactsFromPackageCommand & { commandIds?: CommandId[] },
+  ): Promise<RemoveArtefactsFromPackageApiResponse> {
+    const userId = request.user.userId;
+
+    // Accept BOTH keys: new `commandIds` wins, legacy `recipeIds` fallback.
+    const recipeIds = body.commandIds ?? body.recipeIds;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/remove-artifacts',
+      { organizationId, spaceId, packageId },
+    );
+
+    const response = await this.deploymentsService.removeArtefactsFromPackage({
+      userId,
+      spaceId,
+      organizationId,
+      packageId: packageId,
+      standardIds: body.standardIds,
+      recipeIds,
+      skillIds: body.skillIds,
     });
     return { ...response, package: toPackageResponse(response.package) };
   }

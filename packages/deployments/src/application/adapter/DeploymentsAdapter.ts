@@ -7,6 +7,8 @@ import {
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  RemoveArtefactsFromPackageCommand,
+  RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -105,6 +107,7 @@ import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJob
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUseCase } from '../useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase';
+import { RemoveArtefactsFromPackageUseCase } from '../useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUseCase } from '../useCases/createPackage/CreatePackageUseCase';
 import { UpdatePackageUseCase } from '../useCases/updatePackage/UpdatePackageUseCase';
@@ -187,6 +190,7 @@ export class DeploymentsAdapter
   private _getPackageByIdUseCase!: GetPackageByIdUseCase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUseCase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUseCase;
+  private _removeArtefactsFromPackageUseCase!: RemoveArtefactsFromPackageUseCase;
   private _notifyArtefactsDistributionUseCase!: NotifyArtefactsDistributionUseCase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
@@ -522,6 +526,14 @@ export class DeploymentsAdapter
       this.skillsPort,
     );
 
+    this._removeArtefactsFromPackageUseCase =
+      new RemoveArtefactsFromPackageUseCase(
+        this.spacesPort,
+        this.accountsPort,
+        this.deploymentsServices,
+        ports.eventEmitterService,
+      );
+
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(
       this.accountsPort,
       this.commandsPort,
@@ -781,6 +793,12 @@ export class DeploymentsAdapter
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this._addArtefactsToPackageUseCase.execute(command);
+  }
+
+  async removeArtefactsFromPackage(
+    command: RemoveArtefactsFromPackageCommand,
+  ): Promise<RemoveArtefactsFromPackageResponse> {
+    return this._removeArtefactsFromPackageUseCase.execute(command);
   }
 
   async notifyDistribution(

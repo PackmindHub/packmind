@@ -15,6 +15,7 @@ export { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
 export { NotifyDistributionUseCase } from './notifyDistribution/NotifyDistributionUseCase';
 export { PullContentUseCase } from './PullContentUseCase';
 export { RenderPackageAsPluginUseCase } from './renderPackageAsPlugin/RenderPackageAsPluginUseCase';
+export { RemoveArtefactsFromPackageUseCase } from './removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase';
 export { RemovePackageFromTargetsUseCase } from './RemovePackageFromTargetsUseCase';
 export { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
 export { UpdateTargetUseCase } from './UpdateTargetUseCase';

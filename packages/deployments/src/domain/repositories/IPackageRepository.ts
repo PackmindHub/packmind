@@ -46,4 +46,10 @@ export interface IPackageRepository extends IRepository<Package> {
   removeCommandFromAllPackages(recipeId: CommandId): Promise<void>;
   removeStandardFromAllPackages(standardId: StandardId): Promise<void>;
   removeSkillFromAllPackages(skillId: SkillId): Promise<void>;
+  removeCommands(packageId: PackageId, recipeIds: CommandId[]): Promise<void>;
+  removeStandards(
+    packageId: PackageId,
+    standardIds: StandardId[],
+  ): Promise<void>;
+  removeSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void>;
 }

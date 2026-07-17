@@ -1,6 +1,8 @@
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
+  RemoveArtefactsFromPackageCommand,
+  RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -428,6 +430,21 @@ export interface IDeploymentPort {
   addArtefactsToPackage(
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse>;
+
+  /**
+   * Removes artefacts (recipes/standards/skills) from a package. Only artefacts
+   * currently in the package are removed; the rest are reported as skipped.
+   * Membership only — the artefacts keep shipping to any targets the package is
+   * deployed to until the next sync, then stop. Emits an
+   * ArtefactRemovedFromPackageEvent per removed artefact for drift tracking.
+   *
+   * @param command - Command containing packageId and arrays of recipeIds, standardIds and skillIds to remove
+   * @returns Promise of the updated package with removed/skipped artefact ids
+   * @throws Error if package not found or does not belong to the space
+   */
+  removeArtefactsFromPackage(
+    command: RemoveArtefactsFromPackageCommand,
+  ): Promise<RemoveArtefactsFromPackageResponse>;
 
   /**
    * Notifies about a distribution from external sources (e.g., packmind-cli)

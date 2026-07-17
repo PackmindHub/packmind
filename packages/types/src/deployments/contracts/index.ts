@@ -28,6 +28,7 @@ export * from './PackageResponse';
 export * from './IUpdatePackageUseCase';
 export * from './IDeletePackagesBatchUseCase';
 export * from './IAddArtefactsToPackageUseCase';
+export * from './IRemoveArtefactsFromPackageUseCase';
 export * from './INotifyArtefactsDistribution';
 export * from './INotifyDistributionUseCase';
 export * from './IRemovePackageFromTargetsUseCase';
