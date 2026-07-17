@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:27.021Z",
+  "installedAt": "2026-07-17T08:00:42.705Z",
   "artifacts": {
     "user:standard:cli-command-structure": {
       "name": "CLI Command Structure",
@@ -101,5 +103,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

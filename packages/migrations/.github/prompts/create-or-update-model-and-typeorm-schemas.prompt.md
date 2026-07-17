@@ -1,5 +1,5 @@
 ---
-description: 'Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.'
+description: 'Create or update model and TypeORM schemas'
 agent: 'agent'
 ---
 

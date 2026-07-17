@@ -11,7 +11,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 # Standard: CLI Command Structure
 
-Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/description/args and delegate to separate Handler.ts functions that validate inputs, run PackmindCliHexa with PackmindLogger, handle domain errors, and standardize output/exit codes via consoleLogger utilities to improve testability, maintainability, and consistent user feedback. :
+Enforce clear separation of concerns between command definition (parameters and metadata) and handler logic (validation, execution, and output) in apps/cli commands to improve testability, maintainabi... :
 * Call exit(1) after outputting error messages and exit(0) after success messages
 * Create a separate handler file (ending in Handler.ts) that exports the handler function for each command
 * Define command files (ending in Command.ts) using cmd-ts with only name, description, and args—do not implement handler logic inline
@@ -29,7 +29,7 @@ Full standard is available here for further request: [CLI Command Structure](../
 
 # Standard: CLI Gateway Implementation
 
-Standardize apps/cli/src/infra/repositories/*Gateway.ts PackmindGateway methods to use PackmindHttpClient (getAuthContext and typed request<T> with options for non-GET), delegate to sub-gateways, and expose only Gateway<UseCase> interfaces to reduce boilerplate, enforce type safety, and keep authentication and error handling consistent. :
+When adding new methods to the PackmindGateway class in the CLI application, use the PackmindHttpClient abstraction to avoid code duplication and maintain consistency. The older methods contain extens... :
 * Define the method return type using `Promise<ResponseType>` for type safety
 * Gateway implementations methods should always be typed using `Gateway<UseCase>`
 * Gateway interfaces should only expose `Gateway<UseCase>`
@@ -44,7 +44,7 @@ Full standard is available here for further request: [CLI Gateway Implementation
 
 # Standard: CLI Use Case Structure
 
-Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
+Enforce clean separation between domain contracts and application logic in apps/cli use cases, ensuring use cases focus purely on business operations without presentation concerns like user output or ... :
 * Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types
 * Create new error classes for domain-specific failure scenarios when existing errors do not apply
 * Define Command and Response types in the same file as the use case interface

@@ -3,12 +3,12 @@ name: 'CLI Command Structure'
 paths:
   - "Command files in apps/cli/src/infra/commands/"
 alwaysApply: false
-description: 'Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/description/args and delegate to separate Handler.ts functions that validate inputs, run PackmindCliHexa with PackmindLogger, handle domain errors, and standardize output/exit codes via consoleLogger utilities to improve testability, maintainability, and consistent user feedback.'
+description: 'Enforce clear separation of concerns between command definition (parameters and metadata) and handler logic (validation, execution, and output) in apps/cli commands to improve testability, maintainability, and consistency.'
 ---
 
 # Standard: CLI Command Structure
 
-Enforce cmd-ts CLI command definitions (Command.ts) to contain only name/description/args and delegate to separate Handler.ts functions that validate inputs, run PackmindCliHexa with PackmindLogger, handle domain errors, and standardize output/exit codes via consoleLogger utilities to improve testability, maintainability, and consistent user feedback. :
+Enforce clear separation of concerns between command definition (parameters and metadata) and handler logic (validation, execution, and output) in apps/cli commands to improve testability, maintainabi... :
 * Call exit(1) after outputting error messages and exit(0) after success messages
 * Create a separate handler file (ending in Handler.ts) that exports the handler function for each command
 * Define command files (ending in Command.ts) using cmd-ts with only name, description, and args—do not implement handler logic inline

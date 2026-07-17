@@ -3,12 +3,12 @@ name: 'Frontend Navigation with React Router'
 paths:
   - "apps/frontend/**/*.tsx"
 alwaysApply: false
-description: 'Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx.'
+description: 'This codebase uses React Router v7 with organization and space scoping in URLs (e.g., /org/{orgSlug}/space/{spaceSlug}/recipes). To maintain consistency, improve maintainability, and simplify navigation management across the application, all internal navigation must use centralized utilities instead of manual URL construction. This approach ensures that URL parameter handling (orgSlug, spaceSlug) is abstracted away and reduces the risk of broken links when routes change.'
 ---
 
 # Standard: Frontend Navigation with React Router
 
-Standardize frontend navigation using React Router v7 with centralized utilities in React applications to ensure consistent URL parameter handling and simplify navigation management, particularly when organizing and scoping URLs, across apps/frontend/**/*.tsx. :
+This codebase uses React Router v7 with organization and space scoping in URLs (e.g., /org/{orgSlug}/space/{spaceSlug}/recipes). To maintain consistency, improve maintainability, and simplify navigati... :
 * Omit orgSlug and spaceSlug parameters to use current organization and space context by default and only specify them explicitly when navigating to a different organization or space.
 * Use authentication route methods (routes.auth.*) for authentication-related navigation.
 * Use organization-scoped route methods (routes.org.*) for pages that require only organization context.

@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:27.337Z",
+  "installedAt": "2026-07-17T08:00:42.995Z",
   "artifacts": {
     "user:standard:e2e-page-object": {
       "name": "[E2E] Page object",
@@ -72,5 +74,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

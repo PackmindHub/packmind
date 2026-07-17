@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:28.934Z",
+  "installedAt": "2026-07-17T08:00:44.542Z",
   "artifacts": {
     "user:standard:front-end-ui-and-design-systems": {
       "name": "Front-end UI and Design Systems",
@@ -43,5 +45,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

@@ -1,12 +1,12 @@
 ---
 name: 'Frontend Data Flow'
 alwaysApply: true
-description: 'Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse.'
+description: 'This standard defines the recommended data flow pattern for frontend routes in the Packmind codebase using React Router v7 in framework mode with TanStack Query for data management. It ensures consistent data fetching, loading patterns, and route organization across the application by centralizing data fetching logic in route loaders and ensuring data availability before rendering, which reduces intermediate loading states and promotes reusability of query options.'
 ---
 
 # Standard: Frontend Data Flow
 
-Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse. :
+This standard defines the recommended data flow pattern for frontend routes in the Packmind codebase using React Router v7 in framework mode with TanStack Query for data management. It ensures consist... :
 * Access data via query or mutation hooks in frontend route modules rather than calling gateways directly to maintain separation between data access and presentation layers
 * Consume data in route module components using the useLoaderData() hook to access data returned by the clientLoader
 * Define a crumb property in the handle export of route modules to enable automatic navigation breadcrumb generation

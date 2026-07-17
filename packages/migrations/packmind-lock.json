@@ -6,12 +6,14 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:28.638Z",
+  "installedAt": "2026-07-17T08:00:44.239Z",
   "artifacts": {
     "user:command:create-or-update-model-and-typeorm-schemas": {
       "name": "Create or update model and TypeORM schemas",
@@ -37,11 +39,15 @@
           "agent": "copilot"
         },
         {
+          "path": ".opencode/commands/create-or-update-model-and-typeorm-schemas.md",
+          "agent": "opencode"
+        },
+        {
           "path": ".packmind/commands/create-or-update-model-and-typeorm-schemas.md",
           "agent": "packmind"
         }
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

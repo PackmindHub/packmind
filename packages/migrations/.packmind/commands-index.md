@@ -4,7 +4,7 @@ This file contains all available coding commands that can be used by AI agents (
 
 ## Available Commands
 
-- [Create or update model and TypeORM schemas](commands/create-or-update-model-and-typeorm-schemas.md) : Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.
+- [Create or update model and TypeORM schemas](commands/create-or-update-model-and-typeorm-schemas.md) : Create or update model and TypeORM schemas
 
 
 ---
