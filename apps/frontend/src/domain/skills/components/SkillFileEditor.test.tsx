@@ -26,8 +26,8 @@ jest.mock('@packmind/ui', () => ({
   pmToaster: { create: (...args: unknown[]) => mockToasterCreate(...args) },
 }));
 
-jest.mock('../../../shared/components/editor/MarkdownEditorWithMode', () => ({
-  MarkdownEditorWithMode: ({
+jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
+  MarkdownEditor: ({
     defaultValue,
     onEditorReady,
   }: {
@@ -49,6 +49,9 @@ jest.mock('../../../shared/components/editor/MarkdownEditorWithMode', () => ({
       />
     );
   },
+  MarkdownEditorProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 jest.mock('../api/queries/SkillsQueries', () => ({

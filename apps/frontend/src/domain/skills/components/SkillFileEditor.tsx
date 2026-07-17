@@ -12,9 +12,10 @@ import { SkillId } from '@packmind/types';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 import {
-  IMarkdownEditorWithModeApi,
-  MarkdownEditorWithMode,
-} from '../../../shared/components/editor/MarkdownEditorWithMode';
+  IMarkdownEditorApi,
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../shared/components/editor/MarkdownEditor';
 
 // Mirrors packages/skills/src/application/validator/SkillValidator.ts (SKILL_FILE_MAX_CONTENT_LENGTH)
 const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
@@ -39,21 +40,26 @@ export const SkillFileEditor = ({
   onSaved,
 }: ISkillFileEditorProps) => {
   const [error, setError] = useState<string | null>(null);
+  // The Milkdown editor initializes asynchronously, so onEditorReady fires
+  // after mount rather than during it. Track readiness explicitly so Save
+  // reflects that state instead of silently doing nothing if clicked first.
+  const [isEditorReady, setIsEditorReady] = useState(false);
   const analytics = useAnalytics();
   const updateSkillFileMutation = useUpdateSkillFileMutation();
 
   // Read the markdown synchronously from the editor on save: the WYSIWYG
   // editor's change events are debounced, so state fed by them can lag
   // behind the actual content when Save is clicked right after a keystroke.
-  const editorApiRef = useRef<IMarkdownEditorWithModeApi | null>(null);
+  const editorApiRef = useRef<IMarkdownEditorApi | null>(null);
   // The WYSIWYG editor normalizes markdown on load, so its output can differ
   // from initialContent without any user edit. The no-op comparison must use
   // the normalized baseline captured at mount, not the raw initial content.
   const baselineContentRef = useRef<string | null>(null);
 
-  const handleEditorReady = (api: IMarkdownEditorWithModeApi) => {
+  const handleEditorReady = (api: IMarkdownEditorApi) => {
     editorApiRef.current = api;
     baselineContentRef.current = api.getMarkdown();
+    setIsEditorReady(true);
   };
 
   const isSaving = updateSkillFileMutation.isPending;
@@ -129,10 +135,12 @@ export const SkillFileEditor = ({
         borderRadius="md"
         backgroundColor="background.primary"
       >
-        <MarkdownEditorWithMode
-          defaultValue={initialContent}
-          onEditorReady={handleEditorReady}
-        />
+        <MarkdownEditorProvider>
+          <MarkdownEditor
+            defaultValue={initialContent}
+            onEditorReady={handleEditorReady}
+          />
+        </MarkdownEditorProvider>
       </PMBox>
 
       <PMHStack
@@ -152,7 +160,7 @@ export const SkillFileEditor = ({
           variant="primary"
           onClick={handleSave}
           loading={isSaving}
-          disabled={isSaving}
+          disabled={isSaving || !isEditorReady}
         >
           Save
         </PMButton>
