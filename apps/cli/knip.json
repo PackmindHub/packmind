@@ -1,0 +1,5 @@
+{
+  "entry": ["src/main.ts"],
+  "project": ["src/**/*.ts"],
+  "ignoreFiles": ["src/**/*.spec.ts", "src/mocks/*.ts"]
+}

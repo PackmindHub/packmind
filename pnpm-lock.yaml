@@ -551,30 +551,45 @@ importers:
 
   apps/cli:
     dependencies:
-      '@types/inquirer':
-        specifier: ^9.0.9
-        version: 9.0.9
+      chalk:
+        specifier: ^5.6.0
+        version: 5.6.2
+      cmd-ts:
+        specifier: ^0.14.3
+        version: 0.14.3
+      diff:
+        specifier: ^8.0.3
+        version: 8.0.4
       dotenv:
         specifier: ^16
         version: 16.6.1
       inquirer:
         specifier: ^13.0.2
         version: 13.4.3(@types/node@20.19.9)
+      log-update:
+        specifier: ^8.0.0
+        version: 8.0.0
       minimatch:
         specifier: ^10
         version: 10.2.5
+      open:
+        specifier: ^11.0.0
+        version: 11.0.0
       semver:
         specifier: ^7.7.4
         version: 7.8.1
+      slug:
+        specifier: ^11.0.0
+        version: 11.0.1
       undici:
         specifier: ^7
         version: 7.24.7
       which:
         specifier: ^4.0.0
         version: 4.0.0
-      zod:
-        specifier: ^4.3.5
-        version: 4.4.3
+      yaml:
+        specifier: ^2.8.3
+        version: 2.9.0
     devDependencies:
       '@types/which':
         specifier: ^3.0.4
@@ -888,10 +903,10 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.78.0
-        version: 0.78.0(zod@4.4.3)
+        version: 0.78.0(zod@3.25.76)
       '@google/genai':
         specifier: ^1.34.0
-        version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+        version: 1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@3.25.76))
       '@packmind/accounts':
         specifier: workspace:*
         version: link:../accounts
@@ -909,7 +924,7 @@ importers:
         version: link:../types
       openai:
         specifier: ^6.9.0
-        version: 6.39.0(ws@8.21.0)(zod@4.4.3)
+        version: 6.39.0(ws@8.21.0)(zod@3.25.76)
       typeorm:
         specifier: 0.3.28
         version: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
@@ -8091,12 +8106,6 @@ packages:
         integrity: sha512-ED6LB+Z1AVylNTu7hdzuBqOgMnvG/ld6wGCG8wFnAzKX5uyW2K3WD52v0gnLCTK/VLpXtKckgWuyScYK6cSPaw==,
       }
 
-  '@types/inquirer@9.0.9':
-    resolution:
-      {
-        integrity: sha512-/mWx5136gts2Z2e5izdoRCo46lPp5TMs9R15GTSsgg/XnZyxDWVqoVU3R9lWnccKpqwsJLvRoxbCjoJtZB7DSw==,
-      }
-
   '@types/istanbul-lib-coverage@2.0.6':
     resolution:
       {
@@ -8359,12 +8368,6 @@ packages:
     resolution:
       {
         integrity: sha512-KHPsfX/FoVbUGbyYvk1q9MMQHLPeRZhRJZdO45Q4YjvFkv4hMNghCWTvy7rdKessBsmtz4euWCWAB6/tVpI1Iw==,
-      }
-
-  '@types/through@0.0.33':
-    resolution:
-      {
-        integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==,
       }
 
   '@types/tough-cookie@4.0.5':
@@ -20925,12 +20928,6 @@ packages:
         integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==,
       }
 
-  zod@4.4.3:
-    resolution:
-      {
-        integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==,
-      }
-
   zwitch@2.0.4:
     resolution:
       {
@@ -21029,12 +21026,6 @@ snapshots:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
       zod: 3.25.76
-
-  '@anthropic-ai/sdk@0.78.0(zod@4.4.3)':
-    dependencies:
-      json-schema-to-ts: 3.1.1
-    optionalDependencies:
-      zod: 4.4.3
 
   '@ark-ui/react@5.36.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
@@ -23070,19 +23061,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@google/genai@1.52.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))':
-    dependencies:
-      google-auth-library: 10.6.2
-      p-retry: 4.6.2
-      protobufjs: 7.6.1
-      ws: 8.21.0
-    optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   '@hono/node-server@1.19.14(hono@4.12.23)':
     dependencies:
       hono: 4.12.23
@@ -24087,29 +24065,6 @@ snapshots:
       zod-to-json-schema: 3.25.2(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
-
-  '@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)':
-    dependencies:
-      '@hono/node-server': 1.19.14(hono@4.12.23)
-      ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
-      content-type: 1.0.5
-      cors: 2.8.6
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.1.0
-      express: 5.2.1
-      express-rate-limit: 8.5.2(express@5.2.1)
-      hono: 4.12.23
-      jose: 6.2.3
-      json-schema-typed: 8.0.2
-      pkce-challenge: 5.0.1
-      raw-body: 3.0.2
-      zod: 4.4.3
-      zod-to-json-schema: 3.25.2(zod@4.4.3)
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
@@ -26758,11 +26713,6 @@ snapshots:
     dependencies:
       '@types/node': 20.19.9
 
-  '@types/inquirer@9.0.9':
-    dependencies:
-      '@types/through': 0.0.33
-      rxjs: 7.8.2
-
   '@types/istanbul-lib-coverage@2.0.6': {}
 
   '@types/istanbul-lib-report@3.0.3':
@@ -26906,10 +26856,6 @@ snapshots:
   '@types/stack-utils@2.0.3': {}
 
   '@types/tedious@4.0.14':
-    dependencies:
-      '@types/node': 20.19.9
-
-  '@types/through@0.0.33':
     dependencies:
       '@types/node': 20.19.9
 
@@ -32738,11 +32684,6 @@ snapshots:
       ws: 8.21.0
       zod: 3.25.76
 
-  openai@6.39.0(ws@8.21.0)(zod@4.4.3):
-    optionalDependencies:
-      ws: 8.21.0
-      zod: 4.4.3
-
   opener@1.5.2: {}
 
   optionator@0.9.4:
@@ -35744,13 +35685,6 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  zod-to-json-schema@3.25.2(zod@4.4.3):
-    dependencies:
-      zod: 4.4.3
-    optional: true
-
   zod@3.25.76: {}
-
-  zod@4.4.3: {}
 
   zwitch@2.0.4: {}
