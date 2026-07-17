@@ -93,12 +93,21 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     }
   };
 
+  const skillNamesById = React.useMemo(
+    () =>
+      new Map((skills ?? []).map((skill) => [skill.id.toString(), skill.name])),
+    [skills],
+  );
+
   const renderAddToPackagesAction = React.useCallback<BatchAction<SkillId>>(
     ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
-          selectedIds={selectedIds}
+          selectedArtifacts={selectedIds.map((id) => ({
+            id,
+            name: skillNamesById.get(id.toString()) ?? '',
+          }))}
           artifactType="skill"
           artifactKindLabel="skill"
           organizationId={organization.id}
@@ -109,7 +118,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         />
       );
     },
-    [organization?.id, spaceId, orgSlug, spaceSlug],
+    [organization?.id, spaceId, orgSlug, spaceSlug, skillNamesById],
   );
 
   const listingProps: Omit<ItemsListingProps<Skill>, 'items'> = {

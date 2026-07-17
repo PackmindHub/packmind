@@ -107,12 +107,23 @@ export const CommandsList = ({
     }
   };
 
+  const commandNamesById = React.useMemo(
+    () =>
+      new Map(
+        (recipes ?? []).map((recipe) => [recipe.id.toString(), recipe.name]),
+      ),
+    [recipes],
+  );
+
   const renderAddToPackagesAction = React.useCallback<BatchAction<CommandId>>(
     ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
-          selectedIds={selectedIds}
+          selectedArtifacts={selectedIds.map((id) => ({
+            id,
+            name: commandNamesById.get(id.toString()) ?? '',
+          }))}
           artifactType="recipe"
           artifactKindLabel="command"
           organizationId={organization.id}
@@ -123,7 +134,7 @@ export const CommandsList = ({
         />
       );
     },
-    [organization?.id, spaceId, orgSlug, spaceSlug],
+    [organization?.id, spaceId, orgSlug, spaceSlug, commandNamesById],
   );
 
   const hasCommands = (recipes ?? []).length > 0;

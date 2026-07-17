@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { LuPackagePlus, LuSearch } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuX } from 'react-icons/lu';
 import {
   PMBox,
   PMButton,
-  PMCheckbox,
   PMCloseButton,
   PMDrawer,
   PMHStack,
@@ -13,15 +12,16 @@ import {
   PMInputGroup,
   PMLink,
   PMPortal,
+  PMSeparator,
   PMSkeleton,
   PMText,
+  PMTooltip,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
 import {
   OrganizationId,
-  Package,
-  PackageId,
+  PackageResponse,
   CommandId,
   SkillId,
   SpaceId,
@@ -32,18 +32,26 @@ import { routes } from '../../../../shared/utils/routes';
 import {
   AddArtefactsToPackagesEntry,
   useAddArtefactsToPackagesMutation,
+  useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
-import { usePackagesMissingAnyArtifact } from '../../hooks/usePackagesMissingAnyArtifact';
+import { usePackageMembership } from '../../hooks/usePackageMembership';
+import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
 type ArtifactId = StandardId | CommandId | SkillId;
 
+export interface ManagePackagesArtifact {
+  id: ArtifactId;
+  name: string;
+}
+
 interface AddToPackagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  artifactIds: ArtifactId[];
+  artifacts: ManagePackagesArtifact[];
   artifactType: ArtifactType;
   artifactKindLabel: AddToPackagesArtifactKind;
   organizationId: OrganizationId;
@@ -59,38 +67,38 @@ const ARTIFACT_KIND_PLURALS: Record<AddToPackagesArtifactKind, string> = {
   skill: 'skills',
 };
 
-const pluralizePackages = (count: number) =>
-  count === 1 ? 'package' : 'packages';
-
-function summarizePackageList(packages: Package[]): string {
-  if (packages.length === 0) return '';
-  if (packages.length === 1) return packages[0].name;
-  if (packages.length === 2)
-    return `${packages[0].name} and ${packages[1].name}`;
-  if (packages.length === 3)
-    return `${packages[0].name}, ${packages[1].name}, and ${packages[2].name}`;
-  return `${packages[0].name}, ${packages[1].name}, and ${packages.length - 2} more`;
-}
-
-function buildArtefactEntry(
-  packageId: PackageId,
+function buildArtefactIdsPayload(
   artifactType: ArtifactType,
   ids: ArtifactId[],
-): AddArtefactsToPackagesEntry {
+): Pick<
+  AddArtefactsToPackagesEntry,
+  'standardIds' | 'commandIds' | 'skillIds'
+> {
   switch (artifactType) {
     case 'standard':
-      return { packageId, standardIds: ids as StandardId[] };
+      return { standardIds: ids as StandardId[] };
     case 'recipe':
-      return { packageId, commandIds: ids as CommandId[] };
+      return { commandIds: ids as CommandId[] };
     case 'skill':
-      return { packageId, skillIds: ids as SkillId[] };
+      return { skillIds: ids as SkillId[] };
   }
 }
 
+const byName = (a: PackageResponse, b: PackageResponse) =>
+  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+
+/**
+ * Drawer-sized twin of the breadcrumb PackagesPopover for a list selection:
+ * every package holding at least one selected artifact is removable in place
+ * (removal only detaches the ones it holds), every package missing some is
+ * one click away from adding them, so a partial overlap shows in both
+ * sections. Adds are instant and silent (the row moves up into the members
+ * section); removal confirms only when the package is deployed somewhere.
+ */
 export const AddToPackagesDialog = ({
   open,
   onOpenChange,
-  artifactIds,
+  artifacts,
   artifactType,
   artifactKindLabel,
   organizationId,
@@ -100,145 +108,173 @@ export const AddToPackagesDialog = ({
   onSuccess,
 }: AddToPackagesDialogProps) => {
   const [query, setQuery] = useState('');
-  const [selectedIds, setSelectedIds] = useState<Set<PackageId>>(new Set());
+  const [removeTarget, setRemoveTarget] = useState<PackageResponse | null>(
+    null,
+  );
+  const [hasChanged, setHasChanged] = useState(false);
 
-  const artifactCount = artifactIds.length;
+  const artifactIds = useMemo(() => artifacts.map((a) => a.id), [artifacts]);
+  const artifactCount = artifacts.length;
   const kindSingular = artifactKindLabel;
   const kindPlural = ARTIFACT_KIND_PLURALS[artifactKindLabel];
 
   const {
     addablePackages,
+    memberPackages,
     presentArtifactIdsByPackageId,
     totalPackages,
     isLoading,
-  } = usePackagesMissingAnyArtifact({
+    isError,
+  } = usePackageMembership({
     artifactIds,
     artifactType,
     spaceId,
     organizationId,
   });
+  const { getDeployedTargets } = usePackageDeploymentStatus(spaceId);
 
-  const filteredPackages = useMemo(() => {
+  const { mutateAsync: addArtefacts, isPending: isAdding } =
+    useAddArtefactsToPackagesMutation();
+  const { mutateAsync: removeArtefacts, isPending: isRemoving } =
+    useRemoveArtefactsFromPackageMutation();
+  const isBusy = isAdding || isRemoving;
+
+  const sortedMembers = useMemo(
+    () => [...memberPackages].sort(byName),
+    [memberPackages],
+  );
+
+  const filteredAddable = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     const base = trimmed
       ? addablePackages.filter((pkg) =>
           pkg.name.toLowerCase().includes(trimmed),
         )
       : addablePackages;
-    return [...base].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-    );
+    return [...base].sort(byName);
   }, [addablePackages, query]);
-
-  const { mutateAsync, isPending } = useAddArtefactsToPackagesMutation();
-
-  const selectedCount = selectedIds.size;
-  const isSubmitDisabled = selectedCount === 0 || isPending;
-
-  const resetState = () => {
-    setQuery('');
-    setSelectedIds(new Set());
-  };
 
   const handleOpenChange = (details: { open: boolean }) => {
     onOpenChange(details.open);
     if (!details.open) {
-      resetState();
+      if (hasChanged) onSuccess();
+      setQuery('');
+      setRemoveTarget(null);
+      setHasChanged(false);
     }
   };
 
-  const toggleSelection = (packageId: PackageId) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(packageId)) {
-        next.delete(packageId);
-      } else {
-        next.add(packageId);
-      }
-      return next;
-    });
-  };
-
-  const handleSubmit = async () => {
-    if (selectedCount === 0) return;
-    const selectedPackages = addablePackages.filter((pkg) =>
-      selectedIds.has(pkg.id),
-    );
-    const entries: AddArtefactsToPackagesEntry[] = selectedPackages.map(
-      (pkg) => {
-        const presentSet =
-          presentArtifactIdsByPackageId[pkg.id.toString()] ?? new Set<string>();
-        const remaining = artifactIds.filter(
-          (id) => !presentSet.has(id.toString()),
-        );
-        return buildArtefactEntry(pkg.id, artifactType, remaining);
-      },
+  const handleAdd = async (pkg: PackageResponse) => {
+    const presentSet =
+      presentArtifactIdsByPackageId[pkg.id.toString()] ?? new Set<string>();
+    const remaining = artifactIds.filter(
+      (id) => !presentSet.has(id.toString()),
     );
     try {
-      const outcomes = await mutateAsync({ spaceId, entries });
-      const successOutcomes = outcomes.filter((o) => o.ok);
-      const failureOutcomes = outcomes.filter((o) => !o.ok);
-
-      if (failureOutcomes.length === 0) {
-        const packageNoun = pluralizePackages(successOutcomes.length);
-        const title =
-          artifactCount === 1
-            ? `Added to ${successOutcomes.length} ${packageNoun}`
-            : `Added ${artifactCount} ${kindPlural} to ${successOutcomes.length} ${packageNoun}`;
-        pmToaster.create({
-          type: 'success',
-          title,
-          description: summarizePackageList(selectedPackages),
-        });
-        onSuccess();
-        onOpenChange(false);
-        resetState();
-        return;
-      }
-
-      if (successOutcomes.length === 0) {
+      const outcomes = await addArtefacts({
+        spaceId,
+        entries: [
+          {
+            packageId: pkg.id,
+            ...buildArtefactIdsPayload(artifactType, remaining),
+          },
+        ],
+      });
+      if (outcomes.some((o) => !o.ok)) {
         pmToaster.create({
           type: 'error',
-          title: "Couldn't add to packages",
-          description:
-            failureOutcomes[0].ok === false
-              ? failureOutcomes[0].error.message
-              : 'Try again, or check your space access.',
+          title: `Couldn't add to ${pkg.name}`,
+          description: 'Try again, or check your space access.',
         });
         return;
       }
-
-      const successIds = new Set(
-        successOutcomes.map((o) => o.packageId.toString()),
-      );
-      const succeededPackages = selectedPackages.filter((p) =>
-        successIds.has(p.id.toString()),
-      );
+      setHasChanged(true);
+    } catch {
       pmToaster.create({
-        type: 'warning',
-        title: `Added to ${successOutcomes.length} of ${outcomes.length} packages`,
-        description: `Succeeded: ${summarizePackageList(succeededPackages)}.`,
+        type: 'error',
+        title: `Couldn't add to ${pkg.name}`,
+        description: 'Try again, or check your space access.',
       });
-      setSelectedIds(
-        new Set(failureOutcomes.filter((o) => !o.ok).map((o) => o.packageId)),
-      );
+    }
+  };
+
+  // The slice of the selection a package actually holds: what its × removes,
+  // what the confirmation lists, and what the row hint counts.
+  const presentArtifactsIn = (pkg: PackageResponse): ManagePackagesArtifact[] =>
+    artifacts.filter((a) =>
+      presentArtifactIdsByPackageId[pkg.id.toString()]?.has(a.id.toString()),
+    );
+
+  const removeFromPackage = async (pkg: PackageResponse) => {
+    const presentIds = presentArtifactsIn(pkg).map((a) => a.id);
+    try {
+      await removeArtefacts({
+        spaceId,
+        packageId: pkg.id,
+        ...buildArtefactIdsPayload(artifactType, presentIds),
+      });
+      setHasChanged(true);
     } catch (error) {
       pmToaster.create({
         type: 'error',
-        title: "Couldn't add to packages",
-        description:
-          (error as Error)?.message || 'Try again, or check your space access.',
+        title: `Couldn't remove from ${pkg.name}`,
+        description: 'Try again, or check your space access.',
+      });
+      throw error;
+    }
+  };
+
+  const requestRemove = (pkg: PackageResponse) => {
+    // A deployed package keeps shipping until the next sync, so warn first.
+    // An undeployed one has no consequence, so remove without a dialog.
+    if (getDeployedTargets(pkg.id) > 0) {
+      setRemoveTarget(pkg);
+    } else {
+      void removeFromPackage(pkg).catch(() => {
+        /* error surfaced via toast */
       });
     }
   };
 
-  const renderListBody = () => {
+  const removalNames = removeTarget
+    ? presentArtifactsIn(removeTarget).map((a) => a.name)
+    : [];
+
+  const subtitle =
+    artifactCount === 1
+      ? `Which packages ship this ${kindSingular}.`
+      : `Which packages ship these ${artifactCount} ${kindPlural}.`;
+
+  const membersEmptyCopy =
+    artifactCount === 1
+      ? 'Not in any package yet. Pick one below to add it.'
+      : `None of these ${artifactCount} ${kindPlural} are in a package yet. Pick one below to add them.`;
+
+  const allCoveredCopy =
+    artifactCount === 1
+      ? `This ${kindSingular} is already in every package in this space.`
+      : `These ${artifactCount} ${kindPlural} are already in every package in this space.`;
+
+  const renderBody = () => {
     if (isLoading) {
       return (
         <PMVStack gap={2} alignItems="stretch">
-          <PMSkeleton height="56px" />
-          <PMSkeleton height="56px" />
-          <PMSkeleton height="56px" />
+          <PMSkeleton height="48px" />
+          <PMSkeleton height="48px" />
+          <PMSkeleton height="48px" />
+        </PMVStack>
+      );
+    }
+
+    if (isError) {
+      return (
+        <PMVStack gap={1} alignItems="stretch" paddingY={6} paddingX={2}>
+          <PMText variant="body" color="error">
+            Could not load packages.
+          </PMText>
+          <PMText variant="small" color="faded">
+            Close this and try again.
+          </PMText>
         </PMVStack>
       );
     }
@@ -258,183 +294,330 @@ export const AddToPackagesDialog = ({
       );
     }
 
-    if (addablePackages.length === 0) {
-      const allCoveredMessage =
-        artifactCount === 1
-          ? `This ${kindSingular} is already in every package in this space.`
-          : `These ${artifactCount} ${kindPlural} are already in every package in this space.`;
-      return (
-        <PMBox paddingY={6} paddingX={2}>
-          <PMText variant="body">{allCoveredMessage}</PMText>
-        </PMBox>
-      );
-    }
-
-    if (filteredPackages.length === 0) {
-      return (
-        <PMVStack gap={2} alignItems="flex-start" paddingY={6} paddingX={2}>
-          <PMText variant="body">No packages match "{query}".</PMText>
-          <PMLink
-            variant="underline"
-            fontSize="sm"
-            cursor="pointer"
-            onClick={() => setQuery('')}
-          >
-            Clear search
-          </PMLink>
-        </PMVStack>
-      );
-    }
-
     return (
-      <PMVStack gap={2} alignItems="stretch" role="list">
-        {filteredPackages.map((pkg) => {
-          const checked = selectedIds.has(pkg.id);
-          const presentCount =
-            presentArtifactIdsByPackageId[pkg.id.toString()]?.size ?? 0;
-          const showOverlapHint =
-            artifactCount > 1 &&
-            presentCount > 0 &&
-            presentCount < artifactCount;
-          return (
-            <PMHStack
-              key={pkg.id}
-              role="listitem"
-              alignItems="center"
-              gap={3}
-              paddingY={3}
-              paddingX={3}
-              border="1px solid"
-              borderColor="border.secondary"
-              borderRadius="sm"
-              cursor={isPending ? 'not-allowed' : 'pointer'}
-              backgroundColor={checked ? 'background.tertiary' : undefined}
-              _hover={
-                isPending
-                  ? undefined
-                  : { backgroundColor: 'background.tertiary' }
-              }
-              onClick={() => {
-                if (isPending) return;
-                toggleSelection(pkg.id);
-              }}
-            >
-              <PMCheckbox
-                checked={checked}
-                disabled={isPending}
-                onCheckedChange={() => toggleSelection(pkg.id)}
-                onClick={(event) => event.stopPropagation()}
-                aria-label={`Add to ${pkg.name}`}
-              />
-              <PMVStack alignItems="flex-start" gap={0.5} flex={1} minWidth={0}>
-                <PMText variant="body" fontWeight={500}>
-                  {pkg.name}
-                </PMText>
-                {showOverlapHint ? (
+      <PMVStack gap={4} alignItems="stretch">
+        <PMVStack gap={1} alignItems="stretch">
+          <SectionLabel>In these packages</SectionLabel>
+          {sortedMembers.length === 0 ? (
+            <PMText variant="small" color="faded">
+              {membersEmptyCopy}
+            </PMText>
+          ) : (
+            <PMVStack gap={0} alignItems="stretch">
+              {sortedMembers.map((pkg) => {
+                const held = presentArtifactsIn(pkg);
+                return (
+                  <MemberRow
+                    key={pkg.id}
+                    pkg={pkg}
+                    deployedTargets={getDeployedTargets(pkg.id)}
+                    heldNames={
+                      artifactCount > 1 && held.length < artifactCount
+                        ? held.map((a) => a.name)
+                        : null
+                    }
+                    totalCount={artifactCount}
+                    disabled={isBusy}
+                    onRemove={() => requestRemove(pkg)}
+                  />
+                );
+              })}
+            </PMVStack>
+          )}
+        </PMVStack>
+
+        <PMSeparator />
+
+        <PMVStack gap={2} alignItems="stretch">
+          <SectionLabel>Add to a package</SectionLabel>
+          {addablePackages.length === 0 ? (
+            <PMText variant="small" color="faded">
+              {allCoveredCopy}
+            </PMText>
+          ) : (
+            <>
+              <PMInputGroup startElement={<LuSearch />}>
+                <PMInput
+                  size="sm"
+                  placeholder="Search packages..."
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  aria-label="Search packages"
+                />
+              </PMInputGroup>
+              {filteredAddable.length === 0 ? (
+                <PMVStack gap={2} alignItems="flex-start" paddingY={2}>
                   <PMText variant="small" color="faded">
-                    Already includes {presentCount} of {artifactCount}
+                    No package matches "{query}".
                   </PMText>
-                ) : null}
-              </PMVStack>
-            </PMHStack>
-          );
-        })}
+                  <PMLink
+                    variant="underline"
+                    fontSize="sm"
+                    cursor="pointer"
+                    onClick={() => setQuery('')}
+                  >
+                    Clear search
+                  </PMLink>
+                </PMVStack>
+              ) : (
+                <PMVStack gap={0} alignItems="stretch">
+                  {filteredAddable.map((pkg) => {
+                    const held = presentArtifactsIn(pkg);
+                    const missing = artifacts.filter((a) => !held.includes(a));
+                    return (
+                      <AddRow
+                        key={pkg.id}
+                        pkg={pkg}
+                        deployedTargets={getDeployedTargets(pkg.id)}
+                        missingNames={
+                          artifactCount > 1 && held.length > 0
+                            ? missing.map((a) => a.name)
+                            : null
+                        }
+                        totalCount={artifactCount}
+                        disabled={isBusy}
+                        onAdd={() => handleAdd(pkg)}
+                      />
+                    );
+                  })}
+                </PMVStack>
+              )}
+            </>
+          )}
+        </PMVStack>
       </PMVStack>
     );
   };
 
-  const showSearchAndCta = addablePackages.length > 0 && !isLoading;
-
-  const subtitle =
-    artifactCount === 1
-      ? `Pick the packages this ${kindSingular} should also ship in.`
-      : `Pick the packages these ${artifactCount} ${kindPlural} should also ship in.`;
-
-  const submitLabel = (() => {
-    if (selectedCount === 0) return 'Add to packages';
-    const packageNoun = pluralizePackages(selectedCount);
-    if (artifactCount === 1) {
-      return `Add to ${selectedCount} ${packageNoun}`;
-    }
-    return `Add ${artifactCount} ${kindPlural} to ${selectedCount} ${packageNoun}`;
-  })();
-
   return (
-    <PMDrawer.Root
-      closeOnInteractOutside={!isPending}
-      open={open}
-      onOpenChange={handleOpenChange}
-      placement="end"
-      size="md"
-    >
-      <PMPortal>
-        <PMDrawer.Backdrop />
-        <PMDrawer.Positioner>
-          <PMDrawer.Content>
-            <PMDrawer.Header
-              borderBottom="1px solid"
-              borderColor="border.tertiary"
-            >
-              <PMVStack alignItems="flex-start" gap={1} flex={1}>
-                <PMHeading size="md">Add to packages</PMHeading>
-                <PMText variant="small" color="secondary">
-                  {subtitle}
-                </PMText>
-              </PMVStack>
-              <PMDrawer.CloseTrigger asChild>
-                <PMCloseButton size="sm" disabled={isPending} />
-              </PMDrawer.CloseTrigger>
-            </PMDrawer.Header>
-            <PMDrawer.Body padding={5}>
-              <PMVStack gap={4} alignItems="stretch">
-                {showSearchAndCta ? (
-                  <PMInputGroup startElement={<LuSearch />}>
-                    <PMInput
-                      placeholder="Search packages..."
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      disabled={isPending}
-                      aria-label="Search packages"
-                    />
-                  </PMInputGroup>
-                ) : null}
-                {renderListBody()}
-              </PMVStack>
-            </PMDrawer.Body>
-            <PMBox
-              borderTop="1px solid"
-              borderColor="border.tertiary"
-              paddingX={5}
-              paddingY={3}
-            >
-              <PMHStack justify="space-between" align="center">
-                <PMButton
-                  variant="tertiary"
-                  size="sm"
-                  onClick={() => handleOpenChange({ open: false })}
-                  disabled={isPending}
-                >
-                  Cancel
-                </PMButton>
-                {showSearchAndCta ? (
+    <>
+      <PMDrawer.Root
+        closeOnInteractOutside={!isBusy}
+        open={open}
+        onOpenChange={handleOpenChange}
+        placement="end"
+        size="md"
+      >
+        <PMPortal>
+          <PMDrawer.Backdrop />
+          <PMDrawer.Positioner>
+            <PMDrawer.Content>
+              <PMDrawer.Header
+                borderBottom="1px solid"
+                borderColor="border.tertiary"
+              >
+                <PMVStack alignItems="flex-start" gap={1} flex={1}>
+                  <PMHeading size="md">Manage packages</PMHeading>
+                  <PMText variant="small" color="secondary">
+                    {subtitle}
+                  </PMText>
+                </PMVStack>
+                <PMDrawer.CloseTrigger asChild>
+                  <PMCloseButton size="sm" disabled={isBusy} />
+                </PMDrawer.CloseTrigger>
+              </PMDrawer.Header>
+              <PMDrawer.Body padding={5}>{renderBody()}</PMDrawer.Body>
+              <PMBox
+                borderTop="1px solid"
+                borderColor="border.tertiary"
+                paddingX={5}
+                paddingY={3}
+              >
+                <PMHStack justify="flex-end">
                   <PMButton
-                    variant="primary"
+                    variant="secondary"
                     size="sm"
-                    onClick={handleSubmit}
-                    loading={isPending}
-                    disabled={isSubmitDisabled}
+                    onClick={() => handleOpenChange({ open: false })}
+                    disabled={isBusy}
                   >
-                    <PMIcon>
-                      <LuPackagePlus />
-                    </PMIcon>
-                    {submitLabel}
+                    Done
                   </PMButton>
-                ) : null}
-              </PMHStack>
-            </PMBox>
-          </PMDrawer.Content>
-        </PMDrawer.Positioner>
-      </PMPortal>
-    </PMDrawer.Root>
+                </PMHStack>
+              </PMBox>
+            </PMDrawer.Content>
+          </PMDrawer.Positioner>
+        </PMPortal>
+      </PMDrawer.Root>
+
+      <RemoveArtifactFromPackageConfirm
+        open={removeTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) setRemoveTarget(null);
+        }}
+        packageName={removeTarget?.name ?? ''}
+        deployedTargets={removeTarget ? getDeployedTargets(removeTarget.id) : 0}
+        artifactNames={removalNames}
+        onConfirm={async () => {
+          if (!removeTarget) return;
+          await removeFromPackage(removeTarget);
+          pmToaster.create({
+            type: 'success',
+            title:
+              removalNames.length === 1
+                ? 'Removed from package'
+                : `${removalNames.length} ${kindPlural} removed from package`,
+            description: `No longer bundled in ${removeTarget.name}.`,
+          });
+          setRemoveTarget(null);
+        }}
+      />
+    </>
   );
 };
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <PMText
+      variant="small"
+      fontWeight={600}
+      color="faded"
+      textTransform="uppercase"
+      letterSpacing="0.04em"
+    >
+      {children}
+    </PMText>
+  );
+}
+
+function PackageRowContent({
+  pkg,
+  deployedTargets,
+}: {
+  pkg: PackageResponse;
+  deployedTargets: number;
+}) {
+  return (
+    <PMVStack alignItems="stretch" gap={0} flex={1} minWidth={0}>
+      <PMHStack gap={2} alignItems="center" minWidth={0}>
+        <PMText variant="body" fontWeight={500} truncate title={pkg.name}>
+          {pkg.name}
+        </PMText>
+        {deployedTargets > 0 ? (
+          <PMText variant="small" color="faded" flexShrink={0}>
+            {deployedTargets} {deployedTargets === 1 ? 'repo' : 'repos'}
+          </PMText>
+        ) : null}
+      </PMHStack>
+      {pkg.description ? (
+        <PMText variant="small" color="faded" truncate>
+          {pkg.description}
+        </PMText>
+      ) : null}
+    </PMVStack>
+  );
+}
+
+function MemberRow({
+  pkg,
+  deployedTargets,
+  heldNames,
+  totalCount,
+  disabled,
+  onRemove,
+}: {
+  pkg: PackageResponse;
+  deployedTargets: number;
+  heldNames: string[] | null;
+  totalCount: number;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <PMHStack
+      gap={3}
+      alignItems="center"
+      paddingX={2}
+      paddingY={2}
+      borderRadius="sm"
+      transition="background-color 120ms ease-out"
+      _hover={{ backgroundColor: 'background.tertiary' }}
+    >
+      <PackageRowContent pkg={pkg} deployedTargets={deployedTargets} />
+      {heldNames !== null ? (
+        <PMTooltip label={heldNames.join(', ')} openDelay={300}>
+          <PMBox as="span" flexShrink={0} cursor="help">
+            <PMText variant="small" color="faded">
+              contains {heldNames.length} of {totalCount}
+            </PMText>
+          </PMBox>
+        </PMTooltip>
+      ) : null}
+      <PMBox
+        as="button"
+        flexShrink={0}
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        width="22px"
+        height="22px"
+        borderRadius="sm"
+        color="text.secondary"
+        cursor={disabled ? 'not-allowed' : 'pointer'}
+        opacity={disabled ? 0.5 : 1}
+        pointerEvents={disabled ? 'none' : undefined}
+        transition="background-color 120ms ease-out, color 120ms ease-out"
+        _hover={{ backgroundColor: 'background.primary', color: 'red.400' }}
+        aria-label={`Remove from ${pkg.name}`}
+        aria-disabled={disabled}
+        onClick={disabled ? undefined : onRemove}
+      >
+        <PMIcon fontSize="xs">
+          <LuX />
+        </PMIcon>
+      </PMBox>
+    </PMHStack>
+  );
+}
+
+function AddRow({
+  pkg,
+  deployedTargets,
+  missingNames,
+  totalCount,
+  disabled,
+  onAdd,
+}: {
+  pkg: PackageResponse;
+  deployedTargets: number;
+  missingNames: string[] | null;
+  totalCount: number;
+  disabled: boolean;
+  onAdd: () => void;
+}) {
+  return (
+    <PMHStack
+      as="button"
+      gap={3}
+      alignItems="center"
+      width="100%"
+      textAlign="left"
+      paddingX={2}
+      paddingY={2}
+      borderRadius="sm"
+      cursor={disabled ? 'not-allowed' : 'pointer'}
+      opacity={disabled ? 0.5 : 1}
+      pointerEvents={disabled ? 'none' : undefined}
+      transition="background-color 120ms ease-out"
+      _hover={{ backgroundColor: 'background.tertiary' }}
+      aria-label={`Add to ${pkg.name}`}
+      aria-disabled={disabled}
+      onClick={disabled ? undefined : onAdd}
+    >
+      <PackageRowContent pkg={pkg} deployedTargets={deployedTargets} />
+      {missingNames !== null ? (
+        <PMTooltip label={missingNames.join(', ')} openDelay={300}>
+          <PMBox as="span" flexShrink={0} cursor="help">
+            <PMText variant="small" color="faded">
+              adds {missingNames.length} of {totalCount}
+            </PMText>
+          </PMBox>
+        </PMTooltip>
+      ) : null}
+      <PMBox flexShrink={0} color="text.faded">
+        <PMIcon fontSize="sm">
+          <LuPlus />
+        </PMIcon>
+      </PMBox>
+    </PMHStack>
+  );
+}

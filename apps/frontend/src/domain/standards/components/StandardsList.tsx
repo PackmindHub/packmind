@@ -109,12 +109,26 @@ export const StandardsList = ({
     }
   };
 
+  const standardNamesById = React.useMemo(
+    () =>
+      new Map(
+        (listStandardsResponse?.standards ?? []).map((standard) => [
+          standard.id.toString(),
+          standard.name,
+        ]),
+      ),
+    [listStandardsResponse],
+  );
+
   const renderAddToPackagesAction = React.useCallback<BatchAction<StandardId>>(
     ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
-          selectedIds={selectedIds}
+          selectedArtifacts={selectedIds.map((id) => ({
+            id,
+            name: standardNamesById.get(id.toString()) ?? '',
+          }))}
           artifactType="standard"
           artifactKindLabel="standard"
           organizationId={organization.id}
@@ -125,7 +139,7 @@ export const StandardsList = ({
         />
       );
     },
-    [organization?.id, spaceId, orgSlug, spaceSlug],
+    [organization?.id, spaceId, orgSlug, spaceSlug, standardNamesById],
   );
 
   const hasStandards = (listStandardsResponse?.standards ?? []).length > 0;

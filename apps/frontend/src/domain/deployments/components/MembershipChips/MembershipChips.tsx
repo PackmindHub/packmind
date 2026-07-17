@@ -29,9 +29,9 @@ interface MembershipChipsProps {
 }
 
 /**
- * Inline, removable package chips for an artifact row in a list. The × always
- * opens a confirmation; the confirmation only shows the deployed warning when
- * the package is live on a target.
+ * Inline, removable package chips for an artifact row in a list. The × asks
+ * for confirmation only when the package is live on a target (it keeps
+ * shipping until the next sync); otherwise it removes right away.
  */
 export const MembershipChips = ({
   artifactId,
@@ -91,6 +91,18 @@ export const MembershipChips = ({
     }
   };
 
+  const requestRemove = (pkg: PackageResponse) => {
+    // A deployed package keeps shipping until the next sync, so warn first.
+    // An undeployed one has no consequence, so remove without a dialog.
+    if (getDeployedTargets(pkg.id) > 0) {
+      setRemoveTarget(pkg);
+    } else {
+      void removeFromPackage(pkg).catch(() => {
+        /* error surfaced via toast */
+      });
+    }
+  };
+
   return (
     <>
       <PMBox display="flex" flexWrap="wrap" gap={1}>
@@ -109,7 +121,7 @@ export const MembershipChips = ({
               cursor="pointer"
               _hover={{ color: 'red.400' }}
               aria-label={`Remove from ${pkg.name}`}
-              onClick={() => setRemoveTarget(pkg)}
+              onClick={() => requestRemove(pkg)}
             >
               <PMIcon fontSize="2xs">
                 <LuX />
@@ -126,7 +138,7 @@ export const MembershipChips = ({
         }}
         packageName={removeTarget?.name ?? ''}
         deployedTargets={removeTarget ? getDeployedTargets(removeTarget.id) : 0}
-        artifactName={artifactName}
+        artifactNames={[artifactName]}
         onConfirm={async () => {
           if (!removeTarget) return;
           await removeFromPackage(removeTarget);

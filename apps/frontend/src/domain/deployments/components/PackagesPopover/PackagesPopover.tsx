@@ -343,7 +343,7 @@ export const PackagesPopover = ({
         }}
         packageName={removeTarget?.name ?? ''}
         deployedTargets={removeTarget ? getDeployedTargets(removeTarget.id) : 0}
-        artifactName={artifactName}
+        artifactNames={[artifactName]}
         onConfirm={async () => {
           if (!removeTarget) return;
           await removeFromPackage(removeTarget);
