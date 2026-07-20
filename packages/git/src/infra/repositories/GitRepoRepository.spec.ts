@@ -260,25 +260,27 @@ describe('GitRepoRepository', () => {
       });
     });
 
-    it('returns null when no branch is tracked for the owner/repo', async () => {
-      await gitRepoRepository.add(
-        gitRepoFactory({
-          owner: 'acme',
-          repo: 'widgets',
-          branch: 'main',
-          providerId: testProvider.id,
-          isTracked: false,
-        }),
-      );
-
-      const found =
-        await gitRepoRepository.findTrackedByOwnerRepoInOrganization(
-          testOrganization.id,
-          'acme',
-          'widgets',
+    describe('when no branch is tracked for the owner/repo', () => {
+      it('returns null', async () => {
+        await gitRepoRepository.add(
+          gitRepoFactory({
+            owner: 'acme',
+            repo: 'widgets',
+            branch: 'main',
+            providerId: testProvider.id,
+            isTracked: false,
+          }),
         );
 
-      expect(found).toBeNull();
+        const found =
+          await gitRepoRepository.findTrackedByOwnerRepoInOrganization(
+            testOrganization.id,
+            'acme',
+            'widgets',
+          );
+
+        expect(found).toBeNull();
+      });
     });
 
     it('does not return a tracked repo from another organization', async () => {
@@ -312,28 +314,48 @@ describe('GitRepoRepository', () => {
   });
 
   describe('updateTracked', () => {
-    it('sets the tracked flag to true', async () => {
-      const gitRepo = await gitRepoRepository.add(
-        gitRepoFactory({ providerId: testProvider.id, isTracked: false }),
-      );
+    describe('when setting the tracked flag to true', () => {
+      let updated: GitRepo;
+      let reloaded: GitRepo | null;
 
-      const updated = await gitRepoRepository.updateTracked(gitRepo.id, true);
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: false }),
+        );
 
-      expect(updated.isTracked).toBe(true);
-      const reloaded = await gitRepoRepository.findById(gitRepo.id);
-      expect(reloaded?.isTracked).toBe(true);
+        updated = await gitRepoRepository.updateTracked(gitRepo.id, true);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('returns the repo with the tracked flag set', () => {
+        expect(updated.isTracked).toBe(true);
+      });
+
+      it('persists the tracked flag', () => {
+        expect(reloaded?.isTracked).toBe(true);
+      });
     });
 
-    it('clears the tracked flag to false', async () => {
-      const gitRepo = await gitRepoRepository.add(
-        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
-      );
+    describe('when clearing the tracked flag to false', () => {
+      let updated: GitRepo;
+      let reloaded: GitRepo | null;
 
-      const updated = await gitRepoRepository.updateTracked(gitRepo.id, false);
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+        );
 
-      expect(updated.isTracked).toBe(false);
-      const reloaded = await gitRepoRepository.findById(gitRepo.id);
-      expect(reloaded?.isTracked).toBe(false);
+        updated = await gitRepoRepository.updateTracked(gitRepo.id, false);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('returns the repo with the tracked flag cleared', () => {
+        expect(updated.isTracked).toBe(false);
+      });
+
+      it('persists the cleared tracked flag', () => {
+        expect(reloaded?.isTracked).toBe(false);
+      });
     });
   });
 

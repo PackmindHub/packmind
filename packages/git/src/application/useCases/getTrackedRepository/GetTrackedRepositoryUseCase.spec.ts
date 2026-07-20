@@ -83,38 +83,54 @@ describe('GetTrackedRepositoryUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns the tracked repository', async () => {
-    mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
-      trackedRepo,
-    );
+  describe('when a branch is tracked', () => {
+    let result: { gitRepo: GitRepo | null };
 
-    const result = await useCase.execute(command);
+    beforeEach(async () => {
+      mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
+        trackedRepo,
+      );
 
-    expect(result).toEqual({ gitRepo: trackedRepo });
-    expect(
-      mockGitRepoService.findTrackedByOwnerRepoInOrganization,
-    ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets');
-  });
-
-  it('returns null when nothing is tracked', async () => {
-    mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
-      null,
-    );
-
-    const result = await useCase.execute(command);
-
-    expect(result).toEqual({ gitRepo: null });
-  });
-
-  describe('when the feature flag is disabled', () => {
-    beforeEach(() => {
-      mockedIsEnabled.mockResolvedValue(false);
+      result = await useCase.execute(command);
     });
 
-    it('behaves as feature-absent and returns no tracked repo', async () => {
+    it('returns the tracked repository', () => {
+      expect(result).toEqual({ gitRepo: trackedRepo });
+    });
+
+    it('queries by organization, owner and repo', () => {
+      expect(
+        mockGitRepoService.findTrackedByOwnerRepoInOrganization,
+      ).toHaveBeenCalledWith(organizationId, 'acme', 'widgets');
+    });
+  });
+
+  describe('when nothing is tracked', () => {
+    it('returns null', async () => {
+      mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
+        null,
+      );
+
       const result = await useCase.execute(command);
 
       expect(result).toEqual({ gitRepo: null });
+    });
+  });
+
+  describe('when the feature flag is disabled', () => {
+    let result: { gitRepo: GitRepo | null };
+
+    beforeEach(async () => {
+      mockedIsEnabled.mockResolvedValue(false);
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns no tracked repo', () => {
+      expect(result).toEqual({ gitRepo: null });
+    });
+
+    it('does not query the git repo service', () => {
       expect(
         mockGitRepoService.findTrackedByOwnerRepoInOrganization,
       ).not.toHaveBeenCalled();

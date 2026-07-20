@@ -102,8 +102,8 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _getAvailableRemoteDirectories!: GetAvailableRemoteDirectoriesUseCase;
   private _checkDirectoryExistence!: CheckDirectoryExistenceUseCase;
   private _findOrCreateGitRepo!: FindOrCreateGitRepoUseCase;
-  private _getTrackedRepository!: GetTrackedRepositoryUseCase;
-  private _setTrackedRepository!: SetTrackedRepositoryUseCase;
+  private _getTrackedRepositoryUseCase!: GetTrackedRepositoryUseCase;
+  private _setTrackedRepositoryUseCase!: SetTrackedRepositoryUseCase;
   private _updateTrackedBranch!: UpdateTrackedBranchUseCase;
 
   constructor(
@@ -268,12 +268,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.accountsPort,
     );
 
-    this._getTrackedRepository = new GetTrackedRepositoryUseCase(
+    this._getTrackedRepositoryUseCase = new GetTrackedRepositoryUseCase(
       this.gitServices.getGitRepoService(),
       this.accountsPort,
     );
 
-    this._setTrackedRepository = new SetTrackedRepositoryUseCase(
+    this._setTrackedRepositoryUseCase = new SetTrackedRepositoryUseCase(
       this.gitServices.getGitRepoService(),
       this._findOrCreateGitRepo,
       this.eventEmitterService,
@@ -552,13 +552,13 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   public getTrackedRepository(
     command: GetTrackedRepositoryCommand,
   ): Promise<GetTrackedRepositoryResponse> {
-    return this._getTrackedRepository.execute(command);
+    return this._getTrackedRepositoryUseCase.execute(command);
   }
 
   public setTrackedRepository(
     command: SetTrackedRepositoryCommand,
   ): Promise<SetTrackedRepositoryResponse> {
-    return this._setTrackedRepository.execute(command);
+    return this._setTrackedRepositoryUseCase.execute(command);
   }
 
   public updateTrackedBranch(

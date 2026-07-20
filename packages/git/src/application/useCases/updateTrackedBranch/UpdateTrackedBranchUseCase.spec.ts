@@ -165,6 +165,7 @@ describe('UpdateTrackedBranchUseCase', () => {
     let newRepo: GitRepo;
     let trackedRepo: GitRepo;
     let result: GitRepo;
+    let emittedEvent: RepositoryTrackingSetEvent;
 
     beforeEach(async () => {
       oldRepo = {
@@ -194,6 +195,8 @@ describe('UpdateTrackedBranchUseCase', () => {
         .mockResolvedValueOnce(trackedRepo);
 
       result = await useCase.execute(command);
+      emittedEvent = mockEventEmitter.emit.mock
+        .calls[0][0] as RepositoryTrackingSetEvent;
     });
 
     it('clears the tracked flag on the old branch', () => {
@@ -216,12 +219,16 @@ describe('UpdateTrackedBranchUseCase', () => {
       expect(result).toEqual(trackedRepo);
     });
 
-    it('emits a RepositoryTrackingSetEvent carrying fromBranch', () => {
+    it('emits exactly one event', () => {
       expect(mockEventEmitter.emit).toHaveBeenCalledTimes(1);
-      const event = mockEventEmitter.emit.mock
-        .calls[0][0] as RepositoryTrackingSetEvent;
-      expect(event).toBeInstanceOf(RepositoryTrackingSetEvent);
-      expect(event.payload).toEqual(
+    });
+
+    it('emits a RepositoryTrackingSetEvent', () => {
+      expect(emittedEvent).toBeInstanceOf(RepositoryTrackingSetEvent);
+    });
+
+    it('carries the tracking details and fromBranch in the payload', () => {
+      expect(emittedEvent.payload).toEqual(
         expect.objectContaining({
           organizationId,
           repositoryId: trackedRepo.id,

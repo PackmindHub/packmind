@@ -68,38 +68,41 @@ describe('AddIsTrackedToGitRepos1813000000000', () => {
     await dataSource.destroy();
   });
 
-  it('is registered as a reversible migration', () => {
-    expect(typeof migration.up).toBe('function');
-    expect(typeof migration.down).toBe('function');
+  describe('before the migration runs', () => {
+    it('has no is_tracked column', async () => {
+      expect(await isTrackedColumnExists()).toBe(false);
+    });
   });
 
-  it('adds the is_tracked column on up', async () => {
-    expect(await isTrackedColumnExists()).toBe(false);
+  describe('when the migration is applied', () => {
+    beforeEach(async () => {
+      await migration.up(queryRunner);
+    });
 
-    await migration.up(queryRunner);
+    it('adds the is_tracked column', async () => {
+      expect(await isTrackedColumnExists()).toBe(true);
+    });
 
-    expect(await isTrackedColumnExists()).toBe(true);
-  });
+    it('defaults is_tracked to false for existing rows', async () => {
+      await queryRunner.query(
+        `INSERT INTO "git_repos" ("id", "owner", "repo", "branch")
+         VALUES ('11111111-1111-1111-1111-111111111111', 'acme', 'app', 'main')`,
+      );
 
-  it('defaults is_tracked to false for existing rows', async () => {
-    await migration.up(queryRunner);
+      const rows = await queryRunner.query(
+        `SELECT "is_tracked" FROM "git_repos"`,
+      );
+      expect(rows[0].is_tracked).toBe(false);
+    });
 
-    await queryRunner.query(
-      `INSERT INTO "git_repos" ("id", "owner", "repo", "branch")
-       VALUES ('11111111-1111-1111-1111-111111111111', 'acme', 'app', 'main')`,
-    );
+    describe('and then reverted', () => {
+      beforeEach(async () => {
+        await migration.down(queryRunner);
+      });
 
-    const rows = await queryRunner.query(
-      `SELECT "is_tracked" FROM "git_repos"`,
-    );
-    expect(rows[0].is_tracked).toBe(false);
-  });
-
-  it('drops the is_tracked column on down (up/down round-trip)', async () => {
-    await migration.up(queryRunner);
-    expect(await isTrackedColumnExists()).toBe(true);
-
-    await migration.down(queryRunner);
-    expect(await isTrackedColumnExists()).toBe(false);
+      it('drops the is_tracked column', async () => {
+        expect(await isTrackedColumnExists()).toBe(false);
+      });
+    });
   });
 });

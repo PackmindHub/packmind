@@ -164,14 +164,9 @@ describe('GitRepositoriesController tracked repository routes', () => {
       });
 
       it('does not call the tracking service method', async () => {
-        await expect(
-          controller.getTrackedRepository(
-            orgId,
-            mockRequest,
-            'my-orga',
-            'my-repo',
-          ),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        await controller
+          .getTrackedRepository(orgId, mockRequest, 'my-orga', 'my-repo')
+          .catch(() => undefined);
 
         expect(mockService.getTrackedRepository).not.toHaveBeenCalled();
       });
@@ -246,12 +241,20 @@ describe('GitRepositoriesController tracked repository routes', () => {
     });
 
     describe('when the feature flag is disabled', () => {
-      it('throws a NotFoundException and does not call the service', async () => {
+      beforeEach(() => {
         mockService.isTrackingFeatureEnabled.mockResolvedValue(false);
+      });
 
+      it('throws a NotFoundException', async () => {
         await expect(
           controller.setTrackedRepository(orgId, mockRequest, body),
         ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('does not call the service', async () => {
+        await controller
+          .setTrackedRepository(orgId, mockRequest, body)
+          .catch(() => undefined);
 
         expect(mockService.setTrackedRepository).not.toHaveBeenCalled();
       });
@@ -326,12 +329,20 @@ describe('GitRepositoriesController tracked repository routes', () => {
     });
 
     describe('when the feature flag is disabled', () => {
-      it('throws a NotFoundException and does not call the service', async () => {
+      beforeEach(() => {
         mockService.isTrackingFeatureEnabled.mockResolvedValue(false);
+      });
 
+      it('throws a NotFoundException', async () => {
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
         ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('does not call the service', async () => {
+        await controller
+          .updateTrackedBranch(orgId, mockRequest, body)
+          .catch(() => undefined);
 
         expect(mockService.updateTrackedBranch).not.toHaveBeenCalled();
       });

@@ -106,6 +106,7 @@ describe('SetTrackedRepositoryUseCase', () => {
     let createdRepo: GitRepo;
     let trackedRepo: GitRepo;
     let result: GitRepo;
+    let emittedEvent: RepositoryTrackingSetEvent;
 
     beforeEach(async () => {
       createdRepo = {
@@ -125,6 +126,8 @@ describe('SetTrackedRepositoryUseCase', () => {
       mockGitRepoService.updateTracked.mockResolvedValue(trackedRepo);
 
       result = await useCase.execute(command);
+      emittedEvent = mockEventEmitter.emit.mock
+        .calls[0][0] as RepositoryTrackingSetEvent;
     });
 
     it('finds or creates the repo for the requested branch', () => {
@@ -148,12 +151,16 @@ describe('SetTrackedRepositoryUseCase', () => {
       expect(result).toEqual(trackedRepo);
     });
 
-    it('emits a RepositoryTrackingSetEvent without fromBranch', () => {
+    it('emits exactly one event', () => {
       expect(mockEventEmitter.emit).toHaveBeenCalledTimes(1);
-      const event = mockEventEmitter.emit.mock
-        .calls[0][0] as RepositoryTrackingSetEvent;
-      expect(event).toBeInstanceOf(RepositoryTrackingSetEvent);
-      expect(event.payload).toEqual(
+    });
+
+    it('emits a RepositoryTrackingSetEvent', () => {
+      expect(emittedEvent).toBeInstanceOf(RepositoryTrackingSetEvent);
+    });
+
+    it('carries the tracking details in the payload', () => {
+      expect(emittedEvent.payload).toEqual(
         expect.objectContaining({
           organizationId,
           repositoryId: trackedRepo.id,
@@ -163,7 +170,10 @@ describe('SetTrackedRepositoryUseCase', () => {
           origin: 'track',
         }),
       );
-      expect(event.payload.fromBranch).toBeUndefined();
+    });
+
+    it('does not set a fromBranch', () => {
+      expect(emittedEvent.payload.fromBranch).toBeUndefined();
     });
   });
 
