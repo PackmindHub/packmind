@@ -16,7 +16,7 @@ import {
  */
 const packmindEmail = (): string => `track-e2e-${uuidv4()}@packmind.com`;
 
-describeForVersion('>= 0.31.0', 'track command', () => {
+describeForVersion('> 0.31.0', 'track command', () => {
   describeWithUserSignedUp(
     'when tracking the current repository',
     (getContext) => {
