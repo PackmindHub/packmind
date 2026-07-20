@@ -39,7 +39,7 @@ const renderComponent = () => {
 describe('DashboardKPI', () => {
   const mockKpiData = {
     standards: { total: 2, active: 1 },
-    recipes: { total: 2, active: 1 },
+    commands: { total: 2, active: 1 },
     skills: { total: 2, active: 1 },
   };
 
@@ -53,7 +53,7 @@ describe('DashboardKPI', () => {
     jest
       .spyOn(DeploymentsQueries, 'useGetDashboardNonLiveQuery')
       .mockReturnValue({
-        data: { standards: [], recipes: [], skills: [] },
+        data: { standards: [], commands: [], skills: [] },
       } as unknown as ReturnType<
         typeof DeploymentsQueries.useGetDashboardNonLiveQuery
       >);
@@ -130,7 +130,7 @@ describe('DashboardKPI', () => {
         .mockReturnValue({
           data: {
             standards: { total: 1, active: 1 },
-            recipes: { total: 1, active: 1 },
+            commands: { total: 1, active: 1 },
             skills: { total: 1, active: 1 },
           },
         } as unknown as ReturnType<

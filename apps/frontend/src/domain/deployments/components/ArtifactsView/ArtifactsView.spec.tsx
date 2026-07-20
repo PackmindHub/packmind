@@ -24,7 +24,7 @@ const makeCommand = (
   options?: { isDeleted?: boolean },
 ): CommandDeploymentStatus =>
   ({
-    recipe: { id, name },
+    command: { id, name },
     latestVersion: { version: latest },
     targetDeployments: targets.map((t) => ({
       target: { id: `${id}-${t.name}`, name: t.name },

@@ -64,7 +64,7 @@ describe('RepositoryTargetTable', () => {
           name: 'alpha',
           recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [commandA],
+        deployedCommands: [commandA],
       }),
       createActivePackage({
         package: packageFactory({
@@ -97,7 +97,7 @@ describe('RepositoryTargetTable', () => {
           name: 'alpha',
           recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [commandA],
+        deployedCommands: [commandA],
       }),
       createActivePackage({
         package: packageFactory({
@@ -132,7 +132,7 @@ describe('RepositoryTargetTable', () => {
           name: 'alpha',
           recipes: [upToDateCommand.recipe.id],
         }),
-        deployedRecipes: [upToDateCommand],
+        deployedCommands: [upToDateCommand],
       }),
     ];
 
@@ -159,7 +159,7 @@ describe('RepositoryTargetTable', () => {
           name: 'alpha',
           recipes: [commandA.recipe.id],
         }),
-        deployedRecipes: [commandA],
+        deployedCommands: [commandA],
       }),
       createActivePackage({
         package: packageFactory({
