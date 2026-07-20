@@ -36,7 +36,10 @@ import {
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageMembership } from '../../hooks/usePackageMembership';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
-import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
+import {
+  deployedPlaceParts,
+  RemoveArtifactFromPackageConfirm,
+} from '../PackagesPopover';
 
 export type AddToPackagesArtifactKind = 'standard' | 'command' | 'skill';
 
@@ -131,7 +134,8 @@ export const AddToPackagesDialog = ({
     spaceId,
     organizationId,
   });
-  const { getDeployedTargets } = usePackageDeploymentStatus(spaceId);
+  const { getDeployedTargets, getDeployedMarketplaces, isDeployed } =
+    usePackageDeploymentStatus(spaceId, organizationId);
 
   const { mutateAsync: addArtefacts, isPending: isAdding } =
     useAddArtefactsToPackagesMutation();
@@ -225,9 +229,7 @@ export const AddToPackagesDialog = ({
   };
 
   const requestRemove = (pkg: PackageResponse) => {
-    // A deployed package keeps shipping until the next sync, so warn first.
-    // An undeployed one has no consequence, so remove without a dialog.
-    if (getDeployedTargets(pkg.id) > 0) {
+    if (isDeployed(pkg.id)) {
       setRemoveTarget(pkg);
     } else {
       void removeFromPackage(pkg).catch(() => {
@@ -311,6 +313,7 @@ export const AddToPackagesDialog = ({
                     key={pkg.id}
                     pkg={pkg}
                     deployedTargets={getDeployedTargets(pkg.id)}
+                    deployedMarketplaces={getDeployedMarketplaces(pkg.id)}
                     heldNames={
                       artifactCount > 1 && held.length < artifactCount
                         ? held.map((a) => a.name)
@@ -369,6 +372,7 @@ export const AddToPackagesDialog = ({
                         key={pkg.id}
                         pkg={pkg}
                         deployedTargets={getDeployedTargets(pkg.id)}
+                        deployedMarketplaces={getDeployedMarketplaces(pkg.id)}
                         missingNames={
                           artifactCount > 1 && held.length > 0
                             ? missing.map((a) => a.name)
@@ -446,6 +450,9 @@ export const AddToPackagesDialog = ({
         }}
         packageName={removeTarget?.name ?? ''}
         deployedTargets={removeTarget ? getDeployedTargets(removeTarget.id) : 0}
+        deployedMarketplaces={
+          removeTarget ? getDeployedMarketplaces(removeTarget.id) : 0
+        }
         artifactNames={removalNames}
         onConfirm={async () => {
           if (!removeTarget) return;
@@ -482,19 +489,25 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function PackageRowContent({
   pkg,
   deployedTargets,
+  deployedMarketplaces,
 }: {
   pkg: PackageResponse;
   deployedTargets: number;
+  deployedMarketplaces: number;
 }) {
+  const deployedPlaces = deployedPlaceParts(
+    deployedTargets,
+    deployedMarketplaces,
+  ).join(' · ');
   return (
     <PMVStack alignItems="stretch" gap={0} flex={1} minWidth={0}>
       <PMHStack gap={2} alignItems="center" minWidth={0}>
         <PMText variant="body" fontWeight={500} truncate title={pkg.name}>
           {pkg.name}
         </PMText>
-        {deployedTargets > 0 ? (
+        {deployedPlaces ? (
           <PMText variant="small" color="faded" flexShrink={0}>
-            {deployedTargets} {deployedTargets === 1 ? 'repo' : 'repos'}
+            {deployedPlaces}
           </PMText>
         ) : null}
       </PMHStack>
@@ -510,6 +523,7 @@ function PackageRowContent({
 function MemberRow({
   pkg,
   deployedTargets,
+  deployedMarketplaces,
   heldNames,
   totalCount,
   disabled,
@@ -517,6 +531,7 @@ function MemberRow({
 }: {
   pkg: PackageResponse;
   deployedTargets: number;
+  deployedMarketplaces: number;
   heldNames: string[] | null;
   totalCount: number;
   disabled: boolean;
@@ -532,7 +547,11 @@ function MemberRow({
       transition="background-color 120ms ease-out"
       _hover={{ backgroundColor: 'background.tertiary' }}
     >
-      <PackageRowContent pkg={pkg} deployedTargets={deployedTargets} />
+      <PackageRowContent
+        pkg={pkg}
+        deployedTargets={deployedTargets}
+        deployedMarketplaces={deployedMarketplaces}
+      />
       {heldNames !== null ? (
         <PMTooltip label={heldNames.join(', ')} openDelay={300}>
           <PMBox as="span" flexShrink={0} cursor="help">
@@ -572,6 +591,7 @@ function MemberRow({
 function AddRow({
   pkg,
   deployedTargets,
+  deployedMarketplaces,
   missingNames,
   totalCount,
   disabled,
@@ -579,6 +599,7 @@ function AddRow({
 }: {
   pkg: PackageResponse;
   deployedTargets: number;
+  deployedMarketplaces: number;
   missingNames: string[] | null;
   totalCount: number;
   disabled: boolean;
@@ -603,7 +624,11 @@ function AddRow({
       aria-disabled={disabled}
       onClick={disabled ? undefined : onAdd}
     >
-      <PackageRowContent pkg={pkg} deployedTargets={deployedTargets} />
+      <PackageRowContent
+        pkg={pkg}
+        deployedTargets={deployedTargets}
+        deployedMarketplaces={deployedMarketplaces}
+      />
       {missingNames !== null ? (
         <PMTooltip label={missingNames.join(', ')} openDelay={300}>
           <PMBox as="span" flexShrink={0} cursor="help">

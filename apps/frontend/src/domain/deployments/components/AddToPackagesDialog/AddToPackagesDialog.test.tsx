@@ -28,6 +28,7 @@ import {
   useListActiveDistributedPackagesBySpaceQuery,
   useListPackagesBySpaceQuery,
 } from '../../api/queries/DeploymentsQueries';
+import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
 
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
   ...jest.requireActual('../../api/queries/DeploymentsQueries'),
@@ -36,6 +37,12 @@ jest.mock('../../api/queries/DeploymentsQueries', () => ({
   useListPackagesBySpaceQuery: jest.fn(),
   useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
 }));
+jest.mock(
+  '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus',
+  () => ({
+    usePackageMarketplaceStatus: jest.fn(),
+  }),
+);
 
 const mockUseListPackagesBySpaceQuery =
   useListPackagesBySpaceQuery as jest.MockedFunction<
@@ -52,6 +59,10 @@ const mockUseRemoveArtefactsFromPackageMutation =
 const mockUseListActiveDistributedPackagesBySpaceQuery =
   useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
     typeof useListActiveDistributedPackagesBySpaceQuery
+  >;
+const mockUsePackageMarketplaceStatus =
+  usePackageMarketplaceStatus as jest.MockedFunction<
+    typeof usePackageMarketplaceStatus
   >;
 
 const artifactId = createStandardId('std-1');
@@ -131,6 +142,15 @@ const setPackagesResponse = (packages: Package[], isLoading = false) => {
   } as unknown as ReturnType<typeof useListPackagesBySpaceQuery>);
 };
 
+const setPublishedMarketplaces = (counts: Record<string, number>) => {
+  mockUsePackageMarketplaceStatus.mockReturnValue({
+    getPublishedMarketplaces: (packageId) =>
+      packageId ? (counts[packageId.toString()] ?? 0) : 0,
+    isLoading: false,
+    isError: false,
+  });
+};
+
 const setDeployedPackages = (packageIds: PackageId[], targetCount = 1) => {
   const targets = Array.from({ length: targetCount }, (_, index) => ({
     targetId: `target-${index + 1}`,
@@ -190,6 +210,7 @@ describe('AddToPackagesDialog', () => {
       createMockRemoveMutation(),
     );
     setDeployedPackages([]);
+    setPublishedMarketplaces({});
     setPackagesResponse([packageA, packageB]);
   });
 
@@ -344,6 +365,16 @@ describe('AddToPackagesDialog', () => {
     });
   });
 
+  it('shows split repo and marketplace counts on a member row', () => {
+    setPackagesResponse([packageContainingArtifact, packageA]);
+    setDeployedPackages([packageContainingArtifact.id], 2);
+    setPublishedMarketplaces({ [packageContainingArtifact.id.toString()]: 1 });
+
+    renderDialog();
+
+    expect(screen.getByText('2 repos · 1 marketplace')).toBeInTheDocument();
+  });
+
   describe('remove from the members section', () => {
     it('removes instantly when the package is not deployed', async () => {
       const mutateAsync = jest.fn().mockResolvedValue({});
@@ -402,6 +433,52 @@ describe('AddToPackagesDialog', () => {
           standardIds: [artifactId],
         });
       });
+    });
+
+    it('asks for confirmation when the package is only published to a marketplace', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setPublishedMarketplaces({
+        [packageContainingArtifact.id.toString()]: 1,
+      });
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Remove from already-here'));
+
+      expect(
+        await screen.findByText('Remove from already-here?'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/already-here is deployed to 1 marketplace/),
+      ).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('names both repos and marketplaces in the confirmation banner', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id], 2);
+      setPublishedMarketplaces({
+        [packageContainingArtifact.id.toString()]: 1,
+      });
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Remove from already-here'));
+
+      expect(
+        await screen.findByText(
+          /already-here is deployed to 2 repos and 1 marketplace/,
+        ),
+      ).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
     });
   });
 

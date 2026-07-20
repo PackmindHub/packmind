@@ -13,11 +13,29 @@ import {
   PMVStack,
 } from '@packmind/ui';
 
+/** Pluralized fragments like `['2 repos', '1 marketplace']`, zero counts omitted. */
+export function deployedPlaceParts(
+  repos: number,
+  marketplaces: number,
+): string[] {
+  const parts: string[] = [];
+  if (repos > 0) {
+    parts.push(`${repos} ${repos === 1 ? 'repo' : 'repos'}`);
+  }
+  if (marketplaces > 0) {
+    parts.push(
+      `${marketplaces} ${marketplaces === 1 ? 'marketplace' : 'marketplaces'}`,
+    );
+  }
+  return parts;
+}
+
 interface RemoveArtifactFromPackageConfirmProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   packageName: string;
   deployedTargets: number;
+  deployedMarketplaces?: number;
   artifactNames: string[];
   onConfirm: () => Promise<void>;
 }
@@ -25,20 +43,25 @@ interface RemoveArtifactFromPackageConfirmProps {
 /**
  * Confirmation shown before removing one or more artifacts from a package. The
  * deployed warning banner only appears when the package is live on at least
- * one target. With several artifacts the dialog lists them so the blast radius
- * is visible before confirming.
+ * one repo target or marketplace. With several artifacts the dialog lists them
+ * so the blast radius is visible before confirming.
  */
 export const RemoveArtifactFromPackageConfirm = ({
   open,
   onOpenChange,
   packageName,
   deployedTargets,
+  deployedMarketplaces = 0,
   artifactNames,
   onConfirm,
 }: RemoveArtifactFromPackageConfirmProps) => {
   const [isRemoving, setIsRemoving] = useState(false);
   const count = artifactNames.length;
   const single = count === 1;
+  const deployedPlaces = deployedPlaceParts(
+    deployedTargets,
+    deployedMarketplaces,
+  ).join(' and ');
 
   const handleRemove = async () => {
     setIsRemoving(true);
@@ -116,7 +139,7 @@ export const RemoveArtifactFromPackageConfirm = ({
                   </PMVStack>
                 ) : null}
 
-                {deployedTargets > 0 ? (
+                {deployedPlaces ? (
                   <PMHStack
                     gap={2.5}
                     alignItems="flex-start"
@@ -130,8 +153,7 @@ export const RemoveArtifactFromPackageConfirm = ({
                       </PMIcon>
                     </PMBox>
                     <PMText variant="small" color="secondary">
-                      {packageName} is deployed to {deployedTargets}{' '}
-                      {deployedTargets === 1 ? 'repo' : 'repos'}.
+                      {packageName} is deployed to {deployedPlaces}.
                     </PMText>
                   </PMHStack>
                 ) : null}
