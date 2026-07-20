@@ -25,8 +25,6 @@ import {
   useGetCommandByIdQuery,
   useDeleteCommandMutation,
 } from '../api/queries/CommandsQueries';
-
-import { AddToPackagesButton } from '../../deployments/components/AddToPackagesDialog';
 import { CommandDistributionsList } from '../../deployments/components/CommandDistributionsList/CommandDistributionsList';
 import { useListCommandDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -200,17 +198,6 @@ export const CommandDetails = ({ id, orgSlug }: CommandDetailsProps) => {
           <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>
-          {organization?.id && spaceId ? (
-            <AddToPackagesButton
-              artifactId={recipe.id}
-              artifactType="recipe"
-              artifactKindLabel="command"
-              organizationId={organization.id}
-              spaceId={spaceId}
-              orgSlug={orgSlug}
-              spaceSlug={spaceSlug}
-            />
-          ) : null}
           <PMAlertDialog
             trigger={
               <PMButton variant="secondary" loading={deleteMutation.isPending}>

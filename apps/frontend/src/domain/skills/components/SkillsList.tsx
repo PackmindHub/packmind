@@ -22,10 +22,8 @@ import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import {
-  PackageCountBadge,
-  formatPackageNames,
-} from '../../deployments/components/PackageCountBadge';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { MembershipChips } from '../../deployments/components/MembershipChips';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { AddToPackagesBatchAction } from '../../deployments/components/AddToPackagesDialog';
@@ -95,12 +93,21 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     }
   };
 
+  const skillNamesById = React.useMemo(
+    () =>
+      new Map((skills ?? []).map((skill) => [skill.id.toString(), skill.name])),
+    [skills],
+  );
+
   const renderAddToPackagesAction = React.useCallback<BatchAction<SkillId>>(
     ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
-          selectedIds={selectedIds}
+          selectedArtifacts={selectedIds.map((id) => ({
+            id,
+            name: skillNamesById.get(id.toString()) ?? '',
+          }))}
           artifactType="skill"
           artifactKindLabel="skill"
           organizationId={organization.id}
@@ -111,7 +118,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         />
       );
     },
-    [organization?.id, spaceId, orgSlug, spaceSlug],
+    [organization?.id, spaceId, orgSlug, spaceSlug, skillNamesById],
   );
 
   const listingProps: Omit<ItemsListingProps<Skill>, 'items'> = {
@@ -230,11 +237,10 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             }
           : {}),
         packages: (
-          <PackageCountBadge
+          <MembershipChips
             artifactId={skill.id}
             artifactType="skill"
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
+            artifactName={skill.name}
             spaceId={spaceId}
             organizationId={organization?.id}
           />

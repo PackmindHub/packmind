@@ -35,14 +35,19 @@
     "packmind-cli": "ts-node --project tsconfig.app.json src/main.ts"
   },
   "dependencies": {
-    "@types/inquirer": "^9.0.9",
     "dotenv": "^16",
     "inquirer": "^13.0.2",
     "minimatch": "^10",
     "semver": "^7.7.4",
     "undici": "^7",
     "which": "^4.0.0",
-    "zod": "^4.3.5"
+    "diff": "^8.0.3",
+    "open": "^11.0.0",
+    "cmd-ts": "^0.14.3",
+    "slug": "^11.0.0",
+    "yaml": "^2.8.3",
+    "chalk": "^5.6.0",
+    "log-update": "^8.0.0"
   },
   "devDependencies": {
     "@types/which": "^3.0.4"

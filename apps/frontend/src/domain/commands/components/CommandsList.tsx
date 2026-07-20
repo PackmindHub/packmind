@@ -24,10 +24,8 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { CommandsBlankState } from './CommandsBlankState';
 import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
-import {
-  PackageCountBadge,
-  formatPackageNames,
-} from '../../deployments/components/PackageCountBadge';
+import { formatPackageNames } from '../../deployments/components/PackageCountBadge';
+import { MembershipChips } from '../../deployments/components/MembershipChips';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { getArtifactPackages } from '../../deployments/hooks/usePackagesForArtifact';
 import { AddToPackagesBatchAction } from '../../deployments/components/AddToPackagesDialog';
@@ -109,12 +107,23 @@ export const CommandsList = ({
     }
   };
 
+  const commandNamesById = React.useMemo(
+    () =>
+      new Map(
+        (recipes ?? []).map((recipe) => [recipe.id.toString(), recipe.name]),
+      ),
+    [recipes],
+  );
+
   const renderAddToPackagesAction = React.useCallback<BatchAction<CommandId>>(
     ({ selectedIds, unselectAll }) => {
       if (!organization?.id || !spaceId) return null;
       return (
         <AddToPackagesBatchAction
-          selectedIds={selectedIds}
+          selectedArtifacts={selectedIds.map((id) => ({
+            id,
+            name: commandNamesById.get(id.toString()) ?? '',
+          }))}
           artifactType="recipe"
           artifactKindLabel="command"
           organizationId={organization.id}
@@ -125,7 +134,7 @@ export const CommandsList = ({
         />
       );
     },
-    [organization?.id, spaceId, orgSlug, spaceSlug],
+    [organization?.id, spaceId, orgSlug, spaceSlug, commandNamesById],
   );
 
   const hasCommands = (recipes ?? []).length > 0;
@@ -258,11 +267,10 @@ export const CommandsList = ({
             }
           : {}),
         packages: (
-          <PackageCountBadge
+          <MembershipChips
             artifactId={recipe.id}
             artifactType="recipe"
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
+            artifactName={recipe.name}
             spaceId={spaceId}
             organizationId={organization?.id}
           />

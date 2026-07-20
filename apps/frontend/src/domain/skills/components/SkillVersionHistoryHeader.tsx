@@ -1,9 +1,8 @@
 import { PMHStack, PMText } from '@packmind/ui';
 import { Skill, SkillVersion } from '@packmind/types';
-import { useParams } from 'react-router';
 
 import { SkillVersionsList } from './SkillVersionsList';
-import { PackageCountHeaderInfo } from '../../deployments/components/PackageCountBadge';
+import { PackagesPopover } from '../../deployments/components/PackagesPopover';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
@@ -16,9 +15,8 @@ export const SkillVersionHistoryHeader = ({
   skill,
   latestVersion,
 }: ISkillVersionHistoryHeaderProps) => {
-  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
-  const { orgSlug } = useParams<{ orgSlug: string }>();
 
   return (
     <PMHStack gap={8} alignItems="center" height="full">
@@ -29,11 +27,11 @@ export const SkillVersionHistoryHeader = ({
         <PMText variant="small">{latestVersion.version}</PMText>
         <SkillVersionsList skillId={skill.id} linkLabel="History" />
       </PMHStack>
-      <PackageCountHeaderInfo
+      <PackagesPopover
         artifactId={skill.id}
         artifactType="skill"
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
+        artifactKindLabel="skill"
+        artifactName={skill.name}
         spaceId={spaceId}
         organizationId={organization?.id}
       />

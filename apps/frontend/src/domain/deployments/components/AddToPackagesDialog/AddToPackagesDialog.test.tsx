@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  act,
   render,
   screen,
   fireEvent,
@@ -16,19 +17,24 @@ import {
   createSpaceId,
   createStandardId,
   Package,
+  PackageId,
 } from '@packmind/types';
 
 import { AddToPackagesDialog } from './AddToPackagesDialog';
 import {
   AddArtefactsToPackagesOutcome,
   useAddArtefactsToPackagesMutation,
+  useRemoveArtefactsFromPackageMutation,
+  useListActiveDistributedPackagesBySpaceQuery,
   useListPackagesBySpaceQuery,
 } from '../../api/queries/DeploymentsQueries';
 
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
   ...jest.requireActual('../../api/queries/DeploymentsQueries'),
   useAddArtefactsToPackagesMutation: jest.fn(),
+  useRemoveArtefactsFromPackageMutation: jest.fn(),
   useListPackagesBySpaceQuery: jest.fn(),
+  useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
 }));
 
 const mockUseListPackagesBySpaceQuery =
@@ -38,6 +44,14 @@ const mockUseListPackagesBySpaceQuery =
 const mockUseAddArtefactsToPackagesMutation =
   useAddArtefactsToPackagesMutation as jest.MockedFunction<
     typeof useAddArtefactsToPackagesMutation
+  >;
+const mockUseRemoveArtefactsFromPackageMutation =
+  useRemoveArtefactsFromPackageMutation as jest.MockedFunction<
+    typeof useRemoveArtefactsFromPackageMutation
+  >;
+const mockUseListActiveDistributedPackagesBySpaceQuery =
+  useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
+    typeof useListActiveDistributedPackagesBySpaceQuery
   >;
 
 const artifactId = createStandardId('std-1');
@@ -79,7 +93,7 @@ const packageContainingArtifact: Package = {
   skills: [],
 };
 
-const createMockMutation = (
+const createMockAddMutation = (
   overrides: Partial<ReturnType<typeof useAddArtefactsToPackagesMutation>> = {},
 ) =>
   ({
@@ -94,12 +108,41 @@ const createMockMutation = (
     ...overrides,
   }) as unknown as ReturnType<typeof useAddArtefactsToPackagesMutation>;
 
+const createMockRemoveMutation = (
+  overrides: Partial<
+    ReturnType<typeof useRemoveArtefactsFromPackageMutation>
+  > = {},
+) =>
+  ({
+    mutate: jest.fn(),
+    mutateAsync: jest.fn().mockResolvedValue({}),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    reset: jest.fn(),
+    ...overrides,
+  }) as unknown as ReturnType<typeof useRemoveArtefactsFromPackageMutation>;
+
 const setPackagesResponse = (packages: Package[], isLoading = false) => {
   mockUseListPackagesBySpaceQuery.mockReturnValue({
     data: { packages },
     isLoading,
     isError: false,
   } as unknown as ReturnType<typeof useListPackagesBySpaceQuery>);
+};
+
+const setDeployedPackages = (packageIds: PackageId[], targetCount = 1) => {
+  const targets = Array.from({ length: targetCount }, (_, index) => ({
+    targetId: `target-${index + 1}`,
+    packages: packageIds.map((packageId) => ({ packageId })),
+  }));
+  mockUseListActiveDistributedPackagesBySpaceQuery.mockReturnValue({
+    data: targets,
+    isLoading: false,
+    isError: false,
+  } as unknown as ReturnType<
+    typeof useListActiveDistributedPackagesBySpaceQuery
+  >);
 };
 
 const renderDialog = (
@@ -114,7 +157,7 @@ const renderDialog = (
   const props: React.ComponentProps<typeof AddToPackagesDialog> = {
     open: true,
     onOpenChange: jest.fn(),
-    artifactIds: [artifactId],
+    artifacts: [{ id: artifactId, name: 'My Standard' }],
     artifactType: 'standard',
     artifactKindLabel: 'standard',
     organizationId,
@@ -140,7 +183,13 @@ const renderDialog = (
 
 describe('AddToPackagesDialog', () => {
   beforeEach(() => {
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(createMockMutation());
+    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+      createMockAddMutation(),
+    );
+    mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+      createMockRemoveMutation(),
+    );
+    setDeployedPackages([]);
     setPackagesResponse([packageA, packageB]);
   });
 
@@ -152,26 +201,40 @@ describe('AddToPackagesDialog', () => {
     renderDialog({ artifactKindLabel: 'command', artifactType: 'recipe' });
 
     expect(
-      screen.getByRole('heading', { name: 'Add to packages' }),
+      screen.getByRole('heading', { name: 'Manage packages' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Pick the packages this command should also ship in.'),
+      screen.getByText('Which packages ship this command.'),
     ).toBeInTheDocument();
   });
 
-  it('lists every package not yet containing the artifact', () => {
+  it('lists packages missing the artifact in the add section', () => {
     renderDialog();
 
-    expect(screen.getByText('frontend-rules')).toBeInTheDocument();
-    expect(screen.getByText('security-baseline')).toBeInTheDocument();
+    expect(screen.getByLabelText('Add to frontend-rules')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Add to security-baseline'),
+    ).toBeInTheDocument();
   });
 
-  it('hides packages that already contain the artifact', () => {
+  it('lists packages already containing the artifact in the members section', () => {
     setPackagesResponse([packageA, packageContainingArtifact]);
     renderDialog();
 
-    expect(screen.queryByText('already-here')).not.toBeInTheDocument();
-    expect(screen.getByText('frontend-rules')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Remove from already-here'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Add to already-here'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows the not-in-any-package hint when nothing contains the artifact', () => {
+    renderDialog();
+
+    expect(
+      screen.getByText('Not in any package yet. Pick one below to add it.'),
+    ).toBeInTheDocument();
   });
 
   it('shows the all-covered message when every package already contains it', () => {
@@ -184,7 +247,7 @@ describe('AddToPackagesDialog', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /^Add to/i }),
+      screen.queryByPlaceholderText('Search packages...'),
     ).not.toBeInTheDocument();
   });
 
@@ -201,32 +264,20 @@ describe('AddToPackagesDialog', () => {
     );
   });
 
-  it('disables the CTA until at least one package is selected', async () => {
-    renderDialog();
-
-    expect(
-      screen.getByRole('button', { name: /^Add to packages$/i }),
-    ).toBeDisabled();
-
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^Add to 1 package$/i }),
-      ).not.toBeDisabled();
-    });
-  });
-
-  it('filters the list when the user types in the search field', async () => {
+  it('filters the add section when the user types in the search field', async () => {
     renderDialog();
 
     const search = screen.getByPlaceholderText('Search packages...');
     fireEvent.change(search, { target: { value: 'security' } });
 
     await waitFor(() => {
-      expect(screen.queryByText('frontend-rules')).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText('Add to frontend-rules'),
+      ).not.toBeInTheDocument();
     });
-    expect(screen.getByText('security-baseline')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Add to security-baseline'),
+    ).toBeInTheDocument();
   });
 
   it('shows the no-match state with a Clear search action', async () => {
@@ -237,152 +288,201 @@ describe('AddToPackagesDialog', () => {
     });
 
     expect(
-      await screen.findByText('No packages match "nothing-matches".'),
+      await screen.findByText('No package matches "nothing-matches".'),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Clear search'));
 
     await waitFor(() => {
-      expect(screen.getByText('frontend-rules')).toBeInTheDocument();
+      expect(
+        screen.getByLabelText('Add to frontend-rules'),
+      ).toBeInTheDocument();
     });
   });
 
-  it('submits a per-package entry for each selected package', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue([
-      { packageId: packageA.id, ok: true, response: { package: packageA } },
-      { packageId: packageB.id, ok: true, response: { package: packageB } },
-    ] as AddArtefactsToPackagesOutcome[]);
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockMutation({ mutateAsync }),
-    );
+  describe('instant add', () => {
+    it('submits a single-package entry when an add row is clicked', async () => {
+      const mutateAsync = jest
+        .fn()
+        .mockResolvedValue([
+          { packageId: packageA.id, ok: true, response: { package: packageA } },
+        ] as AddArtefactsToPackagesOutcome[]);
+      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+        createMockAddMutation({ mutateAsync }),
+      );
 
-    const { props } = renderDialog();
+      renderDialog();
 
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-    fireEvent.click(screen.getByLabelText('Add to security-baseline'));
+      fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
 
-    const submit = await screen.findByRole('button', {
-      name: /^Add to 2 packages$/i,
-    });
-    fireEvent.click(submit);
-
-    await waitFor(() => {
-      expect(mutateAsync).toHaveBeenCalledWith({
-        spaceId,
-        entries: [
-          { packageId: packageA.id, standardIds: [artifactId] },
-          { packageId: packageB.id, standardIds: [artifactId] },
-        ],
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          entries: [{ packageId: packageA.id, standardIds: [artifactId] }],
+        });
       });
     });
 
-    await waitFor(() => {
-      expect(props.onOpenChange).toHaveBeenCalledWith(false);
+    it('keeps the drawer open after a successful add', async () => {
+      const mutateAsync = jest
+        .fn()
+        .mockResolvedValue([
+          { packageId: packageA.id, ok: true, response: { package: packageA } },
+        ] as AddArtefactsToPackagesOutcome[]);
+      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+        createMockAddMutation({ mutateAsync }),
+      );
+
+      const { props } = renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalled();
+      });
+      expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
     });
   });
 
-  it('keeps the dialog open when every package call fails', async () => {
-    const failure = new Error('boom');
-    const mutateAsync = jest
-      .fn()
-      .mockResolvedValue([
-        { packageId: packageA.id, ok: false, error: failure },
-      ] as AddArtefactsToPackagesOutcome[]);
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockMutation({ mutateAsync }),
-    );
+  describe('remove from the members section', () => {
+    it('removes instantly when the package is not deployed', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
 
-    const { props } = renderDialog();
+      renderDialog();
 
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-    fireEvent.click(
-      await screen.findByRole('button', { name: /^Add to 1 package$/i }),
-    );
+      fireEvent.click(screen.getByLabelText('Remove from already-here'));
 
-    await waitFor(() => {
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageContainingArtifact.id,
+          standardIds: [artifactId],
+        });
+      });
+      expect(
+        screen.queryByText('Remove from already-here?'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('asks for confirmation when the package is deployed', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageContainingArtifact, packageA]);
+      setDeployedPackages([packageContainingArtifact.id], 2);
+
+      renderDialog();
+
+      fireEvent.click(screen.getByLabelText('Remove from already-here'));
+
+      expect(
+        await screen.findByText('Remove from already-here?'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/already-here is deployed to 2 repos/),
+      ).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+
+      // Text query on purpose: zag marks sibling layers aria-hidden on an
+      // async tick in jsdom, which makes role queries on the nested dialog
+      // timing-dependent. The e2e suite covers the accessibility tree.
+      fireEvent.click(
+        await screen.findByText('Remove', { selector: 'button' }),
+      );
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageContainingArtifact.id,
+          standardIds: [artifactId],
+        });
+      });
+    });
+  });
+
+  describe('close behavior', () => {
+    it('invokes onSuccess on close after a successful change', async () => {
+      const mutateAsync = jest
+        .fn()
+        .mockResolvedValue([
+          { packageId: packageA.id, ok: true, response: { package: packageA } },
+        ] as AddArtefactsToPackagesOutcome[]);
+      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+        createMockAddMutation({ mutateAsync }),
+      );
+      const onSuccess = jest.fn();
+
+      renderDialog({ onSuccess });
+
+      // act flushes the whole add flow, including the state commit that
+      // marks the drawer as changed, before Done is clicked.
+      await act(async () => {
+        fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+      });
       expect(mutateAsync).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalledTimes(1);
+      });
     });
-    expect(props.onOpenChange).not.toHaveBeenCalledWith(false);
-  });
 
-  it('invokes onSuccess after a full-success submission', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue([
-      { packageId: packageA.id, ok: true, response: { package: packageA } },
-      { packageId: packageB.id, ok: true, response: { package: packageB } },
-    ] as AddArtefactsToPackagesOutcome[]);
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockMutation({ mutateAsync }),
-    );
-    const onSuccess = jest.fn();
+    it('does not invoke onSuccess on close when nothing changed', async () => {
+      const onSuccess = jest.fn();
 
-    renderDialog({ onSuccess });
+      const { props } = renderDialog({ onSuccess });
 
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-    fireEvent.click(screen.getByLabelText('Add to security-baseline'));
-    fireEvent.click(
-      await screen.findByRole('button', { name: /^Add to 2 packages$/i }),
-    );
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 
-    await waitFor(() => {
-      expect(onSuccess).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(props.onOpenChange).toHaveBeenCalledWith(false);
+      });
+      expect(onSuccess).not.toHaveBeenCalled();
     });
-  });
 
-  it('does not invoke onSuccess when every package call fails', async () => {
-    const failure = new Error('boom');
-    const mutateAsync = jest
-      .fn()
-      .mockResolvedValue([
-        { packageId: packageA.id, ok: false, error: failure },
-      ] as AddArtefactsToPackagesOutcome[]);
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockMutation({ mutateAsync }),
-    );
-    const onSuccess = jest.fn();
+    it('does not invoke onSuccess when the only add attempt failed', async () => {
+      const failure = new Error('boom');
+      const mutateAsync = jest
+        .fn()
+        .mockResolvedValue([
+          { packageId: packageA.id, ok: false, error: failure },
+        ] as AddArtefactsToPackagesOutcome[]);
+      mockUseAddArtefactsToPackagesMutation.mockReturnValue(
+        createMockAddMutation({ mutateAsync }),
+      );
+      const onSuccess = jest.fn();
 
-    renderDialog({ onSuccess });
+      renderDialog({ onSuccess });
 
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-    fireEvent.click(
-      await screen.findByRole('button', { name: /^Add to 1 package$/i }),
-    );
-
-    await waitFor(() => {
+      await act(async () => {
+        fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
+      });
       expect(mutateAsync).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled();
+      });
+      expect(onSuccess).not.toHaveBeenCalled();
     });
-    expect(onSuccess).not.toHaveBeenCalled();
-  });
-
-  it('does not invoke onSuccess on partial success', async () => {
-    const failure = new Error('boom');
-    const mutateAsync = jest.fn().mockResolvedValue([
-      { packageId: packageA.id, ok: true, response: { package: packageA } },
-      { packageId: packageB.id, ok: false, error: failure },
-    ] as AddArtefactsToPackagesOutcome[]);
-    mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-      createMockMutation({ mutateAsync }),
-    );
-    const onSuccess = jest.fn();
-
-    renderDialog({ onSuccess });
-
-    fireEvent.click(screen.getByLabelText('Add to frontend-rules'));
-    fireEvent.click(screen.getByLabelText('Add to security-baseline'));
-    fireEvent.click(
-      await screen.findByRole('button', { name: /^Add to 2 packages$/i }),
-    );
-
-    await waitFor(() => {
-      expect(mutateAsync).toHaveBeenCalled();
-    });
-    expect(onSuccess).not.toHaveBeenCalled();
   });
 
   describe('multi-artifact selection', () => {
     const firstId = createStandardId('multi-1');
     const secondId = createStandardId('multi-2');
     const thirdId = createStandardId('multi-3');
-    const multiArtifactIds = [firstId, secondId, thirdId];
+    const multiArtifacts = [
+      { id: firstId, name: 'First Standard' },
+      { id: secondId, name: 'Second Standard' },
+      { id: thirdId, name: 'Third Standard' },
+    ];
 
     const packageWithPartialOverlap: Package = {
       id: createPackageId('pkg-partial'),
@@ -420,43 +520,148 @@ describe('AddToPackagesDialog', () => {
 
     it('renders a plural subtitle that names the artifact count and kind', () => {
       setPackagesResponse([packageWithNoOverlap]);
-      renderDialog({ artifactIds: multiArtifactIds });
+      renderDialog({ artifacts: multiArtifacts });
+
+      expect(
+        screen.getByText('Which packages ship these 3 standards.'),
+      ).toBeInTheDocument();
+    });
+
+    it('treats a package containing every selected artifact as a member', () => {
+      setPackagesResponse([packageWithAllArtifacts, packageWithNoOverlap]);
+      renderDialog({ artifacts: multiArtifacts });
+
+      expect(
+        screen.getByLabelText('Remove from fully-covered'),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText('Add to fresh-target')).toBeInTheDocument();
+    });
+
+    it('shows the plural members-empty hint when no package holds any of them', () => {
+      setPackagesResponse([packageWithNoOverlap]);
+      renderDialog({ artifacts: multiArtifacts });
 
       expect(
         screen.getByText(
-          'Pick the packages these 3 standards should also ship in.',
+          'None of these 3 standards are in a package yet. Pick one below to add them.',
         ),
       ).toBeInTheDocument();
     });
 
-    it('renders an "already includes N of M" hint on packages with partial overlap', () => {
+    it('lists a partial-overlap package in both sections with a contains hint', () => {
       setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
-      renderDialog({ artifactIds: multiArtifactIds });
+      renderDialog({ artifacts: multiArtifacts });
 
-      const partialRow = screen
-        .getByText('partial-overlap')
-        .closest('[role="listitem"]');
-      expect(partialRow).not.toBeNull();
-      if (partialRow) {
-        expect(
-          within(partialRow as HTMLElement).getByText(
-            'Already includes 1 of 3',
-          ),
-        ).toBeInTheDocument();
-      }
+      const memberRow = screen
+        .getByLabelText('Remove from partial-overlap')
+        .closest('div');
+      expect(memberRow).not.toBeNull();
+      expect(
+        within(memberRow as HTMLElement).getByText('contains 1 of 3'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByLabelText('Add to partial-overlap'),
+      ).toBeInTheDocument();
 
-      const freshRow = screen
-        .getByText('fresh-target')
-        .closest('[role="listitem"]');
-      expect(freshRow).not.toBeNull();
-      if (freshRow) {
-        expect(
-          within(freshRow as HTMLElement).queryByText(/Already includes/),
-        ).not.toBeInTheDocument();
-      }
+      expect(
+        screen.queryByLabelText('Remove from fresh-target'),
+      ).not.toBeInTheDocument();
     });
 
-    it('omits already-present artifact IDs from each per-package entry at submit', async () => {
+    it('names the missing artifacts in a tooltip on the adds hint', async () => {
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      renderDialog({ artifacts: multiArtifacts });
+
+      const hint = screen.getByText('adds 2 of 3');
+      fireEvent.pointerMove(hint, { pointerType: 'mouse' });
+
+      expect(
+        await screen.findByText(
+          'Second Standard, Third Standard',
+          {},
+          { timeout: 2000 },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('names the held artifacts in a tooltip on the contains hint', async () => {
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      renderDialog({ artifacts: multiArtifacts });
+
+      const hint = screen.getByText('contains 1 of 3');
+      fireEvent.pointerMove(hint, { pointerType: 'mouse' });
+
+      expect(
+        await screen.findByText('First Standard', {}, { timeout: 2000 }),
+      ).toBeInTheDocument();
+    });
+
+    it('removes only the artifacts the package holds from a partial overlap', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+
+      renderDialog({ artifacts: multiArtifacts });
+
+      fireEvent.click(screen.getByLabelText('Remove from partial-overlap'));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageWithPartialOverlap.id,
+          standardIds: [firstId],
+        });
+      });
+    });
+
+    it('confirms with only the held artifact names when the partial overlap is deployed', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      setDeployedPackages([packageWithPartialOverlap.id]);
+
+      renderDialog({ artifacts: multiArtifacts });
+
+      fireEvent.click(screen.getByLabelText('Remove from partial-overlap'));
+
+      expect(
+        await screen.findByText('Remove from partial-overlap?'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('First Standard')).toBeInTheDocument();
+      expect(screen.queryByText('Second Standard')).not.toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+
+      fireEvent.click(
+        await screen.findByText('Remove', { selector: 'button' }),
+      );
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageWithPartialOverlap.id,
+          standardIds: [firstId],
+        });
+      });
+    });
+
+    it('renders an "adds N of M" hint on packages with partial overlap', () => {
+      setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
+      renderDialog({ artifacts: multiArtifacts });
+
+      const partialRow = screen.getByLabelText('Add to partial-overlap');
+      expect(within(partialRow).getByText('adds 2 of 3')).toBeInTheDocument();
+
+      const freshRow = screen.getByLabelText('Add to fresh-target');
+      expect(
+        within(freshRow).queryByText(/adds \d+ of/),
+      ).not.toBeInTheDocument();
+    });
+
+    it('omits already-present artifact IDs from the entry when adding', async () => {
       setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
       const mutateAsync = jest.fn().mockResolvedValue([
         {
@@ -464,26 +669,14 @@ describe('AddToPackagesDialog', () => {
           ok: true,
           response: { package: packageWithPartialOverlap },
         },
-        {
-          packageId: packageWithNoOverlap.id,
-          ok: true,
-          response: { package: packageWithNoOverlap },
-        },
       ] as AddArtefactsToPackagesOutcome[]);
       mockUseAddArtefactsToPackagesMutation.mockReturnValue(
-        createMockMutation({ mutateAsync }),
+        createMockAddMutation({ mutateAsync }),
       );
 
-      renderDialog({ artifactIds: multiArtifactIds });
+      renderDialog({ artifacts: multiArtifacts });
 
       fireEvent.click(screen.getByLabelText('Add to partial-overlap'));
-      fireEvent.click(screen.getByLabelText('Add to fresh-target'));
-
-      fireEvent.click(
-        await screen.findByRole('button', {
-          name: /^Add 3 standards to 2 packages$/i,
-        }),
-      );
 
       await waitFor(() => {
         expect(mutateAsync).toHaveBeenCalledWith({
@@ -493,46 +686,76 @@ describe('AddToPackagesDialog', () => {
               packageId: packageWithPartialOverlap.id,
               standardIds: [secondId, thirdId],
             },
-            {
-              packageId: packageWithNoOverlap.id,
-              standardIds: [firstId, secondId, thirdId],
-            },
           ],
+        });
+      });
+    });
+
+    it('removes several artifacts instantly when the package is not deployed', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageWithAllArtifacts, packageWithNoOverlap]);
+
+      renderDialog({ artifacts: multiArtifacts });
+
+      fireEvent.click(screen.getByLabelText('Remove from fully-covered'));
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageWithAllArtifacts.id,
+          standardIds: [firstId, secondId, thirdId],
+        });
+      });
+      expect(
+        screen.queryByText('Remove 3 artifacts from fully-covered?'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('asks for confirmation before a bulk remove from a deployed package', async () => {
+      const mutateAsync = jest.fn().mockResolvedValue({});
+      mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
+        createMockRemoveMutation({ mutateAsync }),
+      );
+      setPackagesResponse([packageWithAllArtifacts, packageWithNoOverlap]);
+      setDeployedPackages([packageWithAllArtifacts.id]);
+
+      renderDialog({ artifacts: multiArtifacts });
+
+      fireEvent.click(screen.getByLabelText('Remove from fully-covered'));
+
+      expect(
+        await screen.findByText('Remove 3 artifacts from fully-covered?'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('First Standard')).toBeInTheDocument();
+      expect(screen.getByText('Second Standard')).toBeInTheDocument();
+      expect(screen.getByText('Third Standard')).toBeInTheDocument();
+      expect(mutateAsync).not.toHaveBeenCalled();
+
+      fireEvent.click(
+        await screen.findByText('Remove 3', { selector: 'button' }),
+      );
+
+      await waitFor(() => {
+        expect(mutateAsync).toHaveBeenCalledWith({
+          spaceId,
+          packageId: packageWithAllArtifacts.id,
+          standardIds: [firstId, secondId, thirdId],
         });
       });
     });
 
     it('shows the plural all-covered message when every package already has every selected artifact', () => {
       setPackagesResponse([packageWithAllArtifacts]);
-      renderDialog({ artifactIds: multiArtifactIds });
+      renderDialog({ artifacts: multiArtifacts });
 
       expect(
         screen.getByText(
           'These 3 standards are already in every package in this space.',
         ),
       ).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: /^Add to/i }),
-      ).not.toBeInTheDocument();
-    });
-
-    it('switches the submit button copy when more than one artifact is selected', async () => {
-      setPackagesResponse([packageWithNoOverlap]);
-      renderDialog({ artifactIds: multiArtifactIds });
-
-      expect(
-        screen.getByRole('button', { name: /^Add to packages$/i }),
-      ).toBeDisabled();
-
-      fireEvent.click(screen.getByLabelText('Add to fresh-target'));
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', {
-            name: /^Add 3 standards to 1 package$/i,
-          }),
-        ).not.toBeDisabled();
-      });
     });
   });
 });

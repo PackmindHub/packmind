@@ -1,5 +1,6 @@
 import {
   AddArtefactsToPackageResponse,
+  RemoveArtefactsFromPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   DeleteTargetCommand,
@@ -832,6 +833,52 @@ export const useAddArtefactsToPackagesMutation = () => {
       if (!anySuccess) return;
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+  });
+};
+
+export const REMOVE_ARTEFACTS_FROM_PACKAGE_MUTATION_KEY =
+  'removeArtefactsFromPackage';
+export const useRemoveArtefactsFromPackageMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [REMOVE_ARTEFACTS_FROM_PACKAGE_MUTATION_KEY],
+    mutationFn: async ({
+      spaceId,
+      packageId,
+      standardIds,
+      commandIds,
+      skillIds,
+    }: {
+      spaceId: SpaceId;
+      packageId: PackageId;
+      standardIds?: StandardId[];
+      commandIds?: CommandId[];
+      skillIds?: SkillId[];
+    }): Promise<RemoveArtefactsFromPackageResponse> => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to remove artifacts from a package',
+        );
+      }
+      return deploymentsGateways.removeArtefactsFromPackage({
+        organizationId: organization.id,
+        spaceId,
+        packageId,
+        standardIds,
+        recipeIds: commandIds,
+        skillIds,
+      });
+    },
+    onSuccess: async (_response, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
       });
     },
   });

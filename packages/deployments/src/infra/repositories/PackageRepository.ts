@@ -900,4 +900,106 @@ export class PackageRepository
       throw error;
     }
   }
+
+  async removeCommands(
+    packageId: PackageId,
+    recipeIds: CommandId[],
+  ): Promise<void> {
+    if (recipeIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Removing recipes from package', {
+      packageId,
+      recipeCount: recipeIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_commands')
+        .where('package_id = :packageId', { packageId })
+        .andWhere('command_id IN (:...recipeIds)', { recipeIds })
+        .execute();
+
+      this.logger.info('Recipes removed from package successfully', {
+        packageId,
+        recipeCount: recipeIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove recipes from package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async removeStandards(
+    packageId: PackageId,
+    standardIds: StandardId[],
+  ): Promise<void> {
+    if (standardIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Removing standards from package', {
+      packageId,
+      standardCount: standardIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_standards')
+        .where('package_id = :packageId', { packageId })
+        .andWhere('standard_id IN (:...standardIds)', { standardIds })
+        .execute();
+
+      this.logger.info('Standards removed from package successfully', {
+        packageId,
+        standardCount: standardIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove standards from package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async removeSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void> {
+    if (skillIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Removing skills from package', {
+      packageId,
+      skillCount: skillIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_skills')
+        .where('package_id = :packageId', { packageId })
+        .andWhere('skill_id IN (:...skillIds)', { skillIds })
+        .execute();
+
+      this.logger.info('Skills removed from package successfully', {
+        packageId,
+        skillCount: skillIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove skills from package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

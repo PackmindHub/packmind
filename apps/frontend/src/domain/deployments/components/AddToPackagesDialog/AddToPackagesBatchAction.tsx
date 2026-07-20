@@ -1,23 +1,17 @@
 import { useState } from 'react';
 import { LuPackagePlus } from 'react-icons/lu';
 import { PMButton, PMIcon } from '@packmind/ui';
-import {
-  OrganizationId,
-  CommandId,
-  SkillId,
-  SpaceId,
-  StandardId,
-} from '@packmind/types';
+import { OrganizationId, SpaceId } from '@packmind/types';
 import {
   AddToPackagesArtifactKind,
   AddToPackagesDialog,
+  ManagePackagesArtifact,
 } from './AddToPackagesDialog';
 
 type ArtifactType = 'standard' | 'recipe' | 'skill';
-type ArtifactId = StandardId | CommandId | SkillId;
 
 interface AddToPackagesBatchActionProps {
-  selectedIds: ArtifactId[];
+  selectedArtifacts: ManagePackagesArtifact[];
   artifactType: ArtifactType;
   artifactKindLabel: AddToPackagesArtifactKind;
   organizationId: OrganizationId;
@@ -28,7 +22,7 @@ interface AddToPackagesBatchActionProps {
 }
 
 export const AddToPackagesBatchAction = ({
-  selectedIds,
+  selectedArtifacts,
   artifactType,
   artifactKindLabel,
   organizationId,
@@ -45,17 +39,17 @@ export const AddToPackagesBatchAction = ({
         variant="secondary"
         size="sm"
         onClick={() => setOpen(true)}
-        disabled={selectedIds.length === 0}
+        disabled={selectedArtifacts.length === 0}
       >
         <PMIcon>
           <LuPackagePlus />
         </PMIcon>
-        Add to packages
+        Manage packages
       </PMButton>
       <AddToPackagesDialog
         open={open}
         onOpenChange={setOpen}
-        artifactIds={selectedIds}
+        artifacts={selectedArtifacts}
         artifactType={artifactType}
         artifactKindLabel={artifactKindLabel}
         organizationId={organizationId}

@@ -20,6 +20,7 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IAddArtefactsToPackageUseCase,
+  IRemoveArtefactsFromPackageUseCase,
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
   IRemovePackageFromTargetsUseCase,
@@ -44,6 +45,7 @@ import {
   GetDashboardKpiCommand,
   GetDashboardNonLiveCommand,
   AddArtefactsToPackageCommand,
+  RemoveArtefactsFromPackageCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -163,6 +165,21 @@ export class DeploymentsGatewayApi
       { standardIds, commandIds: recipeIds, skillIds },
     );
   };
+
+  removeArtefactsFromPackage: NewGateway<IRemoveArtefactsFromPackageUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+      packageId,
+      standardIds,
+      recipeIds,
+      skillIds,
+    }: NewPackmindCommandBody<RemoveArtefactsFromPackageCommand>) => {
+      return this._api.post(
+        `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/remove-artifacts`,
+        { standardIds, commandIds: recipeIds, skillIds },
+      );
+    };
 
   getPackageById: IDeploymentsGateway['getPackageById'] = async ({
     packageId,

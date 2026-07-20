@@ -15,6 +15,7 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IAddArtefactsToPackageUseCase,
+  IRemoveArtefactsFromPackageUseCase,
   IPublishCommands,
   IPublishStandards,
   IPublishPackages,
@@ -44,6 +45,7 @@ export interface IDeploymentsGateway {
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   addArtefactsToPackage: NewGateway<IAddArtefactsToPackageUseCase>;
+  removeArtefactsFromPackage: NewGateway<IRemoveArtefactsFromPackageUseCase>;
   // Return type widened to the PackageResponse wire DTO (superset of Package)
   // so the command-named `commands` twin is readable alongside `recipes`.
   getPackageById: (

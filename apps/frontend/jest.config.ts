@@ -26,6 +26,10 @@ module.exports = {
     '<rootDir>/src/**/*.(spec|test).[jt]s?(x)',
     '<rootDir>/app/**/*.(spec|test).[jt]s?(x)',
   ],
+  // The @nx/jest preset dropped tsx/jsx from moduleFileExtensions for Jest 30,
+  // which silently excluded every .tsx test from discovery. Keep the full list
+  // here so component tests stay in the suite.
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'html'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',
   moduleNameMapper: {

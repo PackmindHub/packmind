@@ -3,7 +3,7 @@ import { Standard, StandardVersion } from '@packmind/types';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 import { StandardVersionsList } from './StandardVersionsList';
-import { PackageCountHeaderInfo } from '../../deployments/components/PackageCountBadge';
+import { PackagesPopover } from '../../deployments/components/PackagesPopover';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
@@ -20,7 +20,7 @@ export const StandardVersionHistoryHeader = ({
   isLoading,
   orgSlug,
 }: StandardVersionHistoryHeaderProps) => {
-  const { spaceSlug, spaceId } = useCurrentSpace();
+  const { spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
 
   return (
@@ -46,11 +46,11 @@ export const StandardVersionHistoryHeader = ({
           linkLabel="History"
         />
       </PMHStack>
-      <PackageCountHeaderInfo
+      <PackagesPopover
         artifactId={standard.id}
         artifactType="standard"
-        orgSlug={orgSlug}
-        spaceSlug={spaceSlug}
+        artifactKindLabel="standard"
+        artifactName={standard.name}
         spaceId={spaceId}
         organizationId={organization?.id}
       />

@@ -2,7 +2,6 @@ import { PMAlertDialog, PMButton, PMHStack, PMBadge } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { routes } from '../../../shared/utils/routes';
 import { OrganizationId, SpaceId, StandardId } from '@packmind/types';
-import { AddToPackagesButton } from '../../deployments/components/AddToPackagesDialog';
 
 type SummaryActionsProps = {
   onEdit: () => void;
@@ -30,8 +29,6 @@ export const SummaryActions = ({
   deleteDialogMessage,
   pendingCount,
   standardId,
-  organizationId,
-  spaceId,
   orgSlug,
   spaceSlug,
 }: SummaryActionsProps) => {
@@ -62,17 +59,6 @@ export const SummaryActions = ({
       <PMButton variant="primary" onClick={onEdit}>
         Edit
       </PMButton>
-      {organizationId && spaceId ? (
-        <AddToPackagesButton
-          artifactId={standardId}
-          artifactType="standard"
-          artifactKindLabel="standard"
-          organizationId={organizationId}
-          spaceId={spaceId}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
-        />
-      ) : null}
       <PMAlertDialog
         trigger={
           <PMButton
