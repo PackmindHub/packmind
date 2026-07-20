@@ -25,9 +25,8 @@ interface RemoveArtifactFromPackageConfirmProps {
 /**
  * Confirmation shown before removing one or more artifacts from a package. The
  * deployed warning banner only appears when the package is live on at least
- * one target — the artifacts keep shipping there until the next sync, then
- * stop. With several artifacts the dialog lists them so the blast radius is
- * visible before confirming.
+ * one target. With several artifacts the dialog lists them so the blast radius
+ * is visible before confirming.
  */
 export const RemoveArtifactFromPackageConfirm = ({
   open,
@@ -132,10 +131,7 @@ export const RemoveArtifactFromPackageConfirm = ({
                     </PMBox>
                     <PMText variant="small" color="secondary">
                       {packageName} is deployed to {deployedTargets}{' '}
-                      {deployedTargets === 1 ? 'repo' : 'repos'}.{' '}
-                      {single ? 'This artifact keeps' : 'These artifacts keep'}{' '}
-                      shipping until the next sync, then{' '}
-                      {single ? 'stops' : 'stop'}.
+                      {deployedTargets === 1 ? 'repo' : 'repos'}.
                     </PMText>
                   </PMHStack>
                 ) : null}
