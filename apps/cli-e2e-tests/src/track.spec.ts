@@ -38,7 +38,7 @@ describeForVersion('>= 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail() },
+    { email: packmindEmail },
   );
 
   describeWithUserSignedUp(
@@ -61,7 +61,7 @@ describeForVersion('>= 0.31.0', 'track command', () => {
         expect(result.stdout).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail() },
+    { email: packmindEmail },
   );
 
   describeWithUserSignedUp(
@@ -85,7 +85,7 @@ describeForVersion('>= 0.31.0', 'track command', () => {
         expect(result.stderr).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail() },
+    { email: packmindEmail },
   );
 
   describeWithUserSignedUp(
@@ -111,7 +111,7 @@ describeForVersion('>= 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail() },
+    { email: packmindEmail },
   );
 
   describeWithExtraUser(
