@@ -13,7 +13,7 @@
     "@packmind/types": "workspace:*",
     "axios": "^1.18.1",
     "bullmq": "^5.58.2",
-    "typeorm": "0.3.28",
+    "typeorm": "0.3.29",
     "uuid": "^11.1.0"
   }
 }

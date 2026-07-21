@@ -20,7 +20,7 @@
     "@packmind/test-utils": "workspace:*",
     "@packmind/llm": "workspace:*",
     "uuid": "^11.1.0",
-    "typeorm": "0.3.28",
+    "typeorm": "0.3.29",
     "jsonwebtoken": "^9.0.3",
     "jest-stage": "^1.0.0",
     "bullmq": "^5.58.2"

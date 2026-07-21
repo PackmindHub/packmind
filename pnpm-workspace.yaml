@@ -9,6 +9,9 @@ overrides:
   fast-xml-parser: '>=5.7.0'
   # pnpm audit fixes below: parents' declared ranges permit these floors, but
   # plain `pnpm update` doesn't force re-resolution of nested transitive deps.
+  # GHSA-9ggv-8w38-r7pm: typeorm-fastify-plugin (^0.3.20) held a second, older
+  # resolution alive alongside the direct-dependency bump to 0.3.29.
+  typeorm: '>=0.3.29'
   axios: '>=1.18.1'
   undici: '>=7.28.0'
   hono: '>=4.12.25'
