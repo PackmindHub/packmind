@@ -27,9 +27,12 @@ RUN corepack enable && corepack prepare pnpm@11.5.0 --activate && \
 USER node
 
 # Copy optimized API package.json + the workspace lockfile so transitive
-# versions are pinned for reproducible builds
+# versions are pinned for reproducible builds. pnpm-workspace.yaml carries the
+# `overrides` (e.g. tar >=7.5.19 for CVE-2026-59873); without it this install
+# re-resolves linux-only transitive deps fresh and reintroduces vulnerable versions.
 COPY --chown=node:node apps/api/*package*.json package.json
 COPY --chown=node:node pnpm-lock.yaml ./
+COPY --chown=node:node pnpm-workspace.yaml ./
 RUN pnpm install --prod --ignore-scripts
 
 # Copy the built application and migrations bundle with correct ownership
@@ -71,6 +74,10 @@ ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 # force re-downloads of packages shared by both projects)
 WORKDIR /app/migrations
 COPY --chown=node:node pnpm-lock.yaml ./
+# Own copy of pnpm-workspace.yaml so this nested install stays an isolated
+# workspace root (its `packages` globs match nothing here) while still applying
+# the shared `overrides`.
+COPY --chown=node:node pnpm-workspace.yaml ./
 RUN pnpm install --prod --ignore-scripts && pnpm store prune
 
 # Return to app directory
