@@ -158,6 +158,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        isTracked: false,
       });
     });
   });

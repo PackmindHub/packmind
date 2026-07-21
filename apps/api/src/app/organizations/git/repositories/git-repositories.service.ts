@@ -2,15 +2,22 @@ import { Injectable } from '@nestjs/common';
 import {
   CheckDirectoryExistenceResult,
   ClientSource,
+  GetTrackedRepositoryResponse,
   GitProviderId,
   GitRepo,
   GitRepoId,
+  IAccountsPort,
   IDeploymentPort,
   IGitPort,
   OrganizationId,
+  SetTrackedRepositoryResponse,
+  UpdateTrackedBranchResponse,
   UserId,
 } from '@packmind/types';
+import { isFeatureEnabled } from '@packmind/node-utils';
+import { CLI_REPO_TRACKING_FEATURE_KEY } from '@packmind/feature-flags';
 import {
+  InjectAccountsAdapter,
   InjectGitAdapter,
   InjectDeploymentAdapter,
 } from '../../../shared/HexaInjection';
@@ -21,7 +28,73 @@ export class GitRepositoriesService {
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
   ) {}
+
+  /**
+   * Server-side kill-switch for the CLI repository-tracking surface. Resolves
+   * the acting user's email from the accounts adapter and evaluates the
+   * `cli-repo-tracking` feature flag. When it returns false the API routes
+   * behave as if the feature is absent (HTTP 404).
+   */
+  async isTrackingFeatureEnabled(userId: UserId): Promise<boolean> {
+    const user = await this.accountsAdapter.getUserById(userId);
+    return isFeatureEnabled(CLI_REPO_TRACKING_FEATURE_KEY, {
+      userEmail: user?.email ?? null,
+    });
+  }
+
+  async getTrackedRepository(
+    userId: UserId,
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+  ): Promise<GetTrackedRepositoryResponse> {
+    return this.gitAdapter.getTrackedRepository({
+      userId,
+      organizationId,
+      owner,
+      repo,
+    });
+  }
+
+  async setTrackedRepository(
+    userId: UserId,
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+    branch: string,
+    origin: 'init' | 'track',
+    providerVendor?: string,
+    gitRemoteUrl?: string,
+  ): Promise<SetTrackedRepositoryResponse> {
+    return this.gitAdapter.setTrackedRepository({
+      userId,
+      organizationId,
+      owner,
+      repo,
+      branch,
+      origin,
+      providerVendor,
+      gitRemoteUrl,
+    });
+  }
+
+  async updateTrackedBranch(
+    userId: UserId,
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+    branch: string,
+  ): Promise<UpdateTrackedBranchResponse> {
+    return this.gitAdapter.updateTrackedBranch({
+      userId,
+      organizationId,
+      owner,
+      repo,
+      branch,
+    });
+  }
 
   async addRepositoryToProvider(
     userId: UserId,

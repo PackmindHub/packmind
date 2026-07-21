@@ -1,9 +1,11 @@
 import { useCallback, useMemo } from 'react';
 import {
   ActiveDistributedPackagesByTarget,
+  OrganizationId,
   PackageId,
   SpaceId,
 } from '@packmind/types';
+import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
 import { useListActiveDistributedPackagesBySpaceQuery } from '../api/queries/DeploymentsQueries';
 
 /**
@@ -35,13 +37,18 @@ export function getDeployedTargetCountByPackage(
 }
 
 /**
- * Exposes per-package deployment status for a space in a single query. Drives
- * the removal-confirmation warning: removing an artifact from a deployed
- * package (deployedTargets > 0) keeps shipping until the next sync.
+ * Exposes per-package deployment status for a space. A package counts as
+ * deployed when it is live on a repo target or published to a marketplace
+ * (edition-gated: the OSS stub always reports zero marketplaces).
  */
-export function usePackageDeploymentStatus(spaceId: SpaceId | undefined) {
+export function usePackageDeploymentStatus(
+  spaceId: SpaceId | undefined,
+  organizationId?: OrganizationId | string,
+) {
   const { data, isLoading, isError } =
     useListActiveDistributedPackagesBySpaceQuery(spaceId);
+  const { getPublishedMarketplaces } =
+    usePackageMarketplaceStatus(organizationId);
 
   const deployedTargetsByPackageId = useMemo(
     () => getDeployedTargetCountByPackage(data),
@@ -56,9 +63,18 @@ export function usePackageDeploymentStatus(spaceId: SpaceId | undefined) {
     [deployedTargetsByPackageId],
   );
 
+  const isDeployed = useCallback(
+    (packageId: PackageId | string | undefined): boolean =>
+      getDeployedTargets(packageId) > 0 ||
+      getPublishedMarketplaces(packageId) > 0,
+    [getDeployedTargets, getPublishedMarketplaces],
+  );
+
   return {
     deployedTargetsByPackageId,
     getDeployedTargets,
+    getDeployedMarketplaces: getPublishedMarketplaces,
+    isDeployed,
     isLoading,
     isError,
   };

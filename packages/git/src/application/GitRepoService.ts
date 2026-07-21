@@ -63,4 +63,23 @@ export class GitRepoService {
   async deleteGitRepo(id: GitRepoId, userId: UserId): Promise<void> {
     return this.gitRepoRepository.deleteById(id, userId);
   }
+
+  async findTrackedByOwnerRepoInOrganization(
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+  ): Promise<GitRepo | null> {
+    return this.gitRepoRepository.findTrackedByOwnerRepoInOrganization(
+      organizationId,
+      owner,
+      repo,
+    );
+  }
+
+  async updateTracked(
+    gitRepoId: GitRepoId,
+    isTracked: boolean,
+  ): Promise<GitRepo> {
+    return this.gitRepoRepository.updateTracked(gitRepoId, isTracked);
+  }
 }

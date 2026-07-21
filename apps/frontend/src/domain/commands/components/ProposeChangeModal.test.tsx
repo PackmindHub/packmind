@@ -63,7 +63,7 @@ describe('ProposeChangeModal', () => {
   const spaceId = createSpaceId();
   const recipeId = createCommandId();
   const defaultProps = {
-    recipeName: 'My Command',
+    commandName: 'My Command',
     recipeId,
     organizationId,
     spaceId,

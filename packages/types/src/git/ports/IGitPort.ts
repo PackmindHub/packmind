@@ -12,11 +12,19 @@ import {
   FetchFileContentOutput,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
+  FindOrCreateGitRepoCommand,
+  FindOrCreateGitRepoResponse,
   GetAvailableRemoteDirectoriesCommand,
+  GetTrackedRepositoryCommand,
+  GetTrackedRepositoryResponse,
   ListAvailableReposCommand,
   ListAvailableReposResponse,
   ListProvidersCommand,
   ListProvidersResponse,
+  SetTrackedRepositoryCommand,
+  SetTrackedRepositoryResponse,
+  UpdateTrackedBranchCommand,
+  UpdateTrackedBranchResponse,
 } from '../contracts';
 import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
@@ -316,4 +324,50 @@ export interface IGitPort {
    * @param orgId - The organization ID
    */
   revokeOrganizationGitHubApp(orgId: OrganizationId): Promise<void>;
+
+  /**
+   * Get the tracked repository (if any) for the given owner/repo within an
+   * organization. Returns the tracked GitRepo or null when nothing is tracked.
+   *
+   * @param command - Command containing owner, repo, and organization context
+   * @returns Promise of the tracked git repository, or null
+   */
+  getTrackedRepository(
+    command: GetTrackedRepositoryCommand,
+  ): Promise<GetTrackedRepositoryResponse>;
+
+  /**
+   * Set the tracked repository+branch for the given owner/repo within an
+   * organization. Admin-gated server-side. At most one branch may be tracked
+   * per (organization, owner, repo).
+   *
+   * @param command - Command containing owner, repo, branch, origin and context
+   * @returns Promise of the tracked git repository
+   */
+  setTrackedRepository(
+    command: SetTrackedRepositoryCommand,
+  ): Promise<SetTrackedRepositoryResponse>;
+
+  /**
+   * Move the tracked branch for the given owner/repo within an organization.
+   * Admin-gated server-side. Clears the previously tracked branch then sets the
+   * new one (last-one-wins).
+   *
+   * @param command - Command containing owner, repo, branch and context
+   * @returns Promise of the newly tracked git repository
+   */
+  updateTrackedBranch(
+    command: UpdateTrackedBranchCommand,
+  ): Promise<UpdateTrackedBranchResponse>;
+
+  /**
+   * Find an existing git repository for the given owner/repo/branch or create
+   * it (auto-creating a tokenless provider when needed).
+   *
+   * @param command - Command containing owner, repo, branch and context
+   * @returns Promise of the found or created git repository
+   */
+  findOrCreateGitRepo(
+    command: FindOrCreateGitRepoCommand,
+  ): Promise<FindOrCreateGitRepoResponse>;
 }

@@ -7,6 +7,7 @@ title: 'CLI: Command-Line Interface'
 The Packmind CLI provides the following commands:
 
 - **`init`** - Initialize Packmind in your project (configure agents + install skills)
+- **`track`** - Set the repository and branch Packmind tracks for your project
 - **`config agents setup`** - Configure which AI coding agents to generate artifacts for (interactive)
 - **`config agents list`** - List configured agents across `packmind.json` files
 - **`config agents add`** - Add coding agents to `packmind.json` files
@@ -237,10 +238,11 @@ Initialize Packmind in your project. This is the recommended first command to ru
 
 ### What Init Does
 
-The init command performs two main actions:
+The init command performs these main actions:
 
 1. **Configures AI agents** - Interactively select which AI coding agents to generate artifacts for
 2. **Installs default skills** - Including skill creator, standard creator, and onboarding skills
+3. **Offers to track this repository** - Prompts you to set the current repository and branch as the one Packmind tracks (you can confirm or skip)
 
 ### Basic Usage
 
@@ -253,7 +255,8 @@ This will:
 1. Present an interactive prompt to select which AI agents you use (Claude Code, Cursor, GitHub Copilot, etc.)
 2. Save your agent configuration to `packmind.json`
 3. Install Packmind's default skills to the appropriate locations for your selected agents
-4. Display a success message with next steps
+4. Ask whether to track the current repository and branch (you can confirm or skip)
+5. Display a success message with next steps
 
 **Example output:**
 
@@ -283,6 +286,79 @@ Next step: Run /packmind-onboard in your AI agent to onboard the project
   After initialization, use the `/packmind-onboard` skill in your AI agent to
   scan your project and generate project-specific standards and commands.
 </Tip>
+
+## Track Command
+
+Set which repository and branch Packmind tracks for your project. The tracked branch is the anchor Packmind uses to attribute governance and adoption activity, so declaring it tells Packmind where to follow your team's work.
+
+<Info>
+  **Organization admins only** — Only organization admins can set or move the
+  tracked branch. If you are not an admin, the command reports that you cannot
+  change the tracked branch.
+</Info>
+
+### Track the Current Branch
+
+Run the command from inside your project to track the current repository and branch:
+
+```bash
+packmind-cli track
+```
+
+Packmind derives the repository and branch from your local git remote and current branch, then asks you to confirm before setting it:
+
+```
+Track my-org/my-repo on branch dev? (Y/n)
+
+Packmind now tracks my-org/my-repo on branch dev.
+```
+
+If the branch you are on is already the tracked branch, the command reports that it is already tracked and makes no change.
+
+If a **different** branch is already tracked, the command stops and tells you to use `--update` to move it:
+
+```
+Repository my-org/my-repo is already tracked on branch main. Run `packmind-cli track --update` to move it to dev.
+```
+
+### Move the Tracked Branch
+
+Use the `--update` flag to move tracking to your current branch when a different branch is already tracked. Packmind asks you to confirm the change before applying it:
+
+```bash
+packmind-cli track --update
+```
+
+```
+Change the tracked branch for my-org/my-repo from main to dev? (Y/n)
+
+Tracked branch for my-org/my-repo changed from main to dev.
+```
+
+If you cancel the prompt, the tracked branch is left unchanged.
+
+If nothing is tracked yet, `--update` has nothing to move and points you to the commands that start tracking:
+
+```
+Nothing is tracked yet — run `packmind-cli init` or `packmind-cli track` to start tracking.
+```
+
+<Tip>
+  **During onboarding** — `packmind-cli init` also offers to track the current
+  repository and branch, so you can set the anchor as part of your first-time
+  setup. Use `packmind-cli track` later to set or move it.
+</Tip>
+
+### Troubleshooting
+
+- **Problem**: `Repository tracking is not available for your account.`
+- **Solution**: The feature is not enabled for your organization yet. Contact your Packmind administrator.
+
+- **Problem**: The command reports you are not logged in.
+- **Solution**: Run `packmind-cli login` first, then retry.
+
+- **Problem**: The command cannot determine the repository or branch.
+- **Solution**: Run `track` from inside a git repository that has a configured remote and a checked-out branch.
 
 ## Config Command
 

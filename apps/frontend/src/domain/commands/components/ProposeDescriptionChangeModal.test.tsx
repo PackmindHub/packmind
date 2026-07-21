@@ -87,7 +87,7 @@ describe('ProposeDescriptionChangeModal', () => {
   const spaceId = createSpaceId();
   const recipeId = createCommandId();
   const defaultProps = {
-    recipeDescription: '# Original description',
+    commandDescription: '# Original description',
     recipeId,
     organizationId,
     spaceId,

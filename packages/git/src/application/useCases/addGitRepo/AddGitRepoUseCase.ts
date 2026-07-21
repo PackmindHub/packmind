@@ -124,6 +124,7 @@ export class AddGitRepoUseCase
       repo,
       branch,
       providerId: gitProviderId,
+      isTracked: false,
     };
 
     const createdRepo =

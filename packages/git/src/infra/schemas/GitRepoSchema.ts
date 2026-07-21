@@ -28,6 +28,11 @@ export const GitRepoSchema = new EntitySchema<
       name: 'provider_id',
       type: 'uuid',
     },
+    isTracked: {
+      name: 'is_tracked',
+      type: 'boolean',
+      default: false,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

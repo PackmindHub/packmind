@@ -1,6 +1,5 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  GitProviderVendors,
   IGitPort,
   OrganizationId,
   PackageId,
@@ -16,10 +15,8 @@ import { TargetService } from './TargetService';
 import {
   parseGitRepoInfo,
   parseGitProviderVendor,
-  extractBaseUrl,
   generateTargetName,
   normalizeRelativePath,
-  GitProviderVendor,
 } from './gitInfoHelpers';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
@@ -120,7 +117,7 @@ export class TargetResolutionService {
     const providerVendor = parseGitProviderVendor(gitRemoteUrl);
     const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
 
-    const repoId = await this.findOrCreateProviderAndRepo({
+    const gitRepo = await this.gitPort.findOrCreateGitRepo({
       userId,
       organizationId,
       providerVendor,
@@ -131,7 +128,7 @@ export class TargetResolutionService {
     });
 
     return this.findOrCreateTarget({
-      gitRepoId: createGitRepoId(repoId),
+      gitRepoId: createGitRepoId(gitRepo.id),
       relativePath,
     });
   }
@@ -210,194 +207,6 @@ export class TargetResolutionService {
         skillVersions: [],
       };
     }
-  }
-
-  private async findOrCreateProviderAndRepo(params: {
-    userId: string;
-    organizationId: OrganizationId;
-    providerVendor: GitProviderVendor;
-    gitRemoteUrl: string;
-    owner: string;
-    repo: string;
-    branch: string;
-  }): Promise<string> {
-    const {
-      userId,
-      organizationId,
-      providerVendor,
-      gitRemoteUrl,
-      owner,
-      repo,
-      branch,
-    } = params;
-
-    this.logger.info('Finding provider and repo', {
-      providerVendor,
-      owner,
-      repo,
-      branch,
-    });
-
-    const providersResponse = await this.gitPort.listProviders({
-      userId,
-      organizationId,
-    });
-
-    const vendorProviders = providersResponse.providers.filter(
-      (p) => p.source === providerVendor,
-    );
-
-    // Only check token providers for known vendors (github, gitlab)
-    // Unknown vendors don't have API access to list available repos
-    if (providerVendor !== 'unknown') {
-      const tokenProviders = vendorProviders.filter((p) => p.hasAuth);
-
-      // First pass: Check ALL token providers for existing repos and collect
-      // providers that can access the repo. We must check all providers before
-      // creating to avoid GitRepositoryExists errors.
-      type ProviderInfo = (typeof tokenProviders)[number];
-      const providersWithAccess: ProviderInfo[] = [];
-
-      for (const provider of tokenProviders) {
-        // Check if repo already exists for this provider
-        const existingRepos = await this.gitPort.listRepos(provider.id);
-        const existingRepo = existingRepos.find(
-          (r) =>
-            r.owner.toLowerCase() === owner.toLowerCase() &&
-            r.repo.toLowerCase() === repo.toLowerCase() &&
-            r.branch === branch,
-        );
-
-        if (existingRepo) {
-          this.logger.info('Found existing repo under token provider', {
-            providerId: provider.id,
-            repoId: existingRepo.id,
-          });
-          return existingRepo.id;
-        }
-
-        // Check if token can access the repo
-        // Wrap in try-catch to handle expired/invalid tokens gracefully
-        try {
-          const availableRepos = await this.gitPort.listAvailableRepos({
-            gitProviderId: provider.id,
-            userId,
-            organizationId,
-          });
-          const canAccess = availableRepos.repositories.some(
-            (r) =>
-              r.owner.toLowerCase() === owner.toLowerCase() &&
-              r.name.toLowerCase() === repo.toLowerCase(),
-          );
-
-          if (canAccess) {
-            providersWithAccess.push(provider);
-          }
-        } catch (error) {
-          this.logger.info('Failed to list available repos for provider', {
-            providerId: provider.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-          // Continue to next provider - this one's token may be expired/invalid
-        }
-      }
-
-      // Second pass: If we found a provider with access, create the repo there
-      if (providersWithAccess.length > 0) {
-        const provider = providersWithAccess[0];
-        this.logger.info(
-          'Token can access repo, creating under token provider',
-          {
-            providerId: provider.id,
-          },
-        );
-        const newRepo = await this.gitPort.addGitRepo({
-          userId,
-          organizationId,
-          gitProviderId: provider.id,
-          owner,
-          repo,
-          branch,
-        });
-        return newRepo.id;
-      }
-    }
-
-    // Fall back to tokenless provider
-    this.logger.info('No token provider has access, falling back to tokenless');
-
-    // Determine the expected provider URL for this git remote
-    let expectedProviderUrl: string;
-    if (providerVendor === 'github') {
-      expectedProviderUrl = 'https://github.com';
-    } else if (providerVendor === 'gitlab') {
-      expectedProviderUrl = 'https://gitlab.com';
-    } else {
-      expectedProviderUrl = extractBaseUrl(gitRemoteUrl);
-    }
-
-    // Find a tokenless provider that matches the expected URL
-    let tokenlessProvider = vendorProviders.find(
-      (p) =>
-        !p.hasAuth &&
-        p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
-    );
-
-    if (!tokenlessProvider) {
-      // Create new tokenless provider
-      const newProvider = await this.gitPort.addGitProvider({
-        userId,
-        organizationId,
-        gitProvider: {
-          source: GitProviderVendors[providerVendor],
-          url: expectedProviderUrl,
-          token: null,
-          authMethod: 'token' as const,
-          displayName: '',
-        },
-        allowTokenlessProvider: true,
-      });
-      this.logger.info('Created tokenless provider', {
-        providerId: newProvider.id,
-      });
-      tokenlessProvider = {
-        ...newProvider,
-        hasAuth: false,
-        lastDistributionAt: null,
-      };
-    }
-
-    // Check if repo exists under tokenless provider
-    const tokenlessRepos = await this.gitPort.listRepos(tokenlessProvider.id);
-    const existingTokenlessRepo = tokenlessRepos.find(
-      (r) =>
-        r.owner.toLowerCase() === owner.toLowerCase() &&
-        r.repo.toLowerCase() === repo.toLowerCase() &&
-        r.branch === branch,
-    );
-
-    if (existingTokenlessRepo) {
-      this.logger.info('Found existing repo under tokenless provider', {
-        providerId: tokenlessProvider.id,
-        repoId: existingTokenlessRepo.id,
-      });
-      return existingTokenlessRepo.id;
-    }
-
-    // Create repo under tokenless provider
-    this.logger.info('Creating repo under tokenless provider', {
-      providerId: tokenlessProvider.id,
-    });
-    const newRepo = await this.gitPort.addGitRepo({
-      userId,
-      organizationId,
-      gitProviderId: tokenlessProvider.id,
-      owner,
-      repo,
-      branch,
-      allowTokenlessProvider: true,
-    });
-    return newRepo.id;
   }
 
   private async findOrCreateTarget(params: {

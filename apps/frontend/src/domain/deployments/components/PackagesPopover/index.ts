@@ -1,2 +1,5 @@
 export { PackagesPopover } from './PackagesPopover';
-export { RemoveArtifactFromPackageConfirm } from './RemoveArtifactFromPackageConfirm';
+export {
+  deployedPlaceParts,
+  RemoveArtifactFromPackageConfirm,
+} from './RemoveArtifactFromPackageConfirm';

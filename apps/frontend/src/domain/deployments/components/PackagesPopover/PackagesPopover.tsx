@@ -75,7 +75,8 @@ export const PackagesPopover = ({
     isLoading,
     isError,
   } = useListPackagesBySpaceQuery(spaceId, organizationId);
-  const { getDeployedTargets } = usePackageDeploymentStatus(spaceId);
+  const { getDeployedTargets, getDeployedMarketplaces, isDeployed } =
+    usePackageDeploymentStatus(spaceId, organizationId);
   const { mutateAsync: addArtefacts, isPending: isAdding } =
     useAddArtefactsToPackagesMutation();
   const { mutateAsync: removeArtefacts, isPending: isRemoving } =
@@ -162,9 +163,7 @@ export const PackagesPopover = ({
   };
 
   const requestRemove = (pkg: PackageResponse) => {
-    // A deployed package keeps shipping until the next sync, so warn first.
-    // An undeployed one has no consequence, so remove without a dialog.
-    if (getDeployedTargets(pkg.id) > 0) {
+    if (isDeployed(pkg.id)) {
       setRemoveTarget(pkg);
     } else {
       void removeFromPackage(pkg).catch(() => {
@@ -343,6 +342,9 @@ export const PackagesPopover = ({
         }}
         packageName={removeTarget?.name ?? ''}
         deployedTargets={removeTarget ? getDeployedTargets(removeTarget.id) : 0}
+        deployedMarketplaces={
+          removeTarget ? getDeployedMarketplaces(removeTarget.id) : 0
+        }
         artifactNames={[artifactName]}
         onConfirm={async () => {
           if (!removeTarget) return;

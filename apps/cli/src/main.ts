@@ -19,6 +19,7 @@ import { playbookCommand } from './infra/commands/PlaybookCommand';
 import { spacesCommand } from './infra/commands/SpacesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
+import { trackCommand } from './infra/commands/TrackCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
@@ -107,6 +108,7 @@ const app = subcommands({
     skills: skillsCommand,
     spaces: spacesCommand,
     standards: standardsCommand,
+    track: trackCommand,
     uninstall: uninstallCommand,
     update: updateCommand,
     whoami: whoamiCommand,

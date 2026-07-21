@@ -7,6 +7,7 @@ import { IStandardsGateway } from './IStandardsGateway';
 import { IPackagesGateway } from './IPackagesGateway';
 import { IDeploymentGateway } from './IDeploymentGateway';
 import { IOrganizationGateway } from './IOrganizationGateway';
+import { IRepositoryTrackingGateway } from './IRepositoryTrackingGateway';
 
 // Re-export standard types from IStandardsGateway for backward compatibility
 export type {
@@ -28,4 +29,5 @@ export interface IPackmindGateway {
   readonly packages: IPackagesGateway;
   readonly deployment: IDeploymentGateway;
   readonly organization: IOrganizationGateway;
+  readonly repositoryTracking: IRepositoryTrackingGateway;
 }

@@ -1,5 +1,6 @@
 import { GitRepo } from '@packmind/types';
 import { GitProviderId } from '@packmind/types';
+import { GitRepoId } from '@packmind/types';
 import { IGitRepoRepository } from '../../domain/repositories/IGitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
@@ -121,6 +122,89 @@ export class GitRepoRepository
           error: error instanceof Error ? error.message : String(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async findTrackedByOwnerRepoInOrganization(
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+  ): Promise<GitRepo | null> {
+    this.logger.info('Finding tracked git repo by owner, repo, organization', {
+      organizationId,
+      owner,
+      repo,
+    });
+
+    try {
+      const gitRepo = await this.repository
+        .createQueryBuilder('gitRepo')
+        .innerJoin(
+          GitProviderSchema.options.name,
+          'provider',
+          'gitRepo.providerId = provider.id',
+        )
+        .where('gitRepo.owner = :owner', { owner })
+        .andWhere('gitRepo.repo = :repo', { repo })
+        .andWhere('gitRepo.isTracked = :isTracked', { isTracked: true })
+        .andWhere('provider.organizationId = :organizationId', {
+          organizationId,
+        })
+        .getOne();
+
+      this.logger.info('Tracked git repo lookup completed', {
+        organizationId,
+        owner,
+        repo,
+        found: !!gitRepo,
+      });
+      return gitRepo;
+    } catch (error) {
+      this.logger.error('Failed to find tracked git repo', {
+        organizationId,
+        owner,
+        repo,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async updateTracked(
+    gitRepoId: GitRepoId,
+    isTracked: boolean,
+  ): Promise<GitRepo> {
+    this.logger.info('Updating git repo tracked flag', {
+      gitRepoId,
+      isTracked,
+    });
+
+    try {
+      const gitRepo = await this.repository.findOne({
+        where: { id: gitRepoId },
+      });
+
+      if (!gitRepo) {
+        throw new Error(`Git repo with ID '${gitRepoId}' not found`);
+      }
+
+      const updated = await this.repository.save({
+        ...gitRepo,
+        isTracked,
+      });
+
+      this.logger.info('Git repo tracked flag updated', {
+        gitRepoId,
+        isTracked,
+      });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to update git repo tracked flag', {
+        gitRepoId,
+        isTracked,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

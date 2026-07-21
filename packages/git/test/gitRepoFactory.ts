@@ -11,6 +11,7 @@ export const gitRepoFactory: Factory<GitRepo> = (
     repo: 'test-repo',
     branch: 'main',
     providerId: createGitProviderId(uuidv4()),
+    isTracked: false,
     ...gitRepo,
   };
 };

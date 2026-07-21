@@ -10,6 +10,7 @@ export const gitRepoFactory: Factory<GitRepo> = (
     owner: 'test-owner',
     repo: 'test-repo',
     branch: 'main',
+    isTracked: false,
     providerId: createGitProviderId(uuidv4()),
     ...gitRepo,
   };

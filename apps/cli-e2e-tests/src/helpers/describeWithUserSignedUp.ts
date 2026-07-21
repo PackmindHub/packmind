@@ -25,7 +25,7 @@ export type UserSignedUpContext = WithTempSpaceContext & {
 };
 
 export type UserSignedUpOptions = {
-  email: string;
+  email: string | (() => string);
   password: string;
   baseUrl: string;
 };
@@ -79,15 +79,20 @@ export function describeWithUserSignedUp(
         testHome,
       }: WithTempSpaceContext): Promise<UserSignedUpContext> => {
         options = { ...getDefaultOptions(), ...userOptions };
+        // Resolve the email per stage-run: jest-stage re-runs this setup for
+        // every test, so a static email would collide (409) on the 2nd test.
+        // Callers can pass a factory to get a fresh unique email each run.
+        const email =
+          typeof options.email === 'function' ? options.email() : options.email;
         const gateway = new PackmindGateway(options.baseUrl);
 
         const { user, organization } = await gateway.auth.signup({
-          email: options.email,
+          email,
           password: options.password,
           method: 'password',
         });
         await gateway.auth.signin({
-          email: options.email,
+          email,
           password: options.password,
         });
 

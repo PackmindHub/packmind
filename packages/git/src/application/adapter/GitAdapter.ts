@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter, JobsService } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  JobsService,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,
@@ -13,7 +17,11 @@ import {
   FetchFileContentOutput,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
+  FindOrCreateGitRepoCommand,
+  FindOrCreateGitRepoResponse,
   GetAvailableRemoteDirectoriesCommand,
+  GetTrackedRepositoryCommand,
+  GetTrackedRepositoryResponse,
   GitCommit,
   GitProvider,
   GitProviderId,
@@ -32,6 +40,10 @@ import {
   OrganizationGitHubApp,
   OrganizationId,
   QueryOption,
+  SetTrackedRepositoryCommand,
+  SetTrackedRepositoryResponse,
+  UpdateTrackedBranchCommand,
+  UpdateTrackedBranchResponse,
   UserId,
 } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
@@ -48,20 +60,25 @@ import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/DeleteGi
 import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/DeleteGitRepoUseCase';
 import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
+import { FindOrCreateGitRepoUseCase } from '../useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase';
 import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase';
+import { GetTrackedRepositoryUseCase } from '../useCases/getTrackedRepository/GetTrackedRepositoryUseCase';
 import { GetFileFromRepoUseCase } from '../useCases/getFileFromRepo/GetFileFromRepoUseCase';
 import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase';
 import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/GetRepositoryByIdUseCase';
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/ListAvailableReposUseCase';
 import { ListProvidersUseCase } from '../useCases/listProviders/ListProvidersUseCase';
 import { ListReposUseCase } from '../useCases/listRepos/ListReposUseCase';
+import { SetTrackedRepositoryUseCase } from '../useCases/setTrackedRepository/SetTrackedRepositoryUseCase';
 import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/UpdateGitProviderUseCase';
+import { UpdateTrackedBranchUseCase } from '../useCases/updateTrackedBranch/UpdateTrackedBranchUseCase';
 
 const origin = 'GitAdapter';
 
 export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private accountsPort: IAccountsPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
+  private eventEmitterService: PackmindEventEmitterService | null = null;
   private gitDelayedJobs: IGitDelayedJobs | null = null;
   private mode: GithubAppMode = 'on-prem';
 
@@ -84,6 +101,10 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _findGitRepoByOwnerRepoAndBranchInOrganization!: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
   private _getAvailableRemoteDirectories!: GetAvailableRemoteDirectoriesUseCase;
   private _checkDirectoryExistence!: CheckDirectoryExistenceUseCase;
+  private _findOrCreateGitRepo!: FindOrCreateGitRepoUseCase;
+  private _getTrackedRepositoryUseCase!: GetTrackedRepositoryUseCase;
+  private _setTrackedRepositoryUseCase!: SetTrackedRepositoryUseCase;
+  private _updateTrackedBranch!: UpdateTrackedBranchUseCase;
 
   constructor(
     private readonly gitServices: GitServices,
@@ -120,21 +141,28 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
     [IDeploymentPortName]: IDeploymentPort;
+    eventEmitterService: PackmindEventEmitterService;
     jobsService?: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing GitAdapter with ports and services');
 
     this.accountsPort = ports[IAccountsPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
+    this.eventEmitterService = ports.eventEmitterService;
 
     if (ports.jobsService) {
       this.gitDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
     }
 
     // Step 3: Validate all required ports and services are set
-    if (!this.accountsPort || !this.deploymentsPort || !this.gitDelayedJobs) {
+    if (
+      !this.accountsPort ||
+      !this.deploymentsPort ||
+      !this.eventEmitterService ||
+      !this.gitDelayedJobs
+    ) {
       throw new Error(
-        'GitAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
+        'GitAdapter: Required ports/services not provided. Ensure JobsService and PackmindEventEmitterService are passed to initialize().',
       );
     }
 
@@ -234,6 +262,32 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitRepoFactory(),
     );
 
+    // Repository-tracking use cases
+    this._findOrCreateGitRepo = new FindOrCreateGitRepoUseCase(
+      this,
+      this.accountsPort,
+    );
+
+    this._getTrackedRepositoryUseCase = new GetTrackedRepositoryUseCase(
+      this.gitServices.getGitRepoService(),
+      this.accountsPort,
+    );
+
+    this._setTrackedRepositoryUseCase = new SetTrackedRepositoryUseCase(
+      this.gitServices.getGitRepoService(),
+      this._findOrCreateGitRepo,
+      this.eventEmitterService,
+      this.accountsPort,
+    );
+
+    this._updateTrackedBranch = new UpdateTrackedBranchUseCase(
+      this.gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
+      this._findOrCreateGitRepo,
+      this.eventEmitterService,
+      this.accountsPort,
+    );
+
     this.logger.info('GitAdapter initialized successfully with all use cases');
   }
 
@@ -276,6 +330,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return (
       this.accountsPort != null &&
       this.deploymentsPort != null &&
+      this.eventEmitterService != null &&
       this.gitDelayedJobs != null
     );
   }
@@ -492,5 +547,29 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this.gitServices
       .getOrganizationGitHubAppRepository()
       .markRevoked(orgId);
+  }
+
+  public getTrackedRepository(
+    command: GetTrackedRepositoryCommand,
+  ): Promise<GetTrackedRepositoryResponse> {
+    return this._getTrackedRepositoryUseCase.execute(command);
+  }
+
+  public setTrackedRepository(
+    command: SetTrackedRepositoryCommand,
+  ): Promise<SetTrackedRepositoryResponse> {
+    return this._setTrackedRepositoryUseCase.execute(command);
+  }
+
+  public updateTrackedBranch(
+    command: UpdateTrackedBranchCommand,
+  ): Promise<UpdateTrackedBranchResponse> {
+    return this._updateTrackedBranch.execute(command);
+  }
+
+  public findOrCreateGitRepo(
+    command: FindOrCreateGitRepoCommand,
+  ): Promise<FindOrCreateGitRepoResponse> {
+    return this._findOrCreateGitRepo.execute(command);
   }
 }

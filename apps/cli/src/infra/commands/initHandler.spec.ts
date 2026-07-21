@@ -10,6 +10,12 @@ import * as consoleLogger from '../utils/consoleLogger';
 import * as configAgentsHandlerModule from './config/configAgentsHandler';
 import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { TrackRepositoryFunction } from './trackHandler';
+
+jest.mock('inquirer', () => ({
+  __esModule: true,
+  default: { prompt: jest.fn() },
+}));
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
@@ -757,6 +763,142 @@ describe('initHandler', () => {
         expect(
           mockIncompatibleSkillsHandler.handleIncompatibleInstalledSkillsSilently,
         ).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('repository tracking prompt', () => {
+    let mockTrackRepository: jest.MockedFunction<TrackRepositoryFunction>;
+
+    beforeEach(() => {
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+        skippedSkillsCount: 0,
+        skippedIncompatibleSkillNames: [],
+        incompatibleInstalledSkills: [],
+      });
+      mockTrackRepository = jest.fn();
+      deps.trackRepository = mockTrackRepository;
+      deps.isTTY = true;
+    });
+
+    describe('when the user confirms tracking', () => {
+      beforeEach(async () => {
+        mockTrackRepository.mockResolvedValue({
+          status: 'set',
+          owner: 'my-orga',
+          repo: 'my-repo',
+          branch: 'dev',
+          gitRepo: {
+            id: 'repo-id',
+            owner: 'my-orga',
+            repo: 'my-repo',
+            branch: 'dev',
+            providerId: 'provider-id',
+            isTracked: true,
+          } as never,
+        });
+        await initHandler(deps);
+      });
+
+      it('invokes the tracking use case with the init origin', () => {
+        expect(mockTrackRepository).toHaveBeenCalledWith(
+          expect.objectContaining({ origin: 'init', update: false }),
+        );
+      });
+
+      it('reports the repository is now tracked', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Packmind now tracks my-orga/my-repo on branch dev.',
+        );
+      });
+    });
+
+    describe('when the user skips tracking', () => {
+      beforeEach(async () => {
+        mockTrackRepository.mockResolvedValue({ status: 'cancelled' });
+        await initHandler(deps);
+      });
+
+      it('invokes the tracking use case', () => {
+        expect(mockTrackRepository).toHaveBeenCalled();
+      });
+
+      it('does not log a tracking confirmation', () => {
+        expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('Packmind now tracks'),
+        );
+      });
+    });
+
+    describe('when the repository is already tracked on another branch', () => {
+      beforeEach(async () => {
+        mockTrackRepository.mockResolvedValue({
+          status: 'already-tracked-other-branch',
+          owner: 'my-orga',
+          repo: 'my-repo',
+          branch: 'dev',
+          trackedBranch: 'main',
+        });
+        await initHandler(deps);
+      });
+
+      it('shows the already-tracked message without changing tracking', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          'Repository already tracked on branch main.',
+        );
+      });
+    });
+
+    describe('when the repository is already tracked on the same branch', () => {
+      beforeEach(async () => {
+        mockTrackRepository.mockResolvedValue({
+          status: 'already-tracked-same-branch',
+          owner: 'my-orga',
+          repo: 'my-repo',
+          branch: 'dev',
+        });
+        await initHandler(deps);
+      });
+
+      it('shows a warning', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          'Repository my-orga/my-repo is already tracked on branch dev.',
+        );
+      });
+    });
+
+    describe('when not running in an interactive terminal', () => {
+      beforeEach(async () => {
+        deps.isTTY = false;
+        await initHandler(deps);
+      });
+
+      it('does not prompt for tracking', () => {
+        expect(mockTrackRepository).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the tracking feature is disabled (404)', () => {
+      let result: Awaited<ReturnType<typeof initHandler>>;
+
+      beforeEach(async () => {
+        const error: Error & { statusCode?: number } = new Error('Not Found');
+        error.statusCode = 404;
+        mockTrackRepository.mockRejectedValue(error);
+        result = await initHandler(deps);
+      });
+
+      it('still completes init successfully', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('does not log a tracking confirmation', () => {
+        expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('Packmind now tracks'),
+        );
       });
     });
   });

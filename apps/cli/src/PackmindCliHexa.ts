@@ -95,6 +95,10 @@ import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
 import { IOutput } from './domain/repositories/IOutput';
+import {
+  TrackRepositoryCommand,
+  TrackRepositoryResult,
+} from './domain/useCases/trackRepository/ITrackRepositoryUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -421,6 +425,12 @@ export class PackmindCliHexa {
     command: IEnsureCliVersionCommand,
   ): Promise<EnsureCliVersionOutcome> {
     return this.hexa.useCases.ensureCliVersion.execute(command);
+  }
+
+  public async trackRepository(
+    command: TrackRepositoryCommand,
+  ): Promise<TrackRepositoryResult> {
+    return this.hexa.useCases.trackRepository.execute(command);
   }
 
   public getPackmindGateway() {

@@ -3,6 +3,7 @@
 ## Added
 
 - Edit a skill's SKILL.md body and supporting Markdown files directly from the web app, with each save creating a new attributed version
+- Set the repository and branch Packmind tracks from the CLI: new `packmind track` command (with `--update` to move the tracked branch) and a tracking prompt during `packmind init` (organization admins only)
 
 ## Changed
 

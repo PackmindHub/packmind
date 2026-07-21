@@ -5,6 +5,7 @@ import {
   Configuration,
   HexaRegistry,
   JobsService,
+  PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -94,12 +95,18 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
 
       this.adapter.setMode(mode);
 
+      // Get PackmindEventEmitterService (required) - for domain event emission
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       // Get all required ports and services
       const ports = {
         [IAccountsPortName]:
           registry.getAdapter<IAccountsPort>(IAccountsPortName),
         [IDeploymentPortName]:
           registry.getAdapter<IDeploymentPort>(IDeploymentPortName),
+        eventEmitterService,
         jobsService: registry.getService(JobsService),
       };
 

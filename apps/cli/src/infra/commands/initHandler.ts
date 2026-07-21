@@ -23,6 +23,8 @@ import {
   buildSkillsSkippedWarning,
   configuredAgentsSupportSkills,
 } from './skillsCapabilityWarning';
+import { TrackRepositoryFunction } from './trackHandler';
+import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
@@ -43,6 +45,8 @@ export type InitHandlerDependencies = {
   cliVersion: string;
   isTTY?: boolean;
   showOnboardHint?: boolean;
+  trackRepository?: TrackRepositoryFunction;
+  confirmPrompt?: ConfirmPromptFn;
 };
 
 export type InitHandlerResult = {
@@ -67,7 +71,11 @@ export async function initHandler(
     cliVersion,
     isTTY,
     showOnboardHint = true,
+    trackRepository,
+    confirmPrompt,
   } = deps;
+
+  const resolvedIsTTY = isTTY ?? Boolean(process.stdin.isTTY);
 
   if (ensureCliVersion) {
     try {
@@ -145,7 +153,19 @@ export async function initHandler(
     }
   }
 
-  // Step 3: Display success message with next steps
+  // Step 3: Offer to track the current repository + branch. Gated on an
+  // interactive terminal; the feature flag is enforced server-side (a 404
+  // response makes this a silent no-op).
+  if (resolvedIsTTY && trackRepository) {
+    await offerRepositoryTracking({
+      trackRepository,
+      baseDirectory,
+      isTTY: resolvedIsTTY,
+      confirmPrompt,
+    });
+  }
+
+  // Step 4: Display success message with next steps
   logConsole('');
   logSuccessConsole('Packmind initialized successfully!');
   if (showOnboardHint) {
@@ -158,4 +178,58 @@ export async function initHandler(
     success: true,
     errors: [],
   };
+}
+
+/**
+ * During `init`, offers to set the current repository+branch as tracked. Reuses
+ * the same TrackRepositoryUseCase as the `track` command so orchestration is not
+ * duplicated. Init never moves an existing tracked branch (only `track --update`
+ * does) and never fails the init flow — any error (feature disabled, not a git
+ * repo, no remote, not logged in) is a silent skip.
+ */
+async function offerRepositoryTracking(deps: {
+  trackRepository: TrackRepositoryFunction;
+  baseDirectory: string;
+  isTTY: boolean;
+  confirmPrompt?: ConfirmPromptFn;
+}): Promise<void> {
+  const confirm = createTrackConfirm({
+    isTTY: deps.isTTY,
+    confirmPrompt: deps.confirmPrompt,
+  });
+
+  try {
+    const result = await deps.trackRepository({
+      repoPath: deps.baseDirectory,
+      origin: 'init',
+      update: false,
+      confirm,
+    });
+
+    switch (result.status) {
+      case 'set':
+        logSuccessConsole(
+          `Packmind now tracks ${result.owner}/${result.repo} on branch ${result.branch}.`,
+        );
+        break;
+      case 'already-tracked-other-branch':
+        logInfoConsole(
+          `Repository already tracked on branch ${result.trackedBranch}.`,
+        );
+        break;
+      case 'already-tracked-same-branch':
+        logWarningConsole(
+          `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
+        );
+        break;
+      case 'cancelled':
+      case 'nothing-tracked':
+      case 'updated':
+      default:
+        break;
+    }
+  } catch {
+    // Tracking is best-effort during init: never fail onboarding because the
+    // feature is disabled or the repo could not be resolved.
+  }
 }
