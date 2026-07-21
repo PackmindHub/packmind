@@ -13,7 +13,7 @@
     "@packmind/standards": "workspace:*",
     "@packmind/test-utils": "workspace:*",
     "@packmind/types": "workspace:*",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "archiver": "^7.0.1",
     "semver": "^7.7.4",
     "typeorm": "0.3.28",
