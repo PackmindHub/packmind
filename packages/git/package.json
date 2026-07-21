@@ -9,11 +9,11 @@
     "@packmind/accounts": "workspace:*",
     "@packmind/logger": "workspace:*",
     "@packmind/node-utils": "workspace:*",
-    "@packmind/types": "workspace:*",
     "@packmind/test-utils": "workspace:*",
-    "typeorm": "0.3.28",
-    "uuid": "^11.1.0",
+    "@packmind/types": "workspace:*",
+    "axios": "^1.18.1",
     "bullmq": "^5.58.2",
-    "axios": "^1.12.0"
+    "typeorm": "0.3.28",
+    "uuid": "^11.1.0"
   }
 }
