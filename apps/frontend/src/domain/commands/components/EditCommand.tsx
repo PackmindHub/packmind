@@ -10,6 +10,12 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
+import { useListChangeProposalsByCommandQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import {
+  countPendingChangeProposals,
+  PendingChangeProposalsWarning,
+  ConfirmSaveWithPendingProposalsDialog,
+} from '../../../shared/components/PendingChangeProposals';
 
 interface IEditCommandProps {
   recipe: Command;
@@ -24,6 +30,9 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] =
+    useState<CommandFormData | null>(null);
 
   const updateMutation = useUpdateCommandMutation();
   const { data: existingCommands } = useGetCommandsQuery();
@@ -32,7 +41,13 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
     [existingCommands],
   );
 
-  const handleSubmit = (data: CommandFormData) => {
+  const { data: changeProposals } = useListChangeProposalsByCommandQuery(
+    recipe.id,
+  );
+  const pendingChangeProposalsCount =
+    countPendingChangeProposals(changeProposals);
+
+  const performUpdate = (data: CommandFormData) => {
     if (!organization?.id || !spaceId) {
       setAlert({
         type: 'error',
@@ -73,12 +88,41 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
     );
   };
 
+  const handleSubmit = (data: CommandFormData) => {
+    if (pendingChangeProposalsCount > 0) {
+      setPendingSubmitData(data);
+      setConfirmSaveOpen(true);
+      return;
+    }
+
+    performUpdate(data);
+  };
+
+  const handleConfirmSave = () => {
+    setConfirmSaveOpen(false);
+    if (pendingSubmitData) {
+      performUpdate(pendingSubmitData);
+      setPendingSubmitData(null);
+    }
+  };
+
   const handleCancel = () => {
     nav.space.toCommand(recipe.id);
   };
 
   return (
     <MarkdownEditorProvider>
+      <PendingChangeProposalsWarning
+        count={pendingChangeProposalsCount}
+        itemType="command"
+      />
+      <ConfirmSaveWithPendingProposalsDialog
+        open={confirmSaveOpen}
+        onOpenChange={({ open }) => setConfirmSaveOpen(open)}
+        count={pendingChangeProposalsCount}
+        itemType="command"
+        onConfirm={handleConfirmSave}
+      />
       <CommandForm
         mode="edit"
         recipe={recipe}
