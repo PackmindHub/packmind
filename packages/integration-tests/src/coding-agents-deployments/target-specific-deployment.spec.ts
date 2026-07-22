@@ -10,6 +10,7 @@ import {
   createGitProviderId,
   createGitRepoId,
   createTargetId,
+  DeleteItemType,
   FileModification,
   FileUpdates,
   GitRepo,
@@ -717,8 +718,8 @@ class MyService {
         );
       });
 
-      it('creates two files', () => {
-        expect(commandUpdates.createOrUpdate).toHaveLength(2);
+      it('creates one file', () => {
+        expect(commandUpdates.createOrUpdate).toHaveLength(1);
       });
 
       it('creates individual recipe file in jetbrains path', () => {
@@ -737,18 +738,15 @@ class MyService {
         );
       });
 
-      it('creates recipes index file in jetbrains path', () => {
-        expect(indexFile).toBeDefined();
+      it('does not create a commands index file in jetbrains path', () => {
+        expect(indexFile).toBeUndefined();
       });
 
-      it('includes recipe name in index file', () => {
-        expect(indexFile?.content).toContain('Writing Good JetBrains Services');
-      });
-
-      it('includes recipe filename in index file', () => {
-        expect(indexFile?.content).toContain(
-          'writing-good-jetbrains-services.md',
-        );
+      it('deletes the legacy commands index file in jetbrains path', () => {
+        expect(commandUpdates.delete).toContainEqual({
+          path: 'jetbrains/.packmind/commands-index.md',
+          type: DeleteItemType.File,
+        });
       });
     });
 
@@ -896,8 +894,8 @@ class MyService {
         );
       });
 
-      it('creates two files for jetbrains deployment', () => {
-        expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
+      it('creates one file for jetbrains deployment', () => {
+        expect(jetbrainsUpdates.createOrUpdate).toHaveLength(1);
       });
 
       it('creates jetbrains recipe file', () => {
@@ -914,32 +912,16 @@ class MyService {
         );
       });
 
-      it('creates one file for vscode deployment (empty index)', () => {
-        expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
+      it('creates no files for vscode deployment (empty command list)', () => {
+        expect(vscodeUpdates.createOrUpdate).toHaveLength(0);
       });
 
-      it('places vscode index at correct path', () => {
-        expect(vscodeUpdates.createOrUpdate[0].path).toBe(
-          'vscode/.packmind/commands-index.md',
-        );
-      });
-
-      it('includes no commands message in vscode index', () => {
-        expect(vscodeUpdates.createOrUpdate[0].content).toContain(
-          'No commands available',
-        );
-      });
-
-      it('creates jetbrains index file', () => {
-        expect(jetbrainsIndexFile).toBeDefined();
-      });
-
-      it('places jetbrains index in correct path', () => {
-        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      it('does not create a commands index file for jetbrains', () => {
+        expect(jetbrainsIndexFile).toBeUndefined();
       });
 
       it('keeps paths completely separate (no vscode in jetbrains path)', () => {
-        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+        expect(jetbrainsCommandFile?.path).not.toContain('vscode');
       });
     });
   });
@@ -1014,34 +996,28 @@ This recipe provides TDD best practices applicable to any IDE platform.
         );
       });
 
-      it('creates four files (2 for each target)', () => {
-        expect(multiTargetUpdates.createOrUpdate).toHaveLength(4);
+      it('creates two files (1 for each target)', () => {
+        expect(multiTargetUpdates.createOrUpdate).toHaveLength(2);
       });
 
       it('creates jetbrains recipe file', () => {
         expect(jetbrainsCommandFile).toBeDefined();
       });
 
-      it('creates jetbrains index file', () => {
-        expect(jetbrainsIndexFile).toBeDefined();
+      it('does not create a jetbrains commands index file', () => {
+        expect(jetbrainsIndexFile).toBeUndefined();
       });
 
       it('creates vscode recipe file', () => {
         expect(vscodeCommandFile).toBeDefined();
       });
 
-      it('creates vscode index file', () => {
-        expect(vscodeIndexFile).toBeDefined();
+      it('does not create a vscode commands index file', () => {
+        expect(vscodeIndexFile).toBeUndefined();
       });
 
       it('includes TDD recipe in jetbrains recipe file', () => {
         expect(jetbrainsCommandFile?.content).toContain(
-          'Test-Driven Development (TDD) Best Practices',
-        );
-      });
-
-      it('includes TDD recipe in jetbrains index file', () => {
-        expect(jetbrainsIndexFile?.content).toContain(
           'Test-Driven Development (TDD) Best Practices',
         );
       });
@@ -1051,17 +1027,11 @@ This recipe provides TDD best practices applicable to any IDE platform.
           'Test-Driven Development (TDD) Best Practices',
         );
       });
-
-      it('includes TDD recipe in vscode index file', () => {
-        expect(vscodeIndexFile?.content).toContain(
-          'Test-Driven Development (TDD) Best Practices',
-        );
-      });
     });
 
     describe('when Vincent opens exclusively JetBrains folder', () => {
       let jetbrainsOnlyUpdates: FileUpdates;
-      let jetbrainsIndexFile: FileModification | undefined;
+      let jetbrainsCommandFile: FileModification | undefined;
 
       beforeEach(async () => {
         const tddCommandVersions: CommandVersion[] = [
@@ -1091,31 +1061,30 @@ This recipe provides TDD best practices applicable to any IDE platform.
             ['packmind'],
           );
 
-        jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
-          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        jetbrainsCommandFile = jetbrainsOnlyUpdates.createOrUpdate.find(
+          (file) =>
+            file.path === 'jetbrains/.packmind/commands/tdd-best-practices.md',
         );
       });
 
-      it('creates two files for jetbrains only', () => {
-        expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(2);
+      it('creates one file for jetbrains only', () => {
+        expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(1);
       });
 
-      it('creates jetbrains index file', () => {
-        expect(jetbrainsIndexFile).toBeDefined();
+      it('creates jetbrains recipe file', () => {
+        expect(jetbrainsCommandFile).toBeDefined();
       });
 
-      it('includes TDD recipe in jetbrains index', () => {
-        expect(jetbrainsIndexFile?.content).toContain(
-          'Test-Driven Development (TDD) Best Practices',
-        );
+      it('includes TDD recipe content in jetbrains recipe file', () => {
+        expect(jetbrainsCommandFile?.content).toContain('TDD Best Practices');
       });
 
-      it('places index in jetbrains path', () => {
-        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      it('places recipe file in jetbrains path', () => {
+        expect(jetbrainsCommandFile?.path.startsWith('jetbrains/')).toBe(true);
       });
 
       it('keeps paths separate (no vscode in path)', () => {
-        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+        expect(jetbrainsCommandFile?.path).not.toContain('vscode');
       });
     });
   });
@@ -1123,7 +1092,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
   describe('Path prefix behavior', () => {
     describe('when removing leading slash from target path', () => {
       let updates: FileUpdates;
-      let indexFile: FileModification | undefined;
+      let commandFile: FileModification | undefined;
 
       beforeEach(async () => {
         const recipeVersions: CommandVersion[] = [
@@ -1145,31 +1114,33 @@ This recipe provides TDD best practices applicable to any IDE platform.
           ['packmind'],
         );
 
-        indexFile = updates.createOrUpdate.find(
-          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        commandFile = updates.createOrUpdate.find((file) =>
+          file.path.startsWith('jetbrains/.packmind/commands/'),
         );
       });
 
-      it('creates two files', () => {
-        expect(updates.createOrUpdate).toHaveLength(2);
+      it('creates one file', () => {
+        expect(updates.createOrUpdate).toHaveLength(1);
       });
 
-      it('creates index file', () => {
-        expect(indexFile).toBeDefined();
+      it('creates recipe file', () => {
+        expect(commandFile).toBeDefined();
       });
 
-      it('places index at correct path', () => {
-        expect(indexFile?.path).toBe('jetbrains/.packmind/commands-index.md');
+      it('places recipe file at correct prefixed path', () => {
+        expect(commandFile?.path).toBe(
+          'jetbrains/.packmind/commands/writing-good-jetbrains-services.md',
+        );
       });
 
       it('produces path without double slashes', () => {
-        expect(indexFile?.path).not.toContain('//');
+        expect(commandFile?.path).not.toContain('//');
       });
     });
 
     describe('when handling root target', () => {
       let updates: FileUpdates;
-      let indexFile: FileModification | undefined;
+      let commandFile: FileModification | undefined;
 
       beforeEach(async () => {
         const recipeVersions: CommandVersion[] = [
@@ -1191,21 +1162,23 @@ This recipe provides TDD best practices applicable to any IDE platform.
           ['packmind'],
         );
 
-        indexFile = updates.createOrUpdate.find(
-          (file) => file.path === '.packmind/commands-index.md',
+        commandFile = updates.createOrUpdate.find((file) =>
+          file.path.startsWith('.packmind/commands/'),
         );
       });
 
-      it('creates two files', () => {
-        expect(updates.createOrUpdate).toHaveLength(2);
+      it('creates one file', () => {
+        expect(updates.createOrUpdate).toHaveLength(1);
       });
 
-      it('creates index file for root deployment', () => {
-        expect(indexFile).toBeDefined();
+      it('creates recipe file for root deployment', () => {
+        expect(commandFile).toBeDefined();
       });
 
-      it('places index at root path without prefix', () => {
-        expect(indexFile?.path).toBe('.packmind/commands-index.md');
+      it('places recipe file at root path without prefix', () => {
+        expect(commandFile?.path).toBe(
+          '.packmind/commands/writing-good-jetbrains-services.md',
+        );
       });
     });
   });
