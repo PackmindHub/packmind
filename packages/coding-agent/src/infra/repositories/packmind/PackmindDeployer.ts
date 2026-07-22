@@ -11,7 +11,6 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { CommandsIndexService } from '../../../application/services/CommandsIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
@@ -20,17 +19,18 @@ const origin = 'PackmindDeployer';
 
 export class PackmindDeployer implements ICodingAgentDeployer {
   private static readonly ARTEFACT_PATHS = CODING_AGENT_ARTEFACT_PATHS.packmind;
-  private static readonly COMMANDS_INDEX_PATH = '.packmind/commands-index.md';
+  // Legacy index files that are no longer generated but must be cleaned up
+  // from repositories where a previous version wrote them.
+  private static readonly LEGACY_COMMANDS_INDEX_PATH =
+    '.packmind/commands-index.md';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.packmind/recipes-index.md';
-  private readonly commandsIndexService: CommandsIndexService;
   private readonly standardsIndexService: StandardsIndexService;
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.commandsIndexService = new CommandsIndexService();
     this.standardsIndexService = new StandardsIndexService();
   }
 
@@ -63,26 +63,19 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the commands index
-    const commandsIndexContent =
-      this.commandsIndexService.buildCommandsIndex(recipeVersions);
-
-    const indexTargetPrefixedPath = getTargetPrefixedPath(
-      PackmindDeployer.COMMANDS_INDEX_PATH,
-      target,
-    );
-    fileUpdates.createOrUpdate.push({
-      path: indexTargetPrefixedPath,
-      content: commandsIndexContent,
-    });
-
-    // Delete legacy recipes-index.md file
-    const legacyIndexPath = getTargetPrefixedPath(
-      PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
-      target,
-    );
+    // Clean up legacy index files that are no longer generated
     fileUpdates.delete.push({
-      path: legacyIndexPath,
+      path: getTargetPrefixedPath(
+        PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
+        target,
+      ),
+      type: DeleteItemType.File,
+    });
+    fileUpdates.delete.push({
+      path: getTargetPrefixedPath(
+        PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
+        target,
+      ),
       type: DeleteItemType.File,
     });
 
@@ -174,16 +167,11 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the commands index
-    const commandsIndexContent =
-      this.commandsIndexService.buildCommandsIndex(recipeVersions);
-
-    fileUpdates.createOrUpdate.push({
-      path: PackmindDeployer.COMMANDS_INDEX_PATH,
-      content: commandsIndexContent,
+    // Clean up legacy index files that are no longer generated
+    fileUpdates.delete.push({
+      path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
+      type: DeleteItemType.File,
     });
-
-    // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
       type: DeleteItemType.File,
@@ -292,16 +280,12 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the commands index only if there are commands
+    // Clean up legacy index files that are no longer generated
     if (recipeVersions.length > 0) {
-      const commandsIndexContent =
-        this.commandsIndexService.buildCommandsIndex(recipeVersions);
-      fileUpdates.createOrUpdate.push({
-        path: PackmindDeployer.COMMANDS_INDEX_PATH,
-        content: commandsIndexContent,
+      fileUpdates.delete.push({
+        path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
+        type: DeleteItemType.File,
       });
-
-      // Delete legacy recipes-index.md file
       fileUpdates.delete.push({
         path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
         type: DeleteItemType.File,
@@ -380,10 +364,10 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete commands index if no commands remain installed
+    // Delete legacy commands index if no commands remain installed
     if (installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
-        path: PackmindDeployer.COMMANDS_INDEX_PATH,
+        path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
         type: DeleteItemType.File,
       });
     }
@@ -456,7 +440,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
           type: DeleteItemType.Directory,
         },
         {
-          path: PackmindDeployer.COMMANDS_INDEX_PATH,
+          path: PackmindDeployer.LEGACY_COMMANDS_INDEX_PATH,
           type: DeleteItemType.File,
         },
         {
