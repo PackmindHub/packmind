@@ -136,6 +136,7 @@ export class GitProvidersController {
   async getGithubAppManifest(
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
+    @Query('githubOrg') githubOrg?: string,
   ): Promise<{
     manifest: GitHubAppManifest;
     state: string;
@@ -150,13 +151,14 @@ export class GitProvidersController {
 
     this.logger.info(
       'GET /organizations/:orgId/git/providers/github/app/manifest',
-      { organizationId },
+      { organizationId, hasGithubOrg: Boolean(githubOrg) },
     );
 
     try {
       return await this.gitProvidersService.buildGithubAppManifest({
         orgId: organizationId,
         userId: req.user.userId,
+        githubOrg: githubOrg?.trim() || undefined,
       });
     } catch (error) {
       const errorMessage =
