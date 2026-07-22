@@ -38,14 +38,23 @@ How you connect depends on whether you use Packmind Cloud or a self-hosted insta
 
 #### On self-hosted Packmind
 
-The first time you connect, you register a Packmind GitHub App for your organization. This is a one-time setup — every later GitHub connection reuses it.
+The first time you connect, you register a Packmind GitHub App. This is a one-time setup — every later GitHub connection reuses it.
 
 1. Go to **Settings** → **Git** and click **Add connection**.
 2. Select **GitHub**.
-3. Under **Authentication**, click **Register the Packmind GitHub App**. GitHub opens so you can create the app for your organization, then returns you to Packmind automatically.
-4. Once the app is registered, click **Install Packmind on GitHub**.
-5. On GitHub, choose the organizations and repositories to grant access to, then confirm.
-6. You're returned to Packmind automatically, and the connection is ready to use.
+3. (Optional) Under **Authentication**, enter a **GitHub organization** slug (the name that appears in `github.com/<slug>`) to register the app under that organization — you must be one of its owners. Leave the field empty to register the app under your personal GitHub account.
+4. Click **Register the Packmind GitHub App**. GitHub opens so you can create the app, then returns you to Packmind automatically.
+5. Once the app is registered, click **Install Packmind on GitHub**.
+6. On GitHub, choose the organizations and repositories to grant access to, then confirm.
+7. You're returned to Packmind automatically, and the connection is ready to use.
+
+<Note>
+  For team use, prefer registering the app under a GitHub organization so it
+  isn't tied to one person's account. If you already registered it under a
+  personal account, you can move it afterward on GitHub: open the app's
+  settings, go to **Advanced**, and use **Transfer ownership** to hand it to
+  your organization.
+</Note>
 
 <Note>
   After the app is registered, every new GitHub connection in your organization
