@@ -28,7 +28,10 @@ export interface IGitProviderGateway {
     organizationId: OrganizationId,
     gitProviderId?: GitProviderId,
   ): Promise<{ installUrl: string; state: string }>;
-  getGithubAppManifest(organizationId: OrganizationId): Promise<{
+  getGithubAppManifest(
+    organizationId: OrganizationId,
+    githubOrg?: string,
+  ): Promise<{
     manifest: GitHubAppManifest;
     state: string;
     manifestPostUrl: string;

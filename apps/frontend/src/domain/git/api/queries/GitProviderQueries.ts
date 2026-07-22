@@ -264,13 +264,16 @@ export const useGetGithubAppManifestMutation = () => {
   const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ githubOrg }: { githubOrg?: string }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch GitHub App manifest',
         );
       }
-      return gitProviderGateway.getGithubAppManifest(organization.id);
+      return gitProviderGateway.getGithubAppManifest(
+        organization.id,
+        githubOrg,
+      );
     },
     onError: (error) => {
       console.error('Error fetching GitHub App manifest:', error);
