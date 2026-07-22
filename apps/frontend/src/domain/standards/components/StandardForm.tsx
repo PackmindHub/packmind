@@ -18,6 +18,12 @@ import {
   useGetStandardsQuery,
 } from '../api/queries/StandardsQueries';
 import { useArtifactNameValidator } from '../../../shared/hooks/useArtifactNameValidator';
+import { useListChangeProposalsByStandardQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import {
+  countPendingChangeProposals,
+  PendingChangeProposalsWarning,
+  ConfirmSaveWithPendingProposalsDialog,
+} from '../../../shared/components/PendingChangeProposals';
 import {
   createRuleId,
   RuleId,
@@ -73,9 +79,16 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     type: 'success' | 'error' | 'warning' | 'info';
     message: string;
   } | null>(null);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
 
   const createMutation = useCreateStandardMutation();
   const updateMutation = useUpdateStandardMutation();
+
+  const { data: changeProposals } = useListChangeProposalsByStandardQuery(
+    standard?.id,
+  );
+  const pendingChangeProposalsCount =
+    countPendingChangeProposals(changeProposals);
 
   const {
     data: fetchedRules,
@@ -134,6 +147,49 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     setScope('');
   };
 
+  const buildStandardData = () => ({
+    name: name.trim(),
+    description: description.trim(),
+    rules: rules
+      .filter((rule) => rule.content.trim())
+      .map((rule) => ({
+        id: rule.id,
+        content: rule.content.trim(),
+      })),
+    scope: scope.trim() || null,
+  });
+
+  const performUpdate = () => {
+    if (!standard) {
+      throw new Error('No standard.');
+    }
+    updateMutation.mutate(
+      {
+        id: standard.id,
+        standard: buildStandardData(),
+      },
+      {
+        onSuccess: () => {
+          setAlert({
+            type: 'success',
+            message: STANDARD_MESSAGES.success.updated,
+          });
+          setTimeout(() => {
+            setAlert(null);
+            onSuccess?.();
+          }, 2000);
+        },
+        onError: (error) => {
+          console.error('Failed to update standard:', error);
+          setAlert({
+            type: 'error',
+            message: STANDARD_MESSAGES.error.updateFailed,
+          });
+        },
+      },
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -170,20 +226,8 @@ export const StandardForm: React.FC<StandardFormProps> = ({
       return;
     }
 
-    const validRules = rules.filter((rule) => rule.content.trim());
-
-    const standardData = {
-      name: name.trim(),
-      description: description.trim(),
-      rules: validRules.map((rule) => ({
-        id: rule.id,
-        content: rule.content.trim(),
-      })),
-      scope: scope.trim() || null,
-    };
-
     if (mode === 'create') {
-      createMutation.mutate(standardData, {
+      createMutation.mutate(buildStandardData(), {
         onSuccess: (data: Standard) => {
           resetForm();
           setAlert({
@@ -203,36 +247,16 @@ export const StandardForm: React.FC<StandardFormProps> = ({
           });
         },
       });
+    } else if (pendingChangeProposalsCount > 0) {
+      setConfirmSaveOpen(true);
     } else {
-      if (!standard) {
-        throw new Error('No standard.');
-      }
-      updateMutation.mutate(
-        {
-          id: standard.id,
-          standard: standardData,
-        },
-        {
-          onSuccess: () => {
-            setAlert({
-              type: 'success',
-              message: STANDARD_MESSAGES.success.updated,
-            });
-            setTimeout(() => {
-              setAlert(null);
-              onSuccess?.();
-            }, 2000);
-          },
-          onError: (error) => {
-            console.error('Failed to update standard:', error);
-            setAlert({
-              type: 'error',
-              message: STANDARD_MESSAGES.error.updateFailed,
-            });
-          },
-        },
-      );
+      performUpdate();
     }
+  };
+
+  const handleConfirmSave = () => {
+    setConfirmSaveOpen(false);
+    performUpdate();
   };
 
   const hasScopeError = hasOnlyNegativePatterns(scope);
@@ -265,6 +289,19 @@ export const StandardForm: React.FC<StandardFormProps> = ({
           <PMAlert.Title>{alert.message}</PMAlert.Title>
         </PMAlert.Root>
       )}
+      {mode === 'edit' && (
+        <PendingChangeProposalsWarning
+          count={pendingChangeProposalsCount}
+          itemType="standard"
+        />
+      )}
+      <ConfirmSaveWithPendingProposalsDialog
+        open={confirmSaveOpen}
+        onOpenChange={({ open }) => setConfirmSaveOpen(open)}
+        count={pendingChangeProposalsCount}
+        itemType="standard"
+        onConfirm={handleConfirmSave}
+      />
       <PMVStack gap={10} alignItems={'flex-start'}>
         {mode === 'edit' && (
           <>

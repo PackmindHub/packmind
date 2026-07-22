@@ -16,6 +16,12 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
+import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import {
+  countPendingChangeProposals,
+  PendingChangeProposalsWarning,
+  ConfirmSaveWithPendingProposalsDialog,
+} from '../../../shared/components/PendingChangeProposals';
 
 // Mirrors packages/skills/src/application/validator/SkillValidator.ts (SKILL_FILE_MAX_CONTENT_LENGTH)
 const SKILL_FILE_MAX_CONTENT_LENGTH = 300_000;
@@ -44,8 +50,16 @@ export const SkillFileEditor = ({
   // after mount rather than during it. Track readiness explicitly so Save
   // reflects that state instead of silently doing nothing if clicked first.
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [pendingSaveContent, setPendingSaveContent] = useState<string | null>(
+    null,
+  );
   const analytics = useAnalytics();
   const updateSkillFileMutation = useUpdateSkillFileMutation();
+
+  const { data: changeProposals } = useListChangeProposalsBySkillQuery(skillId);
+  const pendingChangeProposalsCount =
+    countPendingChangeProposals(changeProposals);
 
   // Read the markdown synchronously from the editor on save: the WYSIWYG
   // editor's change events are debounced, so state fed by them can lag
@@ -64,30 +78,7 @@ export const SkillFileEditor = ({
 
   const isSaving = updateSkillFileMutation.isPending;
 
-  const handleSave = async () => {
-    if (isSaving || !editorApiRef.current) return;
-    setError(null);
-
-    const content = editorApiRef.current.getMarkdown();
-
-    if (content === (baselineContentRef.current ?? initialContent)) {
-      // No-op save: nothing changed, just exit edit mode silently.
-      onSaved();
-      return;
-    }
-
-    if (content.trim().length === 0) {
-      setError('File content cannot be empty.');
-      return;
-    }
-
-    if (content.length > SKILL_FILE_MAX_CONTENT_LENGTH) {
-      setError(
-        `File content exceeds the maximum length of ${SKILL_FILE_MAX_CONTENT_LENGTH.toLocaleString()} characters.`,
-      );
-      return;
-    }
-
+  const performSave = async (content: string) => {
     try {
       const response = await updateSkillFileMutation.mutateAsync({
         skillId,
@@ -120,6 +111,48 @@ export const SkillFileEditor = ({
     }
   };
 
+  const handleSave = async () => {
+    if (isSaving || !editorApiRef.current) return;
+    setError(null);
+
+    const content = editorApiRef.current.getMarkdown();
+
+    if (content === (baselineContentRef.current ?? initialContent)) {
+      // No-op save: nothing changed, just exit edit mode silently.
+      onSaved();
+      return;
+    }
+
+    if (content.trim().length === 0) {
+      setError('File content cannot be empty.');
+      return;
+    }
+
+    if (content.length > SKILL_FILE_MAX_CONTENT_LENGTH) {
+      setError(
+        `File content exceeds the maximum length of ${SKILL_FILE_MAX_CONTENT_LENGTH.toLocaleString()} characters.`,
+      );
+      return;
+    }
+
+    if (pendingChangeProposalsCount > 0) {
+      setPendingSaveContent(content);
+      setConfirmSaveOpen(true);
+      return;
+    }
+
+    await performSave(content);
+  };
+
+  const handleConfirmSave = async () => {
+    setConfirmSaveOpen(false);
+    if (pendingSaveContent !== null) {
+      const content = pendingSaveContent;
+      setPendingSaveContent(null);
+      await performSave(content);
+    }
+  };
+
   return (
     <PMVStack align="stretch" gap={2} width="full">
       {error && (
@@ -128,6 +161,20 @@ export const SkillFileEditor = ({
           <PMAlert.Title>{error}</PMAlert.Title>
         </PMAlert.Root>
       )}
+
+      <PendingChangeProposalsWarning
+        count={pendingChangeProposalsCount}
+        itemType="skill"
+        marginBottom={0}
+        marginTop={2}
+      />
+      <ConfirmSaveWithPendingProposalsDialog
+        open={confirmSaveOpen}
+        onOpenChange={({ open }) => setConfirmSaveOpen(open)}
+        count={pendingChangeProposalsCount}
+        itemType="skill"
+        onConfirm={handleConfirmSave}
+      />
 
       <PMBox
         border="solid 1px"

@@ -1,15 +1,17 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import {
+  ChangeProposalStatus,
   createSkillId,
   createSkillVersionId,
   createUserId,
 } from '@packmind/types';
 import { SkillFileEditor } from './SkillFileEditor';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
+import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
 const mockTrack = jest.fn();
 const mockToasterCreate = jest.fn();
@@ -58,10 +60,37 @@ jest.mock('../api/queries/SkillsQueries', () => ({
   useUpdateSkillFileMutation: jest.fn(),
 }));
 
+jest.mock(
+  '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+  () => ({
+    ...jest.requireActual(
+      '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
+    ),
+    useListChangeProposalsBySkillQuery: jest.fn(),
+  }),
+);
+
 const mockUseUpdateSkillFileMutation =
   useUpdateSkillFileMutation as jest.MockedFunction<
     typeof useUpdateSkillFileMutation
   >;
+
+const mockUseListChangeProposalsBySkillQuery =
+  useListChangeProposalsBySkillQuery as jest.MockedFunction<
+    typeof useListChangeProposalsBySkillQuery
+  >;
+
+const mockPendingProposals = (pendingCount: number) => {
+  mockUseListChangeProposalsBySkillQuery.mockReturnValue({
+    data: {
+      changeProposals: Array.from({ length: pendingCount }, () => ({
+        status: ChangeProposalStatus.pending,
+      })),
+    },
+    isLoading: false,
+    isError: false,
+  } as ReturnType<typeof useListChangeProposalsBySkillQuery>);
+};
 
 const createMockMutation = (overrides = {}) =>
   ({
@@ -117,6 +146,12 @@ describe('SkillFileEditor', () => {
 
   beforeEach(() => {
     mockUseUpdateSkillFileMutation.mockReturnValue(createMockMutation());
+    // Mirror the OSS stub: no change-proposals data.
+    mockUseListChangeProposalsBySkillQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    } as ReturnType<typeof useListChangeProposalsBySkillQuery>);
   });
 
   afterEach(() => {
@@ -367,6 +402,140 @@ describe('SkillFileEditor', () => {
       });
 
       expect(onCancel).toHaveBeenCalled();
+    });
+  });
+
+  describe('with pending change proposals', () => {
+    beforeEach(() => {
+      mockPendingProposals(2);
+    });
+
+    it('shows the pending change proposals warning', () => {
+      renderWithProviders(<SkillFileEditor {...defaultProps} />);
+
+      expect(
+        screen.getByText(
+          '2 change proposals are pending on this skill. Saving a new version will make them outdated.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    describe('when saving a modified file', () => {
+      it('asks for confirmation instead of saving directly', async () => {
+        const mockMutateAsync = jest.fn();
+        mockUseUpdateSkillFileMutation.mockReturnValue(
+          createMockMutation({ mutateAsync: mockMutateAsync }),
+        );
+        renderWithProviders(<SkillFileEditor {...defaultProps} />);
+        typeContent('Updated content');
+
+        await clickSave();
+
+        expect(
+          await screen.findByText('Save with pending change proposals?'),
+        ).toBeInTheDocument();
+        expect(mockMutateAsync).not.toHaveBeenCalled();
+      });
+
+      describe('when the user confirms', () => {
+        it('saves the file', async () => {
+          const mockMutateAsync = jest.fn().mockResolvedValue({
+            skillVersion: null,
+            versionCreated: false,
+          });
+          mockUseUpdateSkillFileMutation.mockReturnValue(
+            createMockMutation({ mutateAsync: mockMutateAsync }),
+          );
+          renderWithProviders(<SkillFileEditor {...defaultProps} />);
+          typeContent('Updated content');
+
+          await clickSave();
+          const confirmButton = await screen.findByRole('button', {
+            name: 'Save anyway',
+          });
+          await act(async () => {
+            fireEvent.click(confirmButton);
+          });
+
+          expect(mockMutateAsync).toHaveBeenCalledWith({
+            skillId,
+            slug: 'my-skill',
+            filePath: 'references/guide.md',
+            content: 'Updated content',
+          });
+        });
+      });
+
+      describe('when the user cancels', () => {
+        it('does not save the file', async () => {
+          const mockMutateAsync = jest.fn();
+          mockUseUpdateSkillFileMutation.mockReturnValue(
+            createMockMutation({ mutateAsync: mockMutateAsync }),
+          );
+          renderWithProviders(<SkillFileEditor {...defaultProps} />);
+          typeContent('Updated content');
+
+          await clickSave();
+          const dialog = await screen.findByRole('dialog');
+          await act(async () => {
+            fireEvent.click(
+              within(dialog).getByRole('button', { name: 'Cancel' }),
+            );
+          });
+
+          expect(mockMutateAsync).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when saving an unchanged file', () => {
+      it('exits silently without confirmation', async () => {
+        const mockMutateAsync = jest.fn();
+        mockUseUpdateSkillFileMutation.mockReturnValue(
+          createMockMutation({ mutateAsync: mockMutateAsync }),
+        );
+        const onSaved = jest.fn();
+        renderWithProviders(
+          <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
+        );
+
+        await clickSave();
+
+        expect(
+          screen.queryByText('Save with pending change proposals?'),
+        ).not.toBeInTheDocument();
+        expect(mockMutateAsync).not.toHaveBeenCalled();
+        expect(onSaved).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('without pending change proposals', () => {
+    it('does not show the warning', () => {
+      renderWithProviders(<SkillFileEditor {...defaultProps} />);
+
+      expect(
+        screen.queryByText(/pending on this skill/),
+      ).not.toBeInTheDocument();
+    });
+
+    it('saves a modified file without confirmation', async () => {
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        skillVersion: null,
+        versionCreated: false,
+      });
+      mockUseUpdateSkillFileMutation.mockReturnValue(
+        createMockMutation({ mutateAsync: mockMutateAsync }),
+      );
+      renderWithProviders(<SkillFileEditor {...defaultProps} />);
+      typeContent('Updated content');
+
+      await clickSave();
+
+      expect(
+        screen.queryByText('Save with pending change proposals?'),
+      ).not.toBeInTheDocument();
+      expect(mockMutateAsync).toHaveBeenCalled();
     });
   });
 });

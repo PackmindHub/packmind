@@ -77,9 +77,11 @@ RUN pnpm install --prod --ignore-scripts && pnpm store prune
 WORKDIR /app
 
 
-# Remove npm/pnpm and their global node_modules to eliminate vulnerabilities
+# Remove npm/pnpm and their global node_modules to eliminate vulnerabilities.
+# COREPACK_HOME holds the corepack-provisioned pnpm, whose bundled dependencies
+# (e.g. tar) trip CVE scanners even though pnpm is never used at runtime.
 USER root
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack && \
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack "$COREPACK_HOME" && \
     rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/corepack
 USER node
 

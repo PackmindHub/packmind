@@ -8,7 +8,7 @@
   "dependencies": {
     "@packmind/logger": "workspace:*",
     "@packmind/types": "workspace:*",
-    "typeorm": "0.3.28",
+    "typeorm": "0.3.29",
     "pg-mem": "^3.0.5",
     "uuid": "^11.1.0"
   }
