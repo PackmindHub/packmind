@@ -5,6 +5,7 @@
 ## Changed
 
 - `install` no longer generates the `.packmind/commands-index.md` file. Any existing `commands-index.md` is now removed on the next `install`.
+- `install` now notifies Packmind of a distribution only when it runs on the tracked repository and branch. On an untracked repository, a non-tracked branch, or outside a git repository, the install completes locally but sends nothing to Packmind and prints a notice explaining why the distribution will not appear.
 
 ## Fixed
 

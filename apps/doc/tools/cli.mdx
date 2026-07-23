@@ -289,7 +289,7 @@ Next step: Run /packmind-onboard in your AI agent to onboard the project
 
 ## Track Command
 
-Set which repository and branch Packmind tracks for your project. The tracked branch is the anchor Packmind uses to attribute governance and adoption activity, so declaring it tells Packmind where to follow your team's work.
+Set which repository and branch Packmind tracks for your project. The tracked branch is the anchor Packmind uses to attribute governance and adoption activity, so declaring it tells Packmind where to follow your team's work. Only installs that run on the tracked repository and branch are recorded — see [Distribution Recording](#distribution-recording-tracked-repository-and-branch).
 
 <Info>
   **Organization admins only** — Only organization admins can set or move the
@@ -554,6 +554,42 @@ packmind-cli install --path apps/frontend
   created regardless of your configuration. To configure which agents are
   enabled, see [Manage AI Agent Rendering](/administration/manage-ai-agents).
 </Tip>
+
+### Distribution Recording (Tracked Repository and Branch)
+
+When you install packages inside a git repository, Packmind records the deployment as a **distribution** so it shows up in your governance and adoption views. To keep those views meaningful, a distribution is recorded **only when you install on the repository and branch your organization tracks** (see the [Track Command](#track-command)).
+
+If you install anywhere else, the install still completes locally, but nothing is sent to Packmind and the CLI tells you why:
+
+- **The repository is not tracked** — no repository is tracked for this project yet:
+
+  ```
+  Distribution not recorded — my-org/my-repo is not tracked in Packmind. Ask an admin to run `packmind track` to start tracking it.
+  ```
+
+- **You are on a different branch** — the repository is tracked, but on another branch:
+
+  ```
+  Distribution not recorded — you're on 'dev', but the tracked branch is 'main'. Switch to 'main' to record this distribution.
+  ```
+
+- **The folder is not a tracked git repository** — you are outside a git repository, there is no git remote, or you are not signed in:
+
+  ```
+  This folder is not tracked — distribution not recorded in Packmind.
+  ```
+
+<Info>
+  **Anyone can install** — Recording a distribution is not restricted to admins.
+  Only *setting* the tracked repository and branch requires an organization
+  admin (see the [Track Command](#track-command)).
+</Info>
+
+<Note>
+  **Not seeing your activity in Packmind?** — Confirm you are on the tracked
+  repository and branch. An organization admin can set or move the tracked
+  branch with `packmind-cli track`.
+</Note>
 
 ### Install Globally for Claude Code (`~/.claude`)
 

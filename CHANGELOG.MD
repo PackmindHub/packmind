@@ -7,6 +7,8 @@
 
 ## Changed
 
+- `packmind install` now records a distribution in Packmind only when it runs on the tracked repository and branch. Installing on an untracked repository, on a different branch, or outside a git repository completes locally but is not recorded, and the CLI explains why.
+
 ## Fixed
 
 - Support registering the GitHub App on a GitHub organization by providing an optional organization when connecting
