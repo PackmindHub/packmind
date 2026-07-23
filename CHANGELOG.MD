@@ -9,6 +9,8 @@
 
 ## Fixed
 
+- Support registering the GitHub App on a GitHub organization by providing an optional organization when connecting
+
 ## Removed
 
 - Do not generate `installedAt` property of `packmind-lock.json`
