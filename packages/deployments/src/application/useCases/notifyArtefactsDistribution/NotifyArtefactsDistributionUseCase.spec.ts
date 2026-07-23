@@ -13,6 +13,7 @@ import {
   createTargetId,
   createUserId,
   IAccountsPort,
+  IEventTrackingPort,
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
@@ -40,6 +41,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockTargetResolutionService: jest.Mocked<TargetResolutionService>;
+  let mockEventTrackingPort: jest.Mocked<IEventTrackingPort>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
@@ -199,6 +201,11 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
+    mockEventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+      identifyOrganizationGroup: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,
       mockCommandsPort,
@@ -208,6 +215,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       mockDistributedPackageRepository,
       mockRenderModeConfigurationService,
       mockTargetResolutionService,
+      mockEventTrackingPort,
       stubLogger(),
     );
   });
@@ -400,6 +408,76 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         expect(packageIds).toEqual(
           expect.arrayContaining([String(packageId), String(secondPackageId)]),
         );
+      });
+    });
+  });
+
+  describe('distribution_recorded analytics event', () => {
+    beforeEach(() => {
+      mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
+      mockCommandsPort.getCommandVersion.mockResolvedValue(null);
+      mockSkillsPort.getSkillVersionByNumber.mockResolvedValue(null);
+    });
+
+    describe('when a distribution is recorded', () => {
+      beforeEach(async () => {
+        await useCase.execute(buildCommand({ gitBranch: 'main' }));
+      });
+
+      it('tracks a distribution_recorded event with the repository and branch', () => {
+        expect(mockEventTrackingPort.trackEvent).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'distribution_recorded',
+          { repositoryId: String(gitRepoId), branch: 'main' },
+        );
+      });
+    });
+
+    describe('when the event tracking port rejects', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        mockEventTrackingPort.trackEvent.mockRejectedValue(
+          new Error('amplitude down'),
+        );
+        result = await useCase.execute(buildCommand());
+      });
+
+      it('still records the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalled();
+      });
+
+      it('still returns a deployment ID', () => {
+        expect(result).toHaveProperty('deploymentId');
+      });
+    });
+
+    describe('when no event tracking port is provided', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
+        const useCaseWithoutTracking = new NotifyArtefactsDistributionUseCase(
+          mockAccountsPort,
+          mockCommandsPort,
+          mockStandardsPort,
+          mockSkillsPort,
+          mockDistributionRepository,
+          mockDistributedPackageRepository,
+          mockRenderModeConfigurationService,
+          mockTargetResolutionService,
+          undefined,
+          stubLogger(),
+        );
+        result = await useCaseWithoutTracking.execute(buildCommand());
+      });
+
+      it('records the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalled();
+      });
+
+      it('returns a deployment ID', () => {
+        expect(result).toHaveProperty('deploymentId');
       });
     });
   });
