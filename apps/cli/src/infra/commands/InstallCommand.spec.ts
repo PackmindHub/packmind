@@ -642,7 +642,6 @@ describe('installCommand', () => {
           list: false,
           show: undefined,
           status: false,
-          skipInstalledAt: false,
         });
 
         warningIndex = mockConsoleLogger.logWarningConsole.mock.calls.findIndex(
@@ -687,7 +686,6 @@ describe('installCommand', () => {
           list: false,
           show: undefined,
           status: false,
-          skipInstalledAt: false,
         });
       });
 
@@ -725,7 +723,6 @@ describe('installCommand', () => {
           list: false,
           show: undefined,
           status: false,
-          skipInstalledAt: false,
         });
       });
 
@@ -774,7 +771,6 @@ describe('installCommand', () => {
           list: false,
           show: undefined,
           status: false,
-          skipInstalledAt: false,
         });
 
         allLogged = mockConsoleLogger.logConsole.mock.calls
@@ -811,10 +807,8 @@ describe('installCommand', () => {
         await handler({
           installPath: '',
           packages: ['@a/x'].map(parsePackageSlug),
-          list: false,
           show: undefined,
           status: false,
-          skipInstalledAt: false,
         });
 
         summaryLog = mockConsoleLogger.logConsole.mock.calls

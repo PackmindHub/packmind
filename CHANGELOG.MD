@@ -11,6 +11,8 @@
 
 ## Removed
 
+- Do not generate `installedAt` property of `packmind-lock.json`
+
 # [1.15.1] - 2026-06-15
 
 ## Added

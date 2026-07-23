@@ -11,6 +11,7 @@
 ## Removed
 
 - Dropped support for the `PACKMIND_API_KEY_V3` environment variable. Use `PACKMIND_API_KEY` instead.
+- Drop `--skipInstalledAt` flag on the `install` command
 
 # [0.31.0] - 2026-07-10
 

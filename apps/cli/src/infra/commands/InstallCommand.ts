@@ -255,12 +255,10 @@ export async function installHandler({
   installPath,
   packages,
   status,
-  skipInstalledAt,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
   status: boolean;
-  skipInstalledAt: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -364,7 +362,6 @@ export async function installHandler({
       const result = await packmindCliHexa.install({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
-        skipInstalledAt,
         cliVersion: CLI_VERSION,
         homeAgent: dirHomeAgent,
       });
@@ -463,11 +460,6 @@ export const installCommand = command({
       long: 'status',
       description:
         'Show status of all packmind.json files and their packages in the workspace',
-    }),
-    skipInstalledAt: flag({
-      long: 'skip-installed-at',
-      description:
-        'Omit the installedAt timestamp from the packmind-lock.json file',
     }),
   },
   handler: installHandler,

@@ -25,7 +25,6 @@ const lockFileFactory = (
   lockfileVersion: 1,
   packageSlugs: [],
   agents: [],
-  installedAt: new Date().toISOString(),
   artifacts: {},
   ...overrides,
 });
@@ -1566,35 +1565,6 @@ Old packmind content
         ([path]: [string]) => path,
       );
       expect(writeCalls).not.toContain('/test/packmind-lock.json');
-    });
-
-    describe('when skipInstalledAt is true', () => {
-      let lockFileArg: Record<string, unknown>;
-
-      beforeEach(async () => {
-        mockLockFileRepository.read.mockResolvedValue(null);
-        mockConfigFileRepository.readConfig.mockResolvedValue({
-          packages: { '@space/pkg': '*' },
-        });
-
-        await useCase.execute({
-          baseDirectory: '/test',
-          cliVersion: '0.0.0-test',
-          skipInstalledAt: true,
-        });
-
-        [, lockFileArg] = (
-          mockLockFileRepository.write as jest.Mock
-        ).mock.calls[0];
-      });
-
-      it('omits installedAt from the written lockfile', () => {
-        expect(lockFileArg.installedAt).toBeUndefined();
-      });
-
-      it('still writes the cliVersion to the lockfile', () => {
-        expect(lockFileArg.cliVersion).toBe('0.0.0-test');
-      });
     });
   });
 

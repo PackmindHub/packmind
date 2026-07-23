@@ -8,7 +8,6 @@ import { ParsedPackageSlug } from '../entities/PackageSlug';
 export type IInstallCommand = {
   baseDirectory?: string;
   packages?: ParsedPackageSlug[];
-  skipInstalledAt?: boolean;
   /**
    * The running CLI version, stored verbatim (including any `-next`
    * pre-release suffix) in `packmind-lock.json#cliVersion` after a
