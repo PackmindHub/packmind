@@ -52,8 +52,6 @@ import {
   ICodingAgentPort,
   ICodingAgentPortName,
   IDeploymentPort,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   InstallPackagesCommand,
@@ -164,7 +162,6 @@ export class DeploymentsAdapter
   private skillsPort: ISkillsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private accountsPort: IAccountsPort | null = null;
-  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Use cases - initialized in initialize()
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
@@ -229,7 +226,6 @@ export class DeploymentsAdapter
     [ISkillsPortName]: ISkillsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
-    [IEventTrackingPortName]?: IEventTrackingPort;
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
@@ -241,7 +237,6 @@ export class DeploymentsAdapter
     this.skillsPort = ports[ISkillsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
-    this.eventTrackingPort = ports[IEventTrackingPortName] ?? null;
 
     // Step 2: Build delayed jobs
     this.deploymentsDelayedJobs = await this.buildDelayedJobs(
@@ -562,7 +557,7 @@ export class DeploymentsAdapter
         this.distributedPackageRepository,
         this.deploymentsServices.getRenderModeConfigurationService(),
         targetResolutionService,
-        this.eventTrackingPort ?? undefined,
+        ports.eventEmitterService,
       );
 
     this._getLastDistributionDateByProvidersUseCase =
