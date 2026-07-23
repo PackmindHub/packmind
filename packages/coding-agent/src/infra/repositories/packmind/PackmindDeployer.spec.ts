@@ -84,13 +84,20 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('creates two files', () => {
-        expect(result.createOrUpdate).toHaveLength(2);
+      it('creates only the command file', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
       it('deletes legacy recipes-index.md file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/recipes-index.md',
+          type: DeleteItemType.File,
+        });
+      });
+
+      it('deletes legacy commands-index.md file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/commands-index.md',
           type: DeleteItemType.File,
         });
       });
@@ -102,29 +109,11 @@ describe('PackmindDeployer', () => {
         expect(commandFile?.content).toContain('This is the recipe content');
       });
 
-      it('creates commands index with header', () => {
+      it('does not create a commands index file', () => {
         const commandsIndexFile = result.createOrUpdate.find(
           (f) => f.path === '.packmind/commands-index.md',
         );
-        expect(commandsIndexFile?.content).toContain(
-          '# Packmind Commands Index',
-        );
-      });
-
-      it('creates commands index with available commands section', () => {
-        const commandsIndexFile = result.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands-index.md',
-        );
-        expect(commandsIndexFile?.content).toContain('## Available Commands');
-      });
-
-      it('creates commands index with recipe link and name', () => {
-        const commandsIndexFile = result.createOrUpdate.find(
-          (f) => f.path === '.packmind/commands-index.md',
-        );
-        expect(commandsIndexFile?.content).toContain(
-          '- [Test Recipe](commands/test-recipe.md) : Test Recipe',
-        );
+        expect(commandsIndexFile).toBeUndefined();
       });
     });
 
@@ -180,18 +169,15 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('creates three files', () => {
-        expect(result.createOrUpdate).toHaveLength(3);
+      it('creates one file per command', () => {
+        expect(result.createOrUpdate).toHaveLength(2);
       });
 
-      it('sorts commands alphabetically in index', () => {
+      it('does not create a commands index file', () => {
         const commandsIndexFile = result.createOrUpdate.find(
           (f) => f.path === '.packmind/commands-index.md',
         );
-        const commandsIndexContent = commandsIndexFile?.content || '';
-        const appleIndex = commandsIndexContent.indexOf('Apple Recipe');
-        const zebraIndex = commandsIndexContent.indexOf('Zebra Recipe');
-        expect(appleIndex).toBeLessThan(zebraIndex);
+        expect(commandsIndexFile).toBeUndefined();
       });
     });
 
@@ -202,8 +188,8 @@ describe('PackmindDeployer', () => {
         result = await deployer.deployCommands([], mockGitRepo, mockTarget);
       });
 
-      it('creates only commands index file', () => {
-        expect(result.createOrUpdate).toHaveLength(1);
+      it('creates no files', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
       });
 
       it('deletes legacy recipes-index.md file', () => {
@@ -213,9 +199,11 @@ describe('PackmindDeployer', () => {
         });
       });
 
-      it('includes no commands available message', () => {
-        const commandsIndexFile = result.createOrUpdate[0];
-        expect(commandsIndexFile.content).toContain('No commands available.');
+      it('deletes legacy commands-index.md file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
+        });
       });
     });
   });

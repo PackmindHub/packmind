@@ -1066,6 +1066,51 @@ describe('GitProvidersService', () => {
       });
     });
 
+    describe('when a githubOrg is provided', () => {
+      it('returns the org-scoped manifestPostUrl', async () => {
+        const result = await service.buildGithubAppManifest({
+          orgId,
+          userId,
+          githubOrg: 'my-company',
+        });
+
+        expect(result.manifestPostUrl).toBe(
+          'https://github.com/organizations/my-company/settings/apps/new',
+        );
+      });
+    });
+
+    describe('when a githubOrg with uppercase letters is provided', () => {
+      it('accepts it and preserves the original casing in the URL', async () => {
+        const result = await service.buildGithubAppManifest({
+          orgId,
+          userId,
+          githubOrg: 'Netflix',
+        });
+
+        expect(result.manifestPostUrl).toBe(
+          'https://github.com/organizations/Netflix/settings/apps/new',
+        );
+      });
+    });
+
+    describe('when the githubOrg is invalid', () => {
+      it.each([
+        ['starts with a hyphen', '-acme'],
+        ['ends with a hyphen', 'acme-'],
+        ['contains consecutive hyphens', 'ac--me'],
+        ['contains a slash', 'acme/evil'],
+        ['contains a space', 'acme corp'],
+        ['is empty', ''],
+      ])('throws BadRequestException when it %s', async (_label, githubOrg) => {
+        await expect(
+          service.buildGithubAppManifest({ orgId, userId, githubOrg }),
+        ).rejects.toThrow(
+          new BadRequestException('Invalid GitHub organization name'),
+        );
+      });
+    });
+
     describe('when mode is shared', () => {
       it('throws BadRequestException', async () => {
         resolveGithubAppMode.mockResolvedValue('shared');

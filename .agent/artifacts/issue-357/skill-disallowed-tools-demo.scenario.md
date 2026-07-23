@@ -1,4 +1,0 @@
-- Sign in to the Packmind local stack as `demo@packmind.test`
-- Navigate to the `create-em-spec` skill page under the Global space
-- Expand the **Frontmatter → More details** section
-- Confirm `disallowed-tools: Monitor, AskUserQuestions` is displayed correctly in the frontmatter panel

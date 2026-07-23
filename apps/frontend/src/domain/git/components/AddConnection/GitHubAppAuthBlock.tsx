@@ -22,6 +22,11 @@ import {
 } from '../../api/queries/GitProviderQueries';
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { redirectTo } from '../../../../shared/utils/navigation';
+import {
+  GithubAppOrgInput,
+  githubOrgForRegistration,
+  isGithubOrgValid,
+} from '../shared/GithubAppOrgInput';
 
 type GithubAppMode = 'on-prem' | 'shared';
 
@@ -45,6 +50,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   const revokeMutation = useRevokeGithubAppMutation();
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false);
   const [revokeConfirmationInput, setRevokeConfirmationInput] = useState('');
+  const [githubOrg, setGithubOrg] = useState('');
 
   const statusQuery = useGetGithubAppStatusQuery();
 
@@ -92,7 +98,9 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   const handleRegisterClick = async () => {
     try {
       const { manifest, state, manifestPostUrl } =
-        await manifestMutation.mutateAsync();
+        await manifestMutation.mutateAsync({
+          githubOrg: githubOrgForRegistration(githubOrg),
+        });
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = `${manifestPostUrl}?state=${encodeURIComponent(state)}`;
@@ -175,12 +183,19 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
                   </PMAlert.Content>
                 </PMAlert.Root>
               )}
+              <GithubAppOrgInput
+                githubOrg={githubOrg}
+                onGithubOrgChange={setGithubOrg}
+                disabled={manifestMutation.isPending}
+              />
               <PMButton
                 variant="secondary"
                 size="sm"
                 onClick={handleRegisterClick}
                 loading={manifestMutation.isPending}
-                disabled={manifestMutation.isPending}
+                disabled={
+                  manifestMutation.isPending || !isGithubOrgValid(githubOrg)
+                }
               >
                 <PMIcon fontSize="sm">
                   <LuGithub />
@@ -188,8 +203,8 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
                 Register the Packmind GitHub App
               </PMButton>
               <PMText fontSize="xs" color="faded">
-                Opens GitHub to register a new app for your organization. You'll
-                be returned here automatically.
+                Opens GitHub to register the app. You'll be returned here
+                automatically.
               </PMText>
             </PMVStack>
           ) : (

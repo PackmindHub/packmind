@@ -50,6 +50,9 @@ interface PackagesPopoverProps {
   organizationId: OrganizationId | undefined;
 }
 
+const byName = (a: PackageResponse, b: PackageResponse) =>
+  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+
 /**
  * Interactive breadcrumb widget for managing an artifact's package membership
  * in place. Adding is instant; removing from a deployed package asks for
@@ -89,7 +92,9 @@ export const PackagesPopover = ({
 
   const members = useMemo(() => {
     if (!artifactId) return [];
-    return getArtifactPackages(allPackages, artifactId, artifactType);
+    return [...getArtifactPackages(allPackages, artifactId, artifactType)].sort(
+      byName,
+    );
   }, [allPackages, artifactId, artifactType]);
 
   const addable = useMemo(() => {
@@ -99,9 +104,10 @@ export const PackagesPopover = ({
 
   const filteredAddable = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q
+    const base = q
       ? addable.filter((p) => p.name.toLowerCase().includes(q))
       : addable;
+    return [...base].sort(byName);
   }, [addable, query]);
 
   if (!artifactId || !spaceId || !organizationId) return null;

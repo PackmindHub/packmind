@@ -681,6 +681,99 @@ describe('GitHubAppConnection', () => {
 
       expect(mockSubmit).toHaveBeenCalled();
     });
+
+    it('requests the manifest without a githubOrg by default', async () => {
+      const user = userEvent.setup();
+      const mockMutateAsync = jest.fn().mockResolvedValue({
+        manifest: { name: 'Packmind' },
+        state: 'state-xyz',
+        manifestPostUrl: 'https://github.com/settings/apps/new',
+      });
+
+      mockUseGetGithubAppManifestMutation.mockReturnValue(
+        createMockManifestMutation({
+          mutateAsync: mockMutateAsync,
+        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+      );
+
+      jest
+        .spyOn(HTMLFormElement.prototype, 'submit')
+        .mockImplementation(() => undefined);
+
+      renderWithProviders(
+        <GitHubAppConnection
+          organizationId={mockOrganizationId}
+          url="https://github.com"
+        />,
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: /connect to github/i }),
+      );
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({ githubOrg: undefined });
+    });
+
+    describe('when an organization slug is typed', () => {
+      it('requests the manifest with the typed organization slug', async () => {
+        const user = userEvent.setup();
+        const mockMutateAsync = jest.fn().mockResolvedValue({
+          manifest: { name: 'Packmind' },
+          state: 'state-xyz',
+          manifestPostUrl:
+            'https://github.com/organizations/my-company/settings/apps/new',
+        });
+
+        mockUseGetGithubAppManifestMutation.mockReturnValue(
+          createMockManifestMutation({
+            mutateAsync: mockMutateAsync,
+          }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        );
+
+        jest
+          .spyOn(HTMLFormElement.prototype, 'submit')
+          .mockImplementation(() => undefined);
+
+        renderWithProviders(
+          <GitHubAppConnection
+            organizationId={mockOrganizationId}
+            url="https://github.com"
+          />,
+        );
+
+        await user.type(
+          screen.getByRole('textbox', { name: /github organization/i }),
+          'my-company',
+        );
+        await user.click(
+          screen.getByRole('button', { name: /connect to github/i }),
+        );
+
+        expect(mockMutateAsync).toHaveBeenCalledWith({
+          githubOrg: 'my-company',
+        });
+      });
+
+      it('disables the connect button while the slug is invalid', async () => {
+        const user = userEvent.setup();
+
+        renderWithProviders(
+          <GitHubAppConnection
+            organizationId={mockOrganizationId}
+            url="https://github.com"
+          />,
+        );
+
+        await user.type(
+          screen.getByRole('textbox', { name: /github organization/i }),
+          '-bad-',
+        );
+
+        expect(
+          screen.getByRole('button', { name: /connect to github/i }),
+        ).toBeDisabled();
+      });
+    });
   });
 
   describe('when edition is oss and hasApp is true', () => {

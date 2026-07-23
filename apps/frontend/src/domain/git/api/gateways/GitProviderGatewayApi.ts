@@ -63,16 +63,24 @@ export class GitProviderGatewayApi
     );
   }
 
-  async getGithubAppManifest(organizationId: OrganizationId): Promise<{
+  async getGithubAppManifest(
+    organizationId: OrganizationId,
+    githubOrg?: string,
+  ): Promise<{
     manifest: GitHubAppManifest;
     state: string;
     manifestPostUrl: string;
   }> {
+    const query = githubOrg
+      ? `?githubOrg=${encodeURIComponent(githubOrg)}`
+      : '';
     return await this._api.get<{
       manifest: GitHubAppManifest;
       state: string;
       manifestPostUrl: string;
-    }>(`${this._endpoint}/${organizationId}/git/providers/github/app/manifest`);
+    }>(
+      `${this._endpoint}/${organizationId}/git/providers/github/app/manifest${query}`,
+    );
   }
 
   async getGithubAppStatus(organizationId: OrganizationId): Promise<{

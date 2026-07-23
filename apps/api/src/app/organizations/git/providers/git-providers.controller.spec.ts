@@ -338,6 +338,35 @@ describe('GitProvidersController', () => {
         expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith({
           orgId,
           userId,
+          githubOrg: undefined,
+        });
+      });
+
+      describe('when a githubOrg query param is provided', () => {
+        it('passes the trimmed githubOrg to the service', async () => {
+          await controller.getGithubAppManifest(
+            orgId,
+            mockRequest,
+            '  my-company  ',
+          );
+
+          expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith({
+            orgId,
+            userId,
+            githubOrg: 'my-company',
+          });
+        });
+      });
+
+      describe('when the githubOrg query param is blank', () => {
+        it('passes undefined to the service', async () => {
+          await controller.getGithubAppManifest(orgId, mockRequest, '   ');
+
+          expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith({
+            orgId,
+            userId,
+            githubOrg: undefined,
+          });
         });
       });
     });

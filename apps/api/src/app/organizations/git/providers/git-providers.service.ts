@@ -42,6 +42,7 @@ import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 import axios from 'axios';
+import validator from 'validator';
 
 const origin = 'GitProvidersService';
 
@@ -67,6 +68,7 @@ type CompleteGithubAppInstallCommand = {
 type BuildGithubAppManifestCommand = {
   orgId: OrganizationId;
   userId: UserId;
+  githubOrg?: string;
 };
 
 type BuildGithubAppManifestResponse = {
@@ -218,6 +220,16 @@ export class GitProvidersService {
       );
     }
 
+    // GitHub is the real authority (it validates the org and the user's
+    // ownership on its own page); this is just a fail-fast guard that the
+    // value looks like a GitHub org slug before we redirect there.
+    if (
+      command.githubOrg !== undefined &&
+      !validator.isSlug(command.githubOrg.toLowerCase())
+    ) {
+      throw new BadRequestException('Invalid GitHub organization name');
+    }
+
     const configuredAppWebUrl = await Configuration.getConfig('APP_WEB_URL');
     if (!configuredAppWebUrl) {
       throw new BadRequestException('APP_WEB_URL is not configured');
@@ -254,10 +266,17 @@ export class GitProvidersService {
       default_events: [],
     };
 
+    // GitHub creates the App under the account the manifest is posted to:
+    // the org-scoped endpoint when a GitHub organization is targeted, the
+    // user's personal account otherwise.
+    const manifestPostUrl = command.githubOrg
+      ? `https://github.com/organizations/${encodeURIComponent(command.githubOrg)}/settings/apps/new`
+      : 'https://github.com/settings/apps/new';
+
     return {
       manifest,
       state,
-      manifestPostUrl: 'https://github.com/settings/apps/new',
+      manifestPostUrl,
     };
   }
 

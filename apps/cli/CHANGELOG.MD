@@ -4,6 +4,8 @@
 
 ## Changed
 
+- `install` no longer generates the `.packmind/commands-index.md` file. Any existing `commands-index.md` is now removed on the next `install`.
+
 ## Fixed
 
 ## Removed
