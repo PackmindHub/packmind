@@ -65,7 +65,11 @@ jest.mock('../../application/services/AgentArtifactDetectionService', () => ({
 }));
 
 import * as path from 'path';
-import { installHandler, mergeInstallResults } from './InstallCommand';
+import {
+  installHandler,
+  mergeInstallResults,
+  decideDistributionTracking,
+} from './InstallCommand';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
@@ -1654,6 +1658,249 @@ describe('installCommand', () => {
       it('does not call installDefaultSkills', () => {
         expect(mockInstallDefaultSkills).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('distribution recording gate', () => {
+    let mockNotifyArtefactsDistribution: jest.Mock;
+    let mockGetTrackedRepository: jest.Mock;
+    let readFileSyncSpy: jest.SpyInstance;
+
+    const useHexaInGitRepo = (params: {
+      gitRoot?: string | null;
+      remoteUrl?: string;
+      branch?: string;
+    }) => {
+      const {
+        gitRoot = '/repo',
+        remoteUrl = 'git@github.com:my-orga/my-repo.git',
+        branch = 'main',
+      } = params;
+      mockTryGetGitRepositoryRoot.mockResolvedValue(gitRoot);
+      MockPackmindCliHexa.mockImplementation(
+        () =>
+          ({
+            install: mockInstall,
+            tryGetGitRepositoryRoot: mockTryGetGitRepositoryRoot,
+            installDefaultSkills: mockInstallDefaultSkills,
+            getPackmindGateway: jest.fn().mockReturnValue({}),
+            ensureCliVersion: mockEnsureCliVersion,
+            notifyArtefactsDistribution: mockNotifyArtefactsDistribution,
+            getTrackedRepository: mockGetTrackedRepository,
+            getGitRemoteUrlFromPath: jest.fn().mockReturnValue(remoteUrl),
+            getCurrentBranch: jest.fn().mockReturnValue(branch),
+          }) as unknown as PackmindCliHexa,
+      );
+    };
+
+    const runInstall = () =>
+      handler({
+        installPath: '',
+        packages: [],
+        list: false,
+        show: undefined,
+        status: false,
+      });
+
+    beforeEach(() => {
+      mockNotifyArtefactsDistribution = jest.fn().mockResolvedValue(undefined);
+      mockGetTrackedRepository = jest.fn();
+      mockFs.existsSync.mockReturnValue(true);
+      mockFs.statSync.mockReturnValue({ isDirectory: () => true } as fs.Stats);
+      mockFs.readdirSync.mockReturnValue([]);
+      readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockReturnValue(JSON.stringify({ artifacts: [] }) as never);
+    });
+
+    afterEach(() => {
+      readFileSyncSpy.mockRestore();
+      mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    describe('when on the tracked repository and branch', () => {
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockResolvedValue({
+          gitRepo: { branch: 'main' },
+        });
+        useHexaInGitRepo({ branch: 'main' });
+        await runInstall();
+      });
+
+      it('records the distribution', () => {
+        expect(mockNotifyArtefactsDistribution).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the repository is not tracked', () => {
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockResolvedValue({ gitRepo: null });
+        useHexaInGitRepo({});
+        await runInstall();
+      });
+
+      it('does not send any distribution payload', () => {
+        expect(mockNotifyArtefactsDistribution).not.toHaveBeenCalled();
+      });
+
+      it('warns that the repository is not tracked', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('not tracked'),
+        );
+      });
+    });
+
+    describe('when on a branch other than the tracked branch', () => {
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockResolvedValue({
+          gitRepo: { branch: 'main' },
+        });
+        useHexaInGitRepo({ branch: 'dev' });
+        await runInstall();
+      });
+
+      it('does not send any distribution payload', () => {
+        expect(mockNotifyArtefactsDistribution).not.toHaveBeenCalled();
+      });
+
+      it('warns naming the tracked branch', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining("tracked branch is 'main'"),
+        );
+      });
+    });
+
+    describe('when the tracking feature flag is off (API returns 404)', () => {
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockRejectedValue({ statusCode: 404 });
+        useHexaInGitRepo({});
+        await runInstall();
+      });
+
+      it('records the distribution unconditionally', () => {
+        expect(mockNotifyArtefactsDistribution).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the directory is not in a git repository', () => {
+      beforeEach(async () => {
+        useHexaInGitRepo({ gitRoot: null });
+        await runInstall();
+      });
+
+      it('does not send any distribution payload', () => {
+        expect(mockNotifyArtefactsDistribution).not.toHaveBeenCalled();
+      });
+
+      it('informs that the folder is not tracked', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('not tracked'),
+        );
+      });
+    });
+
+    describe('when several package directories share the same untracked repo', () => {
+      const subDir1 = path.join(process.cwd(), 'apps', 'frontend');
+      const subDir2 = path.join(process.cwd(), 'packages', 'core');
+
+      beforeEach(async () => {
+        mockGetTrackedRepository.mockResolvedValue({ gitRepo: null });
+        useHexaInGitRepo({});
+        mockFs.existsSync.mockImplementation((p) => {
+          const asStr = String(p);
+          return (
+            asStr === path.join(process.cwd(), 'packmind.json') ||
+            asStr === path.join(subDir1, 'packmind.json') ||
+            asStr === path.join(subDir2, 'packmind.json')
+          );
+        });
+        mockFs.readdirSync.mockImplementation((dirPath) => {
+          const asStr = String(dirPath);
+          if (asStr === process.cwd()) {
+            return [
+              makeDirent('apps'),
+              makeDirent('packages'),
+            ] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'apps')) {
+            return [makeDirent('frontend')] as unknown as string[];
+          }
+          if (asStr === path.join(process.cwd(), 'packages')) {
+            return [makeDirent('core')] as unknown as string[];
+          }
+          return [] as unknown as string[];
+        });
+        await runInstall();
+      });
+
+      it('looks up the tracked repository only once', () => {
+        expect(mockGetTrackedRepository).toHaveBeenCalledTimes(1);
+      });
+
+      it('warns only once', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+});
+
+describe('decideDistributionTracking', () => {
+  describe('when the feature flag is off', () => {
+    it('records unconditionally (legacy behaviour)', () => {
+      expect(
+        decideDistributionTracking({
+          lookup: { status: 'flag-off' },
+          currentBranch: 'main',
+        }),
+      ).toEqual({ action: 'record-legacy' });
+    });
+  });
+
+  describe('when tracking is undeterminable', () => {
+    it('informs the user', () => {
+      expect(
+        decideDistributionTracking({
+          lookup: { status: 'unavailable' },
+          currentBranch: 'main',
+        }),
+      ).toEqual({ action: 'inform' });
+    });
+  });
+
+  describe('when the repository is not tracked', () => {
+    it('skips with a repo_not_tracked reason', () => {
+      expect(
+        decideDistributionTracking({
+          lookup: { status: 'resolved', trackedGitRepo: null },
+          currentBranch: 'main',
+        }),
+      ).toEqual({ action: 'skip', reason: 'repo_not_tracked' });
+    });
+  });
+
+  describe('when the current branch is not the tracked branch', () => {
+    it('skips with a wrong_branch reason and the tracked branch', () => {
+      expect(
+        decideDistributionTracking({
+          lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+          currentBranch: 'dev',
+        }),
+      ).toEqual({
+        action: 'skip',
+        reason: 'wrong_branch',
+        trackedBranch: 'main',
+      });
+    });
+  });
+
+  describe('when on the tracked repository and branch', () => {
+    it('records the distribution', () => {
+      expect(
+        decideDistributionTracking({
+          lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+          currentBranch: 'main',
+        }),
+      ).toEqual({ action: 'record' });
     });
   });
 });
