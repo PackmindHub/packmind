@@ -73,6 +73,7 @@ import {
   AllConfigsResult,
   Gateway,
   HierarchicalConfigResult,
+  IGetTrackedRepositoryUseCase,
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IRenderPackageAsPluginUseCase,
@@ -384,6 +385,14 @@ export class PackmindCliHexa {
         command,
       );
     };
+
+  public getTrackedRepository: Gateway<IGetTrackedRepositoryUseCase> = async (
+    command,
+  ) => {
+    return this.hexa.repositories.packmindGateway.repositoryTracking.getTrackedRepository(
+      command,
+    );
+  };
 
   public renderPlugin: Gateway<IRenderPackageAsPluginUseCase> = async (
     command,

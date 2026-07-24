@@ -25,7 +25,6 @@ describe('LockFileRepository', () => {
         lockfileVersion: 2,
         packageSlugs: ['my-package'],
         agents: ['claude', 'packmind'],
-        installedAt: '2026-01-01T00:00:00.000Z',
         artifacts: {
           'user:standard:my-standard': {
             name: 'My Standard',
@@ -107,7 +106,6 @@ describe('LockFileRepository', () => {
         cliVersion: '0.27.0',
         packageSlugs: ['my-package'],
         agents: ['claude', 'packmind'],
-        installedAt: '2026-01-01T00:00:00.000Z',
         artifacts: {
           'standard:my-standard': {
             name: 'My Standard',
@@ -203,10 +201,6 @@ describe('LockFileRepository', () => {
         expect(result?.agents).toEqual(['claude', 'packmind']);
       });
 
-      it('preserves the installedAt top-level field', () => {
-        expect(result?.installedAt).toBe('2026-01-01T00:00:00.000Z');
-      });
-
       it('does NOT rewrite the on-disk file', () => {
         expect(mockFs.writeFile).not.toHaveBeenCalled();
       });
@@ -221,7 +215,6 @@ describe('LockFileRepository', () => {
         lockfileVersion: 0,
         packageSlugs: ['legacy-package'],
         agents: ['packmind'],
-        installedAt: '',
         artifacts: {
           'standard:legacy-standard': {
             name: 'Legacy Standard',
@@ -299,31 +292,31 @@ describe('LockFileRepository', () => {
       it.each([
         [
           'missing artifacts',
-          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01"}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[]}',
         ],
         [
           'artifacts is an array',
-          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":[]}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"artifacts":[]}',
         ],
         [
           'artifacts is a string',
-          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":"bad"}',
+          '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"artifacts":"bad"}',
         ],
         [
           'missing packageSlugs',
-          '{"lockfileVersion":2,"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":2,"agents":[],"artifacts":{}}',
         ],
         [
           'missing agents',
-          '{"lockfileVersion":2,"packageSlugs":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":2,"packageSlugs":[],"artifacts":{}}',
         ],
         [
           'unsupported lockfileVersion (3)',
-          '{"lockfileVersion":3,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"lockfileVersion":3,"packageSlugs":[],"agents":[],"artifacts":{}}',
         ],
         [
           'missing lockfileVersion',
-          '{"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+          '{"packageSlugs":[],"agents":[],"artifacts":{}}',
         ],
         ['completely wrong shape', '{}'],
       ])('returns null when %s', async (_label, content) => {
@@ -339,15 +332,15 @@ describe('LockFileRepository', () => {
         it.each([
           [
             'v0 (predates the version field convention)',
-            '{"lockfileVersion":0,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+            '{"lockfileVersion":0,"packageSlugs":[],"agents":[],"artifacts":{}}',
           ],
           [
             'v1',
-            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+            '{"lockfileVersion":1,"packageSlugs":[],"agents":[],"artifacts":{}}',
           ],
           [
             'v2',
-            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","artifacts":{}}',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"artifacts":{}}',
           ],
         ])('accepts lockfileVersion %s', async (_label, content) => {
           mockFs.readFile.mockResolvedValue(content);
@@ -363,7 +356,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":123,"artifacts":{}}',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"targetId":123,"artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -383,7 +376,7 @@ describe('LockFileRepository', () => {
 
         beforeEach(async () => {
           mockFs.readFile.mockResolvedValue(
-            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"installedAt":"2026-01-01","targetId":"target-abc","artifacts":{}}',
+            '{"lockfileVersion":2,"packageSlugs":[],"agents":[],"targetId":"target-abc","artifacts":{}}',
           );
 
           result = await repository.read('/project');
@@ -424,7 +417,6 @@ describe('LockFileRepository', () => {
       cliVersion: '0.28.1-next',
       packageSlugs: ['my-package'],
       agents: ['claude', 'packmind'],
-      installedAt: '2026-01-01T00:00:00.000Z',
       artifacts: {
         'user:standard:my-standard': {
           name: 'My Standard',

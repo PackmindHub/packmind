@@ -37,7 +37,6 @@ export class PackmindLockFileService {
     targetId?: string;
     artifactSpaceIds: Record<string, string>;
     artifactPackageIds: Record<string, string[]>;
-    includeInstalledAt?: boolean;
   }): PackmindLockFile {
     const versionLookup = this.buildVersionLookup(
       params.recipeVersions,
@@ -131,9 +130,6 @@ export class PackmindLockFileService {
       lockfileVersion: 2,
       packageSlugs: [...params.packageSlugs].sort((a, b) => a.localeCompare(b)),
       agents: [...params.codingAgents].sort((a, b) => a.localeCompare(b)),
-      ...(params.includeInstalledAt !== false
-        ? { installedAt: new Date().toISOString() }
-        : {}),
       targetId: params.targetId,
       artifacts,
     };

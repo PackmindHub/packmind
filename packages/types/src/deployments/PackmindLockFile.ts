@@ -61,7 +61,6 @@ export type PackmindLockFile = {
   cliVersion?: string;
   packageSlugs: string[];
   agents: CodingAgent[];
-  installedAt?: string;
   targetId?: string;
   artifacts: Record<string, PackmindLockFileEntry>;
 };

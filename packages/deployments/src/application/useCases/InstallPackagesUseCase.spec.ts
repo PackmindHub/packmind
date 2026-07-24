@@ -136,7 +136,6 @@ describe('InstallPackagesUseCase', () => {
       lockfileVersion: 1,
       packageSlugs: [],
       agents: [],
-      installedAt: new Date().toISOString(),
       artifacts: {},
     };
 
@@ -192,7 +191,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: [],
         agents: [],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       }),
       createLockFileModification: jest.fn().mockReturnValue({
@@ -301,37 +299,6 @@ describe('InstallPackagesUseCase', () => {
       await useCase.execute(command);
 
       expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
-    });
-
-    describe('when the incoming lock file has installedAt', () => {
-      it('includes installedAt in the produced lock file', async () => {
-        command.packmindLockFile = {
-          ...emptyLockFile,
-          installedAt: new Date().toISOString(),
-        };
-
-        await useCase.execute(command);
-
-        const builtLockFile =
-          lockFileService.buildLockFile.mock.results[0].value;
-        expect('installedAt' in builtLockFile).toBe(true);
-      });
-    });
-
-    describe('when the incoming lock file does not have installedAt', () => {
-      it('omits installedAt from the produced lock file', async () => {
-        command.packmindLockFile = {
-          lockfileVersion: emptyLockFile.lockfileVersion,
-          packageSlugs: emptyLockFile.packageSlugs,
-          agents: emptyLockFile.agents,
-          artifacts: emptyLockFile.artifacts,
-        };
-
-        await useCase.execute(command);
-        expect(lockFileService.buildLockFile).toHaveBeenCalledWith(
-          expect.objectContaining({ includeInstalledAt: false }),
-        );
-      });
     });
 
     it('returns sourceArtifacts counts based on the packages being installed', async () => {
@@ -471,7 +438,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@public/my-package', '@private/my-secret-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'command:private-command': privateArtifactEntry,
             'command:public-command': publicArtifactEntry,
@@ -501,7 +467,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@public/my-package', '@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -520,7 +485,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@public/my-package', '@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -572,7 +536,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@private/my-secret-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'command:private-command': {
               name: 'Private Command',
@@ -607,7 +570,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 1,
         packageSlugs: ['@private/my-secret-package'],
         agents: [CodingAgents.packmind],
-        installedAt: new Date().toISOString(),
         artifacts: {},
       };
       lockFileService.buildLockFile.mockReturnValue(builtLockFile);
@@ -646,7 +608,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 1,
           packageSlugs: ['@public/my-package', '@public/removed-package'],
           agents: [],
-          installedAt: new Date().toISOString(),
           artifacts: {
             'standard:removed-standard': removedArtifactEntry,
           },
@@ -694,7 +655,6 @@ describe('InstallPackagesUseCase', () => {
             lockfileVersion: 1,
             packageSlugs: ['@public/my-package', '@private/removed-package'],
             agents: [],
-            installedAt: new Date().toISOString(),
             artifacts: {
               'standard:inaccessible-removed-standard':
                 inaccessibleRemovedArtifact,
@@ -754,7 +714,6 @@ describe('InstallPackagesUseCase', () => {
           lockfileVersion: 2,
           packageSlugs: ['@public/my-package'],
           agents: [CodingAgents.claude, CodingAgents.copilot],
-          installedAt: new Date().toISOString(),
           artifacts: {
             [skillKey]: {
               name: 'My Skill',
@@ -777,7 +736,6 @@ describe('InstallPackagesUseCase', () => {
         lockfileVersion: 2,
         packageSlugs: ['@public/my-package'],
         agents: [CodingAgents.claude],
-        installedAt: new Date().toISOString(),
         artifacts: {
           [skillKey]: {
             name: 'My Skill',

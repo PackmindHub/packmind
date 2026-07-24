@@ -636,8 +636,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         targetId: target.id,
         artifactSpaceIds,
         artifactPackageIds,
-        includeInstalledAt:
-          !existingLockFile || existingLockFile.installedAt !== undefined,
       });
       const mergedLockFile = this.lockFileService.mergeWithExistingLockFile(
         lockFile,

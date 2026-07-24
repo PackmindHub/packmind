@@ -94,9 +94,6 @@ export class InstallUseCase implements IInstallUseCase {
       packageSlugs: [],
       agents: [],
       artifacts: {},
-      ...(command.skipInstalledAt
-        ? {}
-        : { installedAt: new Date().toISOString() }),
     };
 
     effectiveLockFile.cliVersion = command.cliVersion;
@@ -391,11 +388,6 @@ export class InstallUseCase implements IInstallUseCase {
           // Fall back to in-memory lockfile if the server payload was malformed.
         }
       }
-
-      if (command.skipInstalledAt) {
-        delete (lockFileToPersist as { installedAt?: string }).installedAt;
-      }
-
       lockFileToPersist.cliVersion = command.cliVersion;
 
       if (stripPathPrefix) {

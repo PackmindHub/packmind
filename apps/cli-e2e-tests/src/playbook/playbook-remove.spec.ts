@@ -76,7 +76,6 @@ describeForVersion('> 0.24.0', 'playbook remove', () => {
               ],
             },
           },
-          installedAt: '',
           lockfileVersion: 0,
           packageSlugs: ['@private/secret'],
         } as unknown as PackmindLockFile;

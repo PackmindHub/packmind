@@ -193,7 +193,6 @@ export class DeployDefaultSkillsUseCase
       packageSlugs: [],
       artifactSpaceIds: {},
       artifactPackageIds: {},
-      includeInstalledAt: false,
     });
 
     return lockFile.artifacts;

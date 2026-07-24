@@ -124,7 +124,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['packmind'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {},
@@ -417,7 +416,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['packmind'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -500,7 +498,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['packmind'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -592,7 +589,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['claude'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -718,7 +714,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['claude'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {
@@ -826,7 +821,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -905,7 +899,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1006,7 +999,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1089,7 +1081,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1170,7 +1161,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1247,7 +1237,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1350,7 +1339,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1601,7 +1589,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1674,7 +1661,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1748,7 +1734,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1842,7 +1827,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -1924,7 +1908,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -2048,7 +2031,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -2171,7 +2153,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -2223,7 +2204,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -2276,7 +2256,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude' as const],
-          installedAt: '2026-03-17T00:00:00.000Z',
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
@@ -2404,7 +2383,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude' as const],
-          installedAt: '2026-03-17T00:00:00.000Z',
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
@@ -2472,7 +2450,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude' as const],
-          installedAt: '2026-03-17T00:00:00.000Z',
           targetId: 'target-456',
           artifacts: {
             'my-skill': {
@@ -2576,7 +2553,6 @@ describe('playbookSubmitHandler', () => {
             lockfileVersion: 1,
             packageSlugs: ['my-package'],
             agents: ['packmind' as const],
-            installedAt: '2026-03-17T00:00:00.000Z',
             cliVersion: '1.0.0',
             targetId: 'target-frontend',
             artifacts: {
@@ -2601,7 +2577,6 @@ describe('playbookSubmitHandler', () => {
             lockfileVersion: 1,
             packageSlugs: ['my-package'],
             agents: ['packmind' as const],
-            installedAt: '2026-03-17T00:00:00.000Z',
             cliVersion: '1.0.0',
             targetId: 'target-api',
             artifacts: {
@@ -2695,7 +2670,6 @@ describe('playbookSubmitHandler', () => {
               lockfileVersion: 1,
               packageSlugs: ['my-package'],
               agents: ['claude' as const],
-              installedAt: '2026-03-17T00:00:00.000Z',
               cliVersion: '1.0.0',
               targetId: 'target-456',
               artifacts: {
@@ -2748,7 +2722,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['claude'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {},
@@ -3023,7 +2996,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -3332,7 +3304,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -3389,7 +3360,6 @@ describe('playbookSubmitHandler', () => {
           lockfileVersion: 1,
           packageSlugs: ['my-package'],
           agents: ['packmind'],
-          installedAt: '2026-03-17T00:00:00.000Z',
           cliVersion: '1.0.0',
           targetId: 'target-456',
           artifacts: {
@@ -3452,7 +3422,6 @@ describe('playbookSubmitHandler', () => {
         lockfileVersion: 1,
         packageSlugs: ['my-package'],
         agents: ['claude-code', 'copilot'],
-        installedAt: '2026-03-17T00:00:00.000Z',
         cliVersion: '1.0.0',
         targetId: 'target-456',
         artifacts: {

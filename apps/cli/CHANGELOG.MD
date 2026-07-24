@@ -5,12 +5,14 @@
 ## Changed
 
 - `install` no longer generates the `.packmind/commands-index.md` file. Any existing `commands-index.md` is now removed on the next `install`.
+- `install` now notifies Packmind of a distribution only when it runs on the tracked repository and branch. On an untracked repository, a non-tracked branch, or outside a git repository, the install completes locally but sends nothing to Packmind and prints a notice explaining why the distribution will not appear.
 
 ## Fixed
 
 ## Removed
 
 - Dropped support for the `PACKMIND_API_KEY_V3` environment variable. Use `PACKMIND_API_KEY` instead.
+- Drop `--skipInstalledAt` flag on the `install` command
 
 # [0.31.0] - 2026-07-10
 

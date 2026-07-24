@@ -6,8 +6,11 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   logConsole,
   logErrorConsole,
+  logInfoConsole,
   logWarningConsole,
+  formatCommand,
 } from '../utils/consoleLogger';
+import { parseOwnerRepo } from '../../application/useCases/trackRepository/TrackRepositoryUseCase';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import {
   statusHandler,
@@ -149,13 +152,166 @@ export function mergeInstallResults(results: IInstallResult[]): IInstallResult {
   return merged;
 }
 
+type TrackingLookup =
+  | { status: 'flag-off' }
+  | { status: 'resolved'; trackedGitRepo: { branch: string } | null }
+  | { status: 'unavailable' };
+
+export type DistributionTrackingDecision =
+  | { action: 'record' }
+  | { action: 'record-legacy' }
+  | { action: 'skip'; reason: 'repo_not_tracked' }
+  | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
+  | { action: 'inform' };
+
+export function decideDistributionTracking(params: {
+  lookup: TrackingLookup;
+  currentBranch: string;
+}): DistributionTrackingDecision {
+  const { lookup, currentBranch } = params;
+
+  switch (lookup.status) {
+    case 'flag-off':
+      return { action: 'record-legacy' };
+    case 'unavailable':
+      return { action: 'inform' };
+    case 'resolved': {
+      const tracked = lookup.trackedGitRepo;
+      if (!tracked) {
+        return { action: 'skip', reason: 'repo_not_tracked' };
+      }
+      if (tracked.branch !== currentBranch) {
+        return {
+          action: 'skip',
+          reason: 'wrong_branch',
+          trackedBranch: tracked.branch,
+        };
+      }
+      return { action: 'record' };
+    }
+  }
+}
+
+const NO_GIT_REPO_CACHE_KEY = '<no-git-repo>';
+
+function toRepoRelativePath(dir: string, gitRoot: string): string {
+  let relativePath = dir.startsWith(gitRoot) ? dir.slice(gitRoot.length) : '/';
+  if (!relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  if (!relativePath.endsWith('/')) {
+    relativePath = relativePath + '/';
+  }
+  return relativePath;
+}
+
+function reportDistributionTrackingDecision(
+  decision: DistributionTrackingDecision,
+  context: { owner?: string; repo?: string; currentBranch?: string },
+): void {
+  switch (decision.action) {
+    case 'skip':
+      if (decision.reason === 'repo_not_tracked') {
+        logWarningConsole(
+          `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
+            'packmind track',
+          )} to start tracking it.`,
+        );
+      } else {
+        logWarningConsole(
+          `Distribution not recorded — you're on '${context.currentBranch}', but the tracked branch is '${decision.trackedBranch}'. Switch to '${decision.trackedBranch}' to record this distribution.`,
+        );
+      }
+      break;
+    case 'inform':
+      logInfoConsole(
+        `This folder is not tracked — distribution not recorded in Packmind.`,
+      );
+      break;
+  }
+}
+
+async function resolveTrackingLookup(
+  packmindCliHexa: PackmindCliHexa,
+  owner: string,
+  repo: string,
+): Promise<TrackingLookup> {
+  try {
+    const { gitRepo } = await packmindCliHexa.getTrackedRepository({
+      owner,
+      repo,
+    });
+    return { status: 'resolved', trackedGitRepo: gitRepo };
+  } catch (error) {
+    const statusCode = (error as { statusCode?: number })?.statusCode;
+    if (statusCode === 404) {
+      return { status: 'flag-off' };
+    }
+    return { status: 'unavailable' };
+  }
+}
+
+async function computeDistributionTrackingDecision(
+  packmindCliHexa: PackmindCliHexa,
+  gitRoot: string | null,
+): Promise<DistributionTrackingDecision> {
+  if (!gitRoot) {
+    const decision: DistributionTrackingDecision = { action: 'inform' };
+    reportDistributionTrackingDecision(decision, {});
+    return decision;
+  }
+
+  let owner: string;
+  let repo: string;
+  let gitBranch: string;
+  try {
+    const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+    gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+    ({ owner, repo } = parseOwnerRepo(gitRemoteUrl));
+  } catch {
+    const decision: DistributionTrackingDecision = { action: 'inform' };
+    reportDistributionTrackingDecision(decision, {});
+    return decision;
+  }
+
+  const lookup = await resolveTrackingLookup(packmindCliHexa, owner, repo);
+  const decision = decideDistributionTracking({
+    lookup,
+    currentBranch: gitBranch,
+  });
+  reportDistributionTrackingDecision(decision, {
+    owner,
+    repo,
+    currentBranch: gitBranch,
+  });
+  return decision;
+}
+
 async function notifyArtefactsDistributionIfInGitRepo(params: {
   packmindCliHexa: PackmindCliHexa;
   dir: string;
+  decisionCache: Map<string, DistributionTrackingDecision>;
 }): Promise<void> {
-  const { packmindCliHexa, dir } = params;
+  const { packmindCliHexa, dir, decisionCache } = params;
   try {
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(dir);
+    const cacheKey = gitRoot ?? NO_GIT_REPO_CACHE_KEY;
+
+    if (!decisionCache.has(cacheKey)) {
+      decisionCache.set(
+        cacheKey,
+        await computeDistributionTrackingDecision(packmindCliHexa, gitRoot),
+      );
+    }
+
+    const decision = decisionCache.get(cacheKey);
+    if (
+      !decision ||
+      (decision.action !== 'record' && decision.action !== 'record-legacy')
+    ) {
+      return;
+    }
+
     if (!gitRoot) return;
 
     const lockFilePath = path.join(dir, 'packmind-lock.json');
@@ -164,16 +320,7 @@ async function notifyArtefactsDistributionIfInGitRepo(params: {
 
     const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
     const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
-
-    let relativePath = dir.startsWith(gitRoot)
-      ? dir.slice(gitRoot.length)
-      : '/';
-    if (!relativePath.startsWith('/')) {
-      relativePath = '/' + relativePath;
-    }
-    if (!relativePath.endsWith('/')) {
-      relativePath = relativePath + '/';
-    }
+    const relativePath = toRepoRelativePath(dir, gitRoot);
 
     await packmindCliHexa.notifyArtefactsDistribution({
       gitRemoteUrl,
@@ -255,12 +402,10 @@ export async function installHandler({
   installPath,
   packages,
   status,
-  skipInstalledAt,
 }: {
   installPath: string;
   packages: ParsedPackageSlug[];
   status: boolean;
-  skipInstalledAt: boolean;
 }): Promise<void> {
   const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
   const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -357,6 +502,10 @@ export async function installHandler({
   const results: IInstallResult[] = [];
   const thrownErrors: string[] = [];
   const multiDir = targetDirs.length > 1;
+  const distributionTrackingCache = new Map<
+    string,
+    DistributionTrackingDecision
+  >();
 
   for (const dir of targetDirs) {
     try {
@@ -364,7 +513,6 @@ export async function installHandler({
       const result = await packmindCliHexa.install({
         baseDirectory: dir,
         packages: packages.length > 0 ? packages : undefined,
-        skipInstalledAt,
         cliVersion: CLI_VERSION,
         homeAgent: dirHomeAgent,
       });
@@ -374,6 +522,7 @@ export async function installHandler({
         await notifyArtefactsDistributionIfInGitRepo({
           packmindCliHexa,
           dir,
+          decisionCache: distributionTrackingCache,
         });
       }
     } catch (error) {
@@ -463,11 +612,6 @@ export const installCommand = command({
       long: 'status',
       description:
         'Show status of all packmind.json files and their packages in the workspace',
-    }),
-    skipInstalledAt: flag({
-      long: 'skip-installed-at',
-      description:
-        'Omit the installedAt timestamp from the packmind-lock.json file',
     }),
   },
   handler: installHandler,
