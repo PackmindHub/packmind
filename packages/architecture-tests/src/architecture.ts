@@ -30,7 +30,7 @@ const ALL_PACKAGES: readonly string[] = fs
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .filter((name) => !EXCLUDED_PACKAGES.has(name))
-  .sort();
+  .sort((a, b) => a.localeCompare(b));
 
 /**
  * Domain (hexagon) packages — the cross-domain isolation subjects. A package is
