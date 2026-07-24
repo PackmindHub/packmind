@@ -1,8 +1,22 @@
 import { createPatch, applyPatch } from 'diff';
+import {
+  IChangeProposalMerger,
+  MergeFieldResult,
+} from './IChangeProposalMerger';
 
 type DiffResult = { success: true; value: string } | { success: false };
 
-export class DiffService {
+export class DiffService implements IChangeProposalMerger {
+  mergeField(base: string, ours: string, theirs: string): MergeFieldResult {
+    const result = this.applyLineDiff(base, theirs, ours);
+
+    if (result.success) {
+      return { clean: true, merged: result.value, conflicts: [] };
+    }
+
+    return { clean: false, merged: ours, conflicts: [{ base, ours, theirs }] };
+  }
+
   applyLineDiff(
     oldValue: string,
     newValue: string,

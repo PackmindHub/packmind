@@ -60,6 +60,64 @@ describe('DiffService', () => {
     });
   });
 
+  describe('mergeField', () => {
+    describe('when current matches old', () => {
+      it('cleanly merges (base=old, ours=current, theirs=new)', () => {
+        const result = diffService.mergeField(
+          'hello world',
+          'hello world',
+          'hello universe',
+        );
+
+        expect(result).toEqual({
+          clean: true,
+          merged: 'hello universe',
+          conflicts: [],
+        });
+      });
+    });
+
+    it('cleanly merges non-conflicting changes from distant lines', () => {
+      const lines = Array.from({ length: 20 }, (_, i) => `line${i + 1}`);
+      const oldValue = lines.join('\n') + '\n';
+
+      const proposalLines = [...lines];
+      proposalLines[2] = 'modified-line3';
+      const newValue = proposalLines.join('\n') + '\n';
+
+      const currentLines = [...lines];
+      currentLines[18] = 'changed-line19';
+      const currentValue = currentLines.join('\n') + '\n';
+
+      const expectedLines = [...lines];
+      expectedLines[2] = 'modified-line3';
+      expectedLines[18] = 'changed-line19';
+      const expectedValue = expectedLines.join('\n') + '\n';
+
+      const result = diffService.mergeField(oldValue, currentValue, newValue);
+
+      expect(result).toEqual({
+        clean: true,
+        merged: expectedValue,
+        conflicts: [],
+      });
+    });
+
+    it('reports a conflict region on conflicting changes', () => {
+      const oldValue = 'line1\nline2\nline3';
+      const newValue = 'line1\nchanged-by-proposal\nline3';
+      const currentValue = 'line1\nchanged-by-someone-else\nline3';
+
+      const result = diffService.mergeField(oldValue, currentValue, newValue);
+
+      expect(result).toEqual({
+        clean: false,
+        merged: currentValue,
+        conflicts: [{ base: oldValue, ours: currentValue, theirs: newValue }],
+      });
+    });
+  });
+
   describe('hasConflict', () => {
     it('returns false for non-conflicting changes', () => {
       const result = diffService.hasConflict(
