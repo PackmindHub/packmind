@@ -277,6 +277,14 @@ export class CommandsAdapter
     return this._getCommandById.getCommandById(id);
   }
 
+  /**
+   * Get commands by IDs without access control (internal use only).
+   * Batch sibling of getCommandByIdInternal for cross-domain hydration.
+   */
+  public getCommandsByIdsInternal(ids: CommandId[]): Promise<Command[]> {
+    return this._getCommandById.getCommandsByIds(ids);
+  }
+
   public findCommandBySlug(
     slug: string,
     organizationId: OrganizationId,

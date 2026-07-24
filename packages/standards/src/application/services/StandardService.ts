@@ -161,6 +161,25 @@ export class StandardService {
     }
   }
 
+  async getStandardsByIds(ids: StandardId[]): Promise<Standard[]> {
+    this.logger.info('Getting standards by IDs', { count: ids.length });
+
+    try {
+      const standards = await this.standardRepository.findByIds(ids);
+      this.logger.info('Standards retrieved by IDs', {
+        requested: ids.length,
+        found: standards.length,
+      });
+      return standards;
+    } catch (error) {
+      this.logger.error('Failed to get standards by IDs', {
+        count: ids.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async findStandardBySlug(
     slug: string,
     organizationId: OrganizationId,

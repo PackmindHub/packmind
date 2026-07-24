@@ -2,7 +2,6 @@ import {
   Package,
   PackageArtifactCounts,
   PackageId,
-  PackageWithArtefacts,
   CommandId,
   SpaceId,
   StandardId,
@@ -15,14 +14,16 @@ export interface IPackageRepository extends IRepository<Package> {
   findBySpaceId(spaceId: SpaceId): Promise<Package[]>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Package[]>;
   findById(id: PackageId): Promise<Package | null>;
-  findBySlugsWithArtefacts(
+  /**
+   * Find packages matching the given slugs within the given spaces, with their
+   * command/standard/skill artefact IDs attached. Cross-domain entity hydration
+   * (fetching full commands/standards/skills) is the application layer's job via
+   * ports — the repository only reads its own aggregate and junction tables.
+   */
+  findBySlugsAndSpaceIds(
     slugs: string[],
-    organizationId: OrganizationId,
-  ): Promise<PackageWithArtefacts[]>;
-  findBySlugsAndSpaceWithArtefacts(
-    slugs: string[],
-    spaceId: SpaceId,
-  ): Promise<PackageWithArtefacts[]>;
+    spaceIds: SpaceId[],
+  ): Promise<Package[]>;
   /**
    * Count recipe/standard/skill artifacts for every package in the given
    * space. The returned map covers all packages in the space, so callers can

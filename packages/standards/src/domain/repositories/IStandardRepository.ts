@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 
 export interface IStandardRepository extends IRepository<Standard> {
+  findByIds(ids: StandardId[], opts?: QueryOption): Promise<Standard[]>;
   findBySlug(
     slug: string,
     organizationId: OrganizationId,

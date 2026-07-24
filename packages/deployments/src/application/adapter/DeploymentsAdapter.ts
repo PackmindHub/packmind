@@ -257,6 +257,15 @@ export class DeploymentsAdapter
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
+    // Wire the cross-domain ports PackageService uses to hydrate package
+    // artefacts (they are not available when DeploymentsServices constructs it).
+    this.deploymentsServices.getPackageService().setArtefactPorts({
+      commandsPort: this.commandsPort,
+      standardsPort: this.standardsPort,
+      skillsPort: this.skillsPort,
+      spacesPort: this.spacesPort,
+    });
+
     // Step 4: Create all use cases with non-null ports
     // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
     this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(

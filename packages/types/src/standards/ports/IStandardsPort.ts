@@ -28,6 +28,10 @@ export type DuplicateStandardResult = {
 
 export interface IStandardsPort {
   getStandard(id: StandardId): Promise<Standard | null>;
+  /**
+   * Batch read of standards by IDs (mirrors getStandard for a set of IDs).
+   */
+  getStandardsByIds(ids: StandardId[]): Promise<Standard[]>;
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null>;
   getStandardVersionById(
     versionId: StandardVersionId,

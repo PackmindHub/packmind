@@ -68,6 +68,12 @@ export interface ICommandsPort {
   getCommandByIdInternal(id: CommandId): Promise<Command | null>;
 
   /**
+   * Get commands by their IDs (internal use - no access control).
+   * Batch sibling of getCommandByIdInternal for cross-domain hydration.
+   */
+  getCommandsByIdsInternal(ids: CommandId[]): Promise<Command[]>;
+
+  /**
    * Find a recipe by its slug within an organization
    */
   findCommandBySlug(
