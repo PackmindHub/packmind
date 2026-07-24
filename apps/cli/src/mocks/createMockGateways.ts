@@ -50,6 +50,8 @@ export function createMockGitGateway(
   return {
     listProviders: jest.fn(),
     addProvider: jest.fn(),
+    listReposByProvider: jest.fn(),
+    listAvailableRepos: jest.fn(),
     ...overrides,
   };
 }

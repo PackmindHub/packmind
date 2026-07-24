@@ -73,13 +73,16 @@ import {
   AllConfigsResult,
   Gateway,
   GitProvider,
+  GitProviderId,
   GitProviderListItem,
+  GitRepo,
   HierarchicalConfigResult,
   IGetTrackedRepositoryUseCase,
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IRenderPackageAsPluginUseCase,
   ITrackPluginDeletedUseCase,
+  ListAvailableReposResponse,
   PackmindFileConfig,
 } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
@@ -467,6 +470,22 @@ export class PackmindCliHexa {
     input: AddGitConnectionInput,
   ): Promise<GitProvider> {
     return this.hexa.repositories.packmindGateway.git.addProvider(input);
+  }
+
+  public async listGitRepos(connectionId: GitProviderId): Promise<GitRepo[]> {
+    return this.hexa.repositories.packmindGateway.git.listReposByProvider(
+      connectionId,
+    );
+  }
+
+  public async listAvailableGitRepos(
+    connectionId: GitProviderId,
+    page?: number,
+  ): Promise<ListAvailableReposResponse> {
+    return this.hexa.repositories.packmindGateway.git.listAvailableRepos(
+      connectionId,
+      page,
+    );
   }
 
   /**

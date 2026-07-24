@@ -1,4 +1,10 @@
-import { GitProvider, ListProvidersResponse } from '@packmind/types';
+import {
+  GitProvider,
+  GitProviderId,
+  GitRepo,
+  ListAvailableReposResponse,
+  ListProvidersResponse,
+} from '@packmind/types';
 import {
   AddGitConnectionInput,
   IGitGateway,
@@ -29,6 +35,27 @@ export class GitGateway implements IGitGateway {
           authMethod: 'token',
         },
       },
+    );
+  }
+
+  async listReposByProvider(gitProviderId: GitProviderId): Promise<GitRepo[]> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<GitRepo[]>(
+      `/api/v0/organizations/${organizationId}/git/repositories/provider/${gitProviderId}`,
+    );
+  }
+
+  async listAvailableRepos(
+    gitProviderId: GitProviderId,
+    page?: number,
+  ): Promise<ListAvailableReposResponse> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    const query =
+      page !== undefined
+        ? `?${new URLSearchParams({ page: String(page) }).toString()}`
+        : '';
+    return this.httpClient.request<ListAvailableReposResponse>(
+      `/api/v0/organizations/${organizationId}/git/providers/${gitProviderId}/available-repos${query}`,
     );
   }
 }
