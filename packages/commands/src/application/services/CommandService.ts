@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
 import { ICommandRepository } from '../../domain/repositories/ICommandRepository';
-import { CommandRepository } from '../../infra/repositories/CommandRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createCommandId,
@@ -40,7 +39,7 @@ export type UpdateCommandData = {
 
 export class CommandService {
   constructor(
-    private readonly commandRepository: ICommandRepository = new CommandRepository(),
+    private readonly commandRepository: ICommandRepository,
     private readonly commandVersionRepository: ICommandVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {

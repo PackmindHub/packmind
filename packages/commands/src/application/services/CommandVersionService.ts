@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
-import { CommandVersionRepository } from '../../infra/repositories/CommandVersionRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createCommandVersionId,
@@ -14,7 +13,7 @@ const origin = 'RecipeVersionService';
 
 export class CommandVersionService {
   constructor(
-    private readonly commandVersionRepository: ICommandVersionRepository = new CommandVersionRepository(),
+    private readonly commandVersionRepository: ICommandVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RecipeVersionService initialized');
