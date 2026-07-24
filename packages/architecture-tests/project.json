@@ -16,6 +16,8 @@
         "{workspaceRoot}/scripts/build-arch-tsconfig.mjs",
         "{workspaceRoot}/scripts/select-tsconfig.mjs",
         "{workspaceRoot}/tsconfig.base.json",
+        "{workspaceRoot}/tsconfig.paths.oss.json",
+        "{workspaceRoot}/tsconfig.paths.proprietary.json",
         "{workspaceRoot}/jest.preset.ts",
         "{workspaceRoot}/jest-utils.ts",
         { "env": "PACKMIND_EDITION" },
