@@ -72,6 +72,7 @@ import {
 import {
   AllConfigsResult,
   Gateway,
+  GitProvider,
   GitProviderListItem,
   HierarchicalConfigResult,
   IGetTrackedRepositoryUseCase,
@@ -97,6 +98,7 @@ import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
 import { IOutput } from './domain/repositories/IOutput';
+import { AddGitConnectionInput } from './domain/repositories/IGitGateway';
 import {
   TrackRepositoryCommand,
   TrackRepositoryResult,
@@ -459,6 +461,12 @@ export class PackmindCliHexa {
     const { providers } =
       await this.hexa.repositories.packmindGateway.git.listProviders();
     return providers;
+  }
+
+  public async addGitConnection(
+    input: AddGitConnectionInput,
+  ): Promise<GitProvider> {
+    return this.hexa.repositories.packmindGateway.git.addProvider(input);
   }
 
   /**

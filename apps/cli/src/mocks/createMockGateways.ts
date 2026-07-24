@@ -49,6 +49,7 @@ export function createMockGitGateway(
 ): jest.Mocked<IGitGateway> {
   return {
     listProviders: jest.fn(),
+    addProvider: jest.fn(),
     ...overrides,
   };
 }
