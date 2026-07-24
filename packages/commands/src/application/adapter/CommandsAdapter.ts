@@ -33,7 +33,7 @@ import {
   UpdateCommandFromUIResponse,
   UserId,
 } from '@packmind/types';
-import { ICommandsDelayedJobs } from '../../domain/jobs/ICommandsDelayedJobs';
+import { ICommandsDelayedJobs } from '../jobs/ICommandsDelayedJobs';
 import { DeployCommandsJobFactory } from '../../infra/jobs/DeployCommandsJobFactory';
 import { CommandsServices } from '../services/CommandsServices';
 import { CaptureCommandUseCase } from '../useCases/captureCommand/CaptureCommandUseCase';

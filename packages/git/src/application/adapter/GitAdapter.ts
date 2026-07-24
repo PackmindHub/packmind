@@ -46,7 +46,7 @@ import {
   UpdateTrackedBranchResponse,
   UserId,
 } from '@packmind/types';
-import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
+import { IGitDelayedJobs } from '../jobs/IGitDelayedJobs';
 import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
 import { GithubAppMode } from '../../infra/repositories/github/auth/GithubTokenResolverFactory';
 import { GitServices } from '../GitServices';

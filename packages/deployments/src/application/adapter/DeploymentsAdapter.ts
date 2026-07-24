@@ -100,7 +100,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
-import { IDeploymentsDelayedJobs } from '../../domain/jobs';
+import { IDeploymentsDelayedJobs } from '../jobs/IDeploymentsDelayedJobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
