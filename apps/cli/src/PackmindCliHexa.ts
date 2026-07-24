@@ -72,6 +72,7 @@ import {
 import {
   AllConfigsResult,
   Gateway,
+  GitProviderListItem,
   HierarchicalConfigResult,
   IGetTrackedRepositoryUseCase,
   INotifyArtefactsDistribution,
@@ -452,6 +453,12 @@ export class PackmindCliHexa {
 
   public async getSpaces(): Promise<Space[]> {
     return this.hexa.services.spaceService.getSpaces();
+  }
+
+  public async listGitConnections(): Promise<GitProviderListItem[]> {
+    const { providers } =
+      await this.hexa.repositories.packmindGateway.git.listProviders();
+    return providers;
   }
 
   /**
