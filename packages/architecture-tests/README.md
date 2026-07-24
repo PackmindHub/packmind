@@ -79,12 +79,6 @@ legal for everyone. The only hardcoded list is `EXCLUDED_PACKAGES` in
 `src/architecture.ts`, which contains just `ui` (the Chakra frontend library — not
 a backend hexagon). A new domain package is therefore covered automatically.
 
-### Domain-event location — `src/events.arch.spec.ts`
-
-| Rule                                      | Guards                                                                                                                                                                                                   |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| domain packages ↛ define `*Event` classes | Event classes live in `@packmind/types` (`packages/types/src/{domain}/events/`), never in a domain package, so listeners subscribe without importing another domain's source. (`standard-domain-events`) |
-
 ### Shared-package purity & reverse dependencies — `src/boundaries.arch.spec.ts`
 
 Between packages the graph is layered too:
@@ -99,8 +93,7 @@ Between packages the graph is layered too:
 ## Known violations (tech debt)
 
 At their introduction, **16 of 23 rules passed** and **7 failed** — the
-violations listed below. Adding the domain-event rule brings the suite to **24
-rules** total. Failures are real and left visible on purpose: each is either
+violations listed below. Failures are real and left visible on purpose: each is either
 fixed by refactoring the offending import or accepted as tracked debt. (As these
 imports are refactored, the corresponding entries below stop failing.)
 
