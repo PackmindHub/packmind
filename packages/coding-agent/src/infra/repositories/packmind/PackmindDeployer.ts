@@ -11,7 +11,7 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
+import { StandardsIndexService } from './StandardsIndexService';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 

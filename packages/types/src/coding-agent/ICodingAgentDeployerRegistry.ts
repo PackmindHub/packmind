@@ -1,10 +1,5 @@
 import { CodingAgent } from './CodingAgent';
-
-/**
- * Type for coding agent deployer (implementation details)
- * Using unknown as this is defined in the coding-agent package
- */
-export type ICodingAgentDeployer = unknown;
+import { ICodingAgentDeployer } from './ICodingAgentDeployer';
 
 /**
  * Registry for managing coding agent deployers
