@@ -4,6 +4,7 @@ import {
   Distribution,
   DistributionStatus,
   IAccountsPort,
+  ICodingAgentPort,
   ICommandsPort,
   ISkillsPort,
   ISpacesPort,
@@ -69,6 +70,7 @@ describe('RenderPackageAsPluginUseCase', () => {
   let commandsPort: jest.Mocked<ICommandsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
+  let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let targetResolutionService: jest.Mocked<TargetResolutionService>;
@@ -214,6 +216,32 @@ describe('RenderPackageAsPluginUseCase', () => {
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
+    // Faithful stand-in for the coding-agent plugin renderer: reproduces the
+    // ClaudePluginDeployer path scheme (manifest + commands + skills, standards
+    // skipped) so the use case's command assembly and output passthrough can be
+    // asserted without re-testing the deployer (covered in @packmind/coding-agent).
+    codingAgentPort = {
+      renderPackageAsClaudePlugin: jest.fn().mockImplementation((command) =>
+        Promise.resolve({
+          files: [
+            {
+              path: `${command.pluginRoot}.claude-plugin/plugin.json`,
+              content: '{}',
+            },
+            ...command.recipeVersions.map((rv: CommandVersion) => ({
+              path: `${command.pluginRoot}commands/${rv.slug}.md`,
+              content: rv.content,
+            })),
+            ...command.skillVersions.map((sv: SkillVersion) => ({
+              path: `${command.pluginRoot}skills/${sv.slug}/SKILL.md`,
+              content: '',
+            })),
+          ],
+          skippedStandardsCount: command.standardVersions.length,
+        }),
+      ),
+    } as unknown as jest.Mocked<ICodingAgentPort>;
+
     spacesPort = {
       listSpacesByOrganization: jest.fn().mockResolvedValue([defaultSpace]),
       getSpaceBySlug: jest.fn().mockResolvedValue(defaultSpace),
@@ -254,6 +282,7 @@ describe('RenderPackageAsPluginUseCase', () => {
       commandsPort,
       standardsPort,
       skillsPort,
+      codingAgentPort,
       spacesPort,
       accountsPort,
       targetResolutionService,

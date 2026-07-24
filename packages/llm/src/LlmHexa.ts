@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LlmAdapter } from './application/adapter/LlmAdapter';
+import { LlmRepositories } from './infra/repositories/LlmRepositories';
 
 const origin = 'LlmHexa';
 
@@ -33,7 +34,7 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
 
     try {
       this.logger.debug('Creating LlmAdapter');
-      this.adapter = new LlmAdapter(this.dataSource);
+      this.adapter = new LlmAdapter(new LlmRepositories(this.dataSource));
 
       this.logger.info('LlmHexa construction completed');
     } catch (error) {

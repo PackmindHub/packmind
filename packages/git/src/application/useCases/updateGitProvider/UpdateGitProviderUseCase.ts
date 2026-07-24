@@ -11,7 +11,7 @@ import {
   UpdateGitProviderResponse,
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
-import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
+import { GithubAppMode } from '@packmind/types';
 import { validateProviderCredentials } from '../shared/validateProviderCredentials';
 import {
   ensureDisplayNameAvailable,

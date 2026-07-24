@@ -1,15 +1,13 @@
-import {
-  DefaultSkillMetadata,
-  ICodingAgentDeployer,
-} from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CodingAgent,
+  DefaultSkillMetadata,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
   FileUpdates,
   IAccountsPort,
+  ICodingAgentDeployer,
   ICodingAgentPort,
   IDeployDefaultSkillsUseCase,
   PackmindLockFileEntry,

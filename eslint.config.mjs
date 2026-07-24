@@ -122,7 +122,10 @@ export default [
     rules: {},
   },
   {
-    files: ['**/jest.config.ts'],
+    // `jest.config.ts` plus variants like `jest.arch.config.ts` (the
+    // architecture-tests project uses a non-default name so the @nx/jest plugin
+    // doesn't infer a `test` target for it).
+    files: ['**/jest.config.ts', '**/jest.*.config.ts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       '@nx/enforce-module-boundaries': 'off',

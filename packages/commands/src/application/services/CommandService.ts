@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { ICommandVersionRepository } from '../../domain/repositories/ICommandVersionRepository';
 import { ICommandRepository } from '../../domain/repositories/ICommandRepository';
-import { CommandRepository } from '../../infra/repositories/CommandRepository';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createCommandId,
@@ -40,7 +39,7 @@ export type UpdateCommandData = {
 
 export class CommandService {
   constructor(
-    private readonly commandRepository: ICommandRepository = new CommandRepository(),
+    private readonly commandRepository: ICommandRepository,
     private readonly commandVersionRepository: ICommandVersionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -141,6 +140,25 @@ export class CommandService {
     } catch (error) {
       this.logger.error('Failed to get recipe by ID', {
         id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getCommandsByIds(ids: CommandId[]): Promise<Command[]> {
+    this.logger.info('Getting commands by IDs', { count: ids.length });
+
+    try {
+      const commands = await this.commandRepository.findByIds(ids);
+      this.logger.info('Commands retrieved by IDs', {
+        requested: ids.length,
+        found: commands.length,
+      });
+      return commands;
+    } catch (error) {
+      this.logger.error('Failed to get commands by IDs', {
+        count: ids.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
