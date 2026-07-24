@@ -13,7 +13,6 @@
     "opencode",
     "packmind"
   ],
-  "installedAt": "2026-07-23T03:05:55.483Z",
   "artifacts": {
     "user:standard:back-end-repositories-sql-queries-using-typeorm": {
       "name": "Back-end repositories SQL queries using TypeORM",

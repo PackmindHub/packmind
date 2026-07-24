@@ -13,7 +13,6 @@
     "opencode",
     "packmind"
   ],
-  "installedAt": "2026-07-23T03:05:55.748Z",
   "artifacts": {
     "user:standard:integration-tests-structure-and-patterns": {
       "name": "Integration Tests Structure and Patterns",

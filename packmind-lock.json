@@ -17,7 +17,6 @@
     "opencode",
     "packmind"
   ],
-  "installedAt": "2026-07-23T03:05:53.528Z",
   "artifacts": {
     "user:skill:cli-e2e-test-authoring": {
       "name": "cli-e2e-test-authoring",
