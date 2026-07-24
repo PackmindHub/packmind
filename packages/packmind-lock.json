@@ -6,12 +6,13 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:28.041Z",
   "artifacts": {
     "user:standard:back-end-repositories-sql-queries-using-typeorm": {
       "name": "Back-end repositories SQL queries using TypeORM",
@@ -188,5 +189,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

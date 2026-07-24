@@ -6,12 +6,13 @@
   "agents": [
     "agents_md",
     "claude",
+    "codex",
     "copilot",
     "cursor",
     "gitlab_duo",
+    "opencode",
     "packmind"
   ],
-  "installedAt": "2026-06-16T03:12:27.646Z",
   "artifacts": {
     "user:standard:frontend-data-flow": {
       "name": "Frontend Data Flow",
@@ -130,5 +131,5 @@
       ]
     }
   },
-  "cliVersion": "0.30.1"
+  "cliVersion": "0.31.0"
 }

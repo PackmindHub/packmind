@@ -54,7 +54,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 # Standard: [E2E] Page object
 
-Define Playwright E2E PageObjects for each frontend route using regexp-based expectedUrl matching and mandatory this.pageFactory() after navigation to ensure safer URL validation and proper typing. :
+Write proper PageObjects for our E2E tests :
 * Always add this.pageFactory() after navigating to ensure proper typing
 * Each route in the frontend should correspond to a Page object
 * Use regExp for `expectedUrl` to ensure safer matching (better than the simili-glob of Playwright)
@@ -63,7 +63,7 @@ Full standard is available here for further request: [[E2E] Page object](.packmi
 
 # Standard: [E2E] Writing E2E tests
 
-Standardize Playwright E2E specs by creating one spec file per feature, using fixtures like testWithApi/testWithUser with API factories for irrelevant setup data and enabling feature flags via testWithApi.use({ underFeatureFlag: true }) to keep tests modular, fast, and reliable. :
+Writing proper E2E tests with our stack. Each feature we add should have its own spec file. :
 * Always use the fixtures (testWithApi, testWithUser...) instead of the default `test` of Playwright
 * Data which are not relevant to the test itself should be created using API
 * Specify "testWithApi.use({ underFeatureFlag: true });" in the test file is the tested feature is under a feature flag.
