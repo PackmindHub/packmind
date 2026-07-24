@@ -14,6 +14,13 @@ export type AddGitConnectionInput = {
   url: string | null;
 };
 
+export type AddGitRepoInput = {
+  gitProviderId: GitProviderId;
+  owner: string;
+  repo: string;
+  branch: string;
+};
+
 export interface IGitGateway {
   listProviders(): Promise<ListProvidersResponse>;
   addProvider(input: AddGitConnectionInput): Promise<GitProvider>;
@@ -22,4 +29,5 @@ export interface IGitGateway {
     gitProviderId: GitProviderId,
     page?: number,
   ): Promise<ListAvailableReposResponse>;
+  addRepo(input: AddGitRepoInput): Promise<GitRepo>;
 }

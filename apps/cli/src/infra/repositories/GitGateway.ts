@@ -7,6 +7,7 @@ import {
 } from '@packmind/types';
 import {
   AddGitConnectionInput,
+  AddGitRepoInput,
   IGitGateway,
 } from '../../domain/repositories/IGitGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -56,6 +57,22 @@ export class GitGateway implements IGitGateway {
         : '';
     return this.httpClient.request<ListAvailableReposResponse>(
       `/api/v0/organizations/${organizationId}/git/providers/${gitProviderId}/available-repos${query}`,
+    );
+  }
+
+  async addRepo(input: AddGitRepoInput): Promise<GitRepo> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<GitRepo>(
+      `/api/v0/organizations/${organizationId}/git/repositories`,
+      {
+        method: 'POST',
+        body: {
+          gitProviderId: input.gitProviderId,
+          owner: input.owner,
+          repo: input.repo,
+          branch: input.branch,
+        },
+      },
     );
   }
 }
