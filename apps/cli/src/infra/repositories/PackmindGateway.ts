@@ -20,6 +20,8 @@ import { OrganizationGateway } from './OrganizationGateway';
 import { IOrganizationGateway } from '../../domain/repositories/IOrganizationGateway';
 import { RepositoryTrackingGateway } from './RepositoryTrackingGateway';
 import { IRepositoryTrackingGateway } from '../../domain/repositories/IRepositoryTrackingGateway';
+import { GitGateway } from './GitGateway';
+import { IGitGateway } from '../../domain/repositories/IGitGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
@@ -33,6 +35,7 @@ export class PackmindGateway implements IPackmindGateway {
   readonly deployment: IDeploymentGateway;
   readonly organization: IOrganizationGateway;
   readonly repositoryTracking: IRepositoryTrackingGateway;
+  readonly git: IGitGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
@@ -47,5 +50,6 @@ export class PackmindGateway implements IPackmindGateway {
     this.deployment = new DeploymentGateway(this.httpClient);
     this.organization = new OrganizationGateway(this.httpClient);
     this.repositoryTracking = new RepositoryTrackingGateway(this.httpClient);
+    this.git = new GitGateway(this.httpClient);
   }
 }

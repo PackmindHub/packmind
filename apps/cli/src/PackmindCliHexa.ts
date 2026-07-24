@@ -72,12 +72,17 @@ import {
 import {
   AllConfigsResult,
   Gateway,
+  GitProvider,
+  GitProviderId,
+  GitProviderListItem,
+  GitRepo,
   HierarchicalConfigResult,
   IGetTrackedRepositoryUseCase,
   INotifyArtefactsDistribution,
   INotifyDistributionUseCase,
   IRenderPackageAsPluginUseCase,
   ITrackPluginDeletedUseCase,
+  ListAvailableReposResponse,
   PackmindFileConfig,
 } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
@@ -96,6 +101,10 @@ import { CheckDiffsResult } from './domain/useCases/ICheckDiffsUseCase';
 import { Space } from '@packmind/types';
 import { ISpaceService } from './domain/services/ISpaceService';
 import { IOutput } from './domain/repositories/IOutput';
+import {
+  AddGitConnectionInput,
+  AddGitRepoInput,
+} from './domain/repositories/IGitGateway';
 import {
   TrackRepositoryCommand,
   TrackRepositoryResult,
@@ -452,6 +461,38 @@ export class PackmindCliHexa {
 
   public async getSpaces(): Promise<Space[]> {
     return this.hexa.services.spaceService.getSpaces();
+  }
+
+  public async listGitConnections(): Promise<GitProviderListItem[]> {
+    const { providers } =
+      await this.hexa.repositories.packmindGateway.git.listProviders();
+    return providers;
+  }
+
+  public async addGitConnection(
+    input: AddGitConnectionInput,
+  ): Promise<GitProvider> {
+    return this.hexa.repositories.packmindGateway.git.addProvider(input);
+  }
+
+  public async listGitRepos(connectionId: GitProviderId): Promise<GitRepo[]> {
+    return this.hexa.repositories.packmindGateway.git.listReposByProvider(
+      connectionId,
+    );
+  }
+
+  public async listAvailableGitRepos(
+    connectionId: GitProviderId,
+    page?: number,
+  ): Promise<ListAvailableReposResponse> {
+    return this.hexa.repositories.packmindGateway.git.listAvailableRepos(
+      connectionId,
+      page,
+    );
+  }
+
+  public async addGitRepo(input: AddGitRepoInput): Promise<GitRepo> {
+    return this.hexa.repositories.packmindGateway.git.addRepo(input);
   }
 
   /**

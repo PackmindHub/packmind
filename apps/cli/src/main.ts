@@ -17,6 +17,7 @@ import { packagesCommand } from './infra/commands/PackagesCommand';
 import { pluginsCommand } from './infra/commands/PluginsCommand';
 import { playbookCommand } from './infra/commands/PlaybookCommand';
 import { spacesCommand } from './infra/commands/SpacesCommand';
+import { gitCommand } from './infra/commands/GitCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
 import { trackCommand } from './infra/commands/TrackCommand';
@@ -97,6 +98,7 @@ const app = subcommands({
   cmds: {
     commands: commandsCommand,
     config: configCommand,
+    git: gitCommand,
     init: initCommand,
     install: installCommand,
     lint: lintCommand,
