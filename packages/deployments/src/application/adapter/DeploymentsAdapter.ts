@@ -401,6 +401,7 @@ export class DeploymentsAdapter
       this.commandsPort,
       this.standardsPort,
       this.skillsPort,
+      this.codingAgentPort,
       this.spacesPort,
       this.accountsPort,
       targetResolutionService,

@@ -1,5 +1,8 @@
-import { FileModification, FileUpdates } from '@packmind/types';
-import { DefaultSkillMetadata } from '@packmind/coding-agent';
+import {
+  DefaultSkillMetadata,
+  FileModification,
+  FileUpdates,
+} from '@packmind/types';
 import { getDefaultSkillId } from './defaultSkillIdUtils';
 
 /**
