@@ -34,7 +34,10 @@ import {
   OrganizationId,
 } from '@packmind/types';
 import { AuthService } from '../../../auth/auth.service';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  OrganizationAdminRequiredError,
+} from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
@@ -85,6 +88,9 @@ export class GitProvidersController {
         req.clientSource,
       );
     } catch (error) {
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
       if (error instanceof InvalidGitProviderCredentialsError) {
         throw new BadRequestException(error.message);
       }
@@ -623,6 +629,9 @@ export class GitProvidersController {
         req.clientSource,
       );
     } catch (error) {
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
       if (error instanceof GitRepoAlreadyExistsError) {
         throw new ConflictException(error.message);
       }

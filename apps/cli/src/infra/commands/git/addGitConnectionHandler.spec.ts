@@ -90,4 +90,26 @@ describe('addGitConnectionHandler', () => {
       expect(mockExit).toHaveBeenCalledWith(1);
     });
   });
+
+  describe('when the user lacks admin permissions', () => {
+    beforeEach(() => {
+      mockAddGitConnection.mockRejectedValue(
+        Object.assign(new Error('Forbidden'), { statusCode: 403 }),
+      );
+    });
+
+    it('shows a permission message', async () => {
+      await addGitConnectionHandler(deps);
+
+      expect(mockLogger.logErrorConsole).toHaveBeenCalledWith(
+        'You need to be an organization administrator to add a git connection.',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await addGitConnectionHandler(deps);
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
 });

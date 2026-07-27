@@ -10,12 +10,15 @@ import {
   AddGitRepoHandlerDependencies,
 } from './addGitRepoHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import * as consoleLogger from '../../utils/consoleLogger';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logErrorConsole: jest.fn(),
 }));
+
+const mockLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
 const connectionId = createGitProviderId('provider-1');
 
@@ -188,6 +191,28 @@ describe('addGitRepoHandler', () => {
     it('exits with code 1', async () => {
       mockAddGitRepo.mockRejectedValue(new Error('boom'));
 
+      await addGitRepoHandler(buildDeps({ branch: 'main' }));
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the user lacks admin permissions', () => {
+    beforeEach(() => {
+      mockAddGitRepo.mockRejectedValue(
+        Object.assign(new Error('Forbidden'), { statusCode: 403 }),
+      );
+    });
+
+    it('shows a permission message', async () => {
+      await addGitRepoHandler(buildDeps({ branch: 'main' }));
+
+      expect(mockLogger.logErrorConsole).toHaveBeenCalledWith(
+        'You need to be an organization administrator to manage a repository.',
+      );
+    });
+
+    it('exits with code 1', async () => {
       await addGitRepoHandler(buildDeps({ branch: 'main' }));
 
       expect(mockExit).toHaveBeenCalledWith(1);

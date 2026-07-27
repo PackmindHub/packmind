@@ -28,6 +28,13 @@ export async function addGitConnectionHandler(
     );
     exit(0);
   } catch (err) {
+    if ((err as { statusCode?: number }).statusCode === 403) {
+      logErrorConsole(
+        'You need to be an organization administrator to add a git connection.',
+      );
+      exit(1);
+      return;
+    }
     logErrorConsole('Failed to add git connection:');
     if (err instanceof Error) {
       logErrorConsole(err.message);

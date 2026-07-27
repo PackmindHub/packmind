@@ -91,6 +91,13 @@ export async function addGitRepoHandler(
     );
     exit(0);
   } catch (err) {
+    if ((err as { statusCode?: number }).statusCode === 403) {
+      logErrorConsole(
+        'You need to be an organization administrator to manage a repository.',
+      );
+      exit(1);
+      return;
+    }
     logErrorConsole('Failed to add repository:');
     if (err instanceof Error) {
       logErrorConsole(err.message);

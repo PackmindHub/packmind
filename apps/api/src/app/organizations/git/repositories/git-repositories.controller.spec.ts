@@ -85,6 +85,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
       getTrackedRepository: jest.fn(),
       setTrackedRepository: jest.fn(),
       updateTrackedBranch: jest.fn(),
+      addRepositoryToProvider: jest.fn(),
     };
     logger = stubLogger();
 
@@ -95,6 +96,27 @@ describe('GitRepositoriesController tracked repository routes', () => {
   });
 
   afterEach(() => jest.clearAllMocks());
+
+  describe('addGitRepo', () => {
+    const dto = {
+      gitProviderId: 'prov-1',
+      owner: 'my-orga',
+      repo: 'my-repo',
+      branch: 'main',
+    } as Parameters<typeof controller.addGitRepo>[2];
+
+    describe('when the caller is not an organization admin', () => {
+      it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
+        mockService.addRepositoryToProvider.mockRejectedValue(
+          new OrganizationAdminRequiredError('Not an admin'),
+        );
+
+        await expect(
+          controller.addGitRepo(orgId, mockRequest, dto),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+  });
 
   describe('getTrackedRepository', () => {
     describe('on happy path', () => {
