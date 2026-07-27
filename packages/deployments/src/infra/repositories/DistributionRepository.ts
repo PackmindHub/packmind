@@ -57,23 +57,40 @@ function isSkillVersionOrphaned(skillVersion: SkillVersion): boolean {
 // never used CLI tracking have no tracked sibling at all, so this predicate is a no-op
 // for them and the legacy "show every branch" behaviour is preserved.
 //
-// `gitRepo.*` are TypeORM property paths that get rewritten to the joined alias's
-// columns; the correlated subquery uses raw column names because its aliases are
-// unknown to TypeORM. The `gitRepo.id IS NULL` disjunct matters: the gitRepo join is a
-// left join, so without it every distribution missing a repo row would drop out.
+// The subquery collects "shadowed" repository rows: branches of a repository whose
+// tracking now sits on a sibling branch in the same organization. Their distributions
+// are hidden — never deleted — so moving the tracked branch stays reversible.
+// Repositories in organizations that never used CLI tracking have no tracked sibling,
+// so nothing is shadowed and the legacy "show every branch" behaviour is preserved.
+//
+// Written as an uncorrelated single-column anti-join rather than a correlated
+// NOT EXISTS: it is evaluated once per query instead of once per row, and it stays
+// within the SQL subset the in-memory database used by the integration tests supports.
+//
+// Columns are fully-qualified quoted identifiers rather than TypeORM property paths
+// because TypeORM only rewrites `alias.property` when the match is followed by a
+// space, `=`, `)` or `,` — a reference at the end of a line is silently left as-is and
+// fails at runtime. Every query below joins the repository as "gitRepo".
+//
+// The `"gitRepo"."id" IS NULL` disjunct is load-bearing: the gitRepo join is a left
+// join, so without it every distribution missing a repository row would drop out.
 const TRACKED_BRANCH_SCOPE = `(
-  gitRepo.id IS NULL
-  OR gitRepo.isTracked = true
-  OR NOT EXISTS (
-    SELECT 1
-    FROM "git_repos" tracked_repo
+  "gitRepo"."id" IS NULL
+  OR "gitRepo"."id" NOT IN (
+    SELECT shadowed."id"
+    FROM "git_repos" shadowed
+    INNER JOIN "git_providers" shadowed_provider
+      ON shadowed_provider."id" = shadowed."provider_id"
+     AND shadowed_provider."organization_id" = :trackedScopeOrganizationId
+    INNER JOIN "git_repos" tracked_repo
+      ON tracked_repo."owner" = shadowed."owner"
+     AND tracked_repo."repo" = shadowed."repo"
+     AND tracked_repo."is_tracked" = true
+     AND tracked_repo."deleted_at" IS NULL
     INNER JOIN "git_providers" tracked_provider
       ON tracked_provider."id" = tracked_repo."provider_id"
-    WHERE tracked_repo."owner" = gitRepo.owner
-      AND tracked_repo."repo" = gitRepo.repo
-      AND tracked_repo."is_tracked" = true
-      AND tracked_repo."deleted_at" IS NULL
-      AND tracked_provider."organization_id" = :trackedScopeOrganizationId
+     AND tracked_provider."organization_id" = :trackedScopeOrganizationId
+    WHERE shadowed."is_tracked" = false
   )
 )`;
 

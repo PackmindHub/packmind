@@ -152,7 +152,16 @@ describe('DistributionRepository', () => {
 
       it('keeps distributions whose repository row is absent', () => {
         expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-          expect.stringContaining('gitRepo.id IS NULL'),
+          expect.stringContaining('"gitRepo"."id" IS NULL'),
+          expect.anything(),
+        );
+      });
+
+      // TypeORM only rewrites `alias.property` before a space, `=`, `)` or `,`,
+      // so the predicate must not rely on it — see TRACKED_BRANCH_SCOPE.
+      it('fully qualifies the repository column it filters on', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.stringContaining('"gitRepo"."id" NOT IN'),
           expect.anything(),
         );
       });
