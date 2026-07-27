@@ -374,6 +374,13 @@ The `git` command has two subgroups:
 - **`git repo`** — manage the repositories handled under a connection.
 
 <Info>
+  **Administrator only** — Adding a connection or a repository requires an
+  organization admin. Listing is available to any member. If you are not an
+  admin, `git connection add` and `git repo add` report that you need
+  administrator permissions and make no change.
+</Info>
+
+<Info>
   **GitHub App connections** — The CLI creates **token-authenticated**
   connections. To connect GitHub with the Packmind GitHub App (the recommended
   option for GitHub), use the web app — see [Connecting
@@ -472,6 +479,9 @@ Repository added: myOrga/myRepo (main)
 
 - **Problem**: The command reports you are not logged in.
 - **Solution**: Run `packmind-cli login` first, then retry.
+
+- **Problem**: `You need to be an organization administrator to add a git connection.` (or `to manage a repository.`)
+- **Solution**: Adding connections and repositories is restricted to organization admins. Ask an admin to run the command, or to grant you the admin role.
 
 - **Problem**: `Could not determine the default branch for <owner>/<repo>.`
 - **Solution**: The repository was not found among the connection's available repositories. Re-run `git repo add` with an explicit `--branch`, or confirm the connection can access that repository with `git repo list --connectionId <id> --show-available`.
