@@ -8,6 +8,7 @@
 ## Changed
 
 - `packmind install` now records a distribution in Packmind only when it runs on the tracked repository and branch. Installing on an untracked repository, on a different branch, or outside a git repository completes locally but is not recorded, and the CLI explains why.
+- Distribution History now shows the branch your organization currently tracks. Moving the tracked branch is reversible: distributions recorded on the branch you leave are kept — never deleted — they simply stop being displayed, and they reappear with new ones appended if tracking moves back. Repositories that were never tracked keep showing every branch.
 
 ## Fixed
 
