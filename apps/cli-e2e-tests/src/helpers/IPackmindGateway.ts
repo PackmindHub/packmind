@@ -11,6 +11,7 @@ import {
   IListChangeProposalsByArtefact,
   IListChangeProposalsBySpace,
   IListPackagesBySpaceUseCase,
+  IListProvidersUseCase,
   IListStandardsBySpaceUseCase,
   ISignInUserUseCase,
   ISignUpWithOrganizationUseCase,
@@ -71,6 +72,10 @@ export interface ISkillsGateway {
   upload: Gateway<IUploadSkillUseCase>;
 }
 
+export interface IGitGateway {
+  listProviders: Gateway<IListProvidersUseCase>;
+}
+
 export interface IPackmindGateway {
   auth: IAuthGateway;
   accounts: IAccountsGateway;
@@ -81,6 +86,7 @@ export interface IPackmindGateway {
   changeProposals: IChangeProposalGateway;
   deployments: IDeploymentsGateway;
   skills: ISkillsGateway;
+  git: IGitGateway;
 
   initializeWithApiKey(apiKey: string): void;
 }
