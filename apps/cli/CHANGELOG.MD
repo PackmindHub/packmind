@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [0.32.0] - 2026-07-27
 
 ## Changed
@@ -416,6 +426,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...HEAD
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
 [0.31.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.1...release-cli/0.31.0
 [0.30.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.0...release-cli/0.30.1
