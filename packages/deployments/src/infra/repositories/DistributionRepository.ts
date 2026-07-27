@@ -51,6 +51,32 @@ function isSkillVersionOrphaned(skillVersion: SkillVersion): boolean {
   return skill?.deletedAt != null;
 }
 
+// Distribution history is scoped to the branch Packmind currently tracks. A row on a
+// previously tracked branch is retained forever — it is only hidden while a sibling
+// branch of the same repository holds tracking. Repositories in organizations that
+// never used CLI tracking have no tracked sibling at all, so this predicate is a no-op
+// for them and the legacy "show every branch" behaviour is preserved.
+//
+// `gitRepo.*` are TypeORM property paths that get rewritten to the joined alias's
+// columns; the correlated subquery uses raw column names because its aliases are
+// unknown to TypeORM. The `gitRepo.id IS NULL` disjunct matters: the gitRepo join is a
+// left join, so without it every distribution missing a repo row would drop out.
+const TRACKED_BRANCH_SCOPE = `(
+  gitRepo.id IS NULL
+  OR gitRepo.isTracked = true
+  OR NOT EXISTS (
+    SELECT 1
+    FROM "git_repos" tracked_repo
+    INNER JOIN "git_providers" tracked_provider
+      ON tracked_provider."id" = tracked_repo."provider_id"
+    WHERE tracked_repo."owner" = gitRepo.owner
+      AND tracked_repo."repo" = gitRepo.repo
+      AND tracked_repo."is_tracked" = true
+      AND tracked_repo."deleted_at" IS NULL
+      AND tracked_provider."organization_id" = :trackedScopeOrganizationId
+  )
+)`;
+
 export class DistributionRepository implements IDistributionRepository {
   constructor(
     private readonly repository: Repository<Distribution> = localDataSource.getRepository<Distribution>(
@@ -166,6 +192,9 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere(TRACKED_BRANCH_SCOPE, {
+          trackedScopeOrganizationId: organizationId,
+        })
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
@@ -220,6 +249,9 @@ export class DistributionRepository implements IDistributionRepository {
         })
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
+        })
+        .andWhere(TRACKED_BRANCH_SCOPE, {
+          trackedScopeOrganizationId: organizationId,
         })
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
@@ -276,6 +308,9 @@ export class DistributionRepository implements IDistributionRepository {
         })
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
+        })
+        .andWhere(TRACKED_BRANCH_SCOPE, {
+          trackedScopeOrganizationId: organizationId,
         })
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
@@ -889,6 +924,9 @@ export class DistributionRepository implements IDistributionRepository {
         })
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
+        })
+        .andWhere(TRACKED_BRANCH_SCOPE, {
+          trackedScopeOrganizationId: organizationId,
         })
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
