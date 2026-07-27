@@ -8,6 +8,10 @@ The Packmind CLI provides the following commands:
 
 - **`init`** - Initialize Packmind in your project (configure agents + install skills)
 - **`track`** - Set the repository and branch Packmind tracks for your project
+- **`git connection list`** - List Git connections (providers) in your organization
+- **`git connection add`** - Add a Git connection with an access token
+- **`git repo list`** - List repositories managed under a connection (or those available to manage)
+- **`git repo add`** - Start managing a repository under a connection
 - **`config agents setup`** - Configure which AI coding agents to generate artifacts for (interactive)
 - **`config agents list`** - List configured agents across `packmind.json` files
 - **`config agents add`** - Add coding agents to `packmind.json` files
@@ -359,6 +363,121 @@ Nothing is tracked yet — run `packmind-cli init` or `packmind-cli track` to st
 
 - **Problem**: The command cannot determine the repository or branch.
 - **Solution**: Run `track` from inside a git repository that has a configured remote and a checked-out branch.
+
+## Git Command
+
+Manage the Git connections and repositories your organization uses to distribute standards, commands, and skills — directly from the terminal. This mirrors what you can do from **Settings** → **Git Providers** in the web app. For the full picture of how connections work, see [Git Repository Connection](/governance/git-repository-connection).
+
+The `git` command has two subgroups:
+
+- **`git connection`** — manage Git connections (also called providers), such as a GitHub or GitLab connection.
+- **`git repo`** — manage the repositories handled under a connection.
+
+<Info>
+  **GitHub App connections** — The CLI creates **token-authenticated**
+  connections. To connect GitHub with the Packmind GitHub App (the recommended
+  option for GitHub), use the web app — see [Connecting
+  GitHub](/governance/git-repository-connection#connecting-github).
+</Info>
+
+### List Connections
+
+List the Git connections available in your organization:
+
+```bash
+packmind-cli git connection list
+```
+
+For each connection, the output shows its ID, display name, type, URL, and whether authentication is configured. You need the **connection ID** to manage repositories under it.
+
+**Example output:**
+
+```
+Git connections:
+
+- My GitLab
+    ID:   3f8c1a90-1c2b-4e77-9a0e-2f5b7c9d1e34
+    Type: gitlab
+    URL:  https://gitlab.example.com
+    Auth: Connected
+```
+
+### Add a Connection
+
+Add a new Git connection authenticated with an access token:
+
+```bash
+packmind-cli git connection add <token> --displayName "My GitLab" --type gitlab --url https://gitlab.example.com
+```
+
+**Arguments:**
+
+- `<token>` — Access token used to authenticate against the provider
+
+**Options:**
+
+| Flag            | Description                                                                         |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `--displayName` | Human-readable name to identify the connection later                                |
+| `--type`        | Provider type: `github` or `gitlab`                                                 |
+| `--url`         | Base URL of the provider (required for self-hosted instances, e.g. a GitLab server) |
+
+**Example output:**
+
+```
+Git connection created: My GitLab (3f8c1a90-1c2b-4e77-9a0e-2f5b7c9d1e34)
+```
+
+### List Repositories
+
+List the repositories currently managed under a connection:
+
+```bash
+packmind-cli git repo list --connectionId <connection-id>
+```
+
+To discover repositories that Packmind **can** manage but that aren't managed yet, add `--show-available`:
+
+```bash
+packmind-cli git repo list --connectionId <connection-id> --show-available
+```
+
+Available repositories are paginated. Use `--page` to fetch a specific page:
+
+```bash
+packmind-cli git repo list --connectionId <connection-id> --show-available --page 2
+```
+
+### Add a Repository
+
+Start managing a repository under a connection, using the `owner/repo` form:
+
+```bash
+packmind-cli git repo add <owner>/<repo> --connectionId <connection-id>
+```
+
+By default, Packmind uses the repository's **default branch**. To manage a different branch, pass `--branch`:
+
+```bash
+packmind-cli git repo add myOrga/myRepo --connectionId <connection-id> --branch develop
+```
+
+**Example output:**
+
+```
+Repository added: myOrga/myRepo (main)
+```
+
+### Troubleshooting
+
+- **Problem**: The command reports you are not logged in.
+- **Solution**: Run `packmind-cli login` first, then retry.
+
+- **Problem**: `Could not determine the default branch for <owner>/<repo>.`
+- **Solution**: The repository was not found among the connection's available repositories. Re-run `git repo add` with an explicit `--branch`, or confirm the connection can access that repository with `git repo list --connectionId <id> --show-available`.
+
+- **Problem**: Adding a repository reports it already exists.
+- **Solution**: The repository and branch are already managed under this organization. Use `git repo list --connectionId <id>` to review what is already managed.
 
 ## Config Command
 
@@ -1380,6 +1499,7 @@ fi
 ## Related Documentation
 
 - [Create your first command](/getting-started/gs-create-command): Learn how to create commands with AI assistance
+- [Git Repository Connection](/governance/git-repository-connection): Connect GitHub and GitLab providers and manage repositories
 - [Packages Management](/concepts/packages-management): Learn about organizing commands, standards, and skills into packages
 - [Linter: Automated Detection](/linter/linter): Learn about how detection programs work
 - [Standards Management](/concepts/standards-management): Create rules and add code examples
