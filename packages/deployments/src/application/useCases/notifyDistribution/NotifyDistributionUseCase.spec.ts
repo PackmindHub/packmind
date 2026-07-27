@@ -294,6 +294,35 @@ describe('NotifyDistributionUseCase', () => {
       });
     });
 
+    describe('when no repository is set up for the remote', () => {
+      let result: { deploymentId: string | null };
+
+      beforeEach(async () => {
+        mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+          null,
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        result = await useCase.execute(command);
+      });
+
+      it('does not record a deployment', () => {
+        expect(result.deploymentId).toBeNull();
+      });
+
+      it('does not save any distribution', () => {
+        expect(mockDistributionRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
     describe('with non-matching package slugs', () => {
       let result: { deploymentId: string };
 
