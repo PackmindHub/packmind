@@ -24,3 +24,24 @@ export function findSkillNameConflicts(
   const existing = new Set(existingSkills.map((skill) => slug(skill.name)));
   return detectedNames.filter((name) => existing.has(slug(name)));
 }
+
+/**
+ * Returns the names claimed by more than one skill in the same selection.
+ *
+ * Two folders can declare the same skill name, and the upload endpoint resolves
+ * a skill by that name — so importing both would create one skill and silently
+ * overwrite it with the second, while reporting two successes. Every side of the
+ * clash is returned, not just the later one: which of them was meant is the
+ * user's call, so none should go through.
+ *
+ * This is the web counterpart of the CLI's "staged multiple times" check.
+ */
+export function findDuplicateSkillNames(detectedNames: string[]): string[] {
+  const occurrences = new Map<string, number>();
+  for (const name of detectedNames) {
+    const key = slug(name);
+    occurrences.set(key, (occurrences.get(key) ?? 0) + 1);
+  }
+
+  return detectedNames.filter((name) => (occurrences.get(slug(name)) ?? 0) > 1);
+}

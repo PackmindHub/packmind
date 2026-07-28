@@ -70,7 +70,7 @@ export const SkillsCreateButton = ({ spaceSlug }: SkillsCreateButtonProps) => {
                     </PMText>
                   </PMHStack>
                   <PMText fontSize="xs" color="secondary">
-                    Import skills into your project via CLI
+                    Upload a folder of skills, or import them with the CLI
                   </PMText>
                 </PMVStack>
               </PMMenu.Item>

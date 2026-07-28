@@ -31,12 +31,22 @@ const mockUseCurrentSpace = useCurrentSpace as jest.MockedFunction<
   typeof useCurrentSpace
 >;
 
-/** A File shaped the way the directory picker hands it over. */
-function pickedFile(relativePath: string): File {
-  const file = new File(
-    ['---\nname: skill\n---\n'],
-    relativePath.split('/').pop() as string,
-  );
+/**
+ * A File shaped the way the directory picker hands it over.
+ *
+ * A SKILL.md declares a name in its frontmatter, and that name — not the folder
+ * — is the skill's identity. It defaults to the containing folder so the common
+ * case reads naturally; pass `declaredName` to make the two diverge.
+ */
+function pickedFile(relativePath: string, declaredName?: string): File {
+  const segments = relativePath.split('/');
+  const isManifest = segments[segments.length - 1] === 'SKILL.md';
+  const name = declaredName ?? segments[segments.length - 2] ?? 'skill';
+  const content = isManifest
+    ? `---\nname: ${name}\ndescription: A skill.\n---\n\nBody.\n`
+    : 'supporting content\n';
+
+  const file = new File([content], segments[segments.length - 1]);
   Object.defineProperty(file, 'webkitRelativePath', {
     value: relativePath,
     configurable: true,
@@ -88,7 +98,16 @@ function renderPanel({
  * cannot open a file dialog, so `files` is planted on the element and both
  * events a browser would emit are dispatched.
  */
-async function selectFiles(container: HTMLElement, files: File[]) {
+async function selectFiles(
+  container: HTMLElement,
+  files: File[],
+  /**
+   * Row labels to wait for. Resolving a selection reads each SKILL.md, so a
+   * previous selection's rows are still on screen while that runs — waiting for
+   * "a list exists" would let an assertion race the new one into place.
+   */
+  expectedRows?: string[],
+) {
   const input = container.querySelector(
     'input[type="file"]',
   ) as HTMLInputElement;
@@ -97,7 +116,15 @@ async function selectFiles(container: HTMLElement, files: File[]) {
   fireEvent.input(input);
   fireEvent.change(input);
 
-  await waitFor(() => expect(screen.getByRole('list')).toBeInTheDocument());
+  await waitFor(() => {
+    const labels = screen
+      .getAllByRole('listitem')
+      .map((item) => item.textContent ?? '');
+    expect(labels.length).toBeGreaterThan(0);
+    for (const [index, name] of (expectedRows ?? []).entries()) {
+      expect(labels[index] ?? '').toContain(name);
+    }
+  });
 }
 
 const importButton = () => screen.getByRole('button', { name: /^import$/i });
@@ -207,13 +234,85 @@ describe('SkillsUploadPanel', () => {
     });
   });
 
+  describe('when a folder declares a name other than its own', () => {
+    it('shows the name the skill will actually have', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/folder-alpha/SKILL.md', 'declared-beta'),
+      ]);
+
+      expect(
+        screen.getAllByRole('listitem').map((item) => item.textContent),
+      ).toEqual([expect.stringContaining('declared-beta')]);
+    });
+
+    it('checks that declared name against the space, not the folder', async () => {
+      const { container, uploadSkill } = renderPanel({
+        existingSkills: [{ name: 'declared-beta' }],
+      });
+
+      await selectFiles(container, [
+        pickedFile('skills/folder-alpha/SKILL.md', 'declared-beta'),
+      ]);
+      expect(screen.getByText(/already exists/i)).toBeInTheDocument();
+      expect(uploadSkill).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when two selected folders declare the same skill name', () => {
+    const clashing = () => [
+      pickedFile('skills/copy-a/SKILL.md', 'shared-name'),
+      pickedFile('skills/copy-b/SKILL.md', 'shared-name'),
+    ];
+
+    it('reports the clash on both of them', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, clashing());
+
+      expect(
+        screen.getAllByText(/more than one selected folder declares/i),
+      ).toHaveLength(2);
+    });
+
+    /**
+     * The endpoint resolves a skill by its declared name, so importing both
+     * would create one skill, silently overwrite it with the second, and report
+     * two successes. Neither side may go through.
+     */
+    it('imports neither of them', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, clashing());
+
+      expect(importButton()).toBeDisabled();
+    });
+
+    it('still imports an unrelated skill in the same selection', async () => {
+      const { container, uploadSkill } = renderPanel();
+
+      await selectFiles(container, [
+        ...clashing(),
+        pickedFile('skills/unrelated/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+
+      expect(uploadSkill).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('when a detected skill already exists in the space', () => {
     it('reports the conflict as soon as it is selected', async () => {
       const { container } = renderPanel({
         existingSkills: [{ name: 'onboarding' }],
       });
 
-      await selectFiles(container, [pickedFile('skills/onboarding/SKILL.md')]);
+      await selectFiles(
+        container,
+        [pickedFile('skills/onboarding/SKILL.md')],
+        ['onboarding'],
+      );
 
       expect(screen.getByText(/already exists/i)).toBeInTheDocument();
     });
@@ -370,9 +469,11 @@ describe('SkillsUploadPanel', () => {
         ]);
         await userEvent.click(importButton());
         await screen.findByText('1 imported, 0 failed');
-        await selectFiles(container, [
-          pickedFile('skills/onboarding/SKILL.md'),
-        ]);
+        await selectFiles(
+          container,
+          [pickedFile('skills/onboarding/SKILL.md')],
+          ['onboarding'],
+        );
 
         expect(importButton()).toBeEnabled();
       });
@@ -452,7 +553,11 @@ describe('SkillsUploadPanel', () => {
       await userEvent.click(importButton());
       await screen.findByText('1 imported, 0 failed');
 
-      await selectFiles(container, [pickedFile('skills/onboarding/SKILL.md')]);
+      await selectFiles(
+        container,
+        [pickedFile('skills/onboarding/SKILL.md')],
+        ['onboarding'],
+      );
 
       expect(
         screen.queryByText('1 imported, 0 failed'),
@@ -468,7 +573,11 @@ describe('SkillsUploadPanel', () => {
       await userEvent.click(importButton());
       await screen.findByText('1 imported, 0 failed');
 
-      await selectFiles(container, [pickedFile('skills/onboarding/SKILL.md')]);
+      await selectFiles(
+        container,
+        [pickedFile('skills/onboarding/SKILL.md')],
+        ['onboarding'],
+      );
 
       expect(
         screen.getAllByRole('listitem').map((item) => item.textContent),

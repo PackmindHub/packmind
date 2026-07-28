@@ -3,8 +3,14 @@ import { expect } from '@playwright/test';
 
 import { testWithUserSignedUp } from '../../fixtures/packmindTest';
 
+const fixture = (name: string) => path.join(__dirname, '../../fixtures', name);
+
 /** A folder holding two skill directories, one of them with a nested file. */
-const SKILLS_FIXTURE_FOLDER = path.join(__dirname, '../../fixtures/skills');
+const SKILLS_FIXTURE_FOLDER = fixture('skills');
+/** Two folders whose SKILL.md files both declare `name: shared-skill`. */
+const SAME_DECLARED_NAME_FOLDER = fixture('skills-same-declared-name');
+/** A folder named `folder-alpha` whose SKILL.md declares `name: declared-beta`. */
+const RENAMED_FOLDER = fixture('skills-renamed-folder');
 
 testWithUserSignedUp.describe('importing skills from the web dialog', () => {
   testWithUserSignedUp(
@@ -42,6 +48,74 @@ testWithUserSignedUp.describe('importing skills from the web dialog', () => {
         'documentation',
         'onboarding',
       ]);
+    },
+  );
+
+  /**
+   * The endpoint resolves a skill by the name in its SKILL.md frontmatter, so
+   * importing two folders that declare the same name would create one skill,
+   * silently overwrite it with the second, and report two successes.
+   */
+  testWithUserSignedUp(
+    'it refuses both folders when they declare the same skill name',
+    async ({ dashboardPage }) => {
+      testWithUserSignedUp.setTimeout(90_000);
+
+      const skillsPage = await dashboardPage.openSkills();
+      await skillsPage.openImportDialog();
+      await skillsPage.chooseSkillsFolder(SAME_DECLARED_NAME_FOLDER);
+
+      const detected = await skillsPage.listDetectedSkills();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(detected).toEqual([
+        expect.stringContaining('More than one selected folder declares'),
+        expect.stringContaining('More than one selected folder declares'),
+      ]);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await skillsPage.canImportDetectedSkills()).toBe(false);
+    },
+  );
+
+  /**
+   * A folder whose name differs from the name it declares must still be checked
+   * against the space by the declared name, or the conflict check is bypassed
+   * and the re-import silently updates an unrelated skill.
+   */
+  testWithUserSignedUp(
+    'it identifies a skill by its declared name, not its folder',
+    async ({ dashboardPage }) => {
+      testWithUserSignedUp.setTimeout(90_000);
+
+      const skillsPage = await dashboardPage.openSkills();
+      await skillsPage.openImportDialog();
+      await skillsPage.chooseSkillsFolder(RENAMED_FOLDER);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await skillsPage.listDetectedSkills()).toEqual([
+        expect.stringContaining('declared-beta'),
+      ]);
+
+      await skillsPage.importDetectedSkills();
+      await skillsPage.closeImportDialog();
+      await skillsPage.reload();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect((await skillsPage.listSkills()).map((s) => s.name)).toEqual([
+        'declared-beta',
+      ]);
+
+      await skillsPage.openImportDialog();
+      await skillsPage.chooseSkillsFolder(RENAMED_FOLDER);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await skillsPage.listDetectedSkills()).toEqual([
+        expect.stringContaining('already exists'),
+      ]);
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await skillsPage.canImportDetectedSkills()).toBe(false);
     },
   );
 

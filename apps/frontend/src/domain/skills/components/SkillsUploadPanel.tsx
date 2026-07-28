@@ -16,7 +16,11 @@ import {
   collectSkillsFromFiles,
   DetectedSkill,
 } from '../utils/collectSkillsFromFiles';
-import { findSkillNameConflicts } from '../utils/findSkillNameConflicts';
+import {
+  findDuplicateSkillNames,
+  findSkillNameConflicts,
+} from '../utils/findSkillNameConflicts';
+import { readDeclaredSkillName } from '../utils/readDeclaredSkillName';
 import { readDroppedEntries } from '../utils/readDroppedEntries';
 import { readSkillFileContents } from '../utils/readSkillFileContents';
 import { SkillsUploadRow } from './SkillsUploadRow';
@@ -24,8 +28,15 @@ import { SkillsUploadRow } from './SkillsUploadRow';
 /** Stable empty default, so the selection handler keeps its identity. */
 const NO_EXISTING_SKILLS: { name: string }[] = [];
 
+/**
+ * A detected skill whose `name` has been replaced by the identity the server
+ * will use — the SKILL.md frontmatter name — with the directory it came from
+ * kept for context.
+ */
+type ResolvedSkill = DetectedSkill & { folder: string };
+
 export const SkillsUploadPanel = () => {
-  const [detectedSkills, setDetectedSkills] = useState<DetectedSkill[]>([]);
+  const [detectedSkills, setDetectedSkills] = useState<ResolvedSkill[]>([]);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
@@ -70,31 +81,59 @@ export const SkillsUploadPanel = () => {
     onFinished,
   });
 
-  const handleFiles = useCallback(
-    (files: File[]) => {
-      if (isImporting) return;
+  // Bumped per selection so a slower resolution cannot overwrite a newer pick.
+  const selectionRef = useRef(0);
 
-      const detected = collectSkillsFromFiles(files);
-      const conflicts = new Set(
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (isImporting) return;
+      const selection = ++selectionRef.current;
+
+      // The identity of a skill is the name in its SKILL.md frontmatter, not the
+      // folder it sits in — that is what the endpoint resolves it by. Reading it
+      // here is what lets the checks below compare the right thing, and what
+      // makes each row show the name that will actually exist.
+      const resolved: ResolvedSkill[] = await Promise.all(
+        collectSkillsFromFiles(files).map(async (skill) => {
+          const declared = await readDeclaredSkillName(skill);
+          return { ...skill, folder: skill.name, name: declared ?? skill.name };
+        }),
+      );
+      if (selection !== selectionRef.current) return;
+
+      const identities = resolved.map((skill) => skill.name);
+      const takenInSpace = new Set(
         findSkillNameConflicts(
-          detected.map((skill) => skill.name),
+          identities,
           existingSkills ?? NO_EXISTING_SKILLS,
         ),
       );
+      const claimedTwice = new Set(findDuplicateSkillNames(identities));
 
-      // A local problem is reported ahead of a name conflict: it is the more
-      // actionable of the two, and the conflict may not even be reached.
       reset();
       setDetectedSkills(
-        detected
-          .map((skill) =>
-            skill.validationError || !conflicts.has(skill.name)
-              ? skill
-              : {
-                  ...skill,
-                  validationError: `A skill named "${skill.name}" already exists in this space`,
-                },
-          )
+        resolved
+          .map((skill) => {
+            // A local problem comes first: it is the most actionable, and the
+            // name checks may not even be reached.
+            if (skill.validationError) return skill;
+
+            if (takenInSpace.has(skill.name)) {
+              return {
+                ...skill,
+                validationError: `A skill named "${skill.name}" already exists in this space`,
+              };
+            }
+
+            if (claimedTwice.has(skill.name)) {
+              return {
+                ...skill,
+                validationError: `More than one selected folder declares the skill "${skill.name}"`,
+              };
+            }
+
+            return skill;
+          })
           // Sorted for the reader: a folder pick arrives in whatever order the
           // filesystem enumerated it, which is neither alphabetical nor stable.
           .sort((a, b) => a.name.localeCompare(b.name)),
@@ -109,7 +148,7 @@ export const SkillsUploadPanel = () => {
       if (isImporting) return;
       // The item list is read synchronously inside readDroppedEntries — it is
       // invalidated as soon as this handler yields.
-      handleFiles(await readDroppedEntries(event.dataTransfer.items));
+      await handleFiles(await readDroppedEntries(event.dataTransfer.items));
     },
     [handleFiles, isImporting],
   );
@@ -156,7 +195,7 @@ export const SkillsUploadPanel = () => {
         hidden
         aria-hidden
         onChange={(event) => {
-          handleFiles(Array.from(event.target.files ?? []));
+          void handleFiles(Array.from(event.target.files ?? []));
           // Let the same folder be picked again after a failed import.
           event.target.value = '';
         }}

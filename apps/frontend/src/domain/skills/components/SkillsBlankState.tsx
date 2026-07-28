@@ -158,7 +158,7 @@ export const SkillsBlankState = ({
                   </PMHeading>
                 </PMHStack>
                 <PMBox fontSize={'sm'} color={'text.secondary'}>
-                  Import skills into your project via CLI
+                  Upload a folder of skills, or import them with the CLI
                 </PMBox>
               </PMBox>
               {spaceSlug && (
