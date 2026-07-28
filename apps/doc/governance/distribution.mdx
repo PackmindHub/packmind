@@ -123,9 +123,14 @@ The CLI approach is ideal for:
 
 Every package, standard, command, and skill has a **Distribution History** listing when it was distributed and where it landed.
 
-When your organization tracks a repository and branch (see the [Track Command](/tools/cli#track-command)), that history shows the **branch you currently track**. Distributions made on other branches of the same repository are hidden, so the view stays focused on the branch your team works from today.
+When your organization tracks a repository and branch (see the [Track Command](/tools/cli#track-command)), Packmind shows the **branch you currently track**. Distributions made on other branches of the same repository are hidden, so the view stays focused on the branch your team works from today.
 
-Repositories you have never tracked are unaffected — their history keeps showing every branch.
+This applies to both places branches surface:
+
+- **Distribution History** — entries recorded on another branch of a tracked repository are not listed.
+- **The Deployments overview** — the repositories list only shows the tracked branch, so a repository never appears twice under two branches.
+
+Repositories you have never tracked are unaffected — every branch keeps showing in both views.
 
 ### Moving the Tracked Branch Is Reversible
 

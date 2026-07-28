@@ -126,6 +126,18 @@ describe('Tracked branch distribution history integration', () => {
     return history.map((distribution) => distribution.target.gitRepo?.branch);
   }
 
+  // The Deployments overview / repositories rail. Reviewers reported untracked
+  // branches still showing here after the history lists were filtered.
+  async function overviewBranches(): Promise<(string | undefined)[]> {
+    const overview = await testApp.deploymentsHexa
+      .getAdapter()
+      .listActiveDistributedPackagesBySpace({
+        ...admin.packmindCommand(),
+        spaceId: admin.space.id,
+      });
+    return overview.map((entry) => entry.gitRepo?.branch);
+  }
+
   // Reads straight through the schema, bypassing the display filter, to prove
   // that hidden history is still on disk.
   function storedDistributionCount(
@@ -186,6 +198,10 @@ describe('Tracked branch distribution history integration', () => {
         2,
       );
     });
+
+    it('shows only the tracked branch in the overview', async () => {
+      await expect(overviewBranches()).resolves.toEqual(['main']);
+    });
   });
 
   describe('when tracking has moved away from a branch that has history', () => {
@@ -199,6 +215,10 @@ describe('Tracked branch distribution history integration', () => {
 
     it('displays only the newly tracked branch', async () => {
       await expect(displayedBranches()).resolves.toEqual(['dev']);
+    });
+
+    it('drops the branch left behind from the overview', async () => {
+      await expect(overviewBranches()).resolves.toEqual(['dev']);
     });
 
     it('retains the history of the branch left behind', async () => {
@@ -235,6 +255,12 @@ describe('Tracked branch distribution history integration', () => {
 
     it('displays one entry per branch', async () => {
       await expect(displayedHistory()).resolves.toHaveLength(2);
+    });
+
+    it('keeps every branch in the overview', async () => {
+      await expect(overviewBranches()).resolves.toEqual(
+        expect.arrayContaining(['main', 'dev']),
+      );
     });
   });
 
