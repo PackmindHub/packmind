@@ -1,5 +1,7 @@
 # One Engineering Playbook. Synced Everywhere. For Every AI Coding Agent.
 
+[![MCP Toplist](https://mcptoplist.com/badge/ai.packmind%2Fmcp-server.svg)](https://mcptoplist.com/server/ai.packmind%2Fmcp-server)
+
 ![License](https://img.shields.io/github/license/PackmindHub/packmind)
 ![Stars](https://img.shields.io/github/stars/PackmindHub/packmind)
 [![Main OSS CI/CD Pipeline](https://github.com/PackmindHub/packmind/actions/workflows/main.yml/badge.svg)](https://github.com/PackmindHub/packmind/actions/workflows/main-oss.yml)
