@@ -4,6 +4,7 @@ import {
   ICreateStandardUseCase,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
+  ISetTrackedRepositoryUseCase,
   IUploadSkillUseCase,
   IListUserSpaces,
   IListSkillVersionsUseCase,
@@ -110,6 +111,12 @@ export class PackmindApi implements IPackmindApi {
 
   notifyDistribution: Gateway<INotifyDistributionUseCase> = async (command) => {
     return this.post('/deployments', command, 201);
+  };
+
+  setTrackedRepository: Gateway<ISetTrackedRepositoryUseCase> = async (
+    command,
+  ) => {
+    return this.post('/git/repositories/tracked-repository', command, 201);
   };
 
   uploadSkill: Gateway<IUploadSkillUseCase> = async (command) => {
