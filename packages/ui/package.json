@@ -24,7 +24,7 @@
     "@zag-js/checkbox": "^1.41.1"
   },
   "devDependencies": {
-    "@chakra-ui/cli": "^3.31.0"
+    "@chakra-ui/cli": "^3.36.1"
   },
   "peerDependencies": {
     "@chakra-ui/react": "^3.0.0",
