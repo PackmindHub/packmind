@@ -75,6 +75,70 @@ export class SkillsPage extends AbstractPackmindAppPage implements ISkillsPage {
     return this.pageFactory.getSkillFilePage();
   }
 
+  async openImportDialog(): Promise<void> {
+    const blankState = this.page.getByRole('heading', {
+      name: /no skills yet/i,
+    });
+
+    // Which entry point exists depends on whether the space already has skills,
+    // so wait for the list to resolve one way or the other first. Branching on a
+    // point-in-time check races the initial render and picks the wrong button.
+    await blankState.or(this.page.locator('table tbody tr').first()).waitFor();
+
+    if (await blankState.isVisible()) {
+      // Blank state: a direct Import button on the "Import your skills" card.
+      await this.page
+        .getByRole('button', { name: 'Import', exact: true })
+        .click();
+    } else {
+      // Once skills exist, importing moves under the Create menu in the header.
+      await this.page
+        .getByRole('button', { name: 'Create', exact: true })
+        .click();
+      await this.page
+        .getByRole('menuitem')
+        .filter({ hasText: 'Import skills' })
+        .click();
+    }
+
+    await this.importDialog()
+      .getByText(/drag a folder/i)
+      .waitFor();
+  }
+
+  async chooseSkillsFolder(directoryPath: string): Promise<void> {
+    // A single directory path: the input carries `webkitdirectory`, so Playwright
+    // walks the tree and sets webkitRelativePath on every file, exactly as a
+    // browser folder pick does.
+    await this.page
+      .locator('input[type="file"][webkitdirectory]')
+      .setInputFiles(directoryPath);
+    await this.importDialog().getByRole('listitem').first().waitFor();
+  }
+
+  async listDetectedSkills(): Promise<string[]> {
+    return this.importDialog().getByRole('listitem').allInnerTexts();
+  }
+
+  async importDetectedSkills(): Promise<string> {
+    await this.importDialog()
+      .getByRole('button', { name: 'Import', exact: true })
+      .click();
+
+    const summary = this.importDialog().getByText(/\d+ imported, \d+ failed/);
+    await summary.waitFor();
+    return summary.innerText();
+  }
+
+  async closeImportDialog(): Promise<void> {
+    await this.page.keyboard.press('Escape');
+    await this.importDialog().waitFor({ state: 'hidden' });
+  }
+
+  private importDialog() {
+    return this.page.getByRole('dialog').filter({ hasText: 'import skills' });
+  }
+
   expectedUrl(): RegExp {
     return /.*\/skills$/;
   }

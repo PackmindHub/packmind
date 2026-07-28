@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMBox, PMButton, PMText, PMVStack } from '@packmind/ui';
 
@@ -40,12 +40,29 @@ export const SkillsUploadPanel = () => {
     [uploadSkillFiles],
   );
 
-  const onFinished = useCallback(
-    () =>
-      void queryClient.invalidateQueries({
-        queryKey: getSkillsBySpaceKey(spaceId),
-      }),
-    [queryClient, spaceId],
+  const hasImportedRef = useRef(false);
+  const onFinished = useCallback(() => {
+    hasImportedRef.current = true;
+  }, []);
+
+  // The skills list is refreshed when the panel goes away, not when the import
+  // finishes. Invalidating straight away swaps the page's blank state for the
+  // skills table, and the blank state owns the dialog this panel lives in — so
+  // the dialog would unmount at the very moment the results appear, and the user
+  // would never see them. Refreshing on unmount keeps them on screen until the
+  // dialog is closed, which is also when the list behind it becomes visible.
+  const refreshRef = useRef(() => undefined as void);
+  refreshRef.current = () => {
+    void queryClient.invalidateQueries({
+      queryKey: getSkillsBySpaceKey(spaceId),
+    });
+  };
+
+  useEffect(
+    () => () => {
+      if (hasImportedRef.current) refreshRef.current();
+    },
+    [],
   );
 
   const { rows, isImporting, start, reset } = useSequentialSkillImport({
@@ -69,14 +86,18 @@ export const SkillsUploadPanel = () => {
       // actionable of the two, and the conflict may not even be reached.
       reset();
       setDetectedSkills(
-        detected.map((skill) =>
-          skill.validationError || !conflicts.has(skill.name)
-            ? skill
-            : {
-                ...skill,
-                validationError: `A skill named "${skill.name}" already exists in this space`,
-              },
-        ),
+        detected
+          .map((skill) =>
+            skill.validationError || !conflicts.has(skill.name)
+              ? skill
+              : {
+                  ...skill,
+                  validationError: `A skill named "${skill.name}" already exists in this space`,
+                },
+          )
+          // Sorted for the reader: a folder pick arrives in whatever order the
+          // filesystem enumerated it, which is neither alphabetical nor stable.
+          .sort((a, b) => a.name.localeCompare(b.name)),
       );
     },
     [existingSkills, isImporting, reset],

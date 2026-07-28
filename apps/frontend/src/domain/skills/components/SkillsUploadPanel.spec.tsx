@@ -68,6 +68,9 @@ function renderPanel({
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+  const invalidateQueries = jest
+    .spyOn(queryClient, 'invalidateQueries')
+    .mockResolvedValue(undefined);
 
   const rendered = render(
     <QueryClientProvider client={queryClient}>
@@ -77,7 +80,7 @@ function renderPanel({
     </QueryClientProvider>,
   );
 
-  return { ...rendered, uploadSkill };
+  return { ...rendered, uploadSkill, invalidateQueries };
 }
 
 /**
@@ -313,6 +316,69 @@ describe('SkillsUploadPanel', () => {
       expect(
         await screen.findByText('1 imported, 0 failed'),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when refreshing the skills list', () => {
+    /**
+     * Invalidating as soon as the import finishes swaps the page's blank state
+     * for the skills table, and the blank state owns the dialog this panel lives
+     * in — the results would vanish the instant they appeared.
+     */
+    it('leaves the list alone while the results are on screen', async () => {
+      const { container, invalidateQueries } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+
+      expect(invalidateQueries).not.toHaveBeenCalled();
+    });
+
+    it('refreshes it once the panel goes away', async () => {
+      const { container, invalidateQueries, unmount } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+      unmount();
+
+      expect(invalidateQueries).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when no import was run', () => {
+      it('does not refresh it on unmount', async () => {
+        const { container, invalidateQueries, unmount } = renderPanel();
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+        ]);
+        unmount();
+
+        expect(invalidateQueries).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('when a folder is enumerated out of alphabetical order', () => {
+    it('lists the skills sorted by name', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/onboarding/SKILL.md'),
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+
+      expect(
+        screen.getAllByRole('listitem').map((item) => item.textContent),
+      ).toEqual([
+        expect.stringContaining('documentation'),
+        expect.stringContaining('onboarding'),
+      ]);
     });
   });
 

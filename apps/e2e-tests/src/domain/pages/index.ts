@@ -48,6 +48,12 @@ export interface ISkillsPage extends IPackmindAppPage {
   moveToSpaceExpectingError(spaceName: string): Promise<string>;
   hasNoSkills(): Promise<boolean>;
   openSkill(name: string): Promise<ISkillFilePage>;
+  openImportDialog(): Promise<void>;
+  /** One directory only — the picker is a `webkitdirectory` input. */
+  chooseSkillsFolder(directoryPath: string): Promise<void>;
+  listDetectedSkills(): Promise<string[]>;
+  importDetectedSkills(): Promise<string>;
+  closeImportDialog(): Promise<void>;
 }
 
 export interface ISkillFilePage extends IPackmindAppPage {
