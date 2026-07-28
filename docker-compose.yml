@@ -150,7 +150,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
-      - '4200:4200'
+      - '${PACKMIND_WEB_PORT:-4200}:4200'
     entrypoint: >
       sh -lc '
         set -eu
@@ -226,7 +226,7 @@ services:
       CHOKIDAR_INTERVAL: '200'
       WATCHPACK_POLLING: 'true'
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
-      APP_WEB_URL: ${APP_WEB_URL:-http://localhost:4200}
+      APP_WEB_URL: ${APP_WEB_URL:-http://localhost:${PACKMIND_WEB_PORT:-4200}}
 
     volumes:
       - .:/packmind

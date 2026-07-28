@@ -4,10 +4,16 @@
 
 ## Changed
 
+## Fixed
+
+## Removed
+
+# [0.32.0] - 2026-07-27
+
+## Changed
+
 - `install` no longer generates the `.packmind/commands-index.md` file. Any existing `commands-index.md` is now removed on the next `install`.
 - `install` now notifies Packmind of a distribution only when it runs on the tracked repository and branch. On an untracked repository, a non-tracked branch, or outside a git repository, the install completes locally but sends nothing to Packmind and prints a notice explaining why the distribution will not appear.
-
-## Fixed
 
 ## Removed
 
@@ -420,7 +426,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...HEAD
+[0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
 [0.31.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.1...release-cli/0.31.0
 [0.30.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.0...release-cli/0.30.1
 [0.30.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.29.1...release-cli/0.30.0
