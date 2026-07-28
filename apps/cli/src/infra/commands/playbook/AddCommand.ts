@@ -35,7 +35,7 @@ export const addPlaybookCommand = command({
 
     await playbookAddHandler({
       packmindCliHexa,
-      filePath,
+      filePaths: [filePath],
       spaceSlug: space,
       exit: process.exit,
       cwd: process.cwd(),

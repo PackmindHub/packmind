@@ -122,9 +122,6 @@ async function tryStageRemovedFromLockFile(
   logSuccessConsole(
     `Staged "${lockEntry.name}" (${lockEntry.type}, removed) to playbook${spaceInfo}`,
   );
-  logInfoConsole(
-    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
-  );
   return true;
 }
 
@@ -318,10 +315,12 @@ export async function stageSinglePath(
       } else {
         const lenient = parseLenientStandard(localContent);
         if (!lenient) {
+          // The caller prefixes every failure with the path it came from, so
+          // messages here must not restate it.
           return {
             status: 'failed',
             filePath,
-            message: `${filePath} is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
+            message: `Not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
           };
         }
         artifactName = lenient.name;
@@ -614,9 +613,6 @@ export async function stageSinglePath(
   const spaceInfo = spaceName ? ` in space "${spaceName}"` : '';
   logSuccessConsole(
     `Staged "${artifactName}" (${artifactType}, ${changeType}) to playbook${spaceInfo}. ${formatLabel(codingAgent)}`,
-  );
-  logInfoConsole(
-    `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
   );
   return { status: 'staged', filePath, artifactType };
 }

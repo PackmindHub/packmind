@@ -149,12 +149,31 @@ describe('playbookAddHandler', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   * `filePath` is a single-path convenience override: most cases here stage one
+   * path, so they read better without wrapping it in an array. `undefined` maps
+   * to an empty selection. Pass `filePaths` directly for the multi-path cases.
+   */
+  type BuildDepsOverrides = Partial<
+    Omit<PlaybookAddHandlerDependencies, 'filePaths'>
+  > & {
+    filePath?: string | undefined;
+    filePaths?: string[];
+  };
+
   function buildDeps(
-    overrides: Partial<PlaybookAddHandlerDependencies> = {},
+    overrides: BuildDepsOverrides = {},
   ): PlaybookAddHandlerDependencies {
+    const { filePath, filePaths, ...rest } = overrides;
+
+    // `filePath: undefined` is an explicit "no path" case, so it must be told
+    // apart from an absent `filePath` — a destructuring default cannot do that.
+    const singlePath =
+      'filePath' in overrides ? filePath : '.claude/commands/my-command.md';
+
     return {
       packmindCliHexa: mockPackmindCliHexa,
-      filePath: '.claude/commands/my-command.md',
+      filePaths: filePaths ?? (singlePath === undefined ? [] : [singlePath]),
       exit: mockExit,
       cwd: '/project',
       readFile: mockReadFile,
@@ -162,9 +181,155 @@ describe('playbookAddHandler', () => {
       playbookLocalRepository: mockPlaybookLocalRepository,
       lockFileRepository: mockLockFileRepository,
       spaceSlug: undefined,
-      ...overrides,
+      ...rest,
     };
   }
+
+  describe('when multiple paths are provided', () => {
+    const SECOND_SKILL_MD_CONTENT = [
+      '---',
+      'name: Second Skill',
+      'description: Another useful skill',
+      '---',
+      'This is the second prompt body.',
+    ].join('\n');
+
+    beforeEach(() => {
+      mockReadSkillDirectory.mockImplementation((dirPath: string) => {
+        const content = dirPath.endsWith('second')
+          ? SECOND_SKILL_MD_CONTENT
+          : VALID_SKILL_MD_CONTENT;
+
+        return Promise.resolve([
+          {
+            path: `${dirPath}/SKILL.md`,
+            relativePath: 'SKILL.md',
+            content,
+            size: content.length,
+            permissions: 'rw-r--r--',
+            isBase64: false,
+          },
+        ]);
+      });
+    });
+
+    const TWO_VALID_PATHS = [
+      '.claude/skills/first/SKILL.md',
+      '.claude/skills/second/SKILL.md',
+    ];
+
+    describe('when every path is valid', () => {
+      it('stages every path', async () => {
+        await playbookAddHandler(buildDeps({ filePaths: TWO_VALID_PATHS }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledTimes(2);
+      });
+
+      it('exits with 0', async () => {
+        await playbookAddHandler(buildDeps({ filePaths: TWO_VALID_PATHS }));
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      it('summarizes the batch', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookAddHandler(buildDeps({ filePaths: TWO_VALID_PATHS }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('2 staged, 0 failed of 2'),
+        );
+      });
+
+      it('stages the paths in the order they were given', async () => {
+        await playbookAddHandler(
+          buildDeps({
+            filePaths: [
+              '.claude/skills/second/SKILL.md',
+              '.claude/skills/first/SKILL.md',
+            ],
+          }),
+        );
+
+        const stagedNames =
+          mockPlaybookLocalRepository.addChange.mock.calls.map(
+            ([change]) => change.artifactName,
+          );
+        expect(stagedNames).toEqual(['Second Skill', 'My Skill']);
+      });
+    });
+
+    describe('when one of the paths fails', () => {
+      const ONE_BAD_PATH = [
+        'does/not/exist.md',
+        '.claude/skills/second/SKILL.md',
+      ];
+
+      it('stages the valid paths', async () => {
+        await playbookAddHandler(buildDeps({ filePaths: ONE_BAD_PATH }));
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledTimes(1);
+      });
+
+      it('exits with 1', async () => {
+        await playbookAddHandler(buildDeps({ filePaths: ONE_BAD_PATH }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('attributes the failure to the offending path', async () => {
+        const { logErrorConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookAddHandler(buildDeps({ filePaths: ONE_BAD_PATH }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('does/not/exist.md:'),
+        );
+      });
+
+      it('counts the failure in the summary', async () => {
+        const { logInfoConsole } = jest.requireMock(
+          '../../utils/consoleLogger',
+        );
+
+        await playbookAddHandler(buildDeps({ filePaths: ONE_BAD_PATH }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1 staged, 1 failed of 2'),
+        );
+      });
+
+      it('keeps staging the paths that come after it', async () => {
+        await playbookAddHandler(
+          buildDeps({
+            filePaths: [
+              'does/not/exist.md',
+              '.claude/skills/second/SKILL.md',
+              '.claude/skills/first/SKILL.md',
+            ],
+          }),
+        );
+
+        expect(mockPlaybookLocalRepository.addChange).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe('when a single path is provided', () => {
+    it('does not print a batch summary', async () => {
+      const { logInfoConsole } = jest.requireMock('../../utils/consoleLogger');
+
+      await playbookAddHandler(buildDeps());
+
+      expect(logInfoConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('staged, 0 failed of'),
+      );
+    });
+  });
 
   describe('when filePath is missing', () => {
     it('logs error', async () => {
@@ -173,7 +338,7 @@ describe('playbookAddHandler', () => {
       await playbookAddHandler(buildDeps({ filePath: undefined }));
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Missing file path'),
+        expect.stringContaining('No path provided'),
       );
     });
 
@@ -269,7 +434,7 @@ describe('playbookAddHandler', () => {
       );
 
       expect(logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('is not a valid artifact'),
+        expect.stringContaining('Not a valid artifact'),
       );
     });
 
@@ -1754,7 +1919,7 @@ describe('playbookAddHandler', () => {
         );
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          `.packmind/standards/empty.md is not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
+          `.packmind/standards/empty.md: Not a valid artifact. Expected format:\n\n# My standard name\n\nContent goes here...`,
         );
       });
 
