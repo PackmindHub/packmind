@@ -27,6 +27,7 @@ import {
   formatCodeExpiresAt,
   detectUserOs,
 } from '../../accounts/components/LocalEnvironmentSetup/utils';
+import { SkillsUploadPanel } from './SkillsUploadPanel';
 
 interface InstallSectionProps {
   title: string;
@@ -126,6 +127,14 @@ export const SkillsImportContent: React.FC = () => {
         <PMText color="tertiary">
           Import existing skills into your project. You can add skills from your
           own codebase or from external sources.
+        </PMText>
+      </PMBox>
+
+      <SkillsUploadPanel />
+
+      <PMBox>
+        <PMText color="tertiary" variant="small">
+          Prefer the terminal? You can also import skills with the CLI.
         </PMText>
       </PMBox>
 
@@ -329,15 +338,18 @@ export const SkillsImportContent: React.FC = () => {
             <PMVStack align="flex-start" gap={4} width="full">
               <PMBox width="1/2">
                 <CopiableTextField
-                  value="packmind-cli playbook add <skill-directory> && packmind-cli playbook submit"
+                  value="packmind-cli playbook add <skill-directory>... && packmind-cli playbook submit --no-review"
                   readOnly
                   label="Terminal"
                 />
               </PMBox>
 
               <PMText color="secondary">
-                Provide the path to the directory containing the skill you want
-                to import. The directory should contain a SKILL.md file.
+                Provide the path to each directory containing a skill you want
+                to import — every directory should contain a SKILL.md file.
+                Without <PMText as="span">--no-review</PMText>, the skills are
+                submitted as change proposals to review instead of being created
+                directly.
               </PMText>
             </PMVStack>
           </PMAccordion.ItemContent>
