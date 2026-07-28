@@ -6,6 +6,7 @@ export { PMIconButton, type IPMIconButtonProps } from './PMIconButton';
 export { PMInputGroup } from './PMInputGroup';
 export { PMCodeMirror, type IPMCodeMirrorProps } from './PMCodeMirror';
 export { PMEditable } from './PMEditable/PMEditable';
+export { PMFileUpload } from './PMFileUpload/PMFileUpload';
 export * from './PMButton/PMButton';
 export * from './PMCheckbox/PMCheckbox';
 export { PMCombobox } from './PMCombobox/PMCombobox';
