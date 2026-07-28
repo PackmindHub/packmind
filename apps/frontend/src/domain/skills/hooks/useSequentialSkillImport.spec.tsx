@@ -342,6 +342,22 @@ describe('useSequentialSkillImport', () => {
     });
   });
 
+  describe('when the rows are reset', () => {
+    it('drops the results of the previous batch', async () => {
+      const { result } = renderHook(() =>
+        useSequentialSkillImport({
+          uploadSkill: jest.fn().mockResolvedValue(undefined),
+          onFinished: jest.fn(),
+        }),
+      );
+
+      await act(() => result.current.start([first]));
+      act(() => result.current.reset());
+
+      expect(result.current.rows).toEqual([]);
+    });
+  });
+
   describe('when the batch is empty', () => {
     it('calls onFinished without uploading anything', async () => {
       const uploadSkill = jest.fn();

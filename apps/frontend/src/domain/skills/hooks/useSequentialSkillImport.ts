@@ -88,5 +88,9 @@ export function useSequentialSkillImport({
     [uploadSkill, onFinished, updateRow],
   );
 
-  return { rows, isImporting, start };
+  // Callers must drop the previous batch's rows when the selection changes, or
+  // the results of the last import would be shown against the new selection.
+  const reset = useCallback(() => setRows([]), []);
+
+  return { rows, isImporting, start, reset };
 }
