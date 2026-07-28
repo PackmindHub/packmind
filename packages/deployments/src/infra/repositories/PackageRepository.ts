@@ -3,22 +3,14 @@ import {
   Package,
   PackageArtifactCounts,
   PackageId,
-  PackageWithArtefacts,
-  Command,
   CommandId,
   SpaceId,
-  Standard,
   StandardId,
-  Skill,
   SkillId,
   OrganizationId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { CommandSchema } from '@packmind/commands';
-import { StandardSchema } from '@packmind/standards';
-import { SkillSchema } from '@packmind/skills';
-import { SpaceSchema } from '@packmind/spaces';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { PackageSchema } from '../schemas/PackageSchema';
 import {
@@ -301,35 +293,22 @@ export class PackageRepository
     }
   }
 
-  async findBySlugsWithArtefacts(
+  async findBySlugsAndSpaceIds(
     slugs: string[],
-    organizationId: OrganizationId,
-  ): Promise<PackageWithArtefacts[]> {
-    if (slugs.length === 0) {
-      this.logger.info('No slugs provided to findBySlugsWithArtefacts');
+    spaceIds: SpaceId[],
+  ): Promise<Package[]> {
+    if (slugs.length === 0 || spaceIds.length === 0) {
+      this.logger.info('No slugs or spaces provided to findBySlugsAndSpaceIds');
       return [];
     }
 
-    this.logger.info('Finding packages by slugs with artefacts', {
+    this.logger.info('Finding packages by slugs and space ids', {
       slugs,
       count: slugs.length,
-      organizationId,
+      spaceCount: spaceIds.length,
     });
 
     try {
-      const spaces = await this.repository.manager
-        .getRepository(SpaceSchema)
-        .find({
-          where: { organizationId },
-          select: ['id'],
-        });
-
-      const spaceIds = spaces.map((s) => s.id);
-
-      if (spaceIds.length === 0) {
-        return [];
-      }
-
       const packages = await this.repository.find({
         where: {
           slug: In(slugs),
@@ -337,16 +316,16 @@ export class PackageRepository
         },
       });
 
-      const result = await this.enrichPackagesWithArtefacts(packages);
+      const result = await this.attachArtefactIds(packages);
 
-      this.logger.info('Packages found by slugs successfully', {
+      this.logger.info('Packages found by slugs and space ids successfully', {
         requestedCount: slugs.length,
         foundCount: result.length,
       });
 
       return result;
     } catch (error) {
-      this.logger.error('Failed to find packages by slugs', {
+      this.logger.error('Failed to find packages by slugs and space ids', {
         slugs,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -354,49 +333,13 @@ export class PackageRepository
     }
   }
 
-  async findBySlugsAndSpaceWithArtefacts(
-    slugs: string[],
-    spaceId: SpaceId,
-  ): Promise<PackageWithArtefacts[]> {
-    if (slugs.length === 0) {
-      this.logger.info('No slugs provided to findBySlugsAndSpaceWithArtefacts');
-      return [];
-    }
-
-    this.logger.info('Finding packages by slugs and space with artefacts', {
-      slugs,
-      spaceId,
-    });
-
-    try {
-      const packages = await this.repository.find({
-        where: {
-          slug: In(slugs),
-          spaceId,
-        },
-      });
-
-      const result = await this.enrichPackagesWithArtefacts(packages);
-
-      this.logger.info('Packages found by slugs and space successfully', {
-        requestedCount: slugs.length,
-        foundCount: result.length,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to find packages by slugs and space', {
-        slugs,
-        spaceId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  private async enrichPackagesWithArtefacts(
-    packages: Package[],
-  ): Promise<PackageWithArtefacts[]> {
+  /**
+   * Attach command/standard/skill artefact IDs to each package by reading the
+   * junction tables owned by this domain. Full artefact hydration is the
+   * application layer's responsibility (via ports), keeping this repository free
+   * of cross-domain reads.
+   */
+  private async attachArtefactIds(packages: Package[]): Promise<Package[]> {
     if (packages.length === 0) {
       return [];
     }
@@ -416,77 +359,38 @@ export class PackageRepository
           .find({ where: { package_id: In(packageIds) } }),
       ]);
 
-    const uniqueCommandIds = [
-      ...new Set(commandRelations.map((r) => r.recipe_id)),
-    ];
-    const uniqueStandardIds = [
-      ...new Set(standardRelations.map((s) => s.standard_id)),
-    ];
-    const uniqueSkillIds = [...new Set(skillRelations.map((s) => s.skill_id))];
-
-    const [recipes, standardsEntities, skills] = await Promise.all([
-      uniqueCommandIds.length > 0
-        ? this.repository.manager
-            .getRepository<Command>(CommandSchema)
-            .find({ where: { id: In(uniqueCommandIds) } })
-        : Promise.resolve<Command[]>([]),
-      uniqueStandardIds.length > 0
-        ? this.repository.manager
-            .getRepository<Standard>(StandardSchema)
-            .find({ where: { id: In(uniqueStandardIds) } })
-        : Promise.resolve<Standard[]>([]),
-      uniqueSkillIds.length > 0
-        ? this.repository.manager
-            .getRepository<Skill>(SkillSchema)
-            .find({ where: { id: In(uniqueSkillIds) } })
-        : Promise.resolve<Skill[]>([]),
-    ]);
-
-    const standards: Standard[] = standardsEntities.map((standard) => ({
-      ...standard,
-    }));
-
-    const commandsMap = new Map<string, Command>(recipes.map((r) => [r.id, r]));
-    const standardsMap = new Map<string, Standard>(
-      standards.map((s) => [s.id, s]),
-    );
-    const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
-
     const commandsByPackage = commandRelations.reduce(
       (acc, rel) => {
         if (!acc[rel.package_id]) acc[rel.package_id] = [];
-        const recipe = commandsMap.get(rel.recipe_id);
-        if (recipe) acc[rel.package_id].push(recipe);
+        acc[rel.package_id].push(rel.recipe_id);
         return acc;
       },
-      {} as Record<string, Command[]>,
+      {} as Record<string, string[]>,
     );
 
     const standardsByPackage = standardRelations.reduce(
       (acc, rel) => {
         if (!acc[rel.package_id]) acc[rel.package_id] = [];
-        const standard = standardsMap.get(rel.standard_id);
-        if (standard) acc[rel.package_id].push(standard);
+        acc[rel.package_id].push(rel.standard_id);
         return acc;
       },
-      {} as Record<string, Standard[]>,
+      {} as Record<string, string[]>,
     );
 
     const skillsByPackage = skillRelations.reduce(
       (acc, rel) => {
         if (!acc[rel.package_id]) acc[rel.package_id] = [];
-        const skill = skillsMap.get(rel.skill_id);
-        if (skill) acc[rel.package_id].push(skill);
+        acc[rel.package_id].push(rel.skill_id);
         return acc;
       },
-      {} as Record<string, Skill[]>,
+      {} as Record<string, string[]>,
     );
 
     return packages.map((pkg) => ({
       ...pkg,
-      recipes: commandsByPackage[pkg.id] || [],
-      standards: standardsByPackage[pkg.id] || [],
-      skills: skillsByPackage[pkg.id] || [],
+      recipes: (commandsByPackage[pkg.id] || []) as CommandId[],
+      standards: (standardsByPackage[pkg.id] || []) as StandardId[],
+      skills: (skillsByPackage[pkg.id] || []) as SkillId[],
     }));
   }
 

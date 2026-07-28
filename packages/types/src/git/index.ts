@@ -1,5 +1,6 @@
 export * from './GitRepoId';
 export * from './GitCommit';
+export * from './GithubAppMode';
 export * from './GitProvider';
 export * from './GitRepo';
 export * from './OrganizationGitHubApp';

@@ -33,7 +33,7 @@ import {
   UpdateCommandFromUIResponse,
   UserId,
 } from '@packmind/types';
-import { ICommandsDelayedJobs } from '../../domain/jobs/ICommandsDelayedJobs';
+import { ICommandsDelayedJobs } from '../jobs/ICommandsDelayedJobs';
 import { DeployCommandsJobFactory } from '../../infra/jobs/DeployCommandsJobFactory';
 import { CommandsServices } from '../services/CommandsServices';
 import { CaptureCommandUseCase } from '../useCases/captureCommand/CaptureCommandUseCase';
@@ -275,6 +275,14 @@ export class CommandsAdapter
    */
   public getCommandByIdInternal(id: CommandId) {
     return this._getCommandById.getCommandById(id);
+  }
+
+  /**
+   * Get commands by IDs without access control (internal use only).
+   * Batch sibling of getCommandByIdInternal for cross-domain hydration.
+   */
+  public getCommandsByIdsInternal(ids: CommandId[]): Promise<Command[]> {
+    return this._getCommandById.getCommandsByIds(ids);
   }
 
   public findCommandBySlug(

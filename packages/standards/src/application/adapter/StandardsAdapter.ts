@@ -341,6 +341,14 @@ export class StandardsAdapter
     return this.services.getStandardService().getStandardById(id);
   }
 
+  /**
+   * Batch read of standards by IDs (mirrors getStandard for a set of IDs) so
+   * cross-domain package hydration avoids per-id fan-out.
+   */
+  async getStandardsByIds(ids: StandardId[]): Promise<Standard[]> {
+    return this.services.getStandardService().getStandardsByIds(ids);
+  }
+
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null> {
     return this.services.getStandardVersionService().getStandardVersionById(id);
   }

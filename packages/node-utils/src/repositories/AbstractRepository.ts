@@ -9,6 +9,7 @@ import {
 import {
   EntitySchema,
   FindOptionsWhere,
+  In,
   Repository,
   UpdateResult,
 } from 'typeorm';
@@ -103,6 +104,36 @@ export abstract class AbstractRepository<
     } catch (error) {
       this.logger.error(`Failed to find ${this.entityName} by ID`, {
         id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByIds(ids: Entity['id'][], opts?: QueryOption): Promise<Entity[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    this.logger.info(`Finding ${this.entityName}(s) by IDs`, {
+      count: ids.length,
+    });
+
+    try {
+      const where = { id: In(ids) } as FindOptionsWhere<Entity>;
+      const entities = await this.repository.find({
+        where,
+        withDeleted: opts?.includeDeleted ?? false,
+      });
+
+      this.logger.info(`Found ${this.entityName}(s) by IDs`, {
+        requested: ids.length,
+        found: entities.length,
+      });
+      return entities;
+    } catch (error) {
+      this.logger.error(`Failed to find ${this.entityName}(s) by IDs`, {
+        count: ids.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

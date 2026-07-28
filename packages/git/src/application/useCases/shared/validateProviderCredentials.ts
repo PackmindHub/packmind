@@ -1,5 +1,5 @@
 import { InvalidGitProviderCredentialsError } from '@packmind/types';
-import { GithubAppMode } from '../../../infra/repositories/github/auth/GithubTokenResolverFactory';
+import { GithubAppMode } from '@packmind/types';
 
 export type CredentialView = {
   authMethod: 'token' | 'app';

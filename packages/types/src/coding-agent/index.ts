@@ -1,4 +1,5 @@
 export * from './contracts';
+export * from './ICodingAgentDeployer';
 export * from './ICodingAgentDeployerRegistry';
 export * from './ports';
 export * from './validation';

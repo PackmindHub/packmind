@@ -20,6 +20,10 @@ export const ISkillsPortName = 'ISkillsPort' as const;
 
 export interface ISkillsPort {
   getSkill(id: SkillId): Promise<Skill | null>;
+  /**
+   * Batch read of skills by IDs (mirrors getSkill for a set of IDs).
+   */
+  getSkillsByIds(ids: SkillId[]): Promise<Skill[]>;
   getSkillVersion(id: SkillVersionId): Promise<SkillVersion | null>;
   getLatestSkillVersion(skillId: SkillId): Promise<SkillVersion | null>;
   getSkillVersionByNumber(

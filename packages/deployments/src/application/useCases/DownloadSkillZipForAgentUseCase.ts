@@ -1,12 +1,12 @@
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import {
   CodingAgent,
   DownloadSkillZipForAgentCommand,
   DownloadSkillZipForAgentResponse,
   FileModification,
+  ICodingAgentDeployer,
   ICodingAgentPort,
   IDownloadSkillZipForAgentUseCase,
   ISkillsPort,

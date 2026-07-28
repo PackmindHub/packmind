@@ -22,10 +22,8 @@ import { FetchFileContentCallback } from './application/jobs/FetchFileContentDel
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
-import {
-  GithubAppMode,
-  GithubTokenResolverFactory,
-} from './infra/repositories/github/auth/GithubTokenResolverFactory';
+import { GithubAppMode } from '@packmind/types';
+import { GithubTokenResolverFactory } from './infra/repositories/github/auth/GithubTokenResolverFactory';
 
 const origin = 'GitHexa';
 

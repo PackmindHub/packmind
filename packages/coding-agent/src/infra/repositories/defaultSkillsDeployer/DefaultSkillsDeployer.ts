@@ -1,35 +1,11 @@
-import { FileUpdates } from '@packmind/types';
+import {
+  DefaultSkillMetadata,
+  DefaultSkillsDeployResult,
+  DeployDefaultSkillsOptions,
+} from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 import { UpdatePlaybookDeployer } from './UpdatePlaybookDeployer';
-import { DeployDefaultSkillsOptions } from '../../../domain/repository/ICodingAgentDeployer';
-
-/**
- * Per-skill metadata emitted by `DefaultSkillsDeployer.deployDefaultSkills`
- * for each concrete deployer that actually ran.
- *
- * Consumed by `DefaultSkillsMetadataEnricher` to stamp artifact metadata
- * onto the deployer's `FileModification[]` so downstream lockfile entries
- * carry `artifactType`, `artifactSlug`, `artifactName`, `artifactVersion`
- * and `source: 'default'` markers.
- */
-export type DefaultSkillMetadata = {
-  slug: string;
-  name: string;
-  version: number;
-};
-
-export type DefaultSkillsDeployResult = {
-  fileUpdates: FileUpdates;
-  skippedSkillsCount: number;
-  /**
-   * Metadata for the default skills that were actually deployed in this run.
-   * Filtered by the same `filterDeployers` pass used to compute `fileUpdates`,
-   * so the deployed slugs here are 1:1 with the files emitted in
-   * `fileUpdates.createOrUpdate`.
-   */
-  deployedSkills: DefaultSkillMetadata[];
-};
 
 export class DefaultSkillsDeployer {
   private readonly skillDeployers: ISkillDeployer[] = [

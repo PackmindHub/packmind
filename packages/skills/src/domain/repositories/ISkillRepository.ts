@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 
 export interface ISkillRepository extends IRepository<Skill> {
+  findByIds(ids: SkillId[], opts?: QueryOption): Promise<Skill[]>;
   findBySlug(
     slug: string,
     organizationId: OrganizationId,

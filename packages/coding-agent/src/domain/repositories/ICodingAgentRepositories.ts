@@ -1,3 +1,7 @@
+import {
+  RenderPackageAsClaudePluginCommand,
+  RenderPackageAsClaudePluginResponse,
+} from '@packmind/types';
 import { ICodingAgentDeployerRegistry } from '../repository/ICodingAgentDeployerRegistry';
 
 /**
@@ -12,4 +16,13 @@ export interface ICodingAgentRepositories {
    * Get the coding agent deployer registry instance
    */
   getDeployerRegistry(): ICodingAgentDeployerRegistry;
+
+  /**
+   * Render a single Packmind package as a Claude plugin. Encapsulates the
+   * `ClaudePluginDeployer` (an infra concern) so the application layer and other
+   * domains reach it only through this port.
+   */
+  renderPackageAsClaudePlugin(
+    command: RenderPackageAsClaudePluginCommand,
+  ): Promise<RenderPackageAsClaudePluginResponse>;
 }

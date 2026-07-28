@@ -21,6 +21,8 @@ import {
   PreviewArtifactRenderingResponse,
   RenderArtifactsCommand,
   RenderArtifactsResponse,
+  RenderPackageAsClaudePluginCommand,
+  RenderPackageAsClaudePluginResponse,
 } from '@packmind/types';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
@@ -184,6 +186,12 @@ export class CodingAgentAdapter
     command: PreviewArtifactRenderingCommand,
   ): Promise<PreviewArtifactRenderingResponse> {
     return this._previewArtifactRenderingUseCase.execute(command);
+  }
+
+  async renderPackageAsClaudePlugin(
+    command: RenderPackageAsClaudePluginCommand,
+  ): Promise<RenderPackageAsClaudePluginResponse> {
+    return this.codingAgentRepositories.renderPackageAsClaudePlugin(command);
   }
 
   getSkillsFolderPathForAgents(

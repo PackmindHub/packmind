@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 
 export interface ICommandRepository extends IRepository<Command> {
+  findByIds(ids: CommandId[], opts?: QueryOption): Promise<Command[]>;
   findBySlug(
     slug: string,
     organizationId: OrganizationId,

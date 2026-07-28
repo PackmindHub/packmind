@@ -1,4 +1,4 @@
-import { DeployCommandsDelayedJob } from '../../application/jobs/DeployCommandsDelayedJob';
+import { DeployCommandsDelayedJob } from './DeployCommandsDelayedJob';
 
 export interface ICommandsDelayedJobs {
   deployRecipesDelayedJob: DeployCommandsDelayedJob;

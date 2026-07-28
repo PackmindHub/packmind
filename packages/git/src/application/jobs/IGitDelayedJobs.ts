@@ -1,4 +1,4 @@
-import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
+import { FetchFileContentDelayedJob } from './FetchFileContentDelayedJob';
 
 export interface IGitDelayedJobs {
   fetchFileContentDelayedJob: FetchFileContentDelayedJob;
