@@ -13,7 +13,10 @@ import {
   TargetId,
 } from '@packmind/types';
 
-import { checkForDuplicateNames } from './submit/duplicateNameChecker';
+import {
+  checkForDuplicateNames,
+  duplicateNameKey,
+} from './submit/duplicateNameChecker';
 import { createTargetContextResolver } from './submit/targetContextResolver';
 import { buildProposals, ProposalItem } from './submit/proposalBuilder';
 import { validateProposalSkillDescriptions } from './submit/skillDescriptionValidator';
@@ -95,14 +98,65 @@ export async function playbookSubmitHandler(
     return;
   }
 
-  // Resolve message
+  // Pre-flight: drop entries whose artifact name collides, keeping the rest.
+  // Matching is by (space, type, slugged name) — the same identity the checker
+  // compares — so a conflicting standard never drops a same-named command, and
+  // a conflict in one space never drops an artifact in another.
+  const createdEntries = changes.filter((c) => c.changeType === 'created');
+  const conflictingKeys = new Set<string>();
+
+  if (createdEntries.length > 0) {
+    const duplicateErrors = await checkForDuplicateNames(
+      createdEntries,
+      packmindCliHexa.getPackmindGateway(),
+    );
+    for (const error of duplicateErrors) {
+      logErrorConsole(error.message);
+      conflictingKeys.add(duplicateNameKey(error));
+    }
+  }
+
+  // Only 'created' entries are ever checked, and only they can be held back. An
+  // 'updated' or 'removed' entry shares its key with a conflicting created twin
+  // by construction — the twin conflicts precisely because the artifact it
+  // references already exists — so without this guard a name collision would
+  // also discard the legitimate edit or deletion of that same artifact.
+  const submittableChanges = changes.filter(
+    (c) =>
+      !(c.changeType === 'created' && conflictingKeys.has(duplicateNameKey(c))),
+  );
+  const conflictCount = changes.length - submittableChanges.length;
+
+  // Conflicting entries stay staged so they can be renamed and retried, which
+  // is also why every use of the staged list below must be the filtered one:
+  // unstaging or deleting the file of a change that was never submitted would
+  // lose the user's work.
+  const reportSkippedConflicts = () => {
+    if (conflictCount === 0) return;
+    logInfoConsole(
+      `${conflictCount} change${conflictCount !== 1 ? 's were' : ' was'} skipped and remain${conflictCount !== 1 ? '' : 's'} staged. ` +
+        'Rename them and run `packmind playbook submit` again.',
+    );
+  };
+
+  if (submittableChanges.length === 0) {
+    logErrorConsole(
+      'Nothing to submit: every staged change has a name conflict.',
+    );
+    exit(1);
+    return;
+  }
+
+  // Resolve message. This runs after the conflict filter so the editor prefill,
+  // headed "Changes to be submitted", lists only what will actually be sent —
+  // and so an all-conflicting batch never asks for a message it cannot use.
   let resolvedMessage: string;
   if (message) {
     resolvedMessage = message;
   } else if (noReview) {
     resolvedMessage = '';
   } else {
-    const prefill = buildEditorPrefill(changes);
+    const prefill = buildEditorPrefill(submittableChanges);
     const editorResult = openEditor(prefill);
     if (!editorResult) {
       logErrorConsole('Aborting: empty message.');
@@ -118,22 +172,6 @@ export async function playbookSubmitHandler(
     resolvedMessage = stripped;
   }
 
-  // Pre-flight: check for duplicate artifact names
-  const createdEntries = changes.filter((c) => c.changeType === 'created');
-  if (createdEntries.length > 0) {
-    const duplicateErrors = await checkForDuplicateNames(
-      createdEntries,
-      packmindCliHexa.getPackmindGateway(),
-    );
-    if (duplicateErrors.length > 0) {
-      for (const error of duplicateErrors) {
-        logErrorConsole(error);
-      }
-      exit(1);
-      return;
-    }
-  }
-
   // Per-target lock file resolution cache
   const resolver = await createTargetContextResolver({
     lockFileRepository,
@@ -146,7 +184,7 @@ export async function playbookSubmitHandler(
     proposals: allProposals,
     conflicts,
     skipped,
-  } = await buildProposals(changes, resolver.getTargetContext);
+  } = await buildProposals(submittableChanges, resolver.getTargetContext);
 
   // Pre-flight: reject skill proposals whose description exceeds the limit.
   // The backend enforces the same cap; failing fast here keeps the error tied
@@ -207,10 +245,11 @@ export async function playbookSubmitHandler(
     logConsole(
       'Nothing to submit — no changes detected compared to deployed versions.',
     );
-    for (const entry of changes) {
+    for (const entry of submittableChanges) {
       playbookLocalRepository.removeChange(entry.filePath, entry.spaceId);
     }
-    exit(0);
+    reportSkippedConflicts();
+    exit(conflictCount > 0 ? 1 : 0);
     return;
   }
 
@@ -231,7 +270,7 @@ export async function playbookSubmitHandler(
 
   // Group file paths by spaceId (for incremental clearing)
   const filePathsBySpaceId = new Map<string, Set<string>>();
-  for (const entry of changes) {
+  for (const entry of submittableChanges) {
     const existing = filePathsBySpaceId.get(entry.spaceId) ?? new Set();
     existing.add(entry.filePath);
     filePathsBySpaceId.set(entry.spaceId, existing);
@@ -261,7 +300,8 @@ export async function playbookSubmitHandler(
 
     if (applyProposals.length === 0) {
       logConsole('Nothing to apply directly.');
-      exit(0);
+      reportSkippedConflicts();
+      exit(conflictCount > 0 ? 1 : 0);
       return;
     }
 
@@ -338,12 +378,13 @@ export async function playbookSubmitHandler(
     );
     logPackageAddGuidance(response.created, packageSlugs);
 
-    exit(0);
+    reportSkippedConflicts();
+    exit(conflictCount > 0 ? 1 : 0);
     return;
   }
 
   const spaceNameById = new Map<string, string>();
-  for (const change of changes) {
+  for (const change of submittableChanges) {
     if (change.spaceName && !spaceNameById.has(change.spaceId)) {
       spaceNameById.set(change.spaceId, change.spaceName);
     }
@@ -389,7 +430,9 @@ export async function playbookSubmitHandler(
 
     if (response.errors.length > 0) {
       const filePaths = filePathsBySpaceId.get(spaceId) ?? new Set();
-      const spaceChanges = changes.filter((c) => filePaths.has(c.filePath));
+      const spaceChanges = submittableChanges.filter((c) =>
+        filePaths.has(c.filePath),
+      );
       const allRemovals =
         spaceChanges.length > 0 &&
         spaceChanges.every((c) => c.changeType === 'removed');
@@ -435,7 +478,7 @@ export async function playbookSubmitHandler(
       }
 
       // Delete local files for removed entries
-      const removedEntries = changes.filter(
+      const removedEntries = submittableChanges.filter(
         (c) => c.changeType === 'removed' && filePaths.has(c.filePath),
       );
       for (const entry of removedEntries) {
@@ -497,5 +540,6 @@ export async function playbookSubmitHandler(
     await logReviewUrls(packmindCliHexa, succeededSpaces);
   }
 
-  exit(0);
+  reportSkippedConflicts();
+  exit(conflictCount > 0 ? 1 : 0);
 }

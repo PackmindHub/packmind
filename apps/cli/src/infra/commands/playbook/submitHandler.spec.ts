@@ -2937,6 +2937,464 @@ describe('playbookSubmitHandler', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
+
+    describe('when only some entries have a duplicate name', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'Taken Standard',
+            filePath: '.packmind/standards/taken-standard.md',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'Free Standard',
+            filePath: '.packmind/standards/free-standard.md',
+          }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'taken-standard',
+              name: 'Taken Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('submits only the non-conflicting entry', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        const { proposals } =
+          mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+        expect(proposals).toHaveLength(1);
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+
+      it('unstages the submitted entry', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          '.packmind/standards/free-standard.md',
+          'space-123',
+        );
+      });
+
+      it('leaves the conflicting entry staged so it can be renamed and retried', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(
+          mockPlaybookLocalRepository.removeChange,
+        ).not.toHaveBeenCalledWith(
+          '.packmind/standards/taken-standard.md',
+          'space-123',
+        );
+      });
+
+      it('reports how many changes remain staged', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1 change was skipped'),
+        );
+      });
+
+      it('keeps the conflicting entry out of the editor prefill', async () => {
+        await playbookSubmitHandler(buildDeps());
+
+        expect(mockOpenEditor).toHaveBeenCalledWith(
+          expect.not.stringContaining('Taken Standard'),
+        );
+      });
+
+      it('still lists the submittable entry in the editor prefill', async () => {
+        await playbookSubmitHandler(buildDeps());
+
+        expect(mockOpenEditor).toHaveBeenCalledWith(
+          expect.stringContaining('Free Standard'),
+        );
+      });
+    });
+
+    describe('when every entry conflicts and no message was given', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'My Standard' }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('does not ask for a commit message it cannot use', async () => {
+        await playbookSubmitHandler(buildDeps());
+
+        expect(mockOpenEditor).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a created conflict shares its name with an updated entry', () => {
+      beforeEach(() => {
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'my-standard': {
+              name: 'My Standard',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+
+        mockGateway.deployment.getContentByVersions.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/standards/my-standard.md',
+                content: STANDARD_CONTENT,
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+          targetId: 'target-456',
+          resolvedAgents: [],
+        });
+
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'updated',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+            content: `${STANDARD_CONTENT}\n* Prefer readonly`,
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'My Standard',
+            filePath: '.cursor/rules/my-standard.mdc',
+            codingAgent: 'cursor',
+          }),
+        ]);
+
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('still submits the update', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalled();
+      });
+
+      it('leaves the conflicting creation staged', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(
+          mockPlaybookLocalRepository.removeChange,
+        ).not.toHaveBeenCalledWith(
+          '.cursor/rules/my-standard.mdc',
+          'space-123',
+        );
+      });
+    });
+
+    describe('when a created conflict shares its name with a removed entry', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'removed',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'My Standard',
+            filePath: '.cursor/rules/my-standard.mdc',
+            codingAgent: 'cursor',
+          }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+        mockLockFileRepository.read.mockResolvedValue({
+          lockfileVersion: 1,
+          packageSlugs: ['my-package'],
+          agents: ['packmind'],
+          cliVersion: '1.0.0',
+          targetId: 'target-456',
+          artifacts: {
+            'standards/my-standard': {
+              name: 'My Standard',
+              type: 'standard',
+              id: 'std-1',
+              version: 1,
+              spaceId: 'space-123',
+              packageIds: ['pkg-1'],
+              files: [
+                {
+                  path: '.packmind/standards/my-standard.md',
+                  agent: 'packmind',
+                },
+              ],
+            },
+          },
+        });
+      });
+
+      it('does not report the batch as entirely conflicting', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('Nothing to submit'),
+        );
+      });
+
+      it('still submits the removal', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockGateway.changeProposals.batchCreate).toHaveBeenCalled();
+      });
+    });
+
+    describe('when a conflicting name is shared by another artifact type', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'standard',
+            artifactName: 'Shared Name',
+            filePath: '.packmind/standards/shared-name.md',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'command',
+            artifactName: 'Shared Name',
+            filePath: '.packmind/commands/shared-name.md',
+            content: COMMAND_CONTENT,
+          }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'shared-name',
+              name: 'Shared Name',
+              description: '',
+            },
+          ],
+        });
+        mockGateway.commands.list.mockResolvedValue({ recipes: [] });
+      });
+
+      it('keeps the same-named artifact of the other type submittable', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        const { proposals } =
+          mockGateway.changeProposals.batchCreate.mock.calls[0][0];
+        expect(proposals).toHaveLength(1);
+      });
+
+      it('unstages the command that never conflicted', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          '.packmind/commands/shared-name.md',
+          'space-123',
+        );
+      });
+    });
+
+    describe('when a conflicting name is shared by an artifact in another space', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'Shared Name',
+            filePath: '.packmind/standards/shared-name.md',
+            spaceId: 'space-123',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactName: 'Shared Name',
+            filePath: 'other/.packmind/standards/shared-name.md',
+            spaceId: 'space-999',
+          }),
+        ]);
+        mockGateway.standards.list.mockImplementation(
+          ({ spaceId }: { spaceId: string }) =>
+            Promise.resolve({
+              standards:
+                spaceId === 'space-123'
+                  ? [
+                      {
+                        id: 'std-1',
+                        slug: 'shared-name',
+                        name: 'Shared Name',
+                        description: '',
+                      },
+                    ]
+                  : [],
+            }),
+        );
+      });
+
+      it('keeps the same-named artifact in the other space submittable', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).toHaveBeenCalledWith(
+          'other/.packmind/standards/shared-name.md',
+          'space-999',
+        );
+      });
+
+      it('leaves the conflicting space entry staged', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(
+          mockPlaybookLocalRepository.removeChange,
+        ).not.toHaveBeenCalledWith(
+          '.packmind/standards/shared-name.md',
+          'space-123',
+        );
+      });
+    });
+
+    describe('when a mixed skill, standard and command batch has one conflict', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'skill',
+            artifactName: 'My Skill',
+            filePath: '.packmind/skills/my-skill',
+            content:
+              'name: My Skill\ndescription: A skill\nprompt: Do something',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'standard',
+            artifactName: 'My Standard',
+            filePath: '.packmind/standards/my-standard.md',
+          }),
+          makeEntry({
+            changeType: 'created',
+            artifactType: 'command',
+            artifactName: 'My Command',
+            filePath: '.packmind/commands/my-command.md',
+            content: COMMAND_CONTENT,
+          }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+        mockGateway.commands.list.mockResolvedValue({ recipes: [] });
+        mockGateway.skills.list.mockResolvedValue([]);
+        mockGateway.changeProposals.batchApply.mockResolvedValue({
+          success: true,
+          created: { standards: [], commands: [], skills: [] },
+          updated: { standards: [], commands: [], skills: [] },
+        });
+      });
+
+      it('skips only the conflicting artifact', async () => {
+        await playbookSubmitHandler(
+          buildDeps({ message: 'test', noReview: true }),
+        );
+
+        const { proposals } =
+          mockGateway.changeProposals.batchApply.mock.calls[0][0];
+        expect(proposals).toHaveLength(2);
+      });
+
+      it('exits with code 1', async () => {
+        await playbookSubmitHandler(
+          buildDeps({ message: 'test', noReview: true }),
+        );
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when every entry has a duplicate name', () => {
+      beforeEach(() => {
+        mockPlaybookLocalRepository.getChanges.mockReturnValue([
+          makeEntry({ changeType: 'created', artifactName: 'My Standard' }),
+        ]);
+        mockGateway.standards.list.mockResolvedValue({
+          standards: [
+            {
+              id: 'std-1',
+              slug: 'my-standard',
+              name: 'My Standard',
+              description: '',
+            },
+          ],
+        });
+      });
+
+      it('reports that there is nothing left to submit', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('Nothing to submit'),
+        );
+      });
+
+      it('leaves the entry staged', async () => {
+        await playbookSubmitHandler(buildDeps({ message: 'test' }));
+
+        expect(mockPlaybookLocalRepository.removeChange).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('when --no-review flag is set', () => {

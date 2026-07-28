@@ -1,6 +1,9 @@
 import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 import { createMockPackmindGateway } from '../../../../mocks/createMockGateways';
-import { checkForDuplicateNames } from './duplicateNameChecker';
+import {
+  checkForDuplicateNames,
+  duplicateNameKey,
+} from './duplicateNameChecker';
 
 function makeEntry(
   overrides: Partial<PlaybookChangeEntry> = {},
@@ -52,7 +55,7 @@ describe('checkForDuplicateNames', () => {
 
       const errors = await checkForDuplicateNames(entries, mockGateway);
 
-      expect(errors[0]).toContain('staged multiple times');
+      expect(errors[0].message).toContain('staged multiple times');
     });
   });
 
@@ -91,7 +94,7 @@ describe('checkForDuplicateNames', () => {
 
       const errors = await checkForDuplicateNames(entries, mockGateway);
 
-      expect(errors[0]).toContain('already exists');
+      expect(errors[0].message).toContain('already exists');
     });
   });
 
@@ -125,7 +128,7 @@ describe('checkForDuplicateNames', () => {
 
       const errors = await checkForDuplicateNames(entries, mockGateway);
 
-      expect(errors[0]).toContain('already exists');
+      expect(errors[0].message).toContain('already exists');
     });
   });
 
@@ -159,7 +162,7 @@ describe('checkForDuplicateNames', () => {
 
       const errors = await checkForDuplicateNames(entries, mockGateway);
 
-      expect(errors[0]).toContain('already exists');
+      expect(errors[0].message).toContain('already exists');
     });
   });
 
@@ -208,5 +211,94 @@ describe('checkForDuplicateNames', () => {
 
       expect(errors).toHaveLength(0);
     });
+  });
+
+  describe('when a collision is reported', () => {
+    it('identifies the space it belongs to', async () => {
+      mockGateway.standards.list.mockResolvedValue({
+        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        total: 1,
+      });
+      const entries = [makeEntry({ spaceId: 'space-abc' })];
+
+      const errors = await checkForDuplicateNames(entries, mockGateway);
+
+      expect(errors[0].spaceId).toBe('space-abc');
+    });
+
+    it('identifies the artifact type it belongs to', async () => {
+      mockGateway.skills.list.mockResolvedValue([
+        { name: 'My Skill', id: 'skill-1' },
+      ]);
+      const entries = [
+        makeEntry({ artifactType: 'skill', artifactName: 'My Skill' }),
+      ];
+
+      const errors = await checkForDuplicateNames(entries, mockGateway);
+
+      expect(errors[0].artifactType).toBe('skill');
+    });
+
+    it('identifies the artifact name', async () => {
+      mockGateway.standards.list.mockResolvedValue({
+        standards: [{ name: 'My Standard', id: 'std-1', slug: 'my-standard' }],
+        total: 1,
+      });
+      const entries = [makeEntry({ artifactName: 'my standard' })];
+
+      const errors = await checkForDuplicateNames(entries, mockGateway);
+
+      expect(errors[0].artifactName).toBe('my standard');
+    });
+  });
+});
+
+describe('duplicateNameKey', () => {
+  it('separates the same name in different spaces', () => {
+    expect(
+      duplicateNameKey({
+        spaceId: 'space-1',
+        artifactType: 'standard',
+        artifactName: 'Shared',
+      }),
+    ).not.toBe(
+      duplicateNameKey({
+        spaceId: 'space-2',
+        artifactType: 'standard',
+        artifactName: 'Shared',
+      }),
+    );
+  });
+
+  it('separates the same name across artifact types', () => {
+    expect(
+      duplicateNameKey({
+        spaceId: 'space-1',
+        artifactType: 'standard',
+        artifactName: 'Shared',
+      }),
+    ).not.toBe(
+      duplicateNameKey({
+        spaceId: 'space-1',
+        artifactType: 'command',
+        artifactName: 'Shared',
+      }),
+    );
+  });
+
+  it('matches names that differ only by slugging, mirroring the collision check', () => {
+    expect(
+      duplicateNameKey({
+        spaceId: 'space-1',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+      }),
+    ).toBe(
+      duplicateNameKey({
+        spaceId: 'space-1',
+        artifactType: 'standard',
+        artifactName: 'my-standard',
+      }),
+    );
   });
 });
