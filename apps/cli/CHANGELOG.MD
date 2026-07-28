@@ -2,7 +2,11 @@
 
 ## Added
 
+- `playbook add` accepts several paths in one call. Each path is staged independently, and the command reports how much of the batch succeeded (e.g. `1 staged, 1 failed of 2`) while naming the paths that failed.
+
 ## Changed
+
+- `playbook submit` now applies the batch artifact by artifact instead of aborting the whole submit on the first conflict. Artifacts staged under a duplicate name are held back and remain staged, while the rest are submitted.
 
 ## Fixed
 

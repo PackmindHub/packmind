@@ -31,7 +31,10 @@ Do the thing.
   );
 }
 
-describeForVersion('>= 0.31.0', 'importing several skills at once', () => {
+// Multi-path `playbook add` and per-artifact `playbook submit` landed after
+// 0.32.0; gate so production-CLI CI skips older CLI versions that do not
+// implement the new behaviour.
+describeForVersion('> 0.32.0', 'importing several skills at once', () => {
   describeWithUserSignedUp('importing several skills at once', (getContext) => {
     let context: UserSignedUpContext;
 
