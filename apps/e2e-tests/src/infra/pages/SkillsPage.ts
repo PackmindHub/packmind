@@ -130,6 +130,12 @@ export class SkillsPage extends AbstractPackmindAppPage implements ISkillsPage {
     return summary.innerText();
   }
 
+  async canImportDetectedSkills(): Promise<boolean> {
+    return this.importDialog()
+      .getByRole('button', { name: 'Import', exact: true })
+      .isEnabled();
+  }
+
   async closeImportDialog(): Promise<void> {
     await this.page.keyboard.press('Escape');
     await this.importDialog().waitFor({ state: 'hidden' });

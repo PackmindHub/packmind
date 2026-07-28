@@ -210,9 +210,15 @@ export const SkillsUploadPanel = () => {
         </PMText>
       )}
 
+      {/*
+        Disabled once the batch has settled, not just while it runs: the results
+        stay on screen, and leaving it live would let the same selection be sent
+        again — uploading every skill a second time and adding a version to each.
+        Choosing a folder again clears the results and re-arms it.
+      */}
       <PMButton
         onClick={() => start(detectedSkills)}
-        disabled={importableCount === 0 || isImporting}
+        disabled={importableCount === 0 || isImporting || isFinished}
         loading={isImporting}
       >
         Import

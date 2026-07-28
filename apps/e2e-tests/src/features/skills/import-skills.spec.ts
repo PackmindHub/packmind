@@ -29,6 +29,11 @@ testWithUserSignedUp.describe('importing skills from the web dialog', () => {
       // eslint-disable-next-line playwright/no-standalone-expect
       expect(summary).toContain('2 imported, 0 failed');
 
+      // Importing again would upload every skill a second time and add a version
+      // to each, so the action has to be spent once the batch has settled.
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(await skillsPage.canImportDetectedSkills()).toBe(false);
+
       await skillsPage.closeImportDialog();
       const skills = await skillsPage.listSkills();
 

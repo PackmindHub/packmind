@@ -53,6 +53,7 @@ export interface ISkillsPage extends IPackmindAppPage {
   chooseSkillsFolder(directoryPath: string): Promise<void>;
   listDetectedSkills(): Promise<string[]>;
   importDetectedSkills(): Promise<string>;
+  canImportDetectedSkills(): Promise<boolean>;
   closeImportDialog(): Promise<void>;
 }
 

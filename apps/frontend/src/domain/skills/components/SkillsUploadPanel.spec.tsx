@@ -319,6 +319,66 @@ describe('SkillsUploadPanel', () => {
     });
   });
 
+  describe('once an import has finished', () => {
+    it('disables the import action', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+
+      expect(importButton()).toBeDisabled();
+    });
+
+    it('cannot upload the same selection twice', async () => {
+      const { container, uploadSkill } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+      await userEvent.click(importButton());
+
+      expect(uploadSkill).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when the batch had a failure', () => {
+      it('still disables the import action, so a retry goes through a fresh selection', async () => {
+        const { container } = renderPanel({
+          uploadSkill: jest.fn().mockRejectedValue(new Error('Invalid')),
+        });
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+        ]);
+        await userEvent.click(importButton());
+        await screen.findByText('0 imported, 1 failed');
+
+        expect(importButton()).toBeDisabled();
+      });
+    });
+
+    describe('when another folder is selected afterwards', () => {
+      it('enables the import action again', async () => {
+        const { container } = renderPanel();
+
+        await selectFiles(container, [
+          pickedFile('skills/documentation/SKILL.md'),
+        ]);
+        await userEvent.click(importButton());
+        await screen.findByText('1 imported, 0 failed');
+        await selectFiles(container, [
+          pickedFile('skills/onboarding/SKILL.md'),
+        ]);
+
+        expect(importButton()).toBeEnabled();
+      });
+    });
+  });
+
   describe('when refreshing the skills list', () => {
     /**
      * Invalidating as soon as the import finishes swaps the page's blank state
