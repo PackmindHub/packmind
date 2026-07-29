@@ -1,0 +1,89 @@
+name: Weekly CLAUDE.md Improvement
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Every Monday at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  improve-claude-md:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # PAT so the pull request opened below triggers CI (a PR opened with the
+          # default GITHUB_TOKEN would not).
+          token: ${{ secrets.PACKMIND_BOT_PAT }}
+          clean: true
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code@latest
+
+      - name: Install claude-md-management plugin
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: claude plugin install claude-md-management@claude-plugins-official
+
+      - name: Improve CLAUDE.md files with Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          mapfile -t FILES < <(find . -name CLAUDE.md -not -path '*/node_modules/*')
+          echo "Found ${#FILES[@]} CLAUDE.md file(s)"
+          PROMPT_TEMPLATE=$(cat <<'EOF'
+          You are Claude Code running NON-INTERACTIVELY in CI (no human is available to confirm anything).
+          Use the claude-md-improver skill (from the installed claude-md-management plugin) to audit and
+          improve the CLAUDE.md file at: {{FILE}}
+
+          Because this is non-interactive, APPLY fixes directly to the file. Only apply HIGH and MEDIUM
+          priority fixes that have a clear, unambiguous positive impact (e.g. outdated or incorrect
+          commands, broken links or wrong file paths, stale structure or architecture references). Do NOT
+          make low-priority, subjective, or stylistic changes, and skip anything ambiguous.
+
+          CRITICAL: Never modify content inside sections delimited by the markers
+          "<!-- start: Packmind standards -->" and "<!-- end: Packmind standards -->". Leave those regions
+          byte-for-byte unchanged; only edit content outside them.
+
+          Do not create, delete, or rename files - only edit this one CLAUDE.md file.
+          EOF
+          )
+          for file in "${FILES[@]}"; do
+            [ -z "$file" ] && continue
+            echo "::group::Improving $file"
+            prompt="${PROMPT_TEMPLATE//\{\{FILE\}\}/$file}"
+            claude -p "$prompt" \
+              --permission-mode acceptEdits \
+              --allowedTools "Read,Edit,Glob,Grep"
+            echo "::endgroup::"
+          done
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PACKMIND_BOT_PAT }}
+          branch: chore/weekly-claude-md-improvements
+          delete-branch: true
+          commit-message: 'chore: weekly CLAUDE.md improvements via claude-md-improver'
+          title: 'chore: weekly CLAUDE.md improvements'
+          body: |
+            Automated weekly run of the Anthropic `claude-md-improver` skill.
+
+            - Applied only high/medium priority fixes with clear impact.
+            - Packmind standards sections were left untouched.
+
+            Please review before merging.
+          labels: automated
