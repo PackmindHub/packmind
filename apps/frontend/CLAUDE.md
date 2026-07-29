@@ -9,13 +9,13 @@ React Router v7 single-page application for Packmind, built with Chakra UI and T
 - **State Management**: TanStack Query v5 for server state, React Context for UI state
 - **Data Fetching**: clientLoader functions with TanStack Query integration
 - **Styling**: Chakra UI theming system with custom design tokens
-- **Build Tool**: Vite 6 with React plugin
+- **Build Tool**: Vite 8 with React plugin
 
 ## Technologies
 
 - **React**: v19 - UI components, hooks, context
 - **React Router**: v7 - File-based routing, loaders, actions
-- **Vite**: v6 - Fast development server and optimized builds
+- **Vite**: v8 - Fast development server and optimized builds
 - **Chakra UI**: v3 - Component library with theming system
 - **TanStack Query**: v5 - Server state management and caching
 - **TypeScript**: Type-safe component props and API contracts
