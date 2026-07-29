@@ -337,6 +337,8 @@ Tracked branch for my-org/my-repo changed from main to dev.
 
 If you cancel the prompt, the tracked branch is left unchanged.
 
+Moving the tracked branch is **reversible**: the distributions recorded on the branch you leave are kept, they simply stop being displayed, and they reappear if you move tracking back. See [Distribution History and the Tracked Branch](/governance/distribution#distribution-history-and-the-tracked-branch).
+
 If nothing is tracked yet, `--update` has nothing to move and points you to the commands that start tracking:
 
 ```
@@ -588,7 +590,10 @@ If you install anywhere else, the install still completes locally, but nothing i
 <Note>
   **Not seeing your activity in Packmind?** — Confirm you are on the tracked
   repository and branch. An organization admin can set or move the tracked
-  branch with `packmind-cli track`.
+  branch with `packmind-cli track`. If the branch was tracked before and is not
+  anymore, its distributions are still kept — they reappear when tracking moves
+  back. See [Distribution History and the Tracked
+  Branch](/governance/distribution#distribution-history-and-the-tracked-branch).
 </Note>
 
 ### Install Globally for Claude Code (`~/.claude`)

@@ -3,6 +3,7 @@ import { newDb } from 'pg-mem';
 import { PackmindLogger } from '@packmind/logger';
 import { migrations } from './migrations';
 import { AddIsTrackedToGitRepos1813000000000 } from '../migrations/1813000000000-AddIsTrackedToGitRepos';
+import { AddTrackedBranchLookupIndexToGitRepos1817000000000 } from '../migrations/1817000000000-AddTrackedBranchLookupIndexToGitRepos';
 
 describe('migrations', () => {
   it('works', () => {
@@ -102,6 +103,67 @@ describe('AddIsTrackedToGitRepos1813000000000', () => {
 
       it('drops the is_tracked column', async () => {
         expect(await isTrackedColumnExists()).toBe(false);
+      });
+    });
+  });
+});
+
+describe('AddTrackedBranchLookupIndexToGitRepos1817000000000', () => {
+  const migration = new AddTrackedBranchLookupIndexToGitRepos1817000000000(
+    silentLogger,
+  );
+  let dataSource: DataSource;
+  let queryRunner: QueryRunner;
+
+  beforeEach(async () => {
+    dataSource = makeInMemoryDataSource();
+    await dataSource.initialize();
+    queryRunner = dataSource.createQueryRunner();
+
+    await queryRunner.query(`
+      CREATE TABLE "git_repos" (
+        "id" uuid PRIMARY KEY,
+        "owner" varchar NOT NULL,
+        "repo" varchar NOT NULL,
+        "branch" varchar NOT NULL,
+        "is_tracked" boolean NOT NULL DEFAULT false,
+        "deleted_at" timestamp
+      )
+    `);
+  });
+
+  afterEach(async () => {
+    await queryRunner.release();
+    await dataSource.destroy();
+  });
+
+  // pg-mem does not implement the pg_indexes catalog, so these assert that the
+  // partial-index DDL is accepted and reversible. That the index actually exists
+  // is verified against a real Postgres when the migration is applied.
+  describe('when the migration is applied', () => {
+    it('creates the partial index without error', async () => {
+      await expect(migration.up(queryRunner)).resolves.not.toThrow();
+    });
+
+    it('is idempotent', async () => {
+      await migration.up(queryRunner);
+
+      await expect(migration.up(queryRunner)).resolves.not.toThrow();
+    });
+
+    describe('and then reverted', () => {
+      beforeEach(async () => {
+        await migration.up(queryRunner);
+      });
+
+      it('drops the index without error', async () => {
+        await expect(migration.down(queryRunner)).resolves.not.toThrow();
+      });
+
+      it('can be re-applied afterwards', async () => {
+        await migration.down(queryRunner);
+
+        await expect(migration.up(queryRunner)).resolves.not.toThrow();
       });
     });
   });

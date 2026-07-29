@@ -17,6 +17,7 @@ import {
   IUpdateCommandFromUIUseCase,
   IUpdateRenderModeConfigurationUseCase,
   IUploadSkillUseCase,
+  IListSkillsBySpaceUseCase,
   PublicGateway,
   CommandId,
   Space,
@@ -69,6 +70,7 @@ export interface IDeploymentsGateway {
 
 export interface ISkillsGateway {
   upload: Gateway<IUploadSkillUseCase>;
+  list: Gateway<IListSkillsBySpaceUseCase>;
 }
 
 export interface IPackmindGateway {

@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
+import {
+  OrganizationId,
+  SkillId,
+  SpaceId,
+  UploadSkillFileInput,
+} from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
   getSkillsBySpaceKey,
@@ -282,6 +287,43 @@ export const useUpdateSkillFileMutation = () => {
     },
     onError: (error) => {
       console.error('Error updating skill file:', error);
+    },
+  });
+};
+
+const UPLOAD_SKILL_MUTATION_KEY = 'uploadSkill';
+
+/**
+ * Uploads the files of a single skill.
+ *
+ * Deliberately has no `onSuccess` invalidation: skills are imported one at a
+ * time, so invalidating here would refetch the skills list once per skill.
+ * Callers importing a batch invalidate once, after the last upload.
+ */
+export const useUploadSkillMutation = () => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [UPLOAD_SKILL_MUTATION_KEY],
+    mutationFn: async ({
+      files,
+      originSkill,
+    }: {
+      files: UploadSkillFileInput[];
+      originSkill?: string;
+    }) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error(
+          'Organization and space are required to upload a skill',
+        );
+      }
+      return skillsGateway.uploadSkill(
+        organization.id,
+        spaceId,
+        files,
+        originSkill,
+      );
     },
   });
 };

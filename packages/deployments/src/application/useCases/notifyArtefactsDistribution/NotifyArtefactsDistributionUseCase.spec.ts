@@ -12,8 +12,8 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  DistributionRecordedEvent,
   IAccountsPort,
-  IEventTrackingPort,
   ICommandsPort,
   ISkillsPort,
   IStandardsPort,
@@ -25,6 +25,7 @@ import {
   Target,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
@@ -41,7 +42,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockTargetResolutionService: jest.Mocked<TargetResolutionService>;
-  let mockEventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
@@ -201,10 +202,9 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       findOrCreateTargetFromGitInfo: jest.fn().mockResolvedValue(buildTarget()),
     } as unknown as jest.Mocked<TargetResolutionService>;
 
-    mockEventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-      identifyOrganizationGroup: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
+    mockEventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     useCase = new NotifyArtefactsDistributionUseCase(
       mockAccountsPort,
@@ -215,7 +215,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       mockDistributedPackageRepository,
       mockRenderModeConfigurationService,
       mockTargetResolutionService,
-      mockEventTrackingPort,
+      mockEventEmitterService,
       stubLogger(),
     );
   });
@@ -412,7 +412,7 @@ describe('NotifyArtefactsDistributionUseCase', () => {
     });
   });
 
-  describe('distribution_recorded analytics event', () => {
+  describe('distribution_recorded domain event', () => {
     beforeEach(() => {
       mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);
       mockCommandsPort.getCommandVersion.mockResolvedValue(null);
@@ -424,60 +424,31 @@ describe('NotifyArtefactsDistributionUseCase', () => {
         await useCase.execute(buildCommand({ gitBranch: 'main' }));
       });
 
-      it('tracks a distribution_recorded event with the repository and branch', () => {
-        expect(mockEventTrackingPort.trackEvent).toHaveBeenCalledWith(
-          userId,
-          organizationId,
-          'distribution_recorded',
-          { repositoryId: String(gitRepoId), branch: 'main' },
+      it('emits a DistributionRecordedEvent with the repository and branch', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId,
+              organizationId,
+              source: 'cli',
+              repositoryId: gitRepoId,
+              branch: 'main',
+            },
+          }),
         );
       });
     });
 
-    describe('when the event tracking port rejects', () => {
-      let result: Awaited<ReturnType<typeof useCase.execute>>;
+    describe('when checking the emitted event type', () => {
+      let emitted: unknown;
 
       beforeEach(async () => {
-        mockEventTrackingPort.trackEvent.mockRejectedValue(
-          new Error('amplitude down'),
-        );
-        result = await useCase.execute(buildCommand());
+        await useCase.execute(buildCommand());
+        emitted = mockEventEmitterService.emit.mock.calls[0][0];
       });
 
-      it('still records the distribution', () => {
-        expect(mockDistributionRepository.add).toHaveBeenCalled();
-      });
-
-      it('still returns a deployment ID', () => {
-        expect(result).toHaveProperty('deploymentId');
-      });
-    });
-
-    describe('when no event tracking port is provided', () => {
-      let result: Awaited<ReturnType<typeof useCase.execute>>;
-
-      beforeEach(async () => {
-        const useCaseWithoutTracking = new NotifyArtefactsDistributionUseCase(
-          mockAccountsPort,
-          mockCommandsPort,
-          mockStandardsPort,
-          mockSkillsPort,
-          mockDistributionRepository,
-          mockDistributedPackageRepository,
-          mockRenderModeConfigurationService,
-          mockTargetResolutionService,
-          undefined,
-          stubLogger(),
-        );
-        result = await useCaseWithoutTracking.execute(buildCommand());
-      });
-
-      it('records the distribution', () => {
-        expect(mockDistributionRepository.add).toHaveBeenCalled();
-      });
-
-      it('returns a deployment ID', () => {
-        expect(result).toHaveProperty('deploymentId');
+      it('emits an instance of DistributionRecordedEvent', () => {
+        expect(emitted).toBeInstanceOf(DistributionRecordedEvent);
       });
     });
   });

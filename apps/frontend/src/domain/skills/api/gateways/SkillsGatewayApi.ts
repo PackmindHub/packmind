@@ -7,6 +7,8 @@ import {
   SkillWithFiles,
   SpaceId,
   UpdateSkillFileFromUIResponse,
+  UploadSkillFileInput,
+  UploadSkillResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ISkillsGateway } from './ISkillsGateway';
@@ -88,6 +90,18 @@ export class SkillsGatewayApi
     return this._api.patch<UpdateSkillFileFromUIResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}/file`,
       params,
+    );
+  }
+
+  async uploadSkill(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    files: UploadSkillFileInput[],
+    originSkill?: string,
+  ): Promise<UploadSkillResponse> {
+    return this._api.post<UploadSkillResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/upload`,
+      { files, ...(originSkill ? { originSkill } : {}) },
     );
   }
 }

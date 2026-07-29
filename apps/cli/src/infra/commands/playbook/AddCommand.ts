@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { command, option, optional, positional, string } from 'cmd-ts';
+import { command, option, optional, restPositionals, string } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PlaybookLocalRepository } from '../../repositories/PlaybookLocalRepository';
@@ -10,12 +10,12 @@ import { SpaceSlug } from '../customParameters/SpaceSlug';
 
 export const addPlaybookCommand = command({
   name: 'add',
-  description: 'Stage a local artifact change',
+  description: 'Stage one or more local artifact changes',
   args: {
-    filePath: positional({
+    filePaths: restPositionals({
       type: string,
-      displayName: 'path',
-      description: 'Path to the artifact file or directory to stage',
+      displayName: 'paths',
+      description: 'Paths to the artifact files or directories to stage',
     }),
     space: option({
       type: optional(SpaceSlug),
@@ -23,7 +23,7 @@ export const addPlaybookCommand = command({
       description: 'Target space slug',
     }),
   },
-  handler: async ({ filePath, space }) => {
+  handler: async ({ filePaths, space }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(
@@ -35,7 +35,7 @@ export const addPlaybookCommand = command({
 
     await playbookAddHandler({
       packmindCliHexa,
-      filePath,
+      filePaths,
       spaceSlug: space,
       exit: process.exit,
       cwd: process.cwd(),

@@ -1,4 +1,9 @@
 export { DiffService } from './DiffService';
+export type {
+  IChangeProposalMerger,
+  MergeConflictRegion,
+  MergeFieldResult,
+} from './IChangeProposalMerger';
 export { ChangeProposalConflictError } from './ChangeProposalConflictError';
 export { ChangeProposalPayloadParseError } from './ChangeProposalPayloadParseError';
 export { isExpectedChangeProposalType } from './isExpectedChangeProposalType';

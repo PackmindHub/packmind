@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   createDistributedPackageId,
   createDistributionId,
@@ -10,10 +14,9 @@ import {
   createStandardId,
   Distribution,
   DistributedPackage,
+  DistributionRecordedEvent,
   DistributionStatus,
-  GitRepoId,
   IAccountsPort,
-  IEventTrackingPort,
   INotifyArtefactsDistribution,
   ICommandsPort,
   ISkillsPort,
@@ -60,7 +63,7 @@ export class NotifyArtefactsDistributionUseCase
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly targetResolutionService: TargetResolutionService,
-    private readonly eventTrackingPort?: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -118,12 +121,15 @@ export class NotifyArtefactsDistributionUseCase
       renderModes,
     });
 
-    await this.trackDistributionRecorded({
-      userId,
-      organizationId,
-      repositoryId: target.gitRepoId,
-      branch: gitBranch,
-    });
+    this.eventEmitterService.emit(
+      new DistributionRecordedEvent({
+        userId,
+        organizationId,
+        source: 'cli',
+        repositoryId: target.gitRepoId,
+        branch: gitBranch,
+      }),
+    );
 
     this.logger.info(
       'Artefacts distribution notification completed successfully',
@@ -134,30 +140,6 @@ export class NotifyArtefactsDistributionUseCase
     );
 
     return { deploymentId: distributionId };
-  }
-
-  private async trackDistributionRecorded(params: {
-    userId: UserId;
-    organizationId: OrganizationId;
-    repositoryId: GitRepoId;
-    branch: string;
-  }): Promise<void> {
-    if (!this.eventTrackingPort) {
-      return;
-    }
-
-    try {
-      await this.eventTrackingPort.trackEvent(
-        params.userId,
-        params.organizationId,
-        'distribution_recorded',
-        { repositoryId: String(params.repositoryId), branch: params.branch },
-      );
-    } catch (error) {
-      this.logger.warn('Failed to track distribution_recorded event', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
   }
 
   private async getPreviouslyActivePackageIds(

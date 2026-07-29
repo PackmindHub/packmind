@@ -2,7 +2,9 @@ import { ISkillsGateway } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import {
   Gateway,
+  IListSkillsBySpaceUseCase,
   IUploadSkillUseCase,
+  ListSkillsBySpaceResponse,
   UploadSkillResponse,
 } from '@packmind/types';
 
@@ -14,6 +16,14 @@ export class SkillsGateway implements ISkillsGateway {
     return this.httpClient.request<UploadSkillResponse>(
       `/api/v0/organizations/${organizationId}/spaces/${params.spaceId}/skills/upload`,
       { method: 'POST', body: params },
+    );
+  };
+
+  list: Gateway<IListSkillsBySpaceUseCase> = async (params) => {
+    const organizationId = this.httpClient.getOrganizationId();
+    return this.httpClient.request<ListSkillsBySpaceResponse>(
+      `/api/v0/organizations/${organizationId}/spaces/${params.spaceId}/skills`,
+      { method: 'GET' },
     );
   };
 }

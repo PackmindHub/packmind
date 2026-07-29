@@ -124,6 +124,109 @@ describe('DistributionRepository', () => {
     });
   });
 
+  describe('tracked-branch scoping of distribution history', () => {
+    const expectScopedToTrackedBranch = () =>
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('tracked_repo."is_tracked" = true'),
+        { trackedScopeOrganizationId: organizationId },
+      );
+
+    const expectNotScopedToTrackedBranch = () =>
+      expect(mockQueryBuilder.andWhere).not.toHaveBeenCalledWith(
+        expect.stringContaining('tracked_repo'),
+        expect.anything(),
+      );
+
+    beforeEach(() => {
+      mockQueryBuilder.getMany.mockResolvedValue([]);
+    });
+
+    describe('when listing distributions by package', () => {
+      beforeEach(async () => {
+        await repository.listByPackageId(packageId1, organizationId);
+      });
+
+      it('scopes the history to the tracked branch', () => {
+        expectScopedToTrackedBranch();
+      });
+
+      it('keeps distributions whose repository row is absent', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.stringContaining('"gitRepo"."id" IS NULL'),
+          expect.anything(),
+        );
+      });
+
+      // TypeORM only rewrites `alias.property` before a space, `=`, `)` or `,`,
+      // so the predicate must not rely on it — see TRACKED_BRANCH_SCOPE.
+      it('fully qualifies the repository column it filters on', () => {
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+          expect.stringContaining('"gitRepo"."id" NOT IN'),
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('when listing distributions by command', () => {
+      beforeEach(async () => {
+        await repository.listByCommandId(
+          createCommandId('command-1'),
+          organizationId,
+        );
+      });
+
+      it('scopes the history to the tracked branch', () => {
+        expectScopedToTrackedBranch();
+      });
+    });
+
+    describe('when listing distributions by standard', () => {
+      beforeEach(async () => {
+        await repository.listByStandardId(
+          createStandardId('standard-1'),
+          organizationId,
+        );
+      });
+
+      it('scopes the history to the tracked branch', () => {
+        expectScopedToTrackedBranch();
+      });
+    });
+
+    describe('when listing distributions by skill', () => {
+      beforeEach(async () => {
+        await repository.listBySkillId(
+          createSkillId('skill-1'),
+          organizationId,
+        );
+      });
+
+      it('scopes the history to the tracked branch', () => {
+        expectScopedToTrackedBranch();
+      });
+    });
+
+    describe('when listing distributions by organization', () => {
+      beforeEach(async () => {
+        await repository.listByOrganizationId(organizationId);
+      });
+
+      it('leaves every branch visible', () => {
+        expectNotScopedToTrackedBranch();
+      });
+    });
+
+    describe('when listing distributions by target ids', () => {
+      beforeEach(async () => {
+        await repository.listByTargetIds(organizationId, [targetId]);
+      });
+
+      it('leaves every branch visible', () => {
+        expectNotScopedToTrackedBranch();
+      });
+    });
+  });
+
   describe('findActiveStandardVersionsByTarget', () => {
     const createStandardVersion = (
       id: string,

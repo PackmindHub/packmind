@@ -2,7 +2,7 @@ import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalId } from '../ChangeProposalId';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { ScalarUpdatePayload } from '../ChangeProposalPayload';
-import { DiffService } from './DiffService';
+import { IChangeProposalMerger } from './IChangeProposalMerger';
 import { ChangeProposalConflictError } from './ChangeProposalConflictError';
 import { ApplierObjectVersions } from './types';
 import { PackageId } from '../../deployments';
@@ -18,7 +18,7 @@ export type ApplyChangeProposalsResult<Version extends ApplierObjectVersions> =
 export abstract class AbstractChangeProposalApplier<
   Version extends ApplierObjectVersions,
 > {
-  constructor(private readonly diffService: DiffService) {}
+  constructor(private readonly merger: IChangeProposalMerger) {}
 
   applyChangeProposals(
     source: Version,
@@ -96,17 +96,15 @@ export abstract class AbstractChangeProposalApplier<
     payload: ScalarUpdatePayload,
     sourceContent: string,
   ): string {
-    const diffResult = this.diffService.applyLineDiff(
+    const result = this.merger.mergeField(
       payload.oldValue,
-      payload.newValue,
       sourceContent,
+      payload.newValue,
     );
-
-    if (!diffResult.success) {
-      throw new ChangeProposalConflictError(changeProposalId);
+    if (!result.clean) {
+      throw new ChangeProposalConflictError(changeProposalId, result.conflicts);
     }
-
-    return diffResult.value;
+    return result.merged;
   }
 
   private handleRemoveFromPackages(

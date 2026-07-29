@@ -119,6 +119,35 @@ The CLI approach is ideal for:
 - **Monorepos** - Use `packmind-cli install` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
 
+## Distribution History and the Tracked Branch
+
+Every package, standard, command, and skill has a **Distribution History** listing when it was distributed and where it landed.
+
+When your organization tracks a repository and branch (see the [Track Command](/tools/cli#track-command)), Packmind shows the **branch you currently track**. Distributions made on other branches of the same repository are hidden, so the view stays focused on the branch your team works from today.
+
+This applies to both places branches surface:
+
+- **Distribution History** — entries recorded on another branch of a tracked repository are not listed.
+- **The Deployments overview** — the repositories list only shows the tracked branch, so a repository never appears twice under two branches.
+
+Repositories you have never tracked are unaffected — every branch keeps showing in both views.
+
+### Moving the Tracked Branch Is Reversible
+
+Moving tracking to another branch never deletes anything:
+
+- Distributions recorded on the branch you leave are **kept**, just no longer displayed.
+- Move tracking back and the earlier history reappears, with new distributions added to it.
+
+So a team that tracks `main`, moves to `dev` for a while, then returns to `main` finds their original `main` history intact and continuing where it left off.
+
+<Note>
+  **Only one branch at a time** — Packmind shows the tracked branch's history
+  rather than several branches side by side. To see another branch's history,
+  ask an organization admin to move tracking to it with `packmind-cli track
+  --update`.
+</Note>
+
 ## Removing Packages
 
 When you no longer need a package in your repository, you can remove it using either the app or the CLI.

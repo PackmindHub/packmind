@@ -13,6 +13,10 @@ import {
 } from '@packmind/node-utils';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
+import {
+  TRACKED_BRANCH_SCOPE,
+  trackedBranchScopeParams,
+} from './trackedBranchScope';
 
 const origin = 'TargetRepository';
 
@@ -115,6 +119,14 @@ export class TargetRepository
         )
         .innerJoin('packages', 'pkg', 'pkg.id = distributedPackage.package_id')
         .andWhere('pkg.space_id = :spaceId', { spaceId })
+        // The governance overview follows the tracked branch: a target on a branch
+        // whose repository has moved tracking elsewhere drops out of the view, while
+        // its distributions stay on disk. `applyOrganizationScope` has already
+        // joined the repository as `gitRepo`.
+        .andWhere(
+          TRACKED_BRANCH_SCOPE,
+          trackedBranchScopeParams(organizationId),
+        )
         .distinct(true)
         .getMany();
 

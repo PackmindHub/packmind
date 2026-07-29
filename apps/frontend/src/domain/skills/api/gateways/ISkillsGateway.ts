@@ -7,6 +7,8 @@ import {
   SkillWithFiles,
   SpaceId,
   UpdateSkillFileFromUIResponse,
+  UploadSkillFileInput,
+  UploadSkillResponse,
 } from '@packmind/types';
 
 export interface ISkillsGateway {
@@ -42,4 +44,10 @@ export interface ISkillsGateway {
     skillId: SkillId,
     params: { filePath: string; content: string },
   ): Promise<UpdateSkillFileFromUIResponse>;
+  uploadSkill(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    files: UploadSkillFileInput[],
+    originSkill?: string,
+  ): Promise<UploadSkillResponse>;
 }

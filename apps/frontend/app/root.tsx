@@ -16,6 +16,7 @@ import {
   UIProvider,
 } from '@packmind/ui';
 import { useAuthContext } from '../src/domain/accounts/hooks';
+import { useModalLayerRecovery } from '../src/shared/hooks';
 import { UserContextChangeSubscription } from '../src/domain/accounts/components/UserContextChangeSubscription';
 import { DistributionStatusChangeSubscription } from '../src/domain/deployments/components/DistributionStatusChangeSubscription';
 import { QueryProvider } from '../src/providers/QueryProvider';
@@ -110,6 +111,9 @@ function AppContent() {
   const { isAuthenticated } = useAuthContext();
   const navigation = useNavigation();
   const isFirstRender = useRef(true);
+
+  // A Chakra dialog can leave the page unclickable if its layer is stranded.
+  useModalLayerRecovery();
 
   useEffect(() => {
     // Skip NProgress on the very first render (initial hydration)

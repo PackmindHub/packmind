@@ -13,8 +13,6 @@ import {
   ICodingAgentPortName,
   IDeploymentPort,
   IDeploymentPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   ICommandsPort,
@@ -111,15 +109,6 @@ export class DeploymentsHexa extends BaseHexa<
         PackmindEventEmitterService,
       );
 
-      let eventTrackingPort: IEventTrackingPort | undefined;
-      try {
-        eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
-          IEventTrackingPortName,
-        );
-      } catch {
-        eventTrackingPort = undefined;
-      }
-
       // Initialize adapter with all ports
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
@@ -129,7 +118,6 @@ export class DeploymentsHexa extends BaseHexa<
         [ISkillsPortName]: skillsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
-        [IEventTrackingPortName]: eventTrackingPort,
         jobsService,
         eventEmitterService,
       });

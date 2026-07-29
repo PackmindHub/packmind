@@ -28,6 +28,10 @@ import {
   OutdatedStandardDeployment,
 } from '../../domain/repositories/IDistributionRepository';
 import { DistributionSchema } from '../schemas/DistributionSchema';
+import {
+  TRACKED_BRANCH_SCOPE,
+  trackedBranchScopeParams,
+} from './trackedBranchScope';
 
 const origin = 'DistributionRepository';
 
@@ -166,6 +170,10 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere(
+          TRACKED_BRANCH_SCOPE,
+          trackedBranchScopeParams(organizationId),
+        )
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
@@ -221,6 +229,10 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere(
+          TRACKED_BRANCH_SCOPE,
+          trackedBranchScopeParams(organizationId),
+        )
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
@@ -277,6 +289,10 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere(
+          TRACKED_BRANCH_SCOPE,
+          trackedBranchScopeParams(organizationId),
+        )
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
@@ -890,6 +906,10 @@ export class DistributionRepository implements IDistributionRepository {
         .andWhere('distribution.organizationId = :organizationId', {
           organizationId,
         })
+        .andWhere(
+          TRACKED_BRANCH_SCOPE,
+          trackedBranchScopeParams(organizationId),
+        )
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
