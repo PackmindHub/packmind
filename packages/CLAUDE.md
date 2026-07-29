@@ -37,13 +37,92 @@ This directory contains reusable domain and infrastructure packages shared acros
 
 ### Frontend
 
-- **frontend** - Shared frontend utilities, hooks, and contexts
+- **frontend** - Shared `data-testid` enums used by both `apps/frontend` components and `apps/e2e-tests` page objects (Nx project name: `frontend-lib`)
 - **ui** - Reusable UI components with Chakra UI (PM-prefixed components)
 
 ### Supporting
 
 - **assets** - Static assets, WASM files, and embedded resources
-- **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.)
+- **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.) (Nx project name: `@packmind/integration-tests`)
+
+## Environment Tags and Import Boundaries
+
+Every `packages/*/project.json` declares an `env:*` tag, and `@nx/enforce-module-boundaries` in the
+root `eslint.config.mjs` turns those tags into hard import rules:
+
+| Tag | May depend on |
+| --- | --- |
+| `env:node` | anything |
+| `env:shared` | `env:shared`, `env:node` |
+| `env:browser` | `env:shared`, `env:browser` — **never** `env:node` |
+
+- `env:shared`: `types`, `assets`, `editions`, `feature-flags`
+- `env:browser`: `ui`, `frontend`
+- `env:node`: everything else
+
+A lint error about module boundaries usually means code belongs in a differently-tagged package, not
+that the rule needs an exception.
+
+## Package Layout
+
+Domain packages (`accounts`, `spaces`, `standards`, `skills`, `commands`, `deployments`, `git`,
+`coding-agent`, `llm`) all share the same physical shape, so there is no need to explore one to find
+your bearings:
+
+```
+src/<Name>Hexa.ts                       entry point, extends BaseHexa
+src/application/adapter/<Name>Adapter.ts
+src/application/useCases/<useCaseName>/
+src/application/services/
+src/application/jobs/
+src/domain/entities|repositories|useCases|errors|jobs/
+src/infra/schemas/                      TypeORM EntitySchema + a <name>Schemas.ts barrel
+src/infra/repositories/
+src/index.ts                            public barrel — nothing is importable until exported here
+test/                                   entity factories, published as @packmind/<pkg>/test
+```
+
+`BaseHexa`, `BaseService` and `HexaRegistry` come from `@packmind/node-utils`
+(`packages/node-utils/src/hexa/`).
+
+### Architecture rules live in `packages/.claude/rules/packmind/`
+
+The behavioural conventions for this layout are Packmind standards, not documented here — consult
+them rather than inferring from neighbouring code:
+
+- **Use Case Architecture Patterns** — contract-per-file in `packages/types/src/<domain>/contracts/`,
+  the `AbstractMemberUseCase` / `AbstractAdminUseCase` / `AbstractSpaceMemberUseCase` split
+- **Port-Adapter Cross-Domain Integration** — how one domain may reach another
+- **Scoped Repository Patterns** — `OrganizationScopedRepository` / `SpaceScopedRepository`
+- **Domain Events**
+- **Back-end repositories SQL queries using TypeORM**
+- **Back-end TypeScript Clean Code Practices**
+
+## Cross-Package Conventions
+
+### Entity factories: the `/test` subpath
+
+Each domain package ships its entity factories in `packages/<pkg>/test/` (an `index.ts` plus one
+`<entity>Factory.ts` per entity), aliased in `tsconfig.base.json` and imported as
+`@packmind/<pkg>/test` — for example `import { standardFactory } from '@packmind/standards/test'`.
+
+- Spec files import factories from there; production code must not.
+- **Entity** factories belong to the owning package's `test/` folder; **generic** test helpers
+  (datasource, logger stub, mock instances) belong to `@packmind/test-utils`.
+
+### Branded IDs
+
+Entity identifiers are never bare strings. Each one is declared in `@packmind/types` as a branded
+type plus a creator, following `packages/types/src/skills/SkillId.ts`:
+
+```ts
+import { Branded, brandedIdFactory } from '../brandedTypes';
+
+export type SkillId = Branded<'SkillId'>;
+export const createSkillId = brandedIdFactory<SkillId>();
+```
+
+The `Branded` / `brandedIdFactory` helpers live in `packages/types/src/brandedTypes.ts`.
 
 ## Working with Packages
 
@@ -52,5 +131,10 @@ This directory contains reusable domain and infrastructure packages shared acros
 - Build a package: `./node_modules/.bin/nx build <package-name>`
 - Test a package: `./node_modules/.bin/nx test <package-name>`
 - Lint a package: `./node_modules/.bin/nx lint <package-name>`
+
+> Two Nx project names differ from their directory name: `packages/frontend` is `frontend-lib` (plain
+> `frontend` is the **app**) and `packages/integration-tests` is `@packmind/integration-tests`. Not
+> every package exposes every target either — `packages/integration-tests/project.json` declares only
+> `build`. Use `./node_modules/.bin/nx show project <package-name>` to see a project's real targets.
 
 **Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`
