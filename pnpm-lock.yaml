@@ -6,7 +6,7 @@ settings:
 
 overrides:
   fast-xml-parser: '>=5.7.0'
-  typeorm: '>=0.3.29'
+  typeorm: 0.3.31
   axios: '>=1.18.1'
   undici: '>=7.28.0'
   hono: '>=4.12.25'
@@ -102,7 +102,7 @@ importers:
         version: 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)
       '@nestjs/typeorm':
         specifier: ^11.0.0
-        version: 11.0.1(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
+        version: 11.0.1(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
       '@react-router/fs-routes':
         specifier: 7.15.1
         version: 7.15.1(@react-router/dev@7.15.1(@types/node@20.19.9)(babel-plugin-macros@3.1.0)(jiti@2.5.1)(less@4.5.1)(lightningcss@1.32.0)(react-router@7.15.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(typescript@5.8.3)(vite@8.1.5(@types/node@20.19.9)(esbuild@0.28.1)(jiti@2.5.1)(less@4.5.1)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0))(yaml@2.9.0))(typescript@5.8.3)
@@ -190,9 +190,6 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.2.1
-      fastify-plugin:
-        specifier: ~5.1.0
-        version: 5.1.0
       http-proxy-middleware:
         specifier: ^3.0.7
         version: 3.0.7
@@ -245,11 +242,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
-      typeorm-fastify-plugin:
-        specifier: ^3.0.0
-        version: 3.0.0(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -475,7 +469,7 @@ importers:
         version: 23.1.0(@swc-node/register@1.11.1(@swc/core@1.15.8(@swc/helpers@0.5.20))(@swc/types@0.1.26)(typescript@5.8.3))(@swc/core@1.15.8(@swc/helpers@0.5.20))
       pg-mem:
         specifier: ^3.0.5
-        version: 3.0.14(typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
+        version: 3.0.14(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
       prettier:
         specifier: ^3.7.4
         version: 3.8.3
@@ -612,8 +606,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -656,8 +650,8 @@ importers:
         specifier: ^7.7.4
         version: 7.8.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -693,8 +687,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -744,8 +738,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -769,8 +763,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
 
   packages/feature-flags: {}
 
@@ -807,8 +801,8 @@ importers:
         specifier: ^5.58.2
         version: 5.77.6
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -864,8 +858,8 @@ importers:
         specifier: ^9.0.3
         version: 9.0.3
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -908,8 +902,8 @@ importers:
         specifier: ^6.9.0
         version: 6.39.0(ws@8.21.0)(zod@3.25.76)
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -969,8 +963,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -1002,8 +996,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -1029,8 +1023,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -1062,8 +1056,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.1
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -1078,10 +1072,10 @@ importers:
         version: link:../types
       pg-mem:
         specifier: ^3.0.5
-        version: 3.0.14(typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
+        version: 3.0.14(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
       typeorm:
-        specifier: '>=0.3.29'
-        version: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+        specifier: 0.3.31
+        version: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
       uuid:
         specifier: '>=11.1.1'
         version: 11.1.1
@@ -4780,7 +4774,7 @@ packages:
       '@nestjs/core': ^10.0.0 || ^11.0.0
       reflect-metadata: ^0.1.13 || ^0.2.0
       rxjs: ^7.2.0
-      typeorm: '>=0.3.29'
+      typeorm: 0.3.31
 
   '@noble/hashes@1.4.0':
     resolution:
@@ -9607,10 +9601,10 @@ packages:
       }
     engines: { node: '>=12' }
 
-  ansis@4.3.0:
+  ansis@4.3.1:
     resolution:
       {
-        integrity: sha512-44mvgtPvohuU/70DdY5Oz2AIrLJ9k6/5x4KmoSvPwO+5Moijo0+N9D0fKbbYZQWP1hNm5CpOf+E01jhxG/r8xg==,
+        integrity: sha512-BJ8/l4R5LRE7hW9WdSuGYrLSHi2ynxeFpDFbH0K/CgNeY/tyhk+vO6TYxXC5r5CpUhNVX310xzPsN/H9lCdfOA==,
       }
     engines: { node: '>=14' }
 
@@ -12334,12 +12328,6 @@ packages:
         integrity: sha512-IEMIf7298kXuZSRFoGfMYrl7is8LpavODgbNz1cwIudv7KwVFnuU+UsMporfq6PD6aXSlawZlARiA3UywCTfMw==,
       }
     hasBin: true
-
-  fastify-plugin@5.1.0:
-    resolution:
-      {
-        integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==,
-      }
 
   fastq@1.20.1:
     resolution:
@@ -16317,7 +16305,7 @@ packages:
       pg-server: ^0.1.5
       postgres: ^3.4.4
       slonik: '>=23.0.1'
-      typeorm: '>=0.3.29'
+      typeorm: 0.3.31
     peerDependenciesMeta:
       '@mikro-orm/core':
         optional: true
@@ -19309,17 +19297,10 @@ packages:
         integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==,
       }
 
-  typeorm-fastify-plugin@3.0.0:
+  typeorm@0.3.31:
     resolution:
       {
-        integrity: sha512-je7GZN+TeDHKSU5mi1GjBrFVmRVNmGId1IvBXZmK/S2dbotXLnHRhfmZRCirw2yPpE1wIQsDV87dMhSQYLcy2Q==,
-      }
-    engines: { node: '>=20.0.0' }
-
-  typeorm@0.3.29:
-    resolution:
-      {
-        integrity: sha512-wwPEX/df4l72gCmOsrs0otJZYLGA9lLQkUZCkukbsymEycV4zXv2KM7wU7v2r8L01TaCgY9ApSSqHQWBOUhEoQ==,
+        integrity: sha512-6u9EFtdLBgHjnPm78NStVeM+I/1MolTzKykDDcydzKUkh6E++YS6XViU/fePJbvDvEGU4Xq34KOM/CLeer9I2A==,
       }
     engines: { node: '>=16.13.0' }
     hasBin: true
@@ -19331,13 +19312,13 @@ packages:
       mongodb: ^5.8.0 || ^6.0.0
       mssql: ^9.1.1 || ^10.0.0 || ^11.0.0 || ^12.0.0
       mysql2: ^2.2.5 || ^3.0.1
-      oracledb: ^6.3.0
+      oracledb: ^6.3.0 || ^7.0.0
       pg: ^8.5.1
       pg-native: ^3.0.0
       pg-query-stream: ^4.0.0
       redis: ^3.1.1 || ^4.0.0 || ^5.0.14
       sql.js: ^1.4.0
-      sqlite3: ^5.0.3
+      sqlite3: ^5.0.3 || ^6.0.0
       ts-node: ^10.7.0
       typeorm-aurora-data-api-driver: ^2.0.0 || ^3.0.0
     peerDependenciesMeta:
@@ -20366,6 +20347,13 @@ packages:
     resolution:
       {
         integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==,
+      }
+    engines: { node: '>=12' }
+
+  yargs@17.7.3:
+    resolution:
+      {
+        integrity: sha512-GZtjxm/J/4TSxuL3FNYjCmLktBTnIw/rVmKSIyKeYAZpmJB2ig9VauCC5xsa82GNKVKDAqpOn3KVzNt0zmrU0g==,
       }
     engines: { node: '>=12' }
 
@@ -23668,13 +23656,13 @@ snapshots:
     optionalDependencies:
       '@nestjs/platform-express': 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)
 
-  '@nestjs/typeorm@11.0.1(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))':
+  '@nestjs/typeorm@11.0.1(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.24)(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))':
     dependencies:
       '@nestjs/common': 11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/core': 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/platform-express@11.1.24)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       reflect-metadata: 0.1.14
       rxjs: 7.8.2
-      typeorm: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
 
   '@noble/hashes@1.4.0': {}
 
@@ -26313,7 +26301,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.1
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -27476,7 +27464,7 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  ansis@4.3.0: {}
+  ansis@4.3.1: {}
 
   anymatch@3.1.3:
     dependencies:
@@ -29350,8 +29338,6 @@ snapshots:
       path-expression-matcher: 1.6.2
       strnum: 2.4.1
       xml-naming: 0.3.0
-
-  fastify-plugin@5.1.0: {}
 
   fastq@1.20.1:
     dependencies:
@@ -32148,7 +32134,7 @@ snapshots:
 
   pg-int8@1.0.1: {}
 
-  pg-mem@3.0.14(typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))):
+  pg-mem@3.0.14(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))):
     dependencies:
       functional-red-black-tree: 1.0.1
       immutable: 4.3.8
@@ -32158,7 +32144,7 @@ snapshots:
       object-hash: 2.2.0
       pgsql-ast-parser: 12.0.2
     optionalDependencies:
-      typeorm: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
+      typeorm: 0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
 
   pg-pool@3.14.0(pg@8.21.0):
     dependencies:
@@ -34091,34 +34077,10 @@ snapshots:
 
   typedarray@0.0.6: {}
 
-  typeorm-fastify-plugin@3.0.0(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)):
-    dependencies:
-      fastify-plugin: 5.1.0
-      typeorm: 0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3))
-    transitivePeerDependencies:
-      - '@google-cloud/spanner'
-      - '@sap/hana-client'
-      - babel-plugin-macros
-      - better-sqlite3
-      - ioredis
-      - mongodb
-      - mssql
-      - mysql2
-      - oracledb
-      - pg
-      - pg-native
-      - pg-query-stream
-      - redis
-      - sql.js
-      - sqlite3
-      - supports-color
-      - ts-node
-      - typeorm-aurora-data-api-driver
-
-  typeorm@0.3.29(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)):
+  typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.0)(pg@8.21.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)):
     dependencies:
       '@sqltools/formatter': 1.2.5
-      ansis: 4.3.0
+      ansis: 4.3.1
       app-root-path: 3.1.0
       buffer: 6.0.3
       dayjs: 1.11.21
@@ -34131,7 +34093,7 @@ snapshots:
       sql-highlight: 6.1.0
       tslib: 2.8.1
       uuid: 11.1.1
-      yargs: 17.7.2
+      yargs: 17.7.3
     optionalDependencies:
       ioredis: 5.11.0
       pg: 8.21.0
@@ -34404,7 +34366,7 @@ snapshots:
       picomatch: 4.0.4
       postcss: 8.5.15
       rollup: 4.60.4
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 20.19.9
       fsevents: 2.3.3
@@ -34827,6 +34789,16 @@ snapshots:
   yargs-parser@21.1.1: {}
 
   yargs@17.7.2:
+    dependencies:
+      cliui: 8.0.1
+      escalade: 3.2.0
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.3
+      y18n: 5.0.8
+      yargs-parser: 21.1.1
+
+  yargs@17.7.3:
     dependencies:
       cliui: 8.0.1
       escalade: 3.2.0
