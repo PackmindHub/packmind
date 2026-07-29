@@ -28,4 +28,6 @@ This directory contains all deployable applications in the Packmind monorepo.
 - Test an application: `./node_modules/.bin/nx test <app-name>`
 - Lint an application: `./node_modules/.bin/nx lint <app-name>`
 
+> Not every project exposes every target: `cli-e2e-tests` only supports `test` (no `build`/`lint`), and `e2e-tests` is run via `pnpm run e2e` rather than Nx. Use `./node_modules/.bin/nx show project <app-name>` to see a project's available targets.
+
 **Available applications**: `api`, `frontend`, `packmind-cli`, `playground`, `e2e-tests`, `cli-e2e-tests`, `doc`
