@@ -35,7 +35,13 @@ jobs:
       - name: Install claude-md-management plugin
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: claude plugin install claude-md-management@claude-plugins-official
+        run: |
+          # Refresh the official marketplace first: the CLI ships an auto-registered
+          # but stale snapshot that can predate this plugin. `add` fetches the latest
+          # manifest; if it's already registered, fall back to `update`.
+          claude plugin marketplace add anthropics/claude-plugins-official \
+            || claude plugin marketplace update claude-plugins-official
+          claude plugin install claude-md-management@claude-plugins-official
 
       - name: Improve CLAUDE.md files with Claude
         env:
