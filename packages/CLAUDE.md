@@ -133,8 +133,11 @@ The `Branded` / `brandedIdFactory` helpers live in `packages/types/src/brandedTy
 - Lint a package: `./node_modules/.bin/nx lint <package-name>`
 
 > Two Nx project names differ from their directory name: `packages/frontend` is `frontend-lib` (plain
-> `frontend` is the **app**) and `packages/integration-tests` is `@packmind/integration-tests`. Not
-> every package exposes every target either — `packages/integration-tests/project.json` declares only
-> `build`. Use `./node_modules/.bin/nx show project <package-name>` to see a project's real targets.
+> `frontend` is the **app**) and `packages/integration-tests` is `@packmind/integration-tests`.
+>
+> Most targets are **inferred** by Nx plugins rather than declared: `@nx/jest/plugin` derives `test`
+> from a package's `jest.config.ts` and `@nx/eslint/plugin` derives `lint` (see `plugins` in
+> `nx.json`). So a `project.json` that lists only `build` still has a `test` target — check with
+> `./node_modules/.bin/nx show project <package-name>` instead of reading `project.json`.
 
 **Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`
