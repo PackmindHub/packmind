@@ -66,24 +66,28 @@ that the rule needs an exception.
 ## Package Layout
 
 Domain packages (`accounts`, `spaces`, `standards`, `skills`, `commands`, `deployments`, `git`,
-`coding-agent`, `llm`) all share the same physical shape, so there is no need to explore one to find
-your bearings:
+`coding-agent`, `llm`) follow a common shape. Only the first four lines are present in every one of
+them; the rest exist where the package needs them, so check before assuming a directory is there:
 
 ```
-src/<Name>Hexa.ts                       entry point, extends BaseHexa
-src/application/adapter/<Name>Adapter.ts
-src/application/useCases/<useCaseName>/
-src/application/services/
-src/application/jobs/
-src/domain/entities|repositories|useCases|errors|jobs/
-src/infra/schemas/                      TypeORM EntitySchema + a <name>Schemas.ts barrel
-src/infra/repositories/
-src/index.ts                            public barrel — nothing is importable until exported here
-test/                                   entity factories, published as @packmind/<pkg>/test
+src/<Name>Hexa.ts                       always — entry point, extends BaseHexa
+src/application/adapter/<Name>Adapter.ts always
+src/application/services/               always
+src/index.ts                            always — public barrel; nothing is importable until exported here
+src/application/useCases/<useCaseName>/ all but spaces (which drives everything through services)
+src/domain/repositories|useCases|errors/ most
+src/domain/entities/                    only accounts, standards, deployments
+src/infra/schemas/                      persistence packages only — <name>Schemas.ts barrel of TypeORM EntitySchemas
+src/infra/repositories/                 persistence packages only
+src/application/jobs/ + src/domain/jobs/ only commands, deployments, git
+test/                                   only the 7 packages listed below
 ```
 
 `BaseHexa`, `BaseService` and `HexaRegistry` come from `@packmind/node-utils`
 (`packages/node-utils/src/hexa/`).
+
+Two of the packages above are **not** persistence domains and diverge most: `coding-agent` has no
+`infra/schemas/`, no `test/` and stores nothing, and `llm` has schemas but no `test/`.
 
 ### Architecture rules live in `packages/.claude/rules/packmind/`
 
@@ -102,9 +106,19 @@ them rather than inferring from neighbouring code:
 
 ### Entity factories: the `/test` subpath
 
-Each domain package ships its entity factories in `packages/<pkg>/test/` (an `index.ts` plus one
-`<entity>Factory.ts` per entity), aliased in `tsconfig.base.json` and imported as
-`@packmind/<pkg>/test` — for example `import { standardFactory } from '@packmind/standards/test'`.
+Packages that own persisted entities ship their factories in `packages/<pkg>/test/` (an `index.ts`
+plus one `<entity>Factory.ts` per entity), imported as `@packmind/<pkg>/test` — for example
+`import { standardFactory } from '@packmind/standards/test'`.
+
+**Exactly seven packages have this subpath**: `accounts`, `commands`, `deployments`, `git`, `skills`,
+`spaces`, `standards`. There is no `@packmind/coding-agent/test` or `@packmind/llm/test` — don't
+import one. (`packages/node-utils/test/` exists but holds shared test suites, not factories, and is
+not exposed as a subpath.)
+
+Only `commands`, `deployments`, `skills`, `spaces` (and the legacy `recipes`) have an explicit
+`"@packmind/<pkg>/test"` entry in `tsconfig.base.json`; `accounts`, `git` and `standards` resolve
+through the workspace package instead. If a new `/test` subpath fails to resolve under Jest, add the
+alias — `jest.config.ts` maps modules from those `paths`.
 
 - Spec files import factories from there; production code must not.
 - **Entity** factories belong to the owning package's `test/` folder; **generic** test helpers

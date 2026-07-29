@@ -34,12 +34,36 @@ Two sibling folders are **not** agents:
 
 ## Adding an agent
 
-1. Add the key to `CodingAgent` in `packages/types/src/coding-agent/CodingAgent.ts` (and the
-   artefact paths in `CodingAgentArtefactPaths.ts` if it writes multiple files).
-2. Create `src/infra/repositories/<agent>/<Agent>Deployer.ts` implementing `ICodingAgentDeployer`,
+Adding the key to `CodingAgent` (`packages/types/src/coding-agent/CodingAgent.ts`) is step one, and
+it splits the remaining work into two kinds: places the compiler forces you to update, and places
+that fail **silently**.
+
+The compiler catches these — they are total `Record<CodingAgent, …>` maps, so the build breaks until
+each has an entry:
+
+- `CodingAgents` — `packages/types/src/coding-agent/CodingAgent.ts`
+- `AGENT_CAPABILITIES` — `packages/types/src/coding-agent/AgentCapabilities.ts`
+- `AGENT_FILE_PATHS` — `src/domain/AgentConfiguration.ts`, the agent's config-file path
+  (`CLAUDE.md`, `.cursor/rules/…`); `DeployerService` reads it to load existing content before
+  rendering. Use `''` when the agent has no single config file, as `claude_plugin` does.
+
+These do **not** fail at compile time — miss one and the agent misbehaves at runtime:
+
+- **`canCreateDeployer` in `CodingAgentDeployerRegistry.ts`** — a hand-maintained
+  `agent === 'x' || agent === 'y' || …` chain that duplicates `createDeployer`'s switch. Forget it and
+  `hasDeployer()` returns `false` for a perfectly registered agent, so callers skip it instead of
+  erroring.
+- **`createDeployer`'s switch** in the same file — its `default` throws at runtime rather than
+  failing the build.
+- **`CODING_AGENT_ARTEFACT_PATHS`** — `packages/types/src/coding-agent/CodingAgentArtefactPaths.ts`.
+  It is a `Partial<Record<…>>`, so a missing entry compiles fine; needed only for agents that write
+  artefacts to their own directories.
+
+Then:
+
+1. Create `src/infra/repositories/<agent>/<Agent>Deployer.ts` implementing `ICodingAgentDeployer`,
    reusing `genericSectionWriter/` where the output is one file.
-3. Add the `case` to `createDeployer` in `CodingAgentDeployerRegistry.ts`.
-4. Add `packages/integration-tests/src/coding-agents-deployments/<agent>-deployment.spec.ts` —
+2. Add `packages/integration-tests/src/coding-agents-deployments/<agent>-deployment.spec.ts` —
    **that** directory, not this package, is where each agent's emitted files are actually asserted.
 
 ## Gotcha
