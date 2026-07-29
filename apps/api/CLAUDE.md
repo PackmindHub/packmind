@@ -1,24 +1,23 @@
 # API Application
 
-Main backend API for Packmind, built with NestJS and hexagonal architecture.
+Main backend API for Packmind, built with NestJS. Business logic follows hexagonal (ports & adapters) architecture in the `packages/*` libraries consumed by this app; `apps/api/src` itself is organized as NestJS feature modules that wire those libraries together.
 
 ## Architecture
 
-- **Framework**: NestJS 11 with hexagonal (ports & adapters) architecture
+- **Framework**: NestJS 11, feature modules under `apps/api/src/app` (e.g. `auth`, `accounts`, `organizations`, `spaces`, `sse`); domain/application/infrastructure layering lives in the `packages/*` libraries consumed by the API
 - **Database**: PostgreSQL with TypeORM 0.3 for entity persistence
-- **Authentication**: JWT-based authentication with refresh tokens
-- **Background Jobs**: BullMQ for asynchronous task processing
+- **Authentication**: JWT-based authentication via `@nestjs/jwt` (cookie and API-key based), no Passport strategy or refresh tokens
+- **Background Jobs**: BullMQ (via shared `packages/node-utils` and other packages) for asynchronous task processing
 - **Error Tracking**: Sentry for production error monitoring
-- **API Style**: RESTful with OpenAPI documentation
+- **API Style**: RESTful (no OpenAPI/Swagger documentation set up)
 
 ## Technologies
 
 - **NestJS**: v11 - Dependency injection, modules, guards, interceptors
 - **TypeORM**: v0.3 - Entity management, migrations, query builder
 - **PostgreSQL**: Primary database
-- **Redis**: Caching and BullMQ job queue
-- **BullMQ**: Background job processing
-- **Passport**: JWT authentication strategy
+- **Redis**: Used for SSE pub/sub across instances and caching
+- **BullMQ**: Background job processing (via shared packages)
 - **Sentry**: Error tracking and monitoring
 
 ## Main Commands

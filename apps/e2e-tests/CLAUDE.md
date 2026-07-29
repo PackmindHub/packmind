@@ -4,7 +4,7 @@ Playwright end-to-end tests for Packmind frontend and API, using Page Object Mod
 
 ## Architecture
 
-- **Framework**: Playwright 1.56 for browser automation
+- **Framework**: Playwright 1.58 for browser automation
 - **Pattern**: Page Object Model for maintainable test organization
 - **Test Organization**: Tests organized by user flow and feature area
 - **Fixtures**: Custom fixtures for API setup and user authentication
@@ -18,9 +18,9 @@ Playwright end-to-end tests for Packmind frontend and API, using Page Object Mod
 
 ## Technologies
 
-- **Playwright**: v1.56 - Cross-browser testing (Chromium, Firefox, WebKit)
+- **Playwright**: v1.58 - Cross-browser testing (Chromium, Firefox, WebKit)
 - **TypeScript**: Type-safe page objects and test definitions
-- **Custom Fixtures**: `testWithApi`, `testWithUser` for setup/teardown
+- **Custom Fixtures**: `testWithApi`, `testWithUserSignedUp`, `testWithUserData` for setup/teardown
 - **Test Factories**: Shared factories from `packages/test-utils/`
 
 ## Main Commands

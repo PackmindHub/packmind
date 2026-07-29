@@ -19,8 +19,8 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Local Development Environment
 
-Local development uses Docker Compose to run all services (API, frontend, database, Redis, Postgresq).
-This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
+Local development uses Docker Compose to run all services (API, frontend, Redis, PostgreSQL).
+Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
 ## Working with Nx
 
 The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)

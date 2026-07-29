@@ -17,14 +17,16 @@ This directory contains reusable domain and infrastructure packages shared acros
 - **accounts** - User account management, authentication, and user profiles
 - **spaces** - Workspace management, space members, roles, and permissions
 - **standards** - Coding standards creation, storage, and retrieval
-- **recipes** - Multi-step coding recipe definitions and execution
+- **commands** - Multi-step coding command definitions and execution (formerly "recipes")
 - **skills** - AI agent skill definitions and management
 - **editions** - Product edition management (OSS, Enterprise, etc.)
+- **feature-flags** - Shared, browser-safe feature-flag registry and decision logic (consumed by both frontend and backend)
+- **playbook-change-applier** - Applies proposed changes to playbook artifacts (standards, commands, skills)
 
 ### Integration & Deployment
 
-- **git** - Git repository operations for standards and recipe deployment
-- **deployments** - Deployment pipeline for distributing standards, recipes, and skills to AI agents
+- **git** - Git repository operations for standards and command deployment
+- **deployments** - Deployment pipeline for distributing standards, commands, and skills to AI agents
 - **coding-agent** - AI coding agent integration and rendering for multiple agent types (Claude Code, Cursor, etc.)
 
 ### Language Analysis
@@ -41,6 +43,7 @@ This directory contains reusable domain and infrastructure packages shared acros
 ### Supporting
 
 - **assets** - Static assets, WASM files, and embedded resources
+- **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.)
 
 ## Working with Packages
 

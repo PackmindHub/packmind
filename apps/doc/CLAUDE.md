@@ -11,7 +11,7 @@ Mintlify-based end-user documentation for Packmind.
 
 ## Main Commands
 
-- Dev server: `mint dev` 
+- Dev server: `npx mintlify dev`
 - Build: Handled by Mintlify Cloud on deployment
 
 ## Configuration
