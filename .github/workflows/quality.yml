@@ -143,11 +143,11 @@ jobs:
         env:
           PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
-  check-cli-sync:
+  check-oss-sync:
     if: vars.PACKMIND_EDITION == 'proprietary'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
-    name: Check CLI source parity with OSS
+    name: Check source parity with OSS
 
     steps:
       - name: Checkout proprietary repo
@@ -182,3 +182,32 @@ jobs:
           fi
 
           echo "CLI source code is in sync with OSS."
+
+      - name: Compare packages/migrations directories
+        run: |
+          EXCLUDES=(-x node_modules -x dist -x '.*' -x packmind-lock.json)
+
+          PROPRIETARY_COUNT=$(find packages/migrations/src -type f | wc -l | tr -d ' ')
+          OSS_COUNT=$(find /tmp/packmind-oss/packages/migrations/src -type f | wc -l | tr -d ' ')
+          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
+
+          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
+            echo "::error::One of the directories is empty or missing. Aborting comparison."
+            exit 1
+          fi
+
+          echo ""
+          echo "=== File presence differences ==="
+          diff -rq "${EXCLUDES[@]}" packages/migrations /tmp/packmind-oss/packages/migrations || FILE_DIFF=1
+
+          echo ""
+          echo "=== Content differences ==="
+          diff -r "${EXCLUDES[@]}" packages/migrations /tmp/packmind-oss/packages/migrations || CONTENT_DIFF=1
+
+          if [ "${FILE_DIFF:-0}" = "1" ] || [ "${CONTENT_DIFF:-0}" = "1" ]; then
+            echo ""
+            echo "::error::packages/migrations has diverged from the OSS repo (PackmindHub/Packmind). Backport the change to OSS main first, then re-run - both editions must ship the same schema history."
+            exit 1
+          fi
+
+          echo "packages/migrations is in sync with OSS."
