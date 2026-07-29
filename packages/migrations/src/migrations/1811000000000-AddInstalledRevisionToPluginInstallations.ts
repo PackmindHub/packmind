@@ -28,7 +28,7 @@ export class AddInstalledRevisionToPluginInstallations1811000000000 implements M
     try {
       await queryRunner.query(`
         ALTER TABLE "plugin_installations"
-        ADD COLUMN "installed_revision" varchar NULL
+        ADD COLUMN IF NOT EXISTS "installed_revision" varchar NULL
       `);
       this.logger.info(
         'Added installed_revision column to plugin_installations',
@@ -55,7 +55,7 @@ export class AddInstalledRevisionToPluginInstallations1811000000000 implements M
     try {
       await queryRunner.query(`
         ALTER TABLE "plugin_installations"
-        DROP COLUMN "installed_revision"
+        DROP COLUMN IF EXISTS "installed_revision"
       `);
       this.logger.info(
         'Rollback AddInstalledRevisionToPluginInstallations completed successfully',
