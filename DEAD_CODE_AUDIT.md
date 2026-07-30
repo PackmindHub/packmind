@@ -6,17 +6,19 @@ from `*.spec.ts` / `*.stories.tsx` (i.e. the only thing keeping it alive is its 
 
 ## Scope
 
-**`packages/types` is excluded.** It is shared with a proprietary repository that is not
-visible here, so an export that looks unused from inside this monorepo may well be
-consumed there. Nothing in `packages/types` can be judged from this repo alone.
+**`packages/types` and `packages/editions` are excluded.** Both are shared with a
+proprietary repository that is not visible here, so an export that looks unused from
+inside this monorepo may well be consumed there. Neither package can be judged from this
+repo alone.
 
-Two other spots carry the same cross-repo risk and should be confirmed before any
-deletion — they are reported below, but flagged:
+For `editions` the structure makes this visible: `src/index.ts` re-exports only `./oss/*`,
+implying a paired non-OSS tree outside this repo, and `oss/linter` declares
+`linterSchemas: [] = []` while re-declaring its own copies of the linter entity types —
+an OSS stub whose real implementation lives elsewhere.
 
-- **`packages/editions`** — `src/index.ts` re-exports only `./oss/*`, which implies a
-  paired non-OSS tree living outside this repo. `oss/linter` in particular declares
-  `linterSchemas: [] = []` and re-declares its own copies of the linter entity types,
-  i.e. it reads as an OSS stub whose real implementation is elsewhere.
+One spot carries the same cross-repo risk and should be confirmed before any deletion —
+it is reported below, but flagged:
+
 - **`I<UseCase>` interfaces in domain packages** (`skills`, `standards`, `coding-agent`) —
   these are ports. If the proprietary repo implements any of them, they are live.
 
@@ -51,8 +53,8 @@ deleting anything that is deliberately staged for near-term work.
 
 ## Summary
 
-Excluding `packages/types`: **29 dead files, ~600 LOC**, plus **24 dead exports** inside
-otherwise-live files.
+Excluding `packages/types` and `packages/editions`: **28 dead files, ~595 LOC**, plus
+**21 dead exports** inside otherwise-live files.
 
 | Package | Dead files | LOC | of which test-only |
 | --- | --- | --- | --- |
@@ -65,7 +67,6 @@ otherwise-live files.
 | `assets` | 1 | 16 | 0 |
 | `standards` | 1 | 14 | 0 |
 | `llm` | 1 | 12 | 0 |
-| `editions` | 1 | 9 | 0 |
 | `frontend` | 1 | 5 | 0 |
 
 The table counts production source files only. Packages with **no** dead production
@@ -169,12 +170,6 @@ abandoned mid-refactor before deleting.
 | `src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/apply-changes.ts` | 52 | UNUSED | APPLY_CHANGES |
 | `src/infra/repositories/genericSectionWriter/GenericCommandSectionWriter.ts` | 58 | TEST_ONLY | GenericCommandSectionWriterOpts, GenericCommandSectionWriter |
 
-#### `editions`
-
-| File | LOC | Status | Exports |
-|---|---|---|---|
-| `src/oss/amplitude/domain/entities/AmplitudeNodeEvent.ts` | 9 | UNUSED | AmplitudeNodeEvent |
-
 #### `frontend`
 
 | File | LOC | Status | Exports |
@@ -239,8 +234,6 @@ Exports with **zero** references anywhere in the repo, including inside their ow
 | `deployments` | `DEPLOYMENTS_VERSION` | `src/index.ts` |
 | `deployments` | `createActiveDistributedPackagesByTarget` | `test/activeDistributedPackagesByTargetFactory.ts` |
 | `deployments` | `distributionFactory` | `test/distributionFactory.ts` |
-| `editions` ⚠️ | `AmplitudeConfig` | `src/oss/amplitude/index.ts` |
-| `editions` ⚠️ | `MoveArtifactsToSpaceUseCase`, `SpaceOwnershipMismatchError` | `src/oss/spaces-management/index.ts` |
 | `git` | `GitlabFile`, `GitlabBranch` | `src/infra/repositories/gitlab/types.ts` |
 | `linter-ast` | `ParseResult` | `src/core/types/ast.types.ts` |
 | `llm` | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` | `src/constants/defaultModels.ts` |
@@ -256,11 +249,10 @@ Exports with **zero** references anywhere in the repo, including inside their ow
 | `ui` | `PMSwitchCheckedChangeDetails` | `src/lib/components/form/PMSwitch/PMSwitch.tsx` |
 | `ui` | `PMPortalProps` | `src/lib/components/layout/PMPortal/PMPortal.tsx` |
 
-⚠️ = `editions` cross-repo risk, see **Scope**.
-
 ## Not reported as dead (deliberately)
 
-- **`packages/types`** — out of scope, shared with a proprietary repository.
+- **`packages/types`, `packages/editions`** — out of scope, shared with a proprietary
+  repository.
 - **`ui` `*Props` types** — a design kit's prop types are public API even when only the
   component itself references them. Only `Props` types with *zero* references anywhere
   (listed above) are flagged.
@@ -288,4 +280,4 @@ Cheapest and lowest-risk first, one commit per step:
 5. Test-only code: delete implementation **and** its spec together, or wire the
    implementation up if it was meant to ship.
 6. **Only after confirming against the proprietary repo:** the unimplemented use-case
-   ports (§2) and the `editions` exports.
+   ports (§2).
