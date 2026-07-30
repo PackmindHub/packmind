@@ -16,11 +16,38 @@ implying a paired non-OSS tree outside this repo, and `oss/linter` declares
 `linterSchemas: [] = []` while re-declaring its own copies of the linter entity types —
 an OSS stub whose real implementation lives elsewhere.
 
-One spot carries the same cross-repo risk and should be confirmed before any deletion —
-it is reported below, but flagged:
+### Cross-checked against `PackmindHub/packmind-proprietary`
 
-- **`I<UseCase>` interfaces in domain packages** (`skills`, `standards`, `coding-agent`) —
-  these are ports. If the proprietary repo implements any of them, they are live.
+Every remaining candidate was re-checked against the proprietary repo (cloned at
+`ed74410`). That repo is a **superset** of this monorepo: it vendors the same `packages/`
+and `apps/` trees and adds proprietary-only packages (`linter`, `plugins`,
+`spaces-management`, `playbook-change-management`, `amplitude`, `crisp`,
+`import-practices-legacy`).
+
+Two consequences:
+
+1. **All 28 candidate files exist in the proprietary repo** — it carries its own copy of
+   each. So "does the file exist there" cannot discriminate; only "is the symbol
+   *referenced* there" can.
+2. **Mirrored copies can diverge.** `apps/api/src/app/shared/PackmindApp.spec.ts` uses
+   `mockQueueFactory` in the proprietary repo and does not in this one. So the check had
+   to scan the whole proprietary tree, not just its proprietary-only packages.
+
+The cross-check rescued three items, now excluded from the results:
+
+| Symbol | Referenced in proprietary by |
+| --- | --- |
+| `SpaceScopedRepository` (`node-utils`, 33 LOC) | `packages/playbook-change-management/src/infra/repositories/ChangeProposalRepository.ts` — proprietary-only |
+| `PMList` (`ui`) | `apps/frontend/src/domain/detection/components/ActiveConfigurationSection/sections/ToReviewSection.tsx`, `…/DetectionAccordions/DetectabilitySection.tsx` — proprietary-only |
+| `mockQueueFactory` (`node-utils`) | `apps/api/src/app/shared/PackmindApp.spec.ts` — diverged copy, test-only |
+
+Everything else below is **dead in both repos**. Notably the `I<UseCase>` ports in
+`skills` / `standards` / `coding-agent` — the previous open question — are implemented
+nowhere in either repo.
+
+**Removal caveat:** because the proprietary repo vendors these same files, deleting one
+here without the matching deletion there will simply reappear on the next sync (and any
+mirrored spec still referencing it will break that build). Deletions need to land in both.
 
 ## Method
 
@@ -53,17 +80,17 @@ deleting anything that is deliberately staged for near-term work.
 
 ## Summary
 
-Excluding `packages/types` and `packages/editions`: **28 dead files, ~595 LOC**, plus
-**21 dead exports** inside otherwise-live files.
+Excluding `packages/types` and `packages/editions`, and after the proprietary cross-check:
+**26 dead files, ~560 LOC**, plus **20 dead exports** inside otherwise-live files.
 
 | Package | Dead files | LOC | of which test-only |
 | --- | --- | --- | --- |
 | `coding-agent` | 4 | 148 | 1 |
 | `accounts` | 4 | 133 | 0 |
-| `ui` | 6 | 116 | 1 |
-| `node-utils` | 4 | 58 | 1 |
+| `ui` | 5 | 114 | 1 |
 | `migrations` | 1 | 47 | 0 |
 | `skills` | 5 | 46 | 0 |
+| `node-utils` | 3 | 25 | 1 |
 | `assets` | 1 | 16 | 0 |
 | `standards` | 1 | 14 | 0 |
 | `llm` | 1 | 12 | 0 |
@@ -99,7 +126,7 @@ Port interfaces with no implementation, no injection site and no test:
 Also `standards/src/domain/useCases/IGetRuleExamples.ts` (`IGetRuleExamples`) as a dead
 export inside a file that is otherwise reachable.
 
-⚠️ Confirm none of these ports is implemented by the proprietary repo before deleting.
+Confirmed: none of these ports is implemented in the proprietary repo either.
 
 ### 3. Leftovers from finished migrations
 
@@ -125,11 +152,9 @@ keep suggesting them even though no code uses them. Either wire them up or drop 
 
 | Symbol | Documented in |
 | --- | --- |
-| `SpaceScopedRepository` (`node-utils`, 33 LOC) | `packages/.claude/rules/packmind/standard-scoped-repository-patterns.md` + `.cursor`/`.github`/`.gitlab` mirrors |
-| `PMCarousel`, `PMTwoColumnsLayout`, `PMList`, `pmUseToken`, `PMLabel` (`ui`) | `working-with-pm-design-kit` component catalog |
+| `PMCarousel`, `PMTwoColumnsLayout`, `pmUseToken`, `PMLabel` (`ui`) | `working-with-pm-design-kit` component catalog |
 | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` (`llm`) | `packages/llm/CLAUDE.md` |
 | `extractCodeFromMarkdown` (`node-utils`) | `packages/node-utils/CLAUDE.md` |
-| `mockQueueFactory` (`node-utils`) | `packages/node-utils/CLAUDE.md` |
 
 ### 5. Test-only code (alive solely because of its own test)
 
@@ -193,7 +218,6 @@ abandoned mid-refactor before deleting.
 | File | LOC | Status | Exports |
 |---|---|---|---|
 | `src/jobs/domain/QueueFactory.ts` | 7 | UNUSED | QueueFactory |
-| `src/repositories/SpaceScopedRepository.ts` | 33 | UNUSED | SpaceScopedRepository |
 | `src/text/MarkdownCleaner.ts` | 16 | TEST_ONLY | extractCodeFromMarkdown |
 | `types.ts` | 2 | UNUSED | — |
 
@@ -221,7 +245,6 @@ abandoned mid-refactor before deleting.
 | `src/lib/components/content/PMTwoColumnsLayout/PMTwoColumnsLayout.tsx` | 42 | UNUSED | PMTwoColumnsLayout |
 | `src/lib/components/form/PMLabel/PMLabel.tsx` | 32 | TEST_ONLY | PMLabel |
 | `src/lib/components/navigation/PMDataList/PMDataList.recipe.ts` | 22 | UNUSED | pmDataListRecipe |
-| `src/lib/components/typography/PMList.tsx` | 2 | UNUSED | PMList |
 | `src/lib/hooks/useToken.ts` | 3 | UNUSED | pmUseToken |
 
 ## Full inventory — dead exports inside live files
@@ -237,7 +260,6 @@ Exports with **zero** references anywhere in the repo, including inside their ow
 | `git` | `GitlabFile`, `GitlabBranch` | `src/infra/repositories/gitlab/types.ts` |
 | `linter-ast` | `ParseResult` | `src/core/types/ast.types.ts` |
 | `llm` | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` | `src/constants/defaultModels.ts` |
-| `node-utils` | `mockQueueFactory` | `src/jobs/test/mockQueueFactory.ts` |
 | `skills` | `AllowedFrontmatterField` | `src/domain/SkillProperties.ts` |
 | `standards` | `getAllSampleIds` | `samples/index.ts` |
 | `standards` | `IGetRuleExamples` | `src/domain/useCases/IGetRuleExamples.ts` |
@@ -279,5 +301,7 @@ Cheapest and lowest-risk first, one commit per step:
    `deployments` unused test factories, `ui` prop types, …).
 5. Test-only code: delete implementation **and** its spec together, or wire the
    implementation up if it was meant to ship.
-6. **Only after confirming against the proprietary repo:** the unimplemented use-case
-   ports (§2).
+6. The unimplemented use-case ports (§2) — cleared by the proprietary cross-check.
+
+Each step must be mirrored in `PackmindHub/packmind-proprietary`, which vendors the same
+files.
