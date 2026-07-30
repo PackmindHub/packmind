@@ -81,6 +81,21 @@ export interface ICommandsPort {
    */
   listCommandsBySpace(command: ListCommandsBySpaceCommand): Promise<Command[]>;
 
+  /**
+   * List all commands across every space of an organization, without space
+   * membership checks. Intended for organization-scoped aggregations
+   * where the caller has already been authorized at the organization level.
+   */
+  listAllCommandsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Command[]>;
+
+  /**
+   * Count recipes grouped by space ID, omitting spaces with zero recipes.
+   * Used for management listing aggregations.
+   */
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
+
   // ===========================
   // RECIPE VERSION MANAGEMENT
   // ===========================
