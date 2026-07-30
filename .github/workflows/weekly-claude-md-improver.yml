@@ -69,6 +69,10 @@ jobs:
             [ -z "$frontmatter" ] && continue
             SKILLS_INVENTORY+="- ${skill}"$'\n'"${frontmatter}"$'\n\n'
             SKILLS_COUNT=$((SKILLS_COUNT + 1))
+            # Logged per skill so a regression that silently empties the inventory (a gitignored
+            # .claude/skills, a narrowed checkout, an edited find pattern) is visible in the run log
+            # instead of quietly degrading into "skip deduplication".
+            echo "  + $skill"
           done
           echo "Loaded frontmatter for $SKILLS_COUNT skill(s)"
           [ "$SKILLS_COUNT" -eq 0 ] && SKILLS_INVENTORY="(no skills found in this repository)"
