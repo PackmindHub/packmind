@@ -4,14 +4,12 @@ Cross-domain test suites that exercise several hexas together through a real `He
 than mocking at the port boundary.
 
 This file covers the **mechanics**. The structural conventions for writing these specs are a
-Packmind standard in `.claude/rules/packmind/standard-integration-tests-structure-and-patterns.md`
-(also mirrored into this package's `AGENTS.md`) — follow that for test shape and naming.
+Packmind standard — `./.claude/rules/packmind/standard-integration-tests-structure-and-patterns.md`,
+in **this package's** rules directory, not the root one — so follow that for test shape and naming.
 
 ## Running them
 
-The Nx project is named **`@packmind/integration-tests`**, not `integration-tests`. `project.json`
-declares only a `build` target; the `test` target is inferred from `jest.config.ts` by
-`@nx/jest/plugin` (see `nx.json`).
+The Nx project is named **`@packmind/integration-tests`**, not `integration-tests`.
 
 **No Docker, database or Redis is needed.** The environment is faked in-process:
 

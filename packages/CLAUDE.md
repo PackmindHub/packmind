@@ -37,13 +37,13 @@ This directory contains reusable domain and infrastructure packages shared acros
 
 ### Frontend
 
-- **frontend** - Shared `data-testid` enums used by both `apps/frontend` components and `apps/e2e-tests` page objects (Nx project name: `frontend-lib`)
-- **ui** - Reusable UI components with Chakra UI (PM-prefixed components)
+- **frontend** - Shared `data-testid` enums used by both `apps/frontend` components and `apps/e2e-tests` page objects
+- **ui** - The PM design kit — see the `working-with-pm-design-kit` skill
 
 ### Supporting
 
 - **assets** - Static assets, WASM files, and embedded resources
-- **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.) (Nx project name: `@packmind/integration-tests`)
+- **integration-tests** - Cross-package integration test suites (deployments, standards, tracked repositories, etc.)
 
 ## Environment Tags and Import Boundaries
 
@@ -120,9 +120,8 @@ Only `commands`, `deployments`, `skills`, `spaces` (and the legacy `recipes`) ha
 through the workspace package instead. If a new `/test` subpath fails to resolve under Jest, add the
 alias — `jest.config.ts` maps modules from those `paths`.
 
-- Spec files import factories from there; production code must not.
-- **Entity** factories belong to the owning package's `test/` folder; **generic** test helpers
-  (datasource, logger stub, mock instances) belong to `@packmind/test-utils`.
+Spec files import factories from there; production code must not. For the split between these and the
+generic helpers in `@packmind/test-utils`, see [test-utils/CLAUDE.md](./test-utils/CLAUDE.md).
 
 ### Branded IDs
 
@@ -140,11 +139,8 @@ The `Branded` / `brandedIdFactory` helpers live in `packages/types/src/brandedTy
 
 ## Working with Packages
 
-### Common Nx Commands
-
-- Build a package: `./node_modules/.bin/nx build <package-name>`
-- Test a package: `./node_modules/.bin/nx test <package-name>`
-- Lint a package: `./node_modules/.bin/nx lint <package-name>`
+The generic `nx build|test|lint <name>` commands are in the root `CLAUDE.md`, which already covers
+packages. What it does not tell you:
 
 > Two Nx project names differ from their directory name: `packages/frontend` is `frontend-lib` (plain
 > `frontend` is the **app**) and `packages/integration-tests` is `@packmind/integration-tests`.
