@@ -153,5 +153,8 @@ The `Branded` / `brandedIdFactory` helpers live in `packages/types/src/brandedTy
 > from a package's `jest.config.ts` and `@nx/eslint/plugin` derives `lint` (see `plugins` in
 > `nx.json`). So a `project.json` that lists only `build` still has a `test` target — check with
 > `./node_modules/.bin/nx show project <package-name>` instead of reading `project.json`.
+>
+> `ui` is the one package with a hand-declared target that is not inferred:
+> `./node_modules/.bin/nx typecheck ui`. Its build output goes to `dist/packages/packmind-ui`.
 
 **Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`
