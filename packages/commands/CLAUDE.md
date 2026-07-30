@@ -25,10 +25,4 @@ where you look. Expect this rather than treating it as a bug:
 - When searching this domain, grep for **both** spellings — `grep -i recipe` finds call sites that
   `grep Command` misses.
 
-## Note
-
-`src/application/services/cookbook/CookbookService.ts` is a further legacy name in the same family.
-`buildCookbook()` renders a list of `CommandVersion`s into a single document; it is a rendering
-helper, not a separate domain concept.
-
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
