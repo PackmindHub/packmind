@@ -1,26 +1,31 @@
 # Documentation Application
 
-Mintlify-based end-user documentation for Packmind.
+Mintlify end-user documentation. Content is `.mdx` only — there is no TypeScript, React or build
+step in this app.
 
-## Technologies
+**Writing the content** is owned by the **`creating-end-user-documentation-for-packmind`** skill.
+Mintlify basics (local preview, deployment to Mintlify Cloud) are in `README.md`.
 
-- **Mintlify**: Documentation site generator with search and navigation
-- **MDX**: Markdown with embedded React components
-- **React**: For custom documentation components
-- **TypeScript**: Type-safe component development
+## The step the skill omits: register the page
 
-## Main Commands
+A new `.mdx` file is unreachable until it is listed in `docs.json` under
+`navigation.groups[].pages[]`. The skill does not mention this, so do it yourself. Current groups:
+Getting Started, Concepts, Playbook Maintenance, Tools & Integrations, Governance, Linter,
+Administration, Security & Privacy — matching the directories, except `home.mdx` and `index.mdx`
+which sit at the root.
 
-- Dev server: `npx mintlify dev`
-- Build: Handled by Mintlify Cloud on deployment
+Note both the skill and `README.md` list the content directories but omit `playbook-maintenance/`,
+which does exist and is referenced throughout `docs.json`.
+
+## Commands
+
+- Dev server: `./node_modules/.bin/nx dev doc` — the **only** target this project declares. There is
+  no `build`, `test` or `lint` for `doc` (no eslint or jest config), so the generic root commands do
+  not apply here.
 
 ## Configuration
 
-- **Config File**: `docs.json` in app root
-- **Navigation**: Defined in `docs.json`
-- **Theming**: Packmind brand colors and styling
-- **Search**: Automatically indexed by Mintlify
-
-## External Documentation
-
-- [Mintlify Documentation](https://mintlify.com/docs) for framework details
+- `docs.json` holds both configuration and navigation.
+- Theme is Mintlify's stock `mint` preset with indigo colours (`primary: #6366f1`) — not a bespoke
+  Packmind palette. Note Mintlify's `theme` key selects a *layout* preset, not colours.
+- Search is indexed automatically; there is no index to maintain.
