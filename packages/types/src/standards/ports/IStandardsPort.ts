@@ -54,6 +54,7 @@ export interface IStandardsPort {
   listAllStandardsByOrganization(
     organizationId: OrganizationId,
   ): Promise<Standard[]>;
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
   findStandardBySlug(
     slug: string,

@@ -220,6 +220,90 @@ describe('StandardRepository', () => {
     });
   });
 
+  describe('countBySpaceIds', () => {
+    describe('when counting standards per space', () => {
+      let counts: Awaited<
+        ReturnType<typeof standardRepository.countBySpaceIds>
+      >;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
+
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
+
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceA.id, slug: 'std-a-1' }),
+        );
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceA.id, slug: 'std-a-2' }),
+        );
+        await standardRepository.add(
+          standardFactory({ spaceId: spaceB.id, slug: 'std-b-1' }),
+        );
+
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await standardRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero standards', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await standardRepository.countBySpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted standards from the count', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const space = spaceFactory({ organizationId, slug: 'space-soft-delete' });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save(space);
+
+      await standardRepository.add(
+        standardFactory({ spaceId: space.id, slug: 'alive-std' }),
+      );
+      const deletedStandard = await standardRepository.add(
+        standardFactory({ spaceId: space.id, slug: 'deleted-std' }),
+      );
+      await standardRepository.deleteById(deletedStandard.id);
+
+      const counts = await standardRepository.countBySpaceIds([space.id]);
+
+      expect(counts.get(space.id)).toBe(1);
+    });
+
+    it('omits unknown space IDs from the result Map', async () => {
+      const unknownSpaceId = createSpaceId(uuidv4());
+
+      const counts = await standardRepository.countBySpaceIds([unknownSpaceId]);
+
+      expect(counts.has(unknownSpaceId)).toBe(false);
+    });
+  });
+
   itHandlesSoftDelete<Standard>({
     entityFactory: standardFactory,
     getRepository: () => standardRepository,

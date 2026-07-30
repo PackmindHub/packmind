@@ -175,6 +175,40 @@ export class StandardRepository
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    if (spaceIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.info('Counting standards by space IDs', {
+      spaceIdsCount: spaceIds.length,
+    });
+
+    try {
+      const rows = await this.repository
+        .createQueryBuilder('standard')
+        .select('standard.space_id', 'spaceId')
+        .addSelect('COUNT(*)', 'count')
+        .where('standard.space_id IN (:...spaceIds)', { spaceIds })
+        .groupBy('standard.space_id')
+        .getRawMany<{ spaceId: SpaceId; count: string }>();
+
+      const counts = new Map<SpaceId, number>(
+        rows.map((row) => [row.spaceId, Number(row.count)]),
+      );
+
+      this.logger.info('Counted standards by space IDs', {
+        spacesWithStandards: counts.size,
+      });
+      return counts;
+    } catch (error) {
+      this.logger.error('Failed to count standards by space IDs', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async markAsMoved(
     standardId: StandardId,
     destinationSpaceId: SpaceId,
