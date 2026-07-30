@@ -1,8 +1,24 @@
 # Dead code audit — `packages/`
 
-Audit of unused code across every package in `packages/`. "Dead" means an export that
+Audit of unused code across the packages in `packages/`. "Dead" means an export that
 is **never referenced from production code**: either referenced nowhere at all, or only
 from `*.spec.ts` / `*.stories.tsx` (i.e. the only thing keeping it alive is its own test).
+
+## Scope
+
+**`packages/types` is excluded.** It is shared with a proprietary repository that is not
+visible here, so an export that looks unused from inside this monorepo may well be
+consumed there. Nothing in `packages/types` can be judged from this repo alone.
+
+Two other spots carry the same cross-repo risk and should be confirmed before any
+deletion — they are reported below, but flagged:
+
+- **`packages/editions`** — `src/index.ts` re-exports only `./oss/*`, which implies a
+  paired non-OSS tree living outside this repo. `oss/linter` in particular declares
+  `linterSchemas: [] = []` and re-declares its own copies of the linter entity types,
+  i.e. it reads as an OSS stub whose real implementation is elsewhere.
+- **`I<UseCase>` interfaces in domain packages** (`skills`, `standards`, `coding-agent`) —
+  these are ports. If the proprietary repo implements any of them, they are live.
 
 ## Method
 
@@ -35,11 +51,11 @@ deleting anything that is deliberately staged for near-term work.
 
 ## Summary
 
-**55 dead files, ~1 130 LOC**, plus **80 dead exports** inside otherwise-live files.
+Excluding `packages/types`: **29 dead files, ~600 LOC**, plus **24 dead exports** inside
+otherwise-live files.
 
 | Package | Dead files | LOC | of which test-only |
 | --- | --- | --- | --- |
-| `types` | 26 | 530 | 2 |
 | `coding-agent` | 4 | 148 | 1 |
 | `accounts` | 4 | 133 | 0 |
 | `ui` | 6 | 116 | 1 |
@@ -55,7 +71,7 @@ deleting anything that is deliberately staged for near-term work.
 The table counts production source files only. Packages with **no** dead production
 file: `commands`, `deployments`, `feature-flags`, `git`, `integration-tests`,
 `linter-ast`, `linter-execution`, `spaces`, `test-utils` — though `deployments` does have
-two unused files under `test/` (see §6) and several of these packages have dead
+two unused files under `test/` (see §5) and several of these packages have dead
 individual exports.
 
 ## Highest-value findings
@@ -64,38 +80,27 @@ individual exports.
 
 `packages/accounts/src/application/useCases/manageOrganizationUseCase/ManageOrganizationUseCase.ts`
 is exported from `useCases/index.ts` and referenced from nowhere else — no Hexa, no
-NestJS module, no test. The largest single dead unit in `packages/`.
+NestJS module, no test. The largest single dead unit in scope.
 
-### 2. Unemitted domain events (11 files)
+Alongside it, two error classes that nothing throws or catches:
+`InvitationConfigurationError`, `PasswordResetConfigurationError`.
 
-Events are published and subscribed **by class reference** (`emitter.on(eventClass.eventName, …)`
-in `PackmindEventEmitterService`), so there is no dynamic string dispatch that could
-hide a usage. These event classes are declared but never constructed or listened to:
+### 2. Unimplemented use-case ports (8 files)
 
-- `types/src/spaces/events/`: `SpaceDeletedEvent`, `SpaceRenamedEvent`, `SpacePinnedEvent`,
-  `SpaceUnpinnedEvent`, `SpaceVisibilityUpdatedEvent`
-- `types/src/playbookChangeManagement/events/`: `ChangeProposalAcceptedEvent`
-  (plus its `isChangeProposalEdited` helper), `ChangeProposalRejectedEvent`,
-  `ChangeProposalSubmittedEvent`
-- `types/src/linter/events/`: `LinterCalledEvent`, `LinterRuleSeverityUpdatedEvent`
-- `types/src/spaces-management/events/`: `PlaybookArtefactMovedEvent`
+Port interfaces with no implementation, no injection site and no test:
 
-`types/src/events/SystemEvent.ts` (the `SystemEvent` base class) is **test-only** — its
-only consumer is `node-utils/src/hexa/events/PackmindListener.spec.ts`. Every real event
-extends `UserEvent`.
+- `skills/src/domain/useCases/`: `ICreateSkill`, `IDeleteSkill`, `IFindSkillBySlug`,
+  `IGetSkillById`, `IListSkillsBySpace` — the whole directory
+- `coding-agent/src/domain/useCases/`: `IPrepareCommandsDeploymentUseCase`,
+  `IPrepareStandardsDeploymentUseCase` (plus their `…Command` types)
+- `standards/src/domain/useCases/IDeployStandardsToGit.ts` (`DeployStandardsToGitCommand`)
 
-### 3. `I*UseCase` contract aliases in `types/src/linter/contracts/` (~25 dead type aliases)
+Also `standards/src/domain/useCases/IGetRuleExamples.ts` (`IGetRuleExamples`) as a dead
+export inside a file that is otherwise reachable.
 
-Each contract file declares a `Command` type, a `Response` type, and an
-`IUseCase<Command, Response>` alias. Consumers (`editions/oss/linter/LinterAdapter.ts`,
-`apps/cli/**/LinterGateway.ts`) import the `Command`/`Response` types and spell the
-method signatures out directly, so most `I…` aliases are never used. Live counter-example:
-`IGetActiveDetectionProgramForRule` *is* used by the CLI gateway, while
-`IGetActiveDetectionProgram` is not — so this needs per-symbol pruning, not a folder-wide
-delete. Same shape in `types/src/skills/contracts/` (`ICreateSkillUseCase`,
-`IUpdateSkillUseCase`) and `packages/skills/src/domain/useCases/` (5 fully dead files).
+⚠️ Confirm none of these ports is implemented by the proprietary repo before deleting.
 
-### 4. Leftovers from finished migrations
+### 3. Leftovers from finished migrations
 
 - `coding-agent/…/packmind-update-playbook/steps/apply-changes.ts` (`APPLY_CHANGES`, 52 LOC):
   superseded by the version-routed `packmind-versions/<v>/apply-changes.ts` files.
@@ -103,14 +108,15 @@ delete. Same shape in `types/src/skills/contracts/` (`ICreateSkillUseCase`,
   constant is the stranded source of a file the deployer actively removes.
 - `migrations/scripts/fix-docker-imports.js`: an older `.ts`-rewriting variant of
   `fix-docker-imports.mjs`. Only the `.mjs` is referenced by `project.json`.
-- `types/src/llm/AiAgentTypes.ts` (32 LOC): `AiAgentType`, `AiAgentTypes`,
-  `AiAgentConfigFile`, `JunieContentCheckResult`, `ClaudeContentCheckResult` — the
-  per-agent content-check types, all unused.
 - `accounts/src/domain/entities/TrialActivationToken.ts`: an **empty file**.
 - `node-utils/types.ts`: a stray root-level `export * from '@packmind/types'` re-export
   that nothing imports.
+- `llm/src/types/LLMRuntimeConfig.ts` (`LLMRuntimeConfig`): unused config type.
+- `frontend/src/domains/account/components/SettingsPageDataTestIds.ts`
+  (`SettingsPageDataTestId`): a `data-testid` enum no component or page object uses.
+- `assets/icons/ContinueIcon.tsx`: unreferenced icon.
 
-### 5. Documented-but-dead API
+### 4. Documented-but-dead API
 
 These are advertised in generated Packmind standards / skill catalogs, so agents will
 keep suggesting them even though no code uses them. Either wire them up or drop them
@@ -120,19 +126,17 @@ keep suggesting them even though no code uses them. Either wire them up or drop 
 | --- | --- |
 | `SpaceScopedRepository` (`node-utils`, 33 LOC) | `packages/.claude/rules/packmind/standard-scoped-repository-patterns.md` + `.cursor`/`.github`/`.gitlab` mirrors |
 | `PMCarousel`, `PMTwoColumnsLayout`, `PMList`, `pmUseToken`, `PMLabel` (`ui`) | `working-with-pm-design-kit` component catalog |
-| `SystemEvent` (`types`) | `packages/.claude/rules/packmind/standard-domain-events.md` |
 | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` (`llm`) | `packages/llm/CLAUDE.md` |
 | `extractCodeFromMarkdown` (`node-utils`) | `packages/node-utils/CLAUDE.md` |
 | `mockQueueFactory` (`node-utils`) | `packages/node-utils/CLAUDE.md` |
 
-### 6. Test-only code (alive solely because of its own test)
+### 5. Test-only code (alive solely because of its own test)
 
 | Symbol / file | Kept alive by |
 | --- | --- |
 | `coding-agent/…/GenericCommandSectionWriter.ts` (58 LOC) | `GenericCommandSectionWriter.spec.ts` only |
 | `node-utils/src/text/MarkdownCleaner.ts` (`extractCodeFromMarkdown`) | `MarkdownCleaner.spec.ts` only |
 | `ui/…/PMLabel/PMLabel.tsx` | three `*.stories.tsx` only |
-| `types/…/applier/testHelpers.ts` | the three applier specs (legitimate test helper, but it sits in a production `src/` tree) |
 | `deployments/test/distributionFactory.ts`, `deployments/test/activeDistributedPackagesByTargetFactory.ts` | nothing at all — unused *test* factories |
 
 Note `GenericCommandSectionWriter` / `GenericStandardSectionWriter` still appear in
@@ -214,37 +218,6 @@ abandoned mid-refactor before deleting.
 |---|---|---|---|
 | `src/domain/useCases/IDeployStandardsToGit.ts` | 14 | UNUSED | DeployStandardsToGitCommand |
 
-#### `types`
-
-| File | LOC | Status | Exports |
-|---|---|---|---|
-| `src/events/SystemEvent.ts` | 36 | TEST_ONLY | SystemEventPayload, SystemEvent |
-| `src/linter/contracts/IAssessRuleDetectionJob.ts` | 18 | UNUSED | AssessRuleDetectionJobCommand, IAssessRuleDetectionJob |
-| `src/linter/contracts/IGenerateProgramJob.ts` | 22 | UNUSED | GenerateProgramJobCommand, IGenerateProgramJob |
-| `src/linter/contracts/ISoftDeleteLinterArtefactsByRule.ts` | 14 | UNUSED | SoftDeleteLinterArtefactsByRuleCommand, SoftDeleteLinterArtefactsByRuleResponse, ISoftDeleteLinterArtefactsByRule |
-| `src/linter/contracts/IStartRuleDetectionAssessmentUseCase.ts` | 9 | UNUSED | IStartRuleDetectionAssessmentUseCase |
-| `src/linter/contracts/IUpdateHeuristicsFollowingChatbotInput.ts` | 19 | UNUSED | UpdateHeuristicsFollowingChatbotInputCommand, UpdateHeuristicsFollowingChatbotInputResponse, IUpdateHeuristicsFollowingChatbotInput |
-| `src/linter/DetectionProgramRuleInput.ts` | 13 | UNUSED | DetectionProgramRuleInput |
-| `src/linter/events/LinterCalledEvent.ts` | 11 | UNUSED | LinterCalledPayload, LinterCalledEvent |
-| `src/linter/events/LinterRuleSeverityUpdatedEvent.ts` | 13 | UNUSED | LinterRuleSeverityUpdatedPayload, LinterRuleSeverityUpdatedEvent |
-| `src/linter/GenerateProgramInput.ts` | 16 | UNUSED | GenerateProgramInput |
-| `src/llm/AiAgentTypes.ts` | 32 | UNUSED | AiAgentType, AiAgentTypes, AiAgentConfigFile, JunieContentCheckResult, … |
-| `src/llm/errors/AiNotConfigured.ts` | 16 | UNUSED | AiNotConfigured |
-| `src/playbookChangeManagement/applier/testHelpers.ts` | 34 | TEST_ONLY | createChangeProposalFactory |
-| `src/playbookChangeManagement/contracts/IApplyCommandChangeProposalUseCase.ts` | 22 | UNUSED | ApplyCommandChangeProposalCommand, ApplyCommandChangeProposalResponse, IApplyCommandChangeProposalUseCase |
-| `src/playbookChangeManagement/contracts/IListCommandChangeProposalsUseCase.ts` | 23 | UNUSED | ChangeProposalWithOutdatedStatus, ListCommandChangeProposalsCommand, ListCommandChangeProposalsResponse, IListCommandChangeProposalsUseCase |
-| `src/playbookChangeManagement/contracts/IRejectCommandChangeProposalUseCase.ts` | 21 | UNUSED | RejectCommandChangeProposalCommand, RejectCommandChangeProposalResponse, IRejectCommandChangeProposalUseCase |
-| `src/playbookChangeManagement/events/ChangeProposalAcceptedEvent.ts` | 50 | UNUSED | ChangeProposalAcceptedPayload, ChangeProposalAcceptedEvent, isChangeProposalEdited |
-| `src/playbookChangeManagement/events/ChangeProposalRejectedEvent.ts` | 19 | UNUSED | ChangeProposalRejectedPayload, ChangeProposalRejectedEvent |
-| `src/playbookChangeManagement/events/ChangeProposalSubmittedEvent.ts` | 21 | UNUSED | ChangeProposalSubmittedPayload, ChangeProposalSubmittedEvent |
-| `src/skills/errors/SkillAlreadyExistsError.ts` | 42 | UNUSED | SkillAlreadyExistsError |
-| `src/spaces-management/events/PlaybookArtefactMovedEvent.ts` | 17 | UNUSED | PlaybookArtefactMovedPayload, PlaybookArtefactMovedEvent |
-| `src/spaces/events/SpaceDeletedEvent.ts` | 13 | UNUSED | SpaceDeletedPayload, SpaceDeletedEvent |
-| `src/spaces/events/SpacePinnedEvent.ts` | 11 | UNUSED | SpacePinnedPayload, SpacePinnedEvent |
-| `src/spaces/events/SpaceRenamedEvent.ts` | 14 | UNUSED | SpaceRenamedPayload, SpaceRenamedEvent |
-| `src/spaces/events/SpaceUnpinnedEvent.ts` | 11 | UNUSED | SpaceUnpinnedPayload, SpaceUnpinnedEvent |
-| `src/spaces/events/SpaceVisibilityUpdatedEvent.ts` | 13 | UNUSED | SpaceVisibilityUpdatedPayload, SpaceVisibilityUpdatedEvent |
-
 #### `ui`
 
 | File | LOC | Status | Exports |
@@ -260,60 +233,34 @@ abandoned mid-refactor before deleting.
 
 Exports with **zero** references anywhere in the repo, including inside their own file.
 
-### `types`
+| Package | Dead exports | File |
+| --- | --- | --- |
+| `accounts` | `InvitationResendRecord` | `src/application/services/InvitationService.ts` |
+| `deployments` | `DEPLOYMENTS_VERSION` | `src/index.ts` |
+| `deployments` | `createActiveDistributedPackagesByTarget` | `test/activeDistributedPackagesByTargetFactory.ts` |
+| `deployments` | `distributionFactory` | `test/distributionFactory.ts` |
+| `editions` ⚠️ | `AmplitudeConfig` | `src/oss/amplitude/index.ts` |
+| `editions` ⚠️ | `MoveArtifactsToSpaceUseCase`, `SpaceOwnershipMismatchError` | `src/oss/spaces-management/index.ts` |
+| `git` | `GitlabFile`, `GitlabBranch` | `src/infra/repositories/gitlab/types.ts` |
+| `linter-ast` | `ParseResult` | `src/core/types/ast.types.ts` |
+| `llm` | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` | `src/constants/defaultModels.ts` |
+| `node-utils` | `mockQueueFactory` | `src/jobs/test/mockQueueFactory.ts` |
+| `skills` | `AllowedFrontmatterField` | `src/domain/SkillProperties.ts` |
+| `standards` | `getAllSampleIds` | `samples/index.ts` |
+| `standards` | `IGetRuleExamples` | `src/domain/useCases/IGetRuleExamples.ts` |
+| `ui` | `PMColorSwatchProps` | `src/lib/components/content/PMColorSwatch.tsx` |
+| `ui` | `PMButtonGroupProps` | `src/lib/components/form/PMButton/PMButton.tsx` |
+| `ui` | `PMCheckboxCheckedChangeDetails` | `src/lib/components/form/PMCheckbox/PMCheckbox.tsx` |
+| `ui` | `PMFieldProps` | `src/lib/components/form/PMField/PMField.tsx` |
+| `ui` | `PMMenuRoot`, `PMMenuTrigger` | `src/lib/components/form/PMMenu/PMMenu.tsx` |
+| `ui` | `PMSwitchCheckedChangeDetails` | `src/lib/components/form/PMSwitch/PMSwitch.tsx` |
+| `ui` | `PMPortalProps` | `src/lib/components/layout/PMPortal/PMPortal.tsx` |
 
-`SanitizedUser`, `CreateUser` (`accounts/User.ts`) · `RepositoryDeploymentStatus`,
-`TargetDeploymentStatus` (`deployments/contracts/IGetDeploymentOverview.ts`) ·
-`PackageWithArtefactsResponse` (`deployments/contracts/PackageResponse.ts`) ·
-`RepositorySkillDeploymentStatus`, `TargetSkillDeploymentStatus`
-(`deployments/SkillDeploymentOverview.ts`) · `RepositoryStandardDeploymentStatus`,
-`TargetStandardDeploymentStatus` (`deployments/StandardDeploymentOverview.ts`) ·
-`GitProviderAuthMethods` (`git/GitProvider.ts`) · `getAllProgrammingLanguages`
-(`languages/ProgrammingLanguage.ts`) · `getProviderMetadata`, `getAllProviders`,
-`getConfigurableProviders` (`llm/LLMProviderMetadata.ts`) · `CreationChangeProposalTypes`,
-`RemoveChangeProposalTypes` (`playbookChangeManagement/ChangeProposalType.ts`) ·
-`IApplyChangeProposalsUseCase` (`playbookChangeManagement/contracts/IApplyChangeProposals.ts`) ·
-`IRecomputeConflictsUseCase` (`playbookChangeManagement/contracts/IRecomputeConflicts.ts`) ·
-`ICreateSkillUseCase` (`skills/contracts/CreateSkillUseCase.ts`) · `IUpdateSkillUseCase`
-(`skills/contracts/UpdateSkillUseCase.ts`) · `isSpaceColor` (`spaces/SpaceColor.ts`) ·
-`CreateStandardWithExamplesResponse` (`standards/contracts/ICreateStandardWithExamplesUseCase.ts`) ·
-`PublicEmptyPackmindCommand` (`UseCase.ts`)
-
-`types/src/linter/` — `createActiveDetectionProgramId`, `ActiveDetectionProgramWithRelations`,
-`createDetectionProgramId`, `createDetectionHeuristicsId`, `RuleFeasibility`,
-`AssessmentDetectionReadiness`, `createRuleDetectionAssessmentId`, `DetectionLogMessageType`,
-plus the contract aliases `IComputeRuleLanguageDetectionStatusUseCase`,
-`IGetStandardRulesDetectionStatusUseCase`, `ICopyDetectionHeuristics`,
-`ICopyDetectionProgramsToNewRule`, `ICopyLinterArtefacts`, `ICopyRuleDetectionAssessments`,
-`ICreateDetectionHeuristics`, `ICreateDetectionProgram`, `ICreateEmptyRuleDetectionAssessment`,
-`ICreateNewDetectionProgramVersion`, `IGenerateProgramUseCase`, `IGetActiveDetectionProgram`,
-`IGetAllDetectionProgramsByRule`, `IGetDetectionHeuristics`, `IGetDetectionProgramMetadata`,
-`IGetRuleDetectionAssessment`, `IListDetectionProgramUseCase`, `IStartProgramGenerationUseCase`,
-`ITestProgramExecutionUseCase`, `IUpdateActiveDetectionProgramUseCase`,
-`IUpdateActiveDetectionProgramSeverityUseCase`, `IUpdateDetectionProgramUseCase`,
-`IUpdateDetectionProgramStatusUseCase`, `IUpdateRuleDetectionHeuristics`,
-`IUpdateRuleDetectionStatusAfterUpdateUseCase`
-
-Also note `types/src/ai/prompts/types.ts` is not reachable from `types/src/index.ts` (the
-barrel does not list `./ai`); its only importer is `types/src/linter/DetectionProgramMetadata.ts`.
-
-### Other packages
-
-| Package | Dead exports |
-| --- | --- |
-| `accounts` | `InvitationResendRecord` (`services/InvitationService.ts`) |
-| `deployments` | `DEPLOYMENTS_VERSION` (`src/index.ts`), `createActiveDistributedPackagesByTarget`, `distributionFactory` (`test/`) |
-| `editions` | `AmplitudeConfig` (`oss/amplitude/index.ts`), `MoveArtifactsToSpaceUseCase`, `SpaceOwnershipMismatchError` (`oss/spaces-management/index.ts`) |
-| `git` | `GitlabFile`, `GitlabBranch` (`infra/repositories/gitlab/types.ts`) |
-| `linter-ast` | `ParseResult` (`core/types/ast.types.ts`) |
-| `llm` | `OPENAI_ENDPOINT`, `ANTHROPIC_ENDPOINT` (`constants/defaultModels.ts`) |
-| `node-utils` | `mockQueueFactory` (`jobs/test/mockQueueFactory.ts`) |
-| `skills` | `AllowedFrontmatterField` (`domain/SkillProperties.ts`) |
-| `standards` | `getAllSampleIds` (`samples/index.ts`), `IGetRuleExamples` (`domain/useCases/IGetRuleExamples.ts`) |
-| `ui` | `PMColorSwatchProps`, `PMButtonGroupProps`, `PMCheckboxCheckedChangeDetails`, `PMFieldProps`, `PMMenuRoot`, `PMMenuTrigger`, `PMSwitchCheckedChangeDetails`, `PMPortalProps` |
+⚠️ = `editions` cross-repo risk, see **Scope**.
 
 ## Not reported as dead (deliberately)
 
+- **`packages/types`** — out of scope, shared with a proprietary repository.
 - **`ui` `*Props` types** — a design kit's prop types are public API even when only the
   component itself references them. Only `Props` types with *zero* references anywhere
   (listed above) are flagged.
@@ -331,11 +278,14 @@ Cheapest and lowest-risk first, one commit per step:
 
 1. Zero-risk deletes: empty `accounts/…/TrialActivationToken.ts`, `node-utils/types.ts`,
    `migrations/scripts/fix-docker-imports.js`, `coding-agent/…/steps/apply-changes.ts`,
-   `assets/icons/ContinueIcon.tsx`, `frontend/…/SettingsPageDataTestIds.ts`.
+   `assets/icons/ContinueIcon.tsx`, `frontend/…/SettingsPageDataTestIds.ts`,
+   `llm/…/LLMRuntimeConfig.ts`.
 2. `ManageOrganizationUseCase` + the two unused `accounts` error classes.
-3. The 11 unemitted event classes and their payload interfaces.
-4. The dead `I*UseCase` contract aliases (per symbol — keep the `Command`/`Response` types).
-5. `ui` dead components/hooks, updating the `working-with-pm-design-kit` catalog in the
+3. `ui` dead components/hooks, updating the `working-with-pm-design-kit` catalog in the
    same commit.
-6. Test-only code: delete implementation **and** its spec together, or wire the
+4. Dead individual exports (`git` GitLab types, `linter-ast` `ParseResult`,
+   `deployments` unused test factories, `ui` prop types, …).
+5. Test-only code: delete implementation **and** its spec together, or wire the
    implementation up if it was meant to ship.
+6. **Only after confirming against the proprietary repo:** the unimplemented use-case
+   ports (§2) and the `editions` exports.
