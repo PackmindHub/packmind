@@ -978,6 +978,304 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('createBranchFromBase', () => {
+    const baseBranchSha = 'base-branch-sha-abc';
+
+    describe('when the target branch already exists', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: 'existing-sync-sha' } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('does not POST a new ref', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the target branch is missing', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.resolve({
+              data: { object: { sha: baseBranchSha } },
+            });
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({ data: {} });
+
+        await githubRepository.createBranchFromBase('packmind/sync');
+      });
+
+      it('creates the target branch from the base SHA', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/refs`,
+          {
+            ref: 'refs/heads/packmind/sync',
+            sha: baseBranchSha,
+          },
+        );
+      });
+    });
+
+    describe('when fetching the base branch ref fails', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/packmind/sync`
+          ) {
+            return Promise.reject({ response: { status: 404 } });
+          }
+          if (
+            url ===
+            `/repos/${options.owner}/${options.repo}/git/refs/heads/main`
+          ) {
+            return Promise.reject(new Error('Network down'));
+          }
+          return Promise.reject(new Error(`Unexpected GET: ${url}`));
+        });
+        mockAxiosInstance.post = jest.fn();
+      });
+
+      it('propagates an error mentioning the base branch', async () => {
+        await expect(
+          githubRepository.createBranchFromBase('packmind/sync'),
+        ).rejects.toThrow(
+          `Failed to fetch base branch 'main' on GitHub: Network down`,
+        );
+      });
+    });
+  });
+
+  describe('openOrUpdatePullRequest', () => {
+    const command = {
+      head: 'packmind/sync',
+      title: 'Packmind sync',
+      body: 'rolling PR body',
+    };
+
+    describe('when an open pull request already exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 12,
+              html_url: 'https://github.com/test-owner/test-repo/pull/12',
+            },
+          ],
+        });
+        mockAxiosInstance.post = jest.fn();
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('returns the existing pull request URL', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/12',
+        );
+      });
+
+      it('does not POST a new pull request', () => {
+        expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no open pull request exists', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockResolvedValue({
+          data: {
+            number: 21,
+            html_url: 'https://github.com/test-owner/test-repo/pull/21',
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('POSTs a new pull request with the expected payload', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/pulls`,
+          {
+            title: 'Packmind sync',
+            head: 'packmind/sync',
+            base: 'main',
+            body: 'rolling PR body',
+          },
+        );
+      });
+
+      it('reports wasCreated=true', () => {
+        expect(result.wasCreated).toBe(true);
+      });
+    });
+
+    describe('when GitHub responds 422 "pull request already exists" on create', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        const lookupResponses: Array<{ data: unknown[] }> = [
+          { data: [] },
+          {
+            data: [
+              {
+                number: 99,
+                html_url: 'https://github.com/test-owner/test-repo/pull/99',
+              },
+            ],
+          },
+        ];
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockImplementation(() =>
+            Promise.resolve(lookupResponses.shift() ?? { data: [] }),
+          );
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: {
+            status: 422,
+            data: { message: 'A pull request already exists for foo:bar' },
+          },
+        });
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('falls back to the existing pull request', () => {
+        expect(result.url).toBe(
+          'https://github.com/test-owner/test-repo/pull/99',
+        );
+      });
+    });
+
+    describe('when GitHub responds with a non-422 error on create', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        mockAxiosInstance.post = jest.fn().mockRejectedValue({
+          response: { status: 500, data: { message: 'Server error' } },
+          message: 'Server error',
+        });
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          githubRepository.openOrUpdatePullRequest(command),
+        ).rejects.toThrow(/Failed to open pull request on GitHub/);
+      });
+    });
+  });
+
+  describe('findOpenPullRequest', () => {
+    describe('when an open pull request exists', () => {
+      let result: Awaited<
+        ReturnType<typeof githubRepository.findOpenPullRequest>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 7,
+              html_url: 'https://github.com/test-owner/test-repo/pull/7',
+            },
+          ],
+        });
+        result = await githubRepository.findOpenPullRequest('packmind/sync');
+      });
+
+      it('returns the first open pull request mapped to url and number', () => {
+        expect(result).toEqual({
+          url: 'https://github.com/test-owner/test-repo/pull/7',
+          number: 7,
+        });
+      });
+    });
+
+    describe('when no open pull request exists', () => {
+      it('returns null', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: [] });
+        const result =
+          await githubRepository.findOpenPullRequest('packmind/sync');
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('checkRepositoryExists', () => {
+    describe('when the repository endpoint returns 200', () => {
+      it('reports the repository exists', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({ data: {} });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: true });
+      });
+    });
+
+    describe('when the repository endpoint returns 404', () => {
+      it('classifies the failure as repo_not_found', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 404 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'repo_not_found' });
+      });
+    });
+
+    describe('when the repository endpoint returns 401', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 401 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the repository endpoint returns 403', () => {
+      it('classifies the failure as auth_failed', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue({ response: { status: 403 } });
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'auth_failed' });
+      });
+    });
+
+    describe('when the request fails with a network error', () => {
+      it('classifies the failure as network_transient', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue(new Error('socket hang up'));
+        const result = await githubRepository.checkRepositoryExists();
+        expect(result).toEqual({ exists: false, reason: 'network_transient' });
+      });
+    });
+  });
+
   describe('getFileOnRepo', () => {
     const filePath = 'test/file.txt';
     const fileSha = 'test-sha-123';

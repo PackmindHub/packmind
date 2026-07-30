@@ -153,6 +153,55 @@ describe('GitRepoRepository', () => {
     expect(foundGitRepo).toBeNull();
   });
 
+  describe('findByOwnerAndRepoInOrganization with a providerId filter', () => {
+    let secondProvider: GitProvider;
+
+    // Same owner/repo linked under two providers in one org — the
+    // marketplace collision check must distinguish them by provider.
+    beforeEach(async () => {
+      secondProvider = await gitProviderRepository.save(
+        gitProviderFactory({ organizationId: testOrganization.id }),
+      );
+
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'plugins',
+          providerId: testProvider.id,
+          type: 'marketplace',
+        }),
+      );
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'plugins',
+          providerId: secondProvider.id,
+          type: 'standard',
+        }),
+      );
+    });
+
+    it('returns the repo belonging to the requested provider', async () => {
+      const found = await gitRepoRepository.findByOwnerAndRepoInOrganization(
+        'acme',
+        'plugins',
+        testOrganization.id,
+        { type: 'any', providerId: testProvider.id },
+      );
+      expect(found?.providerId).toBe(testProvider.id);
+    });
+
+    it('returns the other provider repo once scoped to it', async () => {
+      const found = await gitRepoRepository.findByOwnerAndRepoInOrganization(
+        'acme',
+        'plugins',
+        testOrganization.id,
+        { type: 'any', providerId: secondProvider.id },
+      );
+      expect(found?.providerId).toBe(secondProvider.id);
+    });
+  });
+
   describe('findByProviderId', () => {
     let gitRepo1: GitRepo;
     let gitRepo2: GitRepo;

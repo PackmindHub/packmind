@@ -12,6 +12,7 @@ export const gitRepoFactory: Factory<GitRepo> = (
     branch: 'main',
     isTracked: false,
     providerId: createGitProviderId(uuidv4()),
+    type: 'standard',
     ...gitRepo,
   };
 };
