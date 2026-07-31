@@ -11,6 +11,10 @@ permissions:
 
 jobs:
   improve-claude-md:
+    # This workflow file is synced into other repositories (including our proprietary
+    # codebase). It must only ever run on PackmindHub/packmind: everywhere else the job
+    # is skipped, so the schedule and workflow_dispatch triggers become no-ops.
+    if: github.repository == 'PackmindHub/packmind'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: 45
     steps:
