@@ -31,6 +31,14 @@ import {
   RecomputeConflictsResponse,
 } from '../contracts/IRecomputeConflicts';
 import {
+  ComputeAppliedPreviewCommand,
+  ComputeAppliedPreviewResponse,
+} from '../contracts/IComputeAppliedPreview';
+import {
+  ComputeDraftVerdictsCommand,
+  ComputeDraftVerdictsResponse,
+} from '../contracts/IComputeDraftVerdicts';
+import {
   MigrateChangeProposalsForMovedArtefactCommand,
   MigrateChangeProposalsForMovedArtefactResponse,
 } from '../contracts/IMigrateChangeProposalsForMovedArtefactUseCase';
@@ -74,6 +82,14 @@ export interface IPlaybookChangeManagementPort {
   recomputeConflicts(
     command: RecomputeConflictsCommand,
   ): Promise<RecomputeConflictsResponse>;
+
+  computeAppliedPreview(
+    command: ComputeAppliedPreviewCommand,
+  ): Promise<ComputeAppliedPreviewResponse>;
+
+  computeDraftVerdicts(
+    command: ComputeDraftVerdictsCommand,
+  ): Promise<ComputeDraftVerdictsResponse>;
 
   migrateChangeProposalsForMovedArtefact(
     command: MigrateChangeProposalsForMovedArtefactCommand,

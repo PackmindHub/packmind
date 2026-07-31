@@ -5,19 +5,19 @@ import { StandardId } from '../../standards/StandardId';
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { ChangeProposalDecision } from '../ChangeProposalDecision';
 import { ChangeProposalId } from '../ChangeProposalId';
-import { ProposalMergeVerdictMap } from '../ProposalMergeVerdict';
+import { ApplierObjectVersions } from '../applier/types';
 
-export type RecomputeConflictsCommand = PackmindCommand & {
+export type ComputeAppliedPreviewCommand = PackmindCommand & {
   spaceId: SpaceId;
   artefactId: StandardId | CommandId | SkillId;
   decisions: Record<ChangeProposalId, ChangeProposalDecision>;
 };
 
-export type RecomputeConflictsResponse = {
-  verdicts: ProposalMergeVerdictMap;
+export type ComputeAppliedPreviewResponse = {
+  preview: ApplierObjectVersions;
 };
 
-export type IRecomputeConflictsUseCase = IUseCase<
-  RecomputeConflictsCommand,
-  RecomputeConflictsResponse
+export type IComputeAppliedPreviewUseCase = IUseCase<
+  ComputeAppliedPreviewCommand,
+  ComputeAppliedPreviewResponse
 >;

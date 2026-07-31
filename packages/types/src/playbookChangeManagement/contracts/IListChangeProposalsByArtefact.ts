@@ -5,7 +5,7 @@ import { SpaceId } from '../../spaces/SpaceId';
 import { StandardId } from '../../standards/StandardId';
 import { PackmindCommand } from '../../UseCase';
 import { ChangeProposal } from '../ChangeProposal';
-import { ChangeProposalId } from '../ChangeProposalId';
+import { ProposalMergeVerdict } from '../ProposalMergeVerdict';
 
 export type ListChangeProposalsByArtefactCommand<
   T extends StandardId | CommandId | SkillId,
@@ -17,7 +17,7 @@ export type ListChangeProposalsByArtefactCommand<
 
 export type ListChangeProposalsByArtefactResponse = {
   changeProposals: (ChangeProposal & {
-    conflictsWith: ChangeProposalId[];
+    mergeVerdict: ProposalMergeVerdict;
   })[];
   currentPackageIds: PackageId[];
 };

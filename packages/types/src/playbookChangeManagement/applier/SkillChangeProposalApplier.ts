@@ -23,7 +23,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       return {
         ...source,
-        name: this.getEffectivePayload(changeProposal).newValue,
+        name: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.name,
+        ),
       };
     }
 
@@ -90,7 +94,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       return {
         ...source,
-        license: changeProposal.payload.newValue,
+        license: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.license ?? '',
+        ),
       };
     }
 
@@ -102,7 +110,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       return {
         ...source,
-        compatibility: changeProposal.payload.newValue,
+        compatibility: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.compatibility ?? '',
+        ),
       };
     }
 
@@ -114,7 +126,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
     ) {
       return {
         ...source,
-        allowedTools: changeProposal.payload.newValue,
+        allowedTools: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.allowedTools ?? '',
+        ),
       };
     }
 
@@ -183,7 +199,11 @@ export class SkillChangeProposalApplier extends AbstractChangeProposalApplier<Sk
 
         return {
           ...file,
-          permissions: changeProposal.payload.newValue,
+          permissions: this.applyDiff(
+            changeProposal.id,
+            this.getEffectivePayload(changeProposal),
+            file.permissions,
+          ),
         };
       });
 

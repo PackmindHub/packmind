@@ -22,7 +22,11 @@ export class CommandChangeProposalApplier extends AbstractChangeProposalApplier<
     ) {
       return {
         ...source,
-        name: this.getEffectivePayload(changeProposal).newValue,
+        name: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.name,
+        ),
       };
     }
 

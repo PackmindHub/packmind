@@ -244,6 +244,20 @@ describe('SkillChangeProposalApplier', () => {
 
         expect(result.version.license).toBe('Apache-2.0');
       });
+
+      describe('when the live license diverged from the base', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const source = skillVersionFactory({ license: 'GPL-3.0' });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateSkillLicense,
+            payload: { oldValue: 'MIT', newValue: 'Apache-2.0' },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
+      });
     });
 
     describe('updateSkillCompatibility', () => {
