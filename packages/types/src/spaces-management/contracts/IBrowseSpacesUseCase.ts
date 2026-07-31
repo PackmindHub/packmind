@@ -1,5 +1,6 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Space, SpaceType } from '../../spaces/Space';
+import { SpaceColor } from '../../spaces/SpaceColor';
 import { SpaceId } from '../../spaces/SpaceId';
 
 export type BrowsableSpace = {
@@ -7,6 +8,7 @@ export type BrowsableSpace = {
   name: string;
   slug: string;
   type: SpaceType;
+  color: SpaceColor;
 };
 
 export type BrowseSpacesCommand = PackmindCommand;
