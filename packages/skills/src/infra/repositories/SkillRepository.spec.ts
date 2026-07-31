@@ -145,6 +145,80 @@ describe('SkillRepository', () => {
     });
   });
 
+  describe('countBySpaceIds', () => {
+    describe('when counting skills per space', () => {
+      let counts: Awaited<ReturnType<typeof skillRepository.countBySpaceIds>>;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
+
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
+
+        await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
+        await skillRepository.add(skillFactory({ spaceId: spaceA.id }));
+        await skillRepository.add(skillFactory({ spaceId: spaceB.id }));
+
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await skillRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero skills', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await skillRepository.countBySpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted skills from the count', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const space = spaceFactory({ organizationId });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save(space);
+
+      await skillRepository.add(skillFactory({ spaceId: space.id }));
+      const deletedSkill = await skillRepository.add(
+        skillFactory({ spaceId: space.id }),
+      );
+      await skillRepository.deleteById(deletedSkill.id);
+
+      const counts = await skillRepository.countBySpaceIds([space.id]);
+
+      expect(counts.get(space.id)).toBe(1);
+    });
+
+    it('omits unknown space IDs from the result Map', async () => {
+      const unknownSpaceId = createSpaceId(uuidv4());
+
+      const counts = await skillRepository.countBySpaceIds([unknownSpaceId]);
+
+      expect(counts.has(unknownSpaceId)).toBe(false);
+    });
+  });
+
   describe('findByUserId', () => {
     it('finds all skills created by user', async () => {
       const userId = createUserId(uuidv4());
