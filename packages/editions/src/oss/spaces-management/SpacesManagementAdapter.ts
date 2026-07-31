@@ -14,7 +14,6 @@ import {
   ListOrganizationSpacesForManagementResponse,
   MoveArtifactsToSpaceCommand,
   MoveArtifactsToSpaceResponse,
-  ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
   PinSpaceCommand,
   PinSpaceResponse,
   UnpinSpaceCommand,
@@ -95,11 +94,6 @@ export class SpacesManagementAdapter implements ISpacesManagementPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _command: ListOrganizationSpacesForManagementCommand,
   ): Promise<ListOrganizationSpacesForManagementResponse> {
-    return {
-      items: [],
-      totalCount: 0,
-      page: 1,
-      pageSize: ORGA_SPACE_MANAGEMENT_PAGE_SIZE,
-    };
+    throw new Error('Method not implemented.');
   }
 }
