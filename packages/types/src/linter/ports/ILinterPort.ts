@@ -45,6 +45,8 @@ import type {
   UpdateDetectionProgramStatusCommand,
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
+  UpdateHeuristicsFollowingChatbotInputCommand,
+  UpdateHeuristicsFollowingChatbotInputResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
   UpdateRuleDetectionStatusAfterUpdateResponse,
   GetDetectionHeuristicsCommand,
@@ -167,6 +169,10 @@ export interface ILinterPort {
   updateRuleDetectionHeuristics(
     command: UpdateRuleDetectionHeuristicsCommand,
   ): Promise<UpdateRuleDetectionHeuristicsResponse>;
+
+  updateHeuristicsFollowingChatbotInput(
+    command: UpdateHeuristicsFollowingChatbotInputCommand,
+  ): Promise<UpdateHeuristicsFollowingChatbotInputResponse>;
 
   getDetectionHeuristics(
     command: GetDetectionHeuristicsCommand,
