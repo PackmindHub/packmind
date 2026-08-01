@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMBox, PMButton, PMText, PMVStack } from '@packmind/ui';
 
+import { useWarnBeforeUnload } from '../../../shared/hooks';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import {
   useGetSkillsQuery,
@@ -90,6 +91,11 @@ export const SkillsUploadPanel = () => {
     uploadSkill,
     onFinished,
   });
+
+  // Only the skills already sent would survive a reload: the batch runs here, in
+  // the page, one request at a time, so closing the tab halfway leaves the rest
+  // silently unimported.
+  useWarnBeforeUnload(isImporting);
 
   // Bumped per selection so a slower resolution cannot overwrite a newer pick.
   const selectionRef = useRef(0);
@@ -241,6 +247,18 @@ export const SkillsUploadPanel = () => {
           </PMButton>
         </PMVStack>
       </PMBox>
+
+      {/*
+        Above the rows rather than beside the buttons: it is the one thing the
+        user has to act on — by not acting — and the browser's own reload prompt
+        cannot carry any of this wording.
+      */}
+      {isImporting && (
+        <PMText variant="small" color="secondary" role="status">
+          Importing — keep this page open until every skill has finished.
+          Leaving now stops the ones that have not been sent yet.
+        </PMText>
+      )}
 
       {displayedRows.length > 0 && (
         <PMVStack

@@ -421,6 +421,20 @@ describe('SkillsUploadPanel', () => {
       ).toBeInTheDocument();
     });
 
+    it('stops telling the user to stay once the batch has settled', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+
+      expect(
+        screen.queryByText(/keep this page open/i),
+      ).not.toBeInTheDocument();
+    });
+
     it('offers no cancel once there is nothing left to stop', async () => {
       const { container } = renderPanel();
 
@@ -445,6 +459,34 @@ describe('SkillsUploadPanel', () => {
             );
           }),
       );
+
+    it('tells the user not to leave the page', async () => {
+      const { container } = renderPanel({ uploadSkill: cancellableUpload() });
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+
+      expect(
+        await screen.findByText(/keep this page open/i),
+      ).toBeInTheDocument();
+    });
+
+    it('warns the browser before it unloads', async () => {
+      const { container } = renderPanel({ uploadSkill: cancellableUpload() });
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText(/keep this page open/i);
+
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
+    });
 
     it('offers a cancel', async () => {
       const { container } = renderPanel({ uploadSkill: cancellableUpload() });
