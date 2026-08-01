@@ -49,5 +49,6 @@ export interface ISkillsGateway {
     spaceId: SpaceId,
     files: UploadSkillFileInput[],
     originSkill?: string,
+    options?: { signal?: AbortSignal },
   ): Promise<UploadSkillResponse>;
 }

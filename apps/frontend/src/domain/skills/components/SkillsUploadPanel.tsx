@@ -47,7 +47,7 @@ export const SkillsUploadPanel = () => {
   const { mutateAsync: uploadSkillFiles } = useUploadSkillMutation();
 
   const uploadSkill = useCallback(
-    async (skill: DetectedSkill) => {
+    async (skill: DetectedSkill, signal: AbortSignal) => {
       const files = await readSkillFileContents(skill);
 
       // Refused here rather than by the server: the request would be rejected
@@ -56,7 +56,7 @@ export const SkillsUploadPanel = () => {
       const tooLarge = findOversizedPayload(files);
       if (tooLarge) throw new Error(tooLarge);
 
-      return uploadSkillFiles({ files });
+      return uploadSkillFiles({ files, signal });
     },
     [uploadSkillFiles],
   );
@@ -86,7 +86,7 @@ export const SkillsUploadPanel = () => {
     [],
   );
 
-  const { rows, isImporting, start, reset } = useSequentialSkillImport({
+  const { rows, isImporting, start, cancel, reset } = useSequentialSkillImport({
     uploadSkill,
     onFinished,
   });
@@ -180,7 +180,16 @@ export const SkillsUploadPanel = () => {
   ).length;
   const succeeded = rows.filter((row) => row.status === 'success').length;
   const failed = rows.filter((row) => row.status === 'failed').length;
+  const cancelled = rows.filter((row) => row.status === 'cancelled').length;
   const isFinished = rows.length > 0 && !isImporting;
+
+  const summary = [
+    `${succeeded} imported`,
+    `${failed} failed`,
+    // Only when it happened: a batch that ran to the end should not be
+    // reported in terms of something the user did not do.
+    ...(cancelled > 0 ? [`${cancelled} cancelled`] : []),
+  ].join(', ');
 
   return (
     <PMVStack align="stretch" gap={4} width="full">
@@ -253,11 +262,7 @@ export const SkillsUploadPanel = () => {
         </PMVStack>
       )}
 
-      {isFinished && (
-        <PMText variant="small-important">
-          {`${succeeded} imported, ${failed} failed`}
-        </PMText>
-      )}
+      {isFinished && <PMText variant="small-important">{summary}</PMText>}
 
       {/*
         Disabled once the batch has settled, not just while it runs: the results
@@ -272,6 +277,16 @@ export const SkillsUploadPanel = () => {
       >
         Import
       </PMButton>
+
+      {/*
+        Only while the batch runs — once it has settled there is nothing left to
+        stop, and the results the user is reading own the space instead.
+      */}
+      {isImporting && (
+        <PMButton variant="secondary" onClick={cancel}>
+          Cancel import
+        </PMButton>
+      )}
     </PMVStack>
   );
 };

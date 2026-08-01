@@ -105,7 +105,30 @@ describe('useUploadSkillMutation', () => {
       spaceId,
       files,
       undefined,
+      { signal: undefined },
     );
+  });
+
+  describe('when an abort signal is provided', () => {
+    it('forwards it to the gateway so the request can be cancelled', async () => {
+      jest
+        .spyOn(skillsGateway, 'uploadSkill')
+        .mockResolvedValue(uploadResponse);
+      const { signal } = new AbortController();
+
+      const { result } = renderHook(() => useUploadSkillMutation(), {
+        wrapper: buildWrapper(),
+      });
+      await result.current.mutateAsync({ files, signal });
+
+      expect(skillsGateway.uploadSkill).toHaveBeenCalledWith(
+        organizationId,
+        spaceId,
+        files,
+        undefined,
+        { signal },
+      );
+    });
   });
 
   it('returns the uploaded skill', async () => {
@@ -136,6 +159,7 @@ describe('useUploadSkillMutation', () => {
         spaceId,
         files,
         'skill-import',
+        { signal: undefined },
       );
     });
   });

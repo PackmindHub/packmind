@@ -309,9 +309,12 @@ export const useUploadSkillMutation = () => {
     mutationFn: async ({
       files,
       originSkill,
+      signal,
     }: {
       files: UploadSkillFileInput[];
       originSkill?: string;
+      /** Lets a caller importing a batch abandon an upload already in flight. */
+      signal?: AbortSignal;
     }) => {
       if (!organization?.id || !spaceId) {
         throw new Error(
@@ -323,6 +326,7 @@ export const useUploadSkillMutation = () => {
         spaceId,
         files,
         originSkill,
+        { signal },
       );
     },
   });

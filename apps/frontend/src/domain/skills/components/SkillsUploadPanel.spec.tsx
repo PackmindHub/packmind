@@ -128,6 +128,8 @@ async function selectFiles(
 }
 
 const importButton = () => screen.getByRole('button', { name: /^import$/i });
+const cancelButton = () =>
+  screen.queryByRole('button', { name: /cancel import/i });
 
 describe('SkillsUploadPanel', () => {
   afterEach(() => jest.clearAllMocks());
@@ -400,6 +402,8 @@ describe('SkillsUploadPanel', () => {
           files: [
             expect.objectContaining({ path: 'SKILL.md', isBase64: false }),
           ],
+          // Carried on every upload so the batch can be cancelled mid-request.
+          signal: expect.any(AbortSignal),
         }),
       );
     });
@@ -414,6 +418,58 @@ describe('SkillsUploadPanel', () => {
 
       expect(
         await screen.findByText('1 imported, 0 failed'),
+      ).toBeInTheDocument();
+    });
+
+    it('offers no cancel once there is nothing left to stop', async () => {
+      const { container } = renderPanel();
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await screen.findByText('1 imported, 0 failed');
+
+      expect(cancelButton()).not.toBeInTheDocument();
+    });
+  });
+
+  describe('while the import is running', () => {
+    /** An upload that only settles when the batch's signal is aborted. */
+    const cancellableUpload = () =>
+      jest.fn(
+        ({ signal }: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () =>
+              reject(new Error('canceled')),
+            );
+          }),
+      );
+
+    it('offers a cancel', async () => {
+      const { container } = renderPanel({ uploadSkill: cancellableUpload() });
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+
+      await waitFor(() => expect(cancelButton()).toBeInTheDocument());
+    });
+
+    it('reports the skills it did not import as cancelled', async () => {
+      const { container } = renderPanel({ uploadSkill: cancellableUpload() });
+
+      await selectFiles(container, [
+        pickedFile('skills/documentation/SKILL.md'),
+        pickedFile('skills/onboarding/SKILL.md'),
+      ]);
+      await userEvent.click(importButton());
+      await waitFor(() => expect(cancelButton()).toBeInTheDocument());
+      await userEvent.click(cancelButton() as HTMLElement);
+
+      expect(
+        await screen.findByText('0 imported, 0 failed, 2 cancelled'),
       ).toBeInTheDocument();
     });
   });

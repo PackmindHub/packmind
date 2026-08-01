@@ -109,11 +109,12 @@ export class SkillsGatewayApi
     spaceId: SpaceId,
     files: UploadSkillFileInput[],
     originSkill?: string,
+    options?: { signal?: AbortSignal },
   ): Promise<UploadSkillResponse> {
     return this._api.post<UploadSkillResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/skills/upload`,
       { files, ...(originSkill ? { originSkill } : {}) },
-      { timeout: UPLOAD_SKILL_TIMEOUT_MS },
+      { timeout: UPLOAD_SKILL_TIMEOUT_MS, signal: options?.signal },
     );
   }
 }

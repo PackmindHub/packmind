@@ -38,6 +38,13 @@ const StatusIndicator = ({ row }: SkillsUploadRowProps) => {
           Failed
         </PMBadge>
       );
+    // Deliberately not red: nothing went wrong, the user stopped the batch.
+    case 'cancelled':
+      return (
+        <PMBadge colorPalette="gray" size="sm">
+          Cancelled
+        </PMBadge>
+      );
   }
 };
 
