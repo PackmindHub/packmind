@@ -22,7 +22,10 @@ import {
 } from '../utils/findSkillNameConflicts';
 import { readDeclaredSkillName } from '../utils/readDeclaredSkillName';
 import { readDroppedEntries } from '../utils/readDroppedEntries';
-import { readSkillFileContents } from '../utils/readSkillFileContents';
+import {
+  findOversizedPayload,
+  readSkillFileContents,
+} from '../utils/readSkillFileContents';
 import { SkillsUploadRow } from './SkillsUploadRow';
 
 /** Stable empty default, so the selection handler keeps its identity. */
@@ -46,6 +49,13 @@ export const SkillsUploadPanel = () => {
   const uploadSkill = useCallback(
     async (skill: DetectedSkill) => {
       const files = await readSkillFileContents(skill);
+
+      // Refused here rather than by the server: the request would be rejected
+      // on its Content-Length alone, and a body cut off mid-flight reaches the
+      // client as a bare network error with nothing about size in it.
+      const tooLarge = findOversizedPayload(files);
+      if (tooLarge) throw new Error(tooLarge);
+
       return uploadSkillFiles({ files });
     },
     [uploadSkillFiles],

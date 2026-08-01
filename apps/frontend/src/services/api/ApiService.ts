@@ -8,6 +8,13 @@ import { PackmindConflictError } from './errors/PackmindConflictError';
 
 const API_VERSION = 'v0';
 
+const HTTP_PAYLOAD_TOO_LARGE = 413;
+
+const isRequestEntityTooLarge = (response: unknown): boolean =>
+  typeof response === 'object' &&
+  response !== null &&
+  (response as { status?: number }).status === HTTP_PAYLOAD_TOO_LARGE;
+
 export class ApiService {
   private readonly _axiosInstance: AxiosInstance;
   private readonly _version: string = API_VERSION;
@@ -97,6 +104,16 @@ export class ApiService {
 
   private handleError(error: unknown): Error {
     if (error && typeof error === 'object' && 'response' in error) {
+      // Ahead of the checks below because a 413 has two shapes: the API answers
+      // with the usual JSON envelope, while a proxy that rejects the body first
+      // answers with its own HTML and no `data.message` — which would otherwise
+      // degrade into the generic statusText branch.
+      if (isRequestEntityTooLarge(error.response)) {
+        return new Error(
+          'Request Too Large: the server refused this request because it exceeds the maximum accepted size',
+        );
+      }
+
       if (isServerErrorResponse(error.response)) {
         switch (error.response.status) {
           case 409:

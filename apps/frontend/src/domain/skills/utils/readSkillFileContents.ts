@@ -8,6 +8,39 @@ export type SkillUploadFile = {
 };
 
 /**
+ * The ceiling the request has to clear end to end: the body-parser limit in
+ * apps/api/src/main.ts and the client_max_body_size of every nginx in front of
+ * it are both 15 MB, so all three must move together.
+ *
+ * This is deliberately checked separately from the on-disk budget in
+ * collectSkillsFromFiles: what travels is JSON, not the bytes on disk. Base64
+ * costs a binary a third of its size, and JSON escaping costs a text file a
+ * character for every newline and quote — so a skill that passes the on-disk
+ * check can still be too large to send, and it would fail as a bare network
+ * error rather than as a size problem.
+ */
+export const MAX_UPLOAD_PAYLOAD_BYTES = 15 * 1024 * 1024;
+
+const utf8Length = (value: string): number =>
+  new TextEncoder().encode(value).length;
+
+/**
+ * Returns why this payload cannot be sent, or undefined when it fits.
+ *
+ * The body is measured as it will actually be serialised rather than estimated,
+ * since the whole point is to catch what the on-disk estimate misses.
+ */
+export function findOversizedPayload(
+  files: SkillUploadFile[],
+): string | undefined {
+  const bytes = utf8Length(JSON.stringify({ files }));
+  if (bytes <= MAX_UPLOAD_PAYLOAD_BYTES) return undefined;
+
+  const asMb = (value: number) => (value / (1024 * 1024)).toFixed(1);
+  return `This skill is ${asMb(bytes)} MB once encoded for upload, which is over the ${asMb(MAX_UPLOAD_PAYLOAD_BYTES)} MB limit`;
+}
+
+/**
  * The browser cannot read POSIX modes, so every uploaded file gets the same
  * default the CLI falls back to on platforms without permission bits
  * (DEFAULT_PERMISSIONS in apps/cli/src/infra/utils/permissions.ts).

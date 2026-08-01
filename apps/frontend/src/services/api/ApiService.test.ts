@@ -392,6 +392,38 @@ describe('ApiService', () => {
       });
     });
 
+    describe('when the request was rejected as too large', () => {
+      // The API rejects with the usual JSON envelope, a proxy rejects with its
+      // own HTML — both have to say the same thing to the user.
+      it('reports the size for a proxy rejection carrying no message', async () => {
+        mockAxiosInstance.post.mockRejectedValue({
+          response: {
+            status: 413,
+            statusText: 'Request Entity Too Large',
+            data: '<html><head><title>413 Request Entity Too Large</title></head></html>',
+          },
+        });
+
+        await expect(apiService.post('/skills/upload', {})).rejects.toThrow(
+          /Request Too Large/,
+        );
+      });
+
+      it('reports the size for an API rejection carrying a message', async () => {
+        mockAxiosInstance.post.mockRejectedValue({
+          response: {
+            status: 413,
+            statusText: 'Payload Too Large',
+            data: { message: 'request entity too large' },
+          },
+        });
+
+        await expect(apiService.post('/skills/upload', {})).rejects.toThrow(
+          /Request Too Large/,
+        );
+      });
+    });
+
     it('handles errors without response data', async () => {
       const mockError = {
         response: {
