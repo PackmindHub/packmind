@@ -71,7 +71,9 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '../contracts';
+import { OrganizationId } from '../../accounts/Organization';
 import { Distribution } from '../Distribution';
+import { Package, PackageId, PackageWithArtefacts } from '../Package';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -399,6 +401,26 @@ export interface IDeploymentPort {
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
+
+  /**
+   * System-level package lookup by id, bypassing membership validation.
+   * Intended for sibling hexas and background jobs that operate without a
+   * user context (e.g. marketplace publishing). Mirrors
+   * `PackageService.findById`: resolves to `null` when the package does not
+   * exist or has been soft-deleted.
+   */
+  findPackageById(packageId: PackageId): Promise<Package | null>;
+
+  /**
+   * System-level bulk package lookup by slug within an organization,
+   * hydrated with artefact entities. Intended for sibling hexas and public
+   * flows that operate without a member context (e.g. plugin install
+   * heartbeats).
+   */
+  getPackagesBySlugsWithArtefacts(
+    slugs: string[],
+    organizationId: OrganizationId,
+  ): Promise<PackageWithArtefacts[]>;
 
   /**
    * Deletes multiple packages in batch

@@ -9,12 +9,38 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   mode: RenderPackageAsPluginMode;
   /** Relative path used as the plugin-root prefix for every emitted file path. */
   pluginRoot: string;
-  /** Requested plugin name; may differ from the package slug. */
+  /**
+   * Requested plugin name. Advisory only: the rendered plugin `name` (in both
+   * plugin.json and the marketplace descriptor) is always normalized to the
+   * package slug, because Claude Code requires a space-free slug and rejects
+   * free-text names (e.g. a package renamed to "definition of ready").
+   */
   pluginName: string;
   /** Git remote URL of the render target; empty/undefined when the CLI is not in a git repo. */
   gitRemoteUrl?: string;
   /** Git branch of the render target. */
   gitBranch?: string;
+  /**
+   * When present (marketplace mode only), instructs the deployer to bundle
+   * install-tracking hook files into the plugin. Absent → no tracking files
+   * emitted (standalone renders are unchanged).
+   */
+  installTracking?: {
+    /** Base URL of the Packmind API, e.g. `https://app.packmind.io/api`. */
+    apiBaseUrl: string;
+    /** Marketplace name, used as the hook's `marketplaceName` payload field. */
+    marketplaceName: string;
+    /** Plugin slug matching `MarketplaceDistribution.pluginSlug`. */
+    pluginSlug: string;
+    /** Write-only tracking token baked into the published plugin. */
+    trackingToken: string;
+    /**
+     * Content revision derived from the distribution's version fingerprint
+     * (`buildVersionRevision`). Baked into the tracking sidecar and reported
+     * back by the heartbeat so installs can be classified up-to-date/outdated.
+     */
+    revision: string;
+  };
 };
 
 export type RenderedPluginFile = {

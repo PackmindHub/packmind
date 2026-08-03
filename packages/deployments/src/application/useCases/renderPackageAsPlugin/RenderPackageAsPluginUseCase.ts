@@ -17,6 +17,7 @@ import {
   ISpacesPort,
   IStandardsPort,
   OrganizationId,
+  PackageNotPublishableAsPluginError,
   PackageWithArtefacts,
   PluginRenderedEvent,
   CommandVersion,
@@ -28,11 +29,14 @@ import {
   StandardVersion,
   Target,
   UserId,
+  isPackagePublishableAsPlugin,
   createDistributedPackageId,
   createDistributionId,
   createGitRepoId,
   createTargetId,
 } from '@packmind/types';
+
+const EMPTY_UPDATES: FileUpdates = { createOrUpdate: [], delete: [] };
 import { v4 as uuidv4 } from 'uuid';
 import { parsePackageSlug } from '../../services/packageSlugHelpers';
 import { PackageService } from '../../services/PackageService';
@@ -89,9 +93,25 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
+    // Standards are not rendered into a plugin, so a package with no skills and
+    // no recipes would yield an empty (manifest-only) plugin. Reject it here so
+    // every render path — marketplace publish job and local CLI render alike —
+    // refuses to produce an empty plugin.
+    if (!isPackagePublishableAsPlugin(pkg)) {
+      throw new PackageNotPublishableAsPluginError(pkg.slug, pkg.name);
+    }
+
     const recipeVersions = await this.fetchCommandVersions(pkg);
     const skillVersions = await this.fetchSkillVersions(pkg);
     const standardVersions = await this.fetchStandardVersions(pkg);
+
+    // Claude Code requires a plugin's `name` (in both plugin.json and the
+    // marketplace descriptor) to be a slug with no spaces. The requested
+    // `command.pluginName` can be a free-text package name — e.g. after a
+    // package is renamed to "definition of ready", its name gains spaces while
+    // its slug stays stable. Always emit the package slug so the plugin stays
+    // installable, and so `name` matches the `plugins/<slug>` source path.
+    const pluginName = pkg.slug;
 
     const deployer = new ClaudePluginDeployer();
     const target = this.buildSyntheticTarget(command.pluginRoot);
@@ -101,7 +121,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
 
     const manifestUpdate = deployer.deployPluginManifest(
       {
-        name: command.pluginName,
+        name: pluginName,
         description: pkg.description || undefined,
         version: PLUGIN_VERSION,
       },
@@ -119,10 +139,16 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     );
     await deployer.deployStandards(standardVersions, gitRepo, target);
 
+    const trackingUpdate =
+      command.mode === 'marketplace' && command.installTracking
+        ? deployer.deployTrackingHooks(command.installTracking, target)
+        : EMPTY_UPDATES;
+
     const files = this.toRenderedFiles([
       manifestUpdate,
       commandsUpdate,
       skillsUpdate,
+      trackingUpdate,
     ]);
 
     this.logger.info('Rendered package as Claude plugin', {
@@ -142,7 +168,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     return {
       files,
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
-      pluginName: command.pluginName,
+      pluginName,
       pluginDescription: pkg.description || undefined,
       pluginVersion: PLUGIN_VERSION,
       distributionId,

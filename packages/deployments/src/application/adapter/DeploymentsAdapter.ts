@@ -38,6 +38,10 @@ import {
   GetLastDistributionDateByProvidersResponse,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
+  OrganizationId,
+  Package,
+  PackageId,
+  PackageWithArtefacts,
   GetPackageSummaryCommand,
   GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
@@ -770,6 +774,19 @@ export class DeploymentsAdapter
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this._getPackageByIdUseCase.execute(command);
+  }
+
+  async findPackageById(packageId: PackageId): Promise<Package | null> {
+    return this.deploymentsServices.getPackageService().findById(packageId);
+  }
+
+  async getPackagesBySlugsWithArtefacts(
+    slugs: string[],
+    organizationId: OrganizationId,
+  ): Promise<PackageWithArtefacts[]> {
+    return this.deploymentsServices
+      .getPackageService()
+      .getPackagesBySlugsWithArtefacts(slugs, organizationId);
   }
 
   async deletePackagesBatch(
