@@ -15,6 +15,7 @@
       "@packmind/playbook-change-management/test": [
         "packages/editions/src/index.ts"
       ],
+      "@packmind/marketplaces": ["packages/editions/src/index.ts"],
       "@packmind/playbook-change-applier": [
         "packages/playbook-change-applier/src/index.ts"
       ]
