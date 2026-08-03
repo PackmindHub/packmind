@@ -9,7 +9,6 @@ import {
   Query,
   ConflictException,
   ForbiddenException,
-  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
@@ -123,8 +122,6 @@ export class GitRepositoriesController {
       { organizationId, owner, repo },
     );
 
-    await this.assertTrackingFeatureEnabled(userId);
-
     try {
       return await this.gitRepositoriesService.getTrackedRepository(
         userId,
@@ -149,8 +146,6 @@ export class GitRepositoriesController {
       'POST /organizations/:orgId/git/repositories/tracked-repository - Setting tracked repository',
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
-
-    await this.assertTrackingFeatureEnabled(userId);
 
     try {
       return await this.gitRepositoriesService.setTrackedRepository(
@@ -181,8 +176,6 @@ export class GitRepositoriesController {
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
 
-    await this.assertTrackingFeatureEnabled(userId);
-
     try {
       return await this.gitRepositoriesService.updateTrackedBranch(
         userId,
@@ -193,18 +186,6 @@ export class GitRepositoriesController {
       );
     } catch (error) {
       throw this.mapTrackingError(error);
-    }
-  }
-
-  private async assertTrackingFeatureEnabled(
-    userId: AuthenticatedRequest['user']['userId'],
-  ): Promise<void> {
-    const enabled =
-      await this.gitRepositoriesService.isTrackingFeatureEnabled(userId);
-
-    if (!enabled) {
-      // Kill-switch: behave as if the feature does not exist.
-      throw new NotFoundException('Cannot GET /tracked-repository');
     }
   }
 

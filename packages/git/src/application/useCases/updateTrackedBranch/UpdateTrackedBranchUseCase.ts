@@ -17,7 +17,6 @@ import {
 } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { isCliRepoTrackingEnabled } from '../shared/cliRepoTrackingFlag';
 
 const origin = 'UpdateTrackedBranchUseCase';
 
@@ -42,13 +41,7 @@ export class UpdateTrackedBranchUseCase
   protected async executeForAdmins(
     command: UpdateTrackedBranchCommand & AdminContext,
   ): Promise<UpdateTrackedBranchResponse> {
-    const { owner, repo, branch, organization, user, userId } = command;
-
-    // Feature-flag guard (defense-in-depth; the API route returns 404 when off).
-    const enabled = await isCliRepoTrackingEnabled({ userEmail: user.email });
-    if (!enabled) {
-      throw new Error('cli-repo-tracking feature is not enabled');
-    }
+    const { owner, repo, branch, organization, userId } = command;
 
     const existingTracked =
       await this.gitRepoService.findTrackedByOwnerRepoInOrganization(

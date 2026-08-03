@@ -15,7 +15,6 @@ import {
   SetTrackedRepositoryResponse,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
-import { isCliRepoTrackingEnabled } from '../shared/cliRepoTrackingFlag';
 
 const origin = 'SetTrackedRepositoryUseCase';
 
@@ -47,15 +46,8 @@ export class SetTrackedRepositoryUseCase
       providerVendor,
       gitRemoteUrl,
       organization,
-      user,
       userId,
     } = command;
-
-    // Feature-flag guard (defense-in-depth; the API route returns 404 when off).
-    const enabled = await isCliRepoTrackingEnabled({ userEmail: user.email });
-    if (!enabled) {
-      throw new Error('cli-repo-tracking feature is not enabled');
-    }
 
     const existingTracked =
       await this.gitRepoService.findTrackedByOwnerRepoInOrganization(

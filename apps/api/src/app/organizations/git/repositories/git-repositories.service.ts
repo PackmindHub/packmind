@@ -6,7 +6,6 @@ import {
   GitProviderId,
   GitRepo,
   GitRepoId,
-  IAccountsPort,
   IDeploymentPort,
   IGitPort,
   OrganizationId,
@@ -14,10 +13,7 @@ import {
   UpdateTrackedBranchResponse,
   UserId,
 } from '@packmind/types';
-import { isFeatureEnabled } from '@packmind/node-utils';
-import { CLI_REPO_TRACKING_FEATURE_KEY } from '@packmind/feature-flags';
 import {
-  InjectAccountsAdapter,
   InjectGitAdapter,
   InjectDeploymentAdapter,
 } from '../../../shared/HexaInjection';
@@ -28,21 +24,7 @@ export class GitRepositoriesService {
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
-    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
   ) {}
-
-  /**
-   * Server-side kill-switch for the CLI repository-tracking surface. Resolves
-   * the acting user's email from the accounts adapter and evaluates the
-   * `cli-repo-tracking` feature flag. When it returns false the API routes
-   * behave as if the feature is absent (HTTP 404).
-   */
-  async isTrackingFeatureEnabled(userId: UserId): Promise<boolean> {
-    const user = await this.accountsAdapter.getUserById(userId);
-    return isFeatureEnabled(CLI_REPO_TRACKING_FEATURE_KEY, {
-      userEmail: user?.email ?? null,
-    });
-  }
 
   async getTrackedRepository(
     userId: UserId,

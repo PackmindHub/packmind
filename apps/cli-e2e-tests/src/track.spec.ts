@@ -9,12 +9,7 @@ import {
   WithMemberContext,
 } from './helpers';
 
-/**
- * The `track` command is gated behind the `cli-repo-tracking` feature flag,
- * which is enabled for the @packmind.com domain. Signed-up users therefore use
- * a @packmind.com email so the feature is available.
- */
-const packmindEmail = (): string => `track-e2e-${uuidv4()}@packmind.com`;
+const randomEmail = (): string => `track-e2e-${uuidv4()}@example.com`;
 
 describeForVersion('> 0.31.0', 'track command', () => {
   describeWithUserSignedUp(
@@ -38,7 +33,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -61,7 +56,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.stdout).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -85,7 +80,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.stderr).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -111,7 +106,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithExtraUser(
@@ -132,6 +127,6 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.returnCode).toBe(1);
       });
     },
-    { email: `track-member-${uuidv4()}@packmind.com`, role: 'member' },
+    { email: `track-member-${uuidv4()}@example.com`, role: 'member' },
   );
 });

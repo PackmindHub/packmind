@@ -18,16 +18,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepoService } from '../../GitRepoService';
-import { isCliRepoTrackingEnabled } from '../shared/cliRepoTrackingFlag';
 import { SetTrackedRepositoryUseCase } from './SetTrackedRepositoryUseCase';
-
-jest.mock('../shared/cliRepoTrackingFlag', () => ({
-  isCliRepoTrackingEnabled: jest.fn().mockResolvedValue(true),
-}));
-
-const mockedIsEnabled = isCliRepoTrackingEnabled as jest.MockedFunction<
-  typeof isCliRepoTrackingEnabled
->;
 
 describe('SetTrackedRepositoryUseCase', () => {
   let useCase: SetTrackedRepositoryUseCase;
@@ -52,7 +43,7 @@ describe('SetTrackedRepositoryUseCase', () => {
   const setupAccounts = (role: UserOrganizationRole) => {
     const user: User = {
       id: userId,
-      email: 'admin@packmind.com',
+      email: 'admin@example.com',
       displayName: 'admin',
       passwordHash: null,
       active: true,
@@ -79,8 +70,6 @@ describe('SetTrackedRepositoryUseCase', () => {
     );
 
   beforeEach(() => {
-    mockedIsEnabled.mockResolvedValue(true);
-
     mockGitRepoService = {
       findTrackedByOwnerRepoInOrganization: jest.fn(),
       updateTracked: jest.fn(),

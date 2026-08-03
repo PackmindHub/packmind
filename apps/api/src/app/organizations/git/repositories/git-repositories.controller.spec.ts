@@ -26,15 +26,10 @@ jest.mock('@packmind/node-utils', () => {
   return {
     AuthenticatedRequest: {},
     OrganizationAdminRequiredError,
-    isFeatureEnabled: jest.fn(),
   };
 });
 
-import {
-  ConflictException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -55,10 +50,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
   let mockService: jest.Mocked<
     Pick<
       GitRepositoriesService,
-      | 'isTrackingFeatureEnabled'
-      | 'getTrackedRepository'
-      | 'setTrackedRepository'
-      | 'updateTrackedBranch'
+      'getTrackedRepository' | 'setTrackedRepository' | 'updateTrackedBranch'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -81,7 +73,6 @@ describe('GitRepositoriesController tracked repository routes', () => {
 
   beforeEach(() => {
     mockService = {
-      isTrackingFeatureEnabled: jest.fn().mockResolvedValue(true),
       getTrackedRepository: jest.fn(),
       setTrackedRepository: jest.fn(),
       updateTrackedBranch: jest.fn(),
@@ -144,31 +135,6 @@ describe('GitRepositoriesController tracked repository routes', () => {
         );
 
         expect(result).toEqual({ gitRepo: null });
-      });
-    });
-
-    describe('when the feature flag is disabled', () => {
-      beforeEach(() => {
-        mockService.isTrackingFeatureEnabled.mockResolvedValue(false);
-      });
-
-      it('throws a NotFoundException', async () => {
-        await expect(
-          controller.getTrackedRepository(
-            orgId,
-            mockRequest,
-            'my-orga',
-            'my-repo',
-          ),
-        ).rejects.toBeInstanceOf(NotFoundException);
-      });
-
-      it('does not call the tracking service method', async () => {
-        await controller
-          .getTrackedRepository(orgId, mockRequest, 'my-orga', 'my-repo')
-          .catch(() => undefined);
-
-        expect(mockService.getTrackedRepository).not.toHaveBeenCalled();
       });
     });
   });
@@ -239,26 +205,6 @@ describe('GitRepositoriesController tracked repository routes', () => {
         ).rejects.toBeInstanceOf(ForbiddenException);
       });
     });
-
-    describe('when the feature flag is disabled', () => {
-      beforeEach(() => {
-        mockService.isTrackingFeatureEnabled.mockResolvedValue(false);
-      });
-
-      it('throws a NotFoundException', async () => {
-        await expect(
-          controller.setTrackedRepository(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(NotFoundException);
-      });
-
-      it('does not call the service', async () => {
-        await controller
-          .setTrackedRepository(orgId, mockRequest, body)
-          .catch(() => undefined);
-
-        expect(mockService.setTrackedRepository).not.toHaveBeenCalled();
-      });
-    });
   });
 
   describe('updateTrackedBranch', () => {
@@ -325,26 +271,6 @@ describe('GitRepositoriesController tracked repository routes', () => {
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
         ).rejects.toBeInstanceOf(ForbiddenException);
-      });
-    });
-
-    describe('when the feature flag is disabled', () => {
-      beforeEach(() => {
-        mockService.isTrackingFeatureEnabled.mockResolvedValue(false);
-      });
-
-      it('throws a NotFoundException', async () => {
-        await expect(
-          controller.updateTrackedBranch(orgId, mockRequest, body),
-        ).rejects.toBeInstanceOf(NotFoundException);
-      });
-
-      it('does not call the service', async () => {
-        await controller
-          .updateTrackedBranch(orgId, mockRequest, body)
-          .catch(() => undefined);
-
-        expect(mockService.updateTrackedBranch).not.toHaveBeenCalled();
       });
     });
   });

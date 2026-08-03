@@ -28,8 +28,7 @@ describe('Tracked repository integration', () => {
     await testApp.initialize();
 
     admin = new DataFactory(testApp);
-    // The cli-repo-tracking flag is enabled for the @packmind.com domain.
-    await admin.withUserAndOrganization({ email: 'admin@packmind.com' });
+    await admin.withUserAndOrganization({ email: 'admin@example.com' });
   });
 
   afterEach(async () => {
@@ -202,7 +201,7 @@ describe('Tracked repository integration', () => {
         .getAdapter()
         .createInvitations({
           ...admin.packmindCommand(),
-          emails: ['member@packmind.com'],
+          emails: ['member@example.com'],
           role: 'member',
         });
       const created = invitations.created[0];

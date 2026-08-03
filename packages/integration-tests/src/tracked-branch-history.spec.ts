@@ -30,8 +30,7 @@ describe('Tracked branch distribution history integration', () => {
     await testApp.initialize();
 
     admin = new DataFactory(testApp);
-    // The cli-repo-tracking flag is enabled for the @packmind.com domain.
-    await admin.withUserAndOrganization({ email: 'admin@packmind.com' });
+    await admin.withUserAndOrganization({ email: 'admin@example.com' });
 
     const command = await admin.withCommand({ name: 'Governed Recipe' });
     const { package: created } = await testApp.deploymentsHexa
