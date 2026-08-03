@@ -6,6 +6,13 @@ import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { GitHexa, gitSchemas } from '@packmind/git';
+import {
+  MarketplacesHexa,
+  marketplacesSchemas,
+  OrganizationMarketplaceDistributionsModule,
+  OrganizationMarketplacesModule,
+  TrackingModule,
+} from '@packmind/marketplaces';
 import { llmSchemas } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
@@ -78,6 +85,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...standardsSchemas,
         ...skillsSchemas,
         ...deploymentsSchemas,
+        ...marketplacesSchemas,
         ...linterSchemas,
         ...llmSchemas,
         ...playbookChangeManagementSchemas,
@@ -118,6 +126,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         PlaybookChangeApplierHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+        MarketplacesHexa, // Must come after DeploymentsHexa (resolves IDeploymentPort)
       ],
       services: [
         JobsService, // Infrastructure service for background jobs
@@ -130,9 +139,14 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     AmplitudeModule,
     LinterModule,
     ImportLegacyModule,
+    TrackingModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
+      {
+        path: 'tracking',
+        module: TrackingModule,
+      },
       {
         path: 'organizations/:orgId',
         module: OrganizationsModule,
@@ -172,6 +186,14 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'llm',
             module: OrganizationLlmModule,
+          },
+          {
+            path: 'marketplace-distributions',
+            module: OrganizationMarketplaceDistributionsModule,
+          },
+          {
+            path: 'marketplaces',
+            module: OrganizationMarketplacesModule,
           },
           {
             path: 'skills',

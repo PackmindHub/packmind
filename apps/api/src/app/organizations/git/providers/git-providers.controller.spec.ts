@@ -21,6 +21,7 @@ jest.mock('../../../shared/HexaInjection', () => {
     InjectGitAdapter: makeDecorator('GIT_ADAPTER'),
     InjectAccountsAdapter: makeDecorator('ACCOUNTS_ADAPTER'),
     InjectDeploymentAdapter: makeDecorator('DEPLOYMENT_ADAPTER'),
+    InjectMarketplacesAdapter: makeDecorator('MARKETPLACES_ADAPTER'),
     InjectRecipesAdapter: makeDecorator('RECIPES_ADAPTER'),
     InjectSkillsAdapter: makeDecorator('SKILLS_ADAPTER'),
     InjectStandardsAdapter: makeDecorator('STANDARDS_ADAPTER'),

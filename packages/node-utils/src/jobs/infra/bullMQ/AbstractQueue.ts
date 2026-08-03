@@ -65,6 +65,38 @@ export abstract class AbstractQueue<Input, Output> implements IQueue<
     return job.id;
   }
 
+  async removeRepeatable(
+    name: string,
+    pattern: string,
+    jobId: string,
+  ): Promise<void> {
+    if (!this.queue) {
+      throw new Error(`Queue ${this.QUEUE_ID} not initialized`);
+    }
+
+    try {
+      const removed = await this.queue.removeRepeatable(name, {
+        pattern,
+        jobId,
+      });
+      if (removed) {
+        this._logger.info(
+          `[${this.QUEUE_ID}] Removed repeatable job ${jobId} with pattern ${pattern}`,
+        );
+      } else {
+        this._logger.info(
+          `[${this.QUEUE_ID}] No repeatable job ${jobId} with pattern ${pattern} to remove`,
+        );
+      }
+    } catch (error) {
+      this._logger.warn(
+        `[${this.QUEUE_ID}] Failed to remove repeatable job ${jobId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
   async cancelJob(jobId: string): Promise<void> {
     const job = await this.queue.getJob(jobId);
     if (job) {

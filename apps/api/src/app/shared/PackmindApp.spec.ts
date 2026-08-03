@@ -1,7 +1,41 @@
+// Prevent hexa initialization from opening real Redis/BullMQ connections.
+// PackmindApp boots the full hexa registry; without this mock, RecipesAdapter
+// and friends call queueFactory which connects to Redis on import.
+jest.mock('@packmind/node-utils', () => {
+  const actual = jest.requireActual('@packmind/node-utils');
+  return {
+    ...actual,
+    queueFactory: actual.mockQueueFactory,
+    Configuration: {
+      getConfig: jest.fn().mockResolvedValue(null),
+      getConfigWithDefault: jest
+        .fn()
+        .mockImplementation((_key: string, defaultValue: string) =>
+          Promise.resolve(defaultValue),
+        ),
+    },
+    SSEEventPublisher: {
+      getInstance: jest.fn(),
+      publishProgramStatusEvent: jest.fn().mockResolvedValue(undefined),
+      publishAssessmentStatusEvent: jest.fn().mockResolvedValue(undefined),
+      publishDetectionHeuristicsUpdatedEvent: jest
+        .fn()
+        .mockResolvedValue(undefined),
+      publishUserContextChangeEvent: jest.fn().mockResolvedValue(undefined),
+      publishDistributionStatusChangeEvent: jest
+        .fn()
+        .mockResolvedValue(undefined),
+      publishChangeProposalUpdateEvent: jest.fn().mockResolvedValue(undefined),
+      publishEvent: jest.fn().mockResolvedValue(undefined),
+    },
+  };
+});
+
 import { JwtService } from '@nestjs/jwt';
 import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
+import { MarketplacesHexa } from '@packmind/marketplaces';
 import { LinterHexa } from '@packmind/linter';
 import { AmplitudeHexa } from '@packmind/amplitude';
 import { apiHexaPlugins } from '@packmind/plugins';
@@ -66,6 +100,7 @@ describe('PackmindApp API', () => {
         PlaybookChangeApplierHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+        MarketplacesHexa,
         ...apiHexaPlugins,
       ]);
     });

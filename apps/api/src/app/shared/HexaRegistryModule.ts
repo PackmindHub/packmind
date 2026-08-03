@@ -5,8 +5,9 @@ import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
-import { LinterHexa } from '@packmind/editions';
+import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
+import { MarketplacesHexa } from '@packmind/marketplaces';
 import { PlaybookChangeApplierHexa } from '@packmind/playbook-change-applier';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
@@ -29,6 +30,7 @@ import {
   IGitPort,
   ILinterPort,
   ILlmPort,
+  IMarketplacePort,
   IPlaybookChangeApplierPort,
   IPlaybookChangeManagementPort,
   ICommandsPort,
@@ -81,6 +83,7 @@ export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
 export const SPACES_MANAGEMENT_ADAPTER_TOKEN = 'SPACES_MANAGEMENT_ADAPTER';
+export const MARKETPLACES_ADAPTER_TOKEN = 'MARKETPLACES_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
 export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
@@ -134,6 +137,7 @@ export class HexaRegistryModule {
         SPACES_ADAPTER_TOKEN,
         LINTER_ADAPTER_TOKEN,
         SPACES_MANAGEMENT_ADAPTER_TOKEN,
+        MARKETPLACES_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
         LLM_ADAPTER_TOKEN,
         PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
@@ -335,6 +339,21 @@ export class HexaRegistryModule {
           return spacesManagementHexa.getAdapter();
         } catch {
           // SpacesManagementHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // Marketplaces adapter
+    providers.push({
+      provide: MARKETPLACES_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): IMarketplacePort | null => {
+        try {
+          const marketplacesHexa = registry.get(MarketplacesHexa);
+          return marketplacesHexa.getAdapter();
+        } catch {
+          // MarketplacesHexa not available
         }
         return null;
       },

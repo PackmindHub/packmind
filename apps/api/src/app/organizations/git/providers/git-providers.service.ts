@@ -21,6 +21,7 @@ import {
   GitRepoId,
   IDeploymentPort,
   IGitPort,
+  IMarketplacePort,
   ListAvailableReposCommand,
   ListAvailableReposResponse,
   ListProvidersCommand,
@@ -35,6 +36,7 @@ import {
 import {
   InjectDeploymentAdapter,
   InjectGitAdapter,
+  InjectMarketplacesAdapter,
 } from '../../../shared/HexaInjection';
 import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
@@ -111,6 +113,8 @@ export class GitProvidersService {
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
+    @InjectMarketplacesAdapter()
+    private readonly marketplacesAdapter: IMarketplacePort,
     private readonly accountsHexa: AccountsHexa,
     @Inject(INSTALL_STATE_SIGNER)
     private readonly signer: InstallStateSigner,
@@ -571,7 +575,46 @@ export class GitProvidersService {
     });
 
     let materialized = 0;
+    let marketplacesLinked = 0;
     for (const availableRepo of availableRepos) {
+      // Ask the deployments domain whether this repo is a marketplace. Marketplace
+      // repos are auto-linked there and must NOT also be mirrored as standard repos.
+      // Any failure (e.g. a non-admin installer hitting the admin gate, or a
+      // transient GitHub error) falls back to standard materialization so the loop
+      // never aborts — consistent with the existing per-repo swallow policy.
+      try {
+        const detection = await this.marketplacesAdapter.autoLinkMarketplace({
+          userId: String(command.userId),
+          organizationId: String(command.organizationId),
+          gitProviderId: provider.id,
+          owner: availableRepo.owner,
+          repo: availableRepo.name,
+          branch: availableRepo.defaultBranch,
+          source: command.source,
+        });
+        if (
+          detection.outcome === 'linked' ||
+          detection.outcome === 'already-linked' ||
+          detection.outcome === 'previously-unlinked'
+        ) {
+          if (detection.outcome === 'linked') {
+            marketplacesLinked += 1;
+          }
+          continue; // it's a marketplace → skip the standard add
+        }
+      } catch (error) {
+        this.logger.warn(
+          'Marketplace auto-detection failed; materializing repo as standard',
+          {
+            providerId: provider.id,
+            organizationId: command.organizationId,
+            owner: availableRepo.owner,
+            repo: availableRepo.name,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
+
       try {
         await this.gitAdapter.addGitRepo({
           userId: String(command.userId),
@@ -613,6 +656,7 @@ export class GitProvidersService {
         providerId: provider.id,
         organizationId: command.organizationId,
         materialized,
+        marketplacesLinked,
         attempted: availableRepos.length,
       },
     );
@@ -649,17 +693,38 @@ export class GitProvidersService {
       return { providers: [] };
     }
 
-    const { datesByProviderId } =
-      await this.deploymentAdapter.getLastDistributionDateByProviders({
+    const providerIds = providers.map((p) => p.id);
+
+    const [{ datesByProviderId }, marketplaceDates] = await Promise.all([
+      this.deploymentAdapter.getLastDistributionDateByProviders({
         userId: command.userId,
         organizationId: command.organizationId,
-        providerIds: providers.map((p) => p.id),
-      });
+        providerIds,
+      }),
+      this.marketplacesAdapter.getLastMarketplaceDistributionDateByProviders({
+        userId: command.userId,
+        organizationId: command.organizationId,
+        providerIds,
+      }),
+    ]);
+
+    // Merge the code-repository and marketplace publish dates, keeping the
+    // later timestamp per provider. The OSS edition's marketplace stub
+    // returns an empty map, so this degrades to distributions-only.
+    const merged: Record<string, string> = { ...datesByProviderId };
+    for (const [providerId, date] of Object.entries(
+      marketplaceDates.datesByProviderId,
+    )) {
+      const existing = merged[providerId];
+      if (existing == null || date > existing) {
+        merged[providerId] = date;
+      }
+    }
 
     return {
       providers: providers.map((provider) => ({
         ...provider,
-        lastDistributionAt: datesByProviderId[provider.id] ?? null,
+        lastDistributionAt: merged[provider.id] ?? null,
       })),
     };
   }

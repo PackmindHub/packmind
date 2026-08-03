@@ -10,6 +10,7 @@ import {
   SPACES_ADAPTER_TOKEN,
   LINTER_ADAPTER_TOKEN,
   SPACES_MANAGEMENT_ADAPTER_TOKEN,
+  MARKETPLACES_ADAPTER_TOKEN,
   CODING_AGENT_ADAPTER_TOKEN,
   LLM_ADAPTER_TOKEN,
   PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
@@ -75,6 +76,8 @@ export const InjectSpacesAdapter = () => Inject(SPACES_ADAPTER_TOKEN);
 export const InjectLinterAdapter = () => Inject(LINTER_ADAPTER_TOKEN);
 export const InjectSpacesManagementAdapter = () =>
   Inject(SPACES_MANAGEMENT_ADAPTER_TOKEN);
+export const InjectMarketplacesAdapter = () =>
+  Inject(MARKETPLACES_ADAPTER_TOKEN);
 export const InjectCodingAgentAdapter = () =>
   Inject(CODING_AGENT_ADAPTER_TOKEN);
 export const InjectLlmAdapter = () => Inject(LLM_ADAPTER_TOKEN);
