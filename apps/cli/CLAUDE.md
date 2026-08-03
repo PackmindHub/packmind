@@ -11,8 +11,6 @@ per-domain subdirectories under `src/infra/commands/`, gateway methods, use case
 by the three standards in `.claude/rules/packmind/`: *CLI Command Structure*, *CLI Gateway
 Implementation*, *CLI Use Case Structure*. A command file must **not** contain handler logic.
 
-E2E coverage for the CLI lives in `apps/cli-e2e-tests/`; see the **`cli-e2e-test-authoring`** skill.
-
 ## Stack specifics
 
 - **cmd-ts** for type-safe argument parsing and routing

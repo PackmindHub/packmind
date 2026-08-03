@@ -36,7 +36,7 @@ establish which before changing credential handling.
 
 ## Reuse
 
-`src/application/services/gitInfoHelpers.ts` already normalises owner/repo/branch/URL shapes across
+`src/application/services/gitInfoHelpers.ts` already normalises owner/repo/URL shapes across
 vendors. Use it instead of parsing remote URLs again.
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
