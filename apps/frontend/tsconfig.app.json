@@ -30,7 +30,7 @@
     "tests/**/*.test.jsx",
     "vite.config.ts",
     "vite.config.mts",
-    "src/test-setup.vitest.ts",
+    "src/test-setup.ts",
     "app/**/*.test.ts",
     "app/**/*.spec.ts",
     "app/**/*.test.tsx",

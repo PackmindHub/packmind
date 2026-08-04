@@ -110,11 +110,15 @@ export default defineConfig(() => {
       watch: false,
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./src/test-setup.vitest.ts'],
+      setupFiles: ['./src/test-setup.ts'],
       include: [
         'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
         'app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       ],
+      // Carried over from the retired jest.config.ts. Vitest defaults to 5s,
+      // which is not enough for the heavier component suites under full-suite
+      // parallelism — the shortfall showed up as an intermittent timeout.
+      testTimeout: 15000,
       reporters: ['default'],
       coverage: {
         reportsDirectory: '../../coverage/apps/frontend',
