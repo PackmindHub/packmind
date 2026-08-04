@@ -91,7 +91,14 @@ export default defineConfig(() => {
       reactRouter(),
       nxViteTsPaths(),
       nxCopyAssetsPlugin(['*.md']),
-      Checker({ typescript: true }),
+      // enableBuild: false keeps the checker to the dev-server overlay. Its build
+      // path spawns a bare `tsc --noEmit` from the workspace root — which has no
+      // tsconfig.json, so tsc prints its usage and exits 1 — then calls
+      // process.exit() on that code. Nx loads this config inside project-graph
+      // workers, so with NODE_ENV=production that killed the worker and any nx
+      // command failed with "Failed to process project graph". CI type-checks the
+      // frontend through the dedicated `frontend:typecheck` target instead.
+      Checker({ typescript: true, enableBuild: false }),
     ],
     // Uncomment this if you are using workers.
     // worker: {
