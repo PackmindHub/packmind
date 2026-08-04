@@ -1,6 +1,16 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 
+// @testing-library/dom gates its fake-timer support on `typeof jest !== 'undefined'`
+// (see jestFakeTimersAreEnabled in its helpers.js) and then calls exactly one method:
+// jest.advanceTimersByTime. Without this shim `waitFor` polls on real timers while
+// Vitest's fake clock is installed, so the poll never fires and the test dies at the
+// 5s timeout. Deliberately a one-method shim rather than `globalThis.jest = vi`: a
+// stray `jest.fn()` reintroduced into a spec must still fail loudly.
+(globalThis as { jest?: unknown }).jest = {
+  advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms),
+};
+
 // Automatically cleanup after each test
 afterEach(() => {
   cleanup();
