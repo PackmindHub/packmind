@@ -301,6 +301,11 @@ describe('SkillsUploadPanel', () => {
         pickedFile('skills/unrelated/SKILL.md'),
       ]);
       await userEvent.click(importButton());
+      // The summary is the only signal that the batch has settled. Counting
+      // uploads before it appears samples a batch still in flight: each skill's
+      // files are read through FileReader before its request goes out, so the
+      // call lands an event-loop turn or more after the click resolves.
+      await screen.findByText('1 imported, 2 failed');
 
       expect(uploadSkill).toHaveBeenCalledTimes(1);
     });
@@ -331,6 +336,10 @@ describe('SkillsUploadPanel', () => {
         pickedFile('skills/documentation/SKILL.md'),
       ]);
       await userEvent.click(importButton());
+      // Waited for the same reason as above: the conflicting skill is skipped
+      // synchronously, but the one that does go out only reaches the mutation
+      // once its files have been read.
+      await screen.findByText('1 imported, 1 failed');
 
       expect(uploadSkill).toHaveBeenCalledTimes(1);
     });
