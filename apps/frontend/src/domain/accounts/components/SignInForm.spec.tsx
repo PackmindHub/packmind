@@ -138,6 +138,22 @@ describe('SignInForm', () => {
       });
     });
 
+    describe('when rendering links', () => {
+      it('renders no nested anchors', () => {
+        mockUseSignInMutation.mockReturnValue(createSignInMutation());
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
+
+        const { container } = renderWithProviders(<SignInForm />);
+
+        expect(container.querySelector('a a')).toBeNull();
+      });
+    });
+
     describe('when email is empty', () => {
       it('rejects form submission', async () => {
         const user = userEvent.setup();
