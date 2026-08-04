@@ -170,7 +170,7 @@ export default function SignUpWithOrganizationForm() {
     <>
       <form
         onSubmit={handleSubmit}
-        data-testId={SignUpWithOrganizationFormDataTestIds.Component}
+        data-testid={SignUpWithOrganizationFormDataTestIds.Component}
       >
         <PMFormContainer maxWidth="full" spacing={4}>
           <PMField.Root required invalid={!!formErrors.email || !!emailError}>
@@ -193,7 +193,7 @@ export default function SignUpWithOrganizationForm() {
                 signInMutation.isPending
               }
               maxLength={EMAIL_MAX_LENGTH}
-              data-testId={SignUpWithOrganizationFormDataTestIds.EmailField}
+              data-testid={SignUpWithOrganizationFormDataTestIds.EmailField}
             />
             <PMField.ErrorText>
               {formErrors.email || emailError}
@@ -223,7 +223,7 @@ export default function SignUpWithOrganizationForm() {
                     signInMutation.isPending
                   }
                   maxLength={PASSWORD_MAX_LENGTH}
-                  data-testId={
+                  data-testid={
                     SignUpWithOrganizationFormDataTestIds.PasswordField
                   }
                 />
@@ -247,7 +247,7 @@ export default function SignUpWithOrganizationForm() {
                     signInMutation.isPending
                   }
                   maxLength={PASSWORD_MAX_LENGTH}
-                  data-testId={
+                  data-testid={
                     SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
                   }
                 />
@@ -276,7 +276,7 @@ export default function SignUpWithOrganizationForm() {
               !!emailError ||
               (shouldShowPasswordFields && (!password || !confirmPassword))
             }
-            data-testId={SignUpWithOrganizationFormDataTestIds.Submit}
+            data-testid={SignUpWithOrganizationFormDataTestIds.Submit}
           >
             {getButtonText()}
           </PMButton>
