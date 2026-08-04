@@ -3,8 +3,6 @@ import {
   ActiveDistributedPackagesByTarget,
   Distribution,
   ListActiveDistributedPackagesBySpaceCommand,
-  ListDriftedPackagesByOrgCommand,
-  ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
@@ -208,11 +206,5 @@ export class DeploymentsService {
     command: ListActiveDistributedPackagesBySpaceCommand,
   ): Promise<ActiveDistributedPackagesByTarget[]> {
     return this.deploymentAdapter.listActiveDistributedPackagesBySpace(command);
-  }
-
-  async listDriftedPackagesByOrg(
-    command: ListDriftedPackagesByOrgCommand,
-  ): Promise<ListDriftedPackagesByOrgResponse> {
-    return this.deploymentAdapter.listDriftedPackagesByOrg(command);
   }
 }

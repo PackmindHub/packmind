@@ -39,7 +39,6 @@ import {
   GET_TARGETS_BY_REPOSITORY_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
   LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-  LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
   LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
@@ -122,24 +121,6 @@ export const useListActiveDistributedPackagesBySpaceQuery = (
   return useQuery(
     getListActiveDistributedPackagesBySpaceOptions(organization?.id, spaceId),
   );
-};
-
-export const getListDriftedPackagesByOrgOptions = (
-  organizationId: OrganizationId | undefined,
-) => ({
-  queryKey: [...LIST_DRIFTED_PACKAGES_BY_ORG_KEY, organizationId],
-  queryFn: () => {
-    if (!organizationId) {
-      throw new Error('Organization ID is required to fetch drifted packages');
-    }
-    return deploymentsGateways.listDriftedPackagesByOrg({ organizationId });
-  },
-  enabled: !!organizationId,
-});
-
-export const useListDriftedPackagesByOrgQuery = () => {
-  const { organization } = useAuthContext();
-  return useQuery(getListDriftedPackagesByOrgOptions(organization?.id));
 };
 
 export const useListCommandDistributionsQuery = (recipeId: CommandId) => {
@@ -356,9 +337,6 @@ export const useDeployCommandsMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
-      });
     },
     onError: async (error, variables, context) => {
       console.error('Error publishing recipes to git');
@@ -399,9 +377,6 @@ export const useDeployStandardsMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -455,9 +430,6 @@ export const useDeployPackagesMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -541,9 +513,6 @@ export const useAddTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
-      });
 
       pmToaster.create({
         type: 'success',
@@ -591,9 +560,6 @@ export const useUpdateTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
       });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
-      });
 
       pmToaster.create({
         type: 'success',
@@ -640,9 +606,6 @@ export const useDeleteTargetMutation = () => {
 
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
       });
 
       pmToaster.create({
@@ -939,9 +902,6 @@ export const useRemovePackageFromTargetsMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_ACTIVE_DISTRIBUTED_PACKAGES_BY_SPACE_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_DRIFTED_PACKAGES_BY_ORG_KEY,
       });
       await invalidateChangeProposalQueries(queryClient);
     },
