@@ -21,6 +21,12 @@
         "{workspaceRoot}/tsconfig.base.effective.json"
       ]
     },
+    "test-vitest": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "config": "apps/frontend/vite.config.ts"
+      }
+    },
     "serve": {
       "executor": "nx:run-commands",
       "options": {

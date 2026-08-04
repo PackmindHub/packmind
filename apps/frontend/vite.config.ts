@@ -88,7 +88,11 @@ export default defineConfig(() => {
       host: 'localhost',
     },
     plugins: [
-      reactRouter(),
+      // The React Router dev plugin injects a Fast Refresh preamble that only a
+      // real browser document can satisfy, so under Vitest every component
+      // suite dies with "can't detect preamble". Tests do not need the plugin:
+      // `jsx: "react-jsx"` lets esbuild handle the JSX transform on its own.
+      !process.env.VITEST && reactRouter(),
       nxViteTsPaths(),
       nxCopyAssetsPlugin(['*.md']),
       Checker({ typescript: true }),
@@ -106,7 +110,11 @@ export default defineConfig(() => {
       watch: false,
       globals: true,
       environment: 'jsdom',
-      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      setupFiles: ['./src/test-setup.vitest.ts'],
+      include: [
+        'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+        'app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      ],
       reporters: ['default'],
       coverage: {
         reportsDirectory: '../../coverage/apps/frontend',
