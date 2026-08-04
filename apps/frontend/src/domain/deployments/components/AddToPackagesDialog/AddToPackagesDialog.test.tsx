@@ -30,8 +30,8 @@ import {
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
 
-vi.mock('../../api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../api/queries/DeploymentsQueries'),
+vi.mock('../../api/queries/DeploymentsQueries', async () => ({
+  ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
   useAddArtefactsToPackagesMutation: vi.fn(),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackagesBySpaceQuery: vi.fn(),

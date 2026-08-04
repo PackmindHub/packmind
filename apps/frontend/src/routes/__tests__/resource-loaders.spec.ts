@@ -11,8 +11,8 @@ vi.mock('../../shared/data/queryClient', () => ({
   },
 }));
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   const mockToaster = {
     create: vi.fn(),
     error: vi.fn(),

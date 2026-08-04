@@ -99,9 +99,9 @@ const makeSkill = (
   }) as unknown as SkillDeploymentStatus;
 
 // Mock PMTable to render a simple table for assertions on rows/columns while keeping our mapping logic
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
-  const ReactActual = jest.requireActual('react');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
+  const ReactActual = await vi.importActual<typeof import('react')>('react');
   type Column = { key: string; header: string };
   type Row = Record<string, React.ReactNode>;
   const getKey = (columns: Column[], row: Row) =>

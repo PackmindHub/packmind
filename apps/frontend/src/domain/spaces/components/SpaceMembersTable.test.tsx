@@ -7,8 +7,8 @@ import { UIProvider } from '@packmind/ui';
 
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     PMTable: ({

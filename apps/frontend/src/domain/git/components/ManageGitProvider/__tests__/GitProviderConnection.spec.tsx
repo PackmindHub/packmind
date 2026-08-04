@@ -71,8 +71,8 @@ vi.mock('../../../../accounts/api/queries/UserQueries', () => ({
 }));
 
 const mockNavigate = vi.fn();
-vi.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual('react-router')),
   useNavigate: () => mockNavigate,
 }));
 

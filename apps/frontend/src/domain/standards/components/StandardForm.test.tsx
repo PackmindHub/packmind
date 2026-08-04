@@ -13,8 +13,8 @@ import * as StandardsQueriesModule from '../api/queries/StandardsQueries';
 import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { StandardForm } from './StandardForm';
 
-vi.mock('../api/queries/StandardsQueries', () => ({
-  ...jest.requireActual('../api/queries/StandardsQueries'),
+vi.mock('../api/queries/StandardsQueries', async () => ({
+  ...(await vi.importActual('../api/queries/StandardsQueries')),
   useCreateStandardMutation: vi.fn(),
   useUpdateStandardMutation: vi.fn(),
   useGetRulesByStandardIdQuery: vi.fn(),
@@ -23,10 +23,10 @@ vi.mock('../api/queries/StandardsQueries', () => ({
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-    ),
+    )),
     useListChangeProposalsByStandardQuery: vi.fn(),
   }),
 );

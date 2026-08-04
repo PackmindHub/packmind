@@ -17,39 +17,41 @@ import * as UseNavigationModule from '../../../shared/hooks/useNavigation';
 import * as UseAuthContextModule from '../../accounts/hooks/useAuthContext';
 import { SpaceDangerZoneSection } from './SpaceDangerZoneSection';
 
-vi.mock('../hooks/useCurrentSpace', () => ({
-  ...jest.requireActual('../hooks/useCurrentSpace'),
+vi.mock('../hooks/useCurrentSpace', async () => ({
+  ...(await vi.importActual('../hooks/useCurrentSpace')),
   useCurrentSpace: vi.fn(),
 }));
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
-    ),
+    )),
     useLeaveSpaceMutation: vi.fn(),
     useDeleteSpaceMutation: vi.fn(),
   }),
 );
 
-vi.mock('../../deployments/api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../deployments/api/queries/DeploymentsQueries'),
+vi.mock('../../deployments/api/queries/DeploymentsQueries', async () => ({
+  ...(await vi.importActual(
+    '../../deployments/api/queries/DeploymentsQueries',
+  )),
   useListPackagesBySpaceQuery: vi.fn(),
 }));
 
-vi.mock('../../../shared/hooks/useNavigation', () => ({
-  ...jest.requireActual('../../../shared/hooks/useNavigation'),
+vi.mock('../../../shared/hooks/useNavigation', async () => ({
+  ...(await vi.importActual('../../../shared/hooks/useNavigation')),
   useNavigation: vi.fn(),
 }));
 
-vi.mock('../../accounts/hooks/useAuthContext', () => ({
-  ...jest.requireActual('../../accounts/hooks/useAuthContext'),
+vi.mock('../../accounts/hooks/useAuthContext', async () => ({
+  ...(await vi.importActual('../../accounts/hooks/useAuthContext')),
   useAuthContext: vi.fn(),
 }));
 
-vi.mock('@packmind/ui', () => ({
-  ...jest.requireActual('@packmind/ui'),
+vi.mock('@packmind/ui', async () => ({
+  ...(await vi.importActual('@packmind/ui')),
   pmToaster: {
     create: vi.fn(),
     success: vi.fn(),

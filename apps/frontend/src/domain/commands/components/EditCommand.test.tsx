@@ -14,18 +14,18 @@ import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/do
 import { EditCommand } from './EditCommand';
 import { CommandFormData } from './CommandForm';
 
-vi.mock('../api/queries/CommandsQueries', () => ({
-  ...jest.requireActual('../api/queries/CommandsQueries'),
+vi.mock('../api/queries/CommandsQueries', async () => ({
+  ...(await vi.importActual('../api/queries/CommandsQueries')),
   useUpdateCommandMutation: vi.fn(),
   useGetCommandsQuery: vi.fn(),
 }));
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-    ),
+    )),
     useListChangeProposalsByCommandQuery: vi.fn(),
   }),
 );

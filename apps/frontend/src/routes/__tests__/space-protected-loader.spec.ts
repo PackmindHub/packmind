@@ -31,8 +31,8 @@ vi.mock('../../shared/utils/flashToast', () => ({
   consumeFlashToast: vi.fn(),
 }));
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     pmToaster: {
@@ -52,8 +52,8 @@ class RedirectResponse {
   }
 }
 
-vi.mock('react-router', () => {
-  const actual = jest.requireActual('react-router');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual('react-router');
   return {
     ...actual,
     redirect: vi.fn((url: string) => {

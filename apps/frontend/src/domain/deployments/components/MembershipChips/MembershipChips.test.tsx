@@ -22,8 +22,8 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
 
-vi.mock('../../api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../api/queries/DeploymentsQueries'),
+vi.mock('../../api/queries/DeploymentsQueries', async () => ({
+  ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
   useRemoveArtefactsFromPackageMutation: vi.fn(),
   useListPackagesBySpaceQuery: vi.fn(),
   useListActiveDistributedPackagesBySpaceQuery: vi.fn(),

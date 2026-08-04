@@ -9,13 +9,13 @@ import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
 import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { SpaceMember } from './SpaceMembersTable';
 
-vi.mock('../api/queries/SpacesQueries', () => ({
-  ...jest.requireActual('../api/queries/SpacesQueries'),
+vi.mock('../api/queries/SpacesQueries', async () => ({
+  ...(await vi.importActual('../api/queries/SpacesQueries')),
   useAddMembersToSpaceMutation: vi.fn(),
 }));
 
-vi.mock('../../accounts/api/queries/UserQueries', () => ({
-  ...jest.requireActual('../../accounts/api/queries/UserQueries'),
+vi.mock('../../accounts/api/queries/UserQueries', async () => ({
+  ...(await vi.importActual('../../accounts/api/queries/UserQueries')),
   useGetUsersInMyOrganizationQuery: vi.fn(),
 }));
 

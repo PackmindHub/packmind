@@ -10,13 +10,13 @@ import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import { SpaceMembersList } from './SpaceMembersList';
 
-vi.mock('../api/queries/SpacesQueries', () => ({
-  ...jest.requireActual('../api/queries/SpacesQueries'),
+vi.mock('../api/queries/SpacesQueries', async () => ({
+  ...(await vi.importActual('../api/queries/SpacesQueries')),
   useGetSpaceMembersQuery: vi.fn(),
 }));
 
-vi.mock('../hooks/useCurrentSpace', () => ({
-  ...jest.requireActual('../hooks/useCurrentSpace'),
+vi.mock('../hooks/useCurrentSpace', async () => ({
+  ...(await vi.importActual('../hooks/useCurrentSpace')),
   useCurrentSpace: vi.fn(),
 }));
 
@@ -25,8 +25,8 @@ const mockUseGetSpaceMembersQuery =
     typeof useGetSpaceMembersQuery
   >;
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     PMTable: ({

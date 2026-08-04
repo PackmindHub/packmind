@@ -15,8 +15,8 @@ vi.mock('../../api/queries', () => ({
   useGetSpacesQuery: vi.fn(),
 }));
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     PMTable: ({

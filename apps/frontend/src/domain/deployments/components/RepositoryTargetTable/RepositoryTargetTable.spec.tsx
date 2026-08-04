@@ -43,8 +43,8 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   }),
 }));
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   const PMTable = ({ data }: { data: unknown[] }) => (
     <div data-testid="pm-table" data-row-count={data.length} />
   );

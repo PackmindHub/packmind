@@ -25,8 +25,8 @@ vi.mock('../api/queries/AccountsQueries', () => ({
 }));
 
 const mockNavigate = vi.fn();
-vi.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual('react-router')),
   useNavigate: () => mockNavigate,
   Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
     <a href={to}>{children}</a>

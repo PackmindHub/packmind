@@ -19,8 +19,8 @@ vi.mock('../../src/domain/git/api/queries/GitProviderQueries', () => ({
 
 const mockNavigate = vi.fn();
 
-vi.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual('react-router')),
   useNavigate: () => mockNavigate,
   useSearchParams: vi.fn(),
 }));

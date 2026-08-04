@@ -23,8 +23,8 @@ vi.mock(
   }),
 );
 
-vi.mock('@packmind/ui', () => ({
-  ...jest.requireActual('@packmind/ui'),
+vi.mock('@packmind/ui', async () => ({
+  ...(await vi.importActual('@packmind/ui')),
   pmToaster: { create: (...args: unknown[]) => mockToasterCreate(...args) },
 }));
 
@@ -62,10 +62,10 @@ vi.mock('../api/queries/SkillsQueries', () => ({
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-    ),
+    )),
     useListChangeProposalsBySkillQuery: vi.fn(),
   }),
 );

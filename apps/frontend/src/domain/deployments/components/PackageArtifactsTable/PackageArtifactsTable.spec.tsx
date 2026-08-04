@@ -76,8 +76,8 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
 
 let lastTableRows: unknown[] = [];
 
-vi.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   const PMTable = ({ data }: { data: Array<Record<string, unknown>> }) => {
     lastTableRows = data;
     return (
