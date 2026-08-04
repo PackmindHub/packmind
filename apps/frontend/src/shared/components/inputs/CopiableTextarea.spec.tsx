@@ -5,7 +5,7 @@ import { UIProvider } from '@packmind/ui';
 import { CopiableTextarea } from './CopiableTextarea';
 
 // Mock the clipboard API
-const mockWriteText = jest.fn();
+const mockWriteText = vi.fn();
 Object.assign(navigator, {
   clipboard: {
     writeText: mockWriteText,
@@ -19,11 +19,11 @@ const renderWithUI = (component: React.ReactElement) => {
 describe('CopiableTextarea', () => {
   beforeEach(() => {
     mockWriteText.mockClear();
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('renders with the provided value', () => {
@@ -34,7 +34,7 @@ describe('CopiableTextarea', () => {
   });
 
   it('calls onValueChange when textarea value changes and not readonly', () => {
-    const mockOnValueChange = jest.fn();
+    const mockOnValueChange = vi.fn();
     renderWithUI(
       <CopiableTextarea value="" onValueChange={mockOnValueChange} />,
     );
@@ -46,7 +46,7 @@ describe('CopiableTextarea', () => {
   });
 
   it('does not call onValueChange when readonly', () => {
-    const mockOnValueChange = jest.fn();
+    const mockOnValueChange = vi.fn();
     renderWithUI(
       <CopiableTextarea
         value="test"
@@ -81,7 +81,7 @@ describe('CopiableTextarea', () => {
   describe('onCopy', () => {
     describe('when copy button is clicked', () => {
       it('triggers onCopy callback', () => {
-        const mockOnCopy = jest.fn();
+        const mockOnCopy = vi.fn();
         renderWithUI(<CopiableTextarea value="test" onCopy={mockOnCopy} />);
 
         const copyButton = screen.getByLabelText('Copy to clipboard');
@@ -93,7 +93,7 @@ describe('CopiableTextarea', () => {
 
     describe('when text is copied from textarea', () => {
       it('triggers onCopy callback', () => {
-        const mockOnCopy = jest.fn();
+        const mockOnCopy = vi.fn();
         renderWithUI(<CopiableTextarea value="test" onCopy={mockOnCopy} />);
 
         const textarea = screen.getByRole('textbox');

@@ -9,32 +9,32 @@ import GithubAppManifestCallbackRouteModule from './_public.integrations.github-
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { useSubmitGithubAppManifestCallbackMutation } from '../../src/domain/git/api/queries/GitProviderQueries';
 
-jest.mock('../../src/domain/accounts/api/queries', () => ({
-  useGetMeQuery: jest.fn(),
+vi.mock('../../src/domain/accounts/api/queries', () => ({
+  useGetMeQuery: vi.fn(),
 }));
 
-jest.mock('../../src/domain/git/api/queries/GitProviderQueries', () => ({
-  useSubmitGithubAppManifestCallbackMutation: jest.fn(),
+vi.mock('../../src/domain/git/api/queries/GitProviderQueries', () => ({
+  useSubmitGithubAppManifestCallbackMutation: vi.fn(),
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router', () => ({
+vi.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
-  useSearchParams: jest.fn(),
+  useSearchParams: vi.fn(),
 }));
 
 const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue({
     installUrl: 'https://github.com/apps/test/installations/new',
   }),
   isPending: false,
   isSuccess: false,
   isError: false,
   error: null,
-  reset: jest.fn(),
+  reset: vi.fn(),
   ...overrides,
 });
 
@@ -90,8 +90,8 @@ describe('GithubAppManifestCallbackRouteModule', () => {
   >;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.clearAllMocks();
+    vi.useFakeTimers();
+    vi.clearAllMocks();
 
     mockUseGetMeQuery.mockReturnValue({
       data: authenticatedMe,
@@ -109,18 +109,18 @@ describe('GithubAppManifestCallbackRouteModule', () => {
         code: 'gh-manifest-code-abc',
         state: 'signed-state-token',
       }),
-      jest.fn(),
+      vi.fn(),
     ]);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe('when authenticated user has valid code and state query params', () => {
     it('calls the manifest callback mutation with code and state', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -212,8 +212,8 @@ describe('GithubAppManifestCallbackRouteModule', () => {
     });
 
     it('resets mutation state when clicking Try again', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const mockReset = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const mockReset = vi.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
         createMockMutation({
@@ -279,7 +279,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
     it('renders the missing manifest context error', () => {
       mockUseSearchParams.mockReturnValue([
         new URLSearchParams({ state: 'signed-state-token' }),
-        jest.fn(),
+        vi.fn(),
       ]);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -288,7 +288,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
     });
 
     it('does not call the mutation', () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -298,7 +298,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
 
       mockUseSearchParams.mockReturnValue([
         new URLSearchParams({ state: 'signed-state-token' }),
-        jest.fn(),
+        vi.fn(),
       ]);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -311,7 +311,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
     it('renders the missing manifest context error', () => {
       mockUseSearchParams.mockReturnValue([
         new URLSearchParams({ code: 'gh-manifest-code-abc' }),
-        jest.fn(),
+        vi.fn(),
       ]);
 
       renderWithProviders(<GithubAppManifestCallbackRouteModule />);
@@ -322,7 +322,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
 
   describe('when user is not authenticated', () => {
     it('does not call the mutation', () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -382,7 +382,7 @@ describe('GithubAppManifestCallbackRouteModule', () => {
 
   describe('when effect runs twice (React 19 strict-mode double-mount)', () => {
     it('fires the mutation exactly once', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppManifestCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<

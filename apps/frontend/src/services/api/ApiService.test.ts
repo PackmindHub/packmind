@@ -4,7 +4,7 @@ import { PackmindError } from './errors/PackmindError';
 import { PackmindConflictError } from './errors/PackmindConflictError';
 
 // Mock axios
-jest.mock('axios');
+vi.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -24,11 +24,11 @@ describe('ApiService', () => {
   beforeEach(() => {
     // Create a mock axios instance with all the methods we need
     mockAxiosInstance = {
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      patch: jest.fn(),
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
     };
 
     // Mock axios.create to return our mock instance
@@ -40,7 +40,7 @@ describe('ApiService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {

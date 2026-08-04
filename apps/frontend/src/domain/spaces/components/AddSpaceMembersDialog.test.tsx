@@ -9,14 +9,14 @@ import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
 import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { SpaceMember } from './SpaceMembersTable';
 
-jest.mock('../api/queries/SpacesQueries', () => ({
+vi.mock('../api/queries/SpacesQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesQueries'),
-  useAddMembersToSpaceMutation: jest.fn(),
+  useAddMembersToSpaceMutation: vi.fn(),
 }));
 
-jest.mock('../../accounts/api/queries/UserQueries', () => ({
+vi.mock('../../accounts/api/queries/UserQueries', () => ({
   ...jest.requireActual('../../accounts/api/queries/UserQueries'),
-  useGetUsersInMyOrganizationQuery: jest.fn(),
+  useGetUsersInMyOrganizationQuery: vi.fn(),
 }));
 
 const mockUseGetUsersInMyOrganizationQuery =
@@ -31,8 +31,8 @@ const mockUseAddMembersToSpaceMutation =
 
 const createMockMutation = (overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn().mockResolvedValue({ memberships: [] }),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({ memberships: [] }),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -63,7 +63,7 @@ describe('AddSpaceMembersDialog', () => {
 
   const defaultProps = {
     open: true,
-    setOpen: jest.fn(),
+    setOpen: vi.fn(),
     spaceId: 'space-id-1',
     existingMembers: [] as SpaceMember[],
   };
@@ -85,7 +85,7 @@ describe('AddSpaceMembersDialog', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the dialog title', () => {
@@ -204,9 +204,7 @@ describe('AddSpaceMembersDialog', () => {
 
     describe('when the add button is clicked', () => {
       it('calls the mutation with selected members', async () => {
-        const mockMutateAsync = jest
-          .fn()
-          .mockResolvedValue({ memberships: [] });
+        const mockMutateAsync = vi.fn().mockResolvedValue({ memberships: [] });
         mockUseAddMembersToSpaceMutation.mockReturnValue(
           createMockMutation({ mutateAsync: mockMutateAsync }),
         );
@@ -229,10 +227,8 @@ describe('AddSpaceMembersDialog', () => {
       });
 
       it('closes the dialog on success', async () => {
-        const mockSetOpen = jest.fn();
-        const mockMutateAsync = jest
-          .fn()
-          .mockResolvedValue({ memberships: [] });
+        const mockSetOpen = vi.fn();
+        const mockMutateAsync = vi.fn().mockResolvedValue({ memberships: [] });
         mockUseAddMembersToSpaceMutation.mockReturnValue(
           createMockMutation({ mutateAsync: mockMutateAsync }),
         );
@@ -258,7 +254,7 @@ describe('AddSpaceMembersDialog', () => {
 
   describe('when the dialog is closed', () => {
     it('resets the selected members', () => {
-      const mockSetOpen = jest.fn();
+      const mockSetOpen = vi.fn();
       const { rerender } = renderWithProviders(
         <AddSpaceMembersDialog
           {...defaultProps}

@@ -22,23 +22,23 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
 
-jest.mock('../../api/queries/DeploymentsQueries', () => ({
+vi.mock('../../api/queries/DeploymentsQueries', () => ({
   ...jest.requireActual('../../api/queries/DeploymentsQueries'),
-  useRemoveArtefactsFromPackageMutation: jest.fn(),
-  useListPackagesBySpaceQuery: jest.fn(),
-  useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
+  useRemoveArtefactsFromPackageMutation: vi.fn(),
+  useListPackagesBySpaceQuery: vi.fn(),
+  useListActiveDistributedPackagesBySpaceQuery: vi.fn(),
 }));
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus',
   () => ({
-    usePackageMarketplaceStatus: jest.fn(),
+    usePackageMarketplaceStatus: vi.fn(),
   }),
 );
-jest.mock('../../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: jest.fn(),
+vi.mock('../../../accounts/hooks/useAuthContext', () => ({
+  useAuthContext: vi.fn(),
 }));
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
-  useCurrentSpace: jest.fn(),
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: vi.fn(),
 }));
 
 const mockUseListPackagesBySpaceQuery =
@@ -116,7 +116,7 @@ describe('MembershipChips', () => {
       typeof useListActiveDistributedPackagesBySpaceQuery
     >);
     mockUseRemoveArtefactsFromPackageMutation.mockReturnValue({
-      mutateAsync: jest.fn().mockResolvedValue({}),
+      mutateAsync: vi.fn().mockResolvedValue({}),
       isPending: false,
     } as unknown as ReturnType<typeof useRemoveArtefactsFromPackageMutation>);
     mockUseAuthContext.mockReturnValue({
@@ -134,7 +134,7 @@ describe('MembershipChips', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('links the package name to the package page', () => {
@@ -160,7 +160,7 @@ describe('MembershipChips', () => {
   });
 
   it('removes instantly from an undeployed package without a confirmation', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue({});
+    const mutateAsync = vi.fn().mockResolvedValue({});
     mockUseRemoveArtefactsFromPackageMutation.mockReturnValue({
       mutateAsync,
       isPending: false,
@@ -183,7 +183,7 @@ describe('MembershipChips', () => {
   });
 
   it('asks for confirmation when the package is deployed', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue({});
+    const mutateAsync = vi.fn().mockResolvedValue({});
     mockUseRemoveArtefactsFromPackageMutation.mockReturnValue({
       mutateAsync,
       isPending: false,
@@ -207,7 +207,7 @@ describe('MembershipChips', () => {
   });
 
   it('asks for confirmation when the package is only published to a marketplace', async () => {
-    const mutateAsync = jest.fn().mockResolvedValue({});
+    const mutateAsync = vi.fn().mockResolvedValue({});
     mockUseRemoveArtefactsFromPackageMutation.mockReturnValue({
       mutateAsync,
       isPending: false,

@@ -19,10 +19,10 @@ import {
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { useCreateChangeProposalMutation } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
   () => ({
-    useCreateChangeProposalMutation: jest.fn(),
+    useCreateChangeProposalMutation: vi.fn(),
   }),
 );
 
@@ -33,8 +33,8 @@ const mockUseCreateChangeProposalMutation =
 
 const createMockMutation = (overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -68,7 +68,7 @@ describe('ProposeChangeModal', () => {
     organizationId,
     spaceId,
     open: true,
-    onOpenChange: jest.fn(),
+    onOpenChange: vi.fn(),
   };
 
   beforeEach(() => {
@@ -76,7 +76,7 @@ describe('ProposeChangeModal', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when open', () => {
@@ -115,7 +115,7 @@ describe('ProposeChangeModal', () => {
     });
 
     it('does not call mutation when clicked', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
       mockUseCreateChangeProposalMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }),
       );
@@ -149,7 +149,7 @@ describe('ProposeChangeModal', () => {
     });
 
     it('calls mutation with correct payload on submit', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
       mockUseCreateChangeProposalMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }),
       );
@@ -182,8 +182,8 @@ describe('ProposeChangeModal', () => {
 
     describe('when mutation succeeds', () => {
       it('closes the modal', async () => {
-        const onOpenChange = jest.fn();
-        const mockMutate = jest.fn();
+        const onOpenChange = vi.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -215,7 +215,7 @@ describe('ProposeChangeModal', () => {
 
     describe('when mutation fails', () => {
       it('shows an error message', async () => {
-        const mockMutate = jest.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -249,8 +249,8 @@ describe('ProposeChangeModal', () => {
       });
 
       it('keeps the modal open', async () => {
-        const onOpenChange = jest.fn();
-        const mockMutate = jest.fn();
+        const onOpenChange = vi.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -283,7 +283,7 @@ describe('ProposeChangeModal', () => {
 
   describe('when clicking Cancel button', () => {
     it('calls onOpenChange to close', async () => {
-      const onOpenChange = jest.fn();
+      const onOpenChange = vi.fn();
       renderWithProviders(
         <ProposeChangeModal {...defaultProps} onOpenChange={onOpenChange} />,
       );

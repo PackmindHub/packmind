@@ -6,13 +6,13 @@ import {
 import { packmindApiService } from '../../../../services/api/PackmindApiService';
 import { GitProviderGatewayApi } from './GitProviderGatewayApi';
 
-jest.mock('../../../../services/api/PackmindApiService', () => ({
+vi.mock('../../../../services/api/PackmindApiService', () => ({
   packmindApiService: {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    patch: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
     baseApiUrl: 'http://test/api',
   },
 }));
@@ -31,7 +31,7 @@ describe('GitProviderGatewayApi', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getGithubAppInstallUrl', () => {

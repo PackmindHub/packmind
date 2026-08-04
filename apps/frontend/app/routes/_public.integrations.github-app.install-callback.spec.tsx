@@ -9,30 +9,30 @@ import GithubAppCallbackRouteModule from './_public.integrations.github-app.inst
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { useSubmitGithubAppCallbackMutation } from '../../src/domain/git/api/queries/GitProviderQueries';
 
-jest.mock('../../src/domain/accounts/api/queries', () => ({
-  useGetMeQuery: jest.fn(),
+vi.mock('../../src/domain/accounts/api/queries', () => ({
+  useGetMeQuery: vi.fn(),
 }));
 
-jest.mock('../../src/domain/git/api/queries/GitProviderQueries', () => ({
-  useSubmitGithubAppCallbackMutation: jest.fn(),
+vi.mock('../../src/domain/git/api/queries/GitProviderQueries', () => ({
+  useSubmitGithubAppCallbackMutation: vi.fn(),
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router', () => ({
+vi.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
-  useSearchParams: jest.fn(),
+  useSearchParams: vi.fn(),
 }));
 
 const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({ id: 'prov-new' }),
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue({ id: 'prov-new' }),
   isPending: false,
   isSuccess: false,
   isError: false,
   error: null,
-  reset: jest.fn(),
+  reset: vi.fn(),
   ...overrides,
 });
 
@@ -88,8 +88,8 @@ describe('GithubAppCallbackRouteModule', () => {
   >;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.clearAllMocks();
+    vi.useFakeTimers();
+    vi.clearAllMocks();
 
     mockUseGetMeQuery.mockReturnValue({
       data: authenticatedMe,
@@ -108,18 +108,18 @@ describe('GithubAppCallbackRouteModule', () => {
         setup_action: 'install',
         state: 'stored-state-token',
       }),
-      jest.fn(),
+      vi.fn(),
     ]);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   describe('when authenticated user has valid installation_id and state in URL params', () => {
     it('calls the callback mutation with installationId and state', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -155,9 +155,9 @@ describe('GithubAppCallbackRouteModule', () => {
     });
 
     it('calls the mutation again when clicking Retry', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      const mockMutate = jest.fn();
-      const mockReset = jest.fn();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const mockMutate = vi.fn();
+      const mockReset = vi.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
         createMockMutation({
@@ -180,7 +180,7 @@ describe('GithubAppCallbackRouteModule', () => {
     it('renders the missing install context error', () => {
       mockUseSearchParams.mockReturnValue([
         new URLSearchParams({ setup_action: 'install' }),
-        jest.fn(),
+        vi.fn(),
       ]);
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
@@ -189,7 +189,7 @@ describe('GithubAppCallbackRouteModule', () => {
     });
 
     it('does not call the mutation', () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -199,7 +199,7 @@ describe('GithubAppCallbackRouteModule', () => {
 
       mockUseSearchParams.mockReturnValue([
         new URLSearchParams({ setup_action: 'install' }),
-        jest.fn(),
+        vi.fn(),
       ]);
 
       renderWithProviders(<GithubAppCallbackRouteModule />);
@@ -210,7 +210,7 @@ describe('GithubAppCallbackRouteModule', () => {
 
   describe('when user is not authenticated', () => {
     it('does not call the mutation', () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<
@@ -254,7 +254,7 @@ describe('GithubAppCallbackRouteModule', () => {
 
   describe('when effect runs twice (React 19 strict-mode double-mount)', () => {
     it('fires the mutation exactly once', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
 
       mockUseSubmitGithubAppCallbackMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }) as unknown as ReturnType<

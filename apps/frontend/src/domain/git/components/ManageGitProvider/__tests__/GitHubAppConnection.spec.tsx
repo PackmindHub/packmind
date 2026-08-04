@@ -19,18 +19,18 @@ import {
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { redirectTo } from '../../../../../shared/utils/navigation';
 
-jest.mock('../../../api/queries/GitProviderQueries', () => ({
-  useGithubAppInstallUrlMutation: jest.fn(),
-  useGetGithubAppStatusQuery: jest.fn(),
-  useGetGithubAppManifestMutation: jest.fn(),
+vi.mock('../../../api/queries/GitProviderQueries', () => ({
+  useGithubAppInstallUrlMutation: vi.fn(),
+  useGetGithubAppStatusQuery: vi.fn(),
+  useGetGithubAppManifestMutation: vi.fn(),
 }));
 
-jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
-  useGetMeQuery: jest.fn(),
+vi.mock('../../../../accounts/api/queries/UserQueries', () => ({
+  useGetMeQuery: vi.fn(),
 }));
 
-jest.mock('../../../../../shared/utils/navigation', () => ({
-  redirectTo: jest.fn(),
+vi.mock('../../../../../shared/utils/navigation', () => ({
+  redirectTo: vi.fn(),
 }));
 
 const mockRedirectTo = redirectTo as jest.MockedFunction<typeof redirectTo>;
@@ -54,8 +54,8 @@ const buildConnectedAppProvider = (
 const createMockInstallUrlMutation = (
   overrides: Record<string, unknown> = {},
 ) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue({
     installUrl: 'https://github.com/apps/packmind/installations/new?state=abc',
     state: 'test-state-token',
   }),
@@ -63,15 +63,15 @@ const createMockInstallUrlMutation = (
   isSuccess: false,
   isError: false,
   error: null,
-  reset: jest.fn(),
+  reset: vi.fn(),
   ...overrides,
 });
 
 const createMockManifestMutation = (
   overrides: Record<string, unknown> = {},
 ) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue({
     manifest: { name: 'Packmind', url: 'https://packmind.com' },
     state: 'manifest-state-abc',
     manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -80,7 +80,7 @@ const createMockManifestMutation = (
   isSuccess: false,
   isError: false,
   error: null,
-  reset: jest.fn(),
+  reset: vi.fn(),
   ...overrides,
 });
 
@@ -110,7 +110,7 @@ describe('GitHubAppInstallSlot', () => {
     >;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockUseGithubAppInstallUrlMutation.mockReturnValue(
       createMockInstallUrlMutation() as ReturnType<
@@ -120,7 +120,7 @@ describe('GitHubAppInstallSlot', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('when rendered', () => {
@@ -148,7 +148,7 @@ describe('GitHubAppInstallSlot', () => {
   describe('when clicking the install button', () => {
     it('calls getGithubAppInstallUrl via the mutation', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         installUrl: 'https://github.com/apps/packmind/installations/new',
         state: 'test-state',
       });
@@ -174,7 +174,7 @@ describe('GitHubAppInstallSlot', () => {
       const user = userEvent.setup();
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         installUrl,
         state: 'abc',
       });
@@ -201,7 +201,7 @@ describe('GitHubAppInstallSlot', () => {
 
     it('shows an error when the install URL mutation fails', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest
+      const mockMutateAsync = vi
         .fn()
         .mockRejectedValue(new Error('Network error'));
 
@@ -231,7 +231,7 @@ describe('GitHubAppInstallSlot', () => {
     it('renders a "View Packmind on GitHub" link instead of the install button', async () => {
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         installUrl,
         state: 'abc',
       });
@@ -262,7 +262,7 @@ describe('GitHubAppInstallSlot', () => {
     it('opens the install URL in a new tab via the link', async () => {
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         installUrl,
         state: 'abc',
       });
@@ -337,7 +337,7 @@ describe('GitHubAppConnection', () => {
   >;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockUseGithubAppInstallUrlMutation.mockReturnValue(
       createMockInstallUrlMutation() as ReturnType<
@@ -348,7 +348,7 @@ describe('GitHubAppConnection', () => {
       data: { hasApp: false },
       isLoading: false,
       isError: false,
-      refetch: jest.fn(),
+      refetch: vi.fn(),
     } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     mockUseGetGithubAppManifestMutation.mockReturnValue(
       createMockManifestMutation() as ReturnType<
@@ -379,7 +379,7 @@ describe('GitHubAppConnection', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('when edition is cloud', () => {
@@ -460,7 +460,7 @@ describe('GitHubAppConnection', () => {
         data: undefined,
         isLoading: true,
         isError: false,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     });
 
@@ -508,7 +508,7 @@ describe('GitHubAppConnection', () => {
         data: undefined,
         isLoading: false,
         isError: true,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     });
 
@@ -540,7 +540,7 @@ describe('GitHubAppConnection', () => {
 
     it('calls refetch when retry button is clicked', async () => {
       const user = userEvent.setup();
-      const mockRefetch = jest.fn();
+      const mockRefetch = vi.fn();
       mockUseGetGithubAppStatusQuery.mockReturnValue({
         data: undefined,
         isLoading: false,
@@ -588,7 +588,7 @@ describe('GitHubAppConnection', () => {
         data: { hasApp: false },
         isLoading: false,
         isError: false,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     });
 
@@ -620,7 +620,7 @@ describe('GitHubAppConnection', () => {
 
     it('calls manifest mutation on click', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind', url: 'https://packmind.com' },
         state: 'state-xyz',
         manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -632,9 +632,9 @@ describe('GitHubAppConnection', () => {
         }) as ReturnType<typeof useGetGithubAppManifestMutation>,
       );
 
-      jest
-        .spyOn(HTMLFormElement.prototype, 'submit')
-        .mockImplementation(() => undefined);
+      vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
+        () => undefined,
+      );
 
       renderWithProviders(
         <GitHubAppConnection
@@ -652,7 +652,7 @@ describe('GitHubAppConnection', () => {
 
     it('submits a hidden form to manifestPostUrl with encoded state on click', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -664,7 +664,7 @@ describe('GitHubAppConnection', () => {
         }) as ReturnType<typeof useGetGithubAppManifestMutation>,
       );
 
-      const mockSubmit = jest
+      const mockSubmit = vi
         .spyOn(HTMLFormElement.prototype, 'submit')
         .mockImplementation(() => undefined);
 
@@ -684,7 +684,7 @@ describe('GitHubAppConnection', () => {
 
     it('requests the manifest without a githubOrg by default', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -696,9 +696,9 @@ describe('GitHubAppConnection', () => {
         }) as ReturnType<typeof useGetGithubAppManifestMutation>,
       );
 
-      jest
-        .spyOn(HTMLFormElement.prototype, 'submit')
-        .mockImplementation(() => undefined);
+      vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
+        () => undefined,
+      );
 
       renderWithProviders(
         <GitHubAppConnection
@@ -717,7 +717,7 @@ describe('GitHubAppConnection', () => {
     describe('when an organization slug is typed', () => {
       it('requests the manifest with the typed organization slug', async () => {
         const user = userEvent.setup();
-        const mockMutateAsync = jest.fn().mockResolvedValue({
+        const mockMutateAsync = vi.fn().mockResolvedValue({
           manifest: { name: 'Packmind' },
           state: 'state-xyz',
           manifestPostUrl:
@@ -730,9 +730,9 @@ describe('GitHubAppConnection', () => {
           }) as ReturnType<typeof useGetGithubAppManifestMutation>,
         );
 
-        jest
-          .spyOn(HTMLFormElement.prototype, 'submit')
-          .mockImplementation(() => undefined);
+        vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
+          () => undefined,
+        );
 
         renderWithProviders(
           <GitHubAppConnection
@@ -803,7 +803,7 @@ describe('GitHubAppConnection', () => {
         data: { hasApp: true, appSlug: 'my-packmind-app' },
         isLoading: false,
         isError: false,
-        refetch: jest.fn(),
+        refetch: vi.fn(),
       } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     });
 
@@ -849,7 +849,7 @@ describe('GitHubAppConnection', () => {
     it('renders the "View Packmind on GitHub" link when editingProvider is a connected App provider', async () => {
       const installUrl =
         'https://github.com/apps/packmind/installations/new?state=abc';
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         installUrl,
         state: 'abc',
       });

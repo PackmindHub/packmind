@@ -10,14 +10,14 @@ import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import { SpaceMembersList } from './SpaceMembersList';
 
-jest.mock('../api/queries/SpacesQueries', () => ({
+vi.mock('../api/queries/SpacesQueries', () => ({
   ...jest.requireActual('../api/queries/SpacesQueries'),
-  useGetSpaceMembersQuery: jest.fn(),
+  useGetSpaceMembersQuery: vi.fn(),
 }));
 
-jest.mock('../hooks/useCurrentSpace', () => ({
+vi.mock('../hooks/useCurrentSpace', () => ({
   ...jest.requireActual('../hooks/useCurrentSpace'),
-  useCurrentSpace: jest.fn(),
+  useCurrentSpace: vi.fn(),
 }));
 
 const mockUseGetSpaceMembersQuery =
@@ -25,7 +25,7 @@ const mockUseGetSpaceMembersQuery =
     typeof useGetSpaceMembersQuery
   >;
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   return {
     ...actual,
@@ -89,7 +89,7 @@ describe('SpaceMembersList', () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
+    vi.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
       spaceId: 'space-1',
       spaceSlug: 'test-space',
       spaceName: 'Test Space',
@@ -99,14 +99,14 @@ describe('SpaceMembersList', () => {
       isReady: true,
     } as unknown as ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>);
 
-    jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
+    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
       user: mockUser,
       organization: mockOrganization,
       isAuthenticated: true,
       isLoading: false,
-      getMe: jest.fn(),
-      getUserOrganizations: jest.fn(),
-      validateAndSwitchIfNeeded: jest.fn(),
+      getMe: vi.fn(),
+      getUserOrganizations: vi.fn(),
+      validateAndSwitchIfNeeded: vi.fn(),
     } as unknown as ReturnType<typeof AuthContextModule.useAuthContext>);
 
     mockUseGetSpaceMembersQuery.mockReturnValue({
@@ -143,7 +143,7 @@ describe('SpaceMembersList', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('renders the current user in the members list', () => {

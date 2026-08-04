@@ -29,11 +29,11 @@ const mockAllProviders: ProviderMetadata[] = Object.values(
 
 describe('LLMConfigurationForm', () => {
   const mockOrganizationId = 'org-123' as OrganizationId;
-  const mockOnTestConnection = jest.fn();
-  const mockOnSaveConfiguration = jest.fn();
+  const mockOnTestConnection = vi.fn();
+  const mockOnSaveConfiguration = vi.fn();
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('provider selection', () => {
@@ -564,7 +564,7 @@ describe('LLMConfigurationForm', () => {
         };
         mockOnTestConnection.mockResolvedValue(mockResponse);
         mockOnSaveConfiguration.mockResolvedValue(undefined);
-        const mockOnSaveSuccess = jest.fn();
+        const mockOnSaveSuccess = vi.fn();
 
         renderWithProvider(
           <LLMConfigurationForm
@@ -649,7 +649,7 @@ describe('LLMConfigurationForm', () => {
         };
         mockOnTestConnection.mockResolvedValue(mockResponse);
         mockOnSaveConfiguration.mockResolvedValue(undefined);
-        const mockOnSaveSuccess = jest.fn();
+        const mockOnSaveSuccess = vi.fn();
 
         const existingConfig: LLMConfigurationDTO = {
           provider: LLMProvider.OPENAI,

@@ -11,11 +11,11 @@ import { UIProvider } from '@packmind/ui';
 import { useGetSpacesQuery } from '../../api/queries';
 import { SpacesManagementPage } from './SpacesManagementPage';
 
-jest.mock('../../api/queries', () => ({
-  useGetSpacesQuery: jest.fn(),
+vi.mock('../../api/queries', () => ({
+  useGetSpacesQuery: vi.fn(),
 }));
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   return {
     ...actual,

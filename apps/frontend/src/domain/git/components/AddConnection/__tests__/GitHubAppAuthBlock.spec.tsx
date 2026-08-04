@@ -14,22 +14,22 @@ import {
   useRevokeGithubAppMutation,
 } from '../../../api/queries/GitProviderQueries';
 
-jest.mock('../../../api/queries/GitProviderQueries', () => ({
-  useGetGithubAppManifestMutation: jest.fn(),
-  useGetGithubAppStatusQuery: jest.fn(),
-  useGithubAppInstallUrlMutation: jest.fn(),
-  useRevokeGithubAppMutation: jest.fn(),
+vi.mock('../../../api/queries/GitProviderQueries', () => ({
+  useGetGithubAppManifestMutation: vi.fn(),
+  useGetGithubAppStatusQuery: vi.fn(),
+  useGithubAppInstallUrlMutation: vi.fn(),
+  useRevokeGithubAppMutation: vi.fn(),
 }));
 
-jest.mock('../../../../../shared/utils/navigation', () => ({
-  redirectTo: jest.fn(),
+vi.mock('../../../../../shared/utils/navigation', () => ({
+  redirectTo: vi.fn(),
 }));
 
 const mockOrganizationId = 'org-1' as OrganizationId;
 
 const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({
+  mutate: vi.fn(),
+  mutateAsync: vi.fn().mockResolvedValue({
     manifest: { name: 'Packmind', url: 'https://packmind.com' },
     state: 'manifest-state-abc',
     manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -38,7 +38,7 @@ const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
   isSuccess: false,
   isError: false,
   error: null,
-  reset: jest.fn(),
+  reset: vi.fn(),
   ...overrides,
 });
 
@@ -111,20 +111,20 @@ describe('GitHubAppAuthBlock', () => {
       isError: false,
     } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
 
-    jest
-      .spyOn(HTMLFormElement.prototype, 'submit')
-      .mockImplementation(() => undefined);
+    vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
+      () => undefined,
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when the organization input is left empty', () => {
     it('requests the manifest without a githubOrg', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -153,7 +153,7 @@ describe('GitHubAppAuthBlock', () => {
   describe('when a valid organization slug is typed', () => {
     it('requests the manifest with the githubOrg', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl:

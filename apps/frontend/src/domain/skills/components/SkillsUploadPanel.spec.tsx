@@ -13,13 +13,13 @@ import {
 } from '../api/queries/SkillsQueries';
 import { SkillsUploadPanel } from './SkillsUploadPanel';
 
-jest.mock('../api/queries/SkillsQueries', () => ({
-  useGetSkillsQuery: jest.fn(),
-  useUploadSkillMutation: jest.fn(),
+vi.mock('../api/queries/SkillsQueries', () => ({
+  useGetSkillsQuery: vi.fn(),
+  useUploadSkillMutation: vi.fn(),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
-  useCurrentSpace: jest.fn(),
+vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: vi.fn(),
 }));
 
 const mockUseGetSkillsQuery = useGetSkillsQuery as jest.MockedFunction<
@@ -61,7 +61,7 @@ type RenderOptions = {
 
 function renderPanel({
   existingSkills = [],
-  uploadSkill = jest.fn().mockResolvedValue({}),
+  uploadSkill = vi.fn().mockResolvedValue({}),
 }: RenderOptions = {}) {
   mockUseCurrentSpace.mockReturnValue({
     spaceId: createSpaceId('space-1'),
@@ -78,7 +78,7 @@ function renderPanel({
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  const invalidateQueries = jest
+  const invalidateQueries = vi
     .spyOn(queryClient, 'invalidateQueries')
     .mockResolvedValue(undefined);
 
@@ -132,7 +132,7 @@ const cancelButton = () =>
   screen.queryByRole('button', { name: /cancel import/i });
 
 describe('SkillsUploadPanel', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   describe('when nothing is selected', () => {
     it('invites the user to drop a folder', () => {
@@ -352,7 +352,7 @@ describe('SkillsUploadPanel', () => {
 
   describe('when the import partly succeeds', () => {
     it('summarises what happened', async () => {
-      const uploadSkill = jest
+      const uploadSkill = vi
         .fn()
         .mockResolvedValueOnce({})
         .mockRejectedValueOnce(new Error('Invalid frontmatter'));
@@ -370,7 +370,7 @@ describe('SkillsUploadPanel', () => {
     });
 
     it('shows the reason the failed skill failed', async () => {
-      const uploadSkill = jest
+      const uploadSkill = vi
         .fn()
         .mockResolvedValueOnce({})
         .mockRejectedValueOnce(new Error('Invalid frontmatter'));
@@ -451,7 +451,7 @@ describe('SkillsUploadPanel', () => {
   describe('while the import is running', () => {
     /** An upload that only settles when the batch's signal is aborted. */
     const cancellableUpload = () =>
-      jest.fn(
+      vi.fn(
         ({ signal }: { signal: AbortSignal }) =>
           new Promise((_resolve, reject) => {
             signal.addEventListener('abort', () =>
@@ -545,7 +545,7 @@ describe('SkillsUploadPanel', () => {
     describe('when the batch had a failure', () => {
       it('still disables the import action, so a retry goes through a fresh selection', async () => {
         const { container } = renderPanel({
-          uploadSkill: jest.fn().mockRejectedValue(new Error('Invalid')),
+          uploadSkill: vi.fn().mockRejectedValue(new Error('Invalid')),
         });
 
         await selectFiles(container, [

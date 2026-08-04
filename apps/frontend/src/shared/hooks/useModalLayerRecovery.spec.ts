@@ -35,7 +35,7 @@ function mountOpenDialog(): HTMLElement {
 
 describe('useModalLayerRecovery', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     document.body.removeAttribute('style');
     document.body.removeAttribute('data-inert');
     document.body.removeAttribute('data-scroll-lock');

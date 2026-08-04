@@ -14,64 +14,64 @@ import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import { GitProviderId, OrganizationId } from '@packmind/types';
 
-jest.mock('../../../api/queries', () => ({
-  useCreateGitProviderMutation: jest.fn(),
-  useUpdateGitProviderMutation: jest.fn(),
+vi.mock('../../../api/queries', () => ({
+  useCreateGitProviderMutation: vi.fn(),
+  useUpdateGitProviderMutation: vi.fn(),
 }));
 
-jest.mock('../../../api/queries/GitProviderQueries', () => ({
-  useCreateGitProviderMutation: jest.fn(),
-  useUpdateGitProviderMutation: jest.fn(),
-  useGithubAppInstallUrlMutation: jest.fn(() => ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+vi.mock('../../../api/queries/GitProviderQueries', () => ({
+  useCreateGitProviderMutation: vi.fn(),
+  useUpdateGitProviderMutation: vi.fn(),
+  useGithubAppInstallUrlMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
-    reset: jest.fn(),
+    reset: vi.fn(),
   })),
-  useSubmitGithubAppCallbackMutation: jest.fn(() => ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+  useSubmitGithubAppCallbackMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
-    reset: jest.fn(),
+    reset: vi.fn(),
   })),
-  useGetGithubAppStatusQuery: jest.fn(() => ({
+  useGetGithubAppStatusQuery: vi.fn(() => ({
     data: { hasApp: false },
     isLoading: false,
     isError: false,
-    refetch: jest.fn(),
+    refetch: vi.fn(),
   })),
-  useGetGithubAppManifestMutation: jest.fn(() => ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+  useGetGithubAppManifestMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
-    reset: jest.fn(),
+    reset: vi.fn(),
   })),
-  useRevokeGithubAppMutation: jest.fn(() => ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+  useRevokeGithubAppMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
     error: null,
-    reset: jest.fn(),
+    reset: vi.fn(),
   })),
 }));
 
-jest.mock('../../../../accounts/api/queries/UserQueries', () => ({
-  useGetMeQuery: jest.fn(),
+vi.mock('../../../../accounts/api/queries/UserQueries', () => ({
+  useGetMeQuery: vi.fn(),
 }));
 
-const mockNavigate = jest.fn();
-jest.mock('react-router', () => ({
+const mockNavigate = vi.fn();
+vi.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
 }));
@@ -97,8 +97,8 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 const createMockMutation = <T = unknown,>(overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn().mockResolvedValue({ id: 'prov-1' }),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({ id: 'prov-1' }),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -134,7 +134,7 @@ describe('GitProviderConnection', () => {
   >;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockUseCreateGitProviderMutation.mockReturnValue(
       createMockMutation<ReturnType<typeof useCreateGitProviderMutation>>(),

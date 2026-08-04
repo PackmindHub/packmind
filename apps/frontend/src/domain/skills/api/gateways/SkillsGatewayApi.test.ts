@@ -6,11 +6,11 @@ import {
 
 import { SkillsGatewayApi, UPLOAD_SKILL_TIMEOUT_MS } from './SkillsGatewayApi';
 
-const mockApiPost = jest.fn();
+const mockApiPost = vi.fn();
 
-jest.mock('../../../../shared/PackmindGateway', () => {
+vi.mock('../../../../shared/PackmindGateway', () => {
   return {
-    PackmindGateway: jest.fn().mockImplementation(function (
+    PackmindGateway: vi.fn().mockImplementation(function (
       this: { _endpoint: string; _api: { post: jest.Mock } },
       endpoint: string,
     ) {

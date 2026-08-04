@@ -14,41 +14,41 @@ import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/do
 import { EditCommand } from './EditCommand';
 import { CommandFormData } from './CommandForm';
 
-jest.mock('../api/queries/CommandsQueries', () => ({
+vi.mock('../api/queries/CommandsQueries', () => ({
   ...jest.requireActual('../api/queries/CommandsQueries'),
-  useUpdateCommandMutation: jest.fn(),
-  useGetCommandsQuery: jest.fn(),
+  useUpdateCommandMutation: vi.fn(),
+  useGetCommandsQuery: vi.fn(),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
   () => ({
     ...jest.requireActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
     ),
-    useListChangeProposalsByCommandQuery: jest.fn(),
+    useListChangeProposalsByCommandQuery: vi.fn(),
   }),
 );
 
-jest.mock('../../accounts/hooks/useAuthContext', () => ({
+vi.mock('../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({ organization: { id: 'org-1' } }),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({ spaceId: 'space-1' }),
 }));
 
-jest.mock('../../../shared/hooks/useNavigation', () => ({
-  useNavigation: () => ({ space: { toCommand: jest.fn() } }),
+vi.mock('../../../shared/hooks/useNavigation', () => ({
+  useNavigation: () => ({ space: { toCommand: vi.fn() } }),
 }));
 
-jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
+vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   MarkdownEditorProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
   ),
 }));
 
-jest.mock('./CommandForm', () => ({
+vi.mock('./CommandForm', () => ({
   CommandForm: ({
     onSubmit,
   }: {
@@ -74,44 +74,45 @@ const recipe: Command = {
 };
 
 const mockPendingProposals = (pendingCount: number) => {
-  jest
-    .spyOn(ChangeProposalsQueriesModule, 'useListChangeProposalsByCommandQuery')
-    .mockReturnValue({
-      data: {
-        changeProposals: Array.from({ length: pendingCount }, () => ({
-          status: ChangeProposalStatus.pending,
-        })),
-      },
-      isLoading: false,
-      isError: false,
-    } as ReturnType<
-      typeof ChangeProposalsQueriesModule.useListChangeProposalsByCommandQuery
-    >);
+  vi.spyOn(
+    ChangeProposalsQueriesModule,
+    'useListChangeProposalsByCommandQuery',
+  ).mockReturnValue({
+    data: {
+      changeProposals: Array.from({ length: pendingCount }, () => ({
+        status: ChangeProposalStatus.pending,
+      })),
+    },
+    isLoading: false,
+    isError: false,
+  } as ReturnType<
+    typeof ChangeProposalsQueriesModule.useListChangeProposalsByCommandQuery
+  >);
 };
 
 describe('EditCommand', () => {
   let updateMutate: jest.Mock;
 
   beforeEach(() => {
-    updateMutate = jest.fn();
+    updateMutate = vi.fn();
 
-    jest
-      .spyOn(CommandsQueriesModule, 'useUpdateCommandMutation')
-      .mockReturnValue({
+    vi.spyOn(CommandsQueriesModule, 'useUpdateCommandMutation').mockReturnValue(
+      {
         mutate: updateMutate,
         isPending: false,
       } as unknown as ReturnType<
         typeof CommandsQueriesModule.useUpdateCommandMutation
-      >);
-    jest
-      .spyOn(CommandsQueriesModule, 'useGetCommandsQuery')
-      .mockReturnValue({ data: [] } as unknown as ReturnType<
-        typeof CommandsQueriesModule.useGetCommandsQuery
-      >);
+      >,
+    );
+    vi.spyOn(CommandsQueriesModule, 'useGetCommandsQuery').mockReturnValue({
+      data: [],
+    } as unknown as ReturnType<
+      typeof CommandsQueriesModule.useGetCommandsQuery
+    >);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const renderEditCommand = () =>

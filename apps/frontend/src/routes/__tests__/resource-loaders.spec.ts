@@ -4,21 +4,21 @@ import { clientLoader as standardLoader } from '../../../app/routes/org.$orgSlug
 import { clientLoader as packageLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId';
 import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId';
 
-jest.mock('../../shared/data/queryClient', () => ({
+vi.mock('../../shared/data/queryClient', () => ({
   queryClient: {
-    ensureQueryData: jest.fn(),
-    fetchQuery: jest.fn(),
+    ensureQueryData: vi.fn(),
+    fetchQuery: vi.fn(),
   },
 }));
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   const mockToaster = {
-    create: jest.fn(),
-    error: jest.fn(),
-    info: jest.fn(),
-    success: jest.fn(),
-    warning: jest.fn(),
+    create: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
   };
   return {
     ...actual,

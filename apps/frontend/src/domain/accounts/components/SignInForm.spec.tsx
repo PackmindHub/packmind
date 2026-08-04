@@ -14,18 +14,18 @@ import {
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
 import { SignInUserResponse } from '@packmind/types';
 
-jest.mock('../api/queries/AuthQueries', () => ({
-  useSignInMutation: jest.fn(),
-  useSelectOrganizationMutation: jest.fn(),
-  useSocialProvidersQuery: jest.fn(),
+vi.mock('../api/queries/AuthQueries', () => ({
+  useSignInMutation: vi.fn(),
+  useSelectOrganizationMutation: vi.fn(),
+  useSocialProvidersQuery: vi.fn(),
 }));
 
-jest.mock('../api/queries/AccountsQueries', () => ({
-  useCreateOrganizationMutation: jest.fn(),
+vi.mock('../api/queries/AccountsQueries', () => ({
+  useCreateOrganizationMutation: vi.fn(),
 }));
 
-const mockNavigate = jest.fn();
-jest.mock('react-router', () => ({
+const mockNavigate = vi.fn();
+vi.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
@@ -70,7 +70,7 @@ describe('SignInForm', () => {
     >;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock social providers query to return empty list
     mockUseSocialProvidersQuery.mockReturnValue({
       data: { providers: [] },
@@ -80,8 +80,8 @@ describe('SignInForm', () => {
 
   const createMockMutation = <T = unknown,>(overrides = {}) =>
     ({
-      mutate: jest.fn(),
-      mutateAsync: jest.fn(),
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
       isError: false,
@@ -554,7 +554,7 @@ describe('SignInForm', () => {
         const user = userEvent.setup();
         const mockSignInMutation = createSignInMutation();
         mockSelectOrganizationMutation = createSelectOrganizationMutation({
-          mutateAsync: jest.fn().mockResolvedValue({}),
+          mutateAsync: vi.fn().mockResolvedValue({}),
         });
         mockUseSignInMutation.mockReturnValue(mockSignInMutation);
         mockUseSelectOrganizationMutation.mockReturnValue(

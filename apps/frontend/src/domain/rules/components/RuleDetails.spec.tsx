@@ -15,11 +15,11 @@ import {
 import { RuleDetails } from './RuleDetails';
 import { useGetRuleExamplesQuery } from '../api/queries';
 
-jest.mock('../api/queries', () => ({
-  useGetRuleExamplesQuery: jest.fn(),
+vi.mock('../api/queries', () => ({
+  useGetRuleExamplesQuery: vi.fn(),
 }));
 
-jest.mock('../../accounts/hooks/useAuthContext', () => ({
+vi.mock('../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({
     organization: {
       id: 'org-1',
@@ -30,7 +30,7 @@ jest.mock('../../accounts/hooks/useAuthContext', () => ({
   }),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-1',
     spaceSlug: 'space-slug',
@@ -39,14 +39,14 @@ jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
   }),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor',
   () => ({
     ProgramEditor: () => <div data-testid="program-editor" />,
   }),
 );
 
-jest.mock('./RuleExamplesManager', () => {
+vi.mock('./RuleExamplesManager', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   const RuleExamplesManagerMock = React.forwardRef(
@@ -58,7 +58,7 @@ jest.mock('./RuleExamplesManager', () => {
       ref: React.Ref<unknown>,
     ) => {
       React.useImperativeHandle(ref, () => ({
-        addExample: jest.fn(),
+        addExample: vi.fn(),
       }));
       return (
         <div data-testid="rule-examples-manager">
@@ -114,7 +114,7 @@ describe('RuleDetails - language selector and states', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when there are no rule examples', () => {

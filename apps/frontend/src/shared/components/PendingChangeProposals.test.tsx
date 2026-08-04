@@ -83,8 +83,8 @@ describe('ConfirmSaveWithPendingProposalsDialog', () => {
   let onOpenChange: jest.Mock;
 
   beforeEach(() => {
-    onConfirm = jest.fn();
-    onOpenChange = jest.fn();
+    onConfirm = vi.fn();
+    onOpenChange = vi.fn();
 
     render(
       <UIProvider>

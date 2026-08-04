@@ -10,15 +10,15 @@ import {
 import { DistributePackageToTargetButton } from './DistributePackageToTargetButton';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
-const mockDeployPackage = jest.fn();
-jest.mock('../../hooks/useDeployPackage', () => ({
+const mockDeployPackage = vi.fn();
+vi.mock('../../hooks/useDeployPackage', () => ({
   useDeployPackage: () => ({
     deployPackage: mockDeployPackage,
     isDeploying: false,
   }),
 }));
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   const PMTooltip = ({
     label,

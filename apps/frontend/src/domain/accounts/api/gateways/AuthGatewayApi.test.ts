@@ -2,12 +2,12 @@ import { AuthGatewayApi } from './AuthGatewayApi';
 import { createOrganizationId, SignUpUserCommand } from '@packmind/types';
 
 // Mock the PackmindGateway
-const mockApiPost = jest.fn();
-const mockApiGet = jest.fn();
+const mockApiPost = vi.fn();
+const mockApiGet = vi.fn();
 
-jest.mock('../../../../shared/PackmindGateway', () => {
+vi.mock('../../../../shared/PackmindGateway', () => {
   return {
-    PackmindGateway: jest.fn().mockImplementation(function (
+    PackmindGateway: vi.fn().mockImplementation(function (
       this: { _endpoint: string; _api: { post: jest.Mock; get: jest.Mock } },
       endpoint: string,
     ) {
@@ -28,7 +28,7 @@ describe('AuthGatewayApi', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('signIn', () => {

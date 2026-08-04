@@ -13,33 +13,33 @@ import * as StandardsQueriesModule from '../api/queries/StandardsQueries';
 import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { StandardForm } from './StandardForm';
 
-jest.mock('../api/queries/StandardsQueries', () => ({
+vi.mock('../api/queries/StandardsQueries', () => ({
   ...jest.requireActual('../api/queries/StandardsQueries'),
-  useCreateStandardMutation: jest.fn(),
-  useUpdateStandardMutation: jest.fn(),
-  useGetRulesByStandardIdQuery: jest.fn(),
-  useGetStandardsQuery: jest.fn(),
+  useCreateStandardMutation: vi.fn(),
+  useUpdateStandardMutation: vi.fn(),
+  useGetRulesByStandardIdQuery: vi.fn(),
+  useGetStandardsQuery: vi.fn(),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
   () => ({
     ...jest.requireActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
     ),
-    useListChangeProposalsByStandardQuery: jest.fn(),
+    useListChangeProposalsByStandardQuery: vi.fn(),
   }),
 );
 
-jest.mock('../../accounts/hooks/useAuthContext', () => ({
+vi.mock('../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({ organization: { id: 'org-1' } }),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({ spaceId: 'space-1' }),
 }));
 
-jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
+vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   MarkdownEditor: ({
     defaultValue,
     onMarkdownChange,
@@ -68,64 +68,65 @@ const standard: Standard = {
 };
 
 const mockPendingProposals = (pendingCount: number) => {
-  jest
-    .spyOn(
-      ChangeProposalsQueriesModule,
-      'useListChangeProposalsByStandardQuery',
-    )
-    .mockReturnValue({
-      data: {
-        changeProposals: Array.from({ length: pendingCount }, () => ({
-          status: ChangeProposalStatus.pending,
-        })),
-      },
-      isLoading: false,
-      isError: false,
-    } as ReturnType<
-      typeof ChangeProposalsQueriesModule.useListChangeProposalsByStandardQuery
-    >);
+  vi.spyOn(
+    ChangeProposalsQueriesModule,
+    'useListChangeProposalsByStandardQuery',
+  ).mockReturnValue({
+    data: {
+      changeProposals: Array.from({ length: pendingCount }, () => ({
+        status: ChangeProposalStatus.pending,
+      })),
+    },
+    isLoading: false,
+    isError: false,
+  } as ReturnType<
+    typeof ChangeProposalsQueriesModule.useListChangeProposalsByStandardQuery
+  >);
 };
 
 describe('StandardForm', () => {
   let updateMutate: jest.Mock;
 
   beforeEach(() => {
-    updateMutate = jest.fn();
+    updateMutate = vi.fn();
 
-    jest
-      .spyOn(StandardsQueriesModule, 'useCreateStandardMutation')
-      .mockReturnValue({
-        mutate: jest.fn(),
-        isPending: false,
-      } as unknown as ReturnType<
-        typeof StandardsQueriesModule.useCreateStandardMutation
-      >);
-    jest
-      .spyOn(StandardsQueriesModule, 'useUpdateStandardMutation')
-      .mockReturnValue({
-        mutate: updateMutate,
-        isPending: false,
-      } as unknown as ReturnType<
-        typeof StandardsQueriesModule.useUpdateStandardMutation
-      >);
-    jest
-      .spyOn(StandardsQueriesModule, 'useGetRulesByStandardIdQuery')
-      .mockReturnValue({
-        data: [],
-        isLoading: false,
-        isError: false,
-      } as unknown as ReturnType<
-        typeof StandardsQueriesModule.useGetRulesByStandardIdQuery
-      >);
-    jest
-      .spyOn(StandardsQueriesModule, 'useGetStandardsQuery')
-      .mockReturnValue({ data: { standards: [] } } as unknown as ReturnType<
-        typeof StandardsQueriesModule.useGetStandardsQuery
-      >);
+    vi.spyOn(
+      StandardsQueriesModule,
+      'useCreateStandardMutation',
+    ).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<
+      typeof StandardsQueriesModule.useCreateStandardMutation
+    >);
+    vi.spyOn(
+      StandardsQueriesModule,
+      'useUpdateStandardMutation',
+    ).mockReturnValue({
+      mutate: updateMutate,
+      isPending: false,
+    } as unknown as ReturnType<
+      typeof StandardsQueriesModule.useUpdateStandardMutation
+    >);
+    vi.spyOn(
+      StandardsQueriesModule,
+      'useGetRulesByStandardIdQuery',
+    ).mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<
+      typeof StandardsQueriesModule.useGetRulesByStandardIdQuery
+    >);
+    vi.spyOn(StandardsQueriesModule, 'useGetStandardsQuery').mockReturnValue({
+      data: { standards: [] },
+    } as unknown as ReturnType<
+      typeof StandardsQueriesModule.useGetStandardsQuery
+    >);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const renderEditForm = () =>

@@ -18,29 +18,29 @@ if (typeof globalThis.Response === 'undefined') {
   } as unknown as typeof globalThis.Response;
 }
 
-jest.mock('../../shared/data/queryClient', () => ({
+vi.mock('../../shared/data/queryClient', () => ({
   queryClient: {
-    ensureQueryData: jest.fn(),
-    fetchQuery: jest.fn(),
-    prefetchQuery: jest.fn(),
+    ensureQueryData: vi.fn(),
+    fetchQuery: vi.fn(),
+    prefetchQuery: vi.fn(),
   },
 }));
 
-jest.mock('../../shared/utils/flashToast', () => ({
-  setFlashToast: jest.fn(),
-  consumeFlashToast: jest.fn(),
+vi.mock('../../shared/utils/flashToast', () => ({
+  setFlashToast: vi.fn(),
+  consumeFlashToast: vi.fn(),
 }));
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   return {
     ...actual,
     pmToaster: {
-      create: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warning: jest.fn(),
+      create: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warning: vi.fn(),
     },
   };
 });
@@ -52,11 +52,11 @@ class RedirectResponse {
   }
 }
 
-jest.mock('react-router', () => {
+vi.mock('react-router', () => {
   const actual = jest.requireActual('react-router');
   return {
     ...actual,
-    redirect: jest.fn((url: string) => {
+    redirect: vi.fn((url: string) => {
       throw new RedirectResponse(url);
     }),
   };

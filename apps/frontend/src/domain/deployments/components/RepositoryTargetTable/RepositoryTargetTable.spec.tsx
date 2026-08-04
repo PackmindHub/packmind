@@ -35,7 +35,7 @@ const renderWithProvider = (ui: React.ReactElement) => {
   );
 };
 
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
@@ -43,7 +43,7 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   }),
 }));
 
-jest.mock('@packmind/ui', () => {
+vi.mock('@packmind/ui', () => {
   const actual = jest.requireActual('@packmind/ui');
   const PMTable = ({ data }: { data: unknown[] }) => (
     <div data-testid="pm-table" data-row-count={data.length} />
