@@ -5,8 +5,7 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import SignInRoute from './_public.sign-in';
 
-jest.mock('../../src/domain/accounts/components/SignInForm', () => ({
-  __esModule: true,
+vi.mock('../../src/domain/accounts/components/SignInForm', () => ({
   default: () => <div>Sign in form</div>,
 }));
 
