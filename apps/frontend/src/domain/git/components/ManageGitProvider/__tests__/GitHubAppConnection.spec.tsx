@@ -18,6 +18,11 @@ import {
 } from '../../../api/queries/GitProviderQueries';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { redirectTo } from '../../../../../shared/utils/navigation';
+import {
+  createFailedMutationResult,
+  createIdleMutationResult,
+  MutationResultCallbacks,
+} from '../../../../../test/mutationResultMocks';
 import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
@@ -52,38 +57,33 @@ const buildConnectedAppProvider = (
   ...overrides,
 });
 
-const createMockInstallUrlMutation = (
-  overrides: Record<string, unknown> = {},
-) => ({
-  mutate: vi.fn(),
-  mutateAsync: vi.fn().mockResolvedValue({
-    installUrl: 'https://github.com/apps/packmind/installations/new?state=abc',
-    state: 'test-state-token',
-  }),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: vi.fn(),
-  ...overrides,
-});
+const createMockInstallUrlMutation = <TData, TVariables>(
+  callbacks: Partial<MutationResultCallbacks<TData, Error, TVariables>> = {},
+) =>
+  createIdleMutationResult<TData, Error, TVariables>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({
+      installUrl:
+        'https://github.com/apps/packmind/installations/new?state=abc',
+      state: 'test-state-token',
+    }),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
-const createMockManifestMutation = (
-  overrides: Record<string, unknown> = {},
-) => ({
-  mutate: vi.fn(),
-  mutateAsync: vi.fn().mockResolvedValue({
-    manifest: { name: 'Packmind', url: 'https://packmind.com' },
-    state: 'manifest-state-abc',
-    manifestPostUrl: 'https://github.com/settings/apps/new',
-  }),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: vi.fn(),
-  ...overrides,
-});
+const createMockManifestMutation = <TData, TVariables>(
+  callbacks: Partial<MutationResultCallbacks<TData, Error, TVariables>> = {},
+) =>
+  createIdleMutationResult<TData, Error, TVariables>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({
+      manifest: { name: 'Packmind', url: 'https://packmind.com' },
+      state: 'manifest-state-abc',
+      manifestPostUrl: 'https://github.com/settings/apps/new',
+    }),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -114,9 +114,7 @@ describe('GitHubAppInstallSlot', () => {
     vi.clearAllMocks();
 
     mockUseGithubAppInstallUrlMutation.mockReturnValue(
-      createMockInstallUrlMutation() as ReturnType<
-        typeof useGithubAppInstallUrlMutation
-      >,
+      createMockInstallUrlMutation(),
     );
   });
 
@@ -157,7 +155,7 @@ describe('GitHubAppInstallSlot', () => {
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+        }),
       );
 
       renderWithProviders(
@@ -183,7 +181,7 @@ describe('GitHubAppInstallSlot', () => {
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+        }),
       );
 
       renderWithProviders(
@@ -207,11 +205,13 @@ describe('GitHubAppInstallSlot', () => {
         .mockRejectedValue(new Error('Network error'));
 
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
-        createMockInstallUrlMutation({
+        createFailedMutationResult({
+          mutate: vi.fn(),
           mutateAsync: mockMutateAsync,
-          isError: true,
+          reset: vi.fn(),
           error: new Error('Network error'),
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+          variables: { gitProviderId: undefined },
+        }),
       );
 
       renderWithProviders(
@@ -240,7 +240,7 @@ describe('GitHubAppInstallSlot', () => {
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+        }),
       );
 
       renderWithProviders(
@@ -271,7 +271,7 @@ describe('GitHubAppInstallSlot', () => {
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+        }),
       );
 
       renderWithProviders(
@@ -341,9 +341,7 @@ describe('GitHubAppConnection', () => {
     vi.clearAllMocks();
 
     mockUseGithubAppInstallUrlMutation.mockReturnValue(
-      createMockInstallUrlMutation() as ReturnType<
-        typeof useGithubAppInstallUrlMutation
-      >,
+      createMockInstallUrlMutation(),
     );
     mockUseGetGithubAppStatusQuery.mockReturnValue({
       data: { hasApp: false },
@@ -352,9 +350,7 @@ describe('GitHubAppConnection', () => {
       refetch: vi.fn(),
     } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
     mockUseGetGithubAppManifestMutation.mockReturnValue(
-      createMockManifestMutation() as ReturnType<
-        typeof useGetGithubAppManifestMutation
-      >,
+      createMockManifestMutation(),
     );
 
     mockUseGetMeQuery.mockReturnValue({
@@ -630,7 +626,7 @@ describe('GitHubAppConnection', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockManifestMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
@@ -662,7 +658,7 @@ describe('GitHubAppConnection', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockManifestMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       const mockSubmit = vi
@@ -694,7 +690,7 @@ describe('GitHubAppConnection', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockManifestMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
@@ -728,7 +724,7 @@ describe('GitHubAppConnection', () => {
         mockUseGetGithubAppManifestMutation.mockReturnValue(
           createMockManifestMutation({
             mutateAsync: mockMutateAsync,
-          }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+          }),
         );
 
         vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
@@ -858,7 +854,7 @@ describe('GitHubAppConnection', () => {
       mockUseGithubAppInstallUrlMutation.mockReturnValue(
         createMockInstallUrlMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGithubAppInstallUrlMutation>,
+        }),
       );
 
       renderWithProviders(

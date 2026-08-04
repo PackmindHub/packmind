@@ -13,6 +13,10 @@ import {
 import { GitProviderAdvancedPanel } from '../GitProviderAdvancedPanel';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import { useRevokeGithubAppMutation } from '../../../api/queries/GitProviderQueries';
+import {
+  createIdleMutationResult,
+  MutationResultCallbacks,
+} from '../../../../../test/mutationResultMocks';
 import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
@@ -24,16 +28,15 @@ const mockUseRevokeGithubAppMutation =
     typeof useRevokeGithubAppMutation
   >;
 
-const createMockRevokeMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: vi.fn(),
-  mutateAsync: vi.fn().mockResolvedValue(undefined),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: vi.fn(),
-  ...overrides,
-});
+const createMockRevokeMutation = (
+  callbacks: Partial<MutationResultCallbacks<void, Error, void>> = {},
+) =>
+  createIdleMutationResult<void, Error, void>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue(undefined),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -72,11 +75,7 @@ const gitlabProvider: GitProviderUI = {
 describe('GitProviderAdvancedPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseRevokeGithubAppMutation.mockReturnValue(
-      createMockRevokeMutation() as ReturnType<
-        typeof useRevokeGithubAppMutation
-      >,
-    );
+    mockUseRevokeGithubAppMutation.mockReturnValue(createMockRevokeMutation());
   });
 
   describe('for a github provider', () => {
@@ -140,9 +139,7 @@ describe('GitProviderAdvancedPanel', () => {
       const onRevoked = vi.fn();
       const mutateAsync = vi.fn().mockResolvedValue(undefined);
       mockUseRevokeGithubAppMutation.mockReturnValue(
-        createMockRevokeMutation({ mutateAsync }) as ReturnType<
-          typeof useRevokeGithubAppMutation
-        >,
+        createMockRevokeMutation({ mutateAsync }),
       );
 
       renderWithProviders(

@@ -13,6 +13,10 @@ import {
   useGithubAppInstallUrlMutation,
   useRevokeGithubAppMutation,
 } from '../../../api/queries/GitProviderQueries';
+import {
+  createIdleMutationResult,
+  MutationResultCallbacks,
+} from '../../../../../test/mutationResultMocks';
 import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
@@ -28,20 +32,19 @@ vi.mock('../../../../../shared/utils/navigation', () => ({
 
 const mockOrganizationId = 'org-1' as OrganizationId;
 
-const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: vi.fn(),
-  mutateAsync: vi.fn().mockResolvedValue({
-    manifest: { name: 'Packmind', url: 'https://packmind.com' },
-    state: 'manifest-state-abc',
-    manifestPostUrl: 'https://github.com/settings/apps/new',
-  }),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: vi.fn(),
-  ...overrides,
-});
+const createMockMutation = <TData, TVariables>(
+  callbacks: Partial<MutationResultCallbacks<TData, Error, TVariables>> = {},
+) =>
+  createIdleMutationResult<TData, Error, TVariables>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({
+      manifest: { name: 'Packmind', url: 'https://packmind.com' },
+      state: 'manifest-state-abc',
+      manifestPostUrl: 'https://github.com/settings/apps/new',
+    }),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -95,17 +98,9 @@ describe('GitHubAppAuthBlock', () => {
     screen.getByRole('textbox', { name: /github organization/i });
 
   beforeEach(() => {
-    mockUseGetGithubAppManifestMutation.mockReturnValue(
-      createMockMutation() as ReturnType<
-        typeof useGetGithubAppManifestMutation
-      >,
-    );
-    mockUseGithubAppInstallUrlMutation.mockReturnValue(
-      createMockMutation() as ReturnType<typeof useGithubAppInstallUrlMutation>,
-    );
-    mockUseRevokeGithubAppMutation.mockReturnValue(
-      createMockMutation() as ReturnType<typeof useRevokeGithubAppMutation>,
-    );
+    mockUseGetGithubAppManifestMutation.mockReturnValue(createMockMutation());
+    mockUseGithubAppInstallUrlMutation.mockReturnValue(createMockMutation());
+    mockUseRevokeGithubAppMutation.mockReturnValue(createMockMutation());
     mockUseGetGithubAppStatusQuery.mockReturnValue({
       data: { hasApp: false },
       isLoading: false,
@@ -133,7 +128,7 @@ describe('GitHubAppAuthBlock', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       renderRegistrationBlock();
@@ -163,7 +158,7 @@ describe('GitHubAppAuthBlock', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       renderRegistrationBlock();
