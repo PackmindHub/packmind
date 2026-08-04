@@ -38,6 +38,12 @@ overrides:
   # Two coexisting major lines (pg-mem wants ^4.x, sass wants ^5.x)
   immutable@4: 4.3.9
   immutable@5: 5.1.9
+  # packages/ui and packages/frontend declare a deliberately broad '>=18.0.0' React
+  # peer, which autoInstallPeers resolves on its own. Without these it settles on a
+  # second React beside the app's, and every hook in the ui test suite throws
+  # "Invalid hook call". Keep both pinned in step with package.json.
+  react: 19.2.8
+  react-dom: 19.2.8
   # Upper-bounded to the current major so a future major release can't be dragged in
   postcss: '>=8.5.25 <9.0.0'
   socket.io-parser: '>=4.2.7 <5.0.0'

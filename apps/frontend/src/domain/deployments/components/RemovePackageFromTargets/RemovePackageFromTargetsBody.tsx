@@ -133,7 +133,10 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
                     borderColor="border.tertiary"
                     width="full"
                     onChange={(event) => {
-                      const input = event.target as HTMLInputElement;
+                      // PMCheckbox spreads onChange onto Chakra's Root <label>, so the
+                      // event is typed against the label while it actually bubbles up
+                      // from the hidden <input> inside it.
+                      const input = event.target as unknown as HTMLInputElement;
                       handleCheckboxChange(target.id, input.checked);
                     }}
                     _checked={{ bg: 'blue.900', borderColor: 'blue.500' }}
