@@ -3,6 +3,7 @@ import { pmToaster } from '@packmind/ui';
 import { clientLoader as standardLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId';
 import { clientLoader as packageLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId';
 import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId';
+import type { Mock, MockedFunction } from 'vitest';
 
 vi.mock('../../shared/data/queryClient', () => ({
   queryClient: {
@@ -26,13 +27,13 @@ vi.mock('@packmind/ui', async () => {
   };
 });
 
-const ensureQueryDataMock = queryClient.ensureQueryData as jest.MockedFunction<
+const ensureQueryDataMock = queryClient.ensureQueryData as MockedFunction<
   typeof queryClient.ensureQueryData
 >;
-const fetchQueryMock = queryClient.fetchQuery as jest.MockedFunction<
+const fetchQueryMock = queryClient.fetchQuery as MockedFunction<
   typeof queryClient.fetchQuery
 >;
-const pmToasterErrorMock = pmToaster.error as jest.Mock;
+const pmToasterErrorMock = pmToaster.error as Mock;
 
 describe('organization resource loaders', () => {
   beforeEach(() => {

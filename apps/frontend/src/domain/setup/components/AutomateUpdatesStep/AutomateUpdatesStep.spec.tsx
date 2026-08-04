@@ -7,12 +7,13 @@ import { UIProvider } from '@packmind/ui';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 import { AutomateUpdatesStep } from './AutomateUpdatesStep';
 import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../accounts/components/LocalEnvironmentSetup/hooks', () => ({
   useApiKey: vi.fn(),
 }));
 
-const mockedUseApiKey = useApiKey as jest.MockedFunction<typeof useApiKey>;
+const mockedUseApiKey = useApiKey as MockedFunction<typeof useApiKey>;
 
 const buildUseApiKeyReturn = (
   overrides: Partial<ReturnType<typeof useApiKey>> = {},

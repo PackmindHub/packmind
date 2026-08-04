@@ -11,13 +11,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { useCreateStandardsFromSamplesMutation } from '../../api/queries/StandardsQueries';
+import type { Mock, MockedFunction } from 'vitest';
 
 vi.mock('../../api/queries/StandardsQueries', () => ({
   useCreateStandardsFromSamplesMutation: vi.fn(),
 }));
 
 const mockUseCreateStandardsFromSamplesMutation =
-  useCreateStandardsFromSamplesMutation as jest.MockedFunction<
+  useCreateStandardsFromSamplesMutation as MockedFunction<
     typeof useCreateStandardsFromSamplesMutation
   >;
 
@@ -184,7 +185,7 @@ describe('StandardSamplesModal', () => {
 
   describe('when clicking Create button', () => {
     describe('with samples selected', () => {
-      const selectSamplesAndClickCreate = async (mockMutate: jest.Mock) => {
+      const selectSamplesAndClickCreate = async (mockMutate: Mock) => {
         mockUseCreateStandardsFromSamplesMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );

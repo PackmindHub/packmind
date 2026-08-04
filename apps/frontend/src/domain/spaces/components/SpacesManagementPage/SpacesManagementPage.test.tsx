@@ -10,6 +10,7 @@ import {
 import { UIProvider } from '@packmind/ui';
 import { useGetSpacesQuery } from '../../api/queries';
 import { SpacesManagementPage } from './SpacesManagementPage';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../api/queries', () => ({
   useGetSpacesQuery: vi.fn(),
@@ -115,7 +116,7 @@ const buildUserSpace = (
   ...overrides,
 });
 
-const mockedUseGetSpacesQuery = useGetSpacesQuery as jest.MockedFunction<
+const mockedUseGetSpacesQuery = useGetSpacesQuery as MockedFunction<
   typeof useGetSpacesQuery
 >;
 

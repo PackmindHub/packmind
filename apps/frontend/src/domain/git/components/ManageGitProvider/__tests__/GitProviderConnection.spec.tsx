@@ -13,6 +13,7 @@ import {
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import { GitProviderId, OrganizationId } from '@packmind/types';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries', () => ({
   useCreateGitProviderMutation: vi.fn(),
@@ -122,14 +123,14 @@ const mockGitProviderUI = (
 
 describe('GitProviderConnection', () => {
   const mockUseCreateGitProviderMutation =
-    useCreateGitProviderMutation as jest.MockedFunction<
+    useCreateGitProviderMutation as MockedFunction<
       typeof useCreateGitProviderMutation
     >;
   const mockUseUpdateGitProviderMutation =
-    useUpdateGitProviderMutation as jest.MockedFunction<
+    useUpdateGitProviderMutation as MockedFunction<
       typeof useUpdateGitProviderMutation
     >;
-  const mockUseGetMeQuery = useGetMeQuery as jest.MockedFunction<
+  const mockUseGetMeQuery = useGetMeQuery as MockedFunction<
     typeof useGetMeQuery
   >;
 

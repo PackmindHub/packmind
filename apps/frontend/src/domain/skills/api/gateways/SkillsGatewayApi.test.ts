@@ -5,13 +5,14 @@ import {
 } from '@packmind/types';
 
 import { SkillsGatewayApi, UPLOAD_SKILL_TIMEOUT_MS } from './SkillsGatewayApi';
+import type { Mock } from 'vitest';
 
 const mockApiPost = vi.fn();
 
 vi.mock('../../../../shared/PackmindGateway', () => {
   return {
     PackmindGateway: vi.fn().mockImplementation(function (
-      this: { _endpoint: string; _api: { post: jest.Mock } },
+      this: { _endpoint: string; _api: { post: Mock } },
       endpoint: string,
     ) {
       this._endpoint = endpoint;

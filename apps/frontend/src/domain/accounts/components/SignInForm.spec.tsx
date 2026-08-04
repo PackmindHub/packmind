@@ -13,6 +13,7 @@ import {
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
 import { SignInUserResponse } from '@packmind/types';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
@@ -53,21 +54,20 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('SignInForm', () => {
-  const mockUseSignInMutation = useSignInMutation as jest.MockedFunction<
+  const mockUseSignInMutation = useSignInMutation as MockedFunction<
     typeof useSignInMutation
   >;
   const mockUseSelectOrganizationMutation =
-    useSelectOrganizationMutation as jest.MockedFunction<
+    useSelectOrganizationMutation as MockedFunction<
       typeof useSelectOrganizationMutation
     >;
   const mockUseCreateOrganizationMutation =
-    useCreateOrganizationMutation as jest.MockedFunction<
+    useCreateOrganizationMutation as MockedFunction<
       typeof useCreateOrganizationMutation
     >;
-  const mockUseSocialProvidersQuery =
-    useSocialProvidersQuery as jest.MockedFunction<
-      typeof useSocialProvidersQuery
-    >;
+  const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
+    typeof useSocialProvidersQuery
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();

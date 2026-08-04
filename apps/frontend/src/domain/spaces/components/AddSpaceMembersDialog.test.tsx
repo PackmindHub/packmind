@@ -8,6 +8,7 @@ import { AddSpaceMembersDialog } from './AddSpaceMembersDialog';
 import { useAddMembersToSpaceMutation } from '../api/queries/SpacesQueries';
 import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { SpaceMember } from './SpaceMembersTable';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/SpacesQueries', async () => ({
   ...(await vi.importActual('../api/queries/SpacesQueries')),
@@ -20,12 +21,12 @@ vi.mock('../../accounts/api/queries/UserQueries', async () => ({
 }));
 
 const mockUseGetUsersInMyOrganizationQuery =
-  useGetUsersInMyOrganizationQuery as jest.MockedFunction<
+  useGetUsersInMyOrganizationQuery as MockedFunction<
     typeof useGetUsersInMyOrganizationQuery
   >;
 
 const mockUseAddMembersToSpaceMutation =
-  useAddMembersToSpaceMutation as jest.MockedFunction<
+  useAddMembersToSpaceMutation as MockedFunction<
     typeof useAddMembersToSpaceMutation
   >;
 

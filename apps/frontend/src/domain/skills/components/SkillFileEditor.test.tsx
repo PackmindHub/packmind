@@ -12,6 +12,7 @@ import {
 import { SkillFileEditor } from './SkillFileEditor';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import type { MockedFunction } from 'vitest';
 
 const mockTrack = vi.fn();
 const mockToasterCreate = vi.fn();
@@ -71,12 +72,12 @@ vi.mock(
 );
 
 const mockUseUpdateSkillFileMutation =
-  useUpdateSkillFileMutation as jest.MockedFunction<
+  useUpdateSkillFileMutation as MockedFunction<
     typeof useUpdateSkillFileMutation
   >;
 
 const mockUseListChangeProposalsBySkillQuery =
-  useListChangeProposalsBySkillQuery as jest.MockedFunction<
+  useListChangeProposalsBySkillQuery as MockedFunction<
     typeof useListChangeProposalsBySkillQuery
   >;
 

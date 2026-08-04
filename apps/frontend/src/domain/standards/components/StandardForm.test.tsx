@@ -12,6 +12,7 @@ import {
 import * as StandardsQueriesModule from '../api/queries/StandardsQueries';
 import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { StandardForm } from './StandardForm';
+import type { Mock } from 'vitest';
 
 vi.mock('../api/queries/StandardsQueries', async () => ({
   ...(await vi.importActual('../api/queries/StandardsQueries')),
@@ -85,7 +86,7 @@ const mockPendingProposals = (pendingCount: number) => {
 };
 
 describe('StandardForm', () => {
-  let updateMutate: jest.Mock;
+  let updateMutate: Mock;
 
   beforeEach(() => {
     updateMutate = vi.fn();

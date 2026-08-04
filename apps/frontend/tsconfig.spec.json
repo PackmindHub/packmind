@@ -8,7 +8,7 @@
     "types": [
       "vite/client",
       "node",
-      "jest",
+      "vitest/globals",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
@@ -16,7 +16,6 @@
     "moduleResolution": "Bundler"
   },
   "include": [
-    "jest.config.ts",
     "vite.config.ts",
     "vite.config.mts",
     "src/**/*.test.ts",
@@ -27,6 +26,10 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "app/**/*.test.ts",
+    "app/**/*.spec.ts",
+    "app/**/*.test.tsx",
+    "app/**/*.spec.tsx"
   ]
 }

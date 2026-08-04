@@ -13,6 +13,7 @@ import {
   useGithubAppInstallUrlMutation,
   useRevokeGithubAppMutation,
 } from '../../../api/queries/GitProviderQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
   useGetGithubAppManifestMutation: vi.fn(),
@@ -63,19 +64,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('GitHubAppAuthBlock', () => {
   const mockUseGetGithubAppManifestMutation =
-    useGetGithubAppManifestMutation as jest.MockedFunction<
+    useGetGithubAppManifestMutation as MockedFunction<
       typeof useGetGithubAppManifestMutation
     >;
   const mockUseGetGithubAppStatusQuery =
-    useGetGithubAppStatusQuery as jest.MockedFunction<
+    useGetGithubAppStatusQuery as MockedFunction<
       typeof useGetGithubAppStatusQuery
     >;
   const mockUseGithubAppInstallUrlMutation =
-    useGithubAppInstallUrlMutation as jest.MockedFunction<
+    useGithubAppInstallUrlMutation as MockedFunction<
       typeof useGithubAppInstallUrlMutation
     >;
   const mockUseRevokeGithubAppMutation =
-    useRevokeGithubAppMutation as jest.MockedFunction<
+    useRevokeGithubAppMutation as MockedFunction<
       typeof useRevokeGithubAppMutation
     >;
 

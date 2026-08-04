@@ -13,13 +13,14 @@ import {
 import { GitProviderAdvancedPanel } from '../GitProviderAdvancedPanel';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import { useRevokeGithubAppMutation } from '../../../api/queries/GitProviderQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
   useRevokeGithubAppMutation: vi.fn(),
 }));
 
 const mockUseRevokeGithubAppMutation =
-  useRevokeGithubAppMutation as jest.MockedFunction<
+  useRevokeGithubAppMutation as MockedFunction<
     typeof useRevokeGithubAppMutation
   >;
 

@@ -8,6 +8,7 @@ import { DeployWithCliModal } from './DeployWithCliModal';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../hooks/useAuthContext');
 vi.mock('../../spaces/api/queries/SpacesQueries');
@@ -21,14 +22,14 @@ vi.mock('./LocalEnvironmentSetup/hooks', () => ({
   })),
 }));
 
-const mockedUseAuthContext = useAuthContext as jest.MockedFunction<
+const mockedUseAuthContext = useAuthContext as MockedFunction<
   typeof useAuthContext
 >;
-const mockedUseGetSpacesQuery = useGetSpacesQuery as jest.MockedFunction<
+const mockedUseGetSpacesQuery = useGetSpacesQuery as MockedFunction<
   typeof useGetSpacesQuery
 >;
 const mockedUseListPackagesBySpaceQuery =
-  useListPackagesBySpaceQuery as jest.MockedFunction<
+  useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
 

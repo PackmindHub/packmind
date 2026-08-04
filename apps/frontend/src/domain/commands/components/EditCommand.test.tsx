@@ -13,6 +13,7 @@ import * as CommandsQueriesModule from '../api/queries/CommandsQueries';
 import * as ChangeProposalsQueriesModule from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { EditCommand } from './EditCommand';
 import { CommandFormData } from './CommandForm';
+import type { Mock } from 'vitest';
 
 vi.mock('../api/queries/CommandsQueries', async () => ({
   ...(await vi.importActual('../api/queries/CommandsQueries')),
@@ -91,7 +92,7 @@ const mockPendingProposals = (pendingCount: number) => {
 };
 
 describe('EditCommand', () => {
-  let updateMutate: jest.Mock;
+  let updateMutate: Mock;
 
   beforeEach(() => {
     updateMutate = vi.fn();

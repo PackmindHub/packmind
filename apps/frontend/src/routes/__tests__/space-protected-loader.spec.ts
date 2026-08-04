@@ -2,6 +2,7 @@ import { queryClient } from '../../shared/data/queryClient';
 import { setFlashToast } from '../../shared/utils/flashToast';
 import { redirect } from 'react-router';
 import { clientLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected';
+import type { Mock, MockedFunction } from 'vitest';
 
 // Ensure Response is available globally for instanceof checks in production code
 if (typeof globalThis.Response === 'undefined') {
@@ -62,17 +63,17 @@ vi.mock('react-router', async () => {
   };
 });
 
-const ensureQueryDataMock = queryClient.ensureQueryData as jest.MockedFunction<
+const ensureQueryDataMock = queryClient.ensureQueryData as MockedFunction<
   typeof queryClient.ensureQueryData
 >;
-const fetchQueryMock = queryClient.fetchQuery as jest.MockedFunction<
+const fetchQueryMock = queryClient.fetchQuery as MockedFunction<
   typeof queryClient.fetchQuery
 >;
-const prefetchQueryMock = queryClient.prefetchQuery as jest.MockedFunction<
+const prefetchQueryMock = queryClient.prefetchQuery as MockedFunction<
   typeof queryClient.prefetchQuery
 >;
-const setFlashToastMock = setFlashToast as jest.Mock;
-const redirectMock = redirect as jest.MockedFunction<typeof redirect>;
+const setFlashToastMock = setFlashToast as Mock;
+const redirectMock = redirect as MockedFunction<typeof redirect>;
 
 const me = {
   edition: 'oss' as const,

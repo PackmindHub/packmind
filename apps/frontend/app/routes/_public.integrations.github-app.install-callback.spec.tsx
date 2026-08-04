@@ -8,6 +8,7 @@ import { UIProvider } from '@packmind/ui';
 import GithubAppCallbackRouteModule from './_public.integrations.github-app.install-callback';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { useSubmitGithubAppCallbackMutation } from '../../src/domain/git/api/queries/GitProviderQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../src/domain/accounts/api/queries', () => ({
   useGetMeQuery: vi.fn(),
@@ -74,16 +75,16 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('GithubAppCallbackRouteModule', () => {
-  const mockUseGetMeQuery = useGetMeQuery as jest.MockedFunction<
+  const mockUseGetMeQuery = useGetMeQuery as MockedFunction<
     typeof useGetMeQuery
   >;
 
   const mockUseSubmitGithubAppCallbackMutation =
-    useSubmitGithubAppCallbackMutation as jest.MockedFunction<
+    useSubmitGithubAppCallbackMutation as MockedFunction<
       typeof useSubmitGithubAppCallbackMutation
     >;
 
-  const mockUseSearchParams = useSearchParams as jest.MockedFunction<
+  const mockUseSearchParams = useSearchParams as MockedFunction<
     typeof useSearchParams
   >;
 

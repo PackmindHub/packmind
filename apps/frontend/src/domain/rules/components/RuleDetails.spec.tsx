@@ -14,6 +14,7 @@ import {
 } from '@packmind/types';
 import { RuleDetails } from './RuleDetails';
 import { useGetRuleExamplesQuery } from '../api/queries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries', () => ({
   useGetRuleExamplesQuery: vi.fn(),
@@ -78,10 +79,9 @@ vi.mock('./RuleExamplesManager', () => {
   };
 });
 
-const mockUseGetRuleExamplesQuery =
-  useGetRuleExamplesQuery as jest.MockedFunction<
-    typeof useGetRuleExamplesQuery
-  >;
+const mockUseGetRuleExamplesQuery = useGetRuleExamplesQuery as MockedFunction<
+  typeof useGetRuleExamplesQuery
+>;
 
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(

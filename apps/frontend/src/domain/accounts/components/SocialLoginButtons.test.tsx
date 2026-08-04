@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import SocialLoginButtons from './SocialLoginButtons';
 import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSocialProvidersQuery: vi.fn(),
@@ -19,10 +20,9 @@ vi.mock('react-icons/si', () => ({
   SiGithub: () => <span data-testid="icon-github" />,
 }));
 
-const mockUseSocialProvidersQuery =
-  useSocialProvidersQuery as jest.MockedFunction<
-    typeof useSocialProvidersQuery
-  >;
+const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
+  typeof useSocialProvidersQuery
+>;
 
 const renderComponent = () => {
   const queryClient = new QueryClient({

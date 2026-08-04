@@ -1,4 +1,5 @@
 import { OrganizationGatewayApi } from './OrganizationGatewayApi';
+import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
 const mockApiPost = vi.fn();
@@ -10,7 +11,7 @@ vi.mock('../../../../shared/PackmindGateway', () => {
     PackmindGateway: vi.fn().mockImplementation(function (
       this: {
         _endpoint: string;
-        _api: { post: jest.Mock; get: jest.Mock; delete: jest.Mock };
+        _api: { post: Mock; get: Mock; delete: Mock };
       },
       endpoint: string,
     ) {

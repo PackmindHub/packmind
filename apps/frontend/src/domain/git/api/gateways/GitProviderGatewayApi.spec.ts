@@ -5,6 +5,7 @@ import {
 } from '@packmind/types';
 import { packmindApiService } from '../../../../services/api/PackmindApiService';
 import { GitProviderGatewayApi } from './GitProviderGatewayApi';
+import type { Mocked } from 'vitest';
 
 vi.mock('../../../../services/api/PackmindApiService', () => ({
   packmindApiService: {
@@ -17,7 +18,7 @@ vi.mock('../../../../services/api/PackmindApiService', () => ({
   },
 }));
 
-const mockedApi = packmindApiService as jest.Mocked<typeof packmindApiService>;
+const mockedApi = packmindApiService as Mocked<typeof packmindApiService>;
 
 describe('GitProviderGatewayApi', () => {
   let gateway: GitProviderGatewayApi;

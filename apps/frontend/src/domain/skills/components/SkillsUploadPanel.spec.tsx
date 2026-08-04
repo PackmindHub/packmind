@@ -12,6 +12,7 @@ import {
   useUploadSkillMutation,
 } from '../api/queries/SkillsQueries';
 import { SkillsUploadPanel } from './SkillsUploadPanel';
+import type { Mock, MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/SkillsQueries', () => ({
   useGetSkillsQuery: vi.fn(),
@@ -22,12 +23,13 @@ vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: vi.fn(),
 }));
 
-const mockUseGetSkillsQuery = useGetSkillsQuery as jest.MockedFunction<
+const mockUseGetSkillsQuery = useGetSkillsQuery as MockedFunction<
   typeof useGetSkillsQuery
 >;
-const mockUseUploadSkillMutation =
-  useUploadSkillMutation as jest.MockedFunction<typeof useUploadSkillMutation>;
-const mockUseCurrentSpace = useCurrentSpace as jest.MockedFunction<
+const mockUseUploadSkillMutation = useUploadSkillMutation as MockedFunction<
+  typeof useUploadSkillMutation
+>;
+const mockUseCurrentSpace = useCurrentSpace as MockedFunction<
   typeof useCurrentSpace
 >;
 
@@ -56,7 +58,7 @@ function pickedFile(relativePath: string, declaredName?: string): File {
 
 type RenderOptions = {
   existingSkills?: { name: string }[];
-  uploadSkill?: jest.Mock;
+  uploadSkill?: Mock;
 };
 
 function renderPanel({

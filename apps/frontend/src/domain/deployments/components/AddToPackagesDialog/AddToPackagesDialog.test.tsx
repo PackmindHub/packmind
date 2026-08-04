@@ -29,6 +29,7 @@ import {
   useListPackagesBySpaceQuery,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../api/queries/DeploymentsQueries', async () => ({
   ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
@@ -45,23 +46,23 @@ vi.mock(
 );
 
 const mockUseListPackagesBySpaceQuery =
-  useListPackagesBySpaceQuery as jest.MockedFunction<
+  useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
 const mockUseAddArtefactsToPackagesMutation =
-  useAddArtefactsToPackagesMutation as jest.MockedFunction<
+  useAddArtefactsToPackagesMutation as MockedFunction<
     typeof useAddArtefactsToPackagesMutation
   >;
 const mockUseRemoveArtefactsFromPackageMutation =
-  useRemoveArtefactsFromPackageMutation as jest.MockedFunction<
+  useRemoveArtefactsFromPackageMutation as MockedFunction<
     typeof useRemoveArtefactsFromPackageMutation
   >;
 const mockUseListActiveDistributedPackagesBySpaceQuery =
-  useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
+  useListActiveDistributedPackagesBySpaceQuery as MockedFunction<
     typeof useListActiveDistributedPackagesBySpaceQuery
   >;
 const mockUsePackageMarketplaceStatus =
-  usePackageMarketplaceStatus as jest.MockedFunction<
+  usePackageMarketplaceStatus as MockedFunction<
     typeof usePackageMarketplaceStatus
   >;
 

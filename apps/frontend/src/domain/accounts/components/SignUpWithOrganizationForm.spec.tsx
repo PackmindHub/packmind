@@ -12,6 +12,7 @@ import {
   useCheckEmailAvailabilityMutation,
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
 // Mock the queries
 vi.mock('../api/queries/AuthQueries', () => ({
@@ -54,20 +55,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('SignUpWithOrganizationForm', () => {
   const mockUseSignUpWithOrganizationMutation =
-    useSignUpWithOrganizationMutation as jest.MockedFunction<
+    useSignUpWithOrganizationMutation as MockedFunction<
       typeof useSignUpWithOrganizationMutation
     >;
-  const mockUseSignInMutation = useSignInMutation as jest.MockedFunction<
+  const mockUseSignInMutation = useSignInMutation as MockedFunction<
     typeof useSignInMutation
   >;
   const mockUseCheckEmailAvailabilityMutation =
-    useCheckEmailAvailabilityMutation as jest.MockedFunction<
+    useCheckEmailAvailabilityMutation as MockedFunction<
       typeof useCheckEmailAvailabilityMutation
     >;
-  const mockUseSocialProvidersQuery =
-    useSocialProvidersQuery as jest.MockedFunction<
-      typeof useSocialProvidersQuery
-    >;
+  const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
+    typeof useSocialProvidersQuery
+  >;
 
   afterEach(() => {
     vi.clearAllMocks();

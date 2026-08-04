@@ -7,6 +7,7 @@ import {
   PendingChangeProposalsWarning,
   ConfirmSaveWithPendingProposalsDialog,
 } from './PendingChangeProposals';
+import type { Mock } from 'vitest';
 
 describe('countPendingChangeProposals', () => {
   describe('when the response is undefined (OSS stub)', () => {
@@ -79,8 +80,8 @@ describe('PendingChangeProposalsWarning', () => {
 });
 
 describe('ConfirmSaveWithPendingProposalsDialog', () => {
-  let onConfirm: jest.Mock;
-  let onOpenChange: jest.Mock;
+  let onConfirm: Mock;
+  let onOpenChange: Mock;
 
   beforeEach(() => {
     onConfirm = vi.fn();

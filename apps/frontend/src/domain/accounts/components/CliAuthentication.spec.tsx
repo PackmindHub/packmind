@@ -15,6 +15,7 @@ import type {
   UserOrganizationRole,
 } from '@packmind/types';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useGetCurrentApiKeyQuery: vi.fn(),
@@ -93,11 +94,9 @@ describe('CliAuthentication', () => {
   });
 
   const mockUseGetCurrentApiKeyQuery =
-    useGetCurrentApiKeyQuery as jest.MockedFunction<
-      typeof useGetCurrentApiKeyQuery
-    >;
+    useGetCurrentApiKeyQuery as MockedFunction<typeof useGetCurrentApiKeyQuery>;
   const mockUseGenerateApiKeyMutation =
-    useGenerateApiKeyMutation as jest.MockedFunction<
+    useGenerateApiKeyMutation as MockedFunction<
       typeof useGenerateApiKeyMutation
     >;
 

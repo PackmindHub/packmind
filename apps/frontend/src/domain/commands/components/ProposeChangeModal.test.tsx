@@ -18,6 +18,7 @@ import {
 } from '@packmind/types';
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { useCreateChangeProposalMutation } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
@@ -27,7 +28,7 @@ vi.mock(
 );
 
 const mockUseCreateChangeProposalMutation =
-  useCreateChangeProposalMutation as jest.MockedFunction<
+  useCreateChangeProposalMutation as MockedFunction<
     typeof useCreateChangeProposalMutation
   >;
 

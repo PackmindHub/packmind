@@ -2,18 +2,19 @@ import axios, { AxiosResponse } from 'axios';
 import { ApiService } from './ApiService';
 import { PackmindError } from './errors/PackmindError';
 import { PackmindConflictError } from './errors/PackmindConflictError';
+import type { Mock, Mocked } from 'vitest';
 
 // Mock axios
 vi.mock('axios');
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedAxios = axios as Mocked<typeof axios>;
 
 interface MockAxiosInstance {
-  get: jest.Mock;
-  post: jest.Mock;
-  put: jest.Mock;
-  delete: jest.Mock;
-  patch: jest.Mock;
+  get: Mock;
+  post: Mock;
+  put: Mock;
+  delete: Mock;
+  patch: Mock;
 }
 
 describe('ApiService', () => {

@@ -21,6 +21,7 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../api/queries/DeploymentsQueries', async () => ({
   ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
@@ -42,25 +43,25 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
 }));
 
 const mockUseListPackagesBySpaceQuery =
-  useListPackagesBySpaceQuery as jest.MockedFunction<
+  useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
 const mockUseRemoveArtefactsFromPackageMutation =
-  useRemoveArtefactsFromPackageMutation as jest.MockedFunction<
+  useRemoveArtefactsFromPackageMutation as MockedFunction<
     typeof useRemoveArtefactsFromPackageMutation
   >;
 const mockUseListActiveDistributedPackagesBySpaceQuery =
-  useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
+  useListActiveDistributedPackagesBySpaceQuery as MockedFunction<
     typeof useListActiveDistributedPackagesBySpaceQuery
   >;
-const mockUseAuthContext = useAuthContext as jest.MockedFunction<
+const mockUseAuthContext = useAuthContext as MockedFunction<
   typeof useAuthContext
 >;
-const mockUseCurrentSpace = useCurrentSpace as jest.MockedFunction<
+const mockUseCurrentSpace = useCurrentSpace as MockedFunction<
   typeof useCurrentSpace
 >;
 const mockUsePackageMarketplaceStatus =
-  usePackageMarketplaceStatus as jest.MockedFunction<
+  usePackageMarketplaceStatus as MockedFunction<
     typeof usePackageMarketplaceStatus
   >;
 

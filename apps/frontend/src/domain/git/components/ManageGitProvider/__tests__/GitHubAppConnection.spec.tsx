@@ -18,6 +18,7 @@ import {
 } from '../../../api/queries/GitProviderQueries';
 import { useGetMeQuery } from '../../../../accounts/api/queries/UserQueries';
 import { redirectTo } from '../../../../../shared/utils/navigation';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../api/queries/GitProviderQueries', () => ({
   useGithubAppInstallUrlMutation: vi.fn(),
@@ -33,7 +34,7 @@ vi.mock('../../../../../shared/utils/navigation', () => ({
   redirectTo: vi.fn(),
 }));
 
-const mockRedirectTo = redirectTo as jest.MockedFunction<typeof redirectTo>;
+const mockRedirectTo = redirectTo as MockedFunction<typeof redirectTo>;
 
 const mockOrganizationId = 'org-1' as OrganizationId;
 
@@ -105,7 +106,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('GitHubAppInstallSlot', () => {
   const mockUseGithubAppInstallUrlMutation =
-    useGithubAppInstallUrlMutation as jest.MockedFunction<
+    useGithubAppInstallUrlMutation as MockedFunction<
       typeof useGithubAppInstallUrlMutation
     >;
 
@@ -321,18 +322,18 @@ describe('GitHubAppInstallSlot', () => {
 
 describe('GitHubAppConnection', () => {
   const mockUseGithubAppInstallUrlMutation =
-    useGithubAppInstallUrlMutation as jest.MockedFunction<
+    useGithubAppInstallUrlMutation as MockedFunction<
       typeof useGithubAppInstallUrlMutation
     >;
   const mockUseGetGithubAppStatusQuery =
-    useGetGithubAppStatusQuery as jest.MockedFunction<
+    useGetGithubAppStatusQuery as MockedFunction<
       typeof useGetGithubAppStatusQuery
     >;
   const mockUseGetGithubAppManifestMutation =
-    useGetGithubAppManifestMutation as jest.MockedFunction<
+    useGetGithubAppManifestMutation as MockedFunction<
       typeof useGetGithubAppManifestMutation
     >;
-  const mockUseGetMeQuery = useGetMeQuery as jest.MockedFunction<
+  const mockUseGetMeQuery = useGetMeQuery as MockedFunction<
     typeof useGetMeQuery
   >;
 

@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useCreateCliLoginCodeMutation: vi.fn(),
@@ -39,7 +40,7 @@ const renderWithQueryClient = (component: React.ReactElement) => {
 
 describe('SetupLocalEnvironment', () => {
   const mockUseCreateCliLoginCodeMutation =
-    useCreateCliLoginCodeMutation as jest.MockedFunction<
+    useCreateCliLoginCodeMutation as MockedFunction<
       typeof useCreateCliLoginCodeMutation
     >;
 

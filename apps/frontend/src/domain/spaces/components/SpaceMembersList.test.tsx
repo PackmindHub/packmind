@@ -9,6 +9,7 @@ import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../api/queries/SpacesQueries';
 import * as UseCurrentSpaceModule from '../hooks/useCurrentSpace';
 import { SpaceMembersList } from './SpaceMembersList';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../api/queries/SpacesQueries', async () => ({
   ...(await vi.importActual('../api/queries/SpacesQueries')),
@@ -20,10 +21,9 @@ vi.mock('../hooks/useCurrentSpace', async () => ({
   useCurrentSpace: vi.fn(),
 }));
 
-const mockUseGetSpaceMembersQuery =
-  useGetSpaceMembersQuery as jest.MockedFunction<
-    typeof useGetSpaceMembersQuery
-  >;
+const mockUseGetSpaceMembersQuery = useGetSpaceMembersQuery as MockedFunction<
+  typeof useGetSpaceMembersQuery
+>;
 
 vi.mock('@packmind/ui', async () => {
   const actual = await vi.importActual('@packmind/ui');

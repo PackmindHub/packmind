@@ -15,6 +15,7 @@ import { skillsGateway } from '../gateways';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useUploadSkillMutation } from './SkillsQueries';
+import type { MockedFunction } from 'vitest';
 
 vi.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: vi.fn(),
@@ -24,10 +25,10 @@ vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: vi.fn(),
 }));
 
-const mockUseAuthContext = useAuthContext as jest.MockedFunction<
+const mockUseAuthContext = useAuthContext as MockedFunction<
   typeof useAuthContext
 >;
-const mockUseCurrentSpace = useCurrentSpace as jest.MockedFunction<
+const mockUseCurrentSpace = useCurrentSpace as MockedFunction<
   typeof useCurrentSpace
 >;
 
