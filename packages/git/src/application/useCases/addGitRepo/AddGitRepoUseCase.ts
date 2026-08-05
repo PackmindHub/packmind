@@ -128,6 +128,7 @@ export class AddGitRepoUseCase
       providerId: gitProviderId,
       type: 'standard' as const,
       isTracked: false,
+      trackingRemovedAt: null,
     };
 
     const createdRepo =

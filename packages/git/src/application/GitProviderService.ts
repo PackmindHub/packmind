@@ -156,6 +156,7 @@ export class GitProviderService {
       providerId: gitProviderId,
       type: 'standard',
       isTracked: false,
+      trackingRemovedAt: null,
     };
 
     const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
@@ -191,6 +192,7 @@ export class GitProviderService {
       providerId: gitProviderId,
       type: 'standard',
       isTracked: false,
+      trackingRemovedAt: null,
     };
 
     const gitRepoInstance = await this.gitRepoFactory.createGitRepo(

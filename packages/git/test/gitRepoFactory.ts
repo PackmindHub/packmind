@@ -13,6 +13,7 @@ export const gitRepoFactory: Factory<GitRepo> = (
     providerId: createGitProviderId(uuidv4()),
     type: 'standard',
     isTracked: false,
+    trackingRemovedAt: null,
     ...gitRepo,
   };
 };

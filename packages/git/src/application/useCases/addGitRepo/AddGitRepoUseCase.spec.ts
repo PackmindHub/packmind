@@ -161,6 +161,7 @@ describe('AddGitRepoUseCase', () => {
         providerId: gitProviderId,
         type: 'standard',
         isTracked: false,
+        trackingRemovedAt: null,
       });
     });
   });

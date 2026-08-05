@@ -406,6 +406,22 @@ describe('GitRepoRepository', () => {
         expect(reloaded?.isTracked).toBe(false);
       });
     });
+
+    describe('when a repository has never had its tracking removed', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id }),
+        );
+
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('leaves the removal stamp empty', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
   });
 
   describe('list with organization ID', () => {

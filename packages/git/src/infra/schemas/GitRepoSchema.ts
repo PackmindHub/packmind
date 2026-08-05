@@ -38,6 +38,11 @@ export const GitRepoSchema = new EntitySchema<
       type: 'boolean',
       default: false,
     },
+    trackingRemovedAt: {
+      name: 'tracking_removed_at',
+      type: 'timestamp with time zone',
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
