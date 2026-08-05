@@ -9,6 +9,7 @@ import {
   IDeploymentPort,
   IGitPort,
   OrganizationId,
+  RemoveTrackedRepositoryResponse,
   SetTrackedRepositoryResponse,
   UpdateTrackedBranchResponse,
   UserId,
@@ -75,6 +76,20 @@ export class GitRepositoriesService {
       owner,
       repo,
       branch,
+    });
+  }
+
+  async removeTrackedRepository(
+    userId: UserId,
+    organizationId: OrganizationId,
+    owner: string,
+    repo: string,
+  ): Promise<RemoveTrackedRepositoryResponse> {
+    return this.gitAdapter.removeTrackedRepository({
+      userId,
+      organizationId,
+      owner,
+      repo,
     });
   }
 

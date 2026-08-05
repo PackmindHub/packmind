@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Put,
@@ -22,7 +23,9 @@ import {
   GitRepoId,
   NoTrackedRepositoryError,
   OrganizationId,
+  RemoveTrackedRepositoryResponse,
   RepositoryAlreadyTrackedError,
+  RepositoryNotTrackableError,
 } from '@packmind/types';
 import {
   AuthenticatedRequest,
@@ -189,10 +192,37 @@ export class GitRepositoriesController {
     }
   }
 
+  @Delete('tracked-repository')
+  async removeTrackedRepository(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+  ): Promise<RemoveTrackedRepositoryResponse> {
+    const userId = req.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/git/repositories/tracked-repository - Removing tracked repository',
+      { organizationId, owner, repo },
+    );
+
+    try {
+      return await this.gitRepositoriesService.removeTrackedRepository(
+        userId,
+        organizationId,
+        owner,
+        repo,
+      );
+    } catch (error) {
+      throw this.mapTrackingError(error);
+    }
+  }
+
   private mapTrackingError(error: unknown): unknown {
     if (
       error instanceof RepositoryAlreadyTrackedError ||
-      error instanceof NoTrackedRepositoryError
+      error instanceof NoTrackedRepositoryError ||
+      error instanceof RepositoryNotTrackableError
     ) {
       return new ConflictException(error.message);
     }
