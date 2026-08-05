@@ -1,5 +1,5 @@
 import { DistributionSchema } from '@packmind/deployments';
-import { GitCommitSchema } from '@packmind/git';
+import { GitCommitSchema, GitRepoSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import { Distribution, GitRepo, Package } from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
@@ -79,6 +79,14 @@ describe('Tracked branch distribution history integration', () => {
       owner: OWNER,
       repo: REPO,
       branch,
+    });
+  }
+
+  function removeTracked(): Promise<unknown> {
+    return testApp.gitHexa.getAdapter().removeTrackedRepository({
+      ...admin.packmindCommand(),
+      owner: OWNER,
+      repo: REPO,
     });
   }
 
@@ -260,6 +268,154 @@ describe('Tracked branch distribution history integration', () => {
       await expect(overviewBranches()).resolves.toEqual(
         expect.arrayContaining(['main', 'dev']),
       );
+    });
+  });
+
+  describe('when tracking is removed and then restored on the same branch', () => {
+    let mainRepo: GitRepo;
+
+    beforeEach(async () => {
+      mainRepo = await setTracked('main');
+      await distributeTo(mainRepo);
+      await distributeTo(mainRepo);
+      await distributeTo(mainRepo);
+
+      await removeTracked();
+    });
+
+    it('drops the repository from the distribution history', async () => {
+      await expect(displayedBranches()).resolves.toEqual([]);
+    });
+
+    it('drops the repository from the overview', async () => {
+      await expect(overviewBranches()).resolves.toEqual([]);
+    });
+
+    it('keeps every recorded distribution on disk', async () => {
+      await expect(storedDistributionCount(OWNER, REPO, 'main')).resolves.toBe(
+        3,
+      );
+    });
+
+    describe('and tracking is set again on main', () => {
+      let restoredRepo: GitRepo;
+
+      beforeEach(async () => {
+        restoredRepo = await setTracked('main');
+      });
+
+      it('reuses the original repository row', () => {
+        expect(restoredRepo.id).toEqual(mainRepo.id);
+      });
+
+      it('shows the earlier distributions again', async () => {
+        const history = await displayedHistory();
+        expect(history).toHaveLength(3);
+      });
+
+      it('appends a new distribution to them', async () => {
+        await distributeTo(restoredRepo);
+
+        const history = await displayedHistory();
+        expect(history).toHaveLength(4);
+      });
+
+      it('creates no duplicate repository row', async () => {
+        const rows = await fixture.datasource
+          .getRepository(GitRepoSchema)
+          .createQueryBuilder('gitRepo')
+          .where('gitRepo.owner = :owner', { owner: OWNER })
+          .andWhere('gitRepo.repo = :repo', { repo: REPO })
+          .andWhere('gitRepo.branch = :branch', { branch: 'main' })
+          .getCount();
+
+        expect(rows).toBe(1);
+      });
+    });
+  });
+
+  // Branch-count equivalence class: two branches, one tracked. Before the
+  // removed-state column, a repository with no tracked sibling was left alone
+  // by the predicate and the overview reverted to listing every branch.
+  describe('when tracking is removed on a repository that has a second branch', () => {
+    beforeEach(async () => {
+      const mainRepo = await setTracked('main');
+      await distributeTo(mainRepo);
+
+      const devRepo = await findOrCreateRepo(
+        OWNER,
+        REPO,
+        'dev',
+        GIT_REMOTE_URL,
+      );
+      await distributeTo(devRepo);
+
+      await removeTracked();
+    });
+
+    it('hides both branches from the overview', async () => {
+      await expect(overviewBranches()).resolves.toEqual([]);
+    });
+
+    it('hides both branches from the history', async () => {
+      await expect(displayedBranches()).resolves.toEqual([]);
+    });
+
+    it('retains the untracked branch history', async () => {
+      await expect(storedDistributionCount(OWNER, REPO, 'dev')).resolves.toBe(
+        1,
+      );
+    });
+
+    describe('and dev is tracked instead', () => {
+      beforeEach(async () => {
+        await setTracked('dev');
+      });
+
+      it('shows only dev', async () => {
+        await expect(displayedBranches()).resolves.toEqual(['dev']);
+      });
+    });
+  });
+
+  // Branch-count equivalence class: nothing distributed yet.
+  describe('when tracking is removed before anything was distributed', () => {
+    beforeEach(async () => {
+      await setTracked('main');
+    });
+
+    it('succeeds', async () => {
+      await expect(removeTracked()).resolves.toBeDefined();
+    });
+  });
+
+  // Protects the backend half of "tracking governs display, not capture":
+  // a distribution recorded on an untracked branch is kept and surfaces the
+  // moment that branch is tracked.
+  describe('when a branch is distributed to before it is tracked', () => {
+    beforeEach(async () => {
+      const devRepo = await findOrCreateRepo(
+        OWNER,
+        REPO,
+        'dev',
+        GIT_REMOTE_URL,
+      );
+      await distributeTo(devRepo);
+      await setTracked('main');
+    });
+
+    it('hides the untracked branch', async () => {
+      await expect(displayedBranches()).resolves.toEqual([]);
+    });
+
+    describe('and that branch is tracked later', () => {
+      beforeEach(async () => {
+        await updateTracked('dev');
+      });
+
+      it('surfaces the distribution recorded before tracking', async () => {
+        await expect(displayedBranches()).resolves.toEqual(['dev']);
+      });
     });
   });
 
