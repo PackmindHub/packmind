@@ -292,9 +292,9 @@ Next step: Run /packmind-onboard in your AI agent to onboard the project
 Set which repository and branch Packmind tracks for your project. The tracked branch is the anchor Packmind uses to attribute governance and adoption activity, so declaring it tells Packmind where to follow your team's work. Only installs that run on the tracked repository and branch are recorded — see [Distribution Recording](#distribution-recording-tracked-repository-and-branch).
 
 <Info>
-  **Organization admins only** — Only organization admins can set or move the
-  tracked branch. If you are not an admin, the command reports that you cannot
-  change the tracked branch.
+  **Organization admins only** — Only organization admins can set, move or
+  remove the tracked branch. If you are not an admin, the command reports that
+  you cannot change the tracked branch.
 </Info>
 
 ### Track the Current Branch
@@ -350,6 +350,32 @@ Nothing is tracked yet — run `packmind-cli init` or `packmind-cli track` to st
   repository and branch, so you can set the anchor as part of your first-time
   setup. Use `packmind-cli track` later to set or move it.
 </Tip>
+
+### Remove Tracking
+
+Use the `--remove` flag to take the repository out of Packmind's governance views. Packmind asks you to confirm before applying it:
+
+```bash
+packmind-cli track --remove
+```
+
+```
+Remove Packmind's tracking of my-org/my-repo on branch main? Distributions already recorded are kept and reappear if you track it again. (Y/n)
+
+Packmind no longer tracks my-org/my-repo. Distributions recorded on branch main are kept and reappear if you track it again.
+```
+
+The repository disappears from Distribution History, the Deployments overview and the deployment targets. **Nothing is deleted** — run `packmind-cli track` on the same branch again and the whole history comes back, with new distributions appended. See [Removing Tracking](/governance/distribution#removing-tracking).
+
+While the repository is untracked, `packmind-cli install` behaves as it does for a repository that was never tracked: it completes locally and tells you the distribution was not recorded.
+
+Removing tracking on a repository that is not tracked changes nothing and reports it:
+
+```
+Repository is not tracked in 'my-organization' organization
+```
+
+`--update` and `--remove` cannot be combined — pick one.
 
 ### Troubleshooting
 
