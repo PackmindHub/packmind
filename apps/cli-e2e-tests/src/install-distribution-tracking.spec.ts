@@ -100,6 +100,44 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
     { email: packmindEmail },
   );
 
+  // A repository whose tracking was removed must behave exactly like one that
+  // was never tracked: the install completes locally and records nothing.
+  describeWithUserSignedUp(
+    'when installing after tracking was removed',
+    (getContext) => {
+      let context: UserSignedUpContext;
+      let pkg: Package;
+      let result: RunCliResult;
+      let distributions: Distribution[];
+
+      beforeEach(async () => {
+        context = await getContext();
+        await setupGitRepo(context.testDir);
+        pkg = await seedPackage(context);
+        await context.runCli('track');
+        await context.runCli('track --remove');
+        result = await context.runCli(
+          `install @${context.space.slug}/${pkg.slug}`,
+        );
+        distributions =
+          await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
+      });
+
+      it('exits successfully', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('does not record any distribution', () => {
+        expect(distributions).toEqual([]);
+      });
+
+      it('warns that the repository is not tracked', () => {
+        expect(result.stderr).toContain('not tracked');
+      });
+    },
+    { email: packmindEmail },
+  );
+
   describeWithUserSignedUp(
     'when installing on a branch other than the tracked branch',
     (getContext) => {
