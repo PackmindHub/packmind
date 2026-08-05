@@ -226,6 +226,12 @@ export class GitRepoRepository
       const updated = await this.repository.save({
         ...gitRepo,
         isTracked,
+        // Setting tracking clears any earlier removal — re-tracking is exactly
+        // what restores a repository's hidden history. Doing it here rather
+        // than in the use cases keeps both re-tracking entry points
+        // (SetTrackedRepositoryUseCase, UpdateTrackedBranchUseCase) correct
+        // without either having to remember.
+        trackingRemovedAt: isTracked ? null : gitRepo.trackingRemovedAt,
       });
 
       this.logger.info('Git repo tracked flag updated', {
@@ -237,6 +243,35 @@ export class GitRepoRepository
       this.logger.error('Failed to update git repo tracked flag', {
         gitRepoId,
         isTracked,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo> {
+    this.logger.info('Marking git repo tracking as removed', { gitRepoId });
+
+    try {
+      const gitRepo = await this.repository.findOne({
+        where: { id: gitRepoId },
+      });
+
+      if (!gitRepo) {
+        throw new Error(`Git repo with ID '${gitRepoId}' not found`);
+      }
+
+      const updated = await this.repository.save({
+        ...gitRepo,
+        isTracked: false,
+        trackingRemovedAt: new Date(),
+      });
+
+      this.logger.info('Git repo tracking marked as removed', { gitRepoId });
+      return updated;
+    } catch (error) {
+      this.logger.error('Failed to mark git repo tracking as removed', {
+        gitRepoId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

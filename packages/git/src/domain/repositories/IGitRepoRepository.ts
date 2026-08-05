@@ -56,6 +56,12 @@ export interface IGitRepoRepository extends IRepository<GitRepo> {
     repo: string,
   ): Promise<GitRepo | null>;
   updateTracked(gitRepoId: GitRepoId, isTracked: boolean): Promise<GitRepo>;
+  /**
+   * Clears the tracked flag and records when tracking was removed. Distinct
+   * from `updateTracked(id, false)`, which a branch move uses and which must
+   * not stamp a removal.
+   */
+  markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo>;
   list(
     organizationId?: OrganizationId,
     opts?: { type?: GitRepoTypeFilter },

@@ -422,6 +422,70 @@ describe('GitRepoRepository', () => {
         expect(reloaded?.trackingRemovedAt).toBeNull();
       });
     });
+
+    describe('when setting the tracked flag on a repository whose tracking was removed', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+        );
+        await gitRepoRepository.markTrackingRemoved(gitRepo.id);
+
+        await gitRepoRepository.updateTracked(gitRepo.id, true);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('clears the removal stamp', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+
+    // Regression guard: UpdateTrackedBranchUseCase clears the flag mid-move.
+    // Stamping a removal here would hide the whole repository during an
+    // ordinary branch switch.
+    describe('when clearing the tracked flag as part of a branch move', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+        );
+
+        await gitRepoRepository.updateTracked(gitRepo.id, false);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('leaves the removal stamp empty', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+  });
+
+  describe('markTrackingRemoved', () => {
+    let updated: GitRepo;
+    let reloaded: GitRepo | null;
+
+    beforeEach(async () => {
+      const gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+      );
+
+      updated = await gitRepoRepository.markTrackingRemoved(gitRepo.id);
+      reloaded = await gitRepoRepository.findById(gitRepo.id);
+    });
+
+    it('returns the repo with the tracked flag cleared', () => {
+      expect(updated.isTracked).toBe(false);
+    });
+
+    it('records the removal timestamp', () => {
+      expect(reloaded?.trackingRemovedAt).toEqual(expect.any(Date));
+    });
+
+    it('keeps the row readable rather than soft-deleting it', () => {
+      expect(reloaded).not.toBeNull();
+    });
   });
 
   describe('list with organization ID', () => {

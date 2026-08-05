@@ -112,6 +112,10 @@ export class GitRepoService {
     return this.gitRepoRepository.updateTracked(gitRepoId, isTracked);
   }
 
+  async markTrackingRemoved(gitRepoId: GitRepoId): Promise<GitRepo> {
+    return this.gitRepoRepository.markTrackingRemoved(gitRepoId);
+  }
+
   // ---------------------------------------------------------------------------
   // Marketplace-aware variants — explicitly opted into by marketplace use cases.
   // ---------------------------------------------------------------------------
