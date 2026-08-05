@@ -1,6 +1,7 @@
 import {
   Gateway,
   IGetTrackedRepositoryUseCase,
+  IRemoveTrackedRepositoryUseCase,
   ISetTrackedRepositoryUseCase,
   IUpdateTrackedBranchUseCase,
 } from '@packmind/types';
@@ -40,4 +41,14 @@ export class RepositoryTrackingGateway implements IRepositoryTrackingGateway {
       { method: 'PUT', body: command },
     );
   };
+
+  public removeTrackedRepository: Gateway<IRemoveTrackedRepositoryUseCase> =
+    async ({ owner, repo }) => {
+      const { organizationId } = this.httpClient.getAuthContext();
+      const query = new URLSearchParams({ owner, repo }).toString();
+      return this.httpClient.request(
+        `/api/v0/organizations/${organizationId}/git/repositories/tracked-repository?${query}`,
+        { method: 'DELETE' },
+      );
+    };
 }
