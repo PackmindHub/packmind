@@ -18,6 +18,7 @@ function makeGitRepo(branch: string, isTracked = true): GitRepo {
     branch,
     providerId: 'provider-id' as GitRepo['providerId'],
     isTracked,
+    trackingRemovedAt: null,
   };
 }
 
@@ -34,6 +35,7 @@ describe('TrackRepositoryUseCase', () => {
       getTrackedRepository: jest.fn(),
       setTrackedRepository: jest.fn(),
       updateTrackedBranch: jest.fn(),
+      removeTrackedRepository: jest.fn(),
     };
     gitService = {
       getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
@@ -55,6 +57,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: false,
+        remove: false,
         confirm,
       });
     });
@@ -100,6 +103,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: false,
+        remove: false,
         confirm,
       });
     });
@@ -124,6 +128,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: false,
+        remove: false,
         confirm,
       });
     });
@@ -157,6 +162,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: false,
+        remove: false,
         confirm,
       });
 
@@ -181,6 +187,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: true,
+        remove: false,
         confirm,
       });
     });
@@ -227,6 +234,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: true,
+        remove: false,
         confirm,
       });
     });
@@ -251,6 +259,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: true,
+        remove: false,
         confirm,
       });
     });
@@ -278,6 +287,7 @@ describe('TrackRepositoryUseCase', () => {
         repoPath: '/repo',
         origin: 'track',
         update: true,
+        remove: false,
         confirm,
       });
     });
@@ -296,6 +306,117 @@ describe('TrackRepositoryUseCase', () => {
     });
   });
 
+  describe('when removing tracking for a tracked repository', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gateway.getTrackedRepository.mockResolvedValue({
+        gitRepo: makeGitRepo('main'),
+      });
+      gateway.removeTrackedRepository.mockResolvedValue({
+        status: 'removed',
+        gitRepo: makeGitRepo('main', false),
+      });
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: true,
+        confirm,
+      });
+    });
+
+    it('prompts to confirm the removal of the tracked branch', () => {
+      expect(confirm).toHaveBeenCalledWith({
+        mode: 'remove',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'main',
+      });
+    });
+
+    it('removes the tracking through the gateway', () => {
+      expect(gateway.removeTrackedRepository).toHaveBeenCalledWith({
+        owner: 'my-orga',
+        repo: 'my-repo',
+      });
+    });
+
+    it('returns the removed outcome', () => {
+      expect(result).toEqual({
+        status: 'removed',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'main',
+      });
+    });
+  });
+
+  describe('when removal is declined at the prompt', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gateway.getTrackedRepository.mockResolvedValue({
+        gitRepo: makeGitRepo('main'),
+      });
+      confirm.mockResolvedValue(false);
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: true,
+        confirm,
+      });
+    });
+
+    it('returns the cancelled outcome', () => {
+      expect(result).toEqual({ status: 'cancelled' });
+    });
+
+    it('changes nothing', () => {
+      expect(gateway.removeTrackedRepository).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when removing tracking for a repository that is not tracked', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+      gateway.removeTrackedRepository.mockResolvedValue({
+        status: 'not-tracked',
+        organizationName: 'PickMand',
+      });
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: true,
+        confirm,
+      });
+    });
+
+    it('skips the confirmation prompt', () => {
+      expect(confirm).not.toHaveBeenCalled();
+    });
+
+    it('calls the server anyway so it can tell known from unknown', () => {
+      expect(gateway.removeTrackedRepository).toHaveBeenCalled();
+    });
+
+    it('returns the not-tracked outcome', () => {
+      expect(result).toEqual({
+        status: 'not-tracked',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        organizationName: 'PickMand',
+      });
+    });
+  });
+
   describe('when not inside a git repository', () => {
     beforeEach(() => {
       gitService.getGitRemoteUrl.mockImplementation(() => {
@@ -309,6 +430,7 @@ describe('TrackRepositoryUseCase', () => {
           repoPath: '/repo',
           origin: 'track',
           update: false,
+          remove: false,
           confirm,
         }),
       ).rejects.toThrow('not a git repository');
@@ -320,6 +442,7 @@ describe('TrackRepositoryUseCase', () => {
           repoPath: '/repo',
           origin: 'track',
           update: false,
+          remove: false,
           confirm,
         })
         .catch(() => undefined);
@@ -339,6 +462,7 @@ describe('TrackRepositoryUseCase', () => {
           repoPath: '/repo',
           origin: 'track',
           update: false,
+          remove: false,
           confirm,
         }),
       ).rejects.toThrow('No Git remotes found in the repository');
@@ -354,6 +478,7 @@ describe('TrackRepositoryUseCase', () => {
           repoPath: '/repo',
           origin: 'track',
           update: false,
+          remove: false,
           confirm,
         }),
       ).rejects.toBeInstanceOf(NotLoggedInError);
@@ -374,6 +499,7 @@ describe('TrackRepositoryUseCase', () => {
           repoPath: '/repo',
           origin: 'track',
           update: false,
+          remove: false,
           confirm,
         }),
       ).rejects.toThrow('You are not an admin');

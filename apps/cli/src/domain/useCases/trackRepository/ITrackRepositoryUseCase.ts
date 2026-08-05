@@ -1,9 +1,10 @@
 import { GitRepo, IPublicUseCase } from '@packmind/types';
 
 /**
- * Whether the tracking operation is a first-time set or a deliberate branch move.
+ * Whether the tracking operation is a first-time set, a deliberate branch move,
+ * or a removal.
  */
-export type TrackRepositoryMode = 'set' | 'update';
+export type TrackRepositoryMode = 'set' | 'update' | 'remove';
 
 /**
  * Details surfaced to the caller so it can build a confirmation prompt.
@@ -26,6 +27,8 @@ export type TrackRepositoryCommand = {
   origin: 'init' | 'track';
   /** When true, move the tracked branch (requires something already tracked). */
   update: boolean;
+  /** When true, remove tracking for the current repository. */
+  remove: boolean;
   /**
    * Confirmation hook invoked before any mutation. Returning `false` cancels
    * the operation without changing anything.
@@ -71,6 +74,18 @@ export type TrackRepositoryResult =
       owner: string;
       repo: string;
       branch: string;
+    }
+  | {
+      status: 'removed';
+      owner: string;
+      repo: string;
+      branch: string;
+    }
+  | {
+      status: 'not-tracked';
+      owner: string;
+      repo: string;
+      organizationName: string;
     }
   | { status: 'cancelled' };
 
