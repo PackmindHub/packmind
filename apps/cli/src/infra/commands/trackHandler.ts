@@ -7,6 +7,7 @@ import {
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
+  logWarningConsole,
   formatCommand,
 } from '../utils/consoleLogger';
 import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
@@ -17,6 +18,7 @@ export type TrackRepositoryFunction = (
 
 export interface TrackHandlerDependencies {
   update: boolean;
+  remove: boolean;
   baseDirectory: string;
   trackRepository: TrackRepositoryFunction;
   isTTY?: boolean;
@@ -30,6 +32,14 @@ export interface TrackHandlerDependencies {
 export async function trackHandler(
   deps: TrackHandlerDependencies,
 ): Promise<void> {
+  if (deps.update && deps.remove) {
+    logErrorConsole(
+      `${formatCommand('--update')} and ${formatCommand('--remove')} cannot be combined — pick one.`,
+    );
+    process.exit(1);
+    return;
+  }
+
   const isTTY = deps.isTTY ?? Boolean(process.stdin.isTTY);
   const confirm = createTrackConfirm({
     isTTY,
@@ -42,6 +52,7 @@ export async function trackHandler(
       repoPath: deps.baseDirectory,
       origin: 'track',
       update: deps.update,
+      remove: deps.remove,
       confirm,
     });
   } catch (error) {
@@ -59,6 +70,18 @@ export async function trackHandler(
     case 'updated':
       logSuccessConsole(
         `Tracked branch for ${result.owner}/${result.repo} changed from ${result.fromBranch} to ${result.branch}.`,
+      );
+      process.exit(0);
+      return;
+    case 'removed':
+      logSuccessConsole(
+        `Packmind no longer tracks ${result.owner}/${result.repo}. Distributions recorded on branch ${result.branch} are kept and reappear if you track it again.`,
+      );
+      process.exit(0);
+      return;
+    case 'not-tracked':
+      logWarningConsole(
+        `Repository is not tracked in '${result.organizationName}' organization`,
       );
       process.exit(0);
       return;

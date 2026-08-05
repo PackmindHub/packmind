@@ -13,13 +13,19 @@ export const trackCommand = command({
       description:
         'Move the tracked branch to the current branch (requires an existing tracked branch)',
     }),
+    remove: flag({
+      long: 'remove',
+      description:
+        "Remove Packmind's tracking of the current repository (keeps every recorded distribution)",
+    }),
   },
-  handler: async ({ update }) => {
+  handler: async ({ update, remove }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     await trackHandler({
       update,
+      remove,
       baseDirectory: process.cwd(),
       trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
     });

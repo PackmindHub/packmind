@@ -11,6 +11,9 @@ export type ConfirmPromptFn = (message: string) => Promise<boolean>;
 export function buildTrackConfirmationMessage(
   details: TrackRepositoryConfirmation,
 ): string {
+  if (details.mode === 'remove') {
+    return `Remove Packmind's tracking of ${details.owner}/${details.repo} on branch ${details.branch}? Distributions already recorded are kept and reappear if you track it again.`;
+  }
   if (details.mode === 'update') {
     return `Change the tracked branch for ${details.owner}/${details.repo} from ${details.fromBranch} to ${details.branch}?`;
   }
