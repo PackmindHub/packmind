@@ -21,6 +21,8 @@ import {
   ListAvailableReposResponse,
   ListProvidersCommand,
   ListProvidersResponse,
+  RemoveTrackedRepositoryCommand,
+  RemoveTrackedRepositoryResponse,
   SetTrackedRepositoryCommand,
   SetTrackedRepositoryResponse,
   UpdateTrackedBranchCommand,
@@ -419,6 +421,19 @@ export interface IGitPort {
   updateTrackedBranch(
     command: UpdateTrackedBranchCommand,
   ): Promise<UpdateTrackedBranchResponse>;
+
+  /**
+   * Remove Packmind's tracking of the given owner/repo within an organization.
+   * Admin-gated server-side. Nothing is deleted: the repository leaves the
+   * governance views but keeps every recorded distribution, and re-tracking the
+   * same branch brings the history back.
+   *
+   * @param command - Command containing owner, repo and context
+   * @returns Promise of the removal outcome
+   */
+  removeTrackedRepository(
+    command: RemoveTrackedRepositoryCommand,
+  ): Promise<RemoveTrackedRepositoryResponse>;
 
   /**
    * Find an existing git repository for the given owner/repo/branch or create

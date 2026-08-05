@@ -40,6 +40,8 @@ import {
   OrganizationGitHubApp,
   OrganizationId,
   QueryOption,
+  RemoveTrackedRepositoryCommand,
+  RemoveTrackedRepositoryResponse,
   SetTrackedRepositoryCommand,
   SetTrackedRepositoryResponse,
   UpdateTrackedBranchCommand,
@@ -69,6 +71,7 @@ import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/GetRepos
 import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/ListAvailableReposUseCase';
 import { ListProvidersUseCase } from '../useCases/listProviders/ListProvidersUseCase';
 import { ListReposUseCase } from '../useCases/listRepos/ListReposUseCase';
+import { RemoveTrackedRepositoryUseCase } from '../useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase';
 import { SetTrackedRepositoryUseCase } from '../useCases/setTrackedRepository/SetTrackedRepositoryUseCase';
 import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/UpdateGitProviderUseCase';
 import { UpdateTrackedBranchUseCase } from '../useCases/updateTrackedBranch/UpdateTrackedBranchUseCase';
@@ -105,6 +108,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _getTrackedRepositoryUseCase!: GetTrackedRepositoryUseCase;
   private _setTrackedRepositoryUseCase!: SetTrackedRepositoryUseCase;
   private _updateTrackedBranch!: UpdateTrackedBranchUseCase;
+  private _removeTrackedRepositoryUseCase!: RemoveTrackedRepositoryUseCase;
 
   constructor(
     private readonly gitServices: GitServices,
@@ -284,6 +288,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitProviderService(),
       this._findOrCreateGitRepo,
+      this.eventEmitterService,
+      this.accountsPort,
+    );
+
+    this._removeTrackedRepositoryUseCase = new RemoveTrackedRepositoryUseCase(
+      this.gitServices.getGitRepoService(),
       this.eventEmitterService,
       this.accountsPort,
     );
@@ -617,6 +627,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     command: UpdateTrackedBranchCommand,
   ): Promise<UpdateTrackedBranchResponse> {
     return this._updateTrackedBranch.execute(command);
+  }
+
+  public removeTrackedRepository(
+    command: RemoveTrackedRepositoryCommand,
+  ): Promise<RemoveTrackedRepositoryResponse> {
+    return this._removeTrackedRepositoryUseCase.execute(command);
   }
 
   public findOrCreateGitRepo(
