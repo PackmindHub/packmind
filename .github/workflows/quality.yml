@@ -211,3 +211,32 @@ jobs:
           fi
 
           echo "packages/migrations is in sync with OSS."
+
+      - name: Compare packages/types directories
+        run: |
+          EXCLUDES=(-x node_modules -x dist -x '.*')
+
+          PROPRIETARY_COUNT=$(find packages/types/src -type f | wc -l | tr -d ' ')
+          OSS_COUNT=$(find /tmp/packmind-oss/packages/types/src -type f | wc -l | tr -d ' ')
+          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
+
+          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
+            echo "::error::One of the directories is empty or missing. Aborting comparison."
+            exit 1
+          fi
+
+          echo ""
+          echo "=== File presence differences ==="
+          diff -rq "${EXCLUDES[@]}" packages/types /tmp/packmind-oss/packages/types || FILE_DIFF=1
+
+          echo ""
+          echo "=== Content differences ==="
+          diff -r "${EXCLUDES[@]}" packages/types /tmp/packmind-oss/packages/types || CONTENT_DIFF=1
+
+          if [ "${FILE_DIFF:-0}" = "1" ] || [ "${CONTENT_DIFF:-0}" = "1" ]; then
+            echo ""
+            echo "::error::packages/types has diverged from the OSS repo (PackmindHub/Packmind). Backport the change to OSS main first, then re-run - @packmind/types is the shared contract layer both editions compile against, so the whole package (not just the domains checked individually above) must stay identical."
+            exit 1
+          fi
+
+          echo "packages/types is in sync with OSS."
