@@ -4,6 +4,7 @@ import { GitRepoId } from '../git/GitRepoId';
 import { WithSoftDelete, WithTimestamps } from '../database/types';
 import { MarketplaceDescriptor } from './MarketplaceDescriptor';
 import { MarketplaceErrorKind } from './MarketplaceErrorKind';
+import { MarketplaceFaceId } from './MarketplaceFaceId';
 import { MarketplaceId } from './MarketplaceId';
 import { MarketplaceState } from './MarketplaceState';
 import { MarketplaceVendor } from './MarketplaceVendor';
@@ -23,6 +24,13 @@ export type Marketplace = WithSoftDelete<
     gitRepoId: GitRepoId;
     name: string;
     vendor: MarketplaceVendor;
+    /**
+     * Faces (vendor-specific descriptor projections) this marketplace serves.
+     * At least one entry; the publish job writes one descriptor per face from
+     * the shared plugin payload. Backfilled to `['claude']` by migration for
+     * rows created before multi-face support.
+     */
+    faces: MarketplaceFaceId[];
     addedBy: UserId;
     linkedAt: Date;
     state: MarketplaceState;

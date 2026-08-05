@@ -13,4 +13,5 @@ export * from './IPublishPackageOnMarketplaceUseCase';
 export * from './ISyncMarketplaceNowUseCase';
 export * from './ITrackPluginInstallHeartbeatUseCase';
 export * from './IUnlinkMarketplaceUseCase';
+export * from './IUpdateMarketplaceFacesUseCase';
 export * from './IValidateMarketplaceUrlUseCase';

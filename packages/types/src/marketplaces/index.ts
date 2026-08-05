@@ -2,6 +2,8 @@ export * from './MarketplaceId';
 export * from './MarketplaceVendor';
 export * from './MarketplaceState';
 export * from './MarketplaceErrorKind';
+export * from './MarketplaceFaceId';
+export * from './MarketplaceFaceHealth';
 export * from './MarketplaceDescriptor';
 export * from './MarketplaceDescriptorFilename';
 export * from './Marketplace';
