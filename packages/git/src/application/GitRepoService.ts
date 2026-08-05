@@ -116,6 +116,23 @@ export class GitRepoService {
     return this.gitRepoRepository.markTrackingRemoved(gitRepoId);
   }
 
+  /**
+   * Find any standard-typed GitRepo for an owner/repo pair in an organization,
+   * tracked or not. Lets a caller tell "connected to Packmind but not governed"
+   * apart from "Packmind has never seen this repository".
+   */
+  async findByOwnerAndRepoInOrganization(
+    owner: string,
+    repo: string,
+    organizationId: OrganizationId,
+  ): Promise<GitRepo | null> {
+    return this.gitRepoRepository.findByOwnerAndRepoInOrganization(
+      owner,
+      repo,
+      organizationId,
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Marketplace-aware variants — explicitly opted into by marketplace use cases.
   // ---------------------------------------------------------------------------

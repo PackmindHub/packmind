@@ -220,6 +220,43 @@ describe('SetTrackedRepositoryUseCase', () => {
     });
   });
 
+  describe('when a different admin re-tracks a repository whose tracking was removed', () => {
+    const otherAdminId = createUserId(uuidv4());
+    let removedRepo: GitRepo;
+
+    beforeEach(async () => {
+      removedRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'acme',
+        repo: 'widgets',
+        branch: 'dev',
+        providerId,
+        type: 'standard',
+        isTracked: false,
+        trackingRemovedAt: new Date('2026-08-05T10:00:00.000Z'),
+      };
+
+      mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
+        null,
+      );
+      mockFindOrCreate.execute.mockResolvedValue(removedRepo);
+      mockGitRepoService.updateTracked.mockResolvedValue({
+        ...removedRepo,
+        isTracked: true,
+        trackingRemovedAt: null,
+      });
+
+      await useCase.execute({ ...command, userId: otherAdminId });
+    });
+
+    it('re-tracks the row the other admin left behind', () => {
+      expect(mockGitRepoService.updateTracked).toHaveBeenCalledWith(
+        removedRepo.id,
+        true,
+      );
+    });
+  });
+
   describe('when the caller is not an admin', () => {
     beforeEach(() => {
       setupAccounts('member');
