@@ -52,7 +52,7 @@ describe('ListActiveDistributedPackagesBySpaceUseCase', () => {
     Pick<ITargetRepository, 'findActiveInSpace'>
   >;
   let standardsPort: jest.Mocked<Pick<IStandardsPort, 'listStandardsBySpace'>>;
-  let commandsPort: jest.Mocked<Pick<ICommandsPort, 'listRecipesBySpace'>>;
+  let commandsPort: jest.Mocked<Pick<ICommandsPort, 'listCommandsBySpace'>>;
   let skillsPort: jest.Mocked<Pick<ISkillsPort, 'listSkillsBySpace'>>;
   let gitPort: jest.Mocked<Pick<IGitPort, 'getOrganizationRepositories'>>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
