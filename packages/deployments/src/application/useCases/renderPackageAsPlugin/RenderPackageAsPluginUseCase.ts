@@ -36,7 +36,6 @@ import {
   createTargetId,
 } from '@packmind/types';
 
-const EMPTY_UPDATES: FileUpdates = { createOrUpdate: [], delete: [] };
 import { v4 as uuidv4 } from 'uuid';
 import { parsePackageSlug } from '../../services/packageSlugHelpers';
 import { PackageService } from '../../services/PackageService';
@@ -139,16 +138,10 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     );
     await deployer.deployStandards(standardVersions, gitRepo, target);
 
-    const trackingUpdate =
-      command.mode === 'marketplace' && command.installTracking
-        ? deployer.deployTrackingHooks(command.installTracking, target)
-        : EMPTY_UPDATES;
-
     const files = this.toRenderedFiles([
       manifestUpdate,
       commandsUpdate,
       skillsUpdate,
-      trackingUpdate,
     ]);
 
     this.logger.info('Rendered package as Claude plugin', {

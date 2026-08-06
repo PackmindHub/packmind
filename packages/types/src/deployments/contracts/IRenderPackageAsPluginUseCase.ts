@@ -20,27 +20,6 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   gitRemoteUrl?: string;
   /** Git branch of the render target. */
   gitBranch?: string;
-  /**
-   * When present (marketplace mode only), instructs the deployer to bundle
-   * install-tracking hook files into the plugin. Absent → no tracking files
-   * emitted (standalone renders are unchanged).
-   */
-  installTracking?: {
-    /** Base URL of the Packmind API, e.g. `https://app.packmind.io/api`. */
-    apiBaseUrl: string;
-    /** Marketplace name, used as the hook's `marketplaceName` payload field. */
-    marketplaceName: string;
-    /** Plugin slug matching `MarketplaceDistribution.pluginSlug`. */
-    pluginSlug: string;
-    /** Write-only tracking token baked into the published plugin. */
-    trackingToken: string;
-    /**
-     * Content revision derived from the distribution's version fingerprint
-     * (`buildVersionRevision`). Baked into the tracking sidecar and reported
-     * back by the heartbeat so installs can be classified up-to-date/outdated.
-     */
-    revision: string;
-  };
 };
 
 export type RenderedPluginFile = {
