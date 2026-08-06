@@ -6,7 +6,7 @@ import {
   StandardVersion,
 } from '@packmind/types';
 
-export type ArtifactMetadata = {
+type ArtifactMetadata = {
   spaceId: string;
   version: number;
   slug: string;

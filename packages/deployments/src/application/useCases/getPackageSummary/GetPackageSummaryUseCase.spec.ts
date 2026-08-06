@@ -12,9 +12,9 @@ import {
 import { skillFactory } from '@packmind/skills/test';
 import { v4 as uuidv4 } from 'uuid';
 import { packageFactory } from '../../../../test';
-import { PackageService } from '../services/PackageService';
-import { DeploymentsServices } from '../services/DeploymentsServices';
 import { GetPackageSummaryUseCase } from './GetPackageSummaryUseCase';
+import { PackageService } from '../../services/PackageService';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
 
 afterEach(() => jest.clearAllMocks());
 
