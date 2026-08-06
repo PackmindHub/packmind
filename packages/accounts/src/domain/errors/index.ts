@@ -1,9 +1,6 @@
 export { ExpectedAuthError } from './ExpectedAuthError';
 export { EmailAlreadyExistsError } from './EmailAlreadyExistsError';
-export {
-  OrganizationSlugConflictError,
-  OrganizationNameConflictError,
-} from './OrganizationNameConflictError';
+export { OrganizationSlugConflictError } from './OrganizationNameConflictError';
 export { OrganizationNotFoundError } from './OrganizationNotFoundError';
 export { InvitationBatchEmptyError } from './InvitationBatchEmptyError';
 export { InvitationConfigurationError } from './InvitationConfigurationError';

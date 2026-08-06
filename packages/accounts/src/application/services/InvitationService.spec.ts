@@ -7,9 +7,8 @@ import {
   userFactory,
 } from '../../../test';
 import { Invitation } from '../../domain/entities/Invitation';
-import { User } from '../../domain/entities/User';
-import { Organization } from '../../domain/entities/Organization';
 import { InvitationCreationRecord } from './InvitationService';
+import { Organization, User } from '@packmind/types';
 
 jest.mock('@packmind/node-utils', () => ({
   ...(jest.requireActual('@packmind/node-utils') as object),

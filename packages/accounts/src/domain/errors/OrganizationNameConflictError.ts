@@ -7,6 +7,3 @@ export class OrganizationSlugConflictError extends Error {
     Object.setPrototypeOf(this, OrganizationSlugConflictError.prototype);
   }
 }
-
-// Backward compatibility alias - can be removed after all references are updated
-export const OrganizationNameConflictError = OrganizationSlugConflictError;
