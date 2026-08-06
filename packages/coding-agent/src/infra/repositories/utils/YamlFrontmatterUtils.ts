@@ -53,7 +53,7 @@ export function formatAdditionalPropertyYaml(
   return `${pad}${key}: ${formatYamlScalar(value)}`;
 }
 
-export function formatYamlScalar(value: unknown): string {
+function formatYamlScalar(value: unknown): string {
   if (value === null || value === undefined) {
     return 'null';
   }
@@ -70,7 +70,7 @@ export function formatYamlScalar(value: unknown): string {
  * Formats a key-value entry, recursing into complex values (objects/arrays)
  * instead of falling through to formatYamlScalar which would produce [object Object].
  */
-export function formatEntryValue(
+function formatEntryValue(
   key: string,
   value: unknown,
   indent: number,
