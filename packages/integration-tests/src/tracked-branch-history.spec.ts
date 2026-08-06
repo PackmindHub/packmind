@@ -456,4 +456,89 @@ describe('Tracked branch distribution history integration', () => {
       await expect(displayedHistory()).resolves.toHaveLength(2);
     });
   });
+
+  // The removal predicate scopes both the shadowed row and its governing
+  // sibling to one organization. Two organizations legitimately track the same
+  // owner/repo, so a removal in one must not hide the other's history.
+  describe('when two organizations track the same owner/repo', () => {
+    let otherAdmin: DataFactory;
+    let otherPackage: Package;
+
+    const otherHistoryBranches = (): Promise<(string | undefined)[]> =>
+      testApp.deploymentsHexa
+        .getAdapter()
+        .listDeploymentsByPackage({
+          ...otherAdmin.packmindCommand(),
+          packageId: otherPackage.id,
+        })
+        .then((history) =>
+          history.map((distribution) => distribution.target.gitRepo?.branch),
+        );
+
+    beforeEach(async () => {
+      otherAdmin = new DataFactory(testApp);
+      await otherAdmin.withUserAndOrganization({ email: 'other@example.com' });
+
+      const otherCommand = await otherAdmin.withCommand({
+        name: 'Other Recipe',
+      });
+      const { package: created } = await testApp.deploymentsHexa
+        .getAdapter()
+        .createPackage({
+          ...otherAdmin.packmindCommand(),
+          spaceId: otherAdmin.space.id,
+          name: 'Other Package',
+          description: 'Owned by the second organization',
+          recipeIds: [otherCommand.id],
+          standardIds: [],
+        });
+      otherPackage = created;
+
+      const mainRepo = await setTracked('main');
+      await distributeTo(mainRepo);
+
+      const otherRepo = await testApp.gitHexa
+        .getAdapter()
+        .setTrackedRepository({
+          ...otherAdmin.packmindCommand(),
+          owner: OWNER,
+          repo: REPO,
+          branch: 'main',
+          origin: 'track',
+          providerVendor: 'github',
+          gitRemoteUrl: GIT_REMOTE_URL,
+        });
+      const otherTargets = await testApp.deploymentsHexa
+        .getAdapter()
+        .getTargetsByGitRepo({
+          ...otherAdmin.packmindCommand(),
+          gitRepoId: otherRepo.id,
+        });
+      await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...otherAdmin.packmindCommand(),
+        packageIds: [otherPackage.id],
+        targetIds: [otherTargets[0].id],
+      });
+
+      await removeTracked();
+    });
+
+    it('hides the repository for the organization that removed tracking', async () => {
+      await expect(displayedBranches()).resolves.toEqual([]);
+    });
+
+    it('leaves the other organization history visible', async () => {
+      await expect(otherHistoryBranches()).resolves.toEqual(['main']);
+    });
+
+    it('keeps the other organization tracking intact', async () => {
+      const tracked = await testApp.gitHexa.getAdapter().getTrackedRepository({
+        ...otherAdmin.packmindCommand(),
+        owner: OWNER,
+        repo: REPO,
+      });
+
+      expect(tracked.gitRepo?.branch).toBe('main');
+    });
+  });
 });

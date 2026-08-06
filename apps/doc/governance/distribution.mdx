@@ -152,8 +152,7 @@ So a team that tracks `main`, moves to `dev` for a while, then returns to `main`
 
 An organization admin can take a repository out of the governance views entirely by running
 `packmind-cli track --remove` from a clone of it (see the [Track Command](/tools/cli#track-command)).
-The repository disappears from Distribution History, the Deployments overview and the deployment
-targets.
+The repository disappears from Distribution History and the Deployments overview.
 
 Nothing is deleted. Every distribution recorded before the removal is kept, and tracking the same
 branch again brings the whole history back, with new distributions appended to it. Tracking a

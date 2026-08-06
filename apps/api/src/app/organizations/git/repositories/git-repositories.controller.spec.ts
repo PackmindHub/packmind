@@ -39,6 +39,7 @@ import {
   GitRepo,
   NoTrackedRepositoryError,
   RepositoryAlreadyTrackedError,
+  RepositoryNotTrackableError,
 } from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -50,7 +51,10 @@ describe('GitRepositoriesController tracked repository routes', () => {
   let mockService: jest.Mocked<
     Pick<
       GitRepositoriesService,
-      'getTrackedRepository' | 'setTrackedRepository' | 'updateTrackedBranch'
+      | 'getTrackedRepository'
+      | 'setTrackedRepository'
+      | 'updateTrackedBranch'
+      | 'removeTrackedRepository'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -76,6 +80,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
       getTrackedRepository: jest.fn(),
       setTrackedRepository: jest.fn(),
       updateTrackedBranch: jest.fn(),
+      removeTrackedRepository: jest.fn(),
     };
     logger = stubLogger();
 
@@ -270,6 +275,114 @@ describe('GitRepositoriesController tracked repository routes', () => {
 
         await expect(
           controller.updateTrackedBranch(orgId, mockRequest, body),
+        ).rejects.toBeInstanceOf(ForbiddenException);
+      });
+    });
+  });
+
+  describe('removeTrackedRepository', () => {
+    const removed = { status: 'removed' as const, gitRepo: trackedRepo };
+
+    describe('on happy path', () => {
+      it('returns the removal outcome', async () => {
+        mockService.removeTrackedRepository.mockResolvedValue(removed);
+
+        const result = await controller.removeTrackedRepository(
+          orgId,
+          mockRequest,
+          'my-orga',
+          'my-repo',
+        );
+
+        expect(result).toBe(removed);
+      });
+
+      it('calls the service with the command fields', async () => {
+        mockService.removeTrackedRepository.mockResolvedValue(removed);
+
+        await controller.removeTrackedRepository(
+          orgId,
+          mockRequest,
+          'my-orga',
+          'my-repo',
+        );
+
+        expect(mockService.removeTrackedRepository).toHaveBeenCalledWith(
+          userId,
+          orgId,
+          'my-orga',
+          'my-repo',
+        );
+      });
+    });
+
+    describe('when nothing was tracked', () => {
+      it('passes the no-op outcome through untouched', async () => {
+        const notTracked = {
+          status: 'not-tracked' as const,
+          organizationName: 'PickMand',
+        };
+        mockService.removeTrackedRepository.mockResolvedValue(notTracked);
+
+        await expect(
+          controller.removeTrackedRepository(
+            orgId,
+            mockRequest,
+            'my-orga',
+            'my-repo',
+          ),
+        ).resolves.toBe(notTracked);
+      });
+    });
+
+    describe('when Packmind has never seen the repository', () => {
+      it('maps RepositoryNotTrackableError to a ConflictException', async () => {
+        mockService.removeTrackedRepository.mockRejectedValue(
+          new RepositoryNotTrackableError('my-orga', 'my-repo'),
+        );
+
+        await expect(
+          controller.removeTrackedRepository(
+            orgId,
+            mockRequest,
+            'my-orga',
+            'my-repo',
+          ),
+        ).rejects.toBeInstanceOf(ConflictException);
+      });
+
+      // Load-bearing: the CLI reads any 404 on the tracking routes as "the
+      // feature is unavailable for your account" and would print that instead
+      // of naming the repository. 409 keeps the real message.
+      it('reports a 409 rather than a 404', async () => {
+        mockService.removeTrackedRepository.mockRejectedValue(
+          new RepositoryNotTrackableError('my-orga', 'my-repo'),
+        );
+
+        await expect(
+          controller.removeTrackedRepository(
+            orgId,
+            mockRequest,
+            'my-orga',
+            'my-repo',
+          ),
+        ).rejects.toMatchObject({ status: 409 });
+      });
+    });
+
+    describe('when the caller is not an organization admin', () => {
+      it('maps OrganizationAdminRequiredError to a ForbiddenException', async () => {
+        mockService.removeTrackedRepository.mockRejectedValue(
+          new OrganizationAdminRequiredError('Not an admin'),
+        );
+
+        await expect(
+          controller.removeTrackedRepository(
+            orgId,
+            mockRequest,
+            'my-orga',
+            'my-repo',
+          ),
         ).rejects.toBeInstanceOf(ForbiddenException);
       });
     });

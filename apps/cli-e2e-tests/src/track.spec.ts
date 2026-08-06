@@ -188,6 +188,39 @@ describeForVersion('> 0.31.0', 'track command', () => {
     { email: randomEmail },
   );
 
+  // The unknown-repository error is mapped to 409 on purpose: the CLI reads any
+  // 404 on the tracking routes as "tracking is not available for your account",
+  // which would be a misleading thing to print here.
+  describeWithUserSignedUp(
+    'when removing tracking for a repository Packmind has never seen',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        result = await context.runCli('track --remove');
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('names the repository that is not connected', () => {
+        expect(result.stderr + result.stdout).toContain(
+          'is not connected to Packmind',
+        );
+      });
+
+      it('does not blame the account for a missing feature', () => {
+        expect(result.stderr + result.stdout).not.toContain(
+          'not available for your account',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+
   describeWithUserSignedUp(
     'when combining --update and --remove',
     (getContext) => {

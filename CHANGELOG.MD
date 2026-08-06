@@ -5,7 +5,7 @@
 - Import skills from the web app: drag a folder onto the Skills import dialog, or choose one, and every skill it contains is listed and imported with a per-skill result. A skill that fails does not stop the others, and the summary says how many were imported
 - Edit a skill's SKILL.md body and supporting Markdown files directly from the web app, with each save creating a new attributed version
 - Set the repository and branch Packmind tracks from the CLI: new `packmind track` command (with `--update` to move the tracked branch) and a tracking prompt during `packmind init` (organization admins only)
-- Remove a repository's tracking from the CLI with `packmind track --remove` (organization admins only). The repository leaves the Deployments overview, the Distribution History and the deployment targets, and every distribution already recorded is kept — track the same branch again and the history reappears with new distributions appended
+- Remove a repository's tracking from the CLI with `packmind track --remove` (organization admins only). The repository leaves the Deployments overview and the Distribution History, and every distribution already recorded is kept — track the same branch again and the history reappears with new distributions appended
 
 ## Changed
 
