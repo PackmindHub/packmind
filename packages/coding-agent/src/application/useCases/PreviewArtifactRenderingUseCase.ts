@@ -53,7 +53,7 @@ export class PreviewArtifactRenderingUseCase {
     const zipBuffer = await this.createZipFromFiles(filesWithContent);
     const base64Content = zipBuffer.toString('base64');
 
-    const fileName = `packmind-${codingAgent}-preview.zip`;
+    const fileName = this.computeFileName(codingAgent, command);
 
     this.logger.info('Preview rendering zip created', {
       codingAgent,
@@ -62,6 +62,38 @@ export class PreviewArtifactRenderingUseCase {
     });
 
     return { fileName, fileContent: base64Content };
+  }
+
+  private computeFileName(
+    codingAgent: PreviewArtifactRenderingCommand['codingAgent'],
+    command: PreviewArtifactRenderingCommand,
+  ): string {
+    const artifacts = [
+      ...command.recipeVersions,
+      ...command.standardVersions,
+      ...command.skillVersions,
+    ];
+
+    if (artifacts.length !== 1) {
+      return `packmind-${codingAgent}-preview.zip`;
+    }
+
+    const [artifact] = artifacts;
+    const slug =
+      artifact.slug && artifact.slug.length > 0
+        ? artifact.slug
+        : this.slugify(artifact.name);
+
+    return `packmind-${codingAgent}-${slug}.zip`;
+  }
+
+  private slugify(value: string): string {
+    const slug = value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return slug.length > 0 ? slug : 'preview';
   }
 
   private async createZipFromFiles(files: FileWithContent[]): Promise<Buffer> {
