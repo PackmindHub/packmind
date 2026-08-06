@@ -13,26 +13,30 @@ import {
 import { GitProviderAdvancedPanel } from '../GitProviderAdvancedPanel';
 import { GitProviderUI } from '../../../types/GitProviderTypes';
 import { useRevokeGithubAppMutation } from '../../../api/queries/GitProviderQueries';
+import {
+  createIdleMutationResult,
+  MutationResultCallbacks,
+} from '../../../../../test/mutationResultMocks';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../../api/queries/GitProviderQueries', () => ({
-  useRevokeGithubAppMutation: jest.fn(),
+vi.mock('../../../api/queries/GitProviderQueries', () => ({
+  useRevokeGithubAppMutation: vi.fn(),
 }));
 
 const mockUseRevokeGithubAppMutation =
-  useRevokeGithubAppMutation as jest.MockedFunction<
+  useRevokeGithubAppMutation as MockedFunction<
     typeof useRevokeGithubAppMutation
   >;
 
-const createMockRevokeMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue(undefined),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: jest.fn(),
-  ...overrides,
-});
+const createMockRevokeMutation = (
+  callbacks: Partial<MutationResultCallbacks<void, Error, void>> = {},
+) =>
+  createIdleMutationResult<void, Error, void>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue(undefined),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -70,12 +74,8 @@ const gitlabProvider: GitProviderUI = {
 
 describe('GitProviderAdvancedPanel', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockUseRevokeGithubAppMutation.mockReturnValue(
-      createMockRevokeMutation() as ReturnType<
-        typeof useRevokeGithubAppMutation
-      >,
-    );
+    vi.clearAllMocks();
+    mockUseRevokeGithubAppMutation.mockReturnValue(createMockRevokeMutation());
   });
 
   describe('for a github provider', () => {
@@ -83,7 +83,7 @@ describe('GitProviderAdvancedPanel', () => {
       renderWithProviders(
         <GitProviderAdvancedPanel
           editingProvider={githubProvider}
-          onRevoked={jest.fn()}
+          onRevoked={vi.fn()}
         />,
       );
 
@@ -99,7 +99,7 @@ describe('GitProviderAdvancedPanel', () => {
       renderWithProviders(
         <GitProviderAdvancedPanel
           editingProvider={githubProvider}
-          onRevoked={jest.fn()}
+          onRevoked={vi.fn()}
         />,
       );
 
@@ -114,7 +114,7 @@ describe('GitProviderAdvancedPanel', () => {
       renderWithProviders(
         <GitProviderAdvancedPanel
           editingProvider={githubProvider}
-          onRevoked={jest.fn()}
+          onRevoked={vi.fn()}
         />,
       );
 
@@ -136,12 +136,10 @@ describe('GitProviderAdvancedPanel', () => {
 
     it('calls the revoke mutation and onRevoked when confirmed', async () => {
       const user = userEvent.setup();
-      const onRevoked = jest.fn();
-      const mutateAsync = jest.fn().mockResolvedValue(undefined);
+      const onRevoked = vi.fn();
+      const mutateAsync = vi.fn().mockResolvedValue(undefined);
       mockUseRevokeGithubAppMutation.mockReturnValue(
-        createMockRevokeMutation({ mutateAsync }) as ReturnType<
-          typeof useRevokeGithubAppMutation
-        >,
+        createMockRevokeMutation({ mutateAsync }),
       );
 
       renderWithProviders(
@@ -174,7 +172,7 @@ describe('GitProviderAdvancedPanel', () => {
       renderWithProviders(
         <GitProviderAdvancedPanel
           editingProvider={gitlabProvider}
-          onRevoked={jest.fn()}
+          onRevoked={vi.fn()}
         />,
       );
 

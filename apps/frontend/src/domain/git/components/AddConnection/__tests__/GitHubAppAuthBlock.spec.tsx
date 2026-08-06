@@ -13,34 +13,38 @@ import {
   useGithubAppInstallUrlMutation,
   useRevokeGithubAppMutation,
 } from '../../../api/queries/GitProviderQueries';
+import {
+  createIdleMutationResult,
+  MutationResultCallbacks,
+} from '../../../../../test/mutationResultMocks';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../../api/queries/GitProviderQueries', () => ({
-  useGetGithubAppManifestMutation: jest.fn(),
-  useGetGithubAppStatusQuery: jest.fn(),
-  useGithubAppInstallUrlMutation: jest.fn(),
-  useRevokeGithubAppMutation: jest.fn(),
+vi.mock('../../../api/queries/GitProviderQueries', () => ({
+  useGetGithubAppManifestMutation: vi.fn(),
+  useGetGithubAppStatusQuery: vi.fn(),
+  useGithubAppInstallUrlMutation: vi.fn(),
+  useRevokeGithubAppMutation: vi.fn(),
 }));
 
-jest.mock('../../../../../shared/utils/navigation', () => ({
-  redirectTo: jest.fn(),
+vi.mock('../../../../../shared/utils/navigation', () => ({
+  redirectTo: vi.fn(),
 }));
 
 const mockOrganizationId = 'org-1' as OrganizationId;
 
-const createMockMutation = (overrides: Record<string, unknown> = {}) => ({
-  mutate: jest.fn(),
-  mutateAsync: jest.fn().mockResolvedValue({
-    manifest: { name: 'Packmind', url: 'https://packmind.com' },
-    state: 'manifest-state-abc',
-    manifestPostUrl: 'https://github.com/settings/apps/new',
-  }),
-  isPending: false,
-  isSuccess: false,
-  isError: false,
-  error: null,
-  reset: jest.fn(),
-  ...overrides,
-});
+const createMockMutation = <TData, TVariables>(
+  callbacks: Partial<MutationResultCallbacks<TData, Error, TVariables>> = {},
+) =>
+  createIdleMutationResult<TData, Error, TVariables>({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({
+      manifest: { name: 'Packmind', url: 'https://packmind.com' },
+      state: 'manifest-state-abc',
+      manifestPostUrl: 'https://github.com/settings/apps/new',
+    }),
+    reset: vi.fn(),
+    ...callbacks,
+  });
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -63,19 +67,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('GitHubAppAuthBlock', () => {
   const mockUseGetGithubAppManifestMutation =
-    useGetGithubAppManifestMutation as jest.MockedFunction<
+    useGetGithubAppManifestMutation as MockedFunction<
       typeof useGetGithubAppManifestMutation
     >;
   const mockUseGetGithubAppStatusQuery =
-    useGetGithubAppStatusQuery as jest.MockedFunction<
+    useGetGithubAppStatusQuery as MockedFunction<
       typeof useGetGithubAppStatusQuery
     >;
   const mockUseGithubAppInstallUrlMutation =
-    useGithubAppInstallUrlMutation as jest.MockedFunction<
+    useGithubAppInstallUrlMutation as MockedFunction<
       typeof useGithubAppInstallUrlMutation
     >;
   const mockUseRevokeGithubAppMutation =
-    useRevokeGithubAppMutation as jest.MockedFunction<
+    useRevokeGithubAppMutation as MockedFunction<
       typeof useRevokeGithubAppMutation
     >;
 
@@ -94,37 +98,29 @@ describe('GitHubAppAuthBlock', () => {
     screen.getByRole('textbox', { name: /github organization/i });
 
   beforeEach(() => {
-    mockUseGetGithubAppManifestMutation.mockReturnValue(
-      createMockMutation() as ReturnType<
-        typeof useGetGithubAppManifestMutation
-      >,
-    );
-    mockUseGithubAppInstallUrlMutation.mockReturnValue(
-      createMockMutation() as ReturnType<typeof useGithubAppInstallUrlMutation>,
-    );
-    mockUseRevokeGithubAppMutation.mockReturnValue(
-      createMockMutation() as ReturnType<typeof useRevokeGithubAppMutation>,
-    );
+    mockUseGetGithubAppManifestMutation.mockReturnValue(createMockMutation());
+    mockUseGithubAppInstallUrlMutation.mockReturnValue(createMockMutation());
+    mockUseRevokeGithubAppMutation.mockReturnValue(createMockMutation());
     mockUseGetGithubAppStatusQuery.mockReturnValue({
       data: { hasApp: false },
       isLoading: false,
       isError: false,
     } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
 
-    jest
-      .spyOn(HTMLFormElement.prototype, 'submit')
-      .mockImplementation(() => undefined);
+    vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(
+      () => undefined,
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when the organization input is left empty', () => {
     it('requests the manifest without a githubOrg', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl: 'https://github.com/settings/apps/new',
@@ -132,7 +128,7 @@ describe('GitHubAppAuthBlock', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       renderRegistrationBlock();
@@ -153,7 +149,7 @@ describe('GitHubAppAuthBlock', () => {
   describe('when a valid organization slug is typed', () => {
     it('requests the manifest with the githubOrg', async () => {
       const user = userEvent.setup();
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         manifest: { name: 'Packmind' },
         state: 'state-xyz',
         manifestPostUrl:
@@ -162,7 +158,7 @@ describe('GitHubAppAuthBlock', () => {
       mockUseGetGithubAppManifestMutation.mockReturnValue(
         createMockMutation({
           mutateAsync: mockMutateAsync,
-        }) as ReturnType<typeof useGetGithubAppManifestMutation>,
+        }),
       );
 
       renderRegistrationBlock();

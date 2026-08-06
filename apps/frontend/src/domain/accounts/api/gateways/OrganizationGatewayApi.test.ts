@@ -1,16 +1,17 @@
 import { OrganizationGatewayApi } from './OrganizationGatewayApi';
+import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
-const mockApiPost = jest.fn();
-const mockApiGet = jest.fn();
-const mockApiDelete = jest.fn();
+const mockApiPost = vi.fn();
+const mockApiGet = vi.fn();
+const mockApiDelete = vi.fn();
 
-jest.mock('../../../../shared/PackmindGateway', () => {
+vi.mock('../../../../shared/PackmindGateway', () => {
   return {
-    PackmindGateway: jest.fn().mockImplementation(function (
+    PackmindGateway: vi.fn().mockImplementation(function (
       this: {
         _endpoint: string;
-        _api: { post: jest.Mock; get: jest.Mock; delete: jest.Mock };
+        _api: { post: Mock; get: Mock; delete: Mock };
       },
       endpoint: string,
     ) {
@@ -32,7 +33,7 @@ describe('OrganizationGatewayApi', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createOrganization', () => {

@@ -15,19 +15,20 @@ import { skillsGateway } from '../gateways';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useUploadSkillMutation } from './SkillsQueries';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../../accounts/hooks/useAuthContext', () => ({
-  useAuthContext: jest.fn(),
+vi.mock('../../../accounts/hooks/useAuthContext', () => ({
+  useAuthContext: vi.fn(),
 }));
 
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
-  useCurrentSpace: jest.fn(),
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: vi.fn(),
 }));
 
-const mockUseAuthContext = useAuthContext as jest.MockedFunction<
+const mockUseAuthContext = useAuthContext as MockedFunction<
   typeof useAuthContext
 >;
-const mockUseCurrentSpace = useCurrentSpace as jest.MockedFunction<
+const mockUseCurrentSpace = useCurrentSpace as MockedFunction<
   typeof useCurrentSpace
 >;
 
@@ -90,10 +91,10 @@ describe('useUploadSkillMutation', () => {
     stubCurrentSpace(spaceId);
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it('uploads the files to the current organization and space', async () => {
-    jest.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
+    vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
 
     const { result } = renderHook(() => useUploadSkillMutation(), {
       wrapper: buildWrapper(),
@@ -111,9 +112,7 @@ describe('useUploadSkillMutation', () => {
 
   describe('when an abort signal is provided', () => {
     it('forwards it to the gateway so the request can be cancelled', async () => {
-      jest
-        .spyOn(skillsGateway, 'uploadSkill')
-        .mockResolvedValue(uploadResponse);
+      vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
       const { signal } = new AbortController();
 
       const { result } = renderHook(() => useUploadSkillMutation(), {
@@ -132,7 +131,7 @@ describe('useUploadSkillMutation', () => {
   });
 
   it('returns the uploaded skill', async () => {
-    jest.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
+    vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
 
     const { result } = renderHook(() => useUploadSkillMutation(), {
       wrapper: buildWrapper(),
@@ -145,9 +144,7 @@ describe('useUploadSkillMutation', () => {
 
   describe('when an originSkill is provided', () => {
     it('forwards it to the gateway', async () => {
-      jest
-        .spyOn(skillsGateway, 'uploadSkill')
-        .mockResolvedValue(uploadResponse);
+      vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
 
       const { result } = renderHook(() => useUploadSkillMutation(), {
         wrapper: buildWrapper(),
@@ -166,9 +163,9 @@ describe('useUploadSkillMutation', () => {
 
   describe('when the upload is rejected', () => {
     it('surfaces the error', async () => {
-      jest
-        .spyOn(skillsGateway, 'uploadSkill')
-        .mockRejectedValue(new Error('Invalid frontmatter'));
+      vi.spyOn(skillsGateway, 'uploadSkill').mockRejectedValue(
+        new Error('Invalid frontmatter'),
+      );
 
       const { result } = renderHook(() => useUploadSkillMutation(), {
         wrapper: buildWrapper(),
@@ -183,9 +180,7 @@ describe('useUploadSkillMutation', () => {
   describe('when there is no organization in context', () => {
     beforeEach(() => {
       stubAuthContext(undefined);
-      jest
-        .spyOn(skillsGateway, 'uploadSkill')
-        .mockResolvedValue(uploadResponse);
+      vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
     });
 
     it('rejects the upload', async () => {
@@ -213,9 +208,7 @@ describe('useUploadSkillMutation', () => {
   describe('when there is no space in context', () => {
     beforeEach(() => {
       stubCurrentSpace(undefined);
-      jest
-        .spyOn(skillsGateway, 'uploadSkill')
-        .mockResolvedValue(uploadResponse);
+      vi.spyOn(skillsGateway, 'uploadSkill').mockResolvedValue(uploadResponse);
     });
 
     it('rejects the upload', async () => {

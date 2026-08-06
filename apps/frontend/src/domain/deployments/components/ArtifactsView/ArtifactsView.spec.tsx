@@ -99,9 +99,9 @@ const makeSkill = (
   }) as unknown as SkillDeploymentStatus;
 
 // Mock PMTable to render a simple table for assertions on rows/columns while keeping our mapping logic
-jest.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
-  const ReactActual = jest.requireActual('react');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
+  const ReactActual = await vi.importActual<typeof import('react')>('react');
   type Column = { key: string; header: string };
   type Row = Record<string, React.ReactNode>;
   const getKey = (columns: Column[], row: Row) =>
@@ -145,7 +145,7 @@ jest.mock('@packmind/ui', () => {
 });
 
 // Mock useCurrentSpace hook
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
@@ -161,7 +161,7 @@ const renderView = (ui: React.ReactElement) =>
   );
 
 describe('ArtifactsView', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
   it('renders data for recipes and standards with correct sorting by target name', () => {
     const recipes = [
       makeCommand('r1', 'Recipe Z', 10, [

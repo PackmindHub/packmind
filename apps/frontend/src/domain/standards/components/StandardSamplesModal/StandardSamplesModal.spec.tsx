@@ -11,20 +11,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { useCreateStandardsFromSamplesMutation } from '../../api/queries/StandardsQueries';
+import type { Mock, MockedFunction } from 'vitest';
 
-jest.mock('../../api/queries/StandardsQueries', () => ({
-  useCreateStandardsFromSamplesMutation: jest.fn(),
+vi.mock('../../api/queries/StandardsQueries', () => ({
+  useCreateStandardsFromSamplesMutation: vi.fn(),
 }));
 
 const mockUseCreateStandardsFromSamplesMutation =
-  useCreateStandardsFromSamplesMutation as jest.MockedFunction<
+  useCreateStandardsFromSamplesMutation as MockedFunction<
     typeof useCreateStandardsFromSamplesMutation
   >;
 
 const createMockMutation = (overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -51,7 +52,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('StandardSamplesModal', () => {
   const defaultProps = {
     open: true,
-    onOpenChange: jest.fn(),
+    onOpenChange: vi.fn(),
   };
 
   beforeEach(() => {
@@ -61,7 +62,7 @@ describe('StandardSamplesModal', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when open', () => {
@@ -184,7 +185,7 @@ describe('StandardSamplesModal', () => {
 
   describe('when clicking Create button', () => {
     describe('with samples selected', () => {
-      const selectSamplesAndClickCreate = async (mockMutate: jest.Mock) => {
+      const selectSamplesAndClickCreate = async (mockMutate: Mock) => {
         mockUseCreateStandardsFromSamplesMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -223,7 +224,7 @@ describe('StandardSamplesModal', () => {
       };
 
       it('calls mutation with selected samples', async () => {
-        const mockMutate = jest.fn();
+        const mockMutate = vi.fn();
         await selectSamplesAndClickCreate(mockMutate);
 
         expect(mockMutate).toHaveBeenCalledWith(
@@ -247,7 +248,7 @@ describe('StandardSamplesModal', () => {
 
       describe('when button is clicked', () => {
         it('does not call mutation', async () => {
-          const mockMutate = jest.fn();
+          const mockMutate = vi.fn();
           mockUseCreateStandardsFromSamplesMutation.mockReturnValue(
             createMockMutation({ mutate: mockMutate }),
           );
@@ -296,7 +297,7 @@ describe('StandardSamplesModal', () => {
 
   describe('when clicking Cancel button', () => {
     it('calls onOpenChange with false', async () => {
-      const onOpenChange = jest.fn();
+      const onOpenChange = vi.fn();
       renderWithProviders(
         <StandardSamplesModal open={true} onOpenChange={onOpenChange} />,
       );
@@ -313,7 +314,7 @@ describe('StandardSamplesModal', () => {
   describe('when closed', () => {
     it('does not render the modal content', () => {
       renderWithProviders(
-        <StandardSamplesModal open={false} onOpenChange={jest.fn()} />,
+        <StandardSamplesModal open={false} onOpenChange={vi.fn()} />,
       );
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

@@ -12,24 +12,25 @@ import {
   useCheckEmailAvailabilityMutation,
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
 // Mock the queries
-jest.mock('../api/queries/AuthQueries', () => ({
-  useSignUpWithOrganizationMutation: jest.fn(),
-  useSignInMutation: jest.fn(),
-  useCheckEmailAvailabilityMutation: jest.fn(),
-  useSocialProvidersQuery: jest.fn(),
+vi.mock('../api/queries/AuthQueries', () => ({
+  useSignUpWithOrganizationMutation: vi.fn(),
+  useSignInMutation: vi.fn(),
+  useCheckEmailAvailabilityMutation: vi.fn(),
+  useSocialProvidersQuery: vi.fn(),
 }));
 
 // Mock the error utility
-jest.mock('../../../services/api/errors/PackmindConflictError', () => ({
-  isPackmindConflictError: jest.fn(),
+vi.mock('../../../services/api/errors/PackmindConflictError', () => ({
+  isPackmindConflictError: vi.fn(),
 }));
 
 // Mock useNavigate
-const mockNavigate = jest.fn();
-jest.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
+const mockNavigate = vi.fn();
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual('react-router')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -54,29 +55,28 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('SignUpWithOrganizationForm', () => {
   const mockUseSignUpWithOrganizationMutation =
-    useSignUpWithOrganizationMutation as jest.MockedFunction<
+    useSignUpWithOrganizationMutation as MockedFunction<
       typeof useSignUpWithOrganizationMutation
     >;
-  const mockUseSignInMutation = useSignInMutation as jest.MockedFunction<
+  const mockUseSignInMutation = useSignInMutation as MockedFunction<
     typeof useSignInMutation
   >;
   const mockUseCheckEmailAvailabilityMutation =
-    useCheckEmailAvailabilityMutation as jest.MockedFunction<
+    useCheckEmailAvailabilityMutation as MockedFunction<
       typeof useCheckEmailAvailabilityMutation
     >;
-  const mockUseSocialProvidersQuery =
-    useSocialProvidersQuery as jest.MockedFunction<
-      typeof useSocialProvidersQuery
-    >;
+  const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
+    typeof useSocialProvidersQuery
+  >;
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const createMockMutation = <T = unknown,>(overrides = {}) =>
     ({
-      mutate: jest.fn(),
-      mutateAsync: jest.fn(),
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
       isError: false,
@@ -94,7 +94,7 @@ describe('SignUpWithOrganizationForm', () => {
 
   const createEmailCheckMutation = (overrides = {}) =>
     createMockMutation<ReturnType<typeof useCheckEmailAvailabilityMutation>>({
-      mutateAsync: jest.fn().mockResolvedValue({ available: true }),
+      mutateAsync: vi.fn().mockResolvedValue({ available: true }),
       ...overrides,
     });
 
@@ -369,7 +369,7 @@ describe('SignUpWithOrganizationForm', () => {
         expect(mockSignUpMutation.mutate).toHaveBeenCalled();
       });
 
-      const signUpCall = jest.mocked(mockSignUpMutation.mutate).mock
+      const signUpCall = vi.mocked(mockSignUpMutation.mutate).mock
         .calls[0] as unknown[];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const onSuccess = (signUpCall[1] as { onSuccess: (data: any) => void })
@@ -392,7 +392,7 @@ describe('SignUpWithOrganizationForm', () => {
 
     describe('when auto-login succeeds', () => {
       beforeEach(() => {
-        const signInCall = jest.mocked(mockSignInMutation.mutate).mock
+        const signInCall = vi.mocked(mockSignInMutation.mutate).mock
           .calls[0] as unknown[];
         const onSignInSuccess = (
           signInCall[1] as { onSuccess: (data: unknown) => void }
@@ -407,7 +407,7 @@ describe('SignUpWithOrganizationForm', () => {
 
     describe('when auto-login fails', () => {
       beforeEach(() => {
-        const signInCall = jest.mocked(mockSignInMutation.mutate).mock
+        const signInCall = vi.mocked(mockSignInMutation.mutate).mock
           .calls[0] as unknown[];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const onSignInError = (signInCall[1] as { onError: (err: any) => void })

@@ -15,13 +15,14 @@ import type {
   UserOrganizationRole,
 } from '@packmind/types';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../api/queries/AuthQueries', () => ({
-  useGetCurrentApiKeyQuery: jest.fn(),
-  useGenerateApiKeyMutation: jest.fn(),
+vi.mock('../api/queries/AuthQueries', () => ({
+  useGetCurrentApiKeyQuery: vi.fn(),
+  useGenerateApiKeyMutation: vi.fn(),
 }));
 
-jest.mock('../../../shared/components/inputs', () => ({
+vi.mock('../../../shared/components/inputs', () => ({
   CopiableTextarea: ({
     value,
     ...props
@@ -80,7 +81,7 @@ describe('CliAuthentication', () => {
   };
 
   beforeAll(() => {
-    jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
+    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
       user: mockUser,
       organization: mockOrganization,
       isAuthenticated: true,
@@ -89,21 +90,19 @@ describe('CliAuthentication', () => {
   });
 
   afterAll(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   const mockUseGetCurrentApiKeyQuery =
-    useGetCurrentApiKeyQuery as jest.MockedFunction<
-      typeof useGetCurrentApiKeyQuery
-    >;
+    useGetCurrentApiKeyQuery as MockedFunction<typeof useGetCurrentApiKeyQuery>;
   const mockUseGenerateApiKeyMutation =
-    useGenerateApiKeyMutation as jest.MockedFunction<
+    useGenerateApiKeyMutation as MockedFunction<
       typeof useGenerateApiKeyMutation
     >;
 
   const defaultMutationResult = {
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -112,7 +111,7 @@ describe('CliAuthentication', () => {
     data: undefined,
     error: null,
     variables: undefined,
-    reset: jest.fn(),
+    reset: vi.fn(),
     failureCount: 0,
     failureReason: null,
     submittedAt: 0,
@@ -121,7 +120,7 @@ describe('CliAuthentication', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when rendering with no API key', () => {
@@ -265,7 +264,7 @@ describe('CliAuthentication', () => {
   });
 
   describe('when user clicks Generate API Key button', () => {
-    const mutateMock = jest.fn();
+    const mutateMock = vi.fn();
 
     beforeEach(async () => {
       const mockQueryResult = {

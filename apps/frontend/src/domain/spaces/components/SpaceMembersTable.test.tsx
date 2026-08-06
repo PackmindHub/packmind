@@ -7,8 +7,8 @@ import { UIProvider } from '@packmind/ui';
 
 import { SpaceMember, SpaceMembersTable } from './SpaceMembersTable';
 
-jest.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     PMTable: ({
@@ -160,7 +160,7 @@ describe('SpaceMembersTable', () => {
   describe('when onRemoveMember is provided', () => {
     describe('when remove button is clicked', () => {
       it('calls onRemoveMember with the member id', async () => {
-        const onRemoveMember = jest.fn();
+        const onRemoveMember = vi.fn();
 
         renderWithProviders(
           <SpaceMembersTable
@@ -181,7 +181,7 @@ describe('SpaceMembersTable', () => {
   describe('when onUpdateMemberRole is provided', () => {
     describe('when role select is changed by a space admin', () => {
       it('calls onUpdateMemberRole', async () => {
-        const onUpdateMemberRole = jest.fn();
+        const onUpdateMemberRole = vi.fn();
 
         renderWithProviders(
           <SpaceMembersTable

@@ -26,7 +26,7 @@ export default function SignInRoute() {
         <PMHStack justify="center" gap={4} wrap="wrap">
           <PMHStack>
             <PMText>No account yet? </PMText>
-            <PMLink>
+            <PMLink asChild>
               <Link to="/sign-up/create-account" prefetch="intent">
                 Sign up
               </Link>

@@ -17,49 +17,51 @@ import * as UseNavigationModule from '../../../shared/hooks/useNavigation';
 import * as UseAuthContextModule from '../../accounts/hooks/useAuthContext';
 import { SpaceDangerZoneSection } from './SpaceDangerZoneSection';
 
-jest.mock('../hooks/useCurrentSpace', () => ({
-  ...jest.requireActual('../hooks/useCurrentSpace'),
-  useCurrentSpace: jest.fn(),
+vi.mock('../hooks/useCurrentSpace', async () => ({
+  ...(await vi.importActual('../hooks/useCurrentSpace')),
+  useCurrentSpace: vi.fn(),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/spaces-management/api/queries/SpacesManagementQueries',
-    ),
-    useLeaveSpaceMutation: jest.fn(),
-    useDeleteSpaceMutation: jest.fn(),
+    )),
+    useLeaveSpaceMutation: vi.fn(),
+    useDeleteSpaceMutation: vi.fn(),
   }),
 );
 
-jest.mock('../../deployments/api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../deployments/api/queries/DeploymentsQueries'),
-  useListPackagesBySpaceQuery: jest.fn(),
+vi.mock('../../deployments/api/queries/DeploymentsQueries', async () => ({
+  ...(await vi.importActual(
+    '../../deployments/api/queries/DeploymentsQueries',
+  )),
+  useListPackagesBySpaceQuery: vi.fn(),
 }));
 
-jest.mock('../../../shared/hooks/useNavigation', () => ({
-  ...jest.requireActual('../../../shared/hooks/useNavigation'),
-  useNavigation: jest.fn(),
+vi.mock('../../../shared/hooks/useNavigation', async () => ({
+  ...(await vi.importActual('../../../shared/hooks/useNavigation')),
+  useNavigation: vi.fn(),
 }));
 
-jest.mock('../../accounts/hooks/useAuthContext', () => ({
-  ...jest.requireActual('../../accounts/hooks/useAuthContext'),
-  useAuthContext: jest.fn(),
+vi.mock('../../accounts/hooks/useAuthContext', async () => ({
+  ...(await vi.importActual('../../accounts/hooks/useAuthContext')),
+  useAuthContext: vi.fn(),
 }));
 
-jest.mock('@packmind/ui', () => ({
-  ...jest.requireActual('@packmind/ui'),
+vi.mock('@packmind/ui', async () => ({
+  ...(await vi.importActual('@packmind/ui')),
   pmToaster: {
-    create: jest.fn(),
-    success: jest.fn(),
-    error: jest.fn(),
+    create: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
   },
 }));
 const mockUseCurrentSpace = (
   overrides: Partial<ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>>,
 ) => {
-  jest.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
+  vi.spyOn(UseCurrentSpaceModule, 'useCurrentSpace').mockReturnValue({
     spaceId: 'space-1',
     spaceSlug: 'test-space',
     spaceName: 'Test Space',
@@ -78,54 +80,57 @@ const mockUseCurrentSpace = (
   } as unknown as ReturnType<typeof UseCurrentSpaceModule.useCurrentSpace>);
 };
 
-const mockMutate = jest.fn();
+const mockMutate = vi.fn();
 
-const mockLeaveMutate = jest.fn();
+const mockLeaveMutate = vi.fn();
 
 const mockLeaveSpaceMutation = () => {
-  jest
-    .spyOn(SpacesManagementQueriesModule, 'useLeaveSpaceMutation')
-    .mockReturnValue({
-      mutate: mockLeaveMutate,
-      isPending: false,
-    } as unknown as ReturnType<
-      typeof SpacesManagementQueriesModule.useLeaveSpaceMutation
-    >);
+  vi.spyOn(
+    SpacesManagementQueriesModule,
+    'useLeaveSpaceMutation',
+  ).mockReturnValue({
+    mutate: mockLeaveMutate,
+    isPending: false,
+  } as unknown as ReturnType<
+    typeof SpacesManagementQueriesModule.useLeaveSpaceMutation
+  >);
 };
 
 const mockDeleteSpaceMutation = () => {
-  jest
-    .spyOn(SpacesManagementQueriesModule, 'useDeleteSpaceMutation')
-    .mockReturnValue({
-      mutate: mockMutate,
-      isPending: false,
-    } as unknown as ReturnType<
-      typeof SpacesManagementQueriesModule.useDeleteSpaceMutation
-    >);
+  vi.spyOn(
+    SpacesManagementQueriesModule,
+    'useDeleteSpaceMutation',
+  ).mockReturnValue({
+    mutate: mockMutate,
+    isPending: false,
+  } as unknown as ReturnType<
+    typeof SpacesManagementQueriesModule.useDeleteSpaceMutation
+  >);
 };
 
 const mockListPackagesBySpaceQuery = (
   packages: { id: string; name: string }[] = [],
 ) => {
-  jest
-    .spyOn(DeploymentsQueriesModule, 'useListPackagesBySpaceQuery')
-    .mockReturnValue({
-      data: { packages },
-    } as unknown as ReturnType<
-      typeof DeploymentsQueriesModule.useListPackagesBySpaceQuery
-    >);
+  vi.spyOn(
+    DeploymentsQueriesModule,
+    'useListPackagesBySpaceQuery',
+  ).mockReturnValue({
+    data: { packages },
+  } as unknown as ReturnType<
+    typeof DeploymentsQueriesModule.useListPackagesBySpaceQuery
+  >);
 };
 
-const mockToDashboard = jest.fn();
+const mockToDashboard = vi.fn();
 
 const mockNavigation = () => {
-  jest.spyOn(UseNavigationModule, 'useNavigation').mockReturnValue({
+  vi.spyOn(UseNavigationModule, 'useNavigation').mockReturnValue({
     org: { toDashboard: mockToDashboard },
   } as unknown as ReturnType<typeof UseNavigationModule.useNavigation>);
 };
 
 const mockAuth = () => {
-  jest.spyOn(UseAuthContextModule, 'useAuthContext').mockReturnValue({
+  vi.spyOn(UseAuthContextModule, 'useAuthContext').mockReturnValue({
     organization: { id: 'org-1', slug: 'org-slug' },
   } as unknown as ReturnType<typeof UseAuthContextModule.useAuthContext>);
 };
@@ -136,7 +141,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('SpaceDangerZoneSection', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockMutate.mockReset();
   });
 

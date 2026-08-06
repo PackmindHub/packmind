@@ -4,11 +4,11 @@ import * as Sentry from '@sentry/react';
 import { UIProvider } from '@packmind/ui';
 
 // Mock Sentry
-jest.mock('@sentry/react', () => ({
-  captureException: jest.fn(),
+vi.mock('@sentry/react', () => ({
+  captureException: vi.fn(),
 }));
 
-jest.mock('@packmind/assets', () => ({
+vi.mock('@packmind/assets', () => ({
   logoPackmindText: 'logo-packmind-text',
 }));
 
@@ -27,15 +27,15 @@ const renderWithUI = (ui: React.ReactElement) => {
 
 describe('ErrorBoundary', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Suppress console.error for cleaner test output
-    jest.spyOn(console, 'error').mockImplementation(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {
       // No-op: intentionally empty to suppress error logs during tests
     });
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Error Catching', () => {
@@ -207,7 +207,7 @@ describe('ErrorBoundary', () => {
   describe('Custom Error Handler', () => {
     describe('when onError handler is provided', () => {
       it('calls custom onError handler', () => {
-        const onError = jest.fn();
+        const onError = vi.fn();
 
         renderWithUI(
           <ErrorBoundary onError={onError}>

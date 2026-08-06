@@ -5,24 +5,24 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import SocialLoginButtons from './SocialLoginButtons';
 import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../api/queries/AuthQueries', () => ({
-  useSocialProvidersQuery: jest.fn(),
+vi.mock('../api/queries/AuthQueries', () => ({
+  useSocialProvidersQuery: vi.fn(),
 }));
 
-jest.mock('@packmind/assets', () => ({
+vi.mock('@packmind/assets', () => ({
   googleLogo: 'google-logo.svg',
   microsoftLogo: 'microsoft-logo.svg',
 }));
 
-jest.mock('react-icons/si', () => ({
+vi.mock('react-icons/si', () => ({
   SiGithub: () => <span data-testid="icon-github" />,
 }));
 
-const mockUseSocialProvidersQuery =
-  useSocialProvidersQuery as jest.MockedFunction<
-    typeof useSocialProvidersQuery
-  >;
+const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
+  typeof useSocialProvidersQuery
+>;
 
 const renderComponent = () => {
   const queryClient = new QueryClient({
@@ -39,7 +39,7 @@ const renderComponent = () => {
 
 describe('SocialLoginButtons', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when providers are available', () => {

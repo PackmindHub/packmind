@@ -1,83 +1,60 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
+
+// @testing-library/dom gates its fake-timer support on `typeof jest !== 'undefined'`
+// (see jestFakeTimersAreEnabled in its helpers.js) and then calls exactly one method:
+// jest.advanceTimersByTime. Without this shim `waitFor` polls on real timers while
+// Vitest's fake clock is installed, so the poll never fires and the test dies at the
+// 5s timeout. Deliberately a one-method shim rather than `globalThis.jest = vi`: a
+// stray `jest.fn()` reintroduced into a spec must still fail loudly.
+(globalThis as { jest?: unknown }).jest = {
+  advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms),
+};
 
 // Automatically cleanup after each test
 afterEach(() => {
   cleanup();
-  // Clear all pending timers
-  jest.clearAllTimers();
+  vi.clearAllTimers();
 });
 
-// Clean up JSDOM resources after all tests
 afterAll(async () => {
-  // Give any pending promises a chance to resolve
   await new Promise((resolve) => setTimeout(resolve, 0));
-
-  // Close all open network connections in JSDOM
-  if (global.window) {
-    // Close any open XMLHttpRequests
-    if (global.XMLHttpRequest) {
-      // Abort any pending requests
-      const xhrProto = global.XMLHttpRequest.prototype;
-      if (xhrProto.abort && typeof xhrProto.abort === 'function') {
-        // This prevents hanging connections
-      }
-    }
-  }
-
-  // Clear all timers
-  jest.clearAllTimers();
-  jest.useRealTimers();
+  vi.clearAllTimers();
+  vi.useRealTimers();
 });
 
 // Mock winston globally to prevent PackmindLogger instantiation issues in frontend tests
-jest.mock('winston', () => {
+vi.mock('winston', () => {
   const mockLogger = {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    http: jest.fn(),
-    verbose: jest.fn(),
-    debug: jest.fn(),
-    silly: jest.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    http: vi.fn(),
+    verbose: vi.fn(),
+    debug: vi.fn(),
+    silly: vi.fn(),
   };
 
   return {
-    __esModule: true,
     default: {
-      createLogger: jest.fn(() => mockLogger),
+      createLogger: vi.fn(() => mockLogger),
       format: {
-        combine: jest.fn(() => jest.fn()),
-        timestamp: jest.fn(() => jest.fn()),
-        errors: jest.fn(() => jest.fn()),
-        label: jest.fn(() => jest.fn()),
-        printf: jest.fn(() => jest.fn()),
-        colorize: jest.fn(() => jest.fn()),
-        simple: jest.fn(() => jest.fn()),
-        json: jest.fn(() => jest.fn()),
+        combine: vi.fn(() => vi.fn()),
+        timestamp: vi.fn(() => vi.fn()),
+        errors: vi.fn(() => vi.fn()),
+        label: vi.fn(() => vi.fn()),
+        printf: vi.fn(() => vi.fn()),
+        colorize: vi.fn(() => vi.fn()),
+        simple: vi.fn(() => vi.fn()),
+        json: vi.fn(() => vi.fn()),
       },
       transports: {
-        Console: jest.fn(),
+        Console: vi.fn(),
       },
     },
   };
 });
 
-// Mock import.meta for Jest to handle ES modules
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace NodeJS {
-    interface Global {
-      import: {
-        meta: {
-          env: Record<string, string>;
-        };
-      };
-    }
-  }
-}
-
-// Mock ResizeObserver for tests
 if (typeof global.ResizeObserver === 'undefined') {
   global.ResizeObserver = class ResizeObserver {
     constructor(cb: ResizeObserverCallback) {
@@ -100,13 +77,12 @@ if (typeof global.ResizeObserver === 'undefined') {
   };
 }
 
-jest.mock('./shared/utils/getEnvVar', () => ({
-  getEnvVar: jest.fn((name: string, defaultValue = '') => {
+vi.mock('./shared/utils/getEnvVar', () => ({
+  getEnvVar: vi.fn((name: string, defaultValue = '') => {
     return defaultValue;
   }),
 }));
 
-// Polyfill for structuredClone which is not available in Jest environment
 if (typeof global.structuredClone === 'undefined') {
   global.structuredClone = (obj: unknown) => {
     if (obj === undefined) return undefined;
@@ -115,7 +91,6 @@ if (typeof global.structuredClone === 'undefined') {
   };
 }
 
-// Polyfills for TextEncoder and TextDecoder which are not available in Jest environment
 if (typeof global.TextEncoder === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { TextEncoder, TextDecoder } = require('util');
@@ -125,8 +100,6 @@ if (typeof global.TextEncoder === 'undefined') {
 
 // Proper mocks for Chakra UI v3 testing environment
 // Based on: https://www.chakra-ui.com/docs/components/concepts/testing
-
-// IntersectionObserver mock - required for some Chakra UI components
 if (typeof global.IntersectionObserver === 'undefined') {
   global.IntersectionObserver = class IntersectionObserver {
     root = null;
@@ -154,14 +127,12 @@ if (typeof global.IntersectionObserver === 'undefined') {
   };
 }
 
-// requestAnimationFrame mock for proper async handling
 if (typeof global.requestAnimationFrame === 'undefined') {
   global.requestAnimationFrame = (cb: FrameRequestCallback) =>
     setTimeout(cb, 1000 / 60);
   global.cancelAnimationFrame = (id: number) => clearTimeout(id);
 }
 
-// Scroll methods mock - required for some Chakra UI components
 if (typeof Element !== 'undefined') {
   Element.prototype.scrollTo =
     Element.prototype.scrollTo ||
@@ -174,5 +145,5 @@ if (typeof Element !== 'undefined') {
       // Mock implementation
     };
 }
-// Make this file a module
+
 export {};

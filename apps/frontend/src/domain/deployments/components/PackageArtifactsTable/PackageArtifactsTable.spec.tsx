@@ -66,7 +66,7 @@ const buildDeployedSkillTargetInfo = (
   };
 };
 
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
@@ -76,8 +76,8 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
 
 let lastTableRows: unknown[] = [];
 
-jest.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   const PMTable = ({ data }: { data: Array<Record<string, unknown>> }) => {
     lastTableRows = data;
     return (
