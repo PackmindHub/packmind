@@ -3,12 +3,12 @@ name: 'Back-end TypeScript Clean Code Practices'
 paths:
   - "**/packages/**/*.ts"
 alwaysApply: false
-description: 'Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services.'
+description: 'This standard establishes clean code practices in TypeScript for back-end development to enhance maintainability and ensure consistent patterns across services. It covers logging best practices, error handling, code organization, and dependency injection patterns. These rules apply when writing services, use cases, controllers, and any back-end TypeScript code in the Packmind monorepo. Following these practices ensures code is maintainable, debuggable, and follows established architectural patterns.'
 ---
 
 # Standard: Back-end TypeScript Clean Code Practices
 
-Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services. :
+This standard establishes clean code practices in TypeScript for back-end development to enhance maintainability and ensure consistent patterns across services. It covers logging best practices, error... :
 * Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
 * Inject PackmindLogger as a constructor parameter with a default value using a variable or a string representing the class name.
 * Instantiate use cases in adapters without passing the adapter's logger; use cases must create their own logger for proper origin tracking.

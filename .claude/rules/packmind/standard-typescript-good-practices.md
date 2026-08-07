@@ -3,12 +3,12 @@ name: 'Typescript good practices'
 paths:
   - "**/*.ts"
 alwaysApply: false
-description: 'Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time.'
+description: 'Generic practices that can be applied for all TS code in our app'
 ---
 
 # Standard: Typescript good practices
 
-Enforce TypeScript error and DTO conventions by prohibiting Object.setPrototypeOf in custom errors and requiring intersection types (DomainType & { extraField: T }) for presentation DTO enrichment to improve reliability and catch domain-field drift at compile time. :
+Generic practices that can be applied for all TS code in our app :
 * Do not use `Object.setPrototypeOf` when defining errors.
 * When defining a presentation DTO that enriches a domain type, use an intersection type (`DomainType & { extraField: T }`) instead of manually re-declaring the domain type's fields, so that structural drift is caught at compile time.
 
