@@ -1,5 +1,7 @@
 # [Unreleased]
 
+- Fix release to ensure correct versioning between OSS and proprietary.
+
 ## Added
 
 ## Changed
