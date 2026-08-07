@@ -300,6 +300,26 @@ describe('NotifyArtefactsDistributionUseCase', () => {
       });
     });
 
+    describe('when no repository is set up for the remote', () => {
+      let result: { deploymentId: string | null };
+
+      beforeEach(async () => {
+        mockTargetResolutionService.findOrCreateTargetFromGitInfo.mockResolvedValue(
+          null,
+        );
+
+        result = await useCase.execute(buildCommand());
+      });
+
+      it('does not record a deployment', () => {
+        expect(result.deploymentId).toBeNull();
+      });
+
+      it('does not save any distribution', () => {
+        expect(mockDistributionRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
     describe('with a lock file that uses agents for render modes', () => {
       beforeEach(async () => {
         mockStandardsPort.getStandardVersionByNumber.mockResolvedValue(null);

@@ -6,7 +6,6 @@ import {
   StandardVersion,
   SkillVersion,
   createGitRepoId,
-  createGitProviderId,
   createOrganizationId,
   createTargetId,
   createCommandVersionId,
@@ -313,31 +312,24 @@ describe('TargetResolutionService', () => {
       });
     });
 
-    describe('when target does not exist', () => {
-      const newRepoId = createGitRepoId(uuidv4());
-      const newTarget: Target = {
-        id: createTargetId(uuidv4()),
-        name: 'Default',
-        path: '/',
-        gitRepoId: newRepoId,
-      };
-
+    describe('when no repository is set up for the remote', () => {
       beforeEach(() => {
-        // findTargetFromGitInfo finds no matching repo -> returns null,
-        // so findOrCreateTargetFromGitInfo delegates to findOrCreateGitRepo.
         gitPort.listProviders.mockResolvedValue({ providers: [] });
-        gitPort.findOrCreateGitRepo.mockResolvedValue({
-          id: newRepoId as unknown as string,
-          owner: 'test-owner',
-          repo: 'test-repo',
-          branch: 'main',
-          providerId: createGitProviderId(uuidv4()),
-        });
-        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
-        targetService.addTarget.mockResolvedValue(newTarget);
       });
 
-      it('delegates provider/repo resolution to findOrCreateGitRepo', async () => {
+      it('returns null', async () => {
+        const result = await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(result).toBeNull();
+      });
+
+      it('does not create a provider or repo', async () => {
         await service.findOrCreateTargetFromGitInfo(
           organizationId,
           userId,
@@ -346,20 +338,59 @@ describe('TargetResolutionService', () => {
           '/',
         );
 
-        expect(gitPort.findOrCreateGitRepo).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId,
-            organizationId,
-            providerVendor: 'github',
-            gitRemoteUrl,
+        expect(gitPort.findOrCreateGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not create a target', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(targetService.addTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the repository exists but the target does not', () => {
+      const newTarget: Target = {
+        id: createTargetId(uuidv4()),
+        name: 'Default',
+        path: '/',
+        gitRepoId,
+      };
+
+      beforeEach(() => {
+        gitPort.listProviders.mockResolvedValue({
+          providers: [{ id: providerId, name: 'github', type: 'github' }],
+        });
+        gitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
             owner: 'test-owner',
             repo: 'test-repo',
             branch: 'main',
-          }),
-        );
+          },
+        ]);
+        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+        targetService.addTarget.mockResolvedValue(newTarget);
       });
 
-      it('creates a target under the resolved repo', async () => {
+      it('does not create a provider or repo', async () => {
+        await service.findOrCreateTargetFromGitInfo(
+          organizationId,
+          userId,
+          gitRemoteUrl,
+          gitBranch,
+          '/',
+        );
+
+        expect(gitPort.findOrCreateGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('creates a target under the existing repo', async () => {
         await service.findOrCreateTargetFromGitInfo(
           organizationId,
           userId,
@@ -372,7 +403,7 @@ describe('TargetResolutionService', () => {
           expect.objectContaining({
             name: 'Default',
             path: '/',
-            gitRepoId: newRepoId,
+            gitRepoId,
           }),
         );
       });
@@ -394,7 +425,7 @@ describe('TargetResolutionService', () => {
           id: createTargetId(uuidv4()),
           name: 'src-packages',
           path: '/src/packages/',
-          gitRepoId: newRepoId,
+          gitRepoId,
         };
         targetService.addTarget.mockResolvedValue(nestedTarget);
 

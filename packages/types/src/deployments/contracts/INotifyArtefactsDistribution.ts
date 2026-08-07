@@ -10,7 +10,9 @@ export type NotifyArtefactsDistributionCommand = PackmindCommand & {
 };
 
 export type NotifyArtefactsDistributionResponse = {
-  deploymentId: DistributionId;
+  // null when the distribution was not recorded because no provider/repo has
+  // been set up for the remote (repos are created up front, not on notify).
+  deploymentId: DistributionId | null;
 };
 
 export type INotifyArtefactsDistribution = IUseCase<

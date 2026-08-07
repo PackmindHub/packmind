@@ -8,6 +8,7 @@ import {
   UserSignedUpContext,
 } from './helpers';
 import { Distribution, Package, RenderMode } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 
@@ -453,17 +454,32 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         });
       });
     });
+  });
+});
 
-    describe('Rule 4: distribution tracking', () => {
+// Distribution recording now requires a repository set up beforehand (an
+// admin-only step via `track`) — rendering no longer provisions a repo on the
+// fly. Rendering inside a *tracked* repo records a CLAUDE_PLUGIN distribution.
+// `track` is gated by the `cli-repo-tracking` feature flag (opened to
+// @packmind.com), so this suite signs up with a packmind.com email and is
+// gated to CLI versions that ship the tracking flow.
+describeForVersion('> 0.31.0', 'plugins distribution tracking', () => {
+  describeWithUserSignedUp(
+    'plugins render/delete on a tracked repo',
+    (getContext) => {
+      let context: UserSignedUpContext;
       let pkg: Package;
       let scopedSlug: string;
 
       beforeEach(async () => {
+        context = await getContext();
+        await setupGitRepo(context.testDir);
         pkg = await seedPackage(context);
         scopedSlug = `@${context.space.slug}/${pkg.slug}`;
+        await context.runCli('track');
       });
 
-      describe('when rendering in marketplace mode inside a git repo', () => {
+      describe('when rendering in marketplace mode inside a tracked git repo', () => {
         let result: RunCliResult;
         let distributions: Distribution[];
 
@@ -483,7 +499,7 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         });
       });
 
-      describe('when rendering in standalone mode inside a git repo', () => {
+      describe('when rendering in standalone mode inside a tracked git repo', () => {
         let result: RunCliResult;
         let distributions: Distribution[];
 
@@ -533,8 +549,9 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
           );
         });
       });
-    });
-  });
+    },
+    { email: () => `plugins-tracking-e2e-${uuidv4()}@packmind.com` },
+  );
 });
 
 describeForVersion('> 0.29.1', 'plugins render outside a git repo', () => {

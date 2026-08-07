@@ -16,20 +16,34 @@ import {
 } from '@packmind/types';
 import { gitProviderFactory } from '../../../../test';
 import { stubLogger } from '@packmind/test-utils';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   const organizationId = createOrganizationId('org-123');
-  const memberUser: User = {
+  const adminUser: User = {
     id: createUserId('user-123'),
-    email: 'member@example.com',
+    email: 'admin@example.com',
     passwordHash: null,
     active: true,
     memberships: [
       {
         userId: createUserId('user-123'),
+        organizationId,
+        role: 'admin',
+      },
+    ],
+  };
+  const memberUser: User = {
+    id: createUserId('user-456'),
+    email: 'member@example.com',
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId('user-456'),
         organizationId,
         role: 'member',
       },
@@ -50,7 +64,7 @@ describe('AddGitProviderUseCase', () => {
     > as jest.Mocked<GitProviderService>;
 
     accountsAdapter = {
-      getUserById: jest.fn().mockResolvedValue(memberUser),
+      getUserById: jest.fn().mockResolvedValue(adminUser),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
@@ -62,6 +76,44 @@ describe('AddGitProviderUseCase', () => {
     );
   });
 
+  describe('when the user is not an organization admin', () => {
+    beforeEach(() => {
+      accountsAdapter.getUserById.mockResolvedValue(memberUser);
+    });
+
+    it('rejects with OrganizationAdminRequiredError', async () => {
+      await expect(
+        useCase.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: 'test-token',
+            authMethod: 'token' as const,
+          },
+          organizationId,
+          userId: memberUser.id,
+        }),
+      ).rejects.toThrow(OrganizationAdminRequiredError);
+    });
+
+    it('does not create the provider', async () => {
+      await useCase
+        .execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: 'test-token',
+            authMethod: 'token' as const,
+          },
+          organizationId,
+          userId: memberUser.id,
+        })
+        .catch(() => undefined);
+
+      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when adding git provider with organization association', () => {
     const input = {
       gitProvider: {
@@ -71,7 +123,7 @@ describe('AddGitProviderUseCase', () => {
         authMethod: 'token' as const,
       },
       organizationId: organizationId,
-      userId: memberUser.id,
+      userId: adminUser.id,
     };
 
     let result: Awaited<ReturnType<typeof useCase.execute>>;
@@ -115,7 +167,7 @@ describe('AddGitProviderUseCase', () => {
         authMethod: 'token' as const,
       },
       organizationId: organizationId,
-      userId: memberUser.id,
+      userId: adminUser.id,
     };
 
     let thrownError: Error | null = null;
@@ -147,7 +199,7 @@ describe('AddGitProviderUseCase', () => {
         authMethod: 'token' as const,
       },
       organizationId: organizationId,
-      userId: memberUser.id,
+      userId: adminUser.id,
     };
 
     let thrownError: Error | null = null;
@@ -200,7 +252,7 @@ describe('AddGitProviderUseCase', () => {
               authMethod: 'token',
             },
             organizationId,
-            userId: memberUser.id,
+            userId: adminUser.id,
           });
 
           expect(result).toEqual(expectedResult);
@@ -220,7 +272,7 @@ describe('AddGitProviderUseCase', () => {
                 authMethod: 'token',
               },
               organizationId,
-              userId: memberUser.id,
+              userId: adminUser.id,
               allowTokenlessProvider: false,
             }),
           ).rejects.toThrow('Git provider token is required');
@@ -255,7 +307,7 @@ describe('AddGitProviderUseCase', () => {
               appInstallationId: 42,
             },
             organizationId,
-            userId: memberUser.id,
+            userId: adminUser.id,
           });
 
           expect(result).toEqual(expectedResult);
@@ -275,7 +327,7 @@ describe('AddGitProviderUseCase', () => {
                 authMethod: 'app',
               },
               organizationId,
-              userId: memberUser.id,
+              userId: adminUser.id,
             }),
           ).rejects.toThrow('GitHub App installation ID is required');
         });
@@ -307,7 +359,7 @@ describe('AddGitProviderUseCase', () => {
               organizationGitHubAppId: orgGitHubAppId,
             },
             organizationId,
-            userId: memberUser.id,
+            userId: adminUser.id,
           });
 
           expect(result).toEqual(expectedResult);
@@ -328,7 +380,7 @@ describe('AddGitProviderUseCase', () => {
                 organizationGitHubAppId: orgGitHubAppId,
               },
               organizationId,
-              userId: memberUser.id,
+              userId: adminUser.id,
             }),
           ).rejects.toThrow('GitHub App installation ID is required');
         });
@@ -348,7 +400,7 @@ describe('AddGitProviderUseCase', () => {
                 appInstallationId: 42,
               },
               organizationId,
-              userId: memberUser.id,
+              userId: adminUser.id,
             }),
           ).rejects.toThrow(
             'organizationGitHubAppId is required when authMethod is "app"',
@@ -371,7 +423,7 @@ describe('AddGitProviderUseCase', () => {
                 organizationGitHubAppId: orgGitHubAppId,
               },
               organizationId,
-              userId: memberUser.id,
+              userId: adminUser.id,
             }),
           ).rejects.toThrow('Token must not be set when authMethod is "app"');
         });
@@ -389,7 +441,7 @@ describe('AddGitProviderUseCase', () => {
           authMethod: 'token' as const,
         },
         organizationId: organizationId,
-        userId: memberUser.id,
+        userId: adminUser.id,
         allowTokenlessProvider: true,
       };
 
@@ -426,7 +478,7 @@ describe('AddGitProviderUseCase', () => {
           authMethod: 'token' as const,
         },
         organizationId: organizationId,
-        userId: memberUser.id,
+        userId: adminUser.id,
         allowTokenlessProvider: false,
       };
 
@@ -459,7 +511,7 @@ describe('AddGitProviderUseCase', () => {
           authMethod: 'token' as const,
         },
         organizationId: organizationId,
-        userId: memberUser.id,
+        userId: adminUser.id,
       };
 
       let thrownError: Error | null = null;
@@ -492,7 +544,7 @@ describe('AddGitProviderUseCase', () => {
         authMethod: 'token' as const,
       },
       organizationId,
-      userId: memberUser.id,
+      userId: adminUser.id,
     };
 
     describe('when displayName is omitted', () => {

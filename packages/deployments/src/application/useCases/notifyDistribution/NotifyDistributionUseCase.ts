@@ -97,6 +97,17 @@ export class NotifyDistributionUseCase
         relativePath,
       );
 
+    if (!target) {
+      // The remote has no provider/repo set up in Packmind. We do not create
+      // one on notify — an admin must set it up first (e.g. via `track`), so
+      // the distribution is simply not recorded.
+      this.logger.info(
+        'Distribution not recorded — no repository set up for remote',
+        { gitRemoteUrl, gitBranch, relativePath },
+      );
+      return { deploymentId: null };
+    }
+
     const previouslyActivePackageIds = await this.getPreviouslyActivePackageIds(
       organizationId,
       target.id,

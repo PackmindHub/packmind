@@ -11,7 +11,9 @@ export type NotifyDistributionCommand = PackmindCommand & {
 };
 
 export type NotifyDistributionResponse = {
-  deploymentId: DistributionId;
+  // null when the distribution was not recorded because no provider/repo has
+  // been set up for the remote (repos are created up front, not on notify).
+  deploymentId: DistributionId | null;
 };
 
 export type INotifyDistributionUseCase = IUseCase<

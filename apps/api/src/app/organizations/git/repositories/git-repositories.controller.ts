@@ -100,6 +100,9 @@ export class GitRepositoriesController {
         req.clientSource,
       );
     } catch (error) {
+      if (error instanceof OrganizationAdminRequiredError) {
+        throw new ForbiddenException(error.message);
+      }
       if (error instanceof GitRepoAlreadyExistsError) {
         throw new ConflictException(error.message);
       }

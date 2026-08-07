@@ -9,6 +9,13 @@ import { apiStandardFactory } from '../../domain/apiDataFactories/apiStandardFac
 import { apiPackageFactory } from '../../domain/apiDataFactories/apiPackageFactory';
 import { expect } from '@playwright/test';
 
+// Distribution recording only happens for a repository that is already set up
+// in Packmind (an admin-only step via `track`); it no longer provisions a
+// tokenless provider/repo on the fly. Tracking is behind the
+// `cli-repo-tracking` feature flag (opened to @packmind.com), so this suite
+// signs up under the feature flag to get a packmind.com email.
+testWithApi.use({ underFeatureFlag: true });
+
 testWithApi.describe('packmind-cli install', () => {
   let standard: Standard;
   let defaultPackage: Package;
@@ -27,6 +34,17 @@ testWithApi.describe('packmind-cli install', () => {
       gitRemoteUrl: `github.com/${gitRepoOwner}/${gitRepoName}`,
       relativePath: '/',
     };
+
+    // Set up the tracked repository first so the distribution is recorded
+    // against an existing tokenless (CLI-managed) provider/repo.
+    await packmindApi.setTrackedRepository({
+      owner: gitRepoOwner,
+      repo: gitRepoName,
+      branch: 'main',
+      origin: 'track',
+      providerVendor: 'github',
+      gitRemoteUrl: `github.com/${gitRepoOwner}/${gitRepoName}`,
+    });
 
     await packmindApi.notifyDistribution(notifyDistributionCommand);
 

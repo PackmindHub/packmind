@@ -233,7 +233,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
     standardVersions: StandardVersion[];
-  }): Promise<string> {
+  }): Promise<string | undefined> {
     const {
       command,
       pkg,
@@ -253,6 +253,17 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
         command.gitBranch ?? DEFAULT_GIT_BRANCH,
         command.pluginRoot,
       );
+
+    if (!target) {
+      // No provider/repo is set up for this remote, so there is no target to
+      // attach the plugin render distribution to. Skip recording — repos are
+      // created up front (admin-only), not implicitly on render.
+      this.logger.info(
+        'Plugin render distribution not recorded — no repository set up for remote',
+        { gitRemoteUrl, pluginRoot: command.pluginRoot },
+      );
+      return undefined;
+    }
 
     const distributionId = createDistributionId(uuidv4());
     const distributedPackage: DistributedPackage = {

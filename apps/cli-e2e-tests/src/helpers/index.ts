@@ -16,4 +16,5 @@ export type {
   IPackageGateway,
   IStandardGateway,
   IChangeProposalGateway,
+  IGitGateway,
 } from './IPackmindGateway';

@@ -3,6 +3,7 @@ import {
   Gateway,
   ICreatePackageUseCase,
   INotifyDistributionUseCase,
+  ISetTrackedRepositoryUseCase,
   IUploadSkillUseCase,
   IListUserSpaces,
   IListSkillVersionsUseCase,
@@ -13,6 +14,7 @@ export interface IPackmindApi {
   createStandard: Gateway<ICreateStandardUseCase>;
   createPackage: Gateway<ICreatePackageUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
+  setTrackedRepository: Gateway<ISetTrackedRepositoryUseCase>;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   listSkillVersions: Gateway<IListSkillVersionsUseCase>;
 }

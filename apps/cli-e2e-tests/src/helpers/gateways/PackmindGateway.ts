@@ -9,6 +9,7 @@ import {
   IDeploymentsGateway,
   IAccountsGateway,
   ISkillsGateway,
+  IGitGateway,
 } from '../IPackmindGateway';
 import { PackmindHttpClient } from './PackmindHttpClient';
 import { AuthGateway } from './AuthGateway';
@@ -20,6 +21,7 @@ import { ChangeProposalGateway } from './ChangeProposalGateway';
 import { DeploymentsGateway } from './DeploymentsGateway';
 import { AccountsGateway } from './AccountsGateway';
 import { SkillsGateway } from './SkillsGateway';
+import { GitGateway } from './GitGateway';
 
 export class PackmindGateway implements IPackmindGateway {
   private httpClient?: PackmindHttpClient;
@@ -32,6 +34,7 @@ export class PackmindGateway implements IPackmindGateway {
   private _changeProposals?: IChangeProposalGateway;
   private _deployments?: IDeploymentsGateway;
   private _skills?: ISkillsGateway;
+  private _git?: IGitGateway;
 
   constructor(
     private readonly baseUrl: string,
@@ -87,6 +90,11 @@ export class PackmindGateway implements IPackmindGateway {
     return this._skills;
   }
 
+  get git(): IGitGateway {
+    this._git ??= new GitGateway(this.getHttpClient());
+    return this._git;
+  }
+
   /**
    * Initialize the gateway with an API key after authentication
    */
@@ -100,6 +108,8 @@ export class PackmindGateway implements IPackmindGateway {
     this._standards = undefined;
     this._changeProposals = undefined;
     this._deployments = undefined;
+    this._skills = undefined;
+    this._git = undefined;
   }
 
   private getHttpClient(): PackmindHttpClient {

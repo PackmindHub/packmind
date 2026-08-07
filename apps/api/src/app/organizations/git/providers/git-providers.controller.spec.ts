@@ -42,10 +42,22 @@ jest.mock('@packmind/git', () => {
   return { InvalidInstallStateError, InstallStateSigner };
 });
 
-jest.mock('@packmind/node-utils', () => ({
-  Configuration: { getConfig: jest.fn() },
-  AuthenticatedRequest: {},
-}));
+// @packmind/node-utils pulls in Configuration/config chains at test time.
+// Export a real OrganizationAdminRequiredError so the controller's
+// `instanceof` check resolves against the same class the test throws.
+jest.mock('@packmind/node-utils', () => {
+  class OrganizationAdminRequiredError extends Error {
+    constructor(message?: string) {
+      super(message);
+      this.name = 'OrganizationAdminRequiredError';
+    }
+  }
+  return {
+    Configuration: { getConfig: jest.fn() },
+    AuthenticatedRequest: {},
+    OrganizationAdminRequiredError,
+  };
+});
 
 import {
   BadRequestException,
@@ -62,7 +74,10 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AuthenticatedRequest,
+  OrganizationAdminRequiredError,
+} from '@packmind/node-utils';
 import { GitProvidersController } from './git-providers.controller';
 import { GitProvidersService } from './git-providers.service';
 
@@ -651,6 +666,18 @@ describe('GitProvidersController', () => {
         await expect(
           controller.addGitProvider(orgId, mockRequest, body),
         ).rejects.toBeInstanceOf(ConflictException);
+      });
+    });
+
+    describe('when the user is not an organization admin', () => {
+      it('translates the domain error into a 403 Forbidden', async () => {
+        mockService.addGitProvider.mockRejectedValue(
+          new OrganizationAdminRequiredError('admin required'),
+        );
+
+        await expect(
+          controller.addGitProvider(orgId, mockRequest, body),
+        ).rejects.toBeInstanceOf(ForbiddenException);
       });
     });
   });

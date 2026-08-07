@@ -24,6 +24,7 @@ import {
   createUserId,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('AddGitRepoUseCase', () => {
@@ -90,6 +91,40 @@ describe('AddGitRepoUseCase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('when the user is not an organization admin', () => {
+    const command: AddGitRepoCommand = {
+      userId,
+      organizationId,
+      gitProviderId,
+      owner: 'testowner',
+      repo: 'testrepo',
+      branch: 'main',
+    };
+
+    beforeEach(() => {
+      mockAccountsAdapter.getUserById.mockResolvedValue({
+        id: userId,
+        email: 'member@example.com',
+        displayName: 'member',
+        passwordHash: null,
+        active: true,
+        memberships: [{ userId, organizationId, role: 'member' }],
+      } as User);
+    });
+
+    it('rejects with OrganizationAdminRequiredError', async () => {
+      await expect(useCase.execute(command)).rejects.toThrow(
+        OrganizationAdminRequiredError,
+      );
+    });
+
+    it('does not create the repository', async () => {
+      await useCase.execute(command).catch(() => undefined);
+
+      expect(mockGitRepoService.addGitRepo).not.toHaveBeenCalled();
+    });
   });
 
   describe('when adding a valid repository', () => {
