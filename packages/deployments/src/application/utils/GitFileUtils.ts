@@ -6,7 +6,7 @@ const origin = 'GitFileUtils';
 /**
  * Maps a coding agent to its corresponding file path in the repository
  */
-export function getFilePathForAgent(agent: CodingAgent): string {
+function getFilePathForAgent(agent: CodingAgent): string {
   const agentToFile: Record<CodingAgent, string> = {
     claude: 'CLAUDE.md',
     claude_plugin: '',

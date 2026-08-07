@@ -1,5 +1,5 @@
 import { NotifyDistributionUseCase } from './NotifyDistributionUseCase';
-import { parseGitRepoInfo } from '../../services/gitInfoHelpers';
+import { parseGitRepoInfo } from '@packmind/node-utils';
 import {
   CodingAgent,
   createUserId,

@@ -1,15 +1,14 @@
 import { AddGitRepoUseCase } from './AddGitRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { AddGitRepoCommand } from '../../../domain/useCases/IAddGitRepo';
 import {
   GitProvider,
   GitProviderId,
   createGitProviderId,
   GitProviderVendors,
-} from '@packmind/types';
-import { GitRepo, createGitRepoId } from '@packmind/types';
-import {
+  AddGitRepoCommand,
+  GitRepo,
+  createGitRepoId,
   IAccountsPort,
   User,
   Organization,
@@ -23,6 +22,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 

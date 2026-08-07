@@ -12,13 +12,9 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { TargetService } from './TargetService';
-import {
-  parseGitRepoInfo,
-  parseGitProviderVendor,
-  generateTargetName,
-  normalizeRelativePath,
-} from './gitInfoHelpers';
+import { generateTargetName, normalizeRelativePath } from './gitInfoHelpers';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { parseGitRepoInfo, parseGitProviderVendor } from '@packmind/node-utils';
 
 const origin = 'TargetResolutionService';
 

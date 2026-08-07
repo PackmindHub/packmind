@@ -2,7 +2,7 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
-} from '../../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
+} from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
 export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase implements IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase {
