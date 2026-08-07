@@ -80,7 +80,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
-    "eslint-plugin-playwright": "^1.6.2",
+    "eslint-plugin-playwright": "^2.11.0",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.0.0",
     "eslint-plugin-storybook": "10.3.3",
