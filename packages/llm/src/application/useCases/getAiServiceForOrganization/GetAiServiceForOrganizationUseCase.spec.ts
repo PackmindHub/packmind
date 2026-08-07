@@ -1,12 +1,12 @@
 import { createOrganizationId, LLMProvider } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
 import { GetAiServiceForOrganizationUseCase } from './GetAiServiceForOrganizationUseCase';
 import { PackmindService } from '../../../infra/services/PackmindService';
 import { OpenAIService } from '../../../infra/services/OpenAIService';
 import { AnthropicService } from '../../../infra/services/AnthropicService';
 import * as utils from '../utils';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 
 jest.mock('../utils');
 
@@ -14,7 +14,7 @@ describe('GetAiServiceForOrganizationUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
 
   let useCase: GetAiServiceForOrganizationUseCase;
-  let mockConfigurationRepository: jest.Mocked<ILLMConfigurationRepository>;
+  let mockConfigurationRepository: jest.Mocked<IAIProviderRepository>;
 
   beforeEach(() => {
     mockConfigurationRepository = {
