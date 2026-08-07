@@ -183,60 +183,96 @@ jobs:
 
           echo "CLI source code is in sync with OSS."
 
-      - name: Compare packages/migrations directories
+      - name: Compare shared packages
         run: |
-          EXCLUDES=(-x node_modules -x dist -x '.*' -x packmind-lock.json)
+          # Packages allowed to diverge. Everything else in packages/ that exists in
+          # both repos must stay byte-identical - proprietary-only code belongs in a
+          # proprietary-only package, not in a fork of a shared one.
+          SKIP_PACKAGES=(integration-tests)
 
-          PROPRIETARY_COUNT=$(find packages/migrations/src -type f | wc -l | tr -d ' ')
-          OSS_COUNT=$(find /tmp/packmind-oss/packages/migrations/src -type f | wc -l | tr -d ' ')
-          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
+          # Build output, plus every artefact Packmind deploys for AI coding agents.
+          # Each repo runs its own deployment, so those are regenerated independently
+          # and drift on their own schedule - comparing them is pure noise.
+          EXCLUDES=(
+            -x node_modules -x dist -x coverage -x '*.tsbuildinfo'
+            -x .packmind -x .claude -x .claude-plugin -x .cursor -x .github
+            -x .continue -x .gitlab -x .opencode -x .agents -x .junie
+            -x AGENTS.md -x CLAUDE.md -x .packmind.md
+            -x packmind.json -x packmind-lock.json
+          )
 
-          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
-            echo "::error::One of the directories is empty or missing. Aborting comparison."
+          if [ ! -d /tmp/packmind-oss/packages ]; then
+            echo "::error::OSS checkout has no packages/ directory. Aborting comparison."
             exit 1
           fi
 
-          echo ""
-          echo "=== File presence differences ==="
-          diff -rq "${EXCLUDES[@]}" packages/migrations /tmp/packmind-oss/packages/migrations || FILE_DIFF=1
+          CHECKED=0
+          DIVERGED=()
+          MISSING=()
+
+          for DIR in packages/*/; do
+            PKG=$(basename "$DIR")
+
+            for SKIP in "${SKIP_PACKAGES[@]}"; do
+              if [ "$PKG" = "$SKIP" ]; then
+                echo "skipped     ${PKG} (deny-list)"
+                continue 2
+              fi
+            done
+
+            # Proprietary-only package - nothing on the OSS side to compare against.
+            if [ ! -d "/tmp/packmind-oss/packages/${PKG}" ]; then
+              echo "not in OSS  ${PKG}"
+              continue
+            fi
+
+            CHECKED=$((CHECKED + 1))
+            if diff -r "${EXCLUDES[@]}" "packages/${PKG}" "/tmp/packmind-oss/packages/${PKG}" > "/tmp/parity-${PKG}.diff" 2>&1; then
+              echo "in sync     ${PKG}"
+            else
+              echo "DIVERGED    ${PKG}"
+              DIVERGED+=("${PKG}")
+            fi
+          done
+
+          # A package that exists in OSS must exist here too - the fork is a superset.
+          for DIR in /tmp/packmind-oss/packages/*/; do
+            PKG=$(basename "$DIR")
+            if [ ! -d "packages/${PKG}" ]; then
+              MISSING+=("${PKG}")
+            fi
+          done
 
           echo ""
-          echo "=== Content differences ==="
-          diff -r "${EXCLUDES[@]}" packages/migrations /tmp/packmind-oss/packages/migrations || CONTENT_DIFF=1
+          echo "Compared ${CHECKED} shared packages."
 
-          if [ "${FILE_DIFF:-0}" = "1" ] || [ "${CONTENT_DIFF:-0}" = "1" ]; then
+          if [ "$CHECKED" -eq 0 ]; then
+            echo "::error::No shared packages were compared - the comparison is not doing anything. Aborting."
+            exit 1
+          fi
+
+          for PKG in "${DIVERGED[@]}"; do
             echo ""
-            echo "::error::packages/migrations has diverged from the OSS repo (PackmindHub/Packmind). Backport the change to OSS main first, then re-run - both editions must ship the same schema history."
-            exit 1
-          fi
+            echo "=== packages/${PKG} ==="
+            head -n 200 "/tmp/parity-${PKG}.diff"
+            TOTAL=$(wc -l < "/tmp/parity-${PKG}.diff" | tr -d ' ')
+            if [ "$TOTAL" -gt 200 ]; then
+              echo "... (${TOTAL} lines total, output truncated)"
+            fi
+          done
 
-          echo "packages/migrations is in sync with OSS."
-
-      - name: Compare packages/types directories
-        run: |
-          EXCLUDES=(-x node_modules -x dist -x '.*')
-
-          PROPRIETARY_COUNT=$(find packages/types/src -type f | wc -l | tr -d ' ')
-          OSS_COUNT=$(find /tmp/packmind-oss/packages/types/src -type f | wc -l | tr -d ' ')
-          echo "Proprietary: ${PROPRIETARY_COUNT} files | OSS: ${OSS_COUNT} files"
-
-          if [ "$PROPRIETARY_COUNT" -eq 0 ] || [ "$OSS_COUNT" -eq 0 ]; then
-            echo "::error::One of the directories is empty or missing. Aborting comparison."
-            exit 1
-          fi
-
-          echo ""
-          echo "=== File presence differences ==="
-          diff -rq "${EXCLUDES[@]}" packages/types /tmp/packmind-oss/packages/types || FILE_DIFF=1
-
-          echo ""
-          echo "=== Content differences ==="
-          diff -r "${EXCLUDES[@]}" packages/types /tmp/packmind-oss/packages/types || CONTENT_DIFF=1
-
-          if [ "${FILE_DIFF:-0}" = "1" ] || [ "${CONTENT_DIFF:-0}" = "1" ]; then
+          if [ ${#MISSING[@]} -gt 0 ]; then
             echo ""
-            echo "::error::packages/types has diverged from the OSS repo (PackmindHub/Packmind). Backport the change to OSS main first, then re-run - @packmind/types is the shared contract layer both editions compile against, so the whole package (not just the domains checked individually above) must stay identical."
+            echo "::error::Present in OSS but missing from this repo: ${MISSING[*]}. Run the sync-from-oss-repository workflow to pull them in."
+          fi
+
+          if [ ${#DIVERGED[@]} -gt 0 ]; then
+            echo ""
+            echo "::error::These packages have diverged from the OSS repo (PackmindHub/Packmind): ${DIVERGED[*]}. Backport the change to OSS main first, then re-run - shared packages must stay identical across editions. If a package is genuinely meant to diverge, add it to SKIP_PACKAGES in this step."
+          fi
+
+          if [ ${#DIVERGED[@]} -gt 0 ] || [ ${#MISSING[@]} -gt 0 ]; then
             exit 1
           fi
 
-          echo "packages/types is in sync with OSS."
+          echo "All shared packages are in sync with OSS."
