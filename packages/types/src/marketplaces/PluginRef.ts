@@ -1,18 +1,29 @@
 /**
- * Source coordinates that tell a marketplace consumer (e.g. Claude Code)
- * how to fetch a plugin entry's content.
+ * Source coordinates that tell a marketplace consumer how to fetch a plugin
+ * entry's content, discriminated by `source`:
  *
- * Currently only the `git-subdir` shape is emitted by Packmind's publish
- * pipeline — the type discriminator is left as a string literal so other
- * vendor-specific source kinds (HTTP archive, registry, etc.) can be added
- * as a union later without touching call sites that already accept
+ * - `git-subdir` — Claude Code shape: clone `url`, read the plugin from
+ *   `path` inside the clone.
+ * - `github` — GitHub Copilot shape: `repo` is an `owner/name` slug resolved
+ *   against github.com; `path` (optional) points at the plugin subdirectory
+ *   and `ref` (optional) pins a branch, tag, or commit.
+ *
+ * Other vendor-specific source kinds (HTTP archive, registry, etc.) are
+ * appended to the union without touching call sites that already accept
  * `PluginSource`.
  */
-export type PluginSource = {
-  source: 'git-subdir';
-  url: string;
-  path: string;
-};
+export type PluginSource =
+  | {
+      source: 'git-subdir';
+      url: string;
+      path: string;
+    }
+  | {
+      source: 'github';
+      repo: string;
+      path?: string;
+      ref?: string;
+    };
 
 /**
  * A single plugin entry declared inside a marketplace descriptor

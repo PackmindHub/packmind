@@ -29,6 +29,8 @@ import {
   TrackPluginInstallHeartbeatResponse,
   UnlinkMarketplaceCommand,
   UnlinkMarketplaceResponse,
+  UpdateMarketplaceFacesCommand,
+  UpdateMarketplaceFacesResponse,
   ValidateMarketplaceUrlCommand,
   ValidateMarketplaceUrlResponse,
 } from '../contracts';
@@ -192,6 +194,26 @@ export interface IMarketplacePort {
   acceptMarketplaceDrift(
     command: AcceptMarketplaceDriftCommand,
   ): Promise<AcceptMarketplaceDriftResponse>;
+
+  /**
+   * Changes which assistants a marketplace serves.
+   *
+   * `faces` is the complete desired set, so the call is idempotent. Enabling an
+   * assistant backfills its catalogue with every plugin already served; the
+   * publish job only appends one entry at a time, so a new assistant left to the
+   * next publish would advertise a single plugin. Disabling one deletes its
+   * catalogue file and leaves the shared plugin payloads in place.
+   *
+   * Organization-admin only, matching who may link a marketplace.
+   *
+   * @param command - Command carrying the marketplace id, the desired assistant
+   *                  set, and the auth context
+   * @returns Promise resolving to the stored set plus the applied delta and the
+   *          rolling sync PR url
+   */
+  updateMarketplaceFaces(
+    command: UpdateMarketplaceFacesCommand,
+  ): Promise<UpdateMarketplaceFacesResponse>;
 
   /**
    * Lists all marketplace distributions for a given marketplace owned by the

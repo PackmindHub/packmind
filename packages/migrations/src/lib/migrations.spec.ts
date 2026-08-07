@@ -4,6 +4,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { migrations } from './migrations';
 import { AddIsTrackedToGitRepos1813000000000 } from '../migrations/1813000000000-AddIsTrackedToGitRepos';
 import { AddTrackedBranchLookupIndexToGitRepos1817000000000 } from '../migrations/1817000000000-AddTrackedBranchLookupIndexToGitRepos';
+import { AddFacesToMarketplaces1818000000000 } from '../migrations/1818000000000-AddFacesToMarketplaces';
 
 describe('migrations', () => {
   it('works', () => {
@@ -164,6 +165,81 @@ describe('AddTrackedBranchLookupIndexToGitRepos1817000000000', () => {
         await migration.down(queryRunner);
 
         await expect(migration.up(queryRunner)).resolves.not.toThrow();
+      });
+    });
+  });
+});
+
+describe('AddFacesToMarketplaces1818000000000', () => {
+  const migration = new AddFacesToMarketplaces1818000000000(silentLogger);
+  let dataSource: DataSource;
+  let queryRunner: QueryRunner;
+
+  const facesColumnExists = async (): Promise<boolean> => {
+    const rows = await queryRunner.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_name = 'marketplaces' AND column_name = 'faces'`,
+    );
+    return rows.length > 0;
+  };
+
+  beforeEach(async () => {
+    dataSource = makeInMemoryDataSource();
+    await dataSource.initialize();
+    queryRunner = dataSource.createQueryRunner();
+
+    await queryRunner.query(`
+      CREATE TABLE "marketplaces" (
+        "id" uuid PRIMARY KEY,
+        "name" varchar NOT NULL,
+        "vendor" varchar NOT NULL
+      )
+    `);
+  });
+
+  afterEach(async () => {
+    await queryRunner.release();
+    await dataSource.destroy();
+  });
+
+  describe('before the migration runs', () => {
+    it('has no faces column', async () => {
+      expect(await facesColumnExists()).toBe(false);
+    });
+  });
+
+  describe('when the migration is applied', () => {
+    beforeEach(async () => {
+      await queryRunner.query(
+        `INSERT INTO "marketplaces" ("id", "name", "vendor")
+         VALUES ('22222222-2222-2222-2222-222222222222', 'Legacy Marketplace', 'anthropic')`,
+      );
+      await migration.up(queryRunner);
+    });
+
+    it('adds the faces column', async () => {
+      expect(await facesColumnExists()).toBe(true);
+    });
+
+    it('backfills existing rows with the claude face', async () => {
+      const rows = await queryRunner.query(
+        `SELECT "faces" FROM "marketplaces"`,
+      );
+      // pg-mem returns jsonb columns as raw strings; the real pg driver parses them.
+      const faces =
+        typeof rows[0].faces === 'string'
+          ? JSON.parse(rows[0].faces)
+          : rows[0].faces;
+      expect(faces).toEqual(['claude']);
+    });
+
+    describe('and then reverted', () => {
+      beforeEach(async () => {
+        await migration.down(queryRunner);
+      });
+
+      it('drops the faces column', async () => {
+        expect(await facesColumnExists()).toBe(false);
       });
     });
   });

@@ -19,6 +19,7 @@ import {
   SyncMarketplaceNowResponse,
   TrackPluginInstallHeartbeatResponse,
   UnlinkMarketplaceResponse,
+  UpdateMarketplaceFacesResponse,
   ValidateMarketplaceUrlResponse,
 } from '@packmind/types';
 
@@ -77,6 +78,10 @@ export class MarketplacesAdapter implements IMarketplacePort {
   }
 
   acceptMarketplaceDrift(): Promise<AcceptMarketplaceDriftResponse> {
+    throw new Error('Marketplaces are not available in the OSS edition.');
+  }
+
+  updateMarketplaceFaces(): Promise<UpdateMarketplaceFacesResponse> {
     throw new Error('Marketplaces are not available in the OSS edition.');
   }
 
