@@ -109,6 +109,32 @@ describeForVersion('> 0.31.0', 'track command', () => {
     { email: randomEmail },
   );
 
+  describeWithExtraUser(
+    'when a non-admin member tracks the repository',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context: WithMemberContext = await getContext();
+        await setupGitRepo(context.testDir);
+        result = await runCli('track', {
+          apiKey: context.extraUserApiKey,
+          cwd: context.testDir,
+        });
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+    },
+    { email: `track-member-${uuidv4()}@example.com`, role: 'member' },
+  );
+});
+
+// `--remove` ships after 0.32.0, so gate these above the current release:
+// in production mode the released binary has no such flag and cmd-ts would
+// reject it as an unknown argument.
+describeForVersion('> 0.32.0', 'track --remove', () => {
   describeWithUserSignedUp(
     'when removing tracking for a tracked repository',
     (getContext) => {
@@ -241,26 +267,5 @@ describeForVersion('> 0.31.0', 'track command', () => {
       });
     },
     { email: randomEmail },
-  );
-
-  describeWithExtraUser(
-    'when a non-admin member tracks the repository',
-    (getContext) => {
-      let result: Awaited<ReturnType<typeof runCli>>;
-
-      beforeEach(async () => {
-        const context: WithMemberContext = await getContext();
-        await setupGitRepo(context.testDir);
-        result = await runCli('track', {
-          apiKey: context.extraUserApiKey,
-          cwd: context.testDir,
-        });
-      });
-
-      it('exits with an error', () => {
-        expect(result.returnCode).toBe(1);
-      });
-    },
-    { email: `track-member-${uuidv4()}@example.com`, role: 'member' },
   );
 });
