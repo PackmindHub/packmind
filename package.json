@@ -173,7 +173,7 @@
     "dompurify": "^3.4.12",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.7",
-    "ioredis": "^5.4.2",
+    "ioredis": "^5.11.1",
     "isbot": "^4.4.0",
     "jsonwebtoken": "^9.0.3",
     "log-update": "^8.0.0",
