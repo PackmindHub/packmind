@@ -335,27 +335,6 @@ describe('trackHandler', () => {
     });
   });
 
-  describe('when the caller is not an admin', () => {
-    beforeEach(async () => {
-      const error: Error & { statusCode?: number } = new Error(
-        'You must be an organization admin to set the tracked branch',
-      );
-      error.statusCode = 403;
-      mockTrackRepository.mockRejectedValue(error);
-      await trackHandler(deps);
-    });
-
-    it('surfaces the server message', () => {
-      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'You must be an organization admin to set the tracked branch',
-      );
-    });
-
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
-    });
-  });
-
   describe('when the feature is not available (404)', () => {
     beforeEach(async () => {
       const error: Error & { statusCode?: number } = new Error('Not Found');
@@ -367,6 +346,36 @@ describe('trackHandler', () => {
     it('reports the feature is unavailable', () => {
       expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
         'Repository tracking is not available for your account.',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the caller is not an organization admin (403)', () => {
+    const serverMessage =
+      'User 947009df-5a1d-45e8-ab1b-c996320eb000 must be an admin of organization ce0eda86-2018-437a-b91d-14feedd72e89 to perform this action';
+
+    beforeEach(async () => {
+      const error: Error & { statusCode?: number } = new Error(serverMessage);
+      error.statusCode = 403;
+      mockTrackRepository.mockRejectedValue(error);
+      await trackHandler(deps);
+    });
+
+    it('explains that admin rights are required', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        'Only organization admins can change which repository Packmind tracks. Ask an admin of your organization to run this command.',
+      );
+    });
+
+    // The server names the user and the organization by UUID, which is useless
+    // to someone at a terminal.
+    it('does not leak the server identifiers', () => {
+      expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('947009df'),
       );
     });
 
