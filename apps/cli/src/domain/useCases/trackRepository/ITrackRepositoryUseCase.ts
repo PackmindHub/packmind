@@ -30,6 +30,12 @@ export type TrackRepositoryCommand = {
   /** When true, remove tracking for the current repository. */
   remove: boolean;
   /**
+   * Branch to track. Defaults to the branch currently checked out when omitted,
+   * which is the common case — but making it explicit means tracking `main` no
+   * longer requires checking `main` out first.
+   */
+  branch?: string;
+  /**
    * Confirmation hook invoked before any mutation. Returning `false` cancels
    * the operation without changing anything.
    */

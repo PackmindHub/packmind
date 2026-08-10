@@ -17,6 +17,8 @@ export type TrackRepositoryFunction = (
 
 export interface TrackHandlerDependencies {
   update: boolean;
+  /** Explicit branch to track; the checked-out branch is used when omitted. */
+  branch?: string;
   baseDirectory: string;
   trackRepository: TrackRepositoryFunction;
   isTTY?: boolean;
@@ -47,6 +49,7 @@ export async function trackHandler(
       origin: 'track',
       update: deps.update,
       remove: false,
+      branch: deps.branch,
       confirm,
     });
   } catch (error) {

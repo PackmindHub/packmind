@@ -131,6 +131,36 @@ describeForVersion('> 0.31.0', 'track command', () => {
   );
 });
 
+// `--branch` ships after 0.32.0; the released binary rejects it as an unknown
+// argument, so this is gated above the current release.
+describeForVersion('> 0.32.0', 'track --branch', () => {
+  describeWithUserSignedUp(
+    'when tracking a branch other than the checked-out one',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        execSync('git checkout -b dev', { cwd: context.testDir });
+        result = await context.runCli('track --branch main');
+      });
+
+      it('succeeds', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      // Previously this required `git checkout main` first.
+      it('tracks the requested branch, not the checked-out one', () => {
+        expect(result.stdout).toContain(
+          'Packmind now tracks PackmindHub/sample-repo on branch main',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+});
+
 // `untrack` ships after 0.32.0, so gate these above the current release: in
 // production mode the released binary has no such command and cmd-ts would
 // reject it as an unknown argument.

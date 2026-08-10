@@ -417,6 +417,56 @@ describe('TrackRepositoryUseCase', () => {
     });
   });
 
+  // Without --branch, tracking `main` meant checking `main` out first.
+  describe('when an explicit branch is given', () => {
+    beforeEach(async () => {
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+      gateway.setTrackedRepository.mockResolvedValue(makeGitRepo('main'));
+
+      await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: false,
+        branch: 'main',
+        confirm,
+      });
+    });
+
+    it('tracks the requested branch rather than the checked-out one', () => {
+      expect(gateway.setTrackedRepository).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'main' }),
+      );
+    });
+
+    it('confirms against the requested branch', () => {
+      expect(confirm).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'main' }),
+      );
+    });
+  });
+
+  describe('when no branch is given', () => {
+    beforeEach(async () => {
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+      gateway.setTrackedRepository.mockResolvedValue(makeGitRepo('dev'));
+
+      await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: false,
+        confirm,
+      });
+    });
+
+    it('falls back to the checked-out branch', () => {
+      expect(gateway.setTrackedRepository).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'dev' }),
+      );
+    });
+  });
+
   describe('when not inside a git repository', () => {
     beforeEach(() => {
       gitService.getGitRemoteUrl.mockImplementation(() => {

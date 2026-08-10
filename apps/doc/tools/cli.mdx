@@ -7,7 +7,7 @@ title: 'CLI: Command-Line Interface'
 The Packmind CLI provides the following commands:
 
 - **`init`** - Initialize Packmind in your project (configure agents + install skills)
-- **`track`** - Set the repository and branch Packmind tracks for your project
+- **`track`** - Set the repository and branch Packmind tracks for your project (`--branch` to name it explicitly)
 - **`untrack`** - Remove Packmind's tracking of the current repository
 - **`config agents setup`** - Configure which AI coding agents to generate artifacts for (interactive)
 - **`config agents list`** - List configured agents across `packmind.json` files
@@ -321,6 +321,24 @@ If a **different** branch is already tracked, the command stops and tells you to
 ```
 Repository my-org/my-repo is already tracked on branch main. Run `packmind-cli track --update` to move it to dev.
 ```
+
+### Track a Specific Branch
+
+Use `--branch` to name the branch explicitly instead of tracking whichever one you have checked out:
+
+```bash
+packmind-cli track --branch main
+```
+
+This is useful when you are working on a feature branch but want governance anchored to your default branch — you no longer have to `git checkout main` first. The branch does not need to be checked out locally.
+
+```
+Track my-org/my-repo on branch main? (y/N)
+
+Packmind now tracks my-org/my-repo on branch main.
+```
+
+`--branch` works with `--update` too, to move tracking to a branch you are not currently on.
 
 ### Move the Tracked Branch
 

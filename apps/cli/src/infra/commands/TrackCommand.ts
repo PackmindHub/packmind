@@ -1,4 +1,4 @@
-import { command, flag } from 'cmd-ts';
+import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { trackHandler } from './trackHandler';
@@ -13,13 +13,20 @@ export const trackCommand = command({
       description:
         'Move the tracked branch to the current branch (requires an existing tracked branch)',
     }),
+    branch: option({
+      type: optional(string),
+      long: 'branch',
+      description:
+        'Branch to track (defaults to the branch currently checked out)',
+    }),
   },
-  handler: async ({ update }) => {
+  handler: async ({ update, branch }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     await trackHandler({
       update,
+      branch,
       baseDirectory: process.cwd(),
       trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
     });
