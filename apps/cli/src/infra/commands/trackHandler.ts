@@ -1,4 +1,3 @@
-import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import {
   TrackRepositoryCommand,
   TrackRepositoryResult,
@@ -7,9 +6,9 @@ import {
   logErrorConsole,
   logInfoConsole,
   logSuccessConsole,
-  logWarningConsole,
   formatCommand,
 } from '../utils/consoleLogger';
+import { handleTrackingError } from './trackingErrors';
 import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
 
 export type TrackRepositoryFunction = (
@@ -18,7 +17,6 @@ export type TrackRepositoryFunction = (
 
 export interface TrackHandlerDependencies {
   update: boolean;
-  remove: boolean;
   baseDirectory: string;
   trackRepository: TrackRepositoryFunction;
   isTTY?: boolean;
@@ -28,18 +26,14 @@ export interface TrackHandlerDependencies {
 /**
  * Handler for the `track` command. Owns all user interaction (prompts + output)
  * and delegates orchestration to the TrackRepositoryUseCase.
+ *
+ * Removal lives in `untrack`, its own top-level command — matching the
+ * `install`/`uninstall` and `login`/`logout` pairs — so there is no
+ * mutually-exclusive flag combination to guard against here.
  */
 export async function trackHandler(
   deps: TrackHandlerDependencies,
 ): Promise<void> {
-  if (deps.update && deps.remove) {
-    logErrorConsole(
-      `${formatCommand('--update')} and ${formatCommand('--remove')} cannot be combined — pick one.`,
-    );
-    process.exit(1);
-    return;
-  }
-
   const isTTY = deps.isTTY ?? Boolean(process.stdin.isTTY);
   const confirm = createTrackConfirm({
     isTTY,
@@ -52,11 +46,11 @@ export async function trackHandler(
       repoPath: deps.baseDirectory,
       origin: 'track',
       update: deps.update,
-      remove: deps.remove,
+      remove: false,
       confirm,
     });
   } catch (error) {
-    handleTrackError(error);
+    handleTrackingError(error);
     return;
   }
 
@@ -73,34 +67,18 @@ export async function trackHandler(
       );
       process.exit(0);
       return;
-    case 'removed':
-      logSuccessConsole(
-        `Packmind no longer tracks ${result.owner}/${result.repo}. Distributions recorded on branch ${result.branch} are kept and reappear if you track it again.`,
-      );
-      process.exit(0);
-      return;
-    case 'not-tracked':
-      logWarningConsole(
-        `Repository is not tracked in '${result.organizationName}' organization`,
-      );
-      process.exit(0);
-      return;
     case 'cancelled':
       logInfoConsole('No changes made. The tracked branch is unchanged.');
       process.exit(0);
       return;
+    // The desired state is already in place, whether or not --update was
+    // passed, so both spellings succeed. Exit codes follow one rule: 0 when
+    // the desired state holds, 1 when it cannot be reached.
     case 'already-tracked-same-branch':
-      if (deps.update) {
-        logErrorConsole(
-          `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
-        );
-        process.exit(1);
-      } else {
-        logInfoConsole(
-          `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
-        );
-        process.exit(0);
-      }
+      logInfoConsole(
+        `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
+      );
+      process.exit(0);
       return;
     case 'already-tracked-other-branch':
       logErrorConsole(
@@ -116,36 +94,8 @@ export async function trackHandler(
       );
       process.exit(1);
       return;
+    default:
+      // `removed` / `not-tracked` belong to `untrack`, which has its own handler.
+      return;
   }
-}
-
-function handleTrackError(error: unknown): void {
-  if (error instanceof NotLoggedInError) {
-    logErrorConsole(error.message);
-    process.exit(1);
-    return;
-  }
-
-  const statusCode = (error as { statusCode?: number })?.statusCode;
-  if (statusCode === 404) {
-    // Kill-switch: the feature flag is off for this user. Behave as feature-absent.
-    logErrorConsole('Repository tracking is not available for your account.');
-    process.exit(1);
-    return;
-  }
-
-  if (statusCode === 403) {
-    // The server's OrganizationAdminRequiredError message names the user and the
-    // organization by UUID, which tells a CLI user nothing they can act on.
-    // Replace it with something actionable; the ids stay in the server logs.
-    logErrorConsole(
-      'Only organization admins can change which repository Packmind tracks. Ask an admin of your organization to run this command.',
-    );
-    process.exit(1);
-    return;
-  }
-
-  const message = error instanceof Error ? error.message : String(error);
-  logErrorConsole(message);
-  process.exit(1);
 }

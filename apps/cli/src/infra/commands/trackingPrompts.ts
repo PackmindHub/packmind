@@ -12,7 +12,10 @@ export function buildTrackConfirmationMessage(
   details: TrackRepositoryConfirmation,
 ): string {
   if (details.mode === 'remove') {
-    return `Remove Packmind's tracking of ${details.owner}/${details.repo} on branch ${details.branch}? Distributions already recorded are kept and reappear if you track it again.`;
+    // The branch is context, not scope: removal is keyed on the repository and
+    // takes whatever branch is tracked. Phrasing it as "… on branch X" read as
+    // though only that branch were affected.
+    return `Stop tracking ${details.owner}/${details.repo}? Packmind currently tracks branch ${details.branch}. Distributions already recorded are kept and reappear if you track it again.`;
   }
   if (details.mode === 'update') {
     return `Change the tracked branch for ${details.owner}/${details.repo} from ${details.fromBranch} to ${details.branch}?`;

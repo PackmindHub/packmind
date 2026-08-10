@@ -8,6 +8,7 @@ The Packmind CLI provides the following commands:
 
 - **`init`** - Initialize Packmind in your project (configure agents + install skills)
 - **`track`** - Set the repository and branch Packmind tracks for your project
+- **`untrack`** - Remove Packmind's tracking of the current repository
 - **`config agents setup`** - Configure which AI coding agents to generate artifacts for (interactive)
 - **`config agents list`** - List configured agents across `packmind.json` files
 - **`config agents add`** - Add coding agents to `packmind.json` files
@@ -351,32 +352,6 @@ Nothing is tracked yet — run `packmind-cli init` or `packmind-cli track` to st
   setup. Use `packmind-cli track` later to set or move it.
 </Tip>
 
-### Remove Tracking
-
-Use the `--remove` flag to take the repository out of Packmind's governance views. Packmind asks you to confirm before applying it:
-
-```bash
-packmind-cli track --remove
-```
-
-```
-Remove Packmind's tracking of my-org/my-repo on branch main? Distributions already recorded are kept and reappear if you track it again. (y/N)
-
-Packmind no longer tracks my-org/my-repo. Distributions recorded on branch main are kept and reappear if you track it again.
-```
-
-The repository disappears from Distribution History and the Deployments overview. **Nothing is deleted** — run `packmind-cli track` on the same branch again and the whole history comes back, with new distributions appended. See [Removing Tracking](/governance/distribution#removing-tracking).
-
-While the repository is untracked, `packmind-cli install` behaves as it does for a repository that was never tracked: it completes locally and tells you the distribution was not recorded.
-
-Removing tracking on a repository that is not tracked changes nothing and reports it:
-
-```
-Repository is not tracked in 'my-organization' organization
-```
-
-`--update` and `--remove` cannot be combined — pick one.
-
 ### Troubleshooting
 
 - **Problem**: `Repository tracking is not available for your account.`
@@ -387,6 +362,36 @@ Repository is not tracked in 'my-organization' organization
 
 - **Problem**: The command cannot determine the repository or branch.
 - **Solution**: Run `track` from inside a git repository that has a configured remote and a checked-out branch.
+
+## Untrack Command
+
+Take a repository out of Packmind's governance views. Tracking applies to the repository, so `untrack` takes no branch — it removes whichever branch is currently tracked.
+
+<Info>
+  **Organization admins only** — Only organization admins can remove tracking.
+</Info>
+
+Run it from a clone of the repository. Packmind asks you to confirm first, and names the tracked branch so you can see what you are about to remove:
+
+```bash
+packmind-cli untrack
+```
+
+```
+Stop tracking my-org/my-repo? Packmind currently tracks branch main. Distributions already recorded are kept and reappear if you track it again. (y/N)
+
+Packmind no longer tracks my-org/my-repo. Distributions recorded on branch main are kept and reappear if you track it again.
+```
+
+The repository disappears from Distribution History and the Deployments overview. **Nothing is deleted** — run `packmind-cli track` on the same branch again and the whole history comes back, with new distributions appended. See [Removing Tracking](/governance/distribution#removing-tracking).
+
+While the repository is untracked, `packmind-cli install` behaves as it does for a repository that was never tracked: it completes locally and tells you the distribution was not recorded.
+
+Running `untrack` on a repository that is not tracked changes nothing and reports it, exiting successfully so the command is safe to repeat:
+
+```
+Repository is not tracked in 'my-organization' organization
+```
 
 ## Config Command
 

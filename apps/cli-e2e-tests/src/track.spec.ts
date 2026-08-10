@@ -131,10 +131,10 @@ describeForVersion('> 0.31.0', 'track command', () => {
   );
 });
 
-// `--remove` ships after 0.32.0, so gate these above the current release:
-// in production mode the released binary has no such flag and cmd-ts would
+// `untrack` ships after 0.32.0, so gate these above the current release: in
+// production mode the released binary has no such command and cmd-ts would
 // reject it as an unknown argument.
-describeForVersion('> 0.32.0', 'track --remove', () => {
+describeForVersion('> 0.32.0', 'untrack', () => {
   describeWithUserSignedUp(
     'when removing tracking for a tracked repository',
     (getContext) => {
@@ -144,7 +144,7 @@ describeForVersion('> 0.32.0', 'track --remove', () => {
         const context = await getContext();
         await setupGitRepo(context.testDir);
         await context.runCli('track');
-        result = await context.runCli('track --remove');
+        result = await context.runCli('untrack');
       });
 
       it('succeeds', () => {
@@ -173,8 +173,8 @@ describeForVersion('> 0.32.0', 'track --remove', () => {
         const context = await getContext();
         await setupGitRepo(context.testDir);
         await context.runCli('track');
-        await context.runCli('track --remove');
-        result = await context.runCli('track --remove');
+        await context.runCli('untrack');
+        result = await context.runCli('untrack');
       });
 
       it('exits successfully', () => {
@@ -197,7 +197,7 @@ describeForVersion('> 0.32.0', 'track --remove', () => {
         const context = await getContext();
         await setupGitRepo(context.testDir);
         await context.runCli('track');
-        await context.runCli('track --remove');
+        await context.runCli('untrack');
         result = await context.runCli('track');
       });
 
@@ -225,7 +225,7 @@ describeForVersion('> 0.32.0', 'track --remove', () => {
       beforeEach(async () => {
         const context = await getContext();
         await setupGitRepo(context.testDir);
-        result = await context.runCli('track --remove');
+        result = await context.runCli('untrack');
       });
 
       it('exits with an error', () => {
@@ -242,28 +242,6 @@ describeForVersion('> 0.32.0', 'track --remove', () => {
         expect(result.stderr + result.stdout).not.toContain(
           'not available for your account',
         );
-      });
-    },
-    { email: randomEmail },
-  );
-
-  describeWithUserSignedUp(
-    'when combining --update and --remove',
-    (getContext) => {
-      let result: Awaited<ReturnType<typeof runCli>>;
-
-      beforeEach(async () => {
-        const context = await getContext();
-        await setupGitRepo(context.testDir);
-        result = await context.runCli('track --update --remove');
-      });
-
-      it('exits with an error', () => {
-        expect(result.returnCode).toBe(1);
-      });
-
-      it('explains the flags are exclusive', () => {
-        expect(result.stderr + result.stdout).toContain('cannot be combined');
       });
     },
     { email: randomEmail },

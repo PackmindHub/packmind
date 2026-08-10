@@ -47,7 +47,6 @@ describe('trackHandler', () => {
     mockTrackRepository = jest.fn();
     deps = {
       update: false,
-      remove: false,
       baseDirectory: '/repo',
       trackRepository: mockTrackRepository,
       isTTY: true,
@@ -210,6 +209,9 @@ describe('trackHandler', () => {
     });
   });
 
+  // Unified exit codes: 0 when the desired state holds, 1 when it cannot be
+  // reached. `--update` onto the already-tracked branch is a no-op, not a
+  // failure — it used to exit 1 while plain `track` exited 0 on the same state.
   describe('when update is requested but the same branch is tracked', () => {
     beforeEach(async () => {
       deps.update = true;
@@ -222,14 +224,14 @@ describe('trackHandler', () => {
       await trackHandler(deps);
     });
 
-    it('logs an error', () => {
-      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+    it('reports the branch is already tracked', () => {
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
         'Repository my-orga/my-repo is already tracked on branch main.',
       );
     });
 
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
+    it('exits with code 0', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(0);
     });
   });
 
@@ -253,68 +255,6 @@ describe('trackHandler', () => {
 
     it('exits with code 1', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe('when both --update and --remove are given', () => {
-    beforeEach(async () => {
-      deps.update = true;
-      deps.remove = true;
-      await trackHandler(deps);
-    });
-
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
-    });
-
-    it('does not touch the tracking', () => {
-      expect(mockTrackRepository).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when tracking is removed', () => {
-    beforeEach(async () => {
-      deps.remove = true;
-      mockTrackRepository.mockResolvedValue({
-        status: 'removed',
-        owner: 'my-orga',
-        repo: 'my-repo',
-        branch: 'main',
-      });
-      await trackHandler(deps);
-    });
-
-    it('exits with code 0', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(0);
-    });
-
-    it('promises the history is kept', () => {
-      expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
-        expect.stringContaining('kept'),
-      );
-    });
-  });
-
-  describe('when removing tracking that was never set', () => {
-    beforeEach(async () => {
-      deps.remove = true;
-      mockTrackRepository.mockResolvedValue({
-        status: 'not-tracked',
-        owner: 'my-orga',
-        repo: 'my-repo',
-        organizationName: 'PickMand',
-      });
-      await trackHandler(deps);
-    });
-
-    it('exits with code 0', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(0);
-    });
-
-    it('warns naming the organization', () => {
-      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
-        "Repository is not tracked in 'PickMand' organization",
-      );
     });
   });
 

@@ -137,7 +137,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
   );
 });
 
-// Gated above the current release: this scenario needs `track --remove`,
+// Gated above the current release: this scenario needs `untrack`,
 // which the released binary does not have.
 describeForVersion(
   '> 0.32.0',
@@ -158,7 +158,7 @@ describeForVersion(
           await setupGitRepo(context.testDir);
           pkg = await seedPackage(context);
           await context.runCli('track');
-          await context.runCli('track --remove');
+          await context.runCli('untrack');
           result = await context.runCli(
             `install @${context.space.slug}/${pkg.slug}`,
           );
