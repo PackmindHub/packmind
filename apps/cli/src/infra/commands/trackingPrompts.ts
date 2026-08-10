@@ -22,6 +22,12 @@ export function buildTrackConfirmationMessage(
 
 /**
  * Default inquirer-backed confirmation prompt.
+ *
+ * Defaults to **cancel** (`y/N`). Every operation behind this prompt changes
+ * which branch governs the repository, so a bare Enter — from the wrong branch,
+ * or from someone skimming the onboarding flow — must not be enough to make a
+ * throwaway branch the organization's governance policy. The caller has to
+ * type `y`.
  */
 export async function defaultConfirmPrompt(message: string): Promise<boolean> {
   const { confirmed } = await inquirer.default.prompt<{ confirmed: boolean }>([
@@ -29,7 +35,7 @@ export async function defaultConfirmPrompt(message: string): Promise<boolean> {
       type: 'confirm',
       name: 'confirmed',
       message,
-      default: true,
+      default: false,
     },
   ]);
   return confirmed;
