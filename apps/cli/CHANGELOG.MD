@@ -4,6 +4,9 @@
 
 ## Changed
 
+- Change `track` command to `git track` command
+- Change `untrack` command to `git untrack` command
+
 ## Fixed
 
 ## Removed

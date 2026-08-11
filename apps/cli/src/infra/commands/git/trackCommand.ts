@@ -1,11 +1,12 @@
 import { command, flag, option, optional, string } from 'cmd-ts';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
+import { trackHandler } from '../trackHandler';
 
 export const trackCommand = command({
   name: 'track',
   description:
-    '[Deprecated] Set the repository and branch Packmind tracks for the current project',
+    'Set the repository and branch Packmind tracks for the current project',
   args: {
     update: flag({
       long: 'update',
@@ -23,21 +24,11 @@ export const trackCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    let exampleCommand = 'packmind git track';
-    if (update) {
-      exampleCommand += ' --update';
-    }
-    if (branch) {
-      exampleCommand += ` --branch ${branch}`;
-    }
-
-    packmindCliHexa.output.notifyError(
-      'Command "packmind track" has been removed.',
-      {
-        content: 'Use the "git track" command instead:',
-        exampleCommand,
-      },
-    );
-    process.exit(1);
+    await trackHandler({
+      update,
+      branch,
+      baseDirectory: process.cwd(),
+      trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
+    });
   },
 });
