@@ -37,9 +37,7 @@ async function seedPackage(context: UserSignedUpContext): Promise<Package> {
 
 describe('track/untrack', () => {
   describeForVersion('> 0.31.0', 'install distribution recording', () => {
-    const trackCommand: string = matchesVersionConstraint('>0.33.0')
-      ? 'git track'
-      : 'track';
+    let trackCommand: string;
 
     describeWithUserSignedUp(
       'when installing on the tracked repository and branch',
@@ -51,6 +49,10 @@ describe('track/untrack', () => {
 
         beforeEach(async () => {
           context = await getContext();
+          trackCommand = matchesVersionConstraint('>0.33.0')
+            ? 'git track'
+            : 'track';
+
           await setupGitRepo(context.testDir);
           pkg = await seedPackage(context);
           await context.runCli(trackCommand);
@@ -61,7 +63,7 @@ describe('track/untrack', () => {
             await context.gateway.deployments.listDeploymentsByPackage(pkg.id);
 
           console.log('---------------------------');
-          console.log(matchesVersionConstraint('> 0.33.0'));
+          console.log(matchesVersionConstraint('> 0.33.0'), trackCommand);
         });
 
         it.only('exits successfully', () => {
@@ -151,12 +153,8 @@ describe('track/untrack', () => {
       '> 0.32.0',
       'install distribution recording after tracking removal',
       () => {
-        const trackCommand: string = matchesVersionConstraint('>0.33.0')
-          ? 'git track'
-          : 'track';
-        const untrackCommand: string = matchesVersionConstraint('>0.33.0')
-          ? 'git untrack'
-          : 'untrack';
+        let trackCommand: string;
+        let untrackCommand: string;
 
         // A repository whose tracking was removed must behave exactly like one that
         // was never tracked: the install completes locally and records nothing.
@@ -170,6 +168,12 @@ describe('track/untrack', () => {
 
             beforeEach(async () => {
               context = await getContext();
+              trackCommand = matchesVersionConstraint('>0.33.0')
+                ? 'git track'
+                : 'track';
+              untrackCommand = matchesVersionConstraint('>0.33.0')
+                ? 'git untrack'
+                : 'untrack';
               await setupGitRepo(context.testDir);
               pkg = await seedPackage(context);
               await context.runCli(trackCommand);
@@ -181,6 +185,13 @@ describe('track/untrack', () => {
                 await context.gateway.deployments.listDeploymentsByPackage(
                   pkg.id,
                 );
+
+              console.log('---------------------------');
+              console.log(
+                matchesVersionConstraint('> 0.33.0'),
+                trackCommand,
+                untrackCommand,
+              );
             });
 
             it('exits successfully', () => {
