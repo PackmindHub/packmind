@@ -36,7 +36,7 @@ async function seedPackage(context: UserSignedUpContext): Promise<Package> {
 }
 
 describeForVersion('> 0.31.0', 'install distribution recording', () => {
-  const trackCommand: string = matchesVersionConstraint('>0.33.0')
+  const trackCommand = matchesVersionConstraint('>0.33.0')
     ? 'git track'
     : 'track';
 
@@ -50,6 +50,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
 
       beforeEach(async () => {
         context = await getContext();
+
         await setupGitRepo(context.testDir);
         pkg = await seedPackage(context);
         await context.runCli(trackCommand);
@@ -147,10 +148,10 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
     '> 0.32.0',
     'install distribution recording after tracking removal',
     () => {
-      const trackCommand: string = matchesVersionConstraint('>0.33.0')
+      const trackCommand = matchesVersionConstraint('>0.33.0')
         ? 'git track'
         : 'track';
-      const untrackCommand: string = matchesVersionConstraint('>0.33.0')
+      const untrackCommand = matchesVersionConstraint('>0.33.0')
         ? 'git untrack'
         : 'untrack';
 
@@ -166,6 +167,7 @@ describeForVersion('> 0.31.0', 'install distribution recording', () => {
 
           beforeEach(async () => {
             context = await getContext();
+
             await setupGitRepo(context.testDir);
             pkg = await seedPackage(context);
             await context.runCli(trackCommand);

@@ -58,6 +58,8 @@ import { SpaceService } from './application/services/SpaceService';
 import { CliOutput } from './infra/repositories/CliOutput';
 import { ITrackRepositoryUseCase } from './domain/useCases/trackRepository/ITrackRepositoryUseCase';
 import { TrackRepositoryUseCase } from './application/useCases/trackRepository/TrackRepositoryUseCase';
+import { IGetTrackingInfoUseCase } from './domain/useCases/trackRepository/IGetTrackingInfoUseCase';
+import { GetTrackingInfoUseCase } from './application/useCases/trackRepository/GetTrackingInfoUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -88,6 +90,7 @@ export class PackmindCliHexaFactory {
     submitDiffs: ISubmitDiffsUseCase;
     checkDiffs: ICheckDiffsUseCase;
     trackRepository: ITrackRepositoryUseCase;
+    getTrackingInfo: IGetTrackingInfoUseCase;
   };
 
   constructor() {
@@ -179,6 +182,10 @@ export class PackmindCliHexaFactory {
       submitDiffs: new SubmitDiffsUseCase(this.repositories.packmindGateway),
       checkDiffs: new CheckDiffsUseCase(this.repositories.packmindGateway),
       trackRepository: new TrackRepositoryUseCase(
+        this.repositories.packmindGateway.repositoryTracking,
+        this.services.gitRemoteUrlService,
+      ),
+      getTrackingInfo: new GetTrackingInfoUseCase(
         this.repositories.packmindGateway.repositoryTracking,
         this.services.gitRemoteUrlService,
       ),

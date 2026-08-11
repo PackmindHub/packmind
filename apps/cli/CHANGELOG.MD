@@ -2,6 +2,8 @@
 
 ## Added
 
+- New `git info` command reports whether Packmind tracks the current repository and on which branch. When the tracked branch is not the one checked out, it warns that distributions from here are not recorded and points to `git track --update`. When the repository is not tracked, it proposes `git track` to track the current branch. Available to every member, not only organization admins.
+
 ## Changed
 
 - Change `track` command to `git track` command
