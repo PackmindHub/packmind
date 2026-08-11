@@ -2,9 +2,26 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.16.1] - 2026-08-07
+
+## Fixed
+
+- Fix release to ensure correct versioning between OSS and proprietary.
+
+# [1.16.0] - 2026-08-07
+
+## Added
+
 - Import skills from the web app: drag a folder onto the Skills import dialog, or choose one, and every skill it contains is listed and imported with a per-skill result. A skill that fails does not stop the others, and the summary says how many were imported
 - Edit a skill's SKILL.md body and supporting Markdown files directly from the web app, with each save creating a new attributed version
-- Set the repository and branch Packmind tracks from the CLI: new `packmind track` command (with `--update` to move the tracked branch) and a tracking prompt during `packmind init` (organization admins only)
+- Set the repository and branch Packmind tracks from the CLI: new `packmind track` command (`--branch` to name a branch other than the one checked out, `--update` to move the tracked branch) and a tracking prompt during `packmind init` (organization admins only)
+- Remove a repository's tracking from the CLI with `packmind untrack` (organization admins only). The repository leaves the Deployments overview and the Distribution History, and every distribution already recorded is kept — track the same branch again and the history reappears with new distributions appended
 
 ## Changed
 
@@ -332,7 +349,9 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.15.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...HEAD
+[1.16.1]: https://github.com/PackmindHub/packmind/compare/release/1.16.0...release/1.16.1
+[1.16.0]: https://github.com/PackmindHub/packmind/compare/release/1.15.1...release/1.16.0
 [1.15.1]: https://github.com/PackmindHub/packmind/compare/release/1.15.0...release/1.15.1
 [1.15.0]: https://github.com/PackmindHub/packmind/compare/release/1.14.0...release/1.15.0
 [1.14.0]: https://github.com/PackmindHub/packmind/compare/release/1.13.1...release/1.14.0

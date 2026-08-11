@@ -153,6 +153,55 @@ describe('GitRepoRepository', () => {
     expect(foundGitRepo).toBeNull();
   });
 
+  describe('findByOwnerAndRepoInOrganization with a providerId filter', () => {
+    let secondProvider: GitProvider;
+
+    // Same owner/repo linked under two providers in one org — the
+    // marketplace collision check must distinguish them by provider.
+    beforeEach(async () => {
+      secondProvider = await gitProviderRepository.save(
+        gitProviderFactory({ organizationId: testOrganization.id }),
+      );
+
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'plugins',
+          providerId: testProvider.id,
+          type: 'marketplace',
+        }),
+      );
+      await gitRepoRepository.add(
+        gitRepoFactory({
+          owner: 'acme',
+          repo: 'plugins',
+          providerId: secondProvider.id,
+          type: 'standard',
+        }),
+      );
+    });
+
+    it('returns the repo belonging to the requested provider', async () => {
+      const found = await gitRepoRepository.findByOwnerAndRepoInOrganization(
+        'acme',
+        'plugins',
+        testOrganization.id,
+        { type: 'any', providerId: testProvider.id },
+      );
+      expect(found?.providerId).toBe(testProvider.id);
+    });
+
+    it('returns the other provider repo once scoped to it', async () => {
+      const found = await gitRepoRepository.findByOwnerAndRepoInOrganization(
+        'acme',
+        'plugins',
+        testOrganization.id,
+        { type: 'any', providerId: secondProvider.id },
+      );
+      expect(found?.providerId).toBe(secondProvider.id);
+    });
+  });
+
   describe('findByProviderId', () => {
     let gitRepo1: GitRepo;
     let gitRepo2: GitRepo;
@@ -356,6 +405,86 @@ describe('GitRepoRepository', () => {
       it('persists the cleared tracked flag', () => {
         expect(reloaded?.isTracked).toBe(false);
       });
+    });
+
+    describe('when a repository has never had its tracking removed', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id }),
+        );
+
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('leaves the removal stamp empty', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+
+    describe('when setting the tracked flag on a repository whose tracking was removed', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+        );
+        await gitRepoRepository.markTrackingRemoved(gitRepo.id);
+
+        await gitRepoRepository.updateTracked(gitRepo.id, true);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('clears the removal stamp', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+
+    // Regression guard: UpdateTrackedBranchUseCase clears the flag mid-move.
+    // Stamping a removal here would hide the whole repository during an
+    // ordinary branch switch.
+    describe('when clearing the tracked flag as part of a branch move', () => {
+      let reloaded: GitRepo | null;
+
+      beforeEach(async () => {
+        const gitRepo = await gitRepoRepository.add(
+          gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+        );
+
+        await gitRepoRepository.updateTracked(gitRepo.id, false);
+        reloaded = await gitRepoRepository.findById(gitRepo.id);
+      });
+
+      it('leaves the removal stamp empty', () => {
+        expect(reloaded?.trackingRemovedAt).toBeNull();
+      });
+    });
+  });
+
+  describe('markTrackingRemoved', () => {
+    let updated: GitRepo;
+    let reloaded: GitRepo | null;
+
+    beforeEach(async () => {
+      const gitRepo = await gitRepoRepository.add(
+        gitRepoFactory({ providerId: testProvider.id, isTracked: true }),
+      );
+
+      updated = await gitRepoRepository.markTrackingRemoved(gitRepo.id);
+      reloaded = await gitRepoRepository.findById(gitRepo.id);
+    });
+
+    it('returns the repo with the tracked flag cleared', () => {
+      expect(updated.isTracked).toBe(false);
+    });
+
+    it('records the removal timestamp', () => {
+      expect(reloaded?.trackingRemovedAt).toEqual(expect.any(Date));
+    });
+
+    it('keeps the row readable rather than soft-deleting it', () => {
+      expect(reloaded).not.toBeNull();
     });
   });
 

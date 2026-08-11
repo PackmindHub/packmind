@@ -2,18 +2,19 @@ import axios, { AxiosResponse } from 'axios';
 import { ApiService } from './ApiService';
 import { PackmindError } from './errors/PackmindError';
 import { PackmindConflictError } from './errors/PackmindConflictError';
+import type { Mock, Mocked } from 'vitest';
 
 // Mock axios
-jest.mock('axios');
+vi.mock('axios');
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedAxios = axios as Mocked<typeof axios>;
 
 interface MockAxiosInstance {
-  get: jest.Mock;
-  post: jest.Mock;
-  put: jest.Mock;
-  delete: jest.Mock;
-  patch: jest.Mock;
+  get: Mock;
+  post: Mock;
+  put: Mock;
+  delete: Mock;
+  patch: Mock;
 }
 
 describe('ApiService', () => {
@@ -24,11 +25,11 @@ describe('ApiService', () => {
   beforeEach(() => {
     // Create a mock axios instance with all the methods we need
     mockAxiosInstance = {
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      patch: jest.fn(),
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      patch: vi.fn(),
     };
 
     // Mock axios.create to return our mock instance
@@ -40,7 +41,7 @@ describe('ApiService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {
@@ -388,6 +389,38 @@ describe('ApiService', () => {
 
         await expect(apiService.get('/users')).rejects.toThrow(
           new PackmindConflictError(conflictError.response),
+        );
+      });
+    });
+
+    describe('when the request was rejected as too large', () => {
+      // The API rejects with the usual JSON envelope, a proxy rejects with its
+      // own HTML — both have to say the same thing to the user.
+      it('reports the size for a proxy rejection carrying no message', async () => {
+        mockAxiosInstance.post.mockRejectedValue({
+          response: {
+            status: 413,
+            statusText: 'Request Entity Too Large',
+            data: '<html><head><title>413 Request Entity Too Large</title></head></html>',
+          },
+        });
+
+        await expect(apiService.post('/skills/upload', {})).rejects.toThrow(
+          /Request Too Large/,
+        );
+      });
+
+      it('reports the size for an API rejection carrying a message', async () => {
+        mockAxiosInstance.post.mockRejectedValue({
+          response: {
+            status: 413,
+            statusText: 'Payload Too Large',
+            data: { message: 'request entity too large' },
+          },
+        });
+
+        await expect(apiService.post('/skills/upload', {})).rejects.toThrow(
+          /Request Too Large/,
         );
       });
     });

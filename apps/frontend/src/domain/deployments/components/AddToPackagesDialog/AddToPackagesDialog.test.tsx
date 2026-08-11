@@ -29,39 +29,40 @@ import {
   useListPackagesBySpaceQuery,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageMarketplaceStatus } from '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../api/queries/DeploymentsQueries', () => ({
-  ...jest.requireActual('../../api/queries/DeploymentsQueries'),
-  useAddArtefactsToPackagesMutation: jest.fn(),
-  useRemoveArtefactsFromPackageMutation: jest.fn(),
-  useListPackagesBySpaceQuery: jest.fn(),
-  useListActiveDistributedPackagesBySpaceQuery: jest.fn(),
+vi.mock('../../api/queries/DeploymentsQueries', async () => ({
+  ...(await vi.importActual('../../api/queries/DeploymentsQueries')),
+  useAddArtefactsToPackagesMutation: vi.fn(),
+  useRemoveArtefactsFromPackageMutation: vi.fn(),
+  useListPackagesBySpaceQuery: vi.fn(),
+  useListActiveDistributedPackagesBySpaceQuery: vi.fn(),
 }));
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/marketplaces/hooks/usePackageMarketplaceStatus',
   () => ({
-    usePackageMarketplaceStatus: jest.fn(),
+    usePackageMarketplaceStatus: vi.fn(),
   }),
 );
 
 const mockUseListPackagesBySpaceQuery =
-  useListPackagesBySpaceQuery as jest.MockedFunction<
+  useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
 const mockUseAddArtefactsToPackagesMutation =
-  useAddArtefactsToPackagesMutation as jest.MockedFunction<
+  useAddArtefactsToPackagesMutation as MockedFunction<
     typeof useAddArtefactsToPackagesMutation
   >;
 const mockUseRemoveArtefactsFromPackageMutation =
-  useRemoveArtefactsFromPackageMutation as jest.MockedFunction<
+  useRemoveArtefactsFromPackageMutation as MockedFunction<
     typeof useRemoveArtefactsFromPackageMutation
   >;
 const mockUseListActiveDistributedPackagesBySpaceQuery =
-  useListActiveDistributedPackagesBySpaceQuery as jest.MockedFunction<
+  useListActiveDistributedPackagesBySpaceQuery as MockedFunction<
     typeof useListActiveDistributedPackagesBySpaceQuery
   >;
 const mockUsePackageMarketplaceStatus =
-  usePackageMarketplaceStatus as jest.MockedFunction<
+  usePackageMarketplaceStatus as MockedFunction<
     typeof usePackageMarketplaceStatus
   >;
 
@@ -108,14 +109,14 @@ const createMockAddMutation = (
   overrides: Partial<ReturnType<typeof useAddArtefactsToPackagesMutation>> = {},
 ) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest
+    mutate: vi.fn(),
+    mutateAsync: vi
       .fn()
       .mockResolvedValue([] as AddArtefactsToPackagesOutcome[]),
     isPending: false,
     isSuccess: false,
     isError: false,
-    reset: jest.fn(),
+    reset: vi.fn(),
     ...overrides,
   }) as unknown as ReturnType<typeof useAddArtefactsToPackagesMutation>;
 
@@ -125,12 +126,12 @@ const createMockRemoveMutation = (
   > = {},
 ) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn().mockResolvedValue({}),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
     isSuccess: false,
     isError: false,
-    reset: jest.fn(),
+    reset: vi.fn(),
     ...overrides,
   }) as unknown as ReturnType<typeof useRemoveArtefactsFromPackageMutation>;
 
@@ -176,7 +177,7 @@ const renderDialog = (
   });
   const props: React.ComponentProps<typeof AddToPackagesDialog> = {
     open: true,
-    onOpenChange: jest.fn(),
+    onOpenChange: vi.fn(),
     artifacts: [{ id: artifactId, name: 'My Standard' }],
     artifactType: 'standard',
     artifactKindLabel: 'standard',
@@ -184,7 +185,7 @@ const renderDialog = (
     spaceId,
     orgSlug: 'acme',
     spaceSlug: 'main',
-    onSuccess: jest.fn(),
+    onSuccess: vi.fn(),
     ...overrides,
   };
   return {
@@ -215,7 +216,7 @@ describe('AddToPackagesDialog', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the title and artifact-kind subtitle', () => {
@@ -323,7 +324,7 @@ describe('AddToPackagesDialog', () => {
 
   describe('instant add', () => {
     it('submits a single-package entry when an add row is clicked', async () => {
-      const mutateAsync = jest
+      const mutateAsync = vi
         .fn()
         .mockResolvedValue([
           { packageId: packageA.id, ok: true, response: { package: packageA } },
@@ -345,7 +346,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('keeps the drawer open after a successful add', async () => {
-      const mutateAsync = jest
+      const mutateAsync = vi
         .fn()
         .mockResolvedValue([
           { packageId: packageA.id, ok: true, response: { package: packageA } },
@@ -377,7 +378,7 @@ describe('AddToPackagesDialog', () => {
 
   describe('remove from the members section', () => {
     it('removes instantly when the package is not deployed', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -400,7 +401,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('asks for confirmation when the package is deployed', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -436,7 +437,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('asks for confirmation when the package is only published to a marketplace', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -459,7 +460,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('names both repos and marketplaces in the confirmation banner', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -484,7 +485,7 @@ describe('AddToPackagesDialog', () => {
 
   describe('close behavior', () => {
     it('invokes onSuccess on close after a successful change', async () => {
-      const mutateAsync = jest
+      const mutateAsync = vi
         .fn()
         .mockResolvedValue([
           { packageId: packageA.id, ok: true, response: { package: packageA } },
@@ -492,7 +493,7 @@ describe('AddToPackagesDialog', () => {
       mockUseAddArtefactsToPackagesMutation.mockReturnValue(
         createMockAddMutation({ mutateAsync }),
       );
-      const onSuccess = jest.fn();
+      const onSuccess = vi.fn();
 
       renderDialog({ onSuccess });
 
@@ -511,7 +512,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('does not invoke onSuccess on close when nothing changed', async () => {
-      const onSuccess = jest.fn();
+      const onSuccess = vi.fn();
 
       const { props } = renderDialog({ onSuccess });
 
@@ -525,7 +526,7 @@ describe('AddToPackagesDialog', () => {
 
     it('does not invoke onSuccess when the only add attempt failed', async () => {
       const failure = new Error('boom');
-      const mutateAsync = jest
+      const mutateAsync = vi
         .fn()
         .mockResolvedValue([
           { packageId: packageA.id, ok: false, error: failure },
@@ -533,7 +534,7 @@ describe('AddToPackagesDialog', () => {
       mockUseAddArtefactsToPackagesMutation.mockReturnValue(
         createMockAddMutation({ mutateAsync }),
       );
-      const onSuccess = jest.fn();
+      const onSuccess = vi.fn();
 
       renderDialog({ onSuccess });
 
@@ -674,7 +675,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('removes only the artifacts the package holds from a partial overlap', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -694,7 +695,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('confirms with only the held artifact names when the partial overlap is deployed', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -740,7 +741,7 @@ describe('AddToPackagesDialog', () => {
 
     it('omits already-present artifact IDs from the entry when adding', async () => {
       setPackagesResponse([packageWithPartialOverlap, packageWithNoOverlap]);
-      const mutateAsync = jest.fn().mockResolvedValue([
+      const mutateAsync = vi.fn().mockResolvedValue([
         {
           packageId: packageWithPartialOverlap.id,
           ok: true,
@@ -769,7 +770,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('removes several artifacts instantly when the package is not deployed', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );
@@ -792,7 +793,7 @@ describe('AddToPackagesDialog', () => {
     });
 
     it('asks for confirmation before a bulk remove from a deployed package', async () => {
-      const mutateAsync = jest.fn().mockResolvedValue({});
+      const mutateAsync = vi.fn().mockResolvedValue({});
       mockUseRemoveArtefactsFromPackageMutation.mockReturnValue(
         createMockRemoveMutation({ mutateAsync }),
       );

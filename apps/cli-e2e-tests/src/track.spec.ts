@@ -9,12 +9,7 @@ import {
   WithMemberContext,
 } from './helpers';
 
-/**
- * The `track` command is gated behind the `cli-repo-tracking` feature flag,
- * which is enabled for the @packmind.com domain. Signed-up users therefore use
- * a @packmind.com email so the feature is available.
- */
-const packmindEmail = (): string => `track-e2e-${uuidv4()}@packmind.com`;
+const randomEmail = (): string => `track-e2e-${uuidv4()}@example.com`;
 
 describeForVersion('> 0.31.0', 'track command', () => {
   describeWithUserSignedUp(
@@ -38,7 +33,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -61,7 +56,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.stdout).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -85,7 +80,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.stderr).toContain('already tracked on branch main');
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithUserSignedUp(
@@ -111,7 +106,7 @@ describeForVersion('> 0.31.0', 'track command', () => {
         );
       });
     },
-    { email: packmindEmail },
+    { email: randomEmail },
   );
 
   describeWithExtraUser(
@@ -132,6 +127,153 @@ describeForVersion('> 0.31.0', 'track command', () => {
         expect(result.returnCode).toBe(1);
       });
     },
-    { email: `track-member-${uuidv4()}@packmind.com`, role: 'member' },
+    { email: `track-member-${uuidv4()}@example.com`, role: 'member' },
+  );
+});
+
+// `--branch` ships after 0.32.0; the released binary rejects it as an unknown
+// argument, so this is gated above the current release.
+describeForVersion('> 0.32.0', 'track --branch', () => {
+  describeWithUserSignedUp(
+    'when tracking a branch other than the checked-out one',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        execSync('git checkout -b dev', { cwd: context.testDir });
+        result = await context.runCli('track --branch main');
+      });
+
+      it('succeeds', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      // Previously this required `git checkout main` first.
+      it('tracks the requested branch, not the checked-out one', () => {
+        expect(result.stdout).toContain(
+          'Packmind now tracks PackmindHub/sample-repo on branch main',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+});
+
+// `untrack` ships after 0.32.0, so gate these above the current release: in
+// production mode the released binary has no such command and cmd-ts would
+// reject it as an unknown argument.
+describeForVersion('> 0.32.0', 'untrack', () => {
+  describeWithUserSignedUp(
+    'when removing tracking for a tracked repository',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        await context.runCli('track');
+        result = await context.runCli('untrack');
+      });
+
+      it('succeeds', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('confirms the tracking is gone', () => {
+        expect(result.stdout).toContain(
+          'Packmind no longer tracks PackmindHub/sample-repo',
+        );
+      });
+
+      it('promises the recorded distributions are kept', () => {
+        expect(result.stdout).toContain('are kept');
+      });
+    },
+    { email: randomEmail },
+  );
+
+  describeWithUserSignedUp(
+    'when removing tracking a second time',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        await context.runCli('track');
+        await context.runCli('untrack');
+        result = await context.runCli('untrack');
+      });
+
+      it('exits successfully', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('warns that the repository is not tracked', () => {
+        expect(result.stdout + result.stderr).toContain('is not tracked in');
+      });
+    },
+    { email: randomEmail },
+  );
+
+  describeWithUserSignedUp(
+    'when tracking is set again after being removed',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        await context.runCli('track');
+        await context.runCli('untrack');
+        result = await context.runCli('track');
+      });
+
+      it('succeeds', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('tracks the same branch again', () => {
+        expect(result.stdout).toContain(
+          'Packmind now tracks PackmindHub/sample-repo on branch main',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+
+  // The unknown-repository error is mapped to 409 on purpose: the CLI reads any
+  // 404 on the tracking routes as "tracking is not available for your account",
+  // which would be a misleading thing to print here.
+  describeWithUserSignedUp(
+    'when removing tracking for a repository Packmind has never seen',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        result = await context.runCli('untrack');
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('names the repository that is not connected', () => {
+        expect(result.stderr + result.stdout).toContain(
+          'is not connected to Packmind',
+        );
+      });
+
+      it('does not blame the account for a missing feature', () => {
+        expect(result.stderr + result.stdout).not.toContain(
+          'not available for your account',
+        );
+      });
+    },
+    { email: randomEmail },
   );
 });

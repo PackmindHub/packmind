@@ -9,11 +9,13 @@ overrides:
   fast-xml-parser: '>=5.7.0'
   # pnpm audit fixes below: parents' declared ranges permit these floors, but
   # plain `pnpm update` doesn't force re-resolution of nested transitive deps.
-  # GHSA-9ggv-8w38-r7pm: typeorm-fastify-plugin (^0.3.20) held a second, older
-  # resolution alive alongside the direct-dependency bump to 0.3.29.
-  typeorm: '>=0.3.29'
+  # Pinned exactly (not a floor): typeorm now publishes a 1.x line, and an
+  # open-ended '>=' override would drag every resolution up to that major.
+  typeorm: '0.3.31'
   axios: '>=1.18.1'
-  undici: '>=7.28.0'
+  # Upper-bounded: undici now publishes an 8.x line, and the bare '>=' floor this
+  # used to carry silently resolved the CLI onto that major.
+  undici: '>=7.29.0 <8.0.0'
   hono: '>=4.12.25'
   piscina: '>=4.9.3'
   shell-quote: '>=1.8.5'
@@ -27,10 +29,25 @@ overrides:
   # Two coexisting major lines (istanbul chain wants ^3.x, eslint chain wants ^4.x)
   js-yaml@3: 3.15.0
   js-yaml@4: 4.3.0
-  # Three coexisting major lines, one per minimatch major version consuming it
-  brace-expansion@1: 1.1.16
-  brace-expansion@2: 2.1.2
-  brace-expansion@5: 5.0.7
+  # Four coexisting major lines, one per minimatch major version consuming it
+  brace-expansion@1: 1.1.18
+  brace-expansion@2: 2.1.4
+  brace-expansion@5: 5.0.9
+  # The 4.x line has no patched release, so redirect it onto the fixed 5.x line
+  brace-expansion@4: 5.0.9
+  # Two coexisting major lines (pg-mem wants ^4.x, sass wants ^5.x)
+  immutable@4: 4.3.9
+  immutable@5: 5.1.9
+  # packages/ui and packages/frontend declare a deliberately broad '>=18.0.0' React
+  # peer, which autoInstallPeers resolves on its own. Without these it settles on a
+  # second React beside the app's, and every hook in the ui test suite throws
+  # "Invalid hook call". Keep both pinned in step with package.json.
+  react: 19.2.8
+  react-dom: 19.2.8
+  # Upper-bounded to the current major so a future major release can't be dragged in
+  postcss: '>=8.5.25 <9.0.0'
+  socket.io-parser: '>=4.2.7 <5.0.0'
+  valibot: '>=1.4.2 <2.0.0'
 
 # Converted from package.json "pnpm".onlyBuiltDependencies (list) to the allowBuilds map form
 allowBuilds:

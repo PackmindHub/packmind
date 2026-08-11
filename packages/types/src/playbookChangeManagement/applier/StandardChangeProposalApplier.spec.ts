@@ -162,6 +162,20 @@ describe('StandardChangeProposalApplier', () => {
         expect(result.version.name).toBe('Third');
       });
 
+      describe('when the live name diverged from the base on the same words', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const source = standardVersionFactory({ name: 'Renamed Already' });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateStandardName,
+            payload: { oldValue: 'Original Name', newValue: 'My New Name' },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
+      });
+
       describe('when decision differs from payload', () => {
         it('uses the decision newValue instead of payload newValue', () => {
           const source = standardVersionFactory({ name: 'Original Name' });
@@ -412,6 +426,29 @@ describe('StandardChangeProposalApplier', () => {
         ]);
 
         expect((result.version.rules ?? [])[1].content).toBe('Other content');
+      });
+
+      describe('when the live rule content diverged from the base', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const ruleId = createRuleId('rule-to-update');
+          const rule = ruleFactory({
+            id: ruleId,
+            content: 'Edited by someone else',
+          });
+          const source = standardVersionFactory({ rules: [rule] });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            payload: {
+              targetId: ruleId,
+              oldValue: 'Original content',
+              newValue: 'My new content',
+            },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
       });
     });
 

@@ -32,13 +32,6 @@ export type InvitationCreationRecord = {
   userId: UserId;
 };
 
-export type InvitationResendRecord = {
-  email: string;
-  invitation: Invitation;
-  userId: UserId;
-  wasResent: boolean;
-};
-
 type SendInvitationEmailArgs = {
   invitation: Invitation;
   request: InvitationCreationRequest;

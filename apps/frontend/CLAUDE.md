@@ -1,36 +1,36 @@
 # Frontend Application
 
-React Router v7 single-page application for Packmind, built with Chakra UI and TanStack Query.
+React Router v7 SPA for Packmind.
 
-## Architecture
+## Owned elsewhere
 
-- **Framework**: React Router v7 with file-based routing
-- **UI Library**: Chakra UI v3 with custom PM-prefixed components
-- **State Management**: TanStack Query v5 for server state, React Context for UI state
-- **Data Fetching**: clientLoader functions with TanStack Query integration
-- **Styling**: Chakra UI theming system with custom design tokens
-- **Build Tool**: Vite 6 with React plugin
+- **Route data flow** — how routes fetch, where query options and hooks live, gateway typing:
+  `.claude/rules/packmind/standard-frontend-data-flow.md`. It is `alwaysApply: true`, so its rules are
+  already in context; do not look for them here.
+- **Query keys**, **navigation** (the `routes` utility and `useNavigation()`), and **error handling**:
+  the other three standards in `.claude/rules/packmind/`.
+- **UI components** — use `@packmind/ui` PM components, never `@chakra-ui/react` directly: the
+  **`working-with-pm-design-kit`** skill.
 
-## Technologies
+## Stack specifics
 
-- **React**: v19 - UI components, hooks, context
-- **React Router**: v7 - File-based routing, loaders, actions
-- **Vite**: v6 - Fast development server and optimized builds
-- **Chakra UI**: v3 - Component library with theming system
-- **TanStack Query**: v5 - Server state management and caching
-- **TypeScript**: Type-safe component props and API contracts
-- **Axios**: HTTP client for API communication
+- **React** v19, **Vite** v8, **Axios** for HTTP
+- **React Context** for UI state (server state belongs to TanStack Query — see the data-flow standard)
 
-## Main Commands
+## Commands
 
-- Build: `./node_modules/.bin/nx build frontend`
-- Test: `./node_modules/.bin/nx test frontend`
+- Dev server: `./node_modules/.bin/nx dev frontend`
 - Type check: `./node_modules/.bin/nx typecheck frontend`
-- Lint: `./node_modules/.bin/nx lint frontend`
+
+(`build`, `test` and `lint` follow the generic form in the root `CLAUDE.md`.)
 
 ## Configuration
 
-- **Port**: 4200 (default development)
-- **Environment Variables**: Vite env vars with `VITE_` prefix
-- **API Base URL**: Configured via environment variable
-- **Build Output**: `dist/apps/frontend/`
+- **Port**: 4200 (set twice in `vite.config.ts` — `server` and `preview`)
+- **Environment variables**: Vite vars with the `VITE_` prefix — `VITE_SENTRY_FRONTEND_DSN`,
+  `VITE_SENTRY_ENVIRONMENT`, `VITE_CRISP_WEBSITE_ID`, `VITE_HMR_HOST`
+- **API base URL**: not configurable — `packmindApiService` is hardcoded to the relative path `/api`
+  (`src/services/api/PackmindApiService.ts`). In dev, `vite.config.ts` proxies `/api` to
+  `API_HOSTNAME`:`API_PORT` **only when both are set**; otherwise requests go to the frontend's own
+  origin.
+- **Build output**: `dist/apps/frontend/`

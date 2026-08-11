@@ -1,13 +1,14 @@
 import { UserGatewayApi } from './UserGatewayApi';
 import { createOrganizationId } from '@packmind/types';
+import type { Mock } from 'vitest';
 
 // Mock the PackmindGateway
-const mockApiGet = jest.fn();
+const mockApiGet = vi.fn();
 
-jest.mock('../../../../shared/PackmindGateway', () => {
+vi.mock('../../../../shared/PackmindGateway', () => {
   return {
-    PackmindGateway: jest.fn().mockImplementation(function (
-      this: { _endpoint: string; _api: { get: jest.Mock } },
+    PackmindGateway: vi.fn().mockImplementation(function (
+      this: { _endpoint: string; _api: { get: Mock } },
       endpoint: string,
     ) {
       this._endpoint = endpoint;

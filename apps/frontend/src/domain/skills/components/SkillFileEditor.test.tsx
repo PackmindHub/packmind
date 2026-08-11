@@ -12,23 +12,24 @@ import {
 import { SkillFileEditor } from './SkillFileEditor';
 import { useUpdateSkillFileMutation } from '../api/queries/SkillsQueries';
 import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import type { MockedFunction } from 'vitest';
 
-const mockTrack = jest.fn();
-const mockToasterCreate = jest.fn();
+const mockTrack = vi.fn();
+const mockToasterCreate = vi.fn();
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider',
   () => ({
     useAnalytics: () => ({ track: mockTrack }),
   }),
 );
 
-jest.mock('@packmind/ui', () => ({
-  ...jest.requireActual('@packmind/ui'),
+vi.mock('@packmind/ui', async () => ({
+  ...(await vi.importActual('@packmind/ui')),
   pmToaster: { create: (...args: unknown[]) => mockToasterCreate(...args) },
 }));
 
-jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
+vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   MarkdownEditor: ({
     defaultValue,
     onEditorReady,
@@ -56,27 +57,27 @@ jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   ),
 }));
 
-jest.mock('../api/queries/SkillsQueries', () => ({
-  useUpdateSkillFileMutation: jest.fn(),
+vi.mock('../api/queries/SkillsQueries', () => ({
+  useUpdateSkillFileMutation: vi.fn(),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-  () => ({
-    ...jest.requireActual(
+  async () => ({
+    ...(await vi.importActual(
       '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
-    ),
-    useListChangeProposalsBySkillQuery: jest.fn(),
+    )),
+    useListChangeProposalsBySkillQuery: vi.fn(),
   }),
 );
 
 const mockUseUpdateSkillFileMutation =
-  useUpdateSkillFileMutation as jest.MockedFunction<
+  useUpdateSkillFileMutation as MockedFunction<
     typeof useUpdateSkillFileMutation
   >;
 
 const mockUseListChangeProposalsBySkillQuery =
-  useListChangeProposalsBySkillQuery as jest.MockedFunction<
+  useListChangeProposalsBySkillQuery as MockedFunction<
     typeof useListChangeProposalsBySkillQuery
   >;
 
@@ -94,8 +95,8 @@ const mockPendingProposals = (pendingCount: number) => {
 
 const createMockMutation = (overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -140,8 +141,8 @@ describe('SkillFileEditor', () => {
     filePath: 'references/guide.md',
     initialContent: 'Original content',
     currentVersion: 1,
-    onCancel: jest.fn(),
-    onSaved: jest.fn(),
+    onCancel: vi.fn(),
+    onSaved: vi.fn(),
   };
 
   beforeEach(() => {
@@ -155,12 +156,12 @@ describe('SkillFileEditor', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('with a real content change', () => {
     it('saves with the correct skillId, slug, filePath and content', async () => {
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion: null,
         versionCreated: false,
       });
@@ -181,7 +182,7 @@ describe('SkillFileEditor', () => {
     });
 
     it('does not track analytics when no new version is created', async () => {
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion: null,
         versionCreated: false,
       });
@@ -197,14 +198,14 @@ describe('SkillFileEditor', () => {
     });
 
     it('calls onSaved on success', async () => {
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion: null,
         versionCreated: false,
       });
       mockUseUpdateSkillFileMutation.mockReturnValue(
         createMockMutation({ mutateAsync: mockMutateAsync }),
       );
-      const onSaved = jest.fn();
+      const onSaved = vi.fn();
       renderWithProviders(
         <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
       );
@@ -228,7 +229,7 @@ describe('SkillFileEditor', () => {
         description: 'desc',
         prompt: 'Updated content',
       };
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion,
         versionCreated: true,
       });
@@ -259,7 +260,7 @@ describe('SkillFileEditor', () => {
         description: 'desc',
         prompt: 'Updated content',
       };
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion,
         versionCreated: true,
       });
@@ -281,7 +282,7 @@ describe('SkillFileEditor', () => {
 
   describe('when the mutation fails', () => {
     it('shows an inline error', async () => {
-      const mockMutateAsync = jest.fn().mockRejectedValue(new Error('boom'));
+      const mockMutateAsync = vi.fn().mockRejectedValue(new Error('boom'));
       mockUseUpdateSkillFileMutation.mockReturnValue(
         createMockMutation({ mutateAsync: mockMutateAsync }),
       );
@@ -296,11 +297,11 @@ describe('SkillFileEditor', () => {
     });
 
     it('does not call onSaved', async () => {
-      const mockMutateAsync = jest.fn().mockRejectedValue(new Error('boom'));
+      const mockMutateAsync = vi.fn().mockRejectedValue(new Error('boom'));
       mockUseUpdateSkillFileMutation.mockReturnValue(
         createMockMutation({ mutateAsync: mockMutateAsync }),
       );
-      const onSaved = jest.fn();
+      const onSaved = vi.fn();
       renderWithProviders(
         <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
       );
@@ -325,7 +326,7 @@ describe('SkillFileEditor', () => {
     });
 
     it('does not call the mutation', async () => {
-      const mockMutateAsync = jest.fn();
+      const mockMutateAsync = vi.fn();
       mockUseUpdateSkillFileMutation.mockReturnValue(
         createMockMutation({ mutateAsync: mockMutateAsync }),
       );
@@ -355,11 +356,11 @@ describe('SkillFileEditor', () => {
 
   describe('with unchanged content', () => {
     it('exits edit mode without calling the mutation on save', async () => {
-      const mockMutateAsync = jest.fn();
+      const mockMutateAsync = vi.fn();
       mockUseUpdateSkillFileMutation.mockReturnValue(
         createMockMutation({ mutateAsync: mockMutateAsync }),
       );
-      const onSaved = jest.fn();
+      const onSaved = vi.fn();
       renderWithProviders(
         <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
       );
@@ -370,7 +371,7 @@ describe('SkillFileEditor', () => {
     });
 
     it('calls onSaved on save', async () => {
-      const onSaved = jest.fn();
+      const onSaved = vi.fn();
       renderWithProviders(
         <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
       );
@@ -391,7 +392,7 @@ describe('SkillFileEditor', () => {
 
   describe('when clicking Cancel', () => {
     it('calls onCancel', async () => {
-      const onCancel = jest.fn();
+      const onCancel = vi.fn();
       renderWithProviders(
         <SkillFileEditor {...defaultProps} onCancel={onCancel} />,
       );
@@ -422,7 +423,7 @@ describe('SkillFileEditor', () => {
 
     describe('when saving a modified file', () => {
       it('asks for confirmation instead of saving directly', async () => {
-        const mockMutateAsync = jest.fn();
+        const mockMutateAsync = vi.fn();
         mockUseUpdateSkillFileMutation.mockReturnValue(
           createMockMutation({ mutateAsync: mockMutateAsync }),
         );
@@ -439,7 +440,7 @@ describe('SkillFileEditor', () => {
 
       describe('when the user confirms', () => {
         it('saves the file', async () => {
-          const mockMutateAsync = jest.fn().mockResolvedValue({
+          const mockMutateAsync = vi.fn().mockResolvedValue({
             skillVersion: null,
             versionCreated: false,
           });
@@ -468,7 +469,7 @@ describe('SkillFileEditor', () => {
 
       describe('when the user cancels', () => {
         it('does not save the file', async () => {
-          const mockMutateAsync = jest.fn();
+          const mockMutateAsync = vi.fn();
           mockUseUpdateSkillFileMutation.mockReturnValue(
             createMockMutation({ mutateAsync: mockMutateAsync }),
           );
@@ -490,11 +491,11 @@ describe('SkillFileEditor', () => {
 
     describe('when saving an unchanged file', () => {
       it('exits silently without confirmation', async () => {
-        const mockMutateAsync = jest.fn();
+        const mockMutateAsync = vi.fn();
         mockUseUpdateSkillFileMutation.mockReturnValue(
           createMockMutation({ mutateAsync: mockMutateAsync }),
         );
-        const onSaved = jest.fn();
+        const onSaved = vi.fn();
         renderWithProviders(
           <SkillFileEditor {...defaultProps} onSaved={onSaved} />,
         );
@@ -520,7 +521,7 @@ describe('SkillFileEditor', () => {
     });
 
     it('saves a modified file without confirmation', async () => {
-      const mockMutateAsync = jest.fn().mockResolvedValue({
+      const mockMutateAsync = vi.fn().mockResolvedValue({
         skillVersion: null,
         versionCreated: false,
       });

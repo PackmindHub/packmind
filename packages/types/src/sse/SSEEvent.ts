@@ -1,4 +1,5 @@
 import { UserOrganizationRole } from '../accounts/User';
+import { PublishFailureReason } from '../deployments/PublishFailureReason';
 
 // Base SSE Event structure
 export interface SSEEvent<TData = unknown> {
@@ -20,7 +21,8 @@ export type SSEEventType =
   | 'DETECTION_HEURISTICS_UPDATED'
   | 'USER_CONTEXT_CHANGE'
   | 'DISTRIBUTION_STATUS_CHANGE'
-  | 'CHANGE_PROPOSAL_UPDATE';
+  | 'CHANGE_PROPOSAL_UPDATE'
+  | 'MARKETPLACE_PUBLISH_COMPLETED';
 
 // Hello World event for testing
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
@@ -96,6 +98,26 @@ export interface ChangeProposalUpdateEvent extends SSEEvent<{
   type: 'CHANGE_PROPOSAL_UPDATE';
 }
 
+export type MarketplacePublishCompletedStatus =
+  | 'success'
+  | 'no_changes'
+  | 'failure';
+
+// Marketplace publish completed event for user-facing notifications
+export interface MarketplacePublishCompletedEvent extends SSEEvent<{
+  marketplaceDistributionId: string;
+  marketplaceId: string;
+  packageId: string;
+  pluginSlug: string;
+  packageName: string;
+  marketplaceName: string;
+  status: MarketplacePublishCompletedStatus;
+  prUrl?: string;
+  failureReason?: PublishFailureReason;
+}> {
+  type: 'MARKETPLACE_PUBLISH_COMPLETED';
+}
+
 // Union type of all possible SSE events
 export type AnySSEEvent =
   | HelloWorldEvent
@@ -106,7 +128,8 @@ export type AnySSEEvent =
   | DetectionHeuristicsUpdatedEvent
   | UserContextChangeEvent
   | DistributionStatusChangeEvent
-  | ChangeProposalUpdateEvent;
+  | ChangeProposalUpdateEvent
+  | MarketplacePublishCompletedEvent;
 
 // Event creation helpers
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
@@ -225,6 +248,24 @@ export function createChangeProposalUpdateEvent(
       organizationId,
       spaceId,
     },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createMarketplacePublishCompletedEvent(params: {
+  marketplaceDistributionId: string;
+  marketplaceId: string;
+  packageId: string;
+  pluginSlug: string;
+  packageName: string;
+  marketplaceName: string;
+  status: MarketplacePublishCompletedStatus;
+  prUrl?: string;
+  failureReason?: PublishFailureReason;
+}): MarketplacePublishCompletedEvent {
+  return {
+    type: 'MARKETPLACE_PUBLISH_COMPLETED',
+    data: params,
     timestamp: new Date().toISOString(),
   };
 }

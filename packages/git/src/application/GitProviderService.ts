@@ -7,6 +7,7 @@ import {
   GitProviderId,
   ListAvailableReposResponse,
   createGitProviderId,
+  createGitRepoId,
 } from '@packmind/types';
 import { GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
@@ -123,6 +124,160 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     return providerInstance.checkBranchExists(owner, repo, branch);
+  }
+
+  async createBranchFromBase(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    baseBranch: string,
+    targetBranch: string,
+  ): Promise<void> {
+    // Resolve provider + token, then build an IGitRepo bound to the BASE
+    // branch so the underlying client knows where to fork from. The factory
+    // only consumes owner/repo/branch from the GitRepo shape, so the synthetic
+    // id/providerId/type fields are inert here.
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const syntheticGitRepo: GitRepo = {
+      id: createGitRepoId(uuidv4()),
+      owner,
+      repo,
+      branch: baseBranch,
+      providerId: gitProviderId,
+      type: 'standard',
+      isTracked: false,
+      trackingRemovedAt: null,
+    };
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      syntheticGitRepo,
+      gitProvider,
+    );
+
+    await gitRepoInstance.createBranchFromBase(targetBranch);
+  }
+
+  async deleteBranch(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    targetBranch: string,
+  ): Promise<void> {
+    const gitProvider =
+      await this.gitProviderRepository.findById(gitProviderId);
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const syntheticGitRepo: GitRepo = {
+      id: createGitRepoId(uuidv4()),
+      owner,
+      repo,
+      branch: targetBranch,
+      providerId: gitProviderId,
+      type: 'standard',
+      isTracked: false,
+      trackingRemovedAt: null,
+    };
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      syntheticGitRepo,
+      gitProvider,
+    );
+
+    await gitRepoInstance.deleteBranch(targetBranch);
+  }
+
+  async openOrUpdatePullRequest(
+    gitRepo: GitRepo,
+    command: {
+      head: string;
+      title: string;
+      body?: string;
+    },
+  ): Promise<{ url: string; number: number; wasCreated: boolean }> {
+    // Resolve provider + token, then build an IGitRepo bound to the BASE
+    // branch (the repo's configured `branch` field is the merge target).
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.openOrUpdatePullRequest(command);
+  }
+
+  async findOpenSyncPullRequest(
+    gitRepo: GitRepo,
+    head: string,
+  ): Promise<{ url: string; number: number } | null> {
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.findOpenPullRequest(head);
+  }
+
+  async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{
+    exists: boolean;
+    reason?: 'auth_failed' | 'repo_not_found' | 'network_transient';
+  }> {
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (
+      !gitProvider ||
+      (gitProvider.authMethod !== 'app' && !gitProvider.token)
+    ) {
+      return { exists: false, reason: 'auth_failed' };
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.checkRepositoryExists();
   }
 
   async listAvailableTargets(

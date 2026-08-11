@@ -23,7 +23,11 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       return {
         ...source,
-        name: this.getEffectivePayload(changeProposal).newValue,
+        name: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.name,
+        ),
       };
     }
 
@@ -35,7 +39,11 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
     ) {
       return {
         ...source,
-        scope: this.getEffectivePayload(changeProposal).newValue,
+        scope: this.applyDiff(
+          changeProposal.id,
+          this.getEffectivePayload(changeProposal),
+          source.scope ?? '',
+        ),
       };
     }
 
@@ -84,7 +92,11 @@ export class StandardChangeProposalApplier extends AbstractChangeProposalApplier
 
         return {
           ...rule,
-          content: changeProposal.payload.newValue,
+          content: this.applyDiff(
+            changeProposal.id,
+            this.getEffectivePayload(changeProposal),
+            rule.content,
+          ),
         };
       });
 

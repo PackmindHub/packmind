@@ -8,6 +8,8 @@ export * from './ChangeProposalDecision';
 export * from './ChangeProposal';
 export * from './ChangeProposalCaptureMode';
 export * from './ChangeProposalArtefactIdType';
+export * from './ProposalMergeVerdict';
+export * from './ArtefactDraft';
 export * from './contracts';
 export * from './events';
 export * from './ports';

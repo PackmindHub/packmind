@@ -3,6 +3,7 @@ export * from './TargetId';
 export * from './Target';
 export * from './TargetWithRepository';
 export * from './DistributionStatus';
+export * from './PublishFailureReason';
 export * from './RenderMode';
 export * from './RenderModeConfigurationId';
 export * from './RenderModeConfiguration';

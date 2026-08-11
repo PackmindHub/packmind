@@ -1,6 +1,6 @@
 {
   "name": "@packmind/cli",
-  "version": "0.32.0-next",
+  "version": "0.33.0-next",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
@@ -41,11 +41,11 @@
     "dotenv": "^16",
     "inquirer": "^13.0.2",
     "log-update": "^8.0.0",
-    "minimatch": "^10",
+    "minimatch": "^10.2.6",
     "open": "^11.0.0",
     "semver": "^7.7.4",
     "slug": "^11.0.0",
-    "undici": "^7.28.0",
+    "undici": "^7.29.0",
     "which": "^4.0.0",
     "yaml": "^2.8.3"
   },

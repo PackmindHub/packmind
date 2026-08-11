@@ -42,11 +42,8 @@ import {
   InstallPackagesResponse,
   IPullContentResponse,
   IListActiveDistributedPackagesBySpaceUseCase,
-  IListDriftedPackagesByOrgUseCase,
   ListActiveDistributedPackagesBySpaceCommand,
   ListActiveDistributedPackagesBySpaceResponse,
-  ListDriftedPackagesByOrgCommand,
-  ListDriftedPackagesByOrgResponse,
   ListDeploymentsByPackageCommand,
   ListDistributionsByCommandCommand,
   ListDistributionsByStandardCommand,
@@ -74,7 +71,9 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '../contracts';
+import { OrganizationId } from '../../accounts/Organization';
 import { Distribution } from '../Distribution';
+import { Package, PackageId, PackageWithArtefacts } from '../Package';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { Target } from '../Target';
@@ -404,6 +403,26 @@ export interface IDeploymentPort {
   ): Promise<GetPackageByIdResponse>;
 
   /**
+   * System-level package lookup by id, bypassing membership validation.
+   * Intended for sibling hexas and background jobs that operate without a
+   * user context (e.g. marketplace publishing). Mirrors
+   * `PackageService.findById`: resolves to `null` when the package does not
+   * exist or has been soft-deleted.
+   */
+  findPackageById(packageId: PackageId): Promise<Package | null>;
+
+  /**
+   * System-level bulk package lookup by slug within an organization,
+   * hydrated with artefact entities. Intended for sibling hexas and public
+   * flows that operate without a member context (e.g. plugin install
+   * heartbeats).
+   */
+  getPackagesBySlugsWithArtefacts(
+    slugs: string[],
+    organizationId: OrganizationId,
+  ): Promise<PackageWithArtefacts[]>;
+
+  /**
    * Deletes multiple packages in batch
    *
    * Soft-deletes multiple packages at once from a specific space.
@@ -581,23 +600,6 @@ export interface IDeploymentPort {
    * Exposes the typed use case instance for consumers that need the port-typed reference.
    */
   getListActiveDistributedPackagesBySpaceUseCase(): IListActiveDistributedPackagesBySpaceUseCase;
-
-  /**
-   * Lists packages with at least one drifted (outdated) distribution across
-   * all spaces of the calling user's organization. Returns a flat aggregate
-   * keyed by (packageId, spaceId), sorted by behindDistributions desc.
-   *
-   * @param command - Command containing user and organization context.
-   * @returns Promise of drifted package summaries.
-   */
-  listDriftedPackagesByOrg(
-    command: ListDriftedPackagesByOrgCommand,
-  ): Promise<ListDriftedPackagesByOrgResponse>;
-
-  /**
-   * Exposes the typed use case instance for consumers that need the port-typed reference.
-   */
-  getListDriftedPackagesByOrgUseCase(): IListDriftedPackagesByOrgUseCase;
 
   /**
    * For each requested Git provider, return the createdAt of the most recent

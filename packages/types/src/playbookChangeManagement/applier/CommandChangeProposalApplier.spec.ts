@@ -99,6 +99,20 @@ describe('CommandChangeProposalApplier', () => {
 
         expect(result.version.name).toBe('Third');
       });
+
+      describe('when the live name diverged from the base on the same words', () => {
+        it('throws ChangeProposalConflictError', () => {
+          const source = commandVersionFactory({ name: 'Renamed Already' });
+          const proposal = changeProposalFactory({
+            type: ChangeProposalType.updateCommandName,
+            payload: { oldValue: 'Original Name', newValue: 'My New Name' },
+          });
+
+          expect(() =>
+            applier.applyChangeProposals(source, [proposal as ChangeProposal]),
+          ).toThrow(ChangeProposalConflictError);
+        });
+      });
     });
 
     describe('updateCommandDescription', () => {

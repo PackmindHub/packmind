@@ -7,12 +7,13 @@ import { UIProvider } from '@packmind/ui';
 import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 import { AutomateUpdatesStep } from './AutomateUpdatesStep';
 import { useApiKey } from '../../../accounts/components/LocalEnvironmentSetup/hooks';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../../accounts/components/LocalEnvironmentSetup/hooks', () => ({
-  useApiKey: jest.fn(),
+vi.mock('../../../accounts/components/LocalEnvironmentSetup/hooks', () => ({
+  useApiKey: vi.fn(),
 }));
 
-const mockedUseApiKey = useApiKey as jest.MockedFunction<typeof useApiKey>;
+const mockedUseApiKey = useApiKey as MockedFunction<typeof useApiKey>;
 
 const buildUseApiKeyReturn = (
   overrides: Partial<ReturnType<typeof useApiKey>> = {},
@@ -27,8 +28,8 @@ const buildUseApiKeyReturn = (
     isError: false,
     error: null,
     showConfirmGenerate: false,
-    handleGenerate: jest.fn(),
-    cancelGenerate: jest.fn(),
+    handleGenerate: vi.fn(),
+    cancelGenerate: vi.fn(),
     getGenerateButtonLabel: () =>
       overrides.hasExistingKey ? 'Generate New API Key' : 'Generate API Key',
     ...overrides,
@@ -61,7 +62,7 @@ const getActivePanel = (): HTMLElement => {
 
 describe('AutomateUpdatesStep', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     window.localStorage.clear();
   });
 
@@ -95,7 +96,7 @@ describe('AutomateUpdatesStep', () => {
   });
 
   it('triggers API key generation directly from the panel button', async () => {
-    const handleGenerate = jest.fn();
+    const handleGenerate = vi.fn();
     mockedUseApiKey.mockReturnValue(buildUseApiKeyReturn({ handleGenerate }));
     renderStep();
 

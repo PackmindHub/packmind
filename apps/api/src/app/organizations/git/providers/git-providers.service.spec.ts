@@ -29,6 +29,7 @@ jest.mock('../../../shared/HexaInjection', () => {
   return {
     InjectGitAdapter: () => Inject('GIT_ADAPTER'),
     InjectDeploymentAdapter: () => Inject('DEPLOYMENT_ADAPTER'),
+    InjectMarketplacesAdapter: () => Inject('MARKETPLACES_ADAPTER'),
   };
 });
 
@@ -59,6 +60,7 @@ import {
   GitProviderNotFoundError,
   IDeploymentPort,
   IGitPort,
+  IMarketplacePort,
   ListAvailableReposResponse,
   OrganizationGitHubApp,
 } from '@packmind/types';
@@ -75,6 +77,7 @@ const { resolveGithubAppMode } = require('../../../shared/utils/edition') as {
 // but defined here to avoid the broken import chain.
 const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 const DEPLOYMENT_ADAPTER_TOKEN = 'DEPLOYMENT_ADAPTER';
+const MARKETPLACES_ADAPTER_TOKEN = 'MARKETPLACES_ADAPTER';
 
 // Wraps a repo list in the paginated response shape returned by
 // gitAdapter.listAvailableRepos.
@@ -101,6 +104,7 @@ describe('GitProvidersService', () => {
   let service: GitProvidersService;
   let mockGitAdapter: Partial<IGitPort>;
   let mockDeploymentAdapter: Partial<IDeploymentPort>;
+  let mockMarketplacesAdapter: Partial<IMarketplacePort>;
   let mockSigner: { sign: jest.Mock; verify: jest.Mock };
   let mockAccountsAdapter: { getOrganizationById: jest.Mock };
 
@@ -109,6 +113,15 @@ describe('GitProvidersService', () => {
       getLastDistributionDateByProviders: jest
         .fn()
         .mockResolvedValue({ datesByProviderId: {} }),
+    };
+
+    mockMarketplacesAdapter = {
+      getLastMarketplaceDistributionDateByProviders: jest
+        .fn()
+        .mockResolvedValue({ datesByProviderId: {} }),
+      autoLinkMarketplace: jest
+        .fn()
+        .mockResolvedValue({ outcome: 'not-a-marketplace' }),
     };
 
     mockGitAdapter = {
@@ -146,6 +159,10 @@ describe('GitProvidersService', () => {
         {
           provide: DEPLOYMENT_ADAPTER_TOKEN,
           useValue: mockDeploymentAdapter,
+        },
+        {
+          provide: MARKETPLACES_ADAPTER_TOKEN,
+          useValue: mockMarketplacesAdapter,
         },
         {
           provide: AccountsHexa,
@@ -661,6 +678,122 @@ describe('GitProvidersService', () => {
 
         it('still returns the provider', () => {
           expect(result).toEqual(mockProvider);
+        });
+      });
+
+      describe('marketplace auto-detection routing', () => {
+        const marketplaceRepo = {
+          name: 'marketplace-repo',
+          owner: 'acme',
+          private: false,
+          defaultBranch: 'main',
+          stars: 0,
+        };
+        const standardRepo = {
+          name: 'standard-repo',
+          owner: 'acme',
+          private: false,
+          defaultBranch: 'main',
+          stars: 0,
+        };
+        const previouslyUnlinkedRepo = {
+          name: 'was-marketplace-repo',
+          owner: 'acme',
+          private: false,
+          defaultBranch: 'main',
+          stars: 0,
+        };
+        const errorRepo = {
+          name: 'error-repo',
+          owner: 'acme',
+          private: false,
+          defaultBranch: 'main',
+          stars: 0,
+        };
+
+        beforeEach(() => {
+          (mockGitAdapter.listAvailableRepos as jest.Mock).mockResolvedValue(
+            reposResponse([
+              marketplaceRepo,
+              standardRepo,
+              previouslyUnlinkedRepo,
+              errorRepo,
+            ]),
+          );
+
+          (
+            mockMarketplacesAdapter.autoLinkMarketplace as jest.Mock
+          ).mockImplementation((cmd: { repo: string }) => {
+            if (cmd.repo === 'marketplace-repo') {
+              return Promise.resolve({ outcome: 'linked' });
+            }
+            if (cmd.repo === 'standard-repo') {
+              return Promise.resolve({ outcome: 'not-a-marketplace' });
+            }
+            if (cmd.repo === 'was-marketplace-repo') {
+              return Promise.resolve({ outcome: 'previously-unlinked' });
+            }
+            // error-repo
+            return Promise.reject(new Error('GitHub timeout'));
+          });
+        });
+
+        it('does not pass a linked marketplace repo to addGitRepo', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          const calls = (mockGitAdapter.addGitRepo as jest.Mock).mock.calls;
+          const calledRepos = calls.map((c: [{ repo: string }]) => c[0].repo);
+          expect(calledRepos).not.toContain('marketplace-repo');
+        });
+
+        it('passes a non-marketplace repo to addGitRepo', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
+            expect.objectContaining({ repo: 'standard-repo' }),
+          );
+        });
+
+        it('does not pass a previously-unlinked marketplace repo to addGitRepo', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          const calls = (mockGitAdapter.addGitRepo as jest.Mock).mock.calls;
+          const calledRepos = calls.map((c: [{ repo: string }]) => c[0].repo);
+          expect(calledRepos).not.toContain('was-marketplace-repo');
+        });
+
+        describe('when autoLinkMarketplace rejects', () => {
+          it('falls back to addGitRepo for that repo', async () => {
+            await service.completeGithubAppInstall({
+              organizationId: orgId,
+              userId,
+              installationId: 12345,
+              state: 'STUB_STATE',
+              source: 'web',
+            });
+
+            expect(mockGitAdapter.addGitRepo).toHaveBeenCalledWith(
+              expect.objectContaining({ repo: 'error-repo' }),
+            );
+          });
         });
       });
     });

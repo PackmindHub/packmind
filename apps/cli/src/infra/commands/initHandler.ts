@@ -203,6 +203,7 @@ async function offerRepositoryTracking(deps: {
       repoPath: deps.baseDirectory,
       origin: 'init',
       update: false,
+      remove: false,
       confirm,
     });
 

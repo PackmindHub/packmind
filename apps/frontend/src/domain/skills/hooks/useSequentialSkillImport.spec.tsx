@@ -24,14 +24,14 @@ const first = detectedSkill('documentation');
 const second = detectedSkill('onboarding');
 
 describe('useSequentialSkillImport', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   describe('before anything is imported', () => {
     it('has no rows', () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn(),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn(),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -41,8 +41,8 @@ describe('useSequentialSkillImport', () => {
     it('is not importing', () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn(),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn(),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -52,9 +52,9 @@ describe('useSequentialSkillImport', () => {
 
   describe('when every skill uploads successfully', () => {
     it('uploads each skill once', async () => {
-      const uploadSkill = jest.fn().mockResolvedValue(undefined);
+      const uploadSkill = vi.fn().mockResolvedValue(undefined);
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([first, second]));
@@ -65,14 +65,14 @@ describe('useSequentialSkillImport', () => {
     it('never runs two uploads at the same time', async () => {
       let inFlight = 0;
       let maxInFlight = 0;
-      const uploadSkill = jest.fn(async () => {
+      const uploadSkill = vi.fn(async () => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await Promise.resolve();
         inFlight -= 1;
       });
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([first, second]));
@@ -82,11 +82,11 @@ describe('useSequentialSkillImport', () => {
 
     it('uploads them in the order they were given', async () => {
       const uploaded: string[] = [];
-      const uploadSkill = jest.fn(async (skill: DetectedSkill) => {
+      const uploadSkill = vi.fn(async (skill: DetectedSkill) => {
         uploaded.push(skill.name);
       });
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([first, second]));
@@ -97,8 +97,8 @@ describe('useSequentialSkillImport', () => {
     it('marks every row as successful', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -111,10 +111,10 @@ describe('useSequentialSkillImport', () => {
     });
 
     it('calls onFinished once for the whole batch', async () => {
-      const onFinished = jest.fn();
+      const onFinished = vi.fn();
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
           onFinished,
         }),
       );
@@ -127,8 +127,8 @@ describe('useSequentialSkillImport', () => {
     it('stops reporting an import in progress', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -140,12 +140,12 @@ describe('useSequentialSkillImport', () => {
 
   describe('when one upload fails', () => {
     const buildHook = () => {
-      const uploadSkill = jest
+      const uploadSkill = vi
         .fn()
         .mockRejectedValueOnce(new Error('Invalid frontmatter'))
         .mockResolvedValueOnce(undefined);
       return renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
     };
 
@@ -178,8 +178,8 @@ describe('useSequentialSkillImport', () => {
     it('falls back to a generic message', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockRejectedValue('boom'),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockRejectedValue('boom'),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -193,9 +193,9 @@ describe('useSequentialSkillImport', () => {
     const invalid = detectedSkill('broken', 'SKILL.md is missing');
 
     it('does not send a request for it', async () => {
-      const uploadSkill = jest.fn().mockResolvedValue(undefined);
+      const uploadSkill = vi.fn().mockResolvedValue(undefined);
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([invalid]));
@@ -206,8 +206,8 @@ describe('useSequentialSkillImport', () => {
     it('reports the validation error on its row', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -221,9 +221,9 @@ describe('useSequentialSkillImport', () => {
     });
 
     it('still uploads the valid skills of the batch', async () => {
-      const uploadSkill = jest.fn().mockResolvedValue(undefined);
+      const uploadSkill = vi.fn().mockResolvedValue(undefined);
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([invalid, first]));
@@ -237,8 +237,8 @@ describe('useSequentialSkillImport', () => {
       const gate = deferred<void>();
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockReturnValue(gate.promise),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockReturnValue(gate.promise),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -258,8 +258,8 @@ describe('useSequentialSkillImport', () => {
       const gate = deferred<void>();
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockReturnValue(gate.promise),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockReturnValue(gate.promise),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -280,9 +280,9 @@ describe('useSequentialSkillImport', () => {
 
     it('ignores a second start so the batches cannot interleave', async () => {
       const gate = deferred<void>();
-      const uploadSkill = jest.fn().mockReturnValueOnce(gate.promise);
+      const uploadSkill = vi.fn().mockReturnValueOnce(gate.promise);
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       let running!: Promise<void>;
@@ -302,10 +302,10 @@ describe('useSequentialSkillImport', () => {
 
     it('does not call onFinished for the ignored start', async () => {
       const gate = deferred<void>();
-      const onFinished = jest.fn();
+      const onFinished = vi.fn();
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockReturnValueOnce(gate.promise),
+          uploadSkill: vi.fn().mockReturnValueOnce(gate.promise),
           onFinished,
         }),
       );
@@ -328,8 +328,8 @@ describe('useSequentialSkillImport', () => {
     it('replaces the rows with the new batch', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -346,8 +346,8 @@ describe('useSequentialSkillImport', () => {
     it('drops the results of the previous batch', async () => {
       const { result } = renderHook(() =>
         useSequentialSkillImport({
-          uploadSkill: jest.fn().mockResolvedValue(undefined),
-          onFinished: jest.fn(),
+          uploadSkill: vi.fn().mockResolvedValue(undefined),
+          onFinished: vi.fn(),
         }),
       );
 
@@ -358,11 +358,142 @@ describe('useSequentialSkillImport', () => {
     });
   });
 
+  describe('when the import is cancelled mid-batch', () => {
+    const third = detectedSkill('deployment');
+
+    /**
+     * The first skill goes through, the second hangs until its signal aborts —
+     * which is what a real request does — and the third never gets a turn.
+     */
+    const buildHook = () => {
+      const signals: AbortSignal[] = [];
+      // Keyed by skill rather than by call count, so a later batch reusing this
+      // mock is not left waiting on an abort that is never coming.
+      const uploadSkill = vi.fn((skill: DetectedSkill, signal: AbortSignal) => {
+        signals.push(signal);
+        if (skill.name !== second.name) return Promise.resolve();
+        return new Promise((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('canceled')));
+        });
+      });
+      const onFinished = vi.fn();
+      const hook = renderHook(() =>
+        useSequentialSkillImport({ uploadSkill, onFinished }),
+      );
+      return { ...hook, uploadSkill, onFinished, signals };
+    };
+
+    const runUntilCancelled = async (hook: ReturnType<typeof buildHook>) => {
+      let running!: Promise<void>;
+      await act(async () => {
+        running = hook.result.current.start([first, second, third]);
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      await act(async () => {
+        hook.result.current.cancel();
+        await running;
+      });
+    };
+
+    it('leaves the skill that already went through imported', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.result.current.rows[0].status).toBe('success');
+    });
+
+    it('marks the upload that was in flight as cancelled', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.result.current.rows[1].status).toBe('cancelled');
+    });
+
+    it('marks the skills still queued as cancelled', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.result.current.rows[2].status).toBe('cancelled');
+    });
+
+    // An abort is not this skill's fault, and reporting it as one would send
+    // the user looking for a problem with the file.
+    it('does not report the aborted upload as failed', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.result.current.rows[1].error).toBeUndefined();
+    });
+
+    it('does not start the uploads that were still queued', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.uploadSkill).toHaveBeenCalledTimes(2);
+    });
+
+    it('aborts the signal handed to the upload in flight', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.signals[1].aborted).toBe(true);
+    });
+
+    it('stops reporting an import in progress', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.result.current.isImporting).toBe(false);
+    });
+
+    // Whatever was imported before the cancellation is on the server, so the
+    // list behind the panel is stale just as it would be after a full run.
+    it('still calls onFinished', async () => {
+      const hook = buildHook();
+
+      await runUntilCancelled(hook);
+
+      expect(hook.onFinished).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets a fresh batch start afterwards', async () => {
+      const hook = buildHook();
+      await runUntilCancelled(hook);
+
+      await act(() => hook.result.current.start([first]));
+
+      expect(hook.result.current.rows.map((row) => row.name)).toEqual([
+        'documentation',
+      ]);
+    });
+  });
+
+  describe('when cancel is called with no import running', () => {
+    it('does nothing', () => {
+      const { result } = renderHook(() =>
+        useSequentialSkillImport({
+          uploadSkill: vi.fn(),
+          onFinished: vi.fn(),
+        }),
+      );
+
+      expect(() => act(() => result.current.cancel())).not.toThrow();
+    });
+  });
+
   describe('when the batch is empty', () => {
     it('calls onFinished without uploading anything', async () => {
-      const uploadSkill = jest.fn();
+      const uploadSkill = vi.fn();
       const { result } = renderHook(() =>
-        useSequentialSkillImport({ uploadSkill, onFinished: jest.fn() }),
+        useSequentialSkillImport({ uploadSkill, onFinished: vi.fn() }),
       );
 
       await act(() => result.current.start([]));

@@ -5,12 +5,13 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../api/queries/AuthQueries', () => ({
-  useCreateCliLoginCodeMutation: jest.fn(),
+vi.mock('../api/queries/AuthQueries', () => ({
+  useCreateCliLoginCodeMutation: vi.fn(),
 }));
 
-jest.mock('../../../shared/components/inputs', () => ({
+vi.mock('../../../shared/components/inputs', () => ({
   CopiableTextarea: ({
     value,
     ...props
@@ -39,13 +40,13 @@ const renderWithQueryClient = (component: React.ReactElement) => {
 
 describe('SetupLocalEnvironment', () => {
   const mockUseCreateCliLoginCodeMutation =
-    useCreateCliLoginCodeMutation as jest.MockedFunction<
+    useCreateCliLoginCodeMutation as MockedFunction<
       typeof useCreateCliLoginCodeMutation
     >;
 
   const defaultMutationResult = {
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -54,7 +55,7 @@ describe('SetupLocalEnvironment', () => {
     data: undefined,
     error: null,
     variables: undefined,
-    reset: jest.fn(),
+    reset: vi.fn(),
     failureCount: 0,
     failureReason: null,
     submittedAt: 0,
@@ -63,7 +64,7 @@ describe('SetupLocalEnvironment', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockUseCreateCliLoginCodeMutation.mockReturnValue(
       defaultMutationResult as ReturnType<typeof useCreateCliLoginCodeMutation>,
     );
@@ -71,7 +72,7 @@ describe('SetupLocalEnvironment', () => {
 
   describe('when mounting', () => {
     it('automatically generates install command', () => {
-      const mutateMock = jest.fn();
+      const mutateMock = vi.fn();
       mockUseCreateCliLoginCodeMutation.mockReturnValue({
         ...defaultMutationResult,
         mutate: mutateMock,
@@ -129,7 +130,7 @@ describe('SetupLocalEnvironment', () => {
 
   describe('when clicking generate new command button', () => {
     it('calls mutate function', () => {
-      const mutateMock = jest.fn();
+      const mutateMock = vi.fn();
       const mockCode = 'test-login-code-123';
       const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 

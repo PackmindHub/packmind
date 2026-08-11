@@ -5,7 +5,7 @@ import { UIProvider } from '@packmind/ui';
 import { CopiableTextField } from './CopiableTextField';
 
 // Mock the clipboard API
-const mockWriteText = jest.fn();
+const mockWriteText = vi.fn();
 Object.assign(navigator, {
   clipboard: {
     writeText: mockWriteText,
@@ -19,11 +19,11 @@ const renderWithUI = (component: React.ReactElement) => {
 describe('CopiableTextField', () => {
   beforeEach(() => {
     mockWriteText.mockClear();
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('renders with the provided value', () => {
@@ -42,7 +42,7 @@ describe('CopiableTextField', () => {
   describe('onValueChange', () => {
     describe('when input value changes and not readonly', () => {
       it('calls onValueChange callback', () => {
-        const mockOnValueChange = jest.fn();
+        const mockOnValueChange = vi.fn();
         renderWithUI(
           <CopiableTextField value="" onValueChange={mockOnValueChange} />,
         );
@@ -56,7 +56,7 @@ describe('CopiableTextField', () => {
 
     describe('when readonly', () => {
       it('does not call onValueChange callback', () => {
-        const mockOnValueChange = jest.fn();
+        const mockOnValueChange = vi.fn();
         renderWithUI(
           <CopiableTextField
             value="test"
@@ -93,7 +93,7 @@ describe('CopiableTextField', () => {
   describe('onCopy', () => {
     describe('when copy button is clicked', () => {
       it('triggers onCopy callback', () => {
-        const mockOnCopy = jest.fn();
+        const mockOnCopy = vi.fn();
         renderWithUI(<CopiableTextField value="test" onCopy={mockOnCopy} />);
 
         const copyButton = screen.getByLabelText('Copy to clipboard');
@@ -105,7 +105,7 @@ describe('CopiableTextField', () => {
 
     describe('when text is copied from input', () => {
       it('triggers onCopy callback', () => {
-        const mockOnCopy = jest.fn();
+        const mockOnCopy = vi.fn();
         renderWithUI(<CopiableTextField value="test" onCopy={mockOnCopy} />);
 
         const input = screen.getByRole('textbox');

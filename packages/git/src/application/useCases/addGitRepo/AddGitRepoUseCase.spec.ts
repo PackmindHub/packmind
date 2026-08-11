@@ -1,15 +1,14 @@
 import { AddGitRepoUseCase } from './AddGitRepoUseCase';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { AddGitRepoCommand } from '../../../domain/useCases/IAddGitRepo';
 import {
   GitProvider,
   GitProviderId,
   createGitProviderId,
   GitProviderVendors,
-} from '@packmind/types';
-import { GitRepo, createGitRepoId } from '@packmind/types';
-import {
+  AddGitRepoCommand,
+  GitRepo,
+  createGitRepoId,
   IAccountsPort,
   User,
   Organization,
@@ -23,6 +22,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -123,6 +123,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        type: 'standard',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -152,14 +153,69 @@ describe('AddGitRepoUseCase', () => {
       ).toHaveBeenCalledWith('testowner', 'testrepo', 'main', organizationId);
     });
 
-    it('calls addGitRepo with the correct repository data', () => {
+    it('calls addGitRepo with the correct repository data including type=standard', () => {
       expect(mockGitRepoService.addGitRepo).toHaveBeenCalledWith({
         owner: 'testowner',
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        type: 'standard',
         isTracked: false,
+        trackingRemovedAt: null,
       });
+    });
+  });
+
+  describe('when an existing marketplace-typed repo shares the same coordinates', () => {
+    let command: AddGitRepoCommand;
+    let mockProvider: GitProvider;
+    let expectedResult: GitRepo;
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      command = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      mockProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: 'token',
+      };
+
+      expectedResult = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        providerId: gitProviderId,
+        type: 'standard',
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+
+      // GitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization filters
+      // to type='standard' by default, so a same-coordinate marketplace row
+      // does NOT surface here and the duplicate check passes.
+      mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        null,
+      );
+      mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
+
+      result = await useCase.execute(command);
+    });
+
+    it('does not throw GitRepoAlreadyExistsError — standard and marketplace are tracked independently', () => {
+      expect(result).toEqual(expectedResult);
     });
   });
 
@@ -194,6 +250,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'develop',
         providerId: gitProviderId,
+        type: 'standard',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -264,6 +321,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        type: 'standard',
       };
 
       mockTarget = {
@@ -504,6 +562,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        type: 'standard',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(
@@ -546,6 +605,7 @@ describe('AddGitRepoUseCase', () => {
         repo: 'testrepo',
         branch: 'main',
         providerId: gitProviderId,
+        type: 'standard',
       };
 
       mockGitProviderService.findGitProviderById.mockResolvedValue(

@@ -118,13 +118,17 @@ export class AddGitRepoUseCase
       throw new GitRepoAlreadyExistsError(owner, repo, branch, organization.id);
     }
 
-    // Create the repository with provider association
+    // Create the repository with provider association. The standard type is
+    // explicit here so AddGitRepoUseCase never accidentally creates a
+    // marketplace-typed row.
     const gitRepoWithProvider = {
       owner,
       repo,
       branch,
       providerId: gitProviderId,
+      type: 'standard' as const,
       isTracked: false,
+      trackingRemovedAt: null,
     };
 
     const createdRepo =

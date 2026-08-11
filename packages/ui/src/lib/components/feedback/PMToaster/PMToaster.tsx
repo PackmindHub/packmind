@@ -5,10 +5,11 @@ import {
   Stack,
   Toast,
   createToaster,
+  type CreateToasterReturn,
 } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
-export const pmToaster = createToaster({
+export const pmToaster: CreateToasterReturn = createToaster({
   placement: 'bottom-end',
   pauseOnPageIdle: true,
 });

@@ -8,6 +8,10 @@ import {
   ChangeProposalType,
   CheckChangeProposalsCommand,
   CheckChangeProposalsResponse,
+  ComputeAppliedPreviewCommand,
+  ComputeAppliedPreviewResponse,
+  ComputeDraftVerdictsCommand,
+  ComputeDraftVerdictsResponse,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   IPlaybookChangeManagementPort,
@@ -78,6 +82,20 @@ export class PlaybookChangeManagementAdapter implements IPlaybookChangeManagemen
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: RecomputeConflictsCommand,
   ): Promise<RecomputeConflictsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  computeAppliedPreview(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: ComputeAppliedPreviewCommand,
+  ): Promise<ComputeAppliedPreviewResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  computeDraftVerdicts(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: ComputeDraftVerdictsCommand,
+  ): Promise<ComputeDraftVerdictsResponse> {
     throw new Error('Method not implemented.');
   }
 

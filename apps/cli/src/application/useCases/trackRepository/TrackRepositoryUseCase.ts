@@ -55,12 +55,24 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
   public async execute(
     command: TrackRepositoryCommand,
   ): Promise<TrackRepositoryResult> {
-    const { repoPath, origin, update, confirm } = command;
+    const {
+      repoPath,
+      origin,
+      update,
+      remove,
+      branch: requestedBranch,
+      confirm,
+    } = command;
 
-    // Derive owner/repo/branch from the local git repository. These throw with
-    // a clear message when not in a git repo or when there is no remote.
+    // Derive owner/repo from the local git repository. These throw with a clear
+    // message when not in a git repo or when there is no remote.
     const { gitRemoteUrl } = this.gitService.getGitRemoteUrl(repoPath);
-    const { branch } = this.gitService.getCurrentBranch(repoPath);
+    // The branch is explicit when given, otherwise the checked-out one. Reading
+    // HEAD unconditionally keeps the "not a git repository" error identical for
+    // both paths.
+    const { branch: currentBranch } =
+      this.gitService.getCurrentBranch(repoPath);
+    const branch = requestedBranch ?? currentBranch;
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
     const providerVendor = parseProviderVendor(gitRemoteUrl);
 
@@ -70,6 +82,45 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
       owner,
       repo,
     });
+
+    if (remove) {
+      // Confirm only when there is something to remove. When nothing is
+      // tracked, call through regardless: the server is the single authority on
+      // whether the repository is merely untracked (a warning) or unknown (an
+      // error), which is also what makes repeating the command harmless.
+      if (tracked) {
+        const confirmed = await confirm({
+          mode: 'remove',
+          owner,
+          repo,
+          branch: tracked.branch,
+        });
+        if (!confirmed) {
+          return { status: 'cancelled' };
+        }
+      }
+
+      const response = await this.gateway.removeTrackedRepository({
+        owner,
+        repo,
+      });
+
+      if (response.status === 'not-tracked') {
+        return {
+          status: 'not-tracked',
+          owner,
+          repo,
+          organizationName: response.organizationName,
+        };
+      }
+
+      return {
+        status: 'removed',
+        owner,
+        repo,
+        branch: response.gitRepo.branch,
+      };
+    }
 
     if (update) {
       if (!tracked) {

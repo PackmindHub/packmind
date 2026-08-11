@@ -10,6 +10,7 @@ import {
 import {
   createOrganizationId,
   createCommandId,
+  createSpaceId,
   Command,
   WithSoftDelete,
 } from '@packmind/types';
@@ -125,6 +126,80 @@ describe('RecipeRepository', () => {
           }),
         ).toMatchObject({ id: recipe.id, name: recipe.name });
       });
+    });
+  });
+
+  describe('countBySpaceIds', () => {
+    describe('when counting commands per space', () => {
+      let counts: Awaited<ReturnType<typeof commandRepository.countBySpaceIds>>;
+      let spaceAId: ReturnType<typeof spaceFactory>['id'];
+      let spaceBId: ReturnType<typeof spaceFactory>['id'];
+      let spaceCId: ReturnType<typeof spaceFactory>['id'];
+
+      beforeEach(async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceA = spaceFactory({ organizationId, slug: 'space-a' });
+        const spaceB = spaceFactory({ organizationId, slug: 'space-b' });
+        const spaceC = spaceFactory({ organizationId, slug: 'space-c' });
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+        await spaceRepo.save([spaceA, spaceB, spaceC]);
+
+        await commandRepository.add(commandFactory({ spaceId: spaceA.id }));
+        await commandRepository.add(commandFactory({ spaceId: spaceA.id }));
+        await commandRepository.add(commandFactory({ spaceId: spaceB.id }));
+
+        spaceAId = spaceA.id;
+        spaceBId = spaceB.id;
+        spaceCId = spaceC.id;
+
+        counts = await commandRepository.countBySpaceIds([
+          spaceA.id,
+          spaceB.id,
+          spaceC.id,
+        ]);
+      });
+
+      it('returns the correct count for spaceA', () => {
+        expect(counts.get(spaceAId)).toBe(2);
+      });
+
+      it('returns the correct count for spaceB', () => {
+        expect(counts.get(spaceBId)).toBe(1);
+      });
+
+      it('omits spaceC which has zero commands', () => {
+        expect(counts.has(spaceCId)).toBe(false);
+      });
+    });
+
+    it('returns an empty Map for empty input', async () => {
+      const counts = await commandRepository.countBySpaceIds([]);
+      expect(counts.size).toBe(0);
+    });
+
+    it('excludes soft-deleted commands from the count', async () => {
+      const organizationId = createOrganizationId(uuidv4());
+      const space = spaceFactory({ organizationId });
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
+      await spaceRepo.save(space);
+
+      await commandRepository.add(commandFactory({ spaceId: space.id }));
+      const deletedCommand = await commandRepository.add(
+        commandFactory({ spaceId: space.id }),
+      );
+      await commandRepository.deleteById(deletedCommand.id);
+
+      const counts = await commandRepository.countBySpaceIds([space.id]);
+
+      expect(counts.get(space.id)).toBe(1);
+    });
+
+    it('omits unknown space IDs from the result Map', async () => {
+      const unknownSpaceId = createSpaceId(uuidv4());
+
+      const counts = await commandRepository.countBySpaceIds([unknownSpaceId]);
+
+      expect(counts.has(unknownSpaceId)).toBe(false);
     });
   });
 

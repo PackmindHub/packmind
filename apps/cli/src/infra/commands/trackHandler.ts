@@ -1,4 +1,3 @@
-import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import {
   TrackRepositoryCommand,
   TrackRepositoryResult,
@@ -9,6 +8,7 @@ import {
   logSuccessConsole,
   formatCommand,
 } from '../utils/consoleLogger';
+import { handleTrackingError } from './trackingErrors';
 import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
 
 export type TrackRepositoryFunction = (
@@ -17,6 +17,8 @@ export type TrackRepositoryFunction = (
 
 export interface TrackHandlerDependencies {
   update: boolean;
+  /** Explicit branch to track; the checked-out branch is used when omitted. */
+  branch?: string;
   baseDirectory: string;
   trackRepository: TrackRepositoryFunction;
   isTTY?: boolean;
@@ -26,6 +28,10 @@ export interface TrackHandlerDependencies {
 /**
  * Handler for the `track` command. Owns all user interaction (prompts + output)
  * and delegates orchestration to the TrackRepositoryUseCase.
+ *
+ * Removal lives in `untrack`, its own top-level command — matching the
+ * `install`/`uninstall` and `login`/`logout` pairs — so there is no
+ * mutually-exclusive flag combination to guard against here.
  */
 export async function trackHandler(
   deps: TrackHandlerDependencies,
@@ -42,10 +48,12 @@ export async function trackHandler(
       repoPath: deps.baseDirectory,
       origin: 'track',
       update: deps.update,
+      remove: false,
+      branch: deps.branch,
       confirm,
     });
   } catch (error) {
-    handleTrackError(error);
+    handleTrackingError(error);
     return;
   }
 
@@ -66,18 +74,14 @@ export async function trackHandler(
       logInfoConsole('No changes made. The tracked branch is unchanged.');
       process.exit(0);
       return;
+    // The desired state is already in place, whether or not --update was
+    // passed, so both spellings succeed. Exit codes follow one rule: 0 when
+    // the desired state holds, 1 when it cannot be reached.
     case 'already-tracked-same-branch':
-      if (deps.update) {
-        logErrorConsole(
-          `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
-        );
-        process.exit(1);
-      } else {
-        logInfoConsole(
-          `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
-        );
-        process.exit(0);
-      }
+      logInfoConsole(
+        `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.branch}.`,
+      );
+      process.exit(0);
       return;
     case 'already-tracked-other-branch':
       logErrorConsole(
@@ -93,25 +97,8 @@ export async function trackHandler(
       );
       process.exit(1);
       return;
+    default:
+      // `removed` / `not-tracked` belong to `untrack`, which has its own handler.
+      return;
   }
-}
-
-function handleTrackError(error: unknown): void {
-  if (error instanceof NotLoggedInError) {
-    logErrorConsole(error.message);
-    process.exit(1);
-    return;
-  }
-
-  const statusCode = (error as { statusCode?: number })?.statusCode;
-  if (statusCode === 404) {
-    // Kill-switch: the feature flag is off for this user. Behave as feature-absent.
-    logErrorConsole('Repository tracking is not available for your account.');
-    process.exit(1);
-    return;
-  }
-
-  const message = error instanceof Error ? error.message : String(error);
-  logErrorConsole(message);
-  process.exit(1);
 }

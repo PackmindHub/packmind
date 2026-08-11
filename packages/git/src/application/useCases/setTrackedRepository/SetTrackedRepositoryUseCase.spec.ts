@@ -18,16 +18,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepoService } from '../../GitRepoService';
-import { isCliRepoTrackingEnabled } from '../shared/cliRepoTrackingFlag';
 import { SetTrackedRepositoryUseCase } from './SetTrackedRepositoryUseCase';
-
-jest.mock('../shared/cliRepoTrackingFlag', () => ({
-  isCliRepoTrackingEnabled: jest.fn().mockResolvedValue(true),
-}));
-
-const mockedIsEnabled = isCliRepoTrackingEnabled as jest.MockedFunction<
-  typeof isCliRepoTrackingEnabled
->;
 
 describe('SetTrackedRepositoryUseCase', () => {
   let useCase: SetTrackedRepositoryUseCase;
@@ -52,7 +43,7 @@ describe('SetTrackedRepositoryUseCase', () => {
   const setupAccounts = (role: UserOrganizationRole) => {
     const user: User = {
       id: userId,
-      email: 'admin@packmind.com',
+      email: 'admin@example.com',
       displayName: 'admin',
       passwordHash: null,
       active: true,
@@ -79,8 +70,6 @@ describe('SetTrackedRepositoryUseCase', () => {
     );
 
   beforeEach(() => {
-    mockedIsEnabled.mockResolvedValue(true);
-
     mockGitRepoService = {
       findTrackedByOwnerRepoInOrganization: jest.fn(),
       updateTracked: jest.fn(),
@@ -227,6 +216,43 @@ describe('SetTrackedRepositoryUseCase', () => {
     it('throws RepositoryAlreadyTrackedError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         RepositoryAlreadyTrackedError,
+      );
+    });
+  });
+
+  describe('when a different admin re-tracks a repository whose tracking was removed', () => {
+    const otherAdminId = createUserId(uuidv4());
+    let removedRepo: GitRepo;
+
+    beforeEach(async () => {
+      removedRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'acme',
+        repo: 'widgets',
+        branch: 'dev',
+        providerId,
+        type: 'standard',
+        isTracked: false,
+        trackingRemovedAt: new Date('2026-08-05T10:00:00.000Z'),
+      };
+
+      mockGitRepoService.findTrackedByOwnerRepoInOrganization.mockResolvedValue(
+        null,
+      );
+      mockFindOrCreate.execute.mockResolvedValue(removedRepo);
+      mockGitRepoService.updateTracked.mockResolvedValue({
+        ...removedRepo,
+        isTracked: true,
+        trackingRemovedAt: null,
+      });
+
+      await useCase.execute({ ...command, userId: otherAdminId });
+    });
+
+    it('re-tracks the row the other admin left behind', () => {
+      expect(mockGitRepoService.updateTracked).toHaveBeenCalledWith(
+        removedRepo.id,
+        true,
       );
     });
   });

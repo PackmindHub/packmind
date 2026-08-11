@@ -20,5 +20,6 @@ export interface ICommandRepository extends IRepository<Command> {
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Command[]>;
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   markAsMoved(recipeId: CommandId, destinationSpaceId: SpaceId): Promise<void>;
 }

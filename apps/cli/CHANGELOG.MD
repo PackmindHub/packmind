@@ -2,15 +2,29 @@
 
 ## Added
 
-- `playbook add` accepts several paths in one call. Each path is staged independently, and the command reports how much of the batch succeeded (e.g. `1 staged, 1 failed of 2`) while naming the paths that failed.
-
 ## Changed
-
-- `playbook submit` now applies the batch artifact by artifact instead of aborting the whole submit on the first conflict. Artifacts staged under a duplicate name are held back and remain staged, while the rest are submitted.
 
 ## Fixed
 
 ## Removed
+
+# [0.33.0] - 2026-08-10
+
+## Added
+
+- `playbook add` accepts several paths in one call. Each path is staged independently, and the command reports how much of the batch succeeded (e.g. `1 staged, 1 failed of 2`) while naming the paths that failed.
+- New `untrack` command removes Packmind's tracking of the current repository (organization admins only). The repository leaves the Deployments overview and the Distribution History, every distribution already recorded is kept, and running `track` on the same branch again brings the whole history back with new distributions appended. Running it on a repository that is not tracked changes nothing and exits successfully.
+- `track --branch <name>` tracks a branch other than the one checked out, so anchoring governance to `main` from a feature branch no longer requires checking `main` out first.
+
+## Changed
+
+- `playbook submit` now applies the batch artifact by artifact instead of aborting the whole submit on the first conflict. Artifacts staged under a duplicate name are held back and remain staged, while the rest are submitted.
+- The `track` confirmation prompt now defaults to cancel (`y/N`). Pressing Enter no longer applies the change, so a stray run cannot make the branch you happen to be on the organization's governance policy.
+- `track --update` exits 0 instead of 1 when the requested branch is already the tracked one. Exit codes now follow a single rule: 0 when the desired state holds — even if it already did — and 1 when it cannot be reached.
+
+## Fixed
+
+- A member without admin rights running `track` saw the server's raw error naming the user and the organization by identifier. It now explains that organization admin rights are required.
 
 # [0.32.0] - 2026-07-27
 
@@ -430,7 +444,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...HEAD
+[0.33.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...release-cli/0.33.0
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
 [0.31.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.1...release-cli/0.31.0
 [0.30.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.0...release-cli/0.30.1

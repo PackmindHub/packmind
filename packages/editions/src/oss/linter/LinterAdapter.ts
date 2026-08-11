@@ -41,6 +41,8 @@ import {
   GetDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionHeuristicsCommand,
+  UpdateHeuristicsFollowingChatbotInputCommand,
+  UpdateHeuristicsFollowingChatbotInputResponse,
   CopyDetectionProgramsToNewRuleCommand,
   CopyDetectionProgramsToNewRuleResponse,
   CopyRuleDetectionAssessmentsCommand,
@@ -229,6 +231,13 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateRuleDetectionHeuristicsCommand,
   ): Promise<UpdateRuleDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  updateHeuristicsFollowingChatbotInput(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: UpdateHeuristicsFollowingChatbotInputCommand,
+  ): Promise<UpdateHeuristicsFollowingChatbotInputResponse> {
     throw new Error('Method not implemented.');
   }
 

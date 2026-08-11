@@ -10,6 +10,7 @@ import {
   IStandardsPort,
   Organization,
   OrganizationId,
+  PackageNotPublishableAsPluginError,
   PackageWithArtefacts,
   PluginRenderedEvent,
   Command,
@@ -277,9 +278,7 @@ describe('RenderPackageAsPluginUseCase', () => {
   });
 
   describe('when the package has only standards', () => {
-    let result: Awaited<ReturnType<typeof useCase.execute>>;
-
-    beforeEach(async () => {
+    beforeEach(() => {
       const standards = [
         buildStandard('s1', 'std-one'),
         buildStandard('s2', 'std-two'),
@@ -291,22 +290,25 @@ describe('RenderPackageAsPluginUseCase', () => {
       standardsPort.getLatestStandardVersion.mockImplementation((id) =>
         Promise.resolve(buildStandardVersion(id as string, 'std')),
       );
-
-      result = await useCase.execute(buildCommand());
     });
 
-    it('returns the skipped standards count', () => {
-      expect(result.skippedStandardsCount).toBe(3);
-    });
-
-    it('returns only the manifest file', () => {
-      expect(result.files).toHaveLength(1);
-    });
-
-    it('returns the manifest at the expected path', () => {
-      expect(result.files[0].path).toBe(
-        'plugins/security/.claude-plugin/plugin.json',
+    it('throws PackageNotPublishableAsPluginError instead of rendering an empty plugin', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        PackageNotPublishableAsPluginError,
       );
+    });
+  });
+
+  describe('hook files', () => {
+    beforeEach(() => {
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        buildPackage({ skills: [buildSkill('sk-track', 'tracking-skill')] }),
+      ]);
+    });
+
+    it('emits none — install tracking is owned by the marketplace', async () => {
+      const result = await useCase.execute(buildCommand());
+      expect(result.files.filter((f) => f.path.includes('hooks/'))).toEqual([]);
     });
   });
 
@@ -380,7 +382,7 @@ describe('RenderPackageAsPluginUseCase', () => {
         result = await useCase.execute(buildCommand());
       });
 
-      it('returns pluginName from the command', () => {
+      it('returns pluginName as the package slug', () => {
         expect(result.pluginName).toBe('security');
       });
 
@@ -391,6 +393,47 @@ describe('RenderPackageAsPluginUseCase', () => {
       it('returns pluginVersion as the initial version', () => {
         expect(result.pluginVersion).toBe('0.1.0');
       });
+    });
+  });
+
+  describe('when the package name contains spaces', () => {
+    // A package renamed to a free-text name (e.g. "definition of ready") keeps
+    // its slug, but its name gains spaces. The marketplace publish flow passes
+    // that raw name as pluginName. Claude Code rejects plugin names with
+    // spaces, so the rendered `name` must fall back to the space-free slug.
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        buildPackage({
+          name: 'Definition of Ready',
+          slug: 'definition-of-ready',
+          skills: [buildSkill('sk1', 'threat-model')],
+        }),
+      ]);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(
+        buildSkillVersion('sk1', 'threat-model', '# tm'),
+      );
+
+      result = await useCase.execute(
+        buildCommand({
+          packageSlug: 'definition-of-ready',
+          pluginRoot: 'plugins/definition-of-ready/',
+          pluginName: 'Definition of Ready',
+        }),
+      );
+    });
+
+    it('returns pluginName as the space-free package slug', () => {
+      expect(result.pluginName).toBe('definition-of-ready');
+    });
+
+    it('writes the slug (not the spaced name) into the plugin manifest', () => {
+      const manifest = result.files.find((f) =>
+        f.path.endsWith('.claude-plugin/plugin.json'),
+      );
+      const parsed = JSON.parse(manifest?.content ?? '{}') as { name: string };
+      expect(parsed.name).toBe('definition-of-ready');
     });
   });
 

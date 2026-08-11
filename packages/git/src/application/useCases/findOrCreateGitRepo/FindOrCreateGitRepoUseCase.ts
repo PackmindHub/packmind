@@ -4,16 +4,13 @@ import {
   FindOrCreateGitRepoCommand,
   FindOrCreateGitRepoResponse,
   GitProviderVendors,
+  GitProviderVendor,
   GitRepo,
   IAccountsPort,
   IFindOrCreateGitRepoUseCase,
   IGitPort,
 } from '@packmind/types';
-import {
-  extractBaseUrl,
-  GitProviderVendor,
-  parseGitProviderVendor,
-} from '../../services/gitInfoHelpers';
+import { extractBaseUrl, parseGitProviderVendor } from '@packmind/node-utils';
 
 const origin = 'FindOrCreateGitRepoUseCase';
 

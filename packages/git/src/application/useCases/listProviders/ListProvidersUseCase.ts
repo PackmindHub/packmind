@@ -50,6 +50,10 @@ export class ListProvidersUseCase
           !rest.revokedAt;
         return {
           ...rest,
+          // Exclude marketplace-typed repos so the "Repos" count and drawer
+          // fallback only reflect standard repositories; marketplaces are
+          // surfaced separately via the marketplaces API.
+          repos: (rest.repos ?? []).filter((repo) => repo.type === 'standard'),
           hasAuth: hasPatToken || hasActiveAppInstallation,
           authMethod: rest.authMethod,
           // The Deployments-aware enrichment happens at the API service

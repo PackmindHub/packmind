@@ -13,6 +13,7 @@ export * from './standards';
 export * from './languages';
 export * from './linter';
 export * from './llm';
+export * from './marketplaces';
 export * from './sse';
 export * from './database/types';
 export * from './events';

@@ -9,6 +9,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
+import { MarketplacesHexa } from '@packmind/marketplaces';
 import { PlaybookChangeApplierHexa } from '@packmind/playbook-change-applier';
 import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import {
@@ -79,6 +80,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       PlaybookChangeApplierHexa,
       CodingAgentHexa,
       DeploymentsHexa,
+      MarketplacesHexa, // Must come after DeploymentsHexa (resolves IDeploymentPort)
       ...apiHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],

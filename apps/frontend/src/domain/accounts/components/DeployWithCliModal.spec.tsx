@@ -8,27 +8,28 @@ import { DeployWithCliModal } from './DeployWithCliModal';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../hooks/useAuthContext');
-jest.mock('../../spaces/api/queries/SpacesQueries');
-jest.mock('../../deployments/api/queries/DeploymentsQueries');
-jest.mock('./LocalEnvironmentSetup/hooks', () => ({
-  useCliLoginCode: jest.fn(() => ({
+vi.mock('../hooks/useAuthContext');
+vi.mock('../../spaces/api/queries/SpacesQueries');
+vi.mock('../../deployments/api/queries/DeploymentsQueries');
+vi.mock('./LocalEnvironmentSetup/hooks', () => ({
+  useCliLoginCode: vi.fn(() => ({
     loginCode: 'TEST-CODE-123',
     codeExpiresAt: new Date(Date.now() + 3600000),
     isGenerating: false,
-    regenerate: jest.fn(),
+    regenerate: vi.fn(),
   })),
 }));
 
-const mockedUseAuthContext = useAuthContext as jest.MockedFunction<
+const mockedUseAuthContext = useAuthContext as MockedFunction<
   typeof useAuthContext
 >;
-const mockedUseGetSpacesQuery = useGetSpacesQuery as jest.MockedFunction<
+const mockedUseGetSpacesQuery = useGetSpacesQuery as MockedFunction<
   typeof useGetSpacesQuery
 >;
 const mockedUseListPackagesBySpaceQuery =
-  useListPackagesBySpaceQuery as jest.MockedFunction<
+  useListPackagesBySpaceQuery as MockedFunction<
     typeof useListPackagesBySpaceQuery
   >;
 
@@ -53,7 +54,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('DeployWithCliModal', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockedUseAuthContext.mockReturnValue({
       organization: { id: 'org-1', slug: 'test-org' },
     } as ReturnType<typeof useAuthContext>);
@@ -66,8 +67,8 @@ describe('DeployWithCliModal', () => {
       isError: false,
       isSuccess: true,
       error: null,
-      refetch: jest.fn(),
-      remove: jest.fn(),
+      refetch: vi.fn(),
+      remove: vi.fn(),
       status: 'success',
       fetchStatus: 'idle',
       isFetching: false,
@@ -85,7 +86,7 @@ describe('DeployWithCliModal', () => {
   describe('when modal is closed', () => {
     it('does not render dialog content', () => {
       renderWithProviders(
-        <DeployWithCliModal open={false} onClose={jest.fn()} />,
+        <DeployWithCliModal open={false} onClose={vi.fn()} />,
       );
 
       expect(screen.queryByText('Deploy with CLI')).not.toBeInTheDocument();
@@ -96,7 +97,7 @@ describe('DeployWithCliModal', () => {
     describe('with default state', () => {
       beforeEach(() => {
         renderWithProviders(
-          <DeployWithCliModal open={true} onClose={jest.fn()} />,
+          <DeployWithCliModal open={true} onClose={vi.fn()} />,
         );
       });
 
@@ -142,8 +143,8 @@ describe('DeployWithCliModal', () => {
           isError: false,
           isSuccess: true,
           error: null,
-          refetch: jest.fn(),
-          remove: jest.fn(),
+          refetch: vi.fn(),
+          remove: vi.fn(),
           status: 'success',
           fetchStatus: 'idle',
           isFetching: false,
@@ -158,7 +159,7 @@ describe('DeployWithCliModal', () => {
         } as unknown as ReturnType<typeof useListPackagesBySpaceQuery>);
 
         renderWithProviders(
-          <DeployWithCliModal open={true} onClose={jest.fn()} />,
+          <DeployWithCliModal open={true} onClose={vi.fn()} />,
         );
       });
 

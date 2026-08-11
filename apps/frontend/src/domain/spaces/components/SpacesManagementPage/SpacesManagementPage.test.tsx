@@ -10,13 +10,14 @@ import {
 import { UIProvider } from '@packmind/ui';
 import { useGetSpacesQuery } from '../../api/queries';
 import { SpacesManagementPage } from './SpacesManagementPage';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../../api/queries', () => ({
-  useGetSpacesQuery: jest.fn(),
+vi.mock('../../api/queries', () => ({
+  useGetSpacesQuery: vi.fn(),
 }));
 
-jest.mock('@packmind/ui', () => {
-  const actual = jest.requireActual('@packmind/ui');
+vi.mock('@packmind/ui', async () => {
+  const actual = await vi.importActual('@packmind/ui');
   return {
     ...actual,
     PMTable: ({
@@ -115,7 +116,7 @@ const buildUserSpace = (
   ...overrides,
 });
 
-const mockedUseGetSpacesQuery = useGetSpacesQuery as jest.MockedFunction<
+const mockedUseGetSpacesQuery = useGetSpacesQuery as MockedFunction<
   typeof useGetSpacesQuery
 >;
 

@@ -119,6 +119,10 @@ export class StandardService {
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.standardRepository.countBySpaceIds(spaceIds);
+  }
+
   async listStandardsByUser(userId: UserId): Promise<Standard[]> {
     this.logger.info('Listing standards by user', { userId });
 

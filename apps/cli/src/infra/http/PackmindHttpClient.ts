@@ -48,7 +48,7 @@ interface IAuthContext {
 }
 
 interface IRequestOptions {
-  method?: 'GET' | 'POST' | 'PUT';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   onError?: (response: Response) => void;
 }

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { PMBox, PMButton, PMText, PMVStack } from '@packmind/ui';
 
+import { useWarnBeforeUnload } from '../../../shared/hooks';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import {
   useGetSkillsQuery,
@@ -22,7 +23,10 @@ import {
 } from '../utils/findSkillNameConflicts';
 import { readDeclaredSkillName } from '../utils/readDeclaredSkillName';
 import { readDroppedEntries } from '../utils/readDroppedEntries';
-import { readSkillFileContents } from '../utils/readSkillFileContents';
+import {
+  findOversizedPayload,
+  readSkillFileContents,
+} from '../utils/readSkillFileContents';
 import { SkillsUploadRow } from './SkillsUploadRow';
 
 /** Stable empty default, so the selection handler keeps its identity. */
@@ -44,9 +48,16 @@ export const SkillsUploadPanel = () => {
   const { mutateAsync: uploadSkillFiles } = useUploadSkillMutation();
 
   const uploadSkill = useCallback(
-    async (skill: DetectedSkill) => {
+    async (skill: DetectedSkill, signal: AbortSignal) => {
       const files = await readSkillFileContents(skill);
-      return uploadSkillFiles({ files });
+
+      // Refused here rather than by the server: the request would be rejected
+      // on its Content-Length alone, and a body cut off mid-flight reaches the
+      // client as a bare network error with nothing about size in it.
+      const tooLarge = findOversizedPayload(files);
+      if (tooLarge) throw new Error(tooLarge);
+
+      return uploadSkillFiles({ files, signal });
     },
     [uploadSkillFiles],
   );
@@ -76,10 +87,15 @@ export const SkillsUploadPanel = () => {
     [],
   );
 
-  const { rows, isImporting, start, reset } = useSequentialSkillImport({
+  const { rows, isImporting, start, cancel, reset } = useSequentialSkillImport({
     uploadSkill,
     onFinished,
   });
+
+  // Only the skills already sent would survive a reload: the batch runs here, in
+  // the page, one request at a time, so closing the tab halfway leaves the rest
+  // silently unimported.
+  useWarnBeforeUnload(isImporting);
 
   // Bumped per selection so a slower resolution cannot overwrite a newer pick.
   const selectionRef = useRef(0);
@@ -170,7 +186,16 @@ export const SkillsUploadPanel = () => {
   ).length;
   const succeeded = rows.filter((row) => row.status === 'success').length;
   const failed = rows.filter((row) => row.status === 'failed').length;
+  const cancelled = rows.filter((row) => row.status === 'cancelled').length;
   const isFinished = rows.length > 0 && !isImporting;
+
+  const summary = [
+    `${succeeded} imported`,
+    `${failed} failed`,
+    // Only when it happened: a batch that ran to the end should not be
+    // reported in terms of something the user did not do.
+    ...(cancelled > 0 ? [`${cancelled} cancelled`] : []),
+  ].join(', ');
 
   return (
     <PMVStack align="stretch" gap={4} width="full">
@@ -223,6 +248,18 @@ export const SkillsUploadPanel = () => {
         </PMVStack>
       </PMBox>
 
+      {/*
+        Above the rows rather than beside the buttons: it is the one thing the
+        user has to act on — by not acting — and the browser's own reload prompt
+        cannot carry any of this wording.
+      */}
+      {isImporting && (
+        <PMText variant="small" color="secondary" role="status">
+          Importing — keep this page open until every skill has finished.
+          Leaving now stops the ones that have not been sent yet.
+        </PMText>
+      )}
+
       {displayedRows.length > 0 && (
         <PMVStack
           as="ul"
@@ -243,11 +280,7 @@ export const SkillsUploadPanel = () => {
         </PMVStack>
       )}
 
-      {isFinished && (
-        <PMText variant="small-important">
-          {`${succeeded} imported, ${failed} failed`}
-        </PMText>
-      )}
+      {isFinished && <PMText variant="small-important">{summary}</PMText>}
 
       {/*
         Disabled once the batch has settled, not just while it runs: the results
@@ -262,6 +295,16 @@ export const SkillsUploadPanel = () => {
       >
         Import
       </PMButton>
+
+      {/*
+        Only while the batch runs — once it has settled there is nothing left to
+        stop, and the results the user is reading own the space instead.
+      */}
+      {isImporting && (
+        <PMButton variant="secondary" onClick={cancel}>
+          Cancel import
+        </PMButton>
+      )}
     </PMVStack>
   );
 };

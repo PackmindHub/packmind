@@ -5,6 +5,7 @@ import { StandardId } from '../../standards/StandardId';
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { ChangeProposalDecision } from '../ChangeProposalDecision';
 import { ChangeProposalId } from '../ChangeProposalId';
+import { ProposalMergeVerdictMap } from '../ProposalMergeVerdict';
 
 export type RecomputeConflictsCommand = PackmindCommand & {
   spaceId: SpaceId;
@@ -13,7 +14,7 @@ export type RecomputeConflictsCommand = PackmindCommand & {
 };
 
 export type RecomputeConflictsResponse = {
-  conflicts: Record<ChangeProposalId, ChangeProposalId[]>;
+  verdicts: ProposalMergeVerdictMap;
 };
 
 export type IRecomputeConflictsUseCase = IUseCase<

@@ -20,6 +20,7 @@ import { spacesCommand } from './infra/commands/SpacesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
 import { trackCommand } from './infra/commands/TrackCommand';
+import { untrackCommand } from './infra/commands/UntrackCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
@@ -110,6 +111,7 @@ const app = subcommands({
     standards: standardsCommand,
     track: trackCommand,
     uninstall: uninstallCommand,
+    untrack: untrackCommand,
     update: updateCommand,
     whoami: whoamiCommand,
   },

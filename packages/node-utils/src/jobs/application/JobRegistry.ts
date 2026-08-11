@@ -41,6 +41,16 @@ export class JobRegistry implements IJobRegistry {
     const initPromises: Promise<void>[] = [];
 
     for (const [queueName, factory] of this.factories.entries()) {
+      // Idempotency: each registered factory's queue is created and its worker
+      // started at most once per process. Without this guard, multiple Hexas
+      // calling `initJobQueues()` re-invoke `factory.createQueue()` for every
+      // previously-initialized queue and spin up duplicate BullMQ workers.
+      if (this.queues.has(queueName)) {
+        this.logger.info('Job queue already initialized, skipping', {
+          queueName,
+        });
+        continue;
+      }
       const initPromise = this.initializeQueue(queueName, factory);
       initPromises.push(initPromise);
     }

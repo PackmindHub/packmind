@@ -9,7 +9,7 @@ This is an Nx monorepo containing applications and reusable packages.
 - **Database**: PostgreSQL with TypeORM for entity persistence
 - **Cache**: Redis for caching
 - **Background Jobs**: BullMQ for job queue management
-- **Testing**: Jest with @swc/jest as test runner. Tip: use `./node_modules/.bin/nx show projects` to list actual apps and packages.
+- **Testing**: Jest with @swc/jest as test runner
 
 ## Directory Structure
 
@@ -19,8 +19,8 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Local Development Environment
 
-Local development uses Docker Compose to run all services (API, frontend, database, Redis, Postgresq).
-This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
+Local development uses Docker Compose to run all services (API, frontend, Redis, PostgreSQL).
+Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
 ## Working with Nx
 
 The following commands apply for both NX apps and packages (use `./node_modules/.bin/nx show projects` to list actual apps and packages.)
@@ -41,7 +41,7 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 - when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
-- Some default skills use version-routed directories (`packmind-versions/<version>/`) and ask you to run `packmind-cli --version` to pick the right one. Since you already run the local build with `node ./dist/apps/cli/main.cjs`, you always have the latest — skip the `--version` check and use the `packmind-versions/next/` directory directly.
+- Some default skills use version-routed directories (`packmind-versions/<version>/`) and ask you to run `packmind-cli --version` to pick the right one. Since you already run the local build with `node ./dist/apps/cli/main.cjs`, you always have the latest — skip the `--version` check and use the **highest-numbered** `packmind-versions/` directory (currently `0.23.0` for both `packmind-onboard` and `packmind-update-playbook`). There is no `next/` directory.
 
 ## Git Workflow
 
@@ -54,10 +54,6 @@ The following commands apply for both NX apps and packages (use `./node_modules/
 - **Secrets Detection**: GitGuardian runs in CI to detect leaked secrets
 - **Secrets Retrieval**: Always use `Configuration.getConfig()` from `@packmind/node-utils` to access secrets in code
 - **Secrets Storage**: Infisical or environment variables are used for secrets management - never hardcode secrets
-
-## Documentation
-
-Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
 ## Task splitting
 

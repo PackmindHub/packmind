@@ -18,10 +18,11 @@ import {
 } from '@packmind/types';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { useCreateChangeProposalMutation } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import type { MockedFunction } from 'vitest';
 
 let mockOnMarkdownChange: ((value: string) => void) | undefined;
 
-jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
+vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   MarkdownEditor: ({
     defaultValue,
     onMarkdownChange,
@@ -43,22 +44,22 @@ jest.mock('../../../shared/components/editor/MarkdownEditor', () => ({
   ),
 }));
 
-jest.mock(
+vi.mock(
   '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries',
   () => ({
-    useCreateChangeProposalMutation: jest.fn(),
+    useCreateChangeProposalMutation: vi.fn(),
   }),
 );
 
 const mockUseCreateChangeProposalMutation =
-  useCreateChangeProposalMutation as jest.MockedFunction<
+  useCreateChangeProposalMutation as MockedFunction<
     typeof useCreateChangeProposalMutation
   >;
 
 const createMockMutation = (overrides = {}) =>
   ({
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
     isPending: false,
     isSuccess: false,
     isError: false,
@@ -92,7 +93,7 @@ describe('ProposeDescriptionChangeModal', () => {
     organizationId,
     spaceId,
     open: true,
-    onOpenChange: jest.fn(),
+    onOpenChange: vi.fn(),
   };
 
   beforeEach(() => {
@@ -101,7 +102,7 @@ describe('ProposeDescriptionChangeModal', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('when open', () => {
@@ -159,7 +160,7 @@ describe('ProposeDescriptionChangeModal', () => {
     });
 
     it('calls mutation with correct payload on submit', async () => {
-      const mockMutate = jest.fn();
+      const mockMutate = vi.fn();
       mockUseCreateChangeProposalMutation.mockReturnValue(
         createMockMutation({ mutate: mockMutate }),
       );
@@ -197,8 +198,8 @@ describe('ProposeDescriptionChangeModal', () => {
 
     describe('when mutation succeeds', () => {
       it('closes the modal', async () => {
-        const onOpenChange = jest.fn();
-        const mockMutate = jest.fn();
+        const onOpenChange = vi.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -235,7 +236,7 @@ describe('ProposeDescriptionChangeModal', () => {
 
     describe('when mutation fails', () => {
       it('shows an error message', async () => {
-        const mockMutate = jest.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -273,8 +274,8 @@ describe('ProposeDescriptionChangeModal', () => {
       });
 
       it('keeps the modal open', async () => {
-        const onOpenChange = jest.fn();
-        const mockMutate = jest.fn();
+        const onOpenChange = vi.fn();
+        const mockMutate = vi.fn();
         mockUseCreateChangeProposalMutation.mockReturnValue(
           createMockMutation({ mutate: mockMutate }),
         );
@@ -312,7 +313,7 @@ describe('ProposeDescriptionChangeModal', () => {
 
   describe('when clicking Cancel button', () => {
     it('calls onOpenChange to close', async () => {
-      const onOpenChange = jest.fn();
+      const onOpenChange = vi.fn();
       renderWithProviders(
         <ProposeDescriptionChangeModal
           {...defaultProps}

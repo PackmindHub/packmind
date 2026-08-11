@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Put,
@@ -9,7 +10,6 @@ import {
   Query,
   ConflictException,
   ForbiddenException,
-  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
@@ -23,7 +23,9 @@ import {
   GitRepoId,
   NoTrackedRepositoryError,
   OrganizationId,
+  RemoveTrackedRepositoryResponse,
   RepositoryAlreadyTrackedError,
+  RepositoryNotTrackableError,
 } from '@packmind/types';
 import {
   AuthenticatedRequest,
@@ -123,8 +125,6 @@ export class GitRepositoriesController {
       { organizationId, owner, repo },
     );
 
-    await this.assertTrackingFeatureEnabled(userId);
-
     try {
       return await this.gitRepositoriesService.getTrackedRepository(
         userId,
@@ -149,8 +149,6 @@ export class GitRepositoriesController {
       'POST /organizations/:orgId/git/repositories/tracked-repository - Setting tracked repository',
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
-
-    await this.assertTrackingFeatureEnabled(userId);
 
     try {
       return await this.gitRepositoriesService.setTrackedRepository(
@@ -181,8 +179,6 @@ export class GitRepositoriesController {
       { organizationId, owner: dto.owner, repo: dto.repo, branch: dto.branch },
     );
 
-    await this.assertTrackingFeatureEnabled(userId);
-
     try {
       return await this.gitRepositoriesService.updateTrackedBranch(
         userId,
@@ -196,22 +192,37 @@ export class GitRepositoriesController {
     }
   }
 
-  private async assertTrackingFeatureEnabled(
-    userId: AuthenticatedRequest['user']['userId'],
-  ): Promise<void> {
-    const enabled =
-      await this.gitRepositoriesService.isTrackingFeatureEnabled(userId);
+  @Delete('tracked-repository')
+  async removeTrackedRepository(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+  ): Promise<RemoveTrackedRepositoryResponse> {
+    const userId = req.user.userId;
 
-    if (!enabled) {
-      // Kill-switch: behave as if the feature does not exist.
-      throw new NotFoundException('Cannot GET /tracked-repository');
+    this.logger.info(
+      'DELETE /organizations/:orgId/git/repositories/tracked-repository - Removing tracked repository',
+      { organizationId, owner, repo },
+    );
+
+    try {
+      return await this.gitRepositoriesService.removeTrackedRepository(
+        userId,
+        organizationId,
+        owner,
+        repo,
+      );
+    } catch (error) {
+      throw this.mapTrackingError(error);
     }
   }
 
   private mapTrackingError(error: unknown): unknown {
     if (
       error instanceof RepositoryAlreadyTrackedError ||
-      error instanceof NoTrackedRepositoryError
+      error instanceof NoTrackedRepositoryError ||
+      error instanceof RepositoryNotTrackableError
     ) {
       return new ConflictException(error.message);
     }

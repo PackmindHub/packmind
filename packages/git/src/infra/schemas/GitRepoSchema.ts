@@ -28,10 +28,20 @@ export const GitRepoSchema = new EntitySchema<
       name: 'provider_id',
       type: 'uuid',
     },
+    type: {
+      type: 'varchar',
+      nullable: false,
+      default: 'standard',
+    },
     isTracked: {
       name: 'is_tracked',
       type: 'boolean',
       default: false,
+    },
+    trackingRemovedAt: {
+      name: 'tracking_removed_at',
+      type: 'timestamp with time zone',
+      nullable: true,
     },
     ...uuidSchema,
     ...timestampsSchemas,

@@ -16,7 +16,7 @@ describe('ItemsListing', () => {
   let batchActionSpy: (selectedIds: string[]) => void;
 
   beforeEach(() => {
-    batchActionSpy = jest.fn();
+    batchActionSpy = vi.fn();
   });
 
   function renderListing() {

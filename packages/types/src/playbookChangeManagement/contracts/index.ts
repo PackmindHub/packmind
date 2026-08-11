@@ -9,4 +9,6 @@ export * from './IListChangeProposalsByArtefact';
 export * from './ICheckChangeProposalsUseCase';
 export * from './IApplyCreationChangeProposalsUseCase';
 export * from './IRecomputeConflicts';
+export * from './IComputeAppliedPreview';
+export * from './IComputeDraftVerdicts';
 export * from './IMigrateChangeProposalsForMovedArtefactUseCase';

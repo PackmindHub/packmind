@@ -9,7 +9,12 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   mode: RenderPackageAsPluginMode;
   /** Relative path used as the plugin-root prefix for every emitted file path. */
   pluginRoot: string;
-  /** Requested plugin name; may differ from the package slug. */
+  /**
+   * Requested plugin name. Advisory only: the rendered plugin `name` (in both
+   * plugin.json and the marketplace descriptor) is always normalized to the
+   * package slug, because Claude Code requires a space-free slug and rejects
+   * free-text names (e.g. a package renamed to "definition of ready").
+   */
   pluginName: string;
   /** Git remote URL of the render target; empty/undefined when the CLI is not in a git repo. */
   gitRemoteUrl?: string;

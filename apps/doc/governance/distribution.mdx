@@ -148,6 +148,20 @@ So a team that tracks `main`, moves to `dev` for a while, then returns to `main`
   --update`.
 </Note>
 
+### Removing Tracking
+
+An organization admin can take a repository out of the governance views entirely by running
+`packmind-cli untrack` from a clone of it (see the [Untrack Command](/tools/cli#untrack-command)).
+The repository disappears from Distribution History and the Deployments overview.
+
+Nothing is deleted. Every distribution recorded before the removal is kept, and tracking the same
+branch again brings the whole history back, with new distributions appended to it. Tracking a
+different branch instead starts that branch's history fresh, while the original branch's history
+stays retained and returns whenever you track it again.
+
+While a repository is untracked, `packmind-cli install` behaves exactly as it does for a repository
+that was never tracked: it completes locally and tells you the distribution was not recorded.
+
 ## Removing Packages
 
 When you no longer need a package in your repository, you can remove it using either the app or the CLI.

@@ -8,9 +8,9 @@ import { formatPackageNames } from './PackagesDropdown';
 import { createPackageId, createStandardId, Package } from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
 
-jest.mock('../../hooks/usePackagesForArtifact');
+vi.mock('../../hooks/usePackagesForArtifact');
 
-const mockUsePackagesForArtifact = jest.spyOn(
+const mockUsePackagesForArtifact = vi.spyOn(
   usePackagesForArtifactModule,
   'usePackagesForArtifact',
 );

@@ -18,5 +18,6 @@ export interface ISkillRepository extends IRepository<Skill> {
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]>;
   findByUserId(userId: UserId): Promise<Skill[]>;
+  countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>>;
   markAsMoved(skillId: SkillId, destinationSpaceId: SpaceId): Promise<void>;
 }

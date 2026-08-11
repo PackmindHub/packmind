@@ -6,16 +6,16 @@ import * as SpacesQueries from '../../../spaces/api/queries/SpacesQueries';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router';
 
-jest.mock('../../../deployments/api/queries/DeploymentsQueries');
-jest.mock('../../../spaces/api/queries/SpacesQueries');
-jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+vi.mock('../../../deployments/api/queries/DeploymentsQueries');
+vi.mock('../../../spaces/api/queries/SpacesQueries');
+vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',
     spaceSlug: 'test-space',
     spaceName: 'Test Space',
   }),
 }));
-jest.mock('../../../accounts/hooks/useAuthContext', () => ({
+vi.mock('../../../accounts/hooks/useAuthContext', () => ({
   useAuthContext: () => ({
     organization: {
       id: 'org-1',
@@ -44,27 +44,27 @@ describe('DashboardKPI', () => {
   };
 
   beforeEach(() => {
-    jest.spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery').mockReturnValue({
+    vi.spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery').mockReturnValue({
       data: mockKpiData,
     } as unknown as ReturnType<
       typeof DeploymentsQueries.useGetDashboardKpiQuery
     >);
 
-    jest
-      .spyOn(DeploymentsQueries, 'useGetDashboardNonLiveQuery')
-      .mockReturnValue({
+    vi.spyOn(DeploymentsQueries, 'useGetDashboardNonLiveQuery').mockReturnValue(
+      {
         data: { standards: [], commands: [], skills: [] },
       } as unknown as ReturnType<
         typeof DeploymentsQueries.useGetDashboardNonLiveQuery
-      >);
+      >,
+    );
 
-    jest.spyOn(SpacesQueries, 'useGetSpacesQuery').mockReturnValue({
+    vi.spyOn(SpacesQueries, 'useGetSpacesQuery').mockReturnValue({
       data: [{ id: 'space-1', name: 'Default Space', slug: 'default-space' }],
     } as unknown as ReturnType<typeof SpacesQueries.useGetSpacesQuery>);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the section title', () => {
@@ -125,17 +125,15 @@ describe('DashboardKPI', () => {
 
   describe('when there are no non-live artifacts', () => {
     beforeEach(() => {
-      jest
-        .spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery')
-        .mockReturnValue({
-          data: {
-            standards: { total: 1, active: 1 },
-            commands: { total: 1, active: 1 },
-            skills: { total: 1, active: 1 },
-          },
-        } as unknown as ReturnType<
-          typeof DeploymentsQueries.useGetDashboardKpiQuery
-        >);
+      vi.spyOn(DeploymentsQueries, 'useGetDashboardKpiQuery').mockReturnValue({
+        data: {
+          standards: { total: 1, active: 1 },
+          commands: { total: 1, active: 1 },
+          skills: { total: 1, active: 1 },
+        },
+      } as unknown as ReturnType<
+        typeof DeploymentsQueries.useGetDashboardKpiQuery
+      >);
     });
 
     it('does not show any non-live buttons', () => {

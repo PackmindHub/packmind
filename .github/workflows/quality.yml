@@ -143,11 +143,11 @@ jobs:
         env:
           PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
-  check-cli-sync:
+  check-oss-sync:
     if: vars.PACKMIND_EDITION == 'proprietary'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
-    name: Check CLI source parity with OSS
+    name: Check source parity with OSS
 
     steps:
       - name: Checkout proprietary repo
@@ -182,3 +182,97 @@ jobs:
           fi
 
           echo "CLI source code is in sync with OSS."
+
+      - name: Compare shared packages
+        run: |
+          # Packages allowed to diverge. Everything else in packages/ that exists in
+          # both repos must stay byte-identical - proprietary-only code belongs in a
+          # proprietary-only package, not in a fork of a shared one.
+          SKIP_PACKAGES=(integration-tests)
+
+          # Build output, plus every artefact Packmind deploys for AI coding agents.
+          # Each repo runs its own deployment, so those are regenerated independently
+          # and drift on their own schedule - comparing them is pure noise.
+          EXCLUDES=(
+            -x node_modules -x dist -x coverage -x '*.tsbuildinfo'
+            -x .packmind -x .claude -x .claude-plugin -x .cursor -x .github
+            -x .continue -x .gitlab -x .opencode -x .agents -x .junie
+            -x AGENTS.md -x CLAUDE.md -x .packmind.md
+            -x packmind.json -x packmind-lock.json
+          )
+
+          if [ ! -d /tmp/packmind-oss/packages ]; then
+            echo "::error::OSS checkout has no packages/ directory. Aborting comparison."
+            exit 1
+          fi
+
+          CHECKED=0
+          DIVERGED=()
+          MISSING=()
+
+          for DIR in packages/*/; do
+            PKG=$(basename "$DIR")
+
+            for SKIP in "${SKIP_PACKAGES[@]}"; do
+              if [ "$PKG" = "$SKIP" ]; then
+                echo "skipped     ${PKG} (deny-list)"
+                continue 2
+              fi
+            done
+
+            # Proprietary-only package - nothing on the OSS side to compare against.
+            if [ ! -d "/tmp/packmind-oss/packages/${PKG}" ]; then
+              echo "not in OSS  ${PKG}"
+              continue
+            fi
+
+            CHECKED=$((CHECKED + 1))
+            if diff -r "${EXCLUDES[@]}" "packages/${PKG}" "/tmp/packmind-oss/packages/${PKG}" > "/tmp/parity-${PKG}.diff" 2>&1; then
+              echo "in sync     ${PKG}"
+            else
+              echo "DIVERGED    ${PKG}"
+              DIVERGED+=("${PKG}")
+            fi
+          done
+
+          # A package that exists in OSS must exist here too - the fork is a superset.
+          for DIR in /tmp/packmind-oss/packages/*/; do
+            PKG=$(basename "$DIR")
+            if [ ! -d "packages/${PKG}" ]; then
+              MISSING+=("${PKG}")
+            fi
+          done
+
+          echo ""
+          echo "Compared ${CHECKED} shared packages."
+
+          if [ "$CHECKED" -eq 0 ]; then
+            echo "::error::No shared packages were compared - the comparison is not doing anything. Aborting."
+            exit 1
+          fi
+
+          for PKG in "${DIVERGED[@]}"; do
+            echo ""
+            echo "=== packages/${PKG} ==="
+            head -n 200 "/tmp/parity-${PKG}.diff"
+            TOTAL=$(wc -l < "/tmp/parity-${PKG}.diff" | tr -d ' ')
+            if [ "$TOTAL" -gt 200 ]; then
+              echo "... (${TOTAL} lines total, output truncated)"
+            fi
+          done
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo ""
+            echo "::error::Present in OSS but missing from this repo: ${MISSING[*]}. Run the sync-from-oss-repository workflow to pull them in."
+          fi
+
+          if [ ${#DIVERGED[@]} -gt 0 ]; then
+            echo ""
+            echo "::error::These packages have diverged from the OSS repo (PackmindHub/Packmind): ${DIVERGED[*]}. Backport the change to OSS main first, then re-run - shared packages must stay identical across editions. If a package is genuinely meant to diverge, add it to SKIP_PACKAGES in this step."
+          fi
+
+          if [ ${#DIVERGED[@]} -gt 0 ] || [ ${#MISSING[@]} -gt 0 ]; then
+            exit 1
+          fi
+
+          echo "All shared packages are in sync with OSS."

@@ -69,6 +69,7 @@ const createSpaceMembership = (
   userId: createUserId(userId),
   spaceId: createSpaceId(spaceId),
   role: UserSpaceRole.MEMBER,
+  pinned: false,
   createdBy: createUserId(userId),
   updatedBy: createUserId(userId),
 });

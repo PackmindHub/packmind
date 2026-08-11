@@ -26,6 +26,7 @@ module.exports = function getOssWebpackPaths(__dirname) {
       __dirname,
       '../../packages/editions/src',
     ),
+    '@packmind/marketplaces': join(__dirname, '../../packages/editions/src'),
     // Add other OSS-specific overrides here as needed
   };
 };

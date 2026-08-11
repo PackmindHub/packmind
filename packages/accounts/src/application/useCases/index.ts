@@ -20,7 +20,6 @@ export { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
 export { ListOrganizationUsersUseCase } from './listOrganizationUsers/ListOrganizationUsersUseCase';
 export { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
 export { ListUserOrganizationsUseCase } from './listUserOrganizations/ListUserOrganizationsUseCase';
-export { ManageOrganizationUseCase } from './manageOrganizationUseCase/ManageOrganizationUseCase';
 export { RemoveUserFromOrganizationUseCase } from './removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
 export { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
 export { ResetPasswordUseCase } from './ResetPasswordUseCase';

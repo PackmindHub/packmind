@@ -131,6 +131,14 @@ describe('DistributionRepository', () => {
         { trackedScopeOrganizationId: organizationId },
       );
 
+    const expectScopedToRemovedTracking = () =>
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'tracked_repo."tracking_removed_at" IS NOT NULL',
+        ),
+        { trackedScopeOrganizationId: organizationId },
+      );
+
     const expectNotScopedToTrackedBranch = () =>
       expect(mockQueryBuilder.andWhere).not.toHaveBeenCalledWith(
         expect.stringContaining('tracked_repo'),
@@ -148,6 +156,10 @@ describe('DistributionRepository', () => {
 
       it('scopes the history to the tracked branch', () => {
         expectScopedToTrackedBranch();
+      });
+
+      it('hides a repository whose tracking was removed', () => {
+        expectScopedToRemovedTracking();
       });
 
       it('keeps distributions whose repository row is absent', () => {
@@ -178,6 +190,10 @@ describe('DistributionRepository', () => {
       it('scopes the history to the tracked branch', () => {
         expectScopedToTrackedBranch();
       });
+
+      it('hides a repository whose tracking was removed', () => {
+        expectScopedToRemovedTracking();
+      });
     });
 
     describe('when listing distributions by standard', () => {
@@ -191,6 +207,10 @@ describe('DistributionRepository', () => {
       it('scopes the history to the tracked branch', () => {
         expectScopedToTrackedBranch();
       });
+
+      it('hides a repository whose tracking was removed', () => {
+        expectScopedToRemovedTracking();
+      });
     });
 
     describe('when listing distributions by skill', () => {
@@ -203,6 +223,10 @@ describe('DistributionRepository', () => {
 
       it('scopes the history to the tracked branch', () => {
         expectScopedToTrackedBranch();
+      });
+
+      it('hides a repository whose tracking was removed', () => {
+        expectScopedToRemovedTracking();
       });
     });
 

@@ -7,8 +7,8 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
 import { SaveLLMConfigurationUseCase } from './SaveLLMConfigurationUseCase';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 
 describe('SaveLLMConfigurationUseCase', () => {
   const organizationId = createOrganizationId('org-123');
@@ -16,7 +16,7 @@ describe('SaveLLMConfigurationUseCase', () => {
 
   let useCase: SaveLLMConfigurationUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockConfigurationRepository: jest.Mocked<ILLMConfigurationRepository>;
+  let mockConfigurationRepository: jest.Mocked<IAIProviderRepository>;
 
   const adminUser = {
     id: userId,

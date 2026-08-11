@@ -20,6 +20,7 @@ import {
   StandardId,
   SkillId,
   SpaceId,
+  Package,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceMembershipRequiredError } from '@packmind/node-utils';
@@ -28,7 +29,6 @@ import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
-import { Package } from '../../../domain/entities/Package';
 
 describe('CreatePackageUseCase', () => {
   let useCase: CreatePackageUseCase;

@@ -299,6 +299,33 @@ export class CommandsAdapter
     return result.recipes;
   }
 
+  public countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.commandsServices.getCommandService().countBySpaceIds(spaceIds);
+  }
+
+  /**
+   * List all commands across every space of an organization, bypassing space
+   * membership checks. Used for organization-scoped aggregations where the
+   * caller is already authorized at the organization level.
+   */
+  public async listAllCommandsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Command[]> {
+    if (!this.spacesPort) {
+      this.logger.warn('SpacesPort not available, returning empty results');
+      return [];
+    }
+
+    const spaces =
+      await this.spacesPort.listSpacesByOrganization(organizationId);
+    const commandsPerSpace = await Promise.all(
+      spaces.map((space) =>
+        this.commandsServices.getCommandService().listCommandsBySpace(space.id),
+      ),
+    );
+    return commandsPerSpace.flat();
+  }
+
   public listCommandVersions(recipeId: CommandId) {
     return this._listCommandVersions.listCommandVersions(recipeId);
   }

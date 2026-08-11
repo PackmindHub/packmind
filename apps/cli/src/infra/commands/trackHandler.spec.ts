@@ -17,6 +17,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
   logConsole: jest.fn(),
   formatCommand: jest.fn((text: string) => text),
 }));
@@ -31,6 +32,7 @@ function makeGitRepo(branch: string): GitRepo {
     branch,
     providerId: 'provider-id' as GitRepo['providerId'],
     isTracked: true,
+    trackingRemovedAt: null,
   };
 }
 
@@ -207,6 +209,9 @@ describe('trackHandler', () => {
     });
   });
 
+  // Unified exit codes: 0 when the desired state holds, 1 when it cannot be
+  // reached. `--update` onto the already-tracked branch is a no-op, not a
+  // failure — it used to exit 1 while plain `track` exited 0 on the same state.
   describe('when update is requested but the same branch is tracked', () => {
     beforeEach(async () => {
       deps.update = true;
@@ -219,14 +224,14 @@ describe('trackHandler', () => {
       await trackHandler(deps);
     });
 
-    it('logs an error', () => {
-      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+    it('reports the branch is already tracked', () => {
+      expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
         'Repository my-orga/my-repo is already tracked on branch main.',
       );
     });
 
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
+    it('exits with code 0', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(0);
     });
   });
 
@@ -270,27 +275,6 @@ describe('trackHandler', () => {
     });
   });
 
-  describe('when the caller is not an admin', () => {
-    beforeEach(async () => {
-      const error: Error & { statusCode?: number } = new Error(
-        'You must be an organization admin to set the tracked branch',
-      );
-      error.statusCode = 403;
-      mockTrackRepository.mockRejectedValue(error);
-      await trackHandler(deps);
-    });
-
-    it('surfaces the server message', () => {
-      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        'You must be an organization admin to set the tracked branch',
-      );
-    });
-
-    it('exits with code 1', () => {
-      expect(processExitSpy).toHaveBeenCalledWith(1);
-    });
-  });
-
   describe('when the feature is not available (404)', () => {
     beforeEach(async () => {
       const error: Error & { statusCode?: number } = new Error('Not Found');
@@ -302,6 +286,36 @@ describe('trackHandler', () => {
     it('reports the feature is unavailable', () => {
       expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
         'Repository tracking is not available for your account.',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('when the caller is not an organization admin (403)', () => {
+    const serverMessage =
+      'User 947009df-5a1d-45e8-ab1b-c996320eb000 must be an admin of organization ce0eda86-2018-437a-b91d-14feedd72e89 to perform this action';
+
+    beforeEach(async () => {
+      const error: Error & { statusCode?: number } = new Error(serverMessage);
+      error.statusCode = 403;
+      mockTrackRepository.mockRejectedValue(error);
+      await trackHandler(deps);
+    });
+
+    it('explains that admin rights are required', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        'Only organization admins can change which repository Packmind tracks. Ask an admin of your organization to run this command.',
+      );
+    });
+
+    // The server names the user and the organization by UUID, which is useless
+    // to someone at a terminal.
+    it('does not leak the server identifiers', () => {
+      expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalledWith(
+        expect.stringContaining('947009df'),
       );
     });
 

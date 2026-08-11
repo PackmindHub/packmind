@@ -105,6 +105,10 @@ export class CommandService {
     }
   }
 
+  async countBySpaceIds(spaceIds: SpaceId[]): Promise<Map<SpaceId, number>> {
+    return this.commandRepository.countBySpaceIds(spaceIds);
+  }
+
   async listCommandsByUser(userId: UserId): Promise<Command[]> {
     this.logger.info('Listing recipes by user', { userId });
 

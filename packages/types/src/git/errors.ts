@@ -238,6 +238,30 @@ export class NoTrackedRepositoryError extends Error {
 }
 
 /**
+ * Error thrown when tracking removal targets a repository Packmind has never
+ * seen in the organization.
+ *
+ * Mapped to 409, deliberately not 404: the CLI already reads any 404 on the
+ * tracking routes as "the feature is unavailable for your account" and would
+ * print the wrong message.
+ */
+export class RepositoryNotTrackableError extends Error {
+  constructor(
+    public readonly owner: string,
+    public readonly repo: string,
+  ) {
+    super(
+      `Repository ${owner}/${repo} is not connected to Packmind, so its tracking cannot be removed`,
+    );
+    this.name = 'RepositoryNotTrackableError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, RepositoryNotTrackableError);
+    }
+  }
+}
+
+/**
  * Error thrown when attempting to use a git remote URL with an unsupported provider
  */
 export class UnsupportedGitProviderError extends Error {
@@ -249,6 +273,29 @@ export class UnsupportedGitProviderError extends Error {
 
     if (hasCaptureStackTrace(Error)) {
       Error.captureStackTrace(this, UnsupportedGitProviderError);
+    }
+  }
+}
+
+/**
+ * Error thrown when attempting to link a marketplace whose `(owner, repo)`
+ * coordinates already match an existing standard (non-marketplace) GitRepo
+ * in the same organization. Linking the repo as a marketplace would create a
+ * cross-type collision; the link is rejected so the admin can resolve the
+ * conflict explicitly.
+ */
+export class GitRepoAlreadyLinkedAsStandardError extends Error {
+  constructor(
+    public readonly owner: string,
+    public readonly repo: string,
+  ) {
+    super(
+      `Repository ${owner}/${repo} is already linked as a standard Git repository in this organization`,
+    );
+    this.name = 'GitRepoAlreadyLinkedAsStandardError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitRepoAlreadyLinkedAsStandardError);
     }
   }
 }

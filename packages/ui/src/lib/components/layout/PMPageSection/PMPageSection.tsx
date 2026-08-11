@@ -55,7 +55,7 @@ const PMPageSection = ({
 
   const headerContent = (
     <HStack justify={'space-between'} width="full">
-      <PMHeading level={headingLevel} mb={2} data-testId={headerDataTestId}>
+      <PMHeading level={headingLevel} mb={2} data-testid={headerDataTestId}>
         {titleComponent ?? title}
       </PMHeading>
       <HStack gap={2}>

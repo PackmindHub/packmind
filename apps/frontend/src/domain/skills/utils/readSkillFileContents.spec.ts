@@ -1,5 +1,10 @@
 import { DetectedSkill } from './collectSkillsFromFiles';
-import { readSkillFileContents } from './readSkillFileContents';
+import {
+  findOversizedPayload,
+  MAX_UPLOAD_PAYLOAD_BYTES,
+  readSkillFileContents,
+  SkillUploadFile,
+} from './readSkillFileContents';
 
 function skillOf(
   ...files: [relativePath: string, file: File][]
@@ -144,6 +149,54 @@ describe('readSkillFileContents', () => {
   describe('when the skill has no files', () => {
     it('returns an empty payload', async () => {
       expect(await readSkillFileContents(skillOf())).toEqual([]);
+    });
+  });
+});
+
+describe('findOversizedPayload', () => {
+  const payloadOf = (contentLength: number): SkillUploadFile[] => [
+    {
+      path: 'SKILL.md',
+      content: 'a'.repeat(contentLength),
+      permissions: 'rw-r--r--',
+      isBase64: false,
+    },
+  ];
+
+  describe('when the payload fits', () => {
+    it('returns no error', () => {
+      expect(findOversizedPayload(payloadOf(1000))).toBeUndefined();
+    });
+  });
+
+  describe('when the payload is over the limit', () => {
+    const oversized = payloadOf(MAX_UPLOAD_PAYLOAD_BYTES + 1);
+
+    it('returns an error naming the limit', () => {
+      expect(findOversizedPayload(oversized)).toContain('15.0 MB limit');
+    });
+
+    it('returns an error naming the encoded size', () => {
+      expect(findOversizedPayload(oversized)).toMatch(/is 15\.\d MB once/);
+    });
+  });
+
+  // The on-disk check in collectSkillsFromFiles cannot see this: the bytes it
+  // measures fit, and only the base64 the transport needs pushes them over.
+  describe('when base64 encoding is what pushes it over', () => {
+    const underLimitOnDisk = MAX_UPLOAD_PAYLOAD_BYTES - 1024;
+    const encoded: SkillUploadFile[] = [
+      {
+        path: 'assets/logo.png',
+        // 4 characters per 3 bytes, so bytes that fit become a body that does not.
+        content: 'a'.repeat(Math.ceil((underLimitOnDisk * 4) / 3)),
+        permissions: 'rw-r--r--',
+        isBase64: true,
+      },
+    ];
+
+    it('rejects the payload', () => {
+      expect(findOversizedPayload(encoded)).toBeDefined();
     });
   });
 });

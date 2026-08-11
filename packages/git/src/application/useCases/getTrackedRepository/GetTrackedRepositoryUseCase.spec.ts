@@ -12,16 +12,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepoService } from '../../GitRepoService';
-import { isCliRepoTrackingEnabled } from '../shared/cliRepoTrackingFlag';
 import { GetTrackedRepositoryUseCase } from './GetTrackedRepositoryUseCase';
-
-jest.mock('../shared/cliRepoTrackingFlag', () => ({
-  isCliRepoTrackingEnabled: jest.fn().mockResolvedValue(true),
-}));
-
-const mockedIsEnabled = isCliRepoTrackingEnabled as jest.MockedFunction<
-  typeof isCliRepoTrackingEnabled
->;
 
 describe('GetTrackedRepositoryUseCase', () => {
   let useCase: GetTrackedRepositoryUseCase;
@@ -48,15 +39,13 @@ describe('GetTrackedRepositoryUseCase', () => {
   };
 
   beforeEach(() => {
-    mockedIsEnabled.mockResolvedValue(true);
-
     mockGitRepoService = {
       findTrackedByOwnerRepoInOrganization: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
     const user: User = {
       id: userId,
-      email: 'member@packmind.com',
+      email: 'member@example.com',
       displayName: 'member',
       passwordHash: null,
       active: true,
@@ -114,26 +103,6 @@ describe('GetTrackedRepositoryUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual({ gitRepo: null });
-    });
-  });
-
-  describe('when the feature flag is disabled', () => {
-    let result: { gitRepo: GitRepo | null };
-
-    beforeEach(async () => {
-      mockedIsEnabled.mockResolvedValue(false);
-
-      result = await useCase.execute(command);
-    });
-
-    it('returns no tracked repo', () => {
-      expect(result).toEqual({ gitRepo: null });
-    });
-
-    it('does not query the git repo service', () => {
-      expect(
-        mockGitRepoService.findTrackedByOwnerRepoInOrganization,
-      ).not.toHaveBeenCalled();
     });
   });
 });

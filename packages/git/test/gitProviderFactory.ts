@@ -14,7 +14,9 @@ export const gitProviderFactory: Factory<GitProvider> = (
     id: createGitProviderId(uuidv4()),
     source: GitProviderVendors.github,
     organizationId: createOrganizationId(uuidv4()),
-    url: 'https://api.github.com',
+    // Web host, as the connection UI persists it — the GitHub API clients
+    // hardcode api.github.com themselves and ignore this field.
+    url: 'https://github.com',
     token: 'test-token',
     authMethod: 'token',
     displayName: '',

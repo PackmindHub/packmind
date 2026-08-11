@@ -1,6 +1,6 @@
 {
   "name": "packmind-api-production",
-  "version": "1.15.1",
+  "version": "1.16.1",
   "private": true,
   "type": "commonjs",
   "main": "main.js",
@@ -44,7 +44,7 @@
     "rxjs": "^7.8.0",
     "semver": "^7.8.1",
     "slug": "^11.0.0",
-    "typeorm": "0.3.29",
+    "typeorm": "0.3.31",
     "uuid": "^11.1.0",
     "validator": "^13.15.15",
     "winston": "^3.17.0",

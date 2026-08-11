@@ -168,6 +168,16 @@ services:
       '
     environment:
       <<: *nx-env
+      # Namespaces this container's rows in Nx's `task_invocations` table. Nx
+      # keys that table by the root Nx process id and defaults it to
+      # `process.pid`; because each entrypoint `exec`s Nx, it becomes PID 1 in
+      # its own PID namespace, so frontend and backend would both register under
+      # root pid "1" in the `.nx/workspace-data` DB they share through the
+      # `.:/packmind` bind mount. The second container to start then collides
+      # with the first container's rows and Nx aborts with a bogus "Recursive
+      # task invocation detected". Distinct values per container keep genuine
+      # in-container recursion detection working.
+      NX_INVOCATION_ROOT_PID: '100001'
       CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
@@ -217,6 +227,8 @@ services:
       '
     environment:
       <<: *nx-env
+      # Distinct from the frontend's — see the comment on that service.
+      NX_INVOCATION_ROOT_PID: '100002'
       CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379

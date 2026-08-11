@@ -6,11 +6,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { OrganizationHomePage } from './OrganizationHomePage';
 
-jest.mock('../../organizations/components/dashboard/DashboardKPI', () => ({
+vi.mock('../../organizations/components/dashboard/DashboardKPI', () => ({
   DashboardKPI: () => <div data-testid="dashboard-kpi">Dashboard KPI</div>,
 }));
 
-jest.mock(
+vi.mock(
   '../../organizations/components/dashboard/OutdatedTargetsSection',
   () => ({
     OutdatedTargetsSection: () => (
@@ -40,7 +40,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('OrganizationHomePage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     renderWithProviders(<OrganizationHomePage />);
   });
 
