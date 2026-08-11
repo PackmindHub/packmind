@@ -28,6 +28,7 @@ import {
   UpdateTrackedBranchCommand,
   UpdateTrackedBranchResponse,
 } from '../contracts';
+import { GitBranchComparison } from '../GitBranchComparison';
 import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
@@ -119,9 +120,10 @@ export interface IGitPort {
    * Open a pull request on a git repository, or update an existing one when a PR
    * with the same `head → base` already exists (rolling-PR semantics).
    *
-   * Idempotent: if a PR matching `head → base` is already open, the existing one
-   * is returned untouched (no second PR is created). Used by the
-   * marketplace-publish flow to keep a single "Packmind sync" PR per marketplace.
+   * Idempotent: if a PR matching `head → base` is already open, no second PR is
+   * created — the existing one has its title and body refreshed and is returned.
+   * Used by the marketplace-publish flow to keep a single "Packmind sync" PR per
+   * marketplace whose description always reflects the PR's current contents.
    *
    * @param repo - The git repository (its `branch` field is the BASE branch)
    * @param command - PR head / title / body
@@ -144,6 +146,17 @@ export interface IGitPort {
     repo: GitRepo,
     head: string,
   ): Promise<{ url: string; number: number } | null>;
+
+  /**
+   * File-level diff of `head` against `base` — what a pull request from `head`
+   * into `base` would change. Used by the marketplace sync PR to describe its
+   * own contents. Yields an empty comparison when either branch is missing.
+   */
+  compareBranches(
+    repo: GitRepo,
+    base: string,
+    head: string,
+  ): Promise<GitBranchComparison>;
 
   /**
    * Probe a marketplace repo's reachability with the configured credentials,

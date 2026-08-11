@@ -9,7 +9,7 @@ import {
   createGitProviderId,
   createGitRepoId,
 } from '@packmind/types';
-import { GitRepo } from '@packmind/types';
+import { GitBranchComparison, GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -255,6 +255,31 @@ export class GitProviderService {
     );
 
     return gitRepoInstance.findOpenPullRequest(head);
+  }
+
+  async compareBranches(
+    gitRepo: GitRepo,
+    base: string,
+    head: string,
+  ): Promise<GitBranchComparison> {
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found');
+    }
+
+    if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    const gitRepoInstance = await this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+
+    return gitRepoInstance.compareBranches(base, head);
   }
 
   async checkMarketplaceRepoExists(gitRepo: GitRepo): Promise<{

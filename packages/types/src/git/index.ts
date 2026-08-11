@@ -1,4 +1,5 @@
 export * from './GitRepoId';
+export * from './GitBranchComparison';
 export * from './GitCommit';
 export * from './GitProvider';
 export * from './GitRepo';

@@ -2,7 +2,12 @@ import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { GitCommit } from '@packmind/types';
+import {
+  GitBranchComparison,
+  GitCommit,
+  GitFileChange,
+  GitFileChangeStatus,
+} from '@packmind/types';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -11,6 +16,14 @@ export interface GithubRepositoryOptions {
 }
 
 const origin = 'GithubRepository';
+
+/**
+ * GitHub caps a compare response at 300 files and paginates them 100 at a
+ * time. Walking all three pages is the most the API will ever give us; beyond
+ * that the comparison is reported as truncated.
+ */
+const COMPARE_FILES_PER_PAGE = 100;
+const COMPARE_MAX_PAGES = 3;
 
 export class GithubRepository implements IGitRepo {
   private readonly axiosInstance: AxiosInstance;
@@ -515,16 +528,19 @@ export class GithubRepository implements IGitRepo {
       base: baseBranch,
     });
 
-    // Step 1: Look up any existing open PR matching head -> base.
+    // Step 1: Look up any existing open PR matching head -> base. When one is
+    // open we refresh its title + body rather than leaving stale text behind —
+    // the marketplace sync PR recomputes its description on every publish.
     const existing = await this.findOpenPullRequestForBase(head, baseBranch);
     if (existing) {
-      this.logger.debug('Existing open pull request found, skipping creation', {
+      this.logger.debug('Existing open pull request found, updating it', {
         owner,
         repo,
         head,
         base: baseBranch,
         number: existing.number,
       });
+      await this.updatePullRequest(existing.number, title, body);
       return { url: existing.url, number: existing.number, wasCreated: false };
     }
 
@@ -589,6 +605,142 @@ export class GithubRepository implements IGitRepo {
         `Failed to open pull request on GitHub for '${head}' -> '${baseBranch}': ${errorMessage}`,
       );
     }
+  }
+
+  /**
+   * Refresh an open pull request's title and body.
+   *
+   * Deliberately non-throwing: the caller already holds a usable PR URL, and
+   * the rolling marketplace sync PR treats its description as cosmetic. Losing
+   * the URL because a PATCH failed would be strictly worse than showing a
+   * slightly stale description, so a failure is logged and swallowed.
+   */
+  private async updatePullRequest(
+    pullNumber: number,
+    title: string,
+    body?: string,
+  ): Promise<void> {
+    const { owner, repo } = this.options;
+    try {
+      await this.axiosInstance.patch(
+        `/repos/${owner}/${repo}/pulls/${pullNumber}`,
+        body === undefined ? { title } : { title, body },
+      );
+      this.logger.debug('Updated pull request on GitHub', {
+        owner,
+        repo,
+        number: pullNumber,
+      });
+    } catch (error) {
+      this.logger.warn('Failed to update pull request on GitHub', {
+        owner,
+        repo,
+        number: pullNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  async compareBranches(
+    base: string,
+    head: string,
+  ): Promise<GitBranchComparison> {
+    const { owner, repo } = this.options;
+    const files: GitFileChange[] = [];
+    let truncated = false;
+
+    try {
+      for (let page = 1; page <= COMPARE_MAX_PAGES; page++) {
+        const response = await this.axiosInstance.get(
+          `/repos/${owner}/${repo}/compare/${base}...${head}`,
+          { params: { per_page: COMPARE_FILES_PER_PAGE, page } },
+        );
+
+        const pageFiles: Array<{
+          filename: string;
+          status: string;
+          previous_filename?: string;
+        }> = Array.isArray(response.data?.files) ? response.data.files : [];
+
+        for (const file of pageFiles) {
+          files.push(...this.toFileChanges(file));
+        }
+
+        if (pageFiles.length < COMPARE_FILES_PER_PAGE) {
+          break;
+        }
+        // A full last page means GitHub may still be holding files back.
+        truncated = page === COMPARE_MAX_PAGES;
+      }
+
+      this.logger.debug('Compared branches on GitHub', {
+        owner,
+        repo,
+        base,
+        head,
+        fileCount: files.length,
+        truncated,
+      });
+
+      return { files, truncated };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 404) {
+        // One of the two refs does not exist — nothing to compare.
+        this.logger.debug('Branch comparison target missing on GitHub', {
+          owner,
+          repo,
+          base,
+          head,
+        });
+        return { files: [], truncated: false };
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to compare branches on GitHub', {
+        owner,
+        repo,
+        base,
+        head,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to compare '${base}'...'${head}' on GitHub: ${errorMessage}`,
+      );
+    }
+  }
+
+  /**
+   * Map one GitHub compare entry to our normalized changes. A rename becomes
+   * two entries (old path removed, new path added) so callers reasoning about
+   * per-directory contents see the file leave one place and arrive in another.
+   */
+  private toFileChanges(file: {
+    filename: string;
+    status: string;
+    previous_filename?: string;
+  }): GitFileChange[] {
+    if (file.status === 'renamed') {
+      const changes: GitFileChange[] = [
+        { path: file.filename, status: 'added' },
+      ];
+      if (file.previous_filename) {
+        changes.push({ path: file.previous_filename, status: 'removed' });
+      }
+      return changes;
+    }
+
+    const statusMap: Record<string, GitFileChangeStatus> = {
+      added: 'added',
+      copied: 'added',
+      removed: 'removed',
+      modified: 'modified',
+      changed: 'modified',
+      unchanged: 'modified',
+    };
+    return [
+      { path: file.filename, status: statusMap[file.status] ?? 'modified' },
+    ];
   }
 
   public async findOpenPullRequest(
