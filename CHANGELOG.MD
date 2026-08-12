@@ -6,7 +6,9 @@
 
 ## Fixed
 
-## Removed
+## Chores
+
+- Removed most of the dead code under packages
 
 # [1.16.1] - 2026-08-07
 
