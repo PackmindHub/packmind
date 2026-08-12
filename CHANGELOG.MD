@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [1.16.2] - 2026-08-12
 
 ## Chores
@@ -345,6 +355,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...HEAD
 [1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
 [1.16.1]: https://github.com/PackmindHub/packmind/compare/release/1.16.0...release/1.16.1
 [1.16.0]: https://github.com/PackmindHub/packmind/compare/release/1.15.1...release/1.16.0
