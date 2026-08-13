@@ -18,10 +18,28 @@ export const trackCommand = command({
       description:
         'Branch to track (defaults to the branch currently checked out)',
     }),
+    // Accepted only so the old removal syntax gets the migration message
+    // instead of a raw "unknown arguments" parser error.
+    remove: flag({
+      long: 'remove',
+      description: 'Removal now lives in the "git untrack" command',
+    }),
   },
-  handler: async ({ update, branch }) => {
+  handler: async ({ update, branch, remove }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+    if (remove) {
+      packmindCliHexa.output.notifyError(
+        'Command "packmind track --remove" has been removed.',
+        {
+          content: 'Use the "git untrack" command instead:',
+          exampleCommand: 'packmind git untrack',
+        },
+      );
+      process.exit(1);
+      return;
+    }
 
     let exampleCommand = 'packmind git track';
     if (update) {

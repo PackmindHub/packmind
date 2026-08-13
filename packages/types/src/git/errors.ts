@@ -227,7 +227,7 @@ export class NoTrackedRepositoryError extends Error {
     public readonly repo: string,
   ) {
     super(
-      'Nothing is tracked yet — run `packmind init` or `packmind track` to start tracking.',
+      'Nothing is tracked yet — run `packmind init` or `packmind git track` to start tracking.',
     );
     this.name = 'NoTrackedRepositoryError';
 
