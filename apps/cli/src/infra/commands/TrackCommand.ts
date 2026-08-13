@@ -1,6 +1,7 @@
 import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { removedTrackHandler } from './removedCommandHandler';
 
 export const trackCommand = command({
   name: 'track',
@@ -29,33 +30,13 @@ export const trackCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    if (remove) {
-      packmindCliHexa.output.notifyError(
-        'Command "packmind track --remove" has been removed.',
-        {
-          content: 'Use the "git untrack" command instead:',
-          exampleCommand: 'packmind git untrack',
-        },
-      );
-      process.exit(1);
-      return;
-    }
-
-    let exampleCommand = 'packmind git track';
-    if (update) {
-      exampleCommand += ' --update';
-    }
-    if (branch) {
-      exampleCommand += ` --branch ${branch}`;
-    }
-
-    packmindCliHexa.output.notifyError(
-      'Command "packmind track" has been removed.',
-      {
-        content: 'Use the "git track" command instead:',
-        exampleCommand,
-      },
-    );
-    process.exit(1);
+    removedTrackHandler({
+      update,
+      branch,
+      remove,
+      notifyError: packmindCliHexa.output.notifyError.bind(
+        packmindCliHexa.output,
+      ),
+    });
   },
 });

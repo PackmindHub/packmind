@@ -1,6 +1,7 @@
 import { command } from 'cmd-ts';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { removedUntrackHandler } from './removedCommandHandler';
 
 export const untrackCommand = command({
   name: 'untrack',
@@ -11,13 +12,10 @@ export const untrackCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    packmindCliHexa.output.notifyError(
-      'Command "packmind untrack" has been removed.',
-      {
-        content: 'Use the "git untrack" command instead:',
-        exampleCommand: 'packmind git untrack',
-      },
-    );
-    process.exit(1);
+    removedUntrackHandler({
+      notifyError: packmindCliHexa.output.notifyError.bind(
+        packmindCliHexa.output,
+      ),
+    });
   },
 });
