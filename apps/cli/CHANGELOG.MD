@@ -11,6 +11,11 @@
 
 ## Fixed
 
+- Messages left pointing at the removed `track` command now name its replacement: `install` on an untracked repository, the "nothing is tracked yet" error and the server-side equivalent all say `packmind git track`.
+- `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.
+- `track --remove` gets the same migration message as `track`, naming `git untrack`, instead of failing with a raw "unknown arguments" parser error.
+- Running a command outside a git repository no longer claims `lint` must be run in a Git repository — `git info`, `git track` and `install` share those git helpers — and no longer prints git's own `fatal: not a git repository` line after the explanation.
+
 ## Removed
 
 # [0.33.0] - 2026-08-10

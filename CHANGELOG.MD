@@ -2,7 +2,11 @@
 
 ## Added
 
+- Check what Packmind tracks for the repository you are in with the new `packmind git info` command: it names the tracked branch, warns when the branch you are on is not the tracked one — distributions from there are not recorded — and tells you how to start tracking when the repository is not tracked at all. Reading the state needs no admin rights
+
 ## Changed
+
+- **Breaking (CLI)**: `packmind track` and `packmind untrack` moved under the `git` command and are now `packmind git track` and `packmind git untrack`, joining `packmind git info`. Both flag spellings moved with them (`git track --branch <name>`, `git track --update`, and the two combined). The old names still parse but exit with an error naming their replacement, so scripts and CI jobs calling them must be updated
 
 ## Fixed
 
