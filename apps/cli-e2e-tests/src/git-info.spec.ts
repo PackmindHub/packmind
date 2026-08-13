@@ -37,9 +37,12 @@ describeForVersion('> 0.33.0', 'git info', () => {
         );
       });
 
+      // `toMatchOutput` strips ANSI: the command is chalk-coloured, so any
+      // assertion spanning it and the plain text around it only holds when
+      // colour is off. Chalk turns colour ON in CI, not locally.
       it('proposes tracking the checked-out branch', () => {
-        expect(result.stdout).toContain(
-          "packmind git track to track branch 'main'",
+        expect(result.stdout).toMatchOutput(
+          "Run packmind git track to track branch 'main'.",
         );
       });
     },
@@ -107,8 +110,8 @@ describeForVersion('> 0.33.0', 'git info', () => {
       });
 
       it('points at the command that moves tracking', () => {
-        expect(result.stdout + result.stderr).toContain(
-          'packmind git track --update',
+        expect(result.stdout + result.stderr).toMatchOutput(
+          'Run packmind git track --update to move tracking',
         );
       });
     },
