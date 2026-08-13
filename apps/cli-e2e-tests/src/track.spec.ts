@@ -9,6 +9,7 @@ import {
   WithMemberContext,
 } from './helpers';
 import { matchesVersionConstraint } from './helpers/cliVersion';
+import { describeWithTempSpace } from './helpers/describeWithTempSpace';
 
 const randomEmail = (): string => `track-e2e-${uuidv4()}@example.com`;
 describeForVersion('> 0.31.0', 'track command', () => {
@@ -167,6 +168,33 @@ describeForVersion('> 0.32.0', 'track --branch', () => {
     },
     { email: randomEmail },
   );
+
+  describeWithUserSignedUp(
+    'when moving tracking to a branch that is not checked out',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        await context.runCli(trackCommand);
+        // Created but never checked out: `--branch` does not require it.
+        execSync('git branch dev', { cwd: context.testDir });
+        result = await context.runCli(`${trackCommand} --update --branch dev`);
+      });
+
+      it('succeeds', () => {
+        expect(result.returnCode).toBe(0);
+      });
+
+      it('moves tracking to the requested branch', () => {
+        expect(result.stdout).toContain(
+          'Tracked branch for PackmindHub/sample-repo changed from main to dev',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
 });
 
 // `untrack` ships after 0.32.0, so gate these above the current release: in
@@ -290,5 +318,101 @@ describeForVersion('> 0.32.0', 'untrack', () => {
       });
     },
     { email: randomEmail },
+  );
+});
+
+// The stubs only exist after the rename; before it, these were the real
+// commands. They never reach the API, so no signed-up user is needed.
+describeForVersion('> 0.33.0', 'removed track and untrack commands', () => {
+  describeWithTempSpace(
+    'when the removed track command is run',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const { testDir } = await getContext();
+        result = await runCli('track', { cwd: testDir });
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('says the command has been removed', () => {
+        expect(result.stdout + result.stderr).toContain(
+          'Command "packmind track" has been removed.',
+        );
+      });
+
+      it('names the command that replaces it', () => {
+        expect(result.stdout + result.stderr).toContain('packmind git track');
+      });
+    },
+  );
+
+  describeWithTempSpace(
+    'when the removed track command is run with flags',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const { testDir } = await getContext();
+        result = await runCli('track --update --branch main', { cwd: testDir });
+      });
+
+      it('carries the flags over to the suggested command', () => {
+        expect(result.stdout + result.stderr).toContain(
+          'packmind git track --update --branch main',
+        );
+      });
+    },
+  );
+
+  // `--remove` predates the `untrack` command. It used to fail with a raw
+  // cmd-ts "unknown arguments" error that never mentioned the replacement.
+  describeWithTempSpace(
+    'when the removed track --remove flag is used',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const { testDir } = await getContext();
+        result = await runCli('track --remove', { cwd: testDir });
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('does not fail on argument parsing', () => {
+        expect(result.stdout + result.stderr).not.toContain(
+          'Unknown arguments',
+        );
+      });
+
+      it('names the command that replaces it', () => {
+        expect(result.stdout + result.stderr).toContain('packmind git untrack');
+      });
+    },
+  );
+
+  describeWithTempSpace(
+    'when the removed untrack command is run',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const { testDir } = await getContext();
+        result = await runCli('untrack', { cwd: testDir });
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('names the command that replaces it', () => {
+        expect(result.stdout + result.stderr).toContain('packmind git untrack');
+      });
+    },
   );
 });
