@@ -11,13 +11,13 @@ export const trackCommand = command({
     update: flag({
       long: 'update',
       description:
-        'Move the tracked branch to the current branch (requires an existing tracked branch)',
+        'Move the tracked branch to the checked-out branch, or to --branch when it is given (requires an existing tracked branch)',
     }),
     branch: option({
       type: optional(string),
       long: 'branch',
       description:
-        'Branch to track (defaults to the branch currently checked out)',
+        'Branch to track instead of the checked-out one; combines with --update to move tracking to it',
     }),
   },
   handler: async ({ update, branch }) => {

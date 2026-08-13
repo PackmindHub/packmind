@@ -5,8 +5,7 @@ import { removedUntrackHandler } from './removedCommandHandler';
 
 export const untrackCommand = command({
   name: 'untrack',
-  description:
-    "[Deprecated] Remove Packmind's tracking of the current repository (keeps every recorded distribution)",
+  description: '[Removed] Use "git untrack" instead',
   args: {},
   handler: async () => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);

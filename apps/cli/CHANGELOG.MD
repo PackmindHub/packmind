@@ -8,6 +8,8 @@
 
 - Change `track` command to `git track` command
 - Change `untrack` command to `git untrack` command
+- `--help` now lists the old `track` and `untrack` as `[Removed] Use "git track" instead`, matching what running them says. They used to be listed as `[Deprecated]` while answering "has been removed".
+- `git track --help` no longer describes `--update` as moving tracking to the current branch, which stopped being true when `--branch` shipped. Both entries now say the two options combine.
 
 ## Fixed
 

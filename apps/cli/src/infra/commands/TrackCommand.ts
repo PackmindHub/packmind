@@ -5,8 +5,9 @@ import { removedTrackHandler } from './removedCommandHandler';
 
 export const trackCommand = command({
   name: 'track',
-  description:
-    '[Deprecated] Set the repository and branch Packmind tracks for the current project',
+  // Listed in --help on purpose: a stub nobody can discover cannot redirect
+  // anyone. "[Removed]" matches what running it actually says.
+  description: '[Removed] Use "git track" instead',
   args: {
     update: flag({
       long: 'update',
