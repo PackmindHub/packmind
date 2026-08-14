@@ -26,8 +26,17 @@ import {
 
 const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
 
+/** Undefined whenever tracing is disabled, which makes shutdownOtel a no-op. */
+let sdk: NodeSDK | undefined;
+
+/**
+ * Bounded so an unreachable collector cannot hold the process past the SIGKILL
+ * grace period a container runtime allows after SIGTERM.
+ */
+const SHUTDOWN_TIMEOUT_MS = 2000;
+
 if (otlpEndpoint) {
-  const sdk = new NodeSDK({
+  sdk = new NodeSDK({
     resource: defaultResource().merge(
       resourceFromAttributes({
         [ATTR_SERVICE_NAME]: process.env['OTEL_SERVICE_NAME'] || 'packmind-api',
@@ -80,15 +89,33 @@ if (otlpEndpoint) {
   sdk.start();
 
   console.log(`[otel] OpenTelemetry started, exporting to ${otlpEndpoint}`);
+}
 
-  // Flush buffered spans on shutdown. These listeners sit alongside the ones
-  // main.ts registers; they only flush and never call process.exit, so the
-  // existing graceful-shutdown sequence is untouched.
-  const shutdown = () => {
-    sdk.shutdown().catch((error: unknown) => {
-      console.error('[otel] Error shutting down OpenTelemetry', error);
-    });
-  };
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+/**
+ * Flushes buffered spans and log records, and resolves once they are on the
+ * wire (or the timeout above expires).
+ *
+ * Deliberately NOT wired to SIGTERM/SIGINT here. main.ts already owns graceful
+ * shutdown and ends it with process.exit, which kills the process regardless of
+ * an in-flight export — a second listener racing it loses the whole final
+ * batch. So main.ts awaits this instead, as the last step before exiting.
+ *
+ * Never rethrows: a failed flush must not change the exit path.
+ */
+export async function shutdownOtel(): Promise<void> {
+  if (!sdk) {
+    return;
+  }
+
+  try {
+    await Promise.race([
+      sdk.shutdown(),
+      new Promise<void>((resolve) => {
+        // unref so a pending timer cannot itself keep the process alive.
+        setTimeout(resolve, SHUTDOWN_TIMEOUT_MS).unref();
+      }),
+    ]);
+  } catch (error: unknown) {
+    console.error('[otel] Error flushing OpenTelemetry on shutdown', error);
+  }
 }

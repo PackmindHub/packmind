@@ -88,6 +88,10 @@ Prompt and completion **content** is not captured — only model and token metad
 `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` would change that; don't, unless you have
 thought about what ends up in Loki.
 
+You also get **Node runtime metrics** for free — event-loop lag, heap and GC, from the bundle's
+`runtime-node` instrumentation, which the SDK exports to Prometheus alongside the traces. Nobody
+configured this; it is on by default. Look for them in Explore → Prometheus.
+
 Two known gaps:
 
 - **BullMQ jobs** are traced (they run in the API process) but are *not* linked to the HTTP request

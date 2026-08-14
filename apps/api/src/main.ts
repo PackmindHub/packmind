@@ -19,6 +19,7 @@ import { NestFactory } from '@nestjs/core';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
+import { shutdownOtel } from './otel';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/editions';
@@ -185,9 +186,13 @@ async function bootstrap() {
             shutdownTime: new Date().toISOString(),
             totalUptime: process.uptime(),
           });
+
+          // Last, because it must be the final thing before process.exit:
+          // exiting with an export in flight drops the whole buffered batch.
+          await shutdownOtel();
           process.exit(0);
         })
-        .catch((error) => {
+        .catch(async (error) => {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           logger.error('❌ Error during graceful shutdown', {
@@ -195,6 +200,8 @@ async function bootstrap() {
             error: errorMessage,
             shutdownTime: new Date().toISOString(),
           });
+
+          await shutdownOtel();
           process.exit(1);
         });
     };
