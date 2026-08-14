@@ -11,6 +11,44 @@ export enum LogLevel {
   SILLY = 'silly',
 }
 
+/**
+ * Renders one human-readable console line.
+ *
+ * `trace_id` / `span_id` / `trace_flags` are injected into every record by
+ * @opentelemetry/instrumentation-winston whenever a span is active (see
+ * apps/api/src/otel.ts). They are pulled out of the metadata here so they show
+ * as a short marker rather than bloating the JSON blob on every line — the
+ * `json()` format still carries them in full, which is what Loki and Grafana's
+ * trace<->logs navigation rely on.
+ *
+ * Exported for testing: the console transport is unreachable under Jest, which
+ * forces PACKMIND_LOG_LEVEL=silent globally.
+ */
+export function formatConsoleLine(
+  info: winston.Logform.TransformableInfo,
+): string {
+  const { timestamp, level, message, label, trace_id: traceId } = info;
+
+  const meta = Object.fromEntries(
+    Object.entries(info).filter(([key]) => !RENDERED_FIELDS.includes(key)),
+  );
+  const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+  const traceStr = traceId ? ` [trace=${String(traceId).slice(0, 8)}]` : '';
+
+  return `${timestamp} [${label}]${traceStr} ${level}: ${message}${metaStr}`;
+}
+
+/** Fields rendered explicitly above, so they must not be repeated in `meta`. */
+const RENDERED_FIELDS = [
+  'timestamp',
+  'level',
+  'message',
+  'label',
+  'trace_id',
+  'span_id',
+  'trace_flags',
+];
+
 export class PackmindLogger {
   private readonly logger: winston.Logger | null;
   private readonly name: string;
@@ -46,14 +84,7 @@ export class PackmindLogger {
           new winston.transports.Console({
             format: winston.format.combine(
               winston.format.colorize(),
-              winston.format.printf(
-                ({ timestamp, level, message, label, ...meta }) => {
-                  const metaStr = Object.keys(meta).length
-                    ? ` ${JSON.stringify(meta)}`
-                    : '';
-                  return `${timestamp} [${label}] ${level}: ${message}${metaStr}`;
-                },
-              ),
+              winston.format.printf(formatConsoleLine),
             ),
           }),
         ],
