@@ -76,6 +76,31 @@ services:
       retries: 10
       start_period: 1s
 
+  # Self-hosted OTLP backend: OTel Collector + Tempo (traces) + Prometheus
+  # (metrics) + Loki (logs) + Grafana, in one container. Opt-in, because it is a
+  # heavy image most days you do not need it:
+  #
+  #   COMPOSE_PROFILES=observability \
+  #   OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
+  #   docker compose up
+  #
+  # Both switches are needed: the profile starts this container, the env var is
+  # what makes the API export (it stays inert when unset). See docker/otel/README.md.
+  otel-lgtm:
+    profiles:
+      - observability
+    # Pinned rather than :latest — the bundled Grafana datasource provisioning
+    # and collector config are internal to the image and do change across
+    # releases.
+    image: grafana/otel-lgtm:0.30.2
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-otel-lgtm
+    ports:
+      - '4317:4317' # OTLP/gRPC
+      - '4318:4318' # OTLP/HTTP — published to the host: the browser posts here directly
+      - '3001:3000' # Grafana UI (3000 belongs to the API)
+    volumes:
+      - dev-otel-lgtm:/data
+
   pgadmin:
     profiles:
       - dev
@@ -181,6 +206,9 @@ services:
       CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
+      # Consumed by the browser, not this container — hence localhost and the
+      # host-published 4318. Empty by default, same opt-in as the API.
+      VITE_OTEL_EXPORTER_URL: ${VITE_OTEL_EXPORTER_URL:-}
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '1000'
 
@@ -239,6 +267,10 @@ services:
       WATCHPACK_POLLING: 'true'
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
       APP_WEB_URL: ${APP_WEB_URL:-http://localhost:${PACKMIND_WEB_PORT:-4200}}
+      # Empty by default: apps/api/src/otel.ts starts the OpenTelemetry SDK only
+      # when this is set, so tracing is entirely off unless you opt in.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: packmind-api
 
     volumes:
       - .:/packmind
@@ -317,3 +349,4 @@ volumes:
   dev-node_modules:
   dev-corepack-cache:
   dev-pnpm-store:
+  dev-otel-lgtm:
