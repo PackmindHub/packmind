@@ -28,6 +28,11 @@ VITE_OTEL_EXPORTER_URL=http://localhost:4318/v1/traces
 
 Grafana is then on <http://localhost:3001> (`admin` / `admin`).
 
+All three otel-lgtm ports are published on **loopback only**, because OTLP ingestion is
+unauthenticated and Grafana runs on default credentials. If you drive Docker from another machine —
+a remote host, or some WSL setups — the ports will look dead; drop the `127.0.0.1:` prefixes in
+`docker-compose.yml` to reach them.
+
 Leave the env vars unset and the SDK never starts: no spans, no exporter, no overhead. That is also
 why production is unaffected — the same gate applies there.
 

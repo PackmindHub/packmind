@@ -94,10 +94,15 @@ services:
     # releases.
     image: grafana/otel-lgtm:0.30.2
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-otel-lgtm
+    # Loopback-only on purpose. OTLP ingestion is unauthenticated and Grafana
+    # runs on default credentials, and traces carry SQL statements, request URLs
+    # and log lines — none of that should be reachable from the local network.
+    # Drop the 127.0.0.1 prefixes if you need to reach the stack from another
+    # machine or through a remote Docker host.
     ports:
-      - '4317:4317' # OTLP/gRPC
-      - '4318:4318' # OTLP/HTTP — published to the host: the browser posts here directly
-      - '3001:3000' # Grafana UI (3000 belongs to the API)
+      - '127.0.0.1:4317:4317' # OTLP/gRPC
+      - '127.0.0.1:4318:4318' # OTLP/HTTP — the browser posts here directly
+      - '127.0.0.1:3001:3000' # Grafana UI (3000 belongs to the API)
     volumes:
       - dev-otel-lgtm:/data
 
