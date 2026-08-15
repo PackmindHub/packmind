@@ -42,7 +42,7 @@ bundle and resolved by **your browser**, so it must be a host URL.
 
 ## Finding your way around Grafana
 
-Everything below is provisioned by the image — there are no dashboards to build. Three entry
+Everything below is provisioned by the image — there are no dashboards to build. Four entry
 points, easiest first.
 
 ### 1. "This request was slow, why?" — Explore → Tempo → Search
@@ -82,13 +82,30 @@ WHERE ( LOWER("user"."email") = LOWER($1) ) AND ( "user"."deleted_at" IS NULL )
 `$1` stays `$1` — the address itself is nowhere in the span. Turning on `enhancedDatabaseReporting`
 in `apps/api/src/otel.ts` is what would attach the values, and that is why it is left off.
 
-### 2. "What is slow?" — Explore → Tempo → Service Graph
+### 2. "Show me everything slower than X" — Explore → Tempo → TraceQL
+
+Switch the Tempo query type to **TraceQL** and filter on duration. Two different things, easy to
+confuse:
+
+```traceql
+{ traceDuration > 800ms }                              # the whole request took > 800ms
+{ duration > 800ms }                                   # a single SPAN took > 800ms
+{ resource.service.name = "packmind-api" && duration > 800ms }
+{ name =~ "pg.query.*" && duration > 200ms }           # slow SQL specifically
+{ name =~ "pg.query.*" && duration > 200ms && resource.deployment.environment.name = "production" }
+```
+
+`duration` is per span, so `{duration > 800ms}` finds a slow *query* even inside a fast request,
+while `{traceDuration > 800ms}` finds slow *requests*. Both return the matching traces, and clicking
+one drops you into the waterfall.
+
+### 3. "What is slow?" — Explore → Tempo → Service Graph
 
 A live diagram of `packmind-frontend → packmind-api → postgres/redis`, with request and error rates
 on each edge, synthesized from spans by Tempo's metrics-generator. Use this when you do not yet
 know which request to look at, then click through an edge into the traces behind it.
 
-### 3. "What happened during that request?" — logs ↔ traces
+### 4. "What happened during that request?" — logs ↔ traces
 
 Logs carry `trace_id` automatically, so the two directions both work:
 
