@@ -90,6 +90,11 @@ if (otlpEndpoint) {
         //   email records `LOWER("user"."email") = LOWER($1)` and not the
         //   address. This is what keeps user data out of the trace backend.
         // - `winston` keeps both trace-context injection AND log sending on.
+        //   Log sending additionally requires `@opentelemetry/winston-transport`
+        //   to be installed — it is an OPTIONAL peer, and without it the
+        //   instrumentation silently sends nothing (it only emits an OTel diag
+        //   warning, which is invisible unless OTEL_LOG_LEVEL is set). Keep that
+        //   package in the dependencies, here and in docker-package.json.
         //   Sending is what puts logs in Loki carrying a `trace_id`, which is
         //   what makes Grafana's trace<->logs navigation work. Do not also add
         //   `OpenTelemetryTransportV3` to PackmindLogger — combined with this

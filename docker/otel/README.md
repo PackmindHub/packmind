@@ -99,6 +99,17 @@ Logs carry `trace_id` automatically, so the two directions both work:
 This round trip is usually the fastest way to debug something, and it is the reason log export is
 enabled rather than just log correlation.
 
+The correlation is exact, not approximate — verified by capturing traces and logs from one request
+and cross-referencing them: the log records emitted inside a request carry the **same `trace_id` as
+the HTTP span**, and a `span_id` belonging to a span in that same trace. Startup logs, emitted
+outside any request, correctly carry no trace context. Inbound `traceparent` is honoured too, so a
+browser-initiated request puts the API's spans *and* its log lines on the browser's trace.
+
+> **Do not drop `@opentelemetry/winston-transport` from the dependencies.** It is an *optional* peer
+> of `instrumentation-winston`, so nothing breaks loudly without it — logs simply never reach Loki,
+> and the only clue is an OTel diag warning you cannot see unless `OTEL_LOG_LEVEL` is set. Trace ids
+> still appear in the console, which makes it look like everything works.
+
 ## What is instrumented
 
 Via `@opentelemetry/auto-instrumentations-node` in `apps/api/src/otel.ts`:
