@@ -56,6 +56,16 @@ bundle and resolved by **your browser**, so it must be a host URL.
 The query languages below are the escape hatch for when the click-through UIs do not cover what you
 want. Worth reading once, not memorising. Five entry points, easiest first.
 
+> **Importing a community dashboard from grafana.com?** Expect empty panels, and do not conclude the
+> setup is broken. Span-metric names are fragmented across the ecosystem: this stack's Tempo
+> metrics-generator emits **`traces_spanmetrics_latency_bucket`** (verified by querying it), while
+> the OpenTelemetry Collector's `spanmetrics` connector and Alloy emit
+> `traces_spanmetrics_duration_milliseconds_bucket`, and old Tempo emitted
+> `traces_spanmetrics_duration_seconds_bucket`. Most published dashboards target one of the other
+> two. Either edit the metric name in the imported panels, or add a Prometheus recording rule
+> aliasing ours to the name the dashboard expects. The bundled dashboard avoids the problem by
+> being built against what this stack actually produces.
+
 ### 1. "This request was slow, why?" — Explore → Tempo → Search
 
 Pick the **Tempo** datasource, set Service Name to `packmind-api`, and sort by duration. Open a
