@@ -57,8 +57,20 @@ GET /api/v0/spaces/…            412ms   ← HTTP span
        └─ pg.query              210ms   ← the N+1 you did not know about
 ```
 
-Click any `pg.query` span and read `db.statement` for the SQL. Statements are parameterized —
-bind values are deliberately **not** captured, so user data never reaches the trace backend.
+Click any `pg.query` span and read **`db.query.text`** for the SQL — the full statement TypeORM
+generated, joins and all. (It is `db.query.text`, not the older `db.statement`: `instrumentation-pg`
+has moved to the stable database semantic conventions. Same reason the neighbouring attributes are
+`db.system.name` and `db.namespace`.)
+
+Statements are parameterized and bind values are deliberately **not** captured, so user data never
+reaches the trace backend. A lookup by email records:
+
+```
+WHERE ( LOWER("user"."email") = LOWER($1) ) AND ( "user"."deleted_at" IS NULL )
+```
+
+`$1` stays `$1` — the address itself is nowhere in the span. Turning on `enhancedDatabaseReporting`
+in `apps/api/src/otel.ts` is what would attach the values, and that is why it is left off.
 
 ### 2. "What is slow?" — Explore → Tempo → Service Graph
 

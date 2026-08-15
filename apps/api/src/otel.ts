@@ -64,8 +64,10 @@ if (otlpEndpoint) {
         // Everything else stays at its defaults, which is deliberate:
         //
         // - `pg` keeps `enhancedDatabaseReporting: false`, so spans carry the
-        //   parameterized SQL in `db.statement` but never the bind values. This
-        //   is what keeps user data out of the trace backend.
+        //   parameterized SQL in `db.query.text` (the stable semconv name, not
+        //   the older `db.statement`) but never the bind values — a lookup by
+        //   email records `LOWER("user"."email") = LOWER($1)` and not the
+        //   address. This is what keeps user data out of the trace backend.
         // - `winston` keeps both trace-context injection AND log sending on.
         //   Sending is what puts logs in Loki carrying a `trace_id`, which is
         //   what makes Grafana's trace<->logs navigation work. Do not also add
