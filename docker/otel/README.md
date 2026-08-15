@@ -106,6 +106,34 @@ Two known gaps:
   `opentelemetry-instrumentation-typeorm` package is unmaintained and not part of
   `opentelemetry-js-contrib`, so it is deliberately not used.
 
+## Cloud vs self-hosted
+
+**Self-hosted builds ship with observability entirely off**, and that is enforced in CI rather than
+left to configuration.
+
+The two halves behave differently and need different handling:
+
+- **API — runtime.** `OTEL_EXPORTER_OTLP_ENDPOINT` is read at startup, so the image is neutral: the
+  same artifact traces or does not trace depending on the environment it runs in. Nothing is set in
+  `dockerfile/prod/docker-compose.yml`, so a self-hosted deployment never starts the SDK. For Cloud,
+  the value comes from the Helm values in `PackmindHub/packmind-ai-helm-charts`, not from this repo.
+- **Frontend — build time.** `VITE_OTEL_EXPORTER_URL` is baked into the client bundle by Vite and
+  cannot be changed afterwards, so the split has to happen when the bundle is built. That is the
+  `Build frontend` step in `.github/workflows/build.yml`, gated exactly like the Sentry and Crisp
+  values:
+
+  ```
+  vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/')
+  ```
+
+  Every `release/*` tag produces the self-hosted images (both editions), so the expression resolves
+  to `''` there and `initOtel()` returns early.
+
+That step also **fails the build** if any Cloud-only `VITE_` value is non-empty on a `release/*`
+tag. The check exists because the failure it guards against is invisible: a leaked endpoint in a
+customer's bundle would silently point their browsers at Packmind infrastructure, and nothing in the
+running product would look wrong.
+
 ## Using a different backend
 
 Because the apps speak plain OTLP to a Collector, swapping backends is a config change, not a code

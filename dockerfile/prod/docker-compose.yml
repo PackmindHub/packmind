@@ -59,6 +59,9 @@ services:
     environment:
       <<: [*database-url, *redis-config, *openai-config]
       COOKIE_SECURE: false # Set to true if exposed behind HTTPS
+      # No OTEL_EXPORTER_OTLP_ENDPOINT on purpose: OpenTelemetry stays off in
+      # self-hosted deployments, and nothing is reported anywhere. Set it to your
+      # own OTLP collector if you want tracing on your own infrastructure.
       # Uncomment the next line to enable custom CA certificates:
       # NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem
     # Uncomment the next 2 lines to mount custom CA certificates:

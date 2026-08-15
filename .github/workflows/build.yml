@@ -17,6 +17,9 @@ on:
       VITE_CRISP_WEBSITE_ID:
         required: false
         description: 'Crisp Website ID for chat support (proprietary only)'
+      VITE_OTEL_EXPORTER_URL:
+        required: false
+        description: 'OTLP endpoint for browser traces (Cloud only). Not confidential — it ships in the client bundle — but kept as a secret for consistency with the other VITE_ values.'
     outputs:
       api-artifact:
         description: 'API build artifact name'
@@ -125,15 +128,36 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx test frontend
+      # Every VITE_ value below is baked into the client bundle at build time and
+      # cannot be changed afterwards, so the Cloud/self-hosted split has to happen
+      # here. `release/*` tags produce the self-hosted images (both editions), so
+      # Cloud telemetry is gated on proprietary AND not-a-release-tag; everything
+      # else resolves to '' and the corresponding vendor stays disabled at runtime.
       - name: Build frontend
         env:
           NODE_ENV: production
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+          IS_SELF_HOSTED_BUILD: ${{ startsWith(github.ref, 'refs/tags/release/') }}
           VITE_SENTRY_FRONTEND_DSN: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && secrets.VITE_SENTRY_FRONTEND_DSN || '' }}
           VITE_SENTRY_ENVIRONMENT: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && 'production' || '' }}
           VITE_CRISP_WEBSITE_ID: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && secrets.VITE_CRISP_WEBSITE_ID || '' }}
-        run: ./node_modules/.bin/nx build frontend
+          VITE_OTEL_EXPORTER_URL: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && secrets.VITE_OTEL_EXPORTER_URL || '' }}
+        run: |
+          # Fail before building rather than shipping a self-hosted bundle that
+          # phones home: a leaked endpoint here would silently point customer
+          # browsers at Packmind infrastructure, and is invisible once bundled.
+          if [ "${IS_SELF_HOSTED_BUILD}" = "true" ]; then
+            for var in VITE_SENTRY_FRONTEND_DSN VITE_SENTRY_ENVIRONMENT \
+                       VITE_CRISP_WEBSITE_ID VITE_OTEL_EXPORTER_URL; do
+              if [ -n "${!var}" ]; then
+                echo "::error::${var} is set on a release/* build. Self-hosted images must ship with no Cloud telemetry."
+                exit 1
+              fi
+            done
+            echo "Self-hosted build: no Cloud telemetry variables set."
+          fi
+          ./node_modules/.bin/nx build frontend
       - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
 
       - name: Upload Frontend build artifacts
