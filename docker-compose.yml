@@ -215,9 +215,6 @@ services:
       CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
-      # Consumed by the browser, not this container — hence localhost and the
-      # host-published 4318. Empty by default, same opt-in as the API.
-      VITE_OTEL_EXPORTER_URL: ${VITE_OTEL_EXPORTER_URL:-}
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '1000'
 

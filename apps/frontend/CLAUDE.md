@@ -28,8 +28,7 @@ React Router v7 SPA for Packmind.
 
 - **Port**: 4200 (set twice in `vite.config.ts` — `server` and `preview`)
 - **Environment variables**: Vite vars with the `VITE_` prefix — `VITE_SENTRY_FRONTEND_DSN`,
-  `VITE_SENTRY_ENVIRONMENT`, `VITE_CRISP_WEBSITE_ID`, `VITE_HMR_HOST`,
-  `VITE_OTEL_EXPORTER_URL` (browser tracing; unset disables it — see `docker/otel/README.md`)
+  `VITE_SENTRY_ENVIRONMENT`, `VITE_CRISP_WEBSITE_ID`, `VITE_HMR_HOST`
 - **API base URL**: not configurable — `packmindApiService` is hardcoded to the relative path `/api`
   (`src/services/api/PackmindApiService.ts`). In dev, `vite.config.ts` proxies `/api` to
   `API_HOSTNAME`:`API_PORT` **only when both are set**; otherwise requests go to the frontend's own

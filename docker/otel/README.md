@@ -13,17 +13,15 @@ vars make the apps export:
 ```bash
 COMPOSE_PROFILES=observability \
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
-VITE_OTEL_EXPORTER_URL=http://localhost:4318/v1/traces \
 docker compose up
 ```
 
-Or, more comfortably, put those three lines in a `.env` file at the repo root — Compose reads it
+Or, more comfortably, put those two lines in a `.env` file at the repo root — Compose reads it
 automatically:
 
 ```dotenv
 COMPOSE_PROFILES=observability
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318
-VITE_OTEL_EXPORTER_URL=http://localhost:4318/v1/traces
 ```
 
 Grafana is then on <http://localhost:3001> (`admin` / `admin`).
@@ -33,12 +31,13 @@ unauthenticated and Grafana runs on default credentials. If you drive Docker fro
 a remote host, or some WSL setups — the ports will look dead; drop the `127.0.0.1:` prefixes in
 `docker-compose.yml` to reach them.
 
-Leave the env vars unset and the SDK never starts: no spans, no exporter, no overhead. That is also
+Leave the env var unset and the SDK never starts: no spans, no exporter, no overhead. That is also
 why production is unaffected — the same gate applies there.
 
-Note the asymmetry in the two URLs. `OTEL_EXPORTER_OTLP_ENDPOINT` is resolved inside the backend
-container, so it uses the compose service name. `VITE_OTEL_EXPORTER_URL` is baked into the frontend
-bundle and resolved by **your browser**, so it must be a host URL.
+**Scope: the API only.** The browser is deliberately not instrumented. Sending telemetry from a page
+means either shipping a credential in a public JS bundle or running an unauthenticated ingest
+endpoint on our domain, and neither was worth it for the value it adds. Traces therefore start at
+the HTTP span, not at the click.
 
 ## Finding your way around Grafana
 
@@ -162,9 +161,9 @@ Two gotchas:
 
 ### 4. "What is slow?" — Explore → Tempo → Service Graph
 
-A live diagram of `packmind-frontend → packmind-api → postgres/redis`, with request and error rates
-on each edge, synthesized from spans by Tempo's metrics-generator. Use this when you do not yet
-know which request to look at, then click through an edge into the traces behind it.
+A live diagram of `packmind-api → postgres/redis`, with request and error rates on each edge,
+synthesized from spans by Tempo's metrics-generator. Use this when you do not yet know which request
+to look at, then click through an edge into the traces behind it.
 
 ### 5. "What happened during that request?" — logs ↔ traces
 
@@ -181,7 +180,8 @@ The correlation is exact, not approximate — verified by capturing traces and l
 and cross-referencing them: the log records emitted inside a request carry the **same `trace_id` as
 the HTTP span**, and a `span_id` belonging to a span in that same trace. Startup logs, emitted
 outside any request, correctly carry no trace context. Inbound `traceparent` is honoured too, so a
-browser-initiated request puts the API's spans *and* its log lines on the browser's trace.
+caller that already has a trace gets the API's spans *and* its log lines attached to it — which is
+what would let a future upstream service, or an instrumented browser, join the same trace.
 
 > **Do not drop `@opentelemetry/winston-transport` from the dependencies.** It is an *optional* peer
 > of `instrumentation-winston`, so nothing breaks loudly without it — logs simply never reach Loki,
@@ -198,7 +198,6 @@ Via `@opentelemetry/auto-instrumentations-node` in `apps/api/src/otel.ts`:
 | **PostgreSQL queries** (all TypeORM traffic) | `pg` — at driver level |
 | Redis: cache, SSE pub/sub, BullMQ connection | `ioredis` |
 | Outgoing LLM calls (OpenAI, Anthropic, Google GenAI) | `undici`, `openai` |
-| Browser page loads and API calls | `sdk-trace-web` in the frontend |
 
 Prompt and completion **content** is not captured — only model and token metadata. Setting
 `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` would change that; don't, unless you have
@@ -219,36 +218,23 @@ Two known gaps:
 
 ## Cloud vs self-hosted
 
-**Self-hosted builds ship with observability entirely off**, and that is enforced in CI rather than
-left to configuration.
+**Self-hosted deployments ship with observability entirely off.**
 
-The two halves behave differently and need different handling:
+Because tracing lives only in the API, this needs no build-time gating: the image is neutral and
+`OTEL_EXPORTER_OTLP_ENDPOINT` is read at startup, so the same artifact traces or does not trace
+depending on the environment it runs in. Nothing sets it in
+`dockerfile/prod/docker-compose.yml`, so a self-hosted deployment never starts the SDK. For Cloud,
+the value comes from the Helm values in `PackmindHub/packmind-ai-helm-charts`, not from this repo.
 
-- **API — runtime.** `OTEL_EXPORTER_OTLP_ENDPOINT` is read at startup, so the image is neutral: the
-  same artifact traces or does not trace depending on the environment it runs in. Nothing is set in
-  `dockerfile/prod/docker-compose.yml`, so a self-hosted deployment never starts the SDK. For Cloud,
-  the value comes from the Helm values in `PackmindHub/packmind-ai-helm-charts`, not from this repo.
-- **Frontend — build time.** `VITE_OTEL_EXPORTER_URL` is baked into the client bundle by Vite and
-  cannot be changed afterwards, so the split has to happen when the bundle is built. That is the
-  `Build frontend` step in `.github/workflows/build.yml`, gated exactly like the Sentry and Crisp
-  values:
-
-  ```
-  vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/')
-  ```
-
-  Every `release/*` tag produces the self-hosted images (both editions), so the expression resolves
-  to `''` there and `initOtel()` returns early.
-
-That step also **fails the build** if any Cloud-only `VITE_` value is non-empty on a `release/*`
-tag. The check exists because the failure it guards against is invisible: a leaked endpoint in a
-customer's bundle would silently point their browsers at Packmind infrastructure, and nothing in the
-running product would look wrong.
+That is a real advantage of keeping the browser out of it — a bundled value could not be changed
+after the build, and would have needed a CI gate to stay out of customer images. (The frontend build
+in `.github/workflows/build.yml` still guards the Sentry and Crisp values that way, for the same
+reason.)
 
 ## Moving to Grafana Cloud
 
-Mostly env vars — but "just change the endpoint" is not the whole story, and the gaps are not
-obvious.
+Mostly env vars, and more so now that only the API is instrumented — but "just change the endpoint"
+is still not the whole story.
 
 **Works with env vars alone, no code change:**
 
@@ -263,21 +249,16 @@ endpoint that requires auth and confirming the `Authorization: Basic …` header
 
 **Needs actual work:**
 
-1. **Browser traces cannot go direct.** `VITE_OTEL_EXPORTER_URL` is resolved by the browser, so
-   pointing it at Grafana Cloud would mean shipping the Cloud token in a public JS bundle. Do not.
-   Either keep a collector you host as the browser's endpoint and let *it* authenticate onward, or
-   use Grafana Cloud Frontend Observability (Faro), which is a different SDK. Until one of those is
-   in place, browser tracing stays local-only.
-2. **Span metrics must be switched on.** The RED dashboards depend on `traces_spanmetrics_*`, which
+1. **Span metrics must be switched on.** The RED dashboards depend on `traces_spanmetrics_*`, which
    otel-lgtm's Tempo generates locally. In Grafana Cloud the metrics-generator is a per-stack setting
    that is off by default, and the series it produces are billed as active series.
-3. **Datasource uids differ.** The bundled dashboard uses a `${ds}` variable rather than a hardcoded
+2. **Datasource uids differ.** The bundled dashboard uses a `${ds}` variable rather than a hardcoded
    uid precisely so it can be repointed — pick the Cloud Prometheus datasource from the dropdown.
-4. **Volume becomes a bill.** Nothing is sampled today, and log export is on for every
+3. **Volume becomes a bill.** Nothing is sampled today, and log export is on for every
    `PackmindLogger` line. That is right for a laptop and wrong for production traffic: add a sampler
    (`OTEL_TRACES_SAMPLER=parentbased_traceidratio`, `OTEL_TRACES_SAMPLER_ARG=0.1`) and consider
    filtering logs below `warn` before pointing production at a paid backend.
-5. **Sentry still overlaps.** Enabling OTel in an environment where `SENTRY_DSN_API` is set needs
+4. **Sentry still overlaps.** Enabling OTel in an environment where `SENTRY_DSN_API` is set needs
    Sentry's `skipOpenTelemetrySetup` route — see the note in `apps/api/src/otel.ts`.
 
 ## Using a different backend
