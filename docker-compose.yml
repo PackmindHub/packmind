@@ -277,6 +277,10 @@ services:
       # when this is set, so tracing is entirely off unless you opt in.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       OTEL_SERVICE_NAME: packmind-api
+      # Declaring the environment is mandatory when exporting — otel.ts refuses
+      # to export without it, so that staging can never report itself as
+      # production. Defaulted here so local stays a one-variable opt-in.
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment.name=local}
 
     volumes:
       - .:/packmind

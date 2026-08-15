@@ -39,6 +39,37 @@ means either shipping a credential in a public JS bundle or running an unauthent
 endpoint on our domain, and neither was worth it for the value it adds. Traces therefore start at
 the HTTP span, not at the click.
 
+## One image, several environments
+
+Everything is environment variables — the same artifact runs everywhere, and nothing is baked in at
+build time.
+
+| | local | staging | production | self-hosted |
+| --- | --- | --- | --- | --- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://otel-lgtm:4318` | Cloud endpoint | Cloud endpoint | *unset* |
+| `OTEL_EXPORTER_OTLP_HEADERS` | — | `Authorization=Basic …` | `Authorization=Basic …` | — |
+| `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment.name=local` | `…=staging,service.version=<tag>` | `…=production,service.version=<tag>` | — |
+| sampling | everything | everything | `traceidratio` ~0.1 | — |
+
+For staging and production these live in the Helm values in `PackmindHub/packmind-ai-helm-charts`.
+Compose defaults the local one, so locally the endpoint remains the only switch you need.
+
+**Declaring the environment is mandatory when exporting.** With an endpoint set but no
+`deployment.environment.name`, the SDK does not start and logs an error — the API still serves
+traffic, because a telemetry typo must never take the service down, but nothing is exported.
+
+That rule exists because of a concrete trap: the API image hardcodes `NODE_ENV=production`, so
+deriving the environment from it made staging announce itself as production. Its traces, logs and
+latency percentiles would have merged into the production ones with nothing looking wrong.
+
+**Watch out when several environments share one backend.** The attribute reaches traces and logs —
+filter with `resource.deployment.environment.name` in TraceQL, and Loki exposes it as the
+`deployment_environment_name` label. It does **not** reach the span metrics: their labels are
+`service`, `span_name`, `span_kind`, `status_code` and `le` only. Two environments writing to the
+same Prometheus therefore blend their percentiles silently. Either add the dimension to Tempo's
+metrics-generator and filter everywhere, or give each environment its own stack — the second is
+easier to guarantee than a filtering discipline everyone has to remember.
+
 ## Finding your way around Grafana
 
 **You mostly do not have to write queries.** Two things cover the common cases:

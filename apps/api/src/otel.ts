@@ -20,12 +20,43 @@ import { ExpressLayerType } from '@opentelemetry/instrumentation-express';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import {
-  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
-  ATTR_SERVICE_NAME,
-} from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+
+const ATTR_KEY_DEPLOYMENT_ENVIRONMENT = 'deployment.environment.name';
 
 const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
+
+/**
+ * The environment is REQUIRED whenever exporting, and must come from
+ * OTEL_RESOURCE_ATTRIBUTES — the SDK's own resource detector reads it, so it is
+ * the one source of truth.
+ *
+ * It used to fall back to NODE_ENV, which was a trap: the API image hardcodes
+ * NODE_ENV=production, so staging reported itself as production and its traces,
+ * logs and latency percentiles merged into the production ones with nothing
+ * looking wrong. Mislabelled telemetry is worse than none, so a missing
+ * environment disables export rather than guessing.
+ */
+function declaredEnvironment(): string | undefined {
+  const raw = process.env['OTEL_RESOURCE_ATTRIBUTES'];
+  if (!raw) {
+    return undefined;
+  }
+
+  for (const pair of raw.split(',')) {
+    const separator = pair.indexOf('=');
+    if (separator === -1) {
+      continue;
+    }
+    if (pair.slice(0, separator).trim() === ATTR_KEY_DEPLOYMENT_ENVIRONMENT) {
+      return pair.slice(separator + 1).trim() || undefined;
+    }
+  }
+
+  return undefined;
+}
+
+const environment = declaredEnvironment();
 
 /** Undefined whenever tracing is disabled, which makes shutdownOtel a no-op. */
 let sdk: NodeSDK | undefined;
@@ -36,13 +67,24 @@ let sdk: NodeSDK | undefined;
  */
 const SHUTDOWN_TIMEOUT_MS = 2000;
 
-if (otlpEndpoint) {
+if (otlpEndpoint && !environment) {
+  // Loud, but never fatal: a typo in telemetry config must not stop the API
+  // from serving traffic.
+  console.error(
+    `[otel] OTEL_EXPORTER_OTLP_ENDPOINT is set but "${ATTR_KEY_DEPLOYMENT_ENVIRONMENT}" is missing ` +
+      `from OTEL_RESOURCE_ATTRIBUTES. Refusing to export rather than mislabel this deployment. ` +
+      `Set e.g. OTEL_RESOURCE_ATTRIBUTES=${ATTR_KEY_DEPLOYMENT_ENVIRONMENT}=staging`,
+  );
+}
+
+if (otlpEndpoint && environment) {
   sdk = new NodeSDK({
+    // deployment.environment.name is deliberately absent here: the resource
+    // detector picks it up from OTEL_RESOURCE_ATTRIBUTES, so it cannot be
+    // silently overridden by a default.
     resource: defaultResource().merge(
       resourceFromAttributes({
         [ATTR_SERVICE_NAME]: process.env['OTEL_SERVICE_NAME'] || 'packmind-api',
-        [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]:
-          process.env['NODE_ENV'] || 'development',
       }),
     ),
 
@@ -116,7 +158,9 @@ if (otlpEndpoint) {
   // SentrySampler / SentryPropagator / SentryContextManager.
   sdk.start();
 
-  console.log(`[otel] OpenTelemetry started, exporting to ${otlpEndpoint}`);
+  console.log(
+    `[otel] OpenTelemetry started for "${environment}", exporting to ${otlpEndpoint}`,
+  );
 }
 
 /**
