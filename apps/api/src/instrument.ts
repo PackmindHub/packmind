@@ -1,3 +1,7 @@
+// MUST stay first: OpenTelemetry patches modules as they are required, so it
+// has to run before anything below pulls in winston, pg, express or ioredis.
+import './otel';
+
 import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import * as Sentry from '@sentry/nestjs';

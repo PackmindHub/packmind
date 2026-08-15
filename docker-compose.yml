@@ -76,6 +76,40 @@ services:
       retries: 10
       start_period: 1s
 
+  # Self-hosted OTLP backend: OTel Collector + Tempo (traces) + Prometheus
+  # (metrics) + Loki (logs) + Grafana, in one container. Opt-in, because it is a
+  # heavy image most days you do not need it:
+  #
+  #   COMPOSE_PROFILES=observability \
+  #   OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
+  #   docker compose up
+  #
+  # Both switches are needed: the profile starts this container, the env var is
+  # what makes the API export (it stays inert when unset). See docker/otel/README.md.
+  otel-lgtm:
+    profiles:
+      - observability
+    # Pinned rather than :latest — the bundled Grafana datasource provisioning
+    # and collector config are internal to the image and do change across
+    # releases.
+    image: grafana/otel-lgtm:0.30.2
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-otel-lgtm
+    # Loopback-only on purpose. OTLP ingestion is unauthenticated and Grafana
+    # runs on default credentials, and traces carry SQL statements, request URLs
+    # and log lines — none of that should be reachable from the local network.
+    # Drop the 127.0.0.1 prefixes if you need to reach the stack from another
+    # machine or through a remote Docker host.
+    ports:
+      - '127.0.0.1:4317:4317' # OTLP/gRPC
+      - '127.0.0.1:4318:4318' # OTLP/HTTP — the browser posts here directly
+      - '127.0.0.1:3001:3000' # Grafana UI (3000 belongs to the API)
+    volumes:
+      - dev-otel-lgtm:/data
+      # Ready-made dashboards, so nobody has to write PromQL by hand. The image
+      # provisions datasources but ships no dashboards of its own.
+      - ./docker/otel/grafana/provisioning-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/packmind.yaml:ro
+      - ./docker/otel/grafana/dashboards:/otel-lgtm/grafana/dashboards/packmind:ro
+
   pgadmin:
     profiles:
       - dev
@@ -239,6 +273,14 @@ services:
       WATCHPACK_POLLING: 'true'
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
       APP_WEB_URL: ${APP_WEB_URL:-http://localhost:${PACKMIND_WEB_PORT:-4200}}
+      # Empty by default: apps/api/src/otel.ts starts the OpenTelemetry SDK only
+      # when this is set, so tracing is entirely off unless you opt in.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: packmind-api
+      # Declaring the environment is mandatory when exporting — otel.ts refuses
+      # to export without it, so that staging can never report itself as
+      # production. Defaulted here so local stays a one-variable opt-in.
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment.name=local}
 
     volumes:
       - .:/packmind
@@ -317,3 +359,4 @@ volumes:
   dev-node_modules:
   dev-corepack-cache:
   dev-pnpm-store:
+  dev-otel-lgtm:
