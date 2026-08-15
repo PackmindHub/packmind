@@ -10,10 +10,19 @@
   "templating": {
     "list": [
       {
+        "name": "ds",
+        "label": "Prometheus",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "prometheus" },
+        "hide": 0,
+        "description": "Defaults to the otel-lgtm datasource. Switch it when pointing this dashboard at Grafana Cloud, whose datasource uids differ."
+      },
+      {
         "name": "endpoint",
         "label": "Endpoint",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": { "type": "prometheus", "uid": "${ds}" },
         "query": "label_values(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_SERVER\"}, span_name)",
         "refresh": 2,
         "includeAll": false,
@@ -28,7 +37,7 @@
       "type": "timeseries",
       "title": "Latency percentiles per endpoint",
       "description": "Server spans only. Straight from Tempo's span metrics — no instrumentation of our own. Empty panel usually means no traffic in the window, not a broken setup: rate() over an idle period is NaN.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
       "fieldConfig": {
         "defaults": { "unit": "s", "custom": { "lineWidth": 1, "fillOpacity": 5 } },
@@ -57,7 +66,7 @@
       "id": 2,
       "type": "timeseries",
       "title": "Requests per second",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
@@ -73,7 +82,7 @@
       "type": "timeseries",
       "title": "Errors per second",
       "description": "Spans whose status is ERROR. Flat zero is the expected state.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
@@ -89,7 +98,7 @@
       "type": "heatmap",
       "title": "Latency distribution — $endpoint",
       "description": "The full shape, not just quantiles. Two bands mean two behaviours (cache hit vs miss, warm vs cold pool) that percentiles average away.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 17 },
       "options": { "calculate": false, "yAxis": { "unit": "s" } },
       "targets": [
@@ -106,7 +115,7 @@
       "type": "timeseries",
       "title": "Database call latency (p95 / p99)",
       "description": "Client spans — pg.query and friends. When these track the endpoint percentiles above, the tail is the database rather than our code.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 26 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [

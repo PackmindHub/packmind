@@ -245,6 +245,41 @@ tag. The check exists because the failure it guards against is invisible: a leak
 customer's bundle would silently point their browsers at Packmind infrastructure, and nothing in the
 running product would look wrong.
 
+## Moving to Grafana Cloud
+
+Mostly env vars — but "just change the endpoint" is not the whole story, and the gaps are not
+obvious.
+
+**Works with env vars alone, no code change:**
+
+```dotenv
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-<region>.grafana.net/otlp
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic <base64 of instanceID:token>
+```
+
+The SDK reads `OTEL_EXPORTER_OTLP_HEADERS` natively — verified by pointing the built API at an
+endpoint that requires auth and confirming the `Authorization: Basic …` header arrives on
+`/v1/traces` and `/v1/logs`. API traces and logs are done at that point.
+
+**Needs actual work:**
+
+1. **Browser traces cannot go direct.** `VITE_OTEL_EXPORTER_URL` is resolved by the browser, so
+   pointing it at Grafana Cloud would mean shipping the Cloud token in a public JS bundle. Do not.
+   Either keep a collector you host as the browser's endpoint and let *it* authenticate onward, or
+   use Grafana Cloud Frontend Observability (Faro), which is a different SDK. Until one of those is
+   in place, browser tracing stays local-only.
+2. **Span metrics must be switched on.** The RED dashboards depend on `traces_spanmetrics_*`, which
+   otel-lgtm's Tempo generates locally. In Grafana Cloud the metrics-generator is a per-stack setting
+   that is off by default, and the series it produces are billed as active series.
+3. **Datasource uids differ.** The bundled dashboard uses a `${ds}` variable rather than a hardcoded
+   uid precisely so it can be repointed — pick the Cloud Prometheus datasource from the dropdown.
+4. **Volume becomes a bill.** Nothing is sampled today, and log export is on for every
+   `PackmindLogger` line. That is right for a laptop and wrong for production traffic: add a sampler
+   (`OTEL_TRACES_SAMPLER=parentbased_traceidratio`, `OTEL_TRACES_SAMPLER_ARG=0.1`) and consider
+   filtering logs below `warn` before pointing production at a paid backend.
+5. **Sentry still overlaps.** Enabling OTel in an environment where `SENTRY_DSN_API` is set needs
+   Sentry's `skipOpenTelemetrySetup` route — see the note in `apps/api/src/otel.ts`.
+
 ## Using a different backend
 
 Because the apps speak plain OTLP to a Collector, swapping backends is a config change, not a code
