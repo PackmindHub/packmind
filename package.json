@@ -148,6 +148,7 @@
     "@opentelemetry/exporter-logs-otlp-http": "^0.221.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
     "@opentelemetry/instrumentation": "^0.221.0",
+    "@opentelemetry/instrumentation-express": "^0.69.0",
     "@opentelemetry/instrumentation-fetch": "^0.221.0",
     "@opentelemetry/instrumentation-xml-http-request": "^0.221.0",
     "@opentelemetry/resources": "^2.10.0",

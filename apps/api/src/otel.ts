@@ -16,6 +16,7 @@
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { ExpressLayerType } from '@opentelemetry/instrumentation-express';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { NodeSDK } from '@opentelemetry/sdk-node';
@@ -60,6 +61,26 @@ if (otlpEndpoint) {
           ignoreIncomingRequestHook: (request) =>
             request.url?.startsWith('/api/v0/healthcheck') ?? false,
         },
+
+        '@opentelemetry/instrumentation-express': {
+          // Drop per-middleware spans. Measured on one request they were 18 of
+          // 24 spans — cookieParser, jsonParser, cors and friends, each wrapped
+          // in an uninformative "middleware - patched" parent — burying the
+          // three spans that carry the story (request handler -> controller ->
+          // SQL). Routers and request handlers are kept.
+          //
+          // The cost is losing body-parsing time as its own span; it stays
+          // inside the root span's duration. Re-enable by removing this if you
+          // are ever chasing a slow middleware specifically.
+          ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+        },
+
+        // Express 5 routes through the standalone `router` package, which the
+        // bundle instruments separately — so routing gets traced twice. It
+        // contributed 9 opaque "middleware - patched" spans plus a duplicate of
+        // the request-handler span that express already emits. Express covers
+        // this ground, so the router instrumentation is pure noise here.
+        '@opentelemetry/instrumentation-router': { enabled: false },
 
         // Everything else stays at its defaults, which is deliberate:
         //

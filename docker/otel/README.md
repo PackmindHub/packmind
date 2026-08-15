@@ -48,14 +48,24 @@ points, easiest first.
 ### 1. "This request was slow, why?" — Explore → Tempo → Search
 
 Pick the **Tempo** datasource, set Service Name to `packmind-api`, and sort by duration. Open a
-trace to get the waterfall:
+trace to get the waterfall. This is a real one, captured from a single request:
 
 ```
-GET /api/v0/spaces/…            412ms   ← HTTP span
-  └─ SpacesController.list      408ms   ← Nest handler
-       ├─ pg.query              180ms   ← SELECT … FROM spaces …
-       └─ pg.query              210ms   ← the N+1 you did not know about
+24.2ms  POST /api/v0/auth/check-email-availability   ← HTTP span
+14.1ms    request handler - /api/v0/auth/check-…     ← Express routing
+13.2ms      AuthController.checkEmailAvailability    ← Nest handler
+ 9.5ms        checkEmailAvailability                 ← use case
+ 0.2ms          pg-pool.connect                      ← waiting for a connection
+ 3.5ms          pg.query:SELECT packmind             ← the SQL
 ```
+
+Six spans, one per layer, reading top to bottom as HTTP → route → controller → use case → SQL.
+An N+1 shows up as repeated sibling `pg.query` spans under the same parent.
+
+It is six spans because two instrumentations are deliberately turned off in `apps/api/src/otel.ts`
+— see the comments there. Left at defaults the same request produced **24** spans, 18 of them
+Express middleware and duplicated routing noise named `middleware - patched`, which buried the four
+spans that actually tell you anything.
 
 Click any `pg.query` span and read **`db.query.text`** for the SQL — the full statement TypeORM
 generated, joins and all. (It is `db.query.text`, not the older `db.statement`: `instrumentation-pg`
