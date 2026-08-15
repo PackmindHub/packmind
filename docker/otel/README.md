@@ -42,8 +42,19 @@ bundle and resolved by **your browser**, so it must be a host URL.
 
 ## Finding your way around Grafana
 
-Everything below is provisioned by the image — there are no dashboards to build. Five entry
-points, easiest first.
+**You mostly do not have to write queries.** Two things cover the common cases:
+
+- **Drilldown apps** — Grafana installs `grafana-exploretraces-app`, `grafana-lokiexplore-app` and
+  `grafana-metricsdrilldown-app` on startup. They are point-and-click: pick a service, see its RED
+  metrics and latency breakdown, click into slow traces. No TraceQL, no PromQL. Start here.
+  (They are downloaded from grafana.com on first run, so they need outbound network once.)
+- **A provisioned dashboard** — `docker/otel/grafana/dashboards/packmind-api.json` ships with this
+  repo and loads automatically: latency percentiles per endpoint, request and error rates, a latency
+  heatmap, and database call percentiles. Find it under Dashboards → *Packmind API — latency &
+  throughput*. Edit it in the UI and copy the JSON back if you want more.
+
+The query languages below are the escape hatch for when the click-through UIs do not cover what you
+want. Worth reading once, not memorising. Five entry points, easiest first.
 
 ### 1. "This request was slow, why?" — Explore → Tempo → Search
 

@@ -105,6 +105,10 @@ services:
       - '127.0.0.1:3001:3000' # Grafana UI (3000 belongs to the API)
     volumes:
       - dev-otel-lgtm:/data
+      # Ready-made dashboards, so nobody has to write PromQL by hand. The image
+      # provisions datasources but ships no dashboards of its own.
+      - ./docker/otel/grafana/provisioning-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/packmind.yaml:ro
+      - ./docker/otel/grafana/dashboards:/otel-lgtm/grafana/dashboards/packmind:ro
 
   pgadmin:
     profiles:
