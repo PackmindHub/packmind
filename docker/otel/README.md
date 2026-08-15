@@ -62,13 +62,26 @@ That rule exists because of a concrete trap: the API image hardcodes `NODE_ENV=p
 deriving the environment from it made staging announce itself as production. Its traces, logs and
 latency percentiles would have merged into the production ones with nothing looking wrong.
 
-**Watch out when several environments share one backend.** The attribute reaches traces and logs —
-filter with `resource.deployment.environment.name` in TraceQL, and Loki exposes it as the
-`deployment_environment_name` label. It does **not** reach the span metrics: their labels are
-`service`, `span_name`, `span_kind`, `status_code` and `le` only. Two environments writing to the
-same Prometheus therefore blend their percentiles silently. Either add the dimension to Tempo's
-metrics-generator and filter everywhere, or give each environment its own stack — the second is
-easier to guarantee than a filtering discipline everyone has to remember.
+**Watch out when several environments share one backend.** The attribute reaches traces and logs out
+of the box — filter with `resource.deployment.environment.name` in TraceQL, and Loki exposes it as
+the `deployment_environment_name` label. It does **not** reach the span metrics by default: their
+labels are `service`, `span_name`, `span_kind`, `status_code` and `le`. Two environments writing to
+the same Prometheus would therefore blend their percentiles silently.
+
+Two supported ways out, depending on how far apart you want the environments:
+
+- **One stack, environment as a label.** Grafana Cloud's metrics-generator can promote span or
+  resource attributes to dimensions, so `deployment.environment.name` becomes a label on
+  `traces_spanmetrics_*`. Cheapest, but every added dimension multiplies active series, which is
+  billed — so add that one and resist adding more.
+- **One stack per environment.** Add the second stack's Prometheus as an extra datasource in a
+  single Grafana (basic auth, the stack's URL, an access-policy token scoped to all stacks). The
+  bundled dashboard carries a `${ds}` datasource variable precisely for this: the same JSON serves
+  both, and you switch environments from the dropdown. Harder isolation — separate quotas,
+  retention and access — at the price of a second stack on the plan.
+
+A single datasource can also query several stacks at once by listing the stack ids as `1|2` in its
+User field, which is useful for a cross-environment overview but not for per-environment dashboards.
 
 ## Finding your way around Grafana
 
