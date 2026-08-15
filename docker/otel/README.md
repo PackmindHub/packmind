@@ -42,7 +42,7 @@ bundle and resolved by **your browser**, so it must be a host URL.
 
 ## Finding your way around Grafana
 
-Everything below is provisioned by the image — there are no dashboards to build. Four entry
+Everything below is provisioned by the image — there are no dashboards to build. Five entry
 points, easiest first.
 
 ### 1. "This request was slow, why?" — Explore → Tempo → Search
@@ -99,13 +99,53 @@ confuse:
 while `{traceDuration > 800ms}` finds slow *requests*. Both return the matching traces, and clicking
 one drops you into the waterfall.
 
-### 3. "What is slow?" — Explore → Tempo → Service Graph
+### 3. "Latency distribution per endpoint" — Explore → Prometheus
+
+Tempo's metrics-generator turns every span into a Prometheus histogram, so percentiles per
+operation need no extra instrumentation. The series is `traces_spanmetrics_latency_bucket`, labelled
+`span_name`, `span_kind`, `status_code` and `service`.
+
+```promql
+# p95 per operation
+histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket[5m])))
+
+# only incoming endpoints (server spans), or only DB/outbound calls
+histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_SERVER"}[5m])))
+histogram_quantile(0.99, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_CLIENT"}[5m])))
+
+# the other two of RED: throughput and errors
+sum by (span_name, status_code) (rate(traces_spanmetrics_calls_total[5m]))
+```
+
+Values are **seconds** — set the panel unit accordingly. For the full distribution rather than a
+few quantiles, put `sum by (le) (rate(traces_spanmetrics_latency_bucket{span_name="…"}[5m]))` in a
+**Heatmap** panel with format `Heatmap`.
+
+Real output from a local run, which shows why this is worth having:
+
+```
+                p50        p95        p99
+POST /…/check-email-availability     3.1ms     46.4ms    216.3ms
+pg.query:SELECT packmind             1.1ms     21.6ms    213.8ms
+```
+
+The endpoint's p99 and the SQL's p99 are the same number — the tail is the query, not our code.
+That is the diagnosis, straight off the graph.
+
+Two gotchas:
+
+- `rate()` over a window with **no traffic returns NaN**, so a quiet dev environment shows an empty
+  panel. That is normal, not a broken setup. Widen the window or generate some load.
+- Requests that match no route collapse to a bare `POST` span name, so 404s and unmatched paths all
+  land in one bucket. Filter them out when they distort the picture.
+
+### 4. "What is slow?" — Explore → Tempo → Service Graph
 
 A live diagram of `packmind-frontend → packmind-api → postgres/redis`, with request and error rates
 on each edge, synthesized from spans by Tempo's metrics-generator. Use this when you do not yet
 know which request to look at, then click through an edge into the traces behind it.
 
-### 4. "What happened during that request?" — logs ↔ traces
+### 5. "What happened during that request?" — logs ↔ traces
 
 Logs carry `trace_id` automatically, so the two directions both work:
 
