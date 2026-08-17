@@ -46,7 +46,6 @@ targeted error.
 | `helpers/TestApp.ts` | reach a domain through `testContext.testApp.<domain>Hexa.getAdapter()` |
 | `helpers/createIntegrationTestFixture.ts` | schema created once per file, tables truncated between tests |
 | `helpers/DataFactory.ts` / `DataQuery.ts` | seed and read fixture data |
-| `helpers/testMatchers.ts` | shared custom matchers |
 | `helpers/StubStandardsListener.ts` | assert standards domain events without a real listener |
 
 `jest.config.ts` sets a 30s timeout and `maxWorkers: 4` — each spec file gets its own database

@@ -41,7 +41,8 @@ the reporting and rollback paths will silently omit the new type.
    `packages/types/src/playbookChangeManagement/applier/`, alongside the per-type
    `*ChangeProposalApplier` helpers the appliers build on, and extend
    `getItemTypeFromChangeProposalType`.
-2. Add `src/appliers/<Type>ChangesApplier.ts` and export it from `src/appliers/index.ts`.
+2. Add `src/appliers/<Type>ChangesApplier.ts` and import it directly in `ApplyPlaybookUseCase.ts` (there
+   is no `src/appliers/index.ts` barrel).
 3. Widen every inline `itemType: 'standard' | 'command' | 'skill'` annotation, then update each
    switch in `ApplyPlaybookUseCase`:
    - `getApplierForType` — applier selection
