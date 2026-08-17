@@ -12,7 +12,18 @@ jest.mock('@packmind/git', () => {
     }
   }
   class InstallStateSigner {}
-  return { InvalidInstallStateError, InstallStateSigner };
+  const GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH = 64;
+  // Mirrors the real normalizeDisplayName: trim, then cap at the column length.
+  const normalizeDisplayName = (input: string | null | undefined): string =>
+    input === null || input === undefined
+      ? ''
+      : input.trim().slice(0, GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH);
+  return {
+    InvalidInstallStateError,
+    InstallStateSigner,
+    GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH,
+    normalizeDisplayName,
+  };
 });
 
 jest.mock('axios');
@@ -57,6 +68,7 @@ import {
   createOrganizationGitHubAppId,
   createOrganizationId,
   createUserId,
+  GitProviderDisplayNameAlreadyUsedError,
   GitProviderNotFoundError,
   IDeploymentPort,
   IGitPort,
@@ -222,6 +234,7 @@ describe('GitProvidersService', () => {
             userId: 'user-456',
             kind: 'install',
             organizationGitHubAppId: undefined,
+            displayName: undefined,
           });
         });
       });
@@ -288,6 +301,7 @@ describe('GitProvidersService', () => {
             userId: 'user-456',
             kind: 'install',
             organizationGitHubAppId: 'app-1',
+            displayName: undefined,
           });
         });
       });
@@ -380,6 +394,93 @@ describe('GitProvidersService', () => {
         });
       });
     });
+
+    describe('display name', () => {
+      beforeEach(() => {
+        resolveGithubAppMode.mockResolvedValue('shared');
+        Configuration.getConfig.mockResolvedValue('packmind-cloud');
+      });
+
+      describe('when a display name is provided', () => {
+        it('signs the state including the display name', async () => {
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            displayName: 'Production GitHub',
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: 'Production GitHub' }),
+          );
+        });
+      });
+
+      describe('when the display name has surrounding whitespace', () => {
+        it('signs the trimmed display name', async () => {
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            displayName: '  Production GitHub  ',
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: 'Production GitHub' }),
+          );
+        });
+      });
+
+      describe('when the display name exceeds the column length', () => {
+        it('signs the display name capped at 64 characters', async () => {
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            displayName: 'a'.repeat(100),
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: 'a'.repeat(64) }),
+          );
+        });
+      });
+
+      describe('when the display name is blank', () => {
+        it('omits the display name from the state', async () => {
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            displayName: '   ',
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: undefined }),
+          );
+        });
+      });
+
+      describe('when re-authenticating an existing connection', () => {
+        it('omits the display name so the connection is not renamed', async () => {
+          const providerId = createGitProviderId(
+            '00000000-0000-0000-0000-0000000000bb',
+          );
+          (mockGitAdapter.listProviders as jest.Mock).mockResolvedValue({
+            providers: [
+              { id: providerId, source: 'github', authMethod: 'app' },
+            ],
+          });
+
+          await service.buildGithubAppInstallUrl({
+            organizationId: orgId,
+            userId,
+            gitProviderId: providerId,
+            displayName: 'Renamed GitHub',
+          });
+
+          expect(mockSigner.sign).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: undefined }),
+          );
+        });
+      });
+    });
   });
 
   describe('completeGithubAppInstall', () => {
@@ -453,6 +554,132 @@ describe('GitProvidersService', () => {
           allowTokenlessProvider: true,
         }),
       );
+    });
+
+    describe('display name carried by the state token', () => {
+      const mockProvider = {
+        id: 'prov-1',
+        source: 'github',
+        authMethod: 'app',
+      };
+
+      beforeEach(() => {
+        (mockGitAdapter.addGitProvider as jest.Mock).mockResolvedValue(
+          mockProvider,
+        );
+      });
+
+      describe('when the state carries a display name', () => {
+        it('creates the provider with that display name', async () => {
+          mockSigner.verify.mockReturnValue({
+            ...validPayload,
+            displayName: 'Production GitHub',
+          });
+
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.addGitProvider).toHaveBeenCalledWith(
+            expect.objectContaining({
+              gitProvider: expect.objectContaining({
+                displayName: 'Production GitHub',
+              }),
+            }),
+          );
+        });
+      });
+
+      describe('when the state carries no display name', () => {
+        it('creates the provider unnamed', async () => {
+          mockSigner.verify.mockReturnValue(validPayload);
+
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.addGitProvider).toHaveBeenCalledWith(
+            expect.objectContaining({
+              gitProvider: expect.objectContaining({ displayName: '' }),
+            }),
+          );
+        });
+      });
+
+      describe('when the display name was taken while the user was on GitHub', () => {
+        beforeEach(() => {
+          mockSigner.verify.mockReturnValue({
+            ...validPayload,
+            displayName: 'Production GitHub',
+          });
+          (mockGitAdapter.addGitProvider as jest.Mock)
+            .mockRejectedValueOnce(
+              new GitProviderDisplayNameAlreadyUsedError(
+                'Production GitHub',
+                orgId,
+              ),
+            )
+            .mockResolvedValueOnce(mockProvider);
+        });
+
+        it('retries unnamed so the installation still yields a connection', async () => {
+          await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(mockGitAdapter.addGitProvider).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+              gitProvider: expect.objectContaining({ displayName: '' }),
+            }),
+          );
+        });
+
+        it('returns the created provider', async () => {
+          const result = await service.completeGithubAppInstall({
+            organizationId: orgId,
+            userId,
+            installationId: 12345,
+            state: 'STUB_STATE',
+            source: 'web',
+          });
+
+          expect(result).toEqual(mockProvider);
+        });
+      });
+
+      describe('when provider creation fails for an unrelated reason', () => {
+        it('propagates the error', async () => {
+          mockSigner.verify.mockReturnValue({
+            ...validPayload,
+            displayName: 'Production GitHub',
+          });
+          (mockGitAdapter.addGitProvider as jest.Mock).mockRejectedValue(
+            new Error('database is down'),
+          );
+
+          await expect(
+            service.completeGithubAppInstall({
+              organizationId: orgId,
+              userId,
+              installationId: 12345,
+              state: 'STUB_STATE',
+              source: 'web',
+            }),
+          ).rejects.toThrow('database is down');
+        });
+      });
     });
 
     describe('when state lacks organizationGitHubAppId', () => {
@@ -1196,6 +1423,21 @@ describe('GitProvidersService', () => {
         orgId: 'org-123',
         userId: 'user-456',
         kind: 'manifest',
+        displayName: undefined,
+      });
+    });
+
+    describe('when a display name is provided', () => {
+      it('signs the manifest state including the display name', async () => {
+        await service.buildGithubAppManifest({
+          orgId,
+          userId,
+          displayName: '  Production GitHub  ',
+        });
+
+        expect(mockSigner.sign).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: 'Production GitHub' }),
+        );
       });
     });
 
@@ -1402,6 +1644,29 @@ describe('GitProvidersService', () => {
           organizationGitHubAppId: expect.any(String),
         }),
       );
+    });
+
+    describe('when the manifest state carries a display name', () => {
+      it('forwards it onto the install state so it survives the second round trip', async () => {
+        mockSigner.verify.mockReturnValue({
+          ...validManifestPayload,
+          displayName: 'Production GitHub',
+        });
+
+        await service.completeGithubAppManifest({
+          orgId,
+          userId,
+          code: 'gh-code-123',
+          state: 'MANIFEST_STATE',
+        });
+
+        expect(mockSigner.sign).toHaveBeenCalledWith(
+          expect.objectContaining({
+            kind: 'install',
+            displayName: 'Production GitHub',
+          }),
+        );
+      });
     });
 
     describe('when state kind is install', () => {
