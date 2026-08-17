@@ -17,6 +17,7 @@
 
 ## Fixed
 
+- A connection created through the GitHub App now keeps the name you typed. The name travels with the install and is applied when the connection is created, including on-prem where the app is registered first and the name has to survive two round trips to GitHub. Previously it was dropped the moment you left for GitHub and every App connection came back as "Unnamed GitHub connection". If the name was taken by another connection while you were on GitHub, the connection is still created — unnamed, ready to be renamed — rather than the install failing (#743).
 - A Git connection whose credentials no longer work can no longer be picked in the "Link a marketplace" drawer. Every connection is checked when the drawer opens, and one that cannot authenticate stays listed and named but is disabled, with the failure and a link to repair it under the field; it is no longer auto-selected either when it is the organization's only connection. Previously it passed the drawer's filter on having stored credentials and dead-ended on a repository list that failed to load (#751).
 - Editing a standard no longer marks the plugins published from its package as outdated. Drift is now measured over the artifacts a plugin actually carries — commands and skills — so a standard edit no longer raises "Changes to publish" nor opens a pull request that changes no file. For the same reason, the plugin "Changes" tab lists command and skill changes only.
 
