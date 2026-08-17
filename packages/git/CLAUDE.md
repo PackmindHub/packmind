@@ -36,7 +36,8 @@ establish which before changing credential handling.
 
 ## Reuse
 
-`src/application/services/gitInfoHelpers.ts` already normalises owner/repo/branch/URL shapes across
-vendors. Use it instead of parsing remote URLs again.
+`packages/node-utils/src/git/` (`parseGitProviderVendor.ts`, `parseGitRepoInfo.ts`,
+`extractBaseUrl.ts`) already normalises owner/repo/vendor/URL shapes across vendors. Use it instead
+of parsing remote URLs again.
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)

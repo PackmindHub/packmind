@@ -45,6 +45,8 @@ These are the ones most often reimplemented by hand:
   blocks into existing file content — what agent-file deployment is built on), `normalizeLineEndings`,
   `removeTrailingSlash`
 - `src/skillMd/`: `parseSkillMd`, `parseSkillMdContent` — SKILL.md frontmatter + body parsing
+- `src/git/`: `extractBaseUrl`, `parseGitProviderVendor`, `parseGitRepoInfo` — parsing helpers for git
+  remote URLs (base URL, provider vendor, owner/repo)
 - `src/errors/`: the shared error types
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
