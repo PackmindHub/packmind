@@ -134,7 +134,10 @@ describe('GitHubAppAuthBlock', () => {
       renderRegistrationBlock();
       await user.click(registerButton());
 
-      expect(mockMutateAsync).toHaveBeenCalledWith({ githubOrg: undefined });
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        githubOrg: undefined,
+        displayName: undefined,
+      });
     });
 
     it('does not show a validation message', () => {
@@ -167,7 +170,121 @@ describe('GitHubAppAuthBlock', () => {
 
       expect(mockMutateAsync).toHaveBeenCalledWith({
         githubOrg: 'my-company',
+        displayName: undefined,
       });
+    });
+  });
+
+  describe('when a connection name was typed in the drawer', () => {
+    const renderWithDisplayName = (displayName: string) =>
+      renderWithProviders(
+        <GitHubAppAuthBlock
+          organizationId={mockOrganizationId}
+          githubAppMode="on-prem"
+          displayName={displayName}
+        />,
+      );
+
+    it('requests the manifest with the display name', async () => {
+      const user = userEvent.setup();
+      const mockMutateAsync = vi.fn().mockResolvedValue({
+        manifest: { name: 'Packmind' },
+        state: 'state-xyz',
+        manifestPostUrl: 'https://github.com/settings/apps/new',
+      });
+      mockUseGetGithubAppManifestMutation.mockReturnValue(
+        createMockMutation({ mutateAsync: mockMutateAsync }),
+      );
+
+      renderWithDisplayName('Production GitHub');
+      await user.click(registerButton());
+
+      expect(mockMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ displayName: 'Production GitHub' }),
+      );
+    });
+
+    it('trims the display name before sending it', async () => {
+      const user = userEvent.setup();
+      const mockMutateAsync = vi.fn().mockResolvedValue({
+        manifest: { name: 'Packmind' },
+        state: 'state-xyz',
+        manifestPostUrl: 'https://github.com/settings/apps/new',
+      });
+      mockUseGetGithubAppManifestMutation.mockReturnValue(
+        createMockMutation({ mutateAsync: mockMutateAsync }),
+      );
+
+      renderWithDisplayName('  Production GitHub  ');
+      await user.click(registerButton());
+
+      expect(mockMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ displayName: 'Production GitHub' }),
+      );
+    });
+
+    describe('when the app is already registered', () => {
+      const installButton = () =>
+        screen.getByRole('button', { name: /install packmind on github/i });
+
+      beforeEach(() => {
+        mockUseGetGithubAppStatusQuery.mockReturnValue({
+          data: { hasApp: true, appSlug: 'packmind-acme' },
+          isLoading: false,
+          isError: false,
+        } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
+      });
+
+      it('requests the install URL with the display name', async () => {
+        const user = userEvent.setup();
+        const mockMutateAsync = vi.fn().mockResolvedValue({
+          installUrl: 'https://github.com/apps/packmind-acme/installations/new',
+          state: 'install-state',
+        });
+        mockUseGithubAppInstallUrlMutation.mockReturnValue(
+          createMockMutation({ mutateAsync: mockMutateAsync }),
+        );
+
+        renderWithDisplayName('Production GitHub');
+        await user.click(installButton());
+
+        expect(mockMutateAsync).toHaveBeenCalledWith({
+          displayName: 'Production GitHub',
+        });
+      });
+    });
+  });
+
+  describe('when no connection name was typed', () => {
+    beforeEach(() => {
+      mockUseGetGithubAppStatusQuery.mockReturnValue({
+        data: { hasApp: true, appSlug: 'packmind-acme' },
+        isLoading: false,
+        isError: false,
+      } as unknown as ReturnType<typeof useGetGithubAppStatusQuery>);
+    });
+
+    it('requests the install URL without a display name', async () => {
+      const user = userEvent.setup();
+      const mockMutateAsync = vi.fn().mockResolvedValue({
+        installUrl: 'https://github.com/apps/packmind-acme/installations/new',
+        state: 'install-state',
+      });
+      mockUseGithubAppInstallUrlMutation.mockReturnValue(
+        createMockMutation({ mutateAsync: mockMutateAsync }),
+      );
+
+      renderWithProviders(
+        <GitHubAppAuthBlock
+          organizationId={mockOrganizationId}
+          githubAppMode="on-prem"
+        />,
+      );
+      await user.click(
+        screen.getByRole('button', { name: /install packmind on github/i }),
+      );
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({ displayName: undefined });
     });
   });
 

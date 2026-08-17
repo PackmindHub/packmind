@@ -21,6 +21,17 @@ import {
 } from '../../types/GitProviderTypes';
 import { GitHubAppManifest } from '../../types/GitHubAppManifest';
 
+// Serializes the defined, non-empty params into a query string (leading '?'),
+// or an empty string when none apply.
+const buildQuery = (params: Record<string, string | undefined>): string => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) search.set(key, value);
+  });
+  const serialized = search.toString();
+  return serialized ? `?${serialized}` : '';
+};
+
 export class GitProviderGatewayApi
   extends PackmindGateway
   implements IGitProviderGateway
@@ -54,10 +65,9 @@ export class GitProviderGatewayApi
   async getGithubAppInstallUrl(
     organizationId: OrganizationId,
     gitProviderId?: GitProviderId,
+    displayName?: string,
   ): Promise<{ installUrl: string; state: string }> {
-    const query = gitProviderId
-      ? `?gitProviderId=${encodeURIComponent(gitProviderId)}`
-      : '';
+    const query = buildQuery({ gitProviderId, displayName });
     return await this._api.get<{ installUrl: string; state: string }>(
       `${this._endpoint}/${organizationId}/git/providers/github/app/install-url${query}`,
     );
@@ -66,14 +76,13 @@ export class GitProviderGatewayApi
   async getGithubAppManifest(
     organizationId: OrganizationId,
     githubOrg?: string,
+    displayName?: string,
   ): Promise<{
     manifest: GitHubAppManifest;
     state: string;
     manifestPostUrl: string;
   }> {
-    const query = githubOrg
-      ? `?githubOrg=${encodeURIComponent(githubOrg)}`
-      : '';
+    const query = buildQuery({ githubOrg, displayName });
     return await this._api.get<{
       manifest: GitHubAppManifest;
       state: string;
