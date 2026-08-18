@@ -41,4 +41,22 @@ export type MarketplaceRepositoryInfo = {
 export type MarketplaceListItem = Marketplace & {
   addedByUserName: string;
   repository: MarketplaceRepositoryInfo | null;
+  /**
+   * How many plugins of this marketplace Packmind publishes: the distributions
+   * it tracks, under the same filter as the marketplace detail view
+   * (`ListMarketplaceDistributionsUseCase`, which excludes removed ones).
+   */
+  managedPluginCount: number;
+  /**
+   * How many plugins this marketplace serves that Packmind does not publish,
+   * per {@link deriveUnmanagedPlugins}.
+   *
+   * Both counts are reported rather than left to the reader to subtract from
+   * the inherited `pluginCount`. That field counts the descriptor's own entries
+   * and answers a third question: it stays right when a distribution exists for
+   * a slug the descriptor does not list yet (a publish whose pull request is
+   * still open), which is exactly when a subtraction goes wrong. Summing these
+   * two gives the total the detail view shows for the same marketplace.
+   */
+  unmanagedPluginCount: number;
 };

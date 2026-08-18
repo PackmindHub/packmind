@@ -13,6 +13,7 @@ export * from './PackmindMarketplaceLock';
 export * from './PluginInstallationId';
 export * from './PluginInstallation';
 export * from './PluginRef';
+export * from './UnmanagedPlugin';
 export * from './VersionFingerprint';
 
 export * from './contracts';
