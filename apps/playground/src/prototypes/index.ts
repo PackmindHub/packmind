@@ -12,6 +12,7 @@ import MarketplaceDetailPrototype from './marketplace-detail/MarketplaceDetailPr
 import GitConnectionsPrototype from './git-connections/GitConnectionsPrototype';
 import DeploymentsOverviewRedesignPrototype from './deployments-overview-redesign/DeploymentsOverviewRedesignPrototype';
 import GetStartedPrototype from './get-started/GetStartedPrototype';
+import SpaceNavPluginFirstPrototype from './space-nav-plugin-first/SpaceNavPluginFirstPrototype';
 
 export interface Prototype {
   name: string;
@@ -20,6 +21,12 @@ export interface Prototype {
 }
 
 export const prototypes: Prototype[] = [
+  {
+    name: 'Space navigation — plugin-first',
+    description:
+      'Three permanent nav entries instead of one per artifact type. The plugin hosts its artifacts, grouped by type, and creation happens inside it. Flip the sidebar between today and the proposal, and raise the artifact-type count to see which one grows.',
+    component: SpaceNavPluginFirstPrototype,
+  },
   {
     name: 'Get started — onboarding redesign',
     description:
