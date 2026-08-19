@@ -2,6 +2,7 @@
 
 ## Added
 
+- `playbook add` and `playbook submit` now read the `## Scope` section of a `.packmind/standards/*.md` file as the standard's glob scope. Patterns go comma-separated on one line or one per `-`/`*` bullet, and both forms are stored as a comma-separated list. Rules are still found with or without a `## Rules` heading, including when they follow the Scope section. `playbook diff` reports scope changes for these files like it already did for `.claude`/`.cursor` standards. The section used to be swallowed into the description
 - New `git info` command reports whether Packmind tracks the current repository and on which branch. When the tracked branch is not the one checked out, it warns that distributions from here are not recorded and points to `git track --update`. When the repository is not tracked, it proposes `git track` to track the current branch. Available to every member, not only organization admins.
 
 ## Changed
