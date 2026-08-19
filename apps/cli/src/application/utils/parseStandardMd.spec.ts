@@ -134,12 +134,92 @@ describe('parseStandardMd', () => {
       });
     });
 
-    it('returns empty scope always', () => {
-      const content = '# Name\n\nDesc\n\n## Rules\n* Rule 1';
+    describe('when there is no Scope section', () => {
+      it('returns empty scope', () => {
+        const content = '# Name\n\nDesc\n\n## Rules\n* Rule 1';
 
-      const result = parseStandardMd(content, filePath);
+        const result = parseStandardMd(content, filePath);
 
-      expect(result?.scope).toBe('');
+        expect(result?.scope).toBe('');
+      });
+    });
+
+    describe('when a ## Scope section is present', () => {
+      it('extracts a comma-separated scope and keeps it out of the description', () => {
+        const content =
+          '# My Standard\n\nSome description\n\n## Scope\n\n**/*.spec.ts,**/*.test.ts\n\n## Rules\n\n* Rule 1';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description: 'Some description',
+          scope: '**/*.spec.ts,**/*.test.ts',
+          rules: ['Rule 1'],
+        });
+      });
+
+      it('joins a bullet list of patterns into the comma-separated form', () => {
+        const content =
+          '# My Standard\n\nDesc\n\n## Scope\n\n- **/*.spec.ts\n- **/*.test.ts\n\n## Rules\n\n* Rule 1';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.scope).toBe('**/*.spec.ts, **/*.test.ts');
+      });
+
+      it('extracts rules written after the Scope section without a ## Rules heading', () => {
+        const content =
+          '# My Standard\n\nSome description\n\n## Scope\n\n**/*.spec.ts\n\n- Rule 1\n- Rule 2';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description: 'Some description',
+          scope: '**/*.spec.ts',
+          rules: ['Rule 1', 'Rule 2'],
+        });
+      });
+
+      it('extracts scope from a Scope section placed after the rules', () => {
+        const content =
+          '# My Standard\n\nDesc\n\n## Rules\n\n* Rule 1\n\n## Scope\n\n**/*.ts';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description: 'Desc',
+          scope: '**/*.ts',
+          rules: ['Rule 1'],
+        });
+      });
+
+      it('returns empty scope for an empty Scope section', () => {
+        const content =
+          '# My Standard\n\nDesc\n\n## Scope\n\n## Rules\n\n* Rule 1';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'My Standard',
+          description: 'Desc',
+          scope: '',
+          rules: ['Rule 1'],
+        });
+      });
+    });
+
+    describe('when a sub-heading follows the rules', () => {
+      it('returns empty scope', () => {
+        const content =
+          '# My Standard\n\nDesc\n\n## Rules\n\n* Rule 1\n\n## Evidence\n\nfile1.ts';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.scope).toBe('');
+      });
     });
   });
 
