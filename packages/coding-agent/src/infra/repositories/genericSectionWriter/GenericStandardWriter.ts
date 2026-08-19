@@ -5,12 +5,24 @@ export class GenericStandardWriter {
     standardVersion: StandardVersion,
     rules: Rule[],
   ): string {
-    return `# ${standardVersion.name}
+    const sections = [
+      `# ${standardVersion.name}`,
+      standardVersion.description,
+      this.renderScope(standardVersion.scope),
+      this.renderRules(rules),
+    ].filter((section) => section !== '');
 
-${standardVersion.description}
+    return `${sections.join('\n\n')}\n`;
+  }
 
-${this.renderRules(rules)}
-`;
+  private static renderScope(scope: string | null) {
+    if (!scope || !scope.trim()) {
+      return '';
+    }
+
+    return `## Scope
+
+${scope.trim()}`;
   }
 
   private static renderRules(rules: Rule[]) {
