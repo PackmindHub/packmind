@@ -220,6 +220,39 @@ describe('buildProposals', () => {
       );
     });
 
+    describe('when the standard declares a scope', () => {
+      it('includes the parsed scope in payload', async () => {
+        const entries = [
+          makeEntry({
+            changeType: 'created',
+            content: [
+              '# My Standard',
+              '',
+              'A description of the standard.',
+              '',
+              '## Scope',
+              '',
+              '**/*.spec.ts, **/*.test.ts',
+              '',
+              '## Rules',
+              '',
+              '* Do not use var',
+              '',
+            ].join('\n'),
+          }),
+        ];
+
+        const { proposals } = await buildProposals(
+          entries,
+          defaultGetTargetContext,
+        );
+
+        expect((proposals[0].payload as { scope: string }).scope).toBe(
+          '**/*.spec.ts, **/*.test.ts',
+        );
+      });
+    });
+
     it('includes parsed rules in payload', async () => {
       const entries = [makeEntry({ changeType: 'created' })];
 
