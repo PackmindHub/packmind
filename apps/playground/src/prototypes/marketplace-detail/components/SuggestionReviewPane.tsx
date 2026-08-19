@@ -105,11 +105,7 @@ function IdentityStrip({ suggestion }: Readonly<{ suggestion: Suggestion }>) {
         <PMHeading size="lg" color="primary">
           {suggestion.pluginName}
         </PMHeading>
-        <PMText
-          fontSize="sm"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
+        <PMText fontSize="sm" color="faded" fontVariantNumeric="tabular-nums">
           proposed v{suggestion.proposedVersion}
         </PMText>
         <StateBadge state={suggestion.state} />
@@ -117,7 +113,7 @@ function IdentityStrip({ suggestion }: Readonly<{ suggestion: Suggestion }>) {
       <PMHStack gap={2} align="center" wrap="wrap">
         <OriginChip name={suggestion.originSpace.name} />
         <Dot />
-        <PMText fontSize="xs" color="text.faded">
+        <PMText fontSize="xs" color="faded">
           suggested by {suggestion.suggester.name},{' '}
           {suggestion.suggestedRelative}
         </PMText>
@@ -146,7 +142,7 @@ function StateBadge({ state }: Readonly<{ state: Suggestion['state'] }>) {
         />
         <PMText
           fontSize="xs"
-          color="text.secondary"
+          color="secondary"
           fontWeight="medium"
           letterSpacing="0.025em"
         >
@@ -170,7 +166,7 @@ function StateBadge({ state }: Readonly<{ state: Suggestion['state'] }>) {
         </PMIcon>
         <PMText
           fontSize="xs"
-          color="text.secondary"
+          color="secondary"
           fontWeight="medium"
           letterSpacing="0.025em"
         >
@@ -235,7 +231,7 @@ function MetaCell({ label, value, mono = false }: Readonly<MetaCellProps>) {
     <PMVStack gap={0.5} align="start" minW={0}>
       <PMText
         fontSize="11px"
-        color="text.faded"
+        color="faded"
         textTransform="uppercase"
         letterSpacing="wider"
         fontWeight="semibold"
@@ -244,7 +240,7 @@ function MetaCell({ label, value, mono = false }: Readonly<MetaCellProps>) {
       </PMText>
       <PMText
         fontSize="sm"
-        color="text.primary"
+        color="primary"
         fontFamily={mono ? 'mono' : undefined}
         fontVariantNumeric={mono ? 'tabular-nums' : undefined}
       >
@@ -258,7 +254,7 @@ function RationaleBlock({ description }: Readonly<{ description: string }>) {
   return (
     <PMVStack gap={2} align="stretch">
       <SectionLabel>Why</SectionLabel>
-      <PMText fontSize="md" color="text.secondary" lineHeight={1.6} maxW="70ch">
+      <PMText fontSize="md" color="secondary" lineHeight={1.6} maxW="70ch">
         {description}
       </PMText>
     </PMVStack>
@@ -269,7 +265,7 @@ function SectionLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <PMText
       fontSize="11px"
-      color="text.faded"
+      color="faded"
       textTransform="uppercase"
       letterSpacing="wider"
       fontWeight="semibold"
@@ -286,11 +282,7 @@ function ArtifactsBlock({ artifacts }: Readonly<{ artifacts: Artifact[] }>) {
     <PMVStack gap={3} align="stretch">
       <PMHStack gap={2} align="baseline">
         <SectionLabel>What&rsquo;s inside</SectionLabel>
-        <PMText
-          fontSize="11px"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
+        <PMText fontSize="11px" color="faded" fontVariantNumeric="tabular-nums">
           {total} {total === 1 ? 'artifact' : 'artifacts'}
         </PMText>
       </PMHStack>
@@ -319,14 +311,10 @@ function ArtifactGroup({ kind, items }: Readonly<ArtifactGroupProps>) {
         <PMIcon fontSize="sm" color="text.faded">
           <Icon />
         </PMIcon>
-        <PMText fontSize="sm" color="text.secondary" fontWeight="medium">
+        <PMText fontSize="sm" color="secondary" fontWeight="medium">
           {KIND_LABEL[kind]}
         </PMText>
-        <PMText
-          fontSize="11px"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
+        <PMText fontSize="11px" color="faded" fontVariantNumeric="tabular-nums">
           {items.length}
         </PMText>
       </PMHStack>
@@ -347,13 +335,13 @@ function ArtifactGroup({ kind, items }: Readonly<ArtifactGroupProps>) {
           >
             <PMText
               fontSize="sm"
-              color="text.primary"
+              color="primary"
               fontFamily={useMono ? 'mono' : undefined}
               fontWeight="medium"
             >
               {a.name}
             </PMText>
-            <PMText fontSize="xs" color="text.secondary" lineHeight={1.5}>
+            <PMText fontSize="xs" color="secondary" lineHeight={1.5}>
               {a.summary}
             </PMText>
           </PMVStack>
@@ -404,23 +392,18 @@ function CommentRow({ comment }: Readonly<{ comment: SuggestionComment }>) {
       paddingY={2.5}
     >
       <PMHStack gap={2} align="center">
-        <PMText fontSize="xs" color="text.primary" fontWeight="semibold">
+        <PMText fontSize="xs" color="primary" fontWeight="semibold">
           {comment.authorName}
         </PMText>
-        <PMText fontSize="11px" color="text.faded" fontWeight="medium">
+        <PMText fontSize="11px" color="faded" fontWeight="medium">
           {isAdmin ? 'admin' : 'suggester'}
         </PMText>
         <Dot />
-        <PMText fontSize="11px" color="text.faded">
+        <PMText fontSize="11px" color="faded">
           {comment.at}
         </PMText>
       </PMHStack>
-      <PMText
-        fontSize="sm"
-        color="text.secondary"
-        lineHeight={1.55}
-        maxW="70ch"
-      >
+      <PMText fontSize="sm" color="secondary" lineHeight={1.55} maxW="70ch">
         {comment.body}
       </PMText>
     </PMVStack>
@@ -615,10 +598,10 @@ function PolicyRow({
           <Icon />
         </PMIcon>
         <PMVStack gap={0.5} align="start" flex={1} minW={0}>
-          <PMText fontSize="sm" color="text.primary" fontWeight="medium">
+          <PMText fontSize="sm" color="primary" fontWeight="medium">
             {label}
           </PMText>
-          <PMText fontSize="xs" color="text.secondary">
+          <PMText fontSize="xs" color="secondary">
             {explanation}
           </PMText>
         </PMVStack>

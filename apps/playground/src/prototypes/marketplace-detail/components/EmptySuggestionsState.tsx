@@ -23,7 +23,7 @@ export function EmptySuggestionsState() {
         >
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             textTransform="uppercase"
             letterSpacing="wider"
             fontWeight="semibold"

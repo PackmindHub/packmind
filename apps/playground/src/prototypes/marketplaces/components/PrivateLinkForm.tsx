@@ -191,7 +191,6 @@ function ConnectedProviderRow({
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="faded"
         bg="transparent"
@@ -222,15 +221,9 @@ function RepoPickerMenu({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (open) {
-      const t = setTimeout(() => inputRef.current?.focus(), 0);
-      return () => clearTimeout(t);
-    }
-    setQuery('');
-    return undefined;
+    if (!open) setQuery('');
   }, [open]);
 
   useEffect(() => {
@@ -259,10 +252,9 @@ function RepoPickerMenu({
   }, [query, repos]);
 
   return (
-    <PMBox position="relative" ref={containerRef}>
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <PMBox
         as="button"
-        type="button"
         width="100%"
         textAlign="left"
         paddingX={3}
@@ -346,7 +338,7 @@ function RepoPickerMenu({
                 </PMIcon>
               </PMBox>
               <PMInput
-                ref={inputRef}
+                autoFocus
                 placeholder="Search your repos…"
                 value={query}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -382,7 +374,7 @@ function RepoPickerMenu({
           </PMBox>
         </PMBox>
       )}
-    </PMBox>
+    </div>
   );
 }
 
@@ -419,13 +411,12 @@ function RepoOption({ repo, selected, onSelect }: Readonly<RepoOptionProps>) {
   return (
     <PMBox
       as="button"
-      type="button"
       width="100%"
       textAlign="left"
       onClick={() => {
         if (!disabled) onSelect();
       }}
-      disabled={disabled}
+      aria-disabled={disabled}
       paddingX={3}
       paddingY={2}
       bg="transparent"

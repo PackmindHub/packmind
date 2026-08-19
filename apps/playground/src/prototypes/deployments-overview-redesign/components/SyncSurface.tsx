@@ -219,9 +219,8 @@ export function SyncSurface({
           </PMVStack>
           <PMBox
             as="button"
-            type="button"
-            onClick={onCancel}
-            disabled={isSyncing}
+            onClick={isSyncing ? undefined : onCancel}
+            aria-disabled={isSyncing}
             display="inline-flex"
             alignItems="center"
             gap={2}
@@ -291,7 +290,7 @@ export function SyncSurface({
               </PMText>
             </PMHStack>
           ) : (
-            <PMText fontSize="xs" color="text.faded">
+            <PMText fontSize="xs" color="faded">
               Esc to cancel · ⌘↵ to confirm
             </PMText>
           )}
@@ -408,7 +407,6 @@ function PackageSyncBlock({
           <PMHStack gap={2} align="center" minW={0} flex={1}>
             <PMBox
               as="button"
-              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded((v) => !v);
@@ -454,7 +452,7 @@ function PackageSyncBlock({
             <PMText
               fontSize="sm"
               fontWeight="semibold"
-              color="text.primary"
+              color="primary"
               truncate
             >
               {block.pkg.name}
@@ -462,7 +460,7 @@ function PackageSyncBlock({
           </PMHStack>
           <PMText
             fontSize="xs"
-            color="text.faded"
+            color="faded"
             fontVariantNumeric="tabular-nums"
             flexShrink={0}
           >
@@ -543,7 +541,6 @@ function InstallSyncRow({
           {selected && (
             <PMBox
               as="button"
-              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setExpanded((v) => !v);
@@ -573,7 +570,7 @@ function InstallSyncRow({
           )}
         </PMBox>
         <PMHStack gap={2} align="center" flex={1} minW={0} wrap="wrap">
-          <PMText fontSize="sm" color="text.primary" truncate>
+          <PMText fontSize="sm" color="primary" truncate>
             {entry.repo.owner}/{entry.repo.name}
           </PMText>
           <PMHStack
@@ -611,11 +608,7 @@ function InstallSyncRow({
           )}
         </PMHStack>
         <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
-          <PMText
-            fontSize="xs"
-            color="text.faded"
-            fontVariantNumeric="tabular-nums"
-          >
+          <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
             {entry.behindArtifacts.length} artifact
             {entry.behindArtifacts.length === 1 ? '' : 's'} to update
           </PMText>
@@ -662,7 +655,7 @@ function InstallSyncRow({
                   </PMIcon>
                   <PMText
                     fontSize="xs"
-                    color="text.secondary"
+                    color="secondary"
                     fontFamily={
                       b.artifact.kind === 'command' ? 'mono' : undefined
                     }
@@ -674,7 +667,7 @@ function InstallSyncRow({
                   </PMText>
                   <PMText
                     fontSize="xs"
-                    color="text.faded"
+                    color="faded"
                     fontVariantNumeric="tabular-nums"
                   >
                     v{b.deployedVersion}
@@ -684,7 +677,7 @@ function InstallSyncRow({
                   </PMIcon>
                   <PMText
                     fontSize="xs"
-                    color="text.primary"
+                    color="primary"
                     fontWeight="medium"
                     fontVariantNumeric="tabular-nums"
                   >
@@ -706,10 +699,10 @@ function NothingToSync() {
       <PMIcon fontSize="2xl" color="green.500">
         <LuCircleCheck />
       </PMIcon>
-      <PMText fontSize="sm" color="text.primary" fontWeight="medium">
+      <PMText fontSize="sm" color="primary" fontWeight="medium">
         Nothing to distribute.
       </PMText>
-      <PMText fontSize="xs" color="text.secondary">
+      <PMText fontSize="xs" color="secondary">
         Every artifact is on its latest version on every distribution.
       </PMText>
     </PMVStack>

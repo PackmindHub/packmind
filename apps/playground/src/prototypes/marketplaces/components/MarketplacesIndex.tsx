@@ -193,7 +193,6 @@ function CoverageViewToggle({
             <PMBox
               key={v}
               as="button"
-              type="button"
               fontSize="xs"
               fontWeight={active ? 'semibold' : 'normal'}
               color={active ? 'text.primary' : 'text.faded'}
@@ -355,7 +354,6 @@ function FilteredZeroState({ query, onClear }: Readonly<FilteredZeroProps>) {
         </PMText>
         <PMBox
           as="button"
-          type="button"
           fontSize="sm"
           color="branding.primary"
           bg="transparent"

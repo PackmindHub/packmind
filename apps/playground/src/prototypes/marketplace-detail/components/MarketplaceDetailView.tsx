@@ -275,18 +275,13 @@ function TabButton({
   countLabel,
   disabled = false,
 }: Readonly<TabButtonProps>) {
-  const baseColor = disabled
-    ? 'text.faded'
-    : active
-      ? 'text.primary'
-      : 'text.secondary';
+  const baseColor = disabled ? 'faded' : active ? 'primary' : 'secondary';
 
   return (
     <PMBox
       as="button"
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+      aria-disabled={disabled}
       bg="transparent"
       border="none"
       cursor={disabled ? 'not-allowed' : 'pointer'}

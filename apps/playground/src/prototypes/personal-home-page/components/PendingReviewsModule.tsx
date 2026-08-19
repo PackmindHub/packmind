@@ -26,7 +26,7 @@ function ModuleEmptyState() {
       <PMIcon fontSize="sm" color="green.400">
         <LuCheck />
       </PMIcon>
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         No pending reviews
       </PMText>
     </PMHStack>
@@ -56,7 +56,7 @@ export function PendingReviewsModule({
         </PMIcon>
         <PMHeading size="md">Pending reviews</PMHeading>
         {totalCount > 0 && (
-          <PMText fontSize="sm" color="text.faded">
+          <PMText fontSize="sm" color="faded">
             {totalCount} across {sortedSpaces.length} space
             {sortedSpaces.length !== 1 ? 's' : ''}
           </PMText>

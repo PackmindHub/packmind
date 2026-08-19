@@ -127,13 +127,15 @@ export default function PersonalHomePagePrototype() {
         bg="background.secondary"
       >
         <PMHStack gap={3} align="center">
-          <PMText fontSize="xs" color="text.faded" fontWeight="medium">
+          <PMText fontSize="xs" color="faded" fontWeight="medium">
             View state:
           </PMText>
           <PMSegmentGroup.Root
             size="xs"
             value={viewState}
-            onValueChange={(e) => handleStateChange(e.value)}
+            onValueChange={(e) => {
+              if (e.value) handleStateChange(e.value);
+            }}
           >
             <PMSegmentGroup.Indicator />
             {STATE_OPTIONS.map((opt) => (

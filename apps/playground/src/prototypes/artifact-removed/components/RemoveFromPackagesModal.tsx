@@ -78,11 +78,8 @@ export function RemoveFromPackagesModal({
                     <PMCheckbox
                       key={pkg.id}
                       checked={selectedPackageIds.has(pkg.id)}
-                      onChange={(e) =>
-                        handleCheckedChange(
-                          pkg.id,
-                          (e.target as HTMLInputElement).checked,
-                        )
+                      onCheckedChange={(details) =>
+                        handleCheckedChange(pkg.id, !!details.checked)
                       }
                     >
                       {pkg.name}

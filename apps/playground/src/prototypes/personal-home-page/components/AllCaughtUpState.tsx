@@ -17,7 +17,7 @@ export function AllCaughtUpState() {
         <PMHeading size="lg" marginBottom={2}>
           You're all caught up
         </PMHeading>
-        <PMText fontSize="md" color="text.secondary" maxW="360px">
+        <PMText fontSize="md" color="secondary" maxW="360px">
           Nothing needs your attention right now. Your spaces are in good shape.
         </PMText>
       </PMBox>

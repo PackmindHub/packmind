@@ -81,7 +81,7 @@ export function SuggestionRail({
         <PMHStack justify="space-between" align="center">
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             textTransform="uppercase"
             letterSpacing="wider"
             fontWeight="semibold"
@@ -90,7 +90,7 @@ export function SuggestionRail({
           </PMText>
           <PMText
             fontSize="11px"
-            color={totalPending > 0 ? 'branding.primary' : 'text.faded'}
+            color={totalPending > 0 ? 'primary' : 'faded'}
             fontVariantNumeric="tabular-nums"
             fontWeight={totalPending > 0 ? 'semibold' : 'normal'}
           >
@@ -171,18 +171,14 @@ function SuggestionGroup({
       >
         <PMText
           fontSize="11px"
-          color="text.faded"
+          color="faded"
           textTransform="uppercase"
           letterSpacing="wider"
           fontWeight="semibold"
         >
           {label}
         </PMText>
-        <PMText
-          fontSize="11px"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
+        <PMText fontSize="11px" color="faded" fontVariantNumeric="tabular-nums">
           {items.length}
         </PMText>
       </PMHStack>
@@ -226,7 +222,6 @@ function SuggestionRow({
   return (
     <PMBox
       as="button"
-      type="button"
       onClick={onSelect}
       width="100%"
       textAlign="left"
@@ -277,7 +272,7 @@ function SuggestionRow({
             <PMText
               fontSize="sm"
               fontWeight={selected ? 'semibold' : 'medium'}
-              color={dimmed ? 'text.faded' : 'text.primary'}
+              color={dimmed ? 'faded' : 'primary'}
               truncate
             >
               {suggestion.pluginName}
@@ -285,7 +280,7 @@ function SuggestionRow({
           </PMHStack>
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             flexShrink={0}
             fontVariantNumeric="tabular-nums"
           >
@@ -304,7 +299,7 @@ function SuggestionRow({
               {suggestion.originSpace.name}
             </PMBox>
           </PMBadge>
-          <PMText fontSize="11px" color="text.faded" truncate>
+          <PMText fontSize="11px" color="faded" truncate>
             {suggestion.suggester.name}
           </PMText>
         </PMHStack>
@@ -326,7 +321,6 @@ function FilteredZero({ query, onClear }: Readonly<FilteredZeroProps>) {
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="branding.primary"
         bg="transparent"

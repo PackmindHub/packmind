@@ -148,10 +148,10 @@ export function PackageDetailPane({
         <PMVStack gap={3} align="stretch">
           <PMHStack gap={3} align="start" justify="space-between">
             <PMVStack gap={1.5} align="start" flex={1} minW={0}>
-              <PMHeading size="md" color="text.primary" letterSpacing="-0.01em">
+              <PMHeading size="md" color="primary" letterSpacing="-0.01em">
                 {pkg.name}
               </PMHeading>
-              <PMText fontSize="sm" color="text.secondary" maxW="68ch">
+              <PMText fontSize="sm" color="secondary" maxW="68ch">
                 {pkg.description}
               </PMText>
             </PMVStack>
@@ -284,7 +284,7 @@ export function PackageDetailPane({
           bottom={0}
         >
           <PMHStack gap={3} align="center" justify="space-between">
-            <PMText fontSize="xs" color="text.secondary">
+            <PMText fontSize="xs" color="secondary">
               {selectedDriftedCount === 0
                 ? 'Select distributions to redistribute the package.'
                 : `${selectedDriftedCount} of ${behindInstallCount} drifted distribution${behindInstallCount === 1 ? '' : 's'} selected.`}
@@ -324,18 +324,14 @@ function SummaryStat({
   tone?: 'neutral' | 'ok' | 'warn';
 }>) {
   const color =
-    tone === 'warn'
-      ? 'orange.500'
-      : tone === 'ok'
-        ? 'green.500'
-        : 'text.primary';
+    tone === 'warn' ? 'warning' : tone === 'ok' ? 'success' : 'primary';
   return (
     <PMHStack gap={1.5} align="baseline">
       <PMText
         fontSize="11px"
         textTransform="uppercase"
         letterSpacing="wider"
-        color="text.faded"
+        color="faded"
         fontWeight="semibold"
       >
         {label}
@@ -388,8 +384,9 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
 
         <PMBox
           as="button"
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => {
+            if (hasDrift) setExpanded((v) => !v);
+          }}
           bg="transparent"
           border="none"
           cursor="pointer"
@@ -405,7 +402,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
             borderRadius: 'sm',
           }}
           aria-expanded={expanded}
-          disabled={!hasDrift}
+          aria-disabled={!hasDrift}
         >
           <PMHStack gap={2} align="center" wrap="wrap">
             {hasDrift && (
@@ -413,12 +410,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
                 {expanded ? <LuChevronDown /> : <LuChevronRight />}
               </PMIcon>
             )}
-            <PMText
-              fontSize="sm"
-              fontWeight="medium"
-              color="text.primary"
-              truncate
-            >
+            <PMText fontSize="sm" fontWeight="medium" color="primary" truncate>
               {entry.repo.owner}/{entry.repo.name}
             </PMText>
             <BranchChip branch={entry.branch} />
@@ -438,14 +430,14 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
             {hasDrift ? (
               <PMText
                 fontSize="xs"
-                color="orange.500"
+                color="warning"
                 fontVariantNumeric="tabular-nums"
               >
                 {behindCount} of {totalArtifactsOnInstall} artifact
                 {totalArtifactsOnInstall === 1 ? '' : 's'} behind
               </PMText>
             ) : (
-              <PMText fontSize="xs" color="text.faded">
+              <PMText fontSize="xs" color="faded">
                 All aligned
               </PMText>
             )}
@@ -483,7 +475,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
                   </PMIcon>
                   <PMText
                     fontSize="sm"
-                    color="text.secondary"
+                    color="secondary"
                     fontFamily={
                       b.artifact.kind === 'command' ? 'mono' : undefined
                     }
@@ -496,7 +488,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
                   <PMHStack gap={2} align="center">
                     <PMText
                       fontSize="xs"
-                      color="orange.500"
+                      color="warning"
                       fontVariantNumeric="tabular-nums"
                     >
                       v{b.deployedVersion}
@@ -506,7 +498,7 @@ function InstallRow({ entry, selected, onToggle }: Readonly<InstallRowProps>) {
                     </PMIcon>
                     <PMText
                       fontSize="xs"
-                      color="text.primary"
+                      color="primary"
                       fontWeight="medium"
                       fontVariantNumeric="tabular-nums"
                     >
@@ -628,11 +620,10 @@ function InstallFilterControl({
           <PMBox
             key={item.value}
             as="button"
-            type="button"
             role="tab"
             aria-selected={active}
-            disabled={disabled}
-            onClick={() => onChange(item.value)}
+            aria-disabled={disabled}
+            onClick={disabled ? undefined : () => onChange(item.value)}
             bg={active ? 'background.secondary' : 'transparent'}
             border="none"
             borderLeftWidth={idx === 0 ? 0 : '1px'}
@@ -663,14 +654,14 @@ function InstallFilterControl({
               )}
               <PMText
                 fontSize="xs"
-                color={active ? 'text.primary' : 'text.secondary'}
+                color={active ? 'primary' : 'secondary'}
                 fontWeight={active ? 'semibold' : 'medium'}
               >
                 {item.label}
               </PMText>
               <PMText
                 fontSize="11px"
-                color="text.faded"
+                color="faded"
                 fontVariantNumeric="tabular-nums"
               >
                 {count}
@@ -706,13 +697,12 @@ function InstallEmptyState({
   })();
   return (
     <PMVStack gap={2} align="start" paddingX={6} paddingY={6}>
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         {message}
       </PMText>
       {hasActiveFilter && (
         <PMBox
           as="button"
-          type="button"
           fontSize="xs"
           color="branding.primary"
           bg="transparent"

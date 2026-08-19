@@ -25,7 +25,7 @@ export function StandardHeader({ standard }: StandardHeaderProps) {
             <PMText fontSize="xs" color="secondary">
               Version: {standard.version}
             </PMText>
-            <PMButton variant="plain" size="xs" color="secondary" padding={0}>
+            <PMButton variant="ghost" size="xs" color="secondary" padding={0}>
               <LuHistory />
               History
             </PMButton>

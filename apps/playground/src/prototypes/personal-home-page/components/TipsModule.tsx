@@ -43,11 +43,11 @@ function TipCard({
         <PMCloseButton size="xs" onClick={() => onDismiss(tip.id)} />
       </PMBox>
 
-      <PMText fontSize="sm" fontWeight="medium" color="text.primary" pr={6}>
+      <PMText fontSize="sm" fontWeight="medium" color="primary" pr={6}>
         {tip.title}
       </PMText>
 
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         {tip.description}
       </PMText>
 

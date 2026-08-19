@@ -336,7 +336,6 @@ function Backlink() {
   return (
     <PMBox
       as="button"
-      type="button"
       display="inline-flex"
       alignItems="center"
       gap="6px"
@@ -364,7 +363,6 @@ function OverflowMenu() {
       <PMMenu.Trigger asChild>
         <PMBox
           as="button"
-          type="button"
           width="32px"
           height="32px"
           display="inline-flex"
@@ -403,7 +401,7 @@ function OverflowMenu() {
                 <PMIcon fontSize="sm" color="red.500">
                   <LuTrash2 />
                 </PMIcon>
-                <PMText fontSize="xs" color="red.500">
+                <PMText fontSize="xs" color="error">
                   Delete marketplace
                 </PMText>
               </PMHStack>
