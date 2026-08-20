@@ -9,8 +9,9 @@ import { MarketplaceListItem } from '../MarketplaceListItem';
 export type ListMarketplacesCommand = PackmindCommand;
 
 /**
- * Response — list of presentation DTOs enriched with `addedByUserName` and
- * carrying the denormalized `pluginCount` from the row.
+ * Response — list of presentation DTOs enriched with `addedByUserName`, with
+ * how many plugins Packmind manages and does not manage on each marketplace,
+ * and carrying the denormalized `pluginCount` from the row.
  */
 export type ListMarketplacesResponse = MarketplaceListItem[];
 

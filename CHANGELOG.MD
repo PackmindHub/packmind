@@ -2,11 +2,33 @@
 
 ## Added
 
+- A standard submitted from the CLI can now carry its scope. A `## Scope` section in a `.packmind/standards/*.md` file is read as the standard's glob patterns, so the coding agents that filter on file patterns get that filtering from a CLI publish instead of only from the web app. Patterns can be written comma-separated on one line or one per bullet. Standards distributed to `.packmind/standards/` now render their scope in that same section, so editing the file and submitting it back keeps the scope instead of dropping it. Previously the heading and its patterns silently became part of the description
+- Check what Packmind tracks for the repository you are in with the new `packmind git info` command: it names the tracked branch, warns when the branch you are on is not the tracked one — distributions from there are not recorded — and tells you how to start tracking when the repository is not tracked at all. Reading the state needs no admin rights
+- A marketplace with no Packmind plugin yet now carries the publish action instead of describing it, in one of three variants read from your data: the packages that can become plugins are listed with their space and their commands and skills, and each can be published from there with this marketplace already selected in the dialog; when none of your packages can become a plugin, the page states that a plugin needs at least one skill or command and links to each package so one can be added; when there is no package at all, it links to package creation in the default space. All three name the repository and branch behind the marketplace, so a marketplace linked to the wrong repository shows up immediately. When the marketplace descriptor already lists plugins Packmind does not manage, the page scopes its message to Packmind and counts those plugins instead of claiming the marketplace is empty.
+- The marketplace page now checks the Git connection behind the marketplace when you open it, and leads with an alert whenever that connection is what blocks you: it names the connection, states the failure and the recovery in the same words as the Git page, and offers the repair before the re-check. When the credentials work again but the marketplace still carries the recorded authentication failure, the alert offers to reconcile it instead. A check that gets no answer stays silent rather than blaming the connection for a failure Packmind could not attribute.
+
 ## Changed
+
+- **Breaking (CLI)**: `packmind track` and `packmind untrack` moved under the `git` command and are now `packmind git track` and `packmind git untrack`, joining `packmind git info`. Both flag spellings moved with them (`git track --branch <name>`, `git track --update`, and the two combined). The old names still parse but exit with an error naming their replacement, so scripts and CI jobs calling them must be updated
+- The marketplace list now names the Git connection behind each marketplace ("via Acme GitHub") and states its health in words, replacing an 8px dot only readable on hover. Severity follows who has to act: a credential that stopped working or a transient failure is a warning an admin can clear from Packmind, while a repository that is gone or a descriptor that does not parse is an error nobody clears from here. The tooltip names the connection at fault and the recovery instead of restating the state.
+- A disabled Sync button now names its cause: authentication when the connection's credentials stopped working, the repository when it can no longer be reached, the descriptor when it does not parse. It previously offered "Marketplace is unreachable or its descriptor is invalid" in every case, and never mentioned the one an admin can clear themselves. "Nothing to sync" still wins when no plugin has drifted.
+- The Overview tab of a marketplace plugin now separates what the plugin ships from what it does not. Commands and skills are listed under "In this plugin"; the package's standards move to a "Not shipped" section stating that standards are distributed to repositories, not to marketplaces, with a tooltip explaining that the Claude Code plugin format has no slot for instruction files and pointing to repository distribution instead. Previously all three were listed together under "Bundled artifacts", which suggested standards were published to the marketplace when they never are.
+- The "Publish to a marketplace" dialog now states what a publish will actually put on the marketplace — "Publishes 2 commands and 1 skill. 3 standards stay in the package: plugins don't carry standards." Previously it mentioned standards only when it refused a standards-only package, so a mixed package was published minus its standards without warning.
+- On a marketplace with no plugin published yet, a publishable package now reads "2 skills, 3 commands · 4 standards not shipped" instead of listing the three counts together, so the standards are not presented as part of what the Publish button would send.
 
 ## Fixed
 
+- A connection created through the GitHub App now keeps the name you typed. The name travels with the install and is applied when the connection is created, including on-prem where the app is registered first and the name has to survive two round trips to GitHub. Previously it was dropped the moment you left for GitHub and every App connection came back as "Unnamed GitHub connection". If the name was taken by another connection while you were on GitHub, the connection is still created — unnamed, ready to be renamed — rather than the install failing (#743).
+- A Git connection whose credentials no longer work can no longer be picked in the "Link a marketplace" drawer. Every connection is checked when the drawer opens, and one that cannot authenticate stays listed and named but is disabled, with the failure and a link to repair it under the field; it is no longer auto-selected either when it is the organization's only connection. Previously it passed the drawer's filter on having stored credentials and dead-ended on a repository list that failed to load (#751).
+- Editing a standard no longer marks the plugins published from its package as outdated. Drift is now measured over the artifacts a plugin actually carries — commands and skills — so a standard edit no longer raises "Changes to publish" nor opens a pull request that changes no file. For the same reason, the plugin "Changes" tab lists command and skill changes only.
+
 ## Removed
+
+# [1.16.2] - 2026-08-12
+
+## Chores
+
+- Removed most of the dead code under packages
 
 # [1.16.1] - 2026-08-07
 
@@ -349,7 +371,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.16.2...HEAD
+[1.16.2]: https://github.com/PackmindHub/packmind/compare/release/1.16.1...release/1.16.2
 [1.16.1]: https://github.com/PackmindHub/packmind/compare/release/1.16.0...release/1.16.1
 [1.16.0]: https://github.com/PackmindHub/packmind/compare/release/1.15.1...release/1.16.0
 [1.15.1]: https://github.com/PackmindHub/packmind/compare/release/1.15.0...release/1.15.1

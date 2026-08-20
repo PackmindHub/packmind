@@ -26,7 +26,6 @@ export function AgentsFieldset({
           <PMBox
             key={o.id}
             as="button"
-            type="button"
             flex={1}
             onClick={() => onToggle(o.id, !checked)}
             paddingX={3}

@@ -13,6 +13,7 @@ import {
   CheckProviderAuthResponse,
   ClientSource,
   GitProvider,
+  GitProviderDisplayNameAlreadyUsedError,
   GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
@@ -39,7 +40,11 @@ import {
   InjectMarketplacesAdapter,
 } from '../../../shared/HexaInjection';
 import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
-import { InvalidInstallStateError, InstallStateSigner } from '@packmind/git';
+import {
+  InvalidInstallStateError,
+  InstallStateSigner,
+  normalizeDisplayName,
+} from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
@@ -52,6 +57,7 @@ type BuildGithubAppInstallUrlCommand = {
   organizationId: OrganizationId;
   userId: UserId;
   gitProviderId?: GitProviderId;
+  displayName?: string;
 };
 
 type BuildGithubAppInstallUrlResponse = {
@@ -71,6 +77,7 @@ type BuildGithubAppManifestCommand = {
   orgId: OrganizationId;
   userId: UserId;
   githubOrg?: string;
+  displayName?: string;
 };
 
 type BuildGithubAppManifestResponse = {
@@ -203,6 +210,11 @@ export class GitProvidersService {
       kind: 'install',
       organizationGitHubAppId,
       gitProviderId,
+      // Re-authentication rebinds an existing connection, so it never carries a
+      // name — only the create flow does.
+      displayName: gitProviderId
+        ? undefined
+        : normalizeDisplayName(command.displayName) || undefined,
     });
 
     const installUrl =
@@ -252,6 +264,9 @@ export class GitProvidersService {
       orgId: String(command.orgId),
       userId: String(command.userId),
       kind: 'manifest',
+      // Registration is followed by an install; carry the typed connection name
+      // across both GitHub round trips so it survives to provider creation.
+      displayName: normalizeDisplayName(command.displayName) || undefined,
     });
 
     const manifest: GitHubAppManifest = {
@@ -364,6 +379,7 @@ export class GitProvidersService {
       userId: String(command.userId),
       kind: 'install',
       organizationGitHubAppId: String(persistedApp.id),
+      displayName: payload.displayName,
     });
 
     const installUrl =
@@ -461,6 +477,10 @@ export class GitProvidersService {
       return existing;
     }
 
+    // The name the user typed in the Add-connection drawer, carried here inside
+    // the signed state token because GitHub only echoes `state` back.
+    const displayName = normalizeDisplayName(payload.displayName);
+
     const addCommand: AddGitProviderCommand = {
       userId: String(command.userId),
       organizationId: String(command.organizationId),
@@ -471,17 +491,52 @@ export class GitProvidersService {
         organizationGitHubAppId,
         url: null,
         token: null,
-        displayName: '',
+        displayName,
       },
       allowTokenlessProvider: true,
       source: command.source,
     };
 
-    const provider = await this.gitAdapter.addGitProvider(addCommand);
+    const provider = await this.addProviderToleratingNameCollision(
+      addCommand,
+      command,
+    );
 
     await this.materializeReposForAppInstallation(provider, command);
 
     return provider;
+  }
+
+  // The App is already installed on GitHub's side by the time we get here, so a
+  // name that was taken while the user was away must not dead-end the flow:
+  // fall back to an unnamed connection, which the user can rename in settings.
+  private async addProviderToleratingNameCollision(
+    addCommand: AddGitProviderCommand,
+    command: CompleteGithubAppInstallCommand,
+  ): Promise<GitProvider> {
+    try {
+      return await this.gitAdapter.addGitProvider(addCommand);
+    } catch (error) {
+      if (
+        !(error instanceof GitProviderDisplayNameAlreadyUsedError) ||
+        addCommand.gitProvider.displayName === ''
+      ) {
+        throw error;
+      }
+
+      this.logger.warn(
+        'Display name already used; creating the GitHub App connection unnamed',
+        {
+          organizationId: command.organizationId,
+          installationId: command.installationId,
+        },
+      );
+
+      return this.gitAdapter.addGitProvider({
+        ...addCommand,
+        gitProvider: { ...addCommand.gitProvider, displayName: '' },
+      });
+    }
   }
 
   private async rebindProviderToInstallation(

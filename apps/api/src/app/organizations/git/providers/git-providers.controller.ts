@@ -109,10 +109,15 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Query('gitProviderId') gitProviderId?: GitProviderId,
+    @Query('displayName') displayName?: string,
   ): Promise<{ installUrl: string; state: string }> {
     this.logger.info(
       'GET /organizations/:orgId/git/providers/github/app/install-url',
-      { organizationId, hasGitProviderId: Boolean(gitProviderId) },
+      {
+        organizationId,
+        hasGitProviderId: Boolean(gitProviderId),
+        hasDisplayName: Boolean(displayName),
+      },
     );
 
     try {
@@ -120,6 +125,7 @@ export class GitProvidersController {
         organizationId,
         userId: req.user.userId,
         gitProviderId: gitProviderId || undefined,
+        displayName: displayName || undefined,
       });
     } catch (error) {
       const errorMessage =
@@ -137,6 +143,7 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Query('githubOrg') githubOrg?: string,
+    @Query('displayName') displayName?: string,
   ): Promise<{
     manifest: GitHubAppManifest;
     state: string;
@@ -151,7 +158,11 @@ export class GitProvidersController {
 
     this.logger.info(
       'GET /organizations/:orgId/git/providers/github/app/manifest',
-      { organizationId, hasGithubOrg: Boolean(githubOrg) },
+      {
+        organizationId,
+        hasGithubOrg: Boolean(githubOrg),
+        hasDisplayName: Boolean(displayName),
+      },
     );
 
     try {
@@ -159,6 +170,7 @@ export class GitProvidersController {
         orgId: organizationId,
         userId: req.user.userId,
         githubOrg: githubOrg?.trim() || undefined,
+        displayName: displayName || undefined,
       });
     } catch (error) {
       const errorMessage =

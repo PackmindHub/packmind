@@ -204,6 +204,40 @@ describe('trackHandler', () => {
       );
     });
 
+    it('suggests moving tracking to the checked-out branch', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining('Run packmind git track --update to move it'),
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  // `--update` alone targets the checked-out branch, so suggesting it after an
+  // explicit `--branch` would move tracking to the wrong branch.
+  describe('when an explicit branch is already tracked on another branch', () => {
+    beforeEach(async () => {
+      deps.branch = 'dev';
+      mockTrackRepository.mockResolvedValue({
+        status: 'already-tracked-other-branch',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'dev',
+        trackedBranch: 'main',
+      });
+      await trackHandler(deps);
+    });
+
+    it('suggests moving tracking to the requested branch', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Run packmind git track --update --branch dev to move it to dev.',
+        ),
+      );
+    });
+
     it('exits with code 1', () => {
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -249,7 +283,7 @@ describe('trackHandler', () => {
 
     it('logs an error naming both commands', () => {
       expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
-        expect.stringContaining('Nothing is tracked yet'),
+        'Nothing is tracked yet — run packmind init or packmind git track to start tracking.',
       );
     });
 

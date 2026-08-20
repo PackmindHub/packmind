@@ -95,7 +95,7 @@ export function SpaceReviewBlock({
           <PMIcon fontSize="xs" color="text.faded">
             <LuClock />
           </PMIcon>
-          <PMText fontSize="xs" color="text.faded">
+          <PMText fontSize="xs" color="faded">
             oldest: {oldestAge}
           </PMText>
         </PMHStack>

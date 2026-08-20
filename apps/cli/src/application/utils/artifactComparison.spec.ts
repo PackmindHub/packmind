@@ -12,15 +12,17 @@ const PACKMIND_PATH = '.packmind/standards/my-standard.md';
 function buildStandard(opts: {
   name?: string;
   description?: string;
+  scope?: string;
   rules?: string[];
 }): string {
   const name = opts.name ?? 'My Standard';
   const description = opts.description ?? 'A description';
   const rules = opts.rules ?? ['Rule one', 'Rule two'];
+  const scopeSection = opts.scope ? `\n## Scope\n\n${opts.scope}\n` : '';
   const rulesSection = rules.length
     ? `\n## Rules\n${rules.map((r) => `- ${r}`).join('\n')}`
     : '';
-  return `# ${name}\n\n${description}${rulesSection}\n`;
+  return `# ${name}\n\n${description}\n${scopeSection}${rulesSection}\n`;
 }
 
 const CLAUDE_PATH = '.claude/rules/packmind/standard-my-standard.md';
@@ -104,6 +106,26 @@ describe('compareStandardFields', () => {
     expect(changes).toContainEqual({
       type: ChangeProposalType.updateStandardScope,
       payload: { oldValue: '**/*.js', newValue: '**/*.ts' },
+    });
+  });
+
+  it('detects scope change in the Packmind format', () => {
+    const local = buildStandard({ scope: '**/*.ts' });
+    const deployed = buildStandard({ scope: '**/*.js' });
+    const changes = compareStandardFields(local, deployed, PACKMIND_PATH);
+    expect(changes).toContainEqual({
+      type: ChangeProposalType.updateStandardScope,
+      payload: { oldValue: '**/*.js', newValue: '**/*.ts' },
+    });
+  });
+
+  it('detects a scope removed from the Packmind format', () => {
+    const local = buildStandard({});
+    const deployed = buildStandard({ scope: '**/*.ts' });
+    const changes = compareStandardFields(local, deployed, PACKMIND_PATH);
+    expect(changes).toContainEqual({
+      type: ChangeProposalType.updateStandardScope,
+      payload: { oldValue: '**/*.ts', newValue: '' },
     });
   });
 

@@ -86,9 +86,18 @@ The markdown file should follow this structure:
 
 A description of the standard (not mandatory)
 
+## Scope
+
+**/\*.spec.ts, **/\*.test.ts
+
 - some rule that the agent should follow
 - another rule the agent should follow
 ```
+
+The optional `## Scope` section holds the glob patterns the standard applies to,
+so your coding assistants only load it for matching files. Write globs rather
+than prose, separated by commas on one line or one bullet per pattern. Leave the
+section out for a standard that applies everywhere.
 
 <Info>
   The standard markdown should be located in a directory where instructions are

@@ -1,7 +1,7 @@
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
-import { GitCommit } from '@packmind/types';
+import { GitBranchComparison, GitCommit, GitFileChange } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
 import { extractNextPageUrl } from './linkHeaderUtils';
 
@@ -681,15 +681,15 @@ export class GitlabRepository implements IGitRepo {
         lookupResponse.data.length > 0
       ) {
         const first = lookupResponse.data[0];
-        this.logger.debug(
-          'Existing open merge request found, skipping creation',
-          {
-            projectPath: this.projectPath,
-            head,
-            base: baseBranch,
-            iid: first.iid,
-          },
-        );
+        this.logger.debug('Existing open merge request found, updating it', {
+          projectPath: this.projectPath,
+          head,
+          base: baseBranch,
+          iid: first.iid,
+        });
+        // Refresh title + description rather than leaving stale text behind —
+        // the marketplace sync MR recomputes its description on every publish.
+        await this.updateMergeRequest(first.iid, title, body);
         return {
           url: first.web_url,
           number: first.iid,
@@ -746,6 +746,118 @@ export class GitlabRepository implements IGitRepo {
       throw new Error(
         `Failed to open merge request on GitLab for '${head}' -> '${baseBranch}': ${errorMessage}`,
       );
+    }
+  }
+
+  async compareBranches(
+    base: string,
+    head: string,
+  ): Promise<GitBranchComparison> {
+    try {
+      const response = await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/repository/compare`,
+        { params: { from: base, to: head } },
+      );
+
+      const diffs: Array<{
+        old_path?: string;
+        new_path?: string;
+        new_file?: boolean;
+        renamed_file?: boolean;
+        deleted_file?: boolean;
+      }> = Array.isArray(response.data?.diffs) ? response.data.diffs : [];
+
+      const files: GitFileChange[] = [];
+      for (const diff of diffs) {
+        // A rename yields two entries (old path removed, new path added) so
+        // callers reasoning about per-directory contents see both sides.
+        if (diff.renamed_file) {
+          if (diff.new_path) {
+            files.push({ path: diff.new_path, status: 'added' });
+          }
+          if (diff.old_path) {
+            files.push({ path: diff.old_path, status: 'removed' });
+          }
+          continue;
+        }
+        if (diff.deleted_file) {
+          const path = diff.old_path ?? diff.new_path;
+          if (path) {
+            files.push({ path, status: 'removed' });
+          }
+          continue;
+        }
+        const path = diff.new_path ?? diff.old_path;
+        if (path) {
+          files.push({ path, status: diff.new_file ? 'added' : 'modified' });
+        }
+      }
+
+      // GitLab gives up on very large comparisons and flags the response
+      // rather than failing, so the diff list can be silently partial.
+      const truncated = response.data?.compare_timeout === true;
+
+      this.logger.debug('Compared branches on GitLab', {
+        projectPath: this.projectPath,
+        base,
+        head,
+        fileCount: files.length,
+        truncated,
+      });
+
+      return { files, truncated };
+    } catch (error) {
+      const status = this.extractHttpStatus(error);
+      if (status === 404) {
+        // One of the two refs does not exist — nothing to compare.
+        this.logger.debug('Branch comparison target missing on GitLab', {
+          projectPath: this.projectPath,
+          base,
+          head,
+        });
+        return { files: [], truncated: false };
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to compare branches on GitLab', {
+        projectPath: this.projectPath,
+        base,
+        head,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to compare '${base}'...'${head}' on GitLab: ${errorMessage}`,
+      );
+    }
+  }
+
+  /**
+   * Refresh an open merge request's title and description.
+   *
+   * Deliberately non-throwing, mirroring the GitHub adapter: the caller already
+   * holds a usable MR URL, and the rolling marketplace sync MR treats its
+   * description as cosmetic. A failure is logged and swallowed.
+   */
+  private async updateMergeRequest(
+    mergeRequestIid: number,
+    title: string,
+    body?: string,
+  ): Promise<void> {
+    try {
+      await this.axiosInstance.put(
+        `/projects/${this.encodedProjectPath}/merge_requests/${mergeRequestIid}`,
+        body === undefined ? { title } : { title, description: body },
+      );
+      this.logger.debug('Updated merge request on GitLab', {
+        projectPath: this.projectPath,
+        iid: mergeRequestIid,
+      });
+    } catch (error) {
+      this.logger.warn('Failed to update merge request on GitLab', {
+        projectPath: this.projectPath,
+        iid: mergeRequestIid,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 

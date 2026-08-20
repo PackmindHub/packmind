@@ -5,6 +5,7 @@ import { migrations } from './migrations';
 import { AddIsTrackedToGitRepos1813000000000 } from '../migrations/1813000000000-AddIsTrackedToGitRepos';
 import { AddTrackedBranchLookupIndexToGitRepos1817000000000 } from '../migrations/1817000000000-AddTrackedBranchLookupIndexToGitRepos';
 import { AddTrackingRemovedAtToGitRepos1818000000000 } from '../migrations/1818000000000-AddTrackingRemovedAtToGitRepos';
+import { AddArtefactStatusIndexToChangeProposals1819000000000 } from '../migrations/1819000000000-AddArtefactStatusIndexToChangeProposals';
 
 describe('migrations', () => {
   it('works', () => {
@@ -241,6 +242,65 @@ describe('AddTrackingRemovedAtToGitRepos1818000000000', () => {
 
       it('drops the tracking_removed_at column', async () => {
         expect(await trackingRemovedAtColumnExists()).toBe(false);
+      });
+    });
+  });
+});
+
+describe('AddArtefactStatusIndexToChangeProposals1819000000000', () => {
+  const migration = new AddArtefactStatusIndexToChangeProposals1819000000000(
+    silentLogger,
+  );
+  let dataSource: DataSource;
+  let queryRunner: QueryRunner;
+
+  beforeEach(async () => {
+    dataSource = makeInMemoryDataSource();
+    await dataSource.initialize();
+    queryRunner = dataSource.createQueryRunner();
+
+    await queryRunner.query(`
+      CREATE TABLE "change_proposals" (
+        "id" uuid PRIMARY KEY,
+        "artefact_id" varchar,
+        "status" varchar NOT NULL,
+        "created_at" timestamp with time zone NOT NULL DEFAULT now()
+      )
+    `);
+  });
+
+  afterEach(async () => {
+    await queryRunner.release();
+    await dataSource.destroy();
+  });
+
+  // pg-mem does not implement the pg_indexes catalog, so these assert that the
+  // index DDL is accepted and reversible. That the index actually exists is
+  // verified against a real Postgres when the migration is applied.
+  describe('when the migration is applied', () => {
+    it('creates the composite index without error', async () => {
+      await expect(migration.up(queryRunner)).resolves.not.toThrow();
+    });
+
+    it('is idempotent', async () => {
+      await migration.up(queryRunner);
+
+      await expect(migration.up(queryRunner)).resolves.not.toThrow();
+    });
+
+    describe('and then reverted', () => {
+      beforeEach(async () => {
+        await migration.up(queryRunner);
+      });
+
+      it('drops the index without error', async () => {
+        await expect(migration.down(queryRunner)).resolves.not.toThrow();
+      });
+
+      it('can be re-applied afterwards', async () => {
+        await migration.down(queryRunner);
+
+        await expect(migration.up(queryRunner)).resolves.not.toThrow();
       });
     });
   });

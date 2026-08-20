@@ -266,7 +266,7 @@ function IdentityStrip({
       <PMHStack gap={2} align="center" wrap="wrap">
         <OwnerChip name={ownerName} />
         <Dot />
-        <PMText fontSize="xs" color="text.faded">
+        <PMText fontSize="xs" color="faded">
           last published {lastPublishedRelative}
         </PMText>
       </PMHStack>
@@ -283,7 +283,7 @@ type PolicyChipProps = {
 
 function PolicyChip({ on, label, OnIcon, OffIcon }: Readonly<PolicyChipProps>) {
   const Icon = on ? OnIcon : OffIcon;
-  const color = on ? 'text.secondary' : 'text.faded';
+  const color = on ? 'secondary' : 'faded';
   return (
     <PMHStack
       gap={1}
@@ -294,7 +294,7 @@ function PolicyChip({ on, label, OnIcon, OffIcon }: Readonly<PolicyChipProps>) {
       borderRadius="sm"
       aria-label={`${label} ${on ? 'on' : 'off'}`}
     >
-      <PMIcon fontSize="11px" color={color}>
+      <PMIcon fontSize="11px" color={`text.${color}`}>
         <Icon />
       </PMIcon>
       <PMText
@@ -330,7 +330,7 @@ function Dot() {
 
 function DescriptionBlock({ description }: Readonly<{ description: string }>) {
   return (
-    <PMText fontSize="md" color="text.secondary" lineHeight={1.55} maxW="70ch">
+    <PMText fontSize="md" color="secondary" lineHeight={1.55} maxW="70ch">
       {description}
     </PMText>
   );
@@ -473,7 +473,7 @@ function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
     <PMVStack gap={1} align="start" minW="100px">
       <PMText
         fontSize="11px"
-        color="text.faded"
+        color="faded"
         textTransform="uppercase"
         letterSpacing="wider"
         fontWeight="semibold"
@@ -482,13 +482,13 @@ function TrailTier({ label, value, sub }: Readonly<TrailTierProps>) {
       </PMText>
       <PMText
         fontSize="md"
-        color="text.primary"
+        color="primary"
         fontWeight="medium"
         fontVariantNumeric="tabular-nums"
       >
         {value}
       </PMText>
-      <PMText fontSize="11px" color="text.faded">
+      <PMText fontSize="11px" color="faded">
         {sub}
       </PMText>
     </PMVStack>
@@ -526,7 +526,7 @@ function TrailConnector({
             bg="branding.primary"
             aria-hidden
           />
-          <PMText fontSize="xs" color="text.secondary">
+          <PMText fontSize="xs" color="secondary">
             auto-syncing
           </PMText>
         </PMHStack>
@@ -551,7 +551,7 @@ function TrailConnector({
             </PMIcon>
             <PMText
               fontSize="xs"
-              color="orange.500"
+              color="warning"
               fontWeight="medium"
               fontVariantNumeric="tabular-nums"
             >
@@ -561,7 +561,6 @@ function TrailConnector({
           {action && (
             <PMBox
               as="button"
-              type="button"
               fontSize="11px"
               color="branding.primary"
               bg="transparent"
@@ -591,7 +590,7 @@ function TrailConnector({
             bg={dimmed ? 'text.faded' : 'green.500'}
             aria-hidden
           />
-          <PMText fontSize="xs" color="text.faded">
+          <PMText fontSize="xs" color="faded">
             {inSyncLabel}
           </PMText>
         </PMHStack>
@@ -611,7 +610,7 @@ function ChangesBlock({
 }: Readonly<ChangesBlockProps>) {
   if (unreachable) {
     return (
-      <PMText fontSize="sm" color="text.faded">
+      <PMText fontSize="sm" color="faded">
         Coverage unavailable while the repo is unreachable.
       </PMText>
     );
@@ -627,7 +626,7 @@ function ChangesBlock({
           bg="green.500"
           aria-hidden
         />
-        <PMText fontSize="sm" color="text.secondary">
+        <PMText fontSize="sm" color="secondary">
           In sync with the marketplace.
         </PMText>
       </PMHStack>
@@ -640,7 +639,7 @@ function ChangesBlock({
 
   return (
     <PMVStack gap={4} align="stretch">
-      <PMText fontSize="md" color="text.primary" fontWeight="medium">
+      <PMText fontSize="md" color="primary" fontWeight="medium">
         {countLabel} ready to publish
       </PMText>
       <PMVStack gap={2.5} align="stretch">
@@ -691,7 +690,7 @@ function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
       </PMBox>
       <PMText
         fontSize="sm"
-        color="text.primary"
+        color="primary"
         fontWeight="medium"
         truncate
         fontFamily={MONO_KINDS.has(change.artifactKind) ? 'mono' : undefined}
@@ -752,7 +751,7 @@ function AdoptionBlock({
     return (
       <PMVStack gap={2} align="start">
         <SectionLabel>Adoption</SectionLabel>
-        <PMText fontSize="sm" color="text.faded">
+        <PMText fontSize="sm" color="faded">
           coverage unavailable while the repo is unreachable
         </PMText>
       </PMVStack>
@@ -778,7 +777,7 @@ function AdoptionBlock({
           <PMIcon fontSize="sm" color="text.secondary">
             <LuRefreshCw />
           </PMIcon>
-          <PMText fontSize="xs" color="text.secondary">
+          <PMText fontSize="xs" color="secondary">
             Auto-update is on. Repos sync to the published version on the next
             pull.
           </PMText>
@@ -795,7 +794,7 @@ function AdoptionBlock({
         >
           <PMText
             fontSize="xs"
-            color="text.secondary"
+            color="secondary"
             fontVariantNumeric="tabular-nums"
           >
             Showing {outdatedRepoCount}{' '}
@@ -804,7 +803,6 @@ function AdoptionBlock({
           {!autoUpdate && (
             <PMBox
               as="button"
-              type="button"
               fontSize="xs"
               color="branding.primary"
               bg="transparent"
@@ -847,7 +845,7 @@ function AdoptionBlock({
           )}
         </PMVStack>
       ) : (
-        <PMText fontSize="sm" color="text.faded">
+        <PMText fontSize="sm" color="faded">
           {outdatedOnly
             ? autoUpdate
               ? 'Auto-update is on. Repos sync to the published version on the next pull.'
@@ -872,7 +870,7 @@ const ADOPTION_COLUMNS: PMTableColumn[] = [
 function toRepoRow(repo: RepoAdoption, latestVersion: string): PMTableRow {
   return {
     name: (
-      <PMText fontSize="sm" fontFamily="mono" color="text.primary" truncate>
+      <PMText fontSize="sm" fontFamily="mono" color="primary" truncate>
         {repo.repoPath}
       </PMText>
     ),
@@ -887,7 +885,7 @@ function toRepoRow(repo: RepoAdoption, latestVersion: string): PMTableRow {
 function toPersonRow(entry: PersonEntry, latestVersion: string): PMTableRow {
   return {
     name: (
-      <PMText fontSize="sm" color="text.primary" truncate>
+      <PMText fontSize="sm" color="primary" truncate>
         {entry.installer.name}
       </PMText>
     ),
@@ -917,7 +915,7 @@ function renderVersionCell(
       <PMBadge colorPalette="gray" size="sm">
         {installed}
       </PMBadge>
-      <PMText fontSize="xs" color="text.faded">
+      <PMText fontSize="xs" color="faded">
         →
       </PMText>
       <PMBadge colorPalette={palette} size="sm">
@@ -969,7 +967,6 @@ function TabButton({
   return (
     <PMBox
       as="button"
-      type="button"
       onClick={onClick}
       bg="transparent"
       border="none"
@@ -1008,7 +1005,7 @@ function CollapsedTail({ count }: Readonly<{ count: number }>) {
   return (
     <PMText
       fontSize="xs"
-      color="text.faded"
+      color="faded"
       paddingY={1}
       paddingX={2}
       fontVariantNumeric="tabular-nums"
@@ -1141,7 +1138,7 @@ function SettingsBlock({
     <PMVStack gap={6} align="stretch" maxW="70ch">
       <PMVStack gap={1} align="start">
         <SectionLabel>Distribution policy</SectionLabel>
-        <PMText fontSize="xs" color="text.faded">
+        <PMText fontSize="xs" color="faded">
           Owned by {ownerName}. Changes apply to every consumer repo.
         </PMText>
       </PMVStack>
@@ -1239,10 +1236,10 @@ function SettingRow({
     <PMVStack gap={3} align="stretch">
       <PMHStack gap={4} align="center" justify="space-between">
         <PMVStack gap={1} align="start" flex={1} minW={0}>
-          <PMText fontSize="sm" color="text.primary" fontWeight="medium">
+          <PMText fontSize="sm" color="primary" fontWeight="medium">
             {label}
           </PMText>
-          <PMText fontSize="xs" color="text.secondary">
+          <PMText fontSize="xs" color="secondary">
             {explanation}
           </PMText>
         </PMVStack>
@@ -1281,7 +1278,7 @@ function ConfirmFooter({
       paddingY={3}
       borderRadius="sm"
     >
-      <PMText fontSize="sm" color="text.secondary" lineHeight={1.5}>
+      <PMText fontSize="sm" color="secondary" lineHeight={1.5}>
         {body}
       </PMText>
       <PMHStack gap={2} justify="flex-end">
@@ -1312,12 +1309,11 @@ function UndoFooter({ message, onUndo }: Readonly<UndoFooterProps>) {
       paddingY={2}
       borderRadius="sm"
     >
-      <PMText fontSize="xs" color="text.secondary">
+      <PMText fontSize="xs" color="secondary">
         {message}
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="branding.primary"
         bg="transparent"
@@ -1377,11 +1373,7 @@ function ArtifactsBlock({ grouped }: Readonly<ArtifactsBlockProps>) {
     <PMVStack gap={4} align="stretch">
       <PMHStack gap={3} align="baseline" justify="space-between">
         <SectionLabel>Bundled artifacts</SectionLabel>
-        <PMText
-          fontSize="xs"
-          color="text.faded"
-          fontVariantNumeric="tabular-nums"
-        >
+        <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
           {isFiltering
             ? `${visibleCount} of ${total}`
             : `${total} ${total === 1 ? 'item' : 'items'}`}
@@ -1510,7 +1502,6 @@ function FacetChip({
   return (
     <PMBox
       as="button"
-      type="button"
       onClick={onClick}
       display="inline-flex"
       alignItems="center"
@@ -1592,18 +1583,14 @@ function ArtifactGroup({
           </PMIcon>
           <PMText
             fontSize="xs"
-            color="text.secondary"
+            color="secondary"
             textTransform="uppercase"
             letterSpacing="wider"
             fontWeight="semibold"
           >
             {KIND_LABEL[kind]}
           </PMText>
-          <PMText
-            fontSize="xs"
-            color="text.faded"
-            fontVariantNumeric="tabular-nums"
-          >
+          <PMText fontSize="xs" color="faded" fontVariantNumeric="tabular-nums">
             {items.length === totalInKind
               ? items.length
               : `${items.length} / ${totalInKind}`}
@@ -1625,7 +1612,6 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
   return (
     <PMBox
       as="button"
-      type="button"
       bg="transparent"
       border="none"
       textAlign="left"
@@ -1645,7 +1631,7 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
         outlineColor: 'branding.primary',
         outlineOffset: '-2px',
       }}
-      sx={{
+      css={{
         '&:hover [data-row-chevron]': { opacity: 1 },
         '&:focus-visible [data-row-chevron]': { opacity: 1 },
       }}
@@ -1666,13 +1652,13 @@ function ArtifactRow({ artifact }: Readonly<{ artifact: Artifact }>) {
       <PMText
         fontSize="sm"
         fontWeight="medium"
-        color="text.primary"
+        color="primary"
         truncate
         fontFamily={mono ? 'mono' : undefined}
       >
         {artifact.name}
       </PMText>
-      <PMText fontSize="xs" color="text.secondary" lineHeight={1.4} truncate>
+      <PMText fontSize="xs" color="secondary" lineHeight={1.4} truncate>
         {artifact.summary}
       </PMText>
       <PMBox
@@ -1709,14 +1695,13 @@ function ArtifactsEmpty({ query, onReset }: Readonly<ArtifactsEmptyProps>) {
       bg="background.secondary"
       borderRadius="sm"
     >
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         {query
           ? `Nothing in this bundle matches "${query}".`
           : 'No artifacts in the selected kind.'}
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="branding.primary"
         bg="transparent"
@@ -1743,7 +1728,7 @@ function SectionLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <PMText
       fontSize="xs"
-      color="text.secondary"
+      color="secondary"
       textTransform="uppercase"
       letterSpacing="wider"
       fontWeight="semibold"

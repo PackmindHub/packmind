@@ -12,6 +12,10 @@ export interface InstallStatePayload {
   // belongs to. Absent for kind === 'manifest' (the App doesn't exist yet).
   organizationGitHubAppId?: string;
   gitProviderId?: string;
+  // The connection name typed by the user before being redirected to GitHub.
+  // GitHub only echoes `state` back, so the name rides along inside it; the
+  // HMAC makes it tamper-proof across the round trip.
+  displayName?: string;
 }
 
 export class InvalidInstallStateError extends Error {
@@ -47,13 +51,15 @@ export class InstallStateSigner {
       kind?: InstallStateKind;
       organizationGitHubAppId?: string;
       gitProviderId?: string;
+      displayName?: string;
     },
   ): string {
     const nonce = payload.nonce ?? randomBytes(16).toString('hex');
     const exp = payload.exp ?? this.now() + this.ttlSeconds;
     const kind: InstallStateKind = payload.kind ?? 'install';
 
-    // Stable key order: orgId, userId, nonce, exp, kind, organizationGitHubAppId
+    // Stable key order: orgId, userId, nonce, exp, kind, organizationGitHubAppId,
+    // gitProviderId, displayName
     const fullPayload: Record<string, string | number> = {
       orgId: payload.orgId,
       userId: payload.userId,
@@ -68,6 +74,10 @@ export class InstallStateSigner {
 
     if (payload.gitProviderId !== undefined) {
       fullPayload.gitProviderId = payload.gitProviderId;
+    }
+
+    if (payload.displayName !== undefined) {
+      fullPayload.displayName = payload.displayName;
     }
 
     const json = JSON.stringify(fullPayload);
@@ -155,6 +165,11 @@ export class InstallStateSigner {
         ? (record.gitProviderId as string)
         : undefined;
 
+    const displayName =
+      typeof record.displayName === 'string' && record.displayName.length > 0
+        ? (record.displayName as string)
+        : undefined;
+
     const payload: InstallStatePayload = {
       orgId: record.orgId as string,
       userId: record.userId as string,
@@ -163,6 +178,7 @@ export class InstallStateSigner {
       kind,
       organizationGitHubAppId,
       gitProviderId,
+      displayName,
     };
 
     if (payload.exp <= this.now()) {

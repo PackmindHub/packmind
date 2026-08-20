@@ -162,6 +162,7 @@ describe('GitProvidersController', () => {
           organizationId: orgId,
           userId,
           gitProviderId: undefined,
+          displayName: undefined,
         });
       });
     });
@@ -181,6 +182,45 @@ describe('GitProvidersController', () => {
         expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith(
           expect.objectContaining({ gitProviderId: providerId }),
         );
+      });
+    });
+
+    describe('when a displayName query param is provided', () => {
+      beforeEach(() => {
+        resolveGithubAppMode.mockResolvedValue('shared');
+        mockService.buildGithubAppInstallUrl.mockResolvedValue({
+          installUrl:
+            'https://github.com/apps/my-app/installations/new?state=abc',
+          state: 'abc',
+        });
+      });
+
+      it('forwards the displayName to the service', async () => {
+        await controller.getGithubAppInstallUrl(
+          orgId,
+          mockRequest,
+          undefined,
+          'Production GitHub',
+        );
+
+        expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith(
+          expect.objectContaining({ displayName: 'Production GitHub' }),
+        );
+      });
+
+      describe('when the displayName is an empty string', () => {
+        it('forwards undefined', async () => {
+          await controller.getGithubAppInstallUrl(
+            orgId,
+            mockRequest,
+            undefined,
+            '',
+          );
+
+          expect(mockService.buildGithubAppInstallUrl).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: undefined }),
+          );
+        });
       });
     });
   });
@@ -340,6 +380,7 @@ describe('GitProvidersController', () => {
           orgId,
           userId,
           githubOrg: undefined,
+          displayName: undefined,
         });
       });
 
@@ -355,6 +396,7 @@ describe('GitProvidersController', () => {
             orgId,
             userId,
             githubOrg: 'my-company',
+            displayName: undefined,
           });
         });
       });
@@ -367,7 +409,23 @@ describe('GitProvidersController', () => {
             orgId,
             userId,
             githubOrg: undefined,
+            displayName: undefined,
           });
+        });
+      });
+
+      describe('when a displayName query param is provided', () => {
+        it('forwards the displayName to the service', async () => {
+          await controller.getGithubAppManifest(
+            orgId,
+            mockRequest,
+            'my-company',
+            'Production GitHub',
+          );
+
+          expect(mockService.buildGithubAppManifest).toHaveBeenCalledWith(
+            expect.objectContaining({ displayName: 'Production GitHub' }),
+          );
         });
       });
     });

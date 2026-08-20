@@ -1,20 +1,20 @@
 import { command } from 'cmd-ts';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { untrackHandler } from './untrackHandler';
+import { removedUntrackHandler } from './removedCommandHandler';
 
 export const untrackCommand = command({
   name: 'untrack',
-  description:
-    "Remove Packmind's tracking of the current repository (keeps every recorded distribution)",
+  description: '[Removed] Use "git untrack" instead',
   args: {},
   handler: async () => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    await untrackHandler({
-      baseDirectory: process.cwd(),
-      trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
+    removedUntrackHandler({
+      notifyError: packmindCliHexa.output.notifyError.bind(
+        packmindCliHexa.output,
+      ),
     });
   },
 });

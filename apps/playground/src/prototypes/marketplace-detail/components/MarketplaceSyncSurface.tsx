@@ -235,9 +235,8 @@ export function MarketplaceSyncSurface({
           </PMVStack>
           <PMBox
             as="button"
-            type="button"
-            onClick={onCancel}
-            disabled={isSyncing}
+            onClick={isSyncing ? undefined : onCancel}
+            aria-disabled={isSyncing}
             display="inline-flex"
             alignItems="center"
             gap={2}
@@ -261,9 +260,9 @@ export function MarketplaceSyncSurface({
             <PMIcon fontSize="sm">
               <LuX />
             </PMIcon>
-            <PMText fontSize="xs" color="inherit">
+            <PMBox as="span" fontSize="xs">
               Cancel
-            </PMText>
+            </PMBox>
           </PMBox>
         </PMHStack>
       </PMBox>
@@ -361,7 +360,6 @@ export function MarketplaceSyncSurface({
           ) : (
             <PMBox
               as="button"
-              type="button"
               onClick={() => setCliMode((prev) => !prev)}
               display="inline-flex"
               alignItems="center"
@@ -675,7 +673,7 @@ function ChangeRow({ change }: Readonly<{ change: SourcePackageChange }>) {
       </PMBox>
       <PMText
         fontSize="sm"
-        color="text.primary"
+        color="primary"
         fontWeight="medium"
         truncate
         fontFamily={MONO_KINDS.has(change.artifactKind) ? 'mono' : undefined}
@@ -759,9 +757,8 @@ function CliPanel({
           </PMBox>
           <PMBox
             as="button"
-            type="button"
-            onClick={onCopy}
-            disabled={selectedCount === 0}
+            onClick={selectedCount === 0 ? undefined : onCopy}
+            aria-disabled={selectedCount === 0}
             display="inline-flex"
             alignItems="center"
             gap="6px"
@@ -785,9 +782,9 @@ function CliPanel({
             aria-label="Copy command to clipboard"
           >
             <PMIcon fontSize="sm">{copied ? <LuCheck /> : <LuCopy />}</PMIcon>
-            <PMText fontSize="xs" color="inherit">
+            <PMBox as="span" fontSize="xs">
               {copied ? 'Copied' : 'Copy'}
-            </PMText>
+            </PMBox>
           </PMBox>
         </PMHStack>
       </PMBox>
@@ -1025,7 +1022,6 @@ function FailureSurface({
               </PMBox>
               <PMBox
                 as="button"
-                type="button"
                 onClick={onCopy}
                 display="inline-flex"
                 alignItems="center"
@@ -1048,9 +1044,9 @@ function FailureSurface({
                 <PMIcon fontSize="sm">
                   {copied ? <LuCheck /> : <LuCopy />}
                 </PMIcon>
-                <PMText fontSize="xs" color="inherit">
+                <PMBox as="span" fontSize="xs">
                   {copied ? 'Copied' : 'Copy'}
-                </PMText>
+                </PMBox>
               </PMBox>
             </PMHStack>
           </PMBox>

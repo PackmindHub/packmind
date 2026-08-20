@@ -2,9 +2,22 @@
 
 ## Added
 
+- `playbook add` and `playbook submit` now read the `## Scope` section of a `.packmind/standards/*.md` file as the standard's glob scope. Patterns go comma-separated on one line or one per `-`/`*` bullet, and both forms are stored as a comma-separated list. Rules are still found with or without a `## Rules` heading, including when they follow the Scope section. `playbook diff` reports scope changes for these files like it already did for `.claude`/`.cursor` standards. The section used to be swallowed into the description
+- New `git info` command reports whether Packmind tracks the current repository and on which branch. When the tracked branch is not the one checked out, it warns that distributions from here are not recorded and points to `git track --update`. When the repository is not tracked, it proposes `git track` to track the current branch. Available to every member, not only organization admins.
+
 ## Changed
 
+- Change `track` command to `git track` command
+- Change `untrack` command to `git untrack` command
+- `--help` now lists the old `track` and `untrack` as `[Removed] Use "git track" instead`, matching what running them says. They used to be listed as `[Deprecated]` while answering "has been removed".
+- `git track --help` no longer describes `--update` as moving tracking to the current branch, which stopped being true when `--branch` shipped. Both entries now say the two options combine.
+
 ## Fixed
+
+- Messages left pointing at the removed `track` command now name its replacement: `install` on an untracked repository, the "nothing is tracked yet" error and the server-side equivalent all say `packmind git track`.
+- `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.
+- `track --remove` gets the same migration message as `track`, naming `git untrack`, instead of failing with a raw "unknown arguments" parser error.
+- Running a command outside a git repository no longer claims `lint` must be run in a Git repository — `git info`, `git track` and `install` share those git helpers — and no longer prints git's own `fatal: not a git repository` line after the explanation.
 
 ## Removed
 

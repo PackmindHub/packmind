@@ -1069,6 +1069,135 @@ describe('GithubRepository', () => {
     });
   });
 
+  describe('compareBranches', () => {
+    describe('when GitHub returns a single page of changed files', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: {
+            files: [
+              { filename: 'plugins/a/skills/x/SKILL.md', status: 'added' },
+              { filename: 'plugins/a/commands/y.md', status: 'modified' },
+              { filename: 'plugins/b/skills/z/SKILL.md', status: 'removed' },
+            ],
+          },
+        });
+      });
+
+      it('normalizes each entry to a path and status', async () => {
+        const result = await githubRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.files).toEqual([
+          { path: 'plugins/a/skills/x/SKILL.md', status: 'added' },
+          { path: 'plugins/a/commands/y.md', status: 'modified' },
+          { path: 'plugins/b/skills/z/SKILL.md', status: 'removed' },
+        ]);
+      });
+
+      it('reports the comparison as complete', async () => {
+        const result = await githubRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.truncated).toBe(false);
+      });
+
+      it('requests the compare endpoint for base...head', async () => {
+        await githubRepository.compareBranches('main', 'packmind/sync');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/compare/main...packmind/sync`,
+          { params: { per_page: 100, page: 1 } },
+        );
+      });
+    });
+
+    describe('when a file was renamed', () => {
+      it('reports the old path as removed and the new path as added', async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: {
+            files: [
+              {
+                filename: 'plugins/a/skills/new-name/SKILL.md',
+                status: 'renamed',
+                previous_filename: 'plugins/a/skills/old-name/SKILL.md',
+              },
+            ],
+          },
+        });
+
+        const result = await githubRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.files).toEqual([
+          { path: 'plugins/a/skills/new-name/SKILL.md', status: 'added' },
+          { path: 'plugins/a/skills/old-name/SKILL.md', status: 'removed' },
+        ]);
+      });
+    });
+
+    describe('when one of the branches does not exist', () => {
+      it('returns an empty comparison', async () => {
+        mockAxiosInstance.get = jest.fn().mockRejectedValue({
+          response: { status: 404, data: { message: 'Not Found' } },
+        });
+
+        const result = await githubRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result).toEqual({ files: [], truncated: false });
+      });
+    });
+
+    describe('when GitHub fails with a non-404 error', () => {
+      it('propagates an error naming both refs', async () => {
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockRejectedValue(new Error('Server error'));
+
+        await expect(
+          githubRepository.compareBranches('main', 'packmind/sync'),
+        ).rejects.toThrow(
+          "Failed to compare 'main'...'packmind/sync' on GitHub: Server error",
+        );
+      });
+    });
+
+    describe('when the diff exceeds what GitHub will paginate', () => {
+      beforeEach(() => {
+        const fullPage = Array.from({ length: 100 }, (_unused, index) => ({
+          filename: `plugins/a/skills/skill-${index}/SKILL.md`,
+          status: 'added',
+        }));
+        mockAxiosInstance.get = jest
+          .fn()
+          .mockResolvedValue({ data: { files: fullPage } });
+      });
+
+      it('flags the comparison as truncated', async () => {
+        const result = await githubRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.truncated).toBe(true);
+      });
+
+      it('stops after the provider page cap', async () => {
+        await githubRepository.compareBranches('main', 'packmind/sync');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledTimes(3);
+      });
+    });
+  });
+
   describe('openOrUpdatePullRequest', () => {
     const command = {
       head: 'packmind/sync',
@@ -1089,6 +1218,7 @@ describe('GithubRepository', () => {
           ],
         });
         mockAxiosInstance.post = jest.fn();
+        mockAxiosInstance.patch = jest.fn().mockResolvedValue({ data: {} });
 
         result = await githubRepository.openOrUpdatePullRequest(command);
       });
@@ -1101,6 +1231,69 @@ describe('GithubRepository', () => {
 
       it('does not POST a new pull request', () => {
         expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+
+      it('PATCHes the existing pull request with the refreshed title and body', () => {
+        expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/pulls/12`,
+          { title: 'Packmind sync', body: 'rolling PR body' },
+        );
+      });
+    });
+
+    describe('when refreshing the existing pull request fails', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 12,
+              html_url: 'https://github.com/test-owner/test-repo/pull/12',
+            },
+          ],
+        });
+        mockAxiosInstance.post = jest.fn();
+        mockAxiosInstance.patch = jest
+          .fn()
+          .mockRejectedValue(new Error('Server error'));
+
+        result = await githubRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('still returns the existing pull request', () => {
+        expect(result).toEqual({
+          url: 'https://github.com/test-owner/test-repo/pull/12',
+          number: 12,
+          wasCreated: false,
+        });
+      });
+    });
+
+    describe('when the command carries no body', () => {
+      beforeEach(async () => {
+        mockAxiosInstance.get = jest.fn().mockResolvedValue({
+          data: [
+            {
+              number: 12,
+              html_url: 'https://github.com/test-owner/test-repo/pull/12',
+            },
+          ],
+        });
+        mockAxiosInstance.post = jest.fn();
+        mockAxiosInstance.patch = jest.fn().mockResolvedValue({ data: {} });
+
+        await githubRepository.openOrUpdatePullRequest({
+          head: 'packmind/sync',
+          title: 'Packmind sync',
+        });
+      });
+
+      it('omits body from the PATCH payload so the existing description survives', () => {
+        expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/pulls/12`,
+          { title: 'Packmind sync' },
+        );
       });
     });
 

@@ -214,7 +214,7 @@ function reportDistributionTrackingDecision(
       if (decision.reason === 'repo_not_tracked') {
         logWarningConsole(
           `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
-            'packmind track',
+            'packmind git track',
           )} to start tracking it.`,
         );
       } else {

@@ -52,7 +52,7 @@ export function DistributionTab() {
                 <PMText fontSize="sm">{repo}</PMText>
                 <PMHStack gap={1} align="center" ml="auto" color="green.500">
                   <LuCircleCheck size={14} />
-                  <PMText fontSize="xs" color="green.500">
+                  <PMText fontSize="xs" color="success">
                     Synced
                   </PMText>
                 </PMHStack>

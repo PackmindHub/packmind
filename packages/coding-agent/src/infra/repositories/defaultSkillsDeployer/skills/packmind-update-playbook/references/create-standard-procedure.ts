@@ -21,6 +21,10 @@ The parser expects this exact structure:
 
 Description text here. Explain what this standard covers and why it matters.
 
+## Scope
+
+**/*.ts, **/*.tsx
+
 ## Rules
 
 * Rule 1
@@ -32,9 +36,23 @@ Description text here. Explain what this standard covers and why it matters.
 
 - **No YAML frontmatter** — the file is pure markdown
 - **Only \`* \` or \`- \` bullet rules are parsed** — \`### Rule\` subsections are NOT supported by the parser
-- **\`## Scope\` is NOT parsed** (always returns empty string) — do not include it
 - **Must have at least one real rule** — the parser rejects empty rules and silently filters out the placeholder text "No rules defined yet."
 - The \`## Rules\` heading is recommended for clarity but technically optional — the parser finds rules from the first \`* \`/\`- \` bullet even without it
+- Any other \`## \` sub-heading is not a section: it stays part of the description
+
+## Scope Writing Guidelines
+
+\`## Scope\` holds the **glob patterns** the standard applies to, so coding agents load it only for matching files. Omit the section when the standard applies everywhere.
+
+- Write **globs, not prose**: \`**/*.spec.ts\`, never "TypeScript test files"
+- Separate several patterns with commas on one line, or write one \`- \` bullet per pattern — both are stored as a comma-separated list
+- Keep patterns anchored on the repository root, as \`**/\` prefixes rather than absolute paths
+
+\`\`\`markdown
+## Scope
+
+**/*.spec.ts, **/*.test.ts
+\`\`\`
 
 ## Rule Writing Guidelines
 

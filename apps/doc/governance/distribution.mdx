@@ -123,7 +123,7 @@ The CLI approach is ideal for:
 
 Every package, standard, command, and skill has a **Distribution History** listing when it was distributed and where it landed.
 
-When your organization tracks a repository and branch (see the [Track Command](/tools/cli#track-command)), Packmind shows the **branch you currently track**. Distributions made on other branches of the same repository are hidden, so the view stays focused on the branch your team works from today.
+When your organization tracks a repository and branch (see [Git Track](/tools/cli#git-track)), Packmind shows the **branch you currently track**. Distributions made on other branches of the same repository are hidden, so the view stays focused on the branch your team works from today.
 
 This applies to both places branches surface:
 
@@ -144,14 +144,14 @@ So a team that tracks `main`, moves to `dev` for a while, then returns to `main`
 <Note>
   **Only one branch at a time** — Packmind shows the tracked branch's history
   rather than several branches side by side. To see another branch's history,
-  ask an organization admin to move tracking to it with `packmind-cli track
+  ask an organization admin to move tracking to it with `packmind-cli git track
   --update`.
 </Note>
 
 ### Removing Tracking
 
 An organization admin can take a repository out of the governance views entirely by running
-`packmind-cli untrack` from a clone of it (see the [Untrack Command](/tools/cli#untrack-command)).
+`packmind-cli git untrack` from a clone of it (see [Git Untrack](/tools/cli#git-untrack)).
 The repository disappears from Distribution History and the Deployments overview.
 
 Nothing is deleted. Every distribution recorded before the removal is kept, and tracking the same

@@ -167,8 +167,10 @@ export const useGithubAppInstallUrlMutation = () => {
   return useMutation({
     mutationFn: async ({
       gitProviderId,
+      displayName,
     }: {
       gitProviderId?: GitProviderId;
+      displayName?: string;
     }) => {
       if (!organization?.id) {
         throw new Error(
@@ -178,6 +180,7 @@ export const useGithubAppInstallUrlMutation = () => {
       return gitProviderGateway.getGithubAppInstallUrl(
         organization.id,
         gitProviderId,
+        displayName,
       );
     },
     onError: (error) => {
@@ -264,7 +267,13 @@ export const useGetGithubAppManifestMutation = () => {
   const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async ({ githubOrg }: { githubOrg?: string }) => {
+    mutationFn: async ({
+      githubOrg,
+      displayName,
+    }: {
+      githubOrg?: string;
+      displayName?: string;
+    }) => {
       if (!organization?.id) {
         throw new Error(
           'Organization ID is required to fetch GitHub App manifest',
@@ -273,6 +282,7 @@ export const useGetGithubAppManifestMutation = () => {
       return gitProviderGateway.getGithubAppManifest(
         organization.id,
         githubOrg,
+        displayName,
       );
     },
     onError: (error) => {

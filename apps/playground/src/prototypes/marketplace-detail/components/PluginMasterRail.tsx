@@ -61,7 +61,7 @@ export function PluginMasterRail({
         <PMHStack justify="space-between" align="center">
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             textTransform="uppercase"
             letterSpacing="wider"
             fontWeight="semibold"
@@ -70,7 +70,7 @@ export function PluginMasterRail({
           </PMText>
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             fontVariantNumeric="tabular-nums"
           >
             {plugins.length}
@@ -135,7 +135,7 @@ function PluginRailRow({
 }: Readonly<PluginRailRowProps>) {
   const { name, version, mandatory, autoUpdate, adoption, sourceSync } = plugin;
 
-  const baseColor = dimmed ? 'text.faded' : 'text.primary';
+  const baseColor = dimmed ? 'faded' : 'primary';
   const publishDriftCount =
     sourceSync.state === 'behind' ? sourceSync.changes.length : 0;
   const outdatedCount = adoption.outdatedRepos;
@@ -145,7 +145,6 @@ function PluginRailRow({
   return (
     <PMBox
       as="button"
-      type="button"
       onClick={onSelect}
       width="100%"
       textAlign="left"
@@ -252,7 +251,7 @@ function PluginRailRow({
             )}
             <PMText
               fontSize="xs"
-              color="text.faded"
+              color="faded"
               fontVariantNumeric="tabular-nums"
             >
               v{version}
@@ -312,7 +311,6 @@ function FilteredZero({ query, onClear }: Readonly<FilteredZeroProps>) {
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="branding.primary"
         bg="transparent"

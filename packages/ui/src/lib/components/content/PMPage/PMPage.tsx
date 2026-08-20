@@ -16,6 +16,12 @@ export interface IPMPageProps {
   children: React.ReactNode;
   maxWidth?: string;
   isFullWidth?: boolean;
+  /**
+   * Let the content fill the height left by the header instead of sizing to its
+   * own content. The children become a column flex item, so a page that wants to
+   * fill the viewport has to carry `flex="1" minH={0}` down its own tree.
+   */
+  isContentFullHeight?: boolean;
 }
 
 export const PMPage: React.FC<IPMPageProps> = ({
@@ -30,6 +36,7 @@ export const PMPage: React.FC<IPMPageProps> = ({
   children,
   maxWidth = '1200px',
   isFullWidth = false,
+  isContentFullHeight = false,
 }) => {
   const hasHeader = !!(title || subtitle || titleAction || actions);
 
@@ -76,6 +83,14 @@ export const PMPage: React.FC<IPMPageProps> = ({
       );
     }
 
+    if (isContentFullHeight) {
+      return (
+        <Box flex={1} minH={0} display="flex" flexDirection="column">
+          {children}
+        </Box>
+      );
+    }
+
     return <Box>{children}</Box>;
   };
 
@@ -99,6 +114,7 @@ export const PMPage: React.FC<IPMPageProps> = ({
           mx={isFullWidth ? 0 : 'auto'}
           px={6}
           py={4}
+          height={isContentFullHeight ? '100%' : undefined}
         >
           {renderHeader()}
           {renderContent()}

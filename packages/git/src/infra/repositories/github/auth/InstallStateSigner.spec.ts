@@ -261,6 +261,87 @@ describe('InstallStateSigner', () => {
     });
   });
 
+  describe('displayName payload field', () => {
+    describe('when displayName is present', () => {
+      let payload: ReturnType<InstallStateSigner['verify']>;
+
+      beforeEach(() => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+          displayName: 'Production GitHub',
+        });
+        payload = signer.verify(state);
+      });
+
+      it('round-trips displayName', () => {
+        expect(payload.displayName).toBe('Production GitHub');
+      });
+    });
+
+    describe('when displayName contains non-ASCII characters', () => {
+      let payload: ReturnType<InstallStateSigner['verify']>;
+
+      beforeEach(() => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'manifest',
+          displayName: 'Équipe Paris 🚀',
+        });
+        payload = signer.verify(state);
+      });
+
+      it('round-trips displayName unchanged', () => {
+        expect(payload.displayName).toBe('Équipe Paris 🚀');
+      });
+    });
+
+    describe('when displayName is absent', () => {
+      let payload: ReturnType<InstallStateSigner['verify']>;
+
+      beforeEach(() => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+        });
+        payload = signer.verify(state);
+      });
+
+      it('omits displayName', () => {
+        expect(payload.displayName).toBeUndefined();
+      });
+    });
+
+    describe('when a signed displayName is tampered with', () => {
+      it('throws InvalidInstallStateError', () => {
+        const signer = signerWithFixedNow();
+        const state = signer.sign({
+          orgId: 'org-1',
+          userId: 'user-1',
+          kind: 'install',
+          displayName: 'Production GitHub',
+        });
+        const [encodedPayload, encodedDigest] = state.split('.');
+        const tampered = JSON.parse(
+          Buffer.from(encodedPayload, 'base64url').toString('utf8'),
+        );
+        tampered.displayName = 'Attacker GitHub';
+
+        expect(() =>
+          signer.verify(
+            `${Buffer.from(JSON.stringify(tampered)).toString('base64url')}.${encodedDigest}`,
+          ),
+        ).toThrow(InvalidInstallStateError);
+      });
+    });
+  });
+
   describe('wrong key', () => {
     describe('when verifying with a different key', () => {
       it('throws InvalidInstallStateError', () => {

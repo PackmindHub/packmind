@@ -1383,6 +1383,118 @@ describe('GitlabRepository', () => {
     });
   });
 
+  describe('compareBranches', () => {
+    const encodedProjectPath = encodeURIComponent('testowner/testrepo');
+
+    describe('when GitLab returns a diff list', () => {
+      beforeEach(() => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: {
+            diffs: [
+              { new_path: 'plugins/a/skills/x/SKILL.md', new_file: true },
+              { new_path: 'plugins/a/commands/y.md' },
+              {
+                old_path: 'plugins/b/skills/z/SKILL.md',
+                new_path: 'plugins/b/skills/z/SKILL.md',
+                deleted_file: true,
+              },
+            ],
+          },
+        });
+      });
+
+      it('normalizes each diff to a path and status', async () => {
+        const result = await gitlabRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.files).toEqual([
+          { path: 'plugins/a/skills/x/SKILL.md', status: 'added' },
+          { path: 'plugins/a/commands/y.md', status: 'modified' },
+          { path: 'plugins/b/skills/z/SKILL.md', status: 'removed' },
+        ]);
+      });
+
+      it('requests the compare endpoint with from and to', async () => {
+        await gitlabRepository.compareBranches('main', 'packmind/sync');
+
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/repository/compare`,
+          { params: { from: 'main', to: 'packmind/sync' } },
+        );
+      });
+    });
+
+    describe('when a file was renamed', () => {
+      it('reports the old path as removed and the new path as added', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: {
+            diffs: [
+              {
+                old_path: 'plugins/a/skills/old-name/SKILL.md',
+                new_path: 'plugins/a/skills/new-name/SKILL.md',
+                renamed_file: true,
+              },
+            ],
+          },
+        });
+
+        const result = await gitlabRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.files).toEqual([
+          { path: 'plugins/a/skills/new-name/SKILL.md', status: 'added' },
+          { path: 'plugins/a/skills/old-name/SKILL.md', status: 'removed' },
+        ]);
+      });
+    });
+
+    describe('when GitLab times the comparison out', () => {
+      it('flags the comparison as truncated', async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: { diffs: [], compare_timeout: true },
+        });
+
+        const result = await gitlabRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result.truncated).toBe(true);
+      });
+    });
+
+    describe('when one of the branches does not exist', () => {
+      it('returns an empty comparison', async () => {
+        mockAxiosInstance.get.mockRejectedValue({
+          response: { status: 404, data: { message: '404 Not Found' } },
+        });
+
+        const result = await gitlabRepository.compareBranches(
+          'main',
+          'packmind/sync',
+        );
+
+        expect(result).toEqual({ files: [], truncated: false });
+      });
+    });
+
+    describe('when GitLab fails with a non-404 error', () => {
+      it('propagates an error naming both refs', async () => {
+        mockAxiosInstance.get.mockRejectedValue(new Error('GitLab 503'));
+
+        await expect(
+          gitlabRepository.compareBranches('main', 'packmind/sync'),
+        ).rejects.toThrow(
+          "Failed to compare 'main'...'packmind/sync' on GitLab: GitLab 503",
+        );
+      });
+    });
+  });
+
   describe('openOrUpdatePullRequest', () => {
     const encodedProjectPath = encodeURIComponent('testowner/testrepo');
     const command = {
@@ -1405,6 +1517,8 @@ describe('GitlabRepository', () => {
           ],
         });
 
+        mockAxiosInstance.put.mockResolvedValue({ data: {} });
+
         result = await gitlabRepository.openOrUpdatePullRequest(command);
       });
 
@@ -1416,6 +1530,40 @@ describe('GitlabRepository', () => {
 
       it('does not POST a new merge request', () => {
         expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+      });
+
+      it('PUTs the refreshed title and description on the existing merge request', () => {
+        expect(mockAxiosInstance.put).toHaveBeenCalledWith(
+          `/projects/${encodedProjectPath}/merge_requests/7`,
+          { title: 'Packmind sync', description: 'rolling MR body' },
+        );
+      });
+    });
+
+    describe('when refreshing the existing merge request fails', () => {
+      let result: { url: string; number: number; wasCreated: boolean };
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: [
+            {
+              iid: 7,
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+            },
+          ],
+        });
+        mockAxiosInstance.put.mockRejectedValue(new Error('GitLab 500'));
+
+        result = await gitlabRepository.openOrUpdatePullRequest(command);
+      });
+
+      it('still returns the existing merge request', () => {
+        expect(result).toEqual({
+          url: 'https://gitlab.com/testowner/testrepo/-/merge_requests/7',
+          number: 7,
+          wasCreated: false,
+        });
       });
     });
 

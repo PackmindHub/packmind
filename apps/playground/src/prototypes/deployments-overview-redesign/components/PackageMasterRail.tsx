@@ -105,7 +105,7 @@ export function PackageMasterRail({
         <PMHStack justify="space-between" align="center">
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             textTransform="uppercase"
             letterSpacing="wider"
             fontWeight="semibold"
@@ -114,7 +114,7 @@ export function PackageMasterRail({
           </PMText>
           <PMText
             fontSize="11px"
-            color="text.faded"
+            color="faded"
             fontVariantNumeric="tabular-nums"
           >
             {packages.length}
@@ -268,7 +268,6 @@ function PackageRow({
 
       <PMBox
         as="button"
-        type="button"
         onClick={onSelect}
         bg="transparent"
         border="none"
@@ -290,7 +289,7 @@ function PackageRow({
           <PMText
             fontSize="sm"
             fontWeight={selected ? 'semibold' : 'medium'}
-            color="text.primary"
+            color="primary"
             truncate
             flex={1}
             minW={0}
@@ -408,7 +407,7 @@ function RailActionBar({
           />
           <PMText
             fontSize="xs"
-            color="text.secondary"
+            color="secondary"
             fontVariantNumeric="tabular-nums"
             truncate
             flex={1}
@@ -421,7 +420,6 @@ function RailActionBar({
         <PMHStack gap={2} justify="space-between" align="center">
           <PMBox
             as="button"
-            type="button"
             onClick={onClearAll}
             fontSize="xs"
             color="text.faded"
@@ -470,7 +468,6 @@ function FilteredZero({
       </PMText>
       <PMBox
         as="button"
-        type="button"
         fontSize="xs"
         color="branding.primary"
         bg="transparent"
@@ -524,7 +521,6 @@ function DriftFilterControl({
           <PMBox
             key={item.value}
             as="button"
-            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(item.value)}
@@ -556,14 +552,14 @@ function DriftFilterControl({
               )}
               <PMText
                 fontSize="xs"
-                color={active ? 'text.primary' : 'text.secondary'}
+                color={active ? 'primary' : 'secondary'}
                 fontWeight={active ? 'semibold' : 'medium'}
               >
                 {item.label}
               </PMText>
               <PMText
                 fontSize="11px"
-                color="text.faded"
+                color="faded"
                 fontVariantNumeric="tabular-nums"
               >
                 {count}

@@ -441,7 +441,6 @@ function VisibilityTabs({ value, onChange }: Readonly<VisibilityTabsProps>) {
               <PMBox
                 key={t.id}
                 as="button"
-                type="button"
                 onClick={() => onChange(t.id)}
                 paddingX={3}
                 paddingBottom={2}
@@ -570,7 +569,6 @@ function CliFallbackBlock() {
         </PMBox>
         <PMBox
           as="button"
-          type="button"
           onClick={handleCopy}
           display="inline-flex"
           alignItems="center"
@@ -594,8 +592,9 @@ function CliFallbackBlock() {
           {copied ? 'Copied' : 'Copy'}
         </PMBox>
         <PMBox
-          as="a"
-          href="#"
+          as="button"
+          bg="transparent"
+          border="none"
           onClick={(e: React.MouseEvent) => e.preventDefault()}
           display="inline-flex"
           alignItems="center"

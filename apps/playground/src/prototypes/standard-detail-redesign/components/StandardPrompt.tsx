@@ -30,7 +30,7 @@ export function StandardPrompt({ description }: StandardPromptProps) {
 
       <PMHStack gap={0} mb={0}>
         <PMButton
-          variant={view === 'preview' ? 'solid' : 'ghost'}
+          variant={view === 'preview' ? 'primary' : 'ghost'}
           size="xs"
           onClick={() => setView('preview')}
           borderRadius="md md 0 0"
@@ -38,7 +38,7 @@ export function StandardPrompt({ description }: StandardPromptProps) {
           Preview
         </PMButton>
         <PMButton
-          variant={view === 'raw' ? 'solid' : 'ghost'}
+          variant={view === 'raw' ? 'primary' : 'ghost'}
           size="xs"
           onClick={() => setView('raw')}
           borderRadius="md md 0 0"

@@ -271,6 +271,7 @@ export const AddConnectionDrawer: React.FC<AddConnectionDrawerProps> = ({
                     <GitHubAppAuthBlock
                       organizationId={organizationId}
                       githubAppMode={githubAppMode}
+                      displayName={displayName}
                     />
                   )}
 

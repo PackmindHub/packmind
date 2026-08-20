@@ -93,28 +93,49 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
     return null;
   }
 
+  let scopeLineIndex = -1;
   let rulesLineIndex = -1;
   for (let i = nameLineIndex + 1; i < lines.length; i++) {
-    if (lines[i].trim() === '## Rules') {
+    const trimmed = lines[i].trim();
+    if (scopeLineIndex < 0 && trimmed === SCOPE_HEADING) {
+      scopeLineIndex = i;
+    } else if (rulesLineIndex < 0 && trimmed === RULES_HEADING) {
       rulesLineIndex = i;
-      break;
     }
   }
 
+  const scopeSection =
+    scopeLineIndex >= 0
+      ? extractScopeSection(lines, scopeLineIndex + 1, rulesLineIndex < 0)
+      : null;
+
+  // The description runs from the H1 to whichever recognised section comes
+  // first. Unrecognised `## ` sub-headings are not sections and stay part of it.
+  const sectionIndexes = [scopeLineIndex, rulesLineIndex].filter(
+    (index) => index >= 0,
+  );
+  const descriptionEnd = sectionIndexes.length
+    ? Math.min(...sectionIndexes)
+    : lines.length;
+
   const descriptionLines: string[] = [];
-  let rulesStartIndex = -1;
-  if (rulesLineIndex >= 0) {
-    for (let i = nameLineIndex + 1; i < rulesLineIndex; i++) {
-      descriptionLines.push(lines[i]);
+  let rulesStartIndex = rulesLineIndex >= 0 ? rulesLineIndex + 1 : -1;
+  for (let i = nameLineIndex + 1; i < descriptionEnd; i++) {
+    if (rulesStartIndex < 0 && isRuleBullet(lines[i])) {
+      rulesStartIndex = i;
+      break;
     }
-    rulesStartIndex = rulesLineIndex + 1;
-  } else {
-    for (let i = nameLineIndex + 1; i < lines.length; i++) {
-      if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
+    descriptionLines.push(lines[i]);
+  }
+
+  // No `## Rules` heading and the bullets sit past the `## Scope` section:
+  // resume the search for the first bullet where that section ended.
+  if (rulesStartIndex < 0 && scopeSection) {
+    for (let i = scopeSection.endIndex; i < lines.length; i++) {
+      if (isRuleBullet(lines[i])) {
         rulesStartIndex = i;
         break;
       }
-      descriptionLines.push(lines[i]);
     }
   }
 
@@ -123,7 +144,7 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
   return {
     name,
     description: descriptionLines.join('\n').trim(),
-    scope: '',
+    scope: scopeSection?.value ?? '',
     rules,
   };
 }
@@ -166,13 +187,46 @@ function parseCopilotStandard(content: string): ParsedStandardMd | null {
 // --- Shared helpers ---
 
 const RULES_FALLBACK = 'No rules defined yet.';
+const SCOPE_HEADING = '## Scope';
+const RULES_HEADING = '## Rules';
+
+function isRuleBullet(line: string): boolean {
+  return line.startsWith('* ') || line.startsWith('- ');
+}
+
+/**
+ * Reads the `## Scope` section of a Packmind standard, which holds the glob
+ * patterns the standard applies to. Patterns may be written as one
+ * comma-separated line or as a bullet list; both normalize to the
+ * comma-separated form the API stores.
+ *
+ * `stopAtBullet` is set when the file has no `## Rules` heading: rules are then
+ * recognised from the first bullet, so no bullet can belong to the scope.
+ */
+function extractScopeSection(
+  lines: string[],
+  startIndex: number,
+  stopAtBullet: boolean,
+): { value: string; endIndex: number } {
+  const patterns: string[] = [];
+  let index = startIndex;
+  for (; index < lines.length; index++) {
+    const line = lines[index];
+    if (line.startsWith('## ')) break;
+    if (stopAtBullet && isRuleBullet(line)) break;
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    patterns.push(isRuleBullet(trimmed) ? trimmed.slice(2).trim() : trimmed);
+  }
+  return { value: patterns.join(', '), endIndex: index };
+}
 
 function extractRulesList(lines: string[], startIndex: number): string[] {
   if (startIndex < 0) return [];
   const rules: string[] = [];
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
-    if (line.startsWith('* ') || line.startsWith('- ')) {
+    if (isRuleBullet(line)) {
       const content = line.slice(2).trim();
       if (content && content !== RULES_FALLBACK) {
         rules.push(content);
@@ -234,7 +288,7 @@ function parseIdeStandardBody(
   const descriptionLines: string[] = [];
   let rulesStartIndex = -1;
   for (let i = nameLineIndex + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
+    if (isRuleBullet(lines[i])) {
       rulesStartIndex = i;
       break;
     }

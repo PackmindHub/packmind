@@ -24,6 +24,7 @@ import { untrackCommand } from './infra/commands/UntrackCommand';
 import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
+import { gitCommand } from './infra/commands/git/gitCommand';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -98,6 +99,7 @@ const app = subcommands({
   cmds: {
     commands: commandsCommand,
     config: configCommand,
+    git: gitCommand,
     init: initCommand,
     install: installCommand,
     lint: lintCommand,

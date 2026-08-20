@@ -134,7 +134,6 @@ function RepoPathMenu({ repoPath, remoteUrl }: Readonly<RepoPathMenuProps>) {
       <PMMenu.Trigger asChild>
         <PMBox
           as="button"
-          type="button"
           bg="transparent"
           border="none"
           padding={0}
@@ -280,7 +279,7 @@ function StateInline({ state }: Readonly<{ state: MarketplaceState }>) {
           bg="red.500"
           aria-hidden
         />
-        <PMText fontSize="xs" fontWeight="medium" color="red.500">
+        <PMText fontSize="xs" fontWeight="medium" color="error">
           repo unreachable
         </PMText>
       </PMHStack>
@@ -343,7 +342,7 @@ function CoverageStrip({
             </PMIcon>
             <PMText
               fontSize="xs"
-              color="orange.500"
+              color="warning"
               fontVariantNumeric="tabular-nums"
               fontWeight="medium"
             >
@@ -361,7 +360,6 @@ function ReconnectButton() {
     <PMTooltip label="Reconnect repository" showArrow openDelay={200}>
       <PMBox
         as="button"
-        type="button"
         width="32px"
         height="32px"
         display="flex"
@@ -393,7 +391,6 @@ function MoreButton({ name }: Readonly<{ name: string }>) {
   return (
     <PMBox
       as="button"
-      type="button"
       width="32px"
       height="32px"
       display="flex"

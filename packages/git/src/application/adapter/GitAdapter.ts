@@ -22,6 +22,7 @@ import {
   GetAvailableRemoteDirectoriesCommand,
   GetTrackedRepositoryCommand,
   GetTrackedRepositoryResponse,
+  GitBranchComparison,
   GitCommit,
   GitProvider,
   GitProviderId,
@@ -476,6 +477,16 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this.gitServices
       .getGitProviderService()
       .findOpenSyncPullRequest(repo, head);
+  }
+
+  public async compareBranches(
+    repo: GitRepo,
+    base: string,
+    head: string,
+  ): Promise<GitBranchComparison> {
+    return this.gitServices
+      .getGitProviderService()
+      .compareBranches(repo, base, head);
   }
 
   public async checkMarketplaceRepoExists(repo: GitRepo): Promise<{

@@ -21,3 +21,7 @@ export type {
   InstallStatePayload,
   InstallStateKind,
 } from './infra/repositories/github/auth/InstallStateSigner';
+export {
+  GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH,
+  normalizeDisplayName,
+} from './application/useCases/shared/validateDisplayName';

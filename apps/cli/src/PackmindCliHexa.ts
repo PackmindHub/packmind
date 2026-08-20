@@ -100,6 +100,10 @@ import {
   TrackRepositoryCommand,
   TrackRepositoryResult,
 } from './domain/useCases/trackRepository/ITrackRepositoryUseCase';
+import {
+  GetTrackingInfoCommand,
+  GetTrackingInfoResult,
+} from './domain/useCases/trackRepository/IGetTrackingInfoUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -440,6 +444,12 @@ export class PackmindCliHexa {
     command: TrackRepositoryCommand,
   ): Promise<TrackRepositoryResult> {
     return this.hexa.useCases.trackRepository.execute(command);
+  }
+
+  public async getTrackingInfo(
+    command: GetTrackingInfoCommand,
+  ): Promise<GetTrackingInfoResult> {
+    return this.hexa.useCases.getTrackingInfo.execute(command);
   }
 
   public getPackmindGateway() {

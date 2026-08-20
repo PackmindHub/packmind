@@ -37,27 +37,43 @@ export class GitService implements IGitService {
     this.logger = logger;
   }
 
-  getGitRepositoryRoot(path: string): string {
+  /**
+   * Runs git and turns an invocation failure into a message the user can act on.
+   *
+   * The raw git stderr is deliberately dropped: every caller prints this message
+   * as-is, and `fatal: not a git repository (or any of the parent directories)`
+   * adds nothing the sentence does not already say. The command name is not
+   * mentioned either — these helpers back `lint`, `install`, `git track`,
+   * `git info` and more, so naming one is wrong for all the others.
+   */
+  private runGit(
+    gitCommand: string,
+    repoPath: string,
+    failure: string,
+  ): string {
     try {
-      const { stdout } = this.gitRunner('rev-parse --show-toplevel', {
-        cwd: path,
-      });
-
-      const gitRoot = stdout.trim();
-      this.logger.debug('Resolved git repository root', {
-        inputPath: path,
-        gitRoot,
-      });
-
-      return gitRoot;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to get Git repository root. The path '${path}' does not appear to be inside a Git repository.\n${error.message}`,
-        );
-      }
-      throw new Error('Failed to get Git repository root: Unknown error');
+      return this.gitRunner(gitCommand, { cwd: repoPath }).stdout;
+    } catch {
+      throw new Error(
+        `${failure}. The path '${repoPath}' does not appear to be inside a Git repository.`,
+      );
     }
+  }
+
+  getGitRepositoryRoot(path: string): string {
+    const stdout = this.runGit(
+      'rev-parse --show-toplevel',
+      path,
+      'Failed to get Git repository root',
+    );
+
+    const gitRoot = stdout.trim();
+    this.logger.debug('Resolved git repository root', {
+      inputPath: path,
+      gitRoot,
+    });
+
+    return gitRoot;
   }
 
   tryGetGitRepositoryRoot(path: string): string | null {
@@ -82,93 +98,70 @@ export class GitService implements IGitService {
   }
 
   getCurrentBranch(repoPath: string): GitCurrentBranchResult {
-    try {
-      const { stdout } = this.gitRunner('rev-parse --abbrev-ref HEAD', {
-        cwd: repoPath,
-      });
+    const stdout = this.runGit(
+      'rev-parse --abbrev-ref HEAD',
+      repoPath,
+      'Failed to get current Git branch',
+    );
 
-      const branch = stdout.trim();
-      this.logger.debug('Resolved current branch', {
-        repoPath,
-        branch,
-      });
+    const branch = stdout.trim();
+    this.logger.debug('Resolved current branch', {
+      repoPath,
+      branch,
+    });
 
-      return { branch };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to get current Git branch. The path '${repoPath}' does not appear to be inside a Git repository.\n${error.message}`,
-        );
-      }
-      throw new Error('Failed to get current Git branch: Unknown error');
-    }
+    return { branch };
   }
 
   getCurrentBranches(repoPath: string): GitBranchesResult {
-    try {
-      const { stdout } = this.gitRunner('branch -a --contains HEAD', {
-        cwd: repoPath,
-      });
+    const stdout = this.runGit(
+      'branch -a --contains HEAD',
+      repoPath,
+      'Failed to get Git branches',
+    );
 
-      const branches = this.parseBranches(stdout);
-
-      return { branches };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to get Git branches. packmind-cli lint must be run in a Git repository.\n${error.message}`,
-        );
-      }
-      throw new Error('Failed to get Git branches: Unknown error');
-    }
+    return { branches: this.parseBranches(stdout) };
   }
 
   getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {
-    try {
-      const { stdout } = this.gitRunner('remote -v', {
-        cwd: repoPath,
-      });
+    const stdout = this.runGit(
+      'remote -v',
+      repoPath,
+      'Failed to get Git remote URL',
+    );
 
-      const remotes = this.parseRemotes(stdout);
+    const remotes = this.parseRemotes(stdout);
 
-      if (remotes.length === 0) {
-        throw new Error('No Git remotes found in the repository');
+    if (remotes.length === 0) {
+      throw new Error('No Git remotes found in the repository');
+    }
+
+    let selectedRemote: string;
+
+    if (origin) {
+      // Use specified remote name
+      const foundRemote = remotes.find((remote) => remote.name === origin);
+      if (!foundRemote) {
+        throw new Error(`Remote '${origin}' not found in repository`);
       }
-
-      let selectedRemote: string;
-
-      if (origin) {
-        // Use specified remote name
-        const foundRemote = remotes.find((remote) => remote.name === origin);
-        if (!foundRemote) {
-          throw new Error(`Remote '${origin}' not found in repository`);
-        }
-        selectedRemote = foundRemote.url;
-      } else if (remotes.length === 1) {
-        // Use the only available remote
-        selectedRemote = remotes[0].url;
-      } else {
-        // Multiple remotes available, use 'origin' as default
-        const originRemote = remotes.find((remote) => remote.name === 'origin');
-        if (!originRemote) {
-          throw new Error(
-            "Multiple remotes found but no 'origin' remote. Please specify the remote name.",
-          );
-        }
-        selectedRemote = originRemote.url;
-      }
-
-      return {
-        gitRemoteUrl: this.normalizeGitUrl(selectedRemote),
-      };
-    } catch (error) {
-      if (error instanceof Error) {
+      selectedRemote = foundRemote.url;
+    } else if (remotes.length === 1) {
+      // Use the only available remote
+      selectedRemote = remotes[0].url;
+    } else {
+      // Multiple remotes available, use 'origin' as default
+      const originRemote = remotes.find((remote) => remote.name === 'origin');
+      if (!originRemote) {
         throw new Error(
-          `Failed to get Git remote URL. packmind-cli lint must be run in a Git repository.\n${error.message}`,
+          "Multiple remotes found but no 'origin' remote. Please specify the remote name.",
         );
       }
-      throw new Error('Failed to get Git remote URL: Unknown error');
+      selectedRemote = originRemote.url;
     }
+
+    return {
+      gitRemoteUrl: this.normalizeGitUrl(selectedRemote),
+    };
   }
 
   /**

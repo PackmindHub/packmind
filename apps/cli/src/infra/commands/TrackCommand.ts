@@ -1,12 +1,13 @@
 import { command, flag, option, optional, string } from 'cmd-ts';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { trackHandler } from './trackHandler';
+import { removedTrackHandler } from './removedCommandHandler';
 
 export const trackCommand = command({
   name: 'track',
-  description:
-    'Set the repository and branch Packmind tracks for the current project',
+  // Listed in --help on purpose: a stub nobody can discover cannot redirect
+  // anyone. "[Removed]" matches what running it actually says.
+  description: '[Removed] Use "git track" instead',
   args: {
     update: flag({
       long: 'update',
@@ -19,16 +20,24 @@ export const trackCommand = command({
       description:
         'Branch to track (defaults to the branch currently checked out)',
     }),
+    // Accepted only so the old removal syntax gets the migration message
+    // instead of a raw "unknown arguments" parser error.
+    remove: flag({
+      long: 'remove',
+      description: 'Removal now lives in the "git untrack" command',
+    }),
   },
-  handler: async ({ update, branch }) => {
+  handler: async ({ update, branch, remove }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    await trackHandler({
+    removedTrackHandler({
       update,
       branch,
-      baseDirectory: process.cwd(),
-      trackRepository: packmindCliHexa.trackRepository.bind(packmindCliHexa),
+      remove,
+      notifyError: packmindCliHexa.output.notifyError.bind(
+        packmindCliHexa.output,
+      ),
     });
   },
 });

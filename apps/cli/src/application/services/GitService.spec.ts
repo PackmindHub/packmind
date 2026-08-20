@@ -338,13 +338,33 @@ describe('GitService', () => {
     });
 
     describe('when path is not a git repository', () => {
-      it('throws error', () => {
+      beforeEach(() => {
         gitRunner.mockImplementation(() => {
           throw new Error('fatal: not a git repository');
         });
+      });
 
+      it('throws error', () => {
         expect(() => service.getGitRemoteUrl('/non-git')).toThrow(
           'Failed to get Git remote URL',
+        );
+      });
+
+      it('names the offending path', () => {
+        expect(() => service.getGitRemoteUrl('/non-git')).toThrow(
+          "The path '/non-git' does not appear to be inside a Git repository.",
+        );
+      });
+
+      // The message reaches the user verbatim, so it must not leak git's own
+      // output nor blame a command they did not run.
+      it('does not leak the raw git output', () => {
+        expect(() => service.getGitRemoteUrl('/non-git')).not.toThrow(/fatal:/);
+      });
+
+      it('does not name an unrelated command', () => {
+        expect(() => service.getGitRemoteUrl('/non-git')).not.toThrow(
+          /packmind-cli lint/,
         );
       });
     });

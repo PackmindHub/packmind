@@ -59,6 +59,68 @@ describe('GitProviderGatewayApi', () => {
         );
       });
     });
+
+    describe('when a displayName is provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppInstallUrl(
+          organizationId,
+          undefined,
+          'Production GitHub',
+        );
+      });
+
+      it('appends the url-encoded displayName query param', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/install-url?displayName=Production+GitHub`,
+        );
+      });
+    });
+
+    describe('when both gitProviderId and displayName are provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppInstallUrl(
+          organizationId,
+          providerId,
+          'Production GitHub',
+        );
+      });
+
+      it('appends both query params', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/install-url?gitProviderId=${providerId}&displayName=Production+GitHub`,
+        );
+      });
+    });
+  });
+
+  describe('getGithubAppManifest', () => {
+    describe('when neither githubOrg nor displayName is provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppManifest(organizationId);
+      });
+
+      it('requests the manifest endpoint without a query string', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/manifest`,
+        );
+      });
+    });
+
+    describe('when a githubOrg and a displayName are provided', () => {
+      beforeEach(async () => {
+        await gateway.getGithubAppManifest(
+          organizationId,
+          'my-company',
+          'Production GitHub',
+        );
+      });
+
+      it('appends both query params', () => {
+        expect(mockedApi.get).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/github/app/manifest?githubOrg=my-company&displayName=Production+GitHub`,
+        );
+      });
+    });
   });
 
   describe('updateGitProvider', () => {

@@ -239,7 +239,7 @@ function ProgramCard({
             {isDraft ? 'Test draft' : 'Test program'}
           </PMButton>
           {isDraft && program.readyToUse && (
-            <PMButton variant="solid" size="xs" colorPalette="green">
+            <PMButton variant="success" size="xs">
               <LuZap size={12} />
               Set as active
             </PMButton>

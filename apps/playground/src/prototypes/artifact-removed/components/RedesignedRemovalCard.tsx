@@ -259,7 +259,7 @@ export function RedesignedRemovalCard({
           </PMIcon>
           <PMText fontWeight="medium" fontSize="sm">
             #{proposal.number} &mdash;{' '}
-            <PMText as="span" color="red.300">
+            <PMText as="span" color="error">
               Removed
             </PMText>
           </PMText>

@@ -86,14 +86,18 @@ export async function trackHandler(
     case 'already-tracked-other-branch':
       logErrorConsole(
         `Repository ${result.owner}/${result.repo} is already tracked on branch ${result.trackedBranch}. Run ${formatCommand(
-          'packmind track --update',
+          // `--update` alone moves tracking to the checked-out branch, which is
+          // not the target when a branch was named explicitly.
+          deps.branch
+            ? `packmind git track --update --branch ${result.branch}`
+            : 'packmind git track --update',
         )} to move it to ${result.branch}.`,
       );
       process.exit(1);
       return;
     case 'nothing-tracked':
       logErrorConsole(
-        `Nothing is tracked yet — run ${formatCommand('packmind init')} or ${formatCommand('packmind track')} to start tracking.`,
+        `Nothing is tracked yet — run ${formatCommand('packmind init')} or ${formatCommand('packmind git track')} to start tracking.`,
       );
       process.exit(1);
       return;

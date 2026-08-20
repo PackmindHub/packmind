@@ -33,6 +33,9 @@ type GithubAppMode = 'on-prem' | 'shared';
 type GitHubAppAuthBlockProps = {
   organizationId: OrganizationId;
   githubAppMode: GithubAppMode;
+  // The name typed in the drawer. It travels to GitHub inside the signed state
+  // token and is applied when the callback creates the connection.
+  displayName?: string;
 };
 
 const appNameFromSlug = (slug: string): string =>
@@ -44,6 +47,7 @@ const appNameFromSlug = (slug: string): string =>
 
 export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
   githubAppMode,
+  displayName,
 }) => {
   const installUrlMutation = useGithubAppInstallUrlMutation();
   const manifestMutation = useGetGithubAppManifestMutation();
@@ -86,9 +90,13 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
     }
   };
 
+  const trimmedDisplayName = displayName?.trim() || undefined;
+
   const handleInstallClick = async () => {
     try {
-      const { installUrl } = await installUrlMutation.mutateAsync({});
+      const { installUrl } = await installUrlMutation.mutateAsync({
+        displayName: trimmedDisplayName,
+      });
       redirectTo(installUrl);
     } catch {
       // installUrlMutation.error surfaces below.
@@ -100,6 +108,7 @@ export const GitHubAppAuthBlock: React.FC<GitHubAppAuthBlockProps> = ({
       const { manifest, state, manifestPostUrl } =
         await manifestMutation.mutateAsync({
           githubOrg: githubOrgForRegistration(githubOrg),
+          displayName: trimmedDisplayName,
         });
       const form = document.createElement('form');
       form.method = 'POST';

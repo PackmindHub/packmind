@@ -201,14 +201,14 @@ function DriftKpi({
       <PMText
         fontSize="2xl"
         fontWeight="semibold"
-        color={tone === 'warn' ? 'orange.500' : 'text.primary'}
+        color={tone === 'warn' ? 'warning' : 'primary'}
         fontVariantNumeric="tabular-nums"
         lineHeight="1"
         letterSpacing="-0.02em"
       >
         {value}
       </PMText>
-      <PMText fontSize="sm" color="text.secondary">
+      <PMText fontSize="sm" color="secondary">
         {label}
       </PMText>
     </PMHStack>
@@ -219,7 +219,6 @@ function Backlink() {
   return (
     <PMBox
       as="button"
-      type="button"
       display="inline-flex"
       alignItems="center"
       gap="6px"

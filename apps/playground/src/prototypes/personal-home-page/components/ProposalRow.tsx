@@ -57,24 +57,19 @@ export function ProposalRow({
         >
           {actionLabel}
         </PMBadge>
-        <PMText
-          fontSize="sm"
-          fontWeight="medium"
-          color="text.primary"
-          lineClamp={1}
-        >
+        <PMText fontSize="sm" fontWeight="medium" color="primary" lineClamp={1}>
           {proposal.artefactName}
         </PMText>
       </PMHStack>
 
       {/* Message */}
-      <PMText fontSize="sm" color="text.secondary" lineClamp={2}>
+      <PMText fontSize="sm" color="secondary" lineClamp={2}>
         {proposal.message}
       </PMText>
 
       {/* Bottom line: meta + actions */}
       <PMHStack justify="space-between" align="center">
-        <PMText fontSize="xs" color="text.faded">
+        <PMText fontSize="xs" color="faded">
           {proposal.authorName} &middot; {age}
         </PMText>
 
