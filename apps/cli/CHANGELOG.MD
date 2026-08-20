@@ -14,6 +14,7 @@
 
 ## Fixed
 
+- `git info` and `install` no longer describe a deleted tracked branch as if it were still there. `git info` reports that the branch is not in the repository — deleted after a merge, or never fetched here — and states that nothing is recorded anywhere until tracking moves, instead of only saying distributions "from here" are not recorded. `install` stops telling you to switch to a branch that does not exist and names `git track --update` instead.
 - `git track --branch <name>` now refuses a branch that does not exist in the repository instead of tracking it silently. A typo used to be accepted and only showed up later as distributions that were never recorded. Local and fetched remote branches both count, and the error points at `git fetch` for a branch that only exists on the remote.
 - Messages left pointing at the removed `track` command now name its replacement: `install` on an untracked repository, the "nothing is tracked yet" error and the server-side equivalent all say `packmind git track`.
 - `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.

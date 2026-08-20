@@ -132,6 +132,24 @@ This applies to both places branches surface:
 
 Repositories you have never tracked are unaffected — every branch keeps showing in both views.
 
+### When the Tracked Branch Is Deleted
+
+A branch usually disappears the day its pull request is merged. Tracking survives it, and since distributions are only recorded on the tracked branch, nothing is recorded from then on — with no error anywhere to say so.
+
+Packmind checks the tracked branch against your Git provider and flags it when it is gone:
+
+- **The Deployments overview** — the repository card carries a **Branch deleted** marker.
+- **The Git connection panel** — the tracked branch is marked in the repositories list, where an admin manages tracking.
+- **`packmind-cli git info`** — reports that the branch is not in the repository and offers to move tracking.
+
+To start recording again, an organization admin moves tracking to a branch that exists:
+
+```bash
+packmind-cli git track --update --branch main
+```
+
+Nothing recorded on the deleted branch is lost — its history is kept, exactly as when tracking moves for any other reason.
+
 ### Moving the Tracked Branch Is Reversible
 
 Moving tracking to another branch never deletes anything:
