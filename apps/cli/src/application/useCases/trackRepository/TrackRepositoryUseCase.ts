@@ -76,6 +76,18 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
     const providerVendor = parseProviderVendor(gitRemoteUrl);
 
+    // A branch that does not exist used to be tracked silently, and only
+    // surfaced later as distributions that were never recorded. Only an
+    // explicitly requested branch is checked — the checked-out one exists by
+    // construction — and it is checked before reading the tracking state so a
+    // typo costs no round trip.
+    if (
+      requestedBranch &&
+      !this.gitService.branchExists(repoPath, requestedBranch)
+    ) {
+      return { status: 'branch-not-found', owner, repo, branch };
+    }
+
     // Read the current tracking state. Also the single point where a disabled
     // feature flag surfaces (server returns 404).
     const { gitRepo: tracked } = await this.gateway.getTrackedRepository({

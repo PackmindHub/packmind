@@ -40,6 +40,7 @@ describe('TrackRepositoryUseCase', () => {
     gitService = {
       getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
       getCurrentBranch: jest.fn().mockReturnValue({ branch: 'dev' }),
+      branchExists: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<IGitService>;
     confirm = jest.fn().mockResolvedValue(true);
     useCase = new TrackRepositoryUseCase(gateway, gitService);
@@ -443,6 +444,83 @@ describe('TrackRepositoryUseCase', () => {
       expect(confirm).toHaveBeenCalledWith(
         expect.objectContaining({ branch: 'main' }),
       );
+    });
+
+    it('checks the requested branch exists', () => {
+      expect(gitService.branchExists).toHaveBeenCalledWith('/repo', 'main');
+    });
+  });
+
+  describe('when the requested branch does not exist', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gitService.branchExists.mockReturnValue(false);
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: false,
+        branch: 'mian',
+        confirm,
+      });
+    });
+
+    it('returns the branch-not-found outcome naming the requested branch', () => {
+      expect(result).toEqual({
+        status: 'branch-not-found',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'mian',
+      });
+    });
+
+    it('does not prompt for confirmation', () => {
+      expect(confirm).not.toHaveBeenCalled();
+    });
+
+    it('does not track anything', () => {
+      expect(gateway.setTrackedRepository).not.toHaveBeenCalled();
+    });
+
+    // A typo costs no round trip: the check runs before any request.
+    it('does not read the tracking state', () => {
+      expect(gateway.getTrackedRepository).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when the requested branch does not exist and update is true', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gitService.branchExists.mockReturnValue(false);
+      gateway.getTrackedRepository.mockResolvedValue({
+        gitRepo: makeGitRepo('main'),
+      });
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: true,
+        remove: false,
+        branch: 'mian',
+        confirm,
+      });
+    });
+
+    it('returns the branch-not-found outcome', () => {
+      expect(result).toEqual({
+        status: 'branch-not-found',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'mian',
+      });
+    });
+
+    it('leaves the tracked branch where it is', () => {
+      expect(gateway.updateTrackedBranch).not.toHaveBeenCalled();
     });
   });
 

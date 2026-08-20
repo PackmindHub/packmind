@@ -76,6 +76,13 @@ export type TrackRepositoryResult =
       trackedBranch: string;
     }
   | {
+      /** The requested branch does not exist in the local repository. */
+      status: 'branch-not-found';
+      owner: string;
+      repo: string;
+      branch: string;
+    }
+  | {
       status: 'nothing-tracked';
       owner: string;
       repo: string;

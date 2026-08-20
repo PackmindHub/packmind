@@ -292,6 +292,29 @@ describe('trackHandler', () => {
     });
   });
 
+  describe('when the requested branch does not exist', () => {
+    beforeEach(async () => {
+      deps.branch = 'mian';
+      mockTrackRepository.mockResolvedValue({
+        status: 'branch-not-found',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        branch: 'mian',
+      });
+      await trackHandler(deps);
+    });
+
+    it('logs an error naming the branch and how to recover', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        'Branch mian does not exist in my-orga/my-repo. Check the spelling, or run git fetch first if the branch only exists on the remote.',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('when the user is not logged in', () => {
     beforeEach(async () => {
       mockTrackRepository.mockRejectedValue(new NotLoggedInError());

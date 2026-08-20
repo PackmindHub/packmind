@@ -95,6 +95,12 @@ export async function trackHandler(
       );
       process.exit(1);
       return;
+    case 'branch-not-found':
+      logErrorConsole(
+        `Branch ${result.branch} does not exist in ${result.owner}/${result.repo}. Check the spelling, or run ${formatCommand('git fetch')} first if the branch only exists on the remote.`,
+      );
+      process.exit(1);
+      return;
     case 'nothing-tracked':
       logErrorConsole(
         `Nothing is tracked yet — run ${formatCommand('packmind init')} or ${formatCommand('packmind git track')} to start tracking.`,
