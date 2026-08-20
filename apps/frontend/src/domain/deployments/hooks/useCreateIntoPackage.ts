@@ -32,7 +32,7 @@ export type PackageArtefacts = Omit<AddArtefactsToPackagesEntry, 'packageId'>;
 export type AttachOutcome = 'attached' | 'failed' | 'not-asked';
 
 /**
- * Puts a freshly created component into the package the form was opened from.
+ * Puts a freshly created component into a known package.
  *
  * Without this, creating from the Context surface produces a component that
  * belongs to nothing: it exists in the space, reaches no repository, and only
@@ -43,16 +43,15 @@ export type AttachOutcome = 'attached' | 'failed' | 'not-asked';
  * It reports rather than throws, because by the time it runs the component is
  * already saved. A failed attach is worth saying out loud and is not worth
  * losing the component over.
+ *
+ * A null package is the normal case, not an error: the same creation paths are
+ * offered from the per-type pages, where there is no package to join.
  */
-export function useCreateIntoPackage() {
-  const [searchParams] = useSearchParams();
+export function useAttachToPackage(packageId: PackageId | null) {
   const { spaceId } = useCurrentSpace();
   const addArtefacts = useAddArtefactsToPackagesMutation();
 
-  const requested = searchParams.get(PACKAGE_PARAM);
-  const packageId = requested ? (requested as PackageId) : null;
-
-  const attachToPackage = useCallback(
+  return useCallback(
     async (artefacts: PackageArtefacts): Promise<AttachOutcome> => {
       if (!packageId || !spaceId) {
         return 'not-asked';
@@ -70,6 +69,18 @@ export function useCreateIntoPackage() {
     },
     [packageId, spaceId, addArtefacts],
   );
+}
 
-  return { packageId, attachToPackage };
+/**
+ * The same thing for a screen that learns its package from the address rather
+ * than from a caller: the create forms, which are reached by navigation and
+ * have nothing else to go on.
+ */
+export function useCreateIntoPackage() {
+  const [searchParams] = useSearchParams();
+
+  const requested = searchParams.get(PACKAGE_PARAM);
+  const packageId = requested ? (requested as PackageId) : null;
+
+  return { packageId, attachToPackage: useAttachToPackage(packageId) };
 }

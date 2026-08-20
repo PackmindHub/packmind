@@ -6,7 +6,11 @@ import {
   createSpaceId,
   createStandardId,
 } from '@packmind/types';
-import { useCreateIntoPackage, withPackageParam } from './useCreateIntoPackage';
+import {
+  useAttachToPackage,
+  useCreateIntoPackage,
+  withPackageParam,
+} from './useCreateIntoPackage';
 
 const mutateAsync = vi.fn();
 let currentSpaceId: ReturnType<typeof createSpaceId> | undefined =
@@ -39,6 +43,37 @@ describe('withPackageParam', () => {
 
   it('leaves the address alone without a package', () => {
     expect(withPackageParam('/standards/create')).toBe('/standards/create');
+  });
+});
+
+describe('useAttachToPackage', () => {
+  beforeEach(() => {
+    mutateAsync.mockReset();
+    mutateAsync.mockResolvedValue([{ packageId: PACKAGE_ID, ok: true }]);
+    currentSpaceId = createSpaceId('space-1');
+  });
+
+  describe('when given a package', () => {
+    it('adds the components to it', async () => {
+      const { result } = renderHook(() => useAttachToPackage(PACKAGE_ID));
+
+      await result.current({ standardIds: [STANDARD_ID] });
+
+      expect(mutateAsync).toHaveBeenCalledWith({
+        spaceId: createSpaceId('space-1'),
+        entries: [{ packageId: PACKAGE_ID, standardIds: [STANDARD_ID] }],
+      });
+    });
+  });
+
+  describe('when given no package', () => {
+    it('asks for nothing', async () => {
+      const { result } = renderHook(() => useAttachToPackage(null));
+
+      const outcome = await result.current({ standardIds: [STANDARD_ID] });
+
+      expect(outcome).toBe('not-asked');
+    });
   });
 });
 
