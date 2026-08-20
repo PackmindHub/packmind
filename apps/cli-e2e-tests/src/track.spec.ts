@@ -235,6 +235,42 @@ describeForVersion('> 0.33.0', 'track --branch validation', () => {
   );
 });
 
+// Refusing a detached HEAD ships after 0.33.0: the released binary tracks a
+// branch literally named `HEAD`, so gate this above the current release.
+describeForVersion('> 0.33.0', 'track with a detached HEAD', () => {
+  describeWithUserSignedUp(
+    'when no branch is checked out',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+      let withBranch: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        execSync('git checkout --detach HEAD', { cwd: context.testDir });
+        result = await context.runCli('git track');
+        withBranch = await context.runCli('git track --branch main');
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      // It used to track a branch called `HEAD`, which nobody can check out.
+      it('reports that no branch is checked out', () => {
+        expect(result.stderr).toContain('HEAD is detached');
+      });
+
+      it('still tracks a branch named explicitly', () => {
+        expect(withBranch.stdout).toContain(
+          'Packmind now tracks PackmindHub/sample-repo on branch main',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+});
+
 // `untrack` ships after 0.32.0, so gate these above the current release: in
 // production mode the released binary has no such command and cmd-ts would
 // reject it as an unknown argument.
