@@ -14,6 +14,7 @@
 
 ## Fixed
 
+- `git track --branch <name>` now refuses a branch that does not exist in the repository instead of tracking it silently. A typo used to be accepted and only showed up later as distributions that were never recorded. Local and fetched remote branches both count, and the error points at `git fetch` for a branch that only exists on the remote.
 - Messages left pointing at the removed `track` command now name its replacement: `install` on an untracked repository, the "nothing is tracked yet" error and the server-side equivalent all say `packmind git track`.
 - `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.
 - `track --remove` gets the same migration message as `track`, naming `git untrack`, instead of failing with a raw "unknown arguments" parser error.

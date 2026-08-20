@@ -354,6 +354,14 @@ Packmind now tracks my-org/my-repo on branch main.
 
 `--branch` works with `--update` too, to move tracking to a branch you are not currently on.
 
+The branch has to exist, though. A name Packmind cannot find in your repository is refused instead of being tracked, so a typo cannot leave you waiting for distributions that are never recorded:
+
+```
+Branch mian does not exist in my-org/my-repo. Check the spelling, or run `git fetch` first if the branch only exists on the remote.
+```
+
+Both local branches and branches you have fetched from the remote count. A branch created on the remote since your last fetch is unknown locally — run `git fetch` and try again.
+
 #### Move the Tracked Branch
 
 Use the `--update` flag to move tracking to your current branch when a different branch is already tracked. Packmind asks you to confirm the change before applying it:
