@@ -11,6 +11,7 @@ import type { PackageResponse } from '@packmind/types';
 import { buildPackageContext } from './buildPackageContext';
 import type { SpaceCatalogue } from './buildPackageContext';
 import { ContextComponentList } from './ContextComponentList';
+import { ContextCreateMenu } from './ContextCreateMenu';
 
 /**
  * What one package holds, grouped by type.
@@ -60,16 +61,22 @@ export function ContextPackagePane({
             {total} component{total === 1 ? '' : 's'}
           </PMText>
         </PMBox>
-        {/*
-          The way out to everything this surface does not carry yet:
-          distribution, edition, deletion, marketplace publication. Secondary,
-          because reading the package is what this screen is for.
-        */}
-        <PMBox flexShrink={0}>
+        <PMHStack flexShrink={0} gap={2}>
+          {/*
+            The way out to everything this surface does not carry yet:
+            distribution, edition, deletion, marketplace publication. Secondary,
+            because reading the package is what this screen is for.
+          */}
           <PMButton variant="secondary" size="sm" asChild>
             <Link to={packageHref}>Open package</Link>
           </PMButton>
-        </PMBox>
+          {/*
+            Creating sits here, on the pane, and not in the rail below the list
+            of packages: the rail creates containers, this creates what goes in
+            them, and side by side the two would read as the same gesture.
+          */}
+          <ContextCreateMenu orgSlug={orgSlug} spaceSlug={spaceSlug} />
+        </PMHStack>
       </PMHStack>
 
       <PMBox paddingTop={6}>
