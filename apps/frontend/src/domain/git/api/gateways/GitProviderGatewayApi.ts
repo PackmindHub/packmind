@@ -264,6 +264,16 @@ export class GitProviderGatewayApi
     return response.exists;
   }
 
+  async checkTrackedBranchExists(
+    organizationId: OrganizationId,
+    repositoryId: GitRepoId,
+  ): Promise<boolean> {
+    const response = await this._api.get<{ exists: boolean }>(
+      `${this._endpoint}/${organizationId}/git/repositories/${repositoryId}/tracked-branch-exists`,
+    );
+    return response.exists;
+  }
+
   async getAvailableRemoteDirectories(
     organizationId: OrganizationId,
     repositoryId: GitRepoId,

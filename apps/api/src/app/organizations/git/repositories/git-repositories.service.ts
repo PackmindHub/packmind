@@ -127,6 +127,26 @@ export class GitRepositoriesService {
     return this.gitAdapter.getRepositoryById(repositoryId);
   }
 
+  /**
+   * Whether the branch this repository is tracked on still exists on the Git
+   * provider. Asked about the repository rather than about a branch name so the
+   * branch never travels through a URL: it is read from the stored repository.
+   */
+  async checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean> {
+    const gitRepo = await this.gitAdapter.getRepositoryById(repositoryId);
+
+    if (!gitRepo) {
+      throw new Error(`Repository with ID ${repositoryId} not found`);
+    }
+
+    return this.gitAdapter.checkBranchExists(
+      gitRepo.providerId,
+      gitRepo.owner,
+      gitRepo.repo,
+      gitRepo.branch,
+    );
+  }
+
   async getRepositoriesByProvider(
     gitProviderId: GitProviderId,
   ): Promise<GitRepo[]> {
