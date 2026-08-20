@@ -19,7 +19,7 @@ export async function clientLoader({ params, request }: LoaderFunctionArgs) {
    */
   const url = new URL(request.url);
   if (resolveSpaceNavMode(url.search) === 'plugin-first') {
-    const target = routes.space.toPackages(params.orgSlug!, params.spaceSlug!);
+    const target = routes.space.toContext(params.orgSlug!, params.spaceSlug!);
     const requested = url.searchParams.get('nav');
     return redirect(requested ? `${target}?nav=${requested}` : target);
   }
