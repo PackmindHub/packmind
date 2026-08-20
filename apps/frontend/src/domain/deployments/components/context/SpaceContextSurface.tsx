@@ -12,9 +12,22 @@ import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQuerie
 import { PackagesBlankState } from '../PackagesBlankState';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextPackagePane } from './ContextPackagePane';
+import { SpaceInventoryPane } from './SpaceInventoryPane';
 
 /** The rail's selection, in the URL rather than in state — see below. */
 const SELECTED_PACKAGE_PARAM = 'package';
+
+/**
+ * What the same parameter says when the pane shows the space-wide inventory
+ * instead of one package. One parameter, one meaning — "what the pane shows" —
+ * rather than two that have to be reconciled when they disagree. Package ids
+ * are generated, so nothing can collide with it.
+ *
+ * Arriving on Context without the parameter still lands on a package, which is
+ * what says the package is the unit here. The inventory is a way of reading it,
+ * reachable by link but never the default.
+ */
+const INVENTORY_VALUE = 'all';
 
 /**
  * The Context surface of a space: its packages on the left, what the selected
@@ -72,16 +85,17 @@ export function SpaceContextSurface() {
    * landing on a package is what says the package is the unit here.
    */
   const requestedId = searchParams.get(SELECTED_PACKAGE_PARAM);
+  const showingInventory = requestedId === INVENTORY_VALUE;
   const selectedPackage =
     packages.find((pkg) => pkg.id === requestedId) ?? packages[0] ?? null;
 
-  const selectPackage = useCallback(
-    (packageId: PackageId) => {
+  const show = useCallback(
+    (value: string) => {
       // Mutating the params we were handed, so `?nav=` and anything else the
       // user arrived with survives the selection.
       setSearchParams(
         (previous) => {
-          previous.set(SELECTED_PACKAGE_PARAM, packageId);
+          previous.set(SELECTED_PACKAGE_PARAM, value);
           return previous;
         },
         { replace: true },
@@ -89,6 +103,17 @@ export function SpaceContextSurface() {
     },
     [setSearchParams],
   );
+
+  const selectPackage = useCallback(
+    (packageId: PackageId) => show(packageId),
+    [show],
+  );
+  const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
+
+  const inventoryCount =
+    catalogue.standards.length +
+    catalogue.commands.length +
+    catalogue.skills.length;
 
   if (isLoadingSpace || isLoadingPackages) {
     return (
@@ -124,28 +149,40 @@ export function SpaceContextSurface() {
         <ContextPackageRail
           packages={packages}
           selectedPackageId={selectedPackage?.id ?? null}
+          showingInventory={showingInventory}
+          inventoryCount={inventoryCount}
           onSelect={selectPackage}
+          onShowInventory={showInventory}
           createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
         />
         <PMBox flex="1" minW={0} minH={0} overflowY="auto">
-          {selectedPackage && (
-            <ContextPackagePane
-              key={selectedPackage.id}
-              pkg={selectedPackage}
+          {showingInventory ? (
+            <SpaceInventoryPane
+              packages={packages}
               catalogue={catalogue}
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
-              packageHref={routes.space.toPackage(
-                orgSlug,
-                spaceSlug,
-                selectedPackage.id,
-              )}
-              packageEditHref={routes.space.toPackageEdit(
-                orgSlug,
-                spaceSlug,
-                selectedPackage.id,
-              )}
             />
+          ) : (
+            selectedPackage && (
+              <ContextPackagePane
+                key={selectedPackage.id}
+                pkg={selectedPackage}
+                catalogue={catalogue}
+                orgSlug={orgSlug}
+                spaceSlug={spaceSlug}
+                packageHref={routes.space.toPackage(
+                  orgSlug,
+                  spaceSlug,
+                  selectedPackage.id,
+                )}
+                packageEditHref={routes.space.toPackageEdit(
+                  orgSlug,
+                  spaceSlug,
+                  selectedPackage.id,
+                )}
+              />
+            )
           )}
         </PMBox>
       </PMHStack>

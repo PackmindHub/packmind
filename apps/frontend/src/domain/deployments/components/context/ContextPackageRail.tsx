@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { PMBox, PMButton, PMIcon, PMVStack } from '@packmind/ui';
-import { LuPackage, LuPlus } from 'react-icons/lu';
+import { LuLayers, LuPackage, LuPlus } from 'react-icons/lu';
 import type { PackageId, PackageResponse } from '@packmind/types';
 import { packageComponentCount } from './buildPackageContext';
 
@@ -15,12 +15,20 @@ import { packageComponentCount } from './buildPackageContext';
 export function ContextPackageRail({
   packages,
   selectedPackageId,
+  showingInventory,
+  inventoryCount,
   onSelect,
+  onShowInventory,
   createPackageHref,
 }: Readonly<{
   packages: readonly PackageResponse[];
   selectedPackageId: PackageId | null;
+  /** The space-wide inventory is open, so no package row is the selected one. */
+  showingInventory: boolean;
+  /** Components in the space, which is not the sum over the packages. */
+  inventoryCount: number;
   onSelect: (packageId: PackageId) => void;
+  onShowInventory: () => void;
   createPackageHref: string;
 }>) {
   return (
@@ -38,12 +46,36 @@ export function ContextPackageRail({
       minH={0}
     >
       <PMBox flex={1} minH={0} overflowY="auto">
+        {/*
+          Deliberately not a package row: half the height, no crate, faded until
+          it is the one selected. The package is the unit this space is
+          organised around and the rail has to keep saying so; this is the way
+          out for the moment when you know what you are looking for but not who
+          carries it — or when nobody does.
+
+          It sits above the list rather than in the sidebar because it is a way
+          of reading Context, not a fourth place to be: a nav entry per
+          arrangement is how the per-type entries happened in the first place.
+
+          Always shown. The prototype hid it below two plugins, on the grounds
+          that with one plugin every row would name the same owner and the view
+          would be a worse copy of the pane. That argument does not survive the
+          real data: a component here belongs to any number of packages,
+          including none, so the flat list says things the pane cannot say even
+          when there is a single package.
+        */}
+        <InventoryRow
+          count={inventoryCount}
+          isActive={showingInventory}
+          onClick={onShowInventory}
+        />
+
         <PMVStack gap={0} align="stretch">
           {packages.map((pkg) => (
             <PackageRow
               key={pkg.id}
               pkg={pkg}
-              isActive={pkg.id === selectedPackageId}
+              isActive={!showingInventory && pkg.id === selectedPackageId}
               onClick={() => onSelect(pkg.id)}
             />
           ))}
@@ -73,6 +105,44 @@ export function ContextPackageRail({
             New package
           </Link>
         </PMButton>
+      </PMBox>
+    </PMBox>
+  );
+}
+
+function InventoryRow({
+  count,
+  isActive,
+  onClick,
+}: Readonly<{ count: number; isActive: boolean; onClick: () => void }>) {
+  return (
+    <PMBox
+      as="button"
+      display="flex"
+      alignItems="center"
+      gap={2}
+      width="full"
+      textAlign="left"
+      paddingX={3}
+      paddingY="7px"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      cursor="pointer"
+      bg={isActive ? 'background.secondary' : 'transparent'}
+      color={isActive ? 'text.primary' : 'text.faded'}
+      _hover={isActive ? undefined : { bg: 'background.secondary' }}
+      transition="background-color 150ms ease-out"
+      onClick={onClick}
+      aria-current={isActive ? 'true' : undefined}
+    >
+      <PMIcon fontSize="xs" flexShrink={0}>
+        <LuLayers />
+      </PMIcon>
+      <PMBox as="span" flex={1} minW={0} fontSize="xs" truncate>
+        All components
+      </PMBox>
+      <PMBox as="span" fontSize="xs" fontVariantNumeric="tabular-nums">
+        {count}
       </PMBox>
     </PMBox>
   );

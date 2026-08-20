@@ -64,17 +64,70 @@ export type ContextLinkTarget = {
  * the order the current navigation lists the three types in, so moving from one
  * architecture to the other does not also reshuffle what the eye expects.
  */
-const GROUP_ORDER: readonly ContextComponentType[] = [
+export const COMPONENT_TYPE_ORDER: readonly ContextComponentType[] = [
   'standard',
   'command',
   'skill',
 ];
 
-const GROUP_LABELS: Record<ContextComponentType, string> = {
+export const COMPONENT_TYPE_LABELS: Record<ContextComponentType, string> = {
   standard: 'Standards',
   command: 'Commands',
   skill: 'Skills',
 };
+
+/*
+ * One mapper per type, exported because two surfaces build the same row from
+ * the same entity: a package's own content and the space-wide inventory. Two
+ * copies would have grown two ideas of what a row of this app is.
+ */
+
+export function standardToComponent(
+  standard: Standard,
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+): ContextComponent {
+  return {
+    key: standard.id,
+    type: 'standard',
+    name: standard.name,
+    summary: standard.description ?? '',
+    version: standard.version,
+    href: routes.space.toStandard(orgSlug, spaceSlug, standard.id),
+  };
+}
+
+export function commandToComponent(
+  command: Command,
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+): ContextComponent {
+  return {
+    key: command.id,
+    type: 'command',
+    name: command.name,
+    summary: '',
+    version: command.version,
+    href: routes.space.toCommand(orgSlug, spaceSlug, command.id),
+  };
+}
+
+/**
+ * By slug, not by id: the skill detail route is the one of the three that is
+ * addressed by slug. Reading the difference off the entity here is what keeps
+ * it out of the row components.
+ */
+export function skillToComponent(
+  skill: Skill,
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+): ContextComponent {
+  return {
+    key: skill.id,
+    type: 'skill',
+    name: skill.name,
+    summary: skill.description ?? '',
+    version: skill.version,
+    href: routes.space.toSkill(orgSlug, spaceSlug, skill.slug),
+  };
+}
 
 /**
  * Crosses the ids a package holds with the space's catalogues and returns the
@@ -92,45 +145,26 @@ export function buildPackageContext(
   catalogue: SpaceCatalogue,
   { orgSlug, spaceSlug }: ContextLinkTarget,
 ): PackageContext {
+  const target = { orgSlug, spaceSlug };
   const byType: Record<ContextComponentType, ContextComponent[]> = {
-    standard: resolve(pkg.standards, catalogue.standards, (standard) => ({
-      key: standard.id,
-      type: 'standard' as const,
-      name: standard.name,
-      summary: standard.description ?? '',
-      version: standard.version,
-      href: routes.space.toStandard(orgSlug, spaceSlug, standard.id),
-    })),
-    command: resolve(pkg.commands, catalogue.commands, (command) => ({
-      key: command.id,
-      type: 'command' as const,
-      name: command.name,
-      summary: '',
-      version: command.version,
-      href: routes.space.toCommand(orgSlug, spaceSlug, command.id),
-    })),
-    /*
-     * By slug, not by id: the skill detail route is the one of the three that
-     * is addressed by slug. Reading the difference off the entity here is what
-     * keeps it out of the row component.
-     */
-    skill: resolve(pkg.skills, catalogue.skills, (skill) => ({
-      key: skill.id,
-      type: 'skill' as const,
-      name: skill.name,
-      summary: skill.description ?? '',
-      version: skill.version,
-      href: routes.space.toSkill(orgSlug, spaceSlug, skill.slug),
-    })),
+    standard: resolve(pkg.standards, catalogue.standards, (standard) =>
+      standardToComponent(standard, target),
+    ),
+    command: resolve(pkg.commands, catalogue.commands, (command) =>
+      commandToComponent(command, target),
+    ),
+    skill: resolve(pkg.skills, catalogue.skills, (skill) =>
+      skillToComponent(skill, target),
+    ),
   };
 
-  const groups = GROUP_ORDER.filter((type) => byType[type].length > 0).map(
-    (type) => ({
-      type,
-      label: GROUP_LABELS[type],
-      components: byType[type],
-    }),
-  );
+  const groups = COMPONENT_TYPE_ORDER.filter(
+    (type) => byType[type].length > 0,
+  ).map((type) => ({
+    type,
+    label: COMPONENT_TYPE_LABELS[type],
+    components: byType[type],
+  }));
 
   return {
     groups,

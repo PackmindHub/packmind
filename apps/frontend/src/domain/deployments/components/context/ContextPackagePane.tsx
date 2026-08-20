@@ -1,33 +1,16 @@
-import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
   PMButton,
   PMHStack,
   PMHeading,
-  PMIcon,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import {
-  LuBookCheck,
-  LuChevronRight,
-  LuTerminal,
-  LuWandSparkles,
-} from 'react-icons/lu';
 import type { PackageResponse } from '@packmind/types';
-import {
-  buildPackageContext,
-  type ContextComponent,
-  type ContextComponentType,
-} from './buildPackageContext';
+import { buildPackageContext } from './buildPackageContext';
 import type { SpaceCatalogue } from './buildPackageContext';
-
-const TYPE_ICONS: Record<ContextComponentType, ReactNode> = {
-  standard: <LuBookCheck />,
-  command: <LuTerminal />,
-  skill: <LuWandSparkles />,
-};
+import { ContextComponentList } from './ContextComponentList';
 
 /**
  * What one package holds, grouped by type.
@@ -120,7 +103,11 @@ export function ContextPackagePane({
                   </PMText>
                 </PMHStack>
                 <PMBox paddingTop={1}>
-                  <ComponentList components={group.components} />
+                  <ContextComponentList
+                    entries={group.components.map((component) => ({
+                      component,
+                    }))}
+                  />
                 </PMBox>
               </PMBox>
             ))}
@@ -128,94 +115,6 @@ export function ContextPackagePane({
         )}
       </PMBox>
     </PMBox>
-  );
-}
-
-function ComponentList({
-  components,
-}: Readonly<{ components: readonly ContextComponent[] }>) {
-  return (
-    <PMBox
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="sm"
-      overflow="hidden"
-    >
-      {components.map((component, index) => (
-        <ComponentRow
-          key={component.key}
-          component={component}
-          isFirst={index === 0}
-        />
-      ))}
-    </PMBox>
-  );
-}
-
-function ComponentRow({
-  component,
-  isFirst,
-}: Readonly<{ component: ContextComponent; isFirst: boolean }>) {
-  return (
-    /*
-     * A real link rather than a box that navigates: the row is the whole target
-     * area, so it has to be openable in a new tab and readable as an address by
-     * anything that reads addresses. PMBox does not forward `to`, hence the
-     * wrapper — the styling stays on the box, which is also what hovers.
-     */
-    <Link to={component.href}>
-      <PMBox
-        display="flex"
-        width="full"
-        alignItems="center"
-        gap={3}
-        textAlign="left"
-        paddingX={3}
-        paddingY="10px"
-        borderTopWidth={isFirst ? '0' : '1px'}
-        borderColor="border.tertiary"
-        _hover={{ bg: 'background.secondary' }}
-        transition="background-color 150ms ease-out"
-      >
-        {/* On the name, not on the pair: the rule the rail beside it follows. */}
-        <PMIcon
-          fontSize="sm"
-          color="text.faded"
-          flexShrink={0}
-          alignSelf="flex-start"
-          marginTop="0.25em"
-        >
-          {TYPE_ICONS[component.type]}
-        </PMIcon>
-        <PMBox flex={1} minW={0}>
-          <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
-            {component.name}
-          </PMText>
-          {component.summary && (
-            <PMText as="div" fontSize="xs" color="faded" truncate>
-              {component.summary}
-            </PMText>
-          )}
-        </PMBox>
-        {/*
-          A fixed width, not the width of the number: v12 is one character wider
-          than v5, and every column to its left would move with it.
-        */}
-        <PMText
-          fontSize="xs"
-          color="faded"
-          flexShrink={0}
-          width="32px"
-          textAlign="right"
-          fontVariantNumeric="tabular-nums"
-        >
-          v{component.version}
-        </PMText>
-        <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-          <LuChevronRight />
-        </PMIcon>
-      </PMBox>
-    </Link>
   );
 }
 

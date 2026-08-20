@@ -1,0 +1,251 @@
+import {
+  createCommandId,
+  createPackageId,
+  createSkillId,
+  createStandardId,
+  type Command,
+  type PackageResponse,
+  type Skill,
+  type Standard,
+} from '@packmind/types';
+import type { SpaceCatalogue } from './buildPackageContext';
+import {
+  buildSpaceInventory,
+  type SpaceInventory,
+} from './buildSpaceInventory';
+
+const TARGET = { orgSlug: 'acme', spaceSlug: 'platform' };
+
+const standard = (id: string, name: string): Standard =>
+  ({
+    id: createStandardId(id),
+    name,
+    slug: name.toLowerCase(),
+    description: `About ${name}`,
+    version: 2,
+  }) as Standard;
+
+const command = (id: string, name: string): Command =>
+  ({
+    id: createCommandId(id),
+    name,
+    slug: name.toLowerCase(),
+    content: 'body',
+    version: 1,
+  }) as Command;
+
+const skill = (id: string, name: string): Skill =>
+  ({
+    id: createSkillId(id),
+    name,
+    slug: name.toLowerCase(),
+    description: `About ${name}`,
+    version: 4,
+  }) as Skill;
+
+const catalogue = (
+  overrides: Partial<SpaceCatalogue> = {},
+): SpaceCatalogue => ({
+  standards: [],
+  commands: [],
+  skills: [],
+  ...overrides,
+});
+
+const pack = (
+  id: string,
+  name: string,
+  holds: Partial<
+    Pick<PackageResponse, 'standards' | 'commands' | 'skills'>
+  > = {},
+): PackageResponse =>
+  ({
+    id: createPackageId(id),
+    name,
+    standards: [],
+    commands: [],
+    skills: [],
+    ...holds,
+  }) as PackageResponse;
+
+describe('buildSpaceInventory', () => {
+  describe('when the space owns one component of each type', () => {
+    let inventory: SpaceInventory;
+
+    beforeEach(() => {
+      inventory = buildSpaceInventory(
+        [
+          pack('p1', 'Backend', {
+            standards: [createStandardId('s1')],
+            commands: [createCommandId('c1')],
+            skills: [createSkillId('k1')],
+          }),
+        ],
+        catalogue({
+          standards: [standard('s1', 'Naming')],
+          commands: [command('c1', 'Release')],
+          skills: [skill('k1', 'Refactor')],
+        }),
+        TARGET,
+      );
+    });
+
+    it('groups them in the order the navigation lists the types in', () => {
+      expect(inventory.groups.map((group) => group.type)).toEqual([
+        'standard',
+        'command',
+        'skill',
+      ]);
+    });
+
+    it('counts them all', () => {
+      expect(inventory.total).toBe(3);
+    });
+
+    it('counts them per type', () => {
+      expect(inventory.countsByType).toEqual({
+        standard: 1,
+        command: 1,
+        skill: 1,
+      });
+    });
+
+    it('names the package that carries each of them', () => {
+      expect(
+        inventory.groups.flatMap((group) =>
+          group.entries.map((entry) => entry.packageNames),
+        ),
+      ).toEqual([['Backend'], ['Backend'], ['Backend']]);
+    });
+  });
+
+  describe('when a component is in no package', () => {
+    let inventory: SpaceInventory;
+
+    beforeEach(() => {
+      inventory = buildSpaceInventory(
+        [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+        }),
+        TARGET,
+      );
+    });
+
+    it('still lists it', () => {
+      expect(
+        inventory.groups[0].entries.map((entry) => entry.component.name),
+      ).toEqual(['Naming', 'Testing']);
+    });
+
+    it('leaves its package list empty', () => {
+      expect(inventory.groups[0].entries[1].packageNames).toEqual([]);
+    });
+
+    it('counts it as an orphan', () => {
+      expect(inventory.orphanCount).toBe(1);
+    });
+  });
+
+  it('reports no orphan for a fully carried space', () => {
+    const inventory = buildSpaceInventory(
+      [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+      catalogue({ standards: [standard('s1', 'Naming')] }),
+      TARGET,
+    );
+
+    expect(inventory.orphanCount).toBe(0);
+  });
+
+  describe('when two packages carry the same component', () => {
+    let inventory: SpaceInventory;
+
+    beforeEach(() => {
+      inventory = buildSpaceInventory(
+        [
+          pack('p2', 'Frontend', { standards: [createStandardId('s1')] }),
+          pack('p1', 'Backend', { standards: [createStandardId('s1')] }),
+        ],
+        catalogue({ standards: [standard('s1', 'Naming')] }),
+        TARGET,
+      );
+    });
+
+    it('lists the component once', () => {
+      expect(inventory.total).toBe(1);
+    });
+
+    it('names both packages, sorted', () => {
+      expect(inventory.groups[0].entries[0].packageNames).toEqual([
+        'Backend',
+        'Frontend',
+      ]);
+    });
+  });
+
+  it('sorts each group by component name', () => {
+    const inventory = buildSpaceInventory(
+      [],
+      catalogue({
+        standards: [
+          standard('s1', 'Zoning'),
+          standard('s2', 'Auditing'),
+          standard('s3', 'Naming'),
+        ],
+      }),
+      TARGET,
+    );
+
+    expect(
+      inventory.groups[0].entries.map((entry) => entry.component.name),
+    ).toEqual(['Auditing', 'Naming', 'Zoning']);
+  });
+
+  it('leaves out the types the space owns none of', () => {
+    const inventory = buildSpaceInventory(
+      [],
+      catalogue({ skills: [skill('k1', 'Refactor')] }),
+      TARGET,
+    );
+
+    expect(inventory.groups.map((group) => group.type)).toEqual(['skill']);
+  });
+
+  describe('when the space owns nothing', () => {
+    let inventory: SpaceInventory;
+
+    beforeEach(() => {
+      inventory = buildSpaceInventory([], catalogue(), TARGET);
+    });
+
+    it('produces no group', () => {
+      expect(inventory.groups).toEqual([]);
+    });
+
+    it('produces a total of zero', () => {
+      expect(inventory.total).toBe(0);
+    });
+  });
+
+  it('ignores a package referencing a component the space no longer owns', () => {
+    const inventory = buildSpaceInventory(
+      [pack('p1', 'Backend', { standards: [createStandardId('moved')] })],
+      catalogue({ standards: [standard('s1', 'Naming')] }),
+      TARGET,
+    );
+
+    expect(inventory.total).toBe(1);
+  });
+
+  it('carries the row built for the component, addresses included', () => {
+    const inventory = buildSpaceInventory(
+      [],
+      catalogue({ skills: [skill('k1', 'Refactor')] }),
+      TARGET,
+    );
+
+    expect(inventory.groups[0].entries[0].component.href).toBe(
+      '/org/acme/space/platform/skills/refactor',
+    );
+  });
+});
