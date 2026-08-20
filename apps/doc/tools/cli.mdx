@@ -362,6 +362,16 @@ Branch mian does not exist in my-org/my-repo. Check the spelling, or run `git fe
 
 Both local branches and branches you have fetched from the remote count. A branch created on the remote since your last fetch is unknown locally — run `git fetch` and try again.
 
+#### When No Branch Is Checked Out
+
+Mid-rebase, after `git checkout <commit>`, or in a CI job that checked out a pull request merge ref, your repository has no current branch — Git calls this a detached `HEAD`. There is nothing to track in that state, so the command stops instead of tracking a branch called `HEAD`:
+
+```
+No branch is checked out for my-org/my-repo — HEAD is detached. Check a branch out, or name one with `packmind-cli git track --branch <name>`.
+```
+
+Naming the branch with `--branch` works as usual, so tracking can still be set from a detached checkout.
+
 #### Move the Tracked Branch
 
 Use the `--update` flag to move tracking to your current branch when a different branch is already tracked. Packmind asks you to confirm the change before applying it:
