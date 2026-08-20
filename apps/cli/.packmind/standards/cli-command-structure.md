@@ -2,6 +2,10 @@
 
 Enforce clear separation of concerns between command definition (parameters and metadata) and handler logic (validation, execution, and output) in apps/cli commands to improve testability, maintainability, and consistency.
 
+## Scope
+
+Command files in apps/cli/src/infra/commands/
+
 ## Rules
 
 * Organize commands in subdirectories under infra/commands/ grouped by their hexa or domain (e.g., infra/commands/auth/, infra/commands/standard/)

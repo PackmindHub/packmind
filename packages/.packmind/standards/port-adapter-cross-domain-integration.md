@@ -2,6 +2,10 @@
 
 This standard defines how domain packages communicate with each other through the Port/Adapter pattern in our DDD monorepo architecture. By following these rules, you prevent circular dependencies, maintain loose coupling between domains, and enable both synchronous and asynchronous cross-domain operations with graceful degradation for optional dependencies.
 
+## Scope
+
+**/*Adapter.ts,**/*Hexa.ts
+
 ## Rules
 
 * Define port interfaces in @packmind/types with domain-specific contracts that expose only the operations needed by consumers, where each method accepts a Command type and returns a Response type or domain entity.

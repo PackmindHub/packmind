@@ -2,6 +2,10 @@
 
 Generic practices that can be applied for all TS code in our app
 
+## Scope
+
+**/*.ts
+
 ## Rules
 
 * Do not use `Object.setPrototypeOf` when defining errors.

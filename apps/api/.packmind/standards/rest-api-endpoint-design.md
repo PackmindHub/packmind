@@ -2,6 +2,10 @@
 
 Conventions for designing REST API endpoints that are predictable, self-documenting, and aligned with distinct business actions. Favors dedicated action endpoints over generic status updates, and routes that reflect the ownership hierarchy without unrelated resource IDs.
 
+## Scope
+
+REST API route definitions and controller endpoints
+
 ## Rules
 
 * Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body

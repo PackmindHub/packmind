@@ -2,6 +2,10 @@
 
 Define testing patterns for integration tests in the Packmind monorepo to ensure consistent organization, proper resource management, and comprehensive test coverage using hexagonal architecture principles.
 
+## Scope
+
+Integration test files in packages/integration-tests/src/**/*.spec.ts
+
 ## Rules
 
 * Use one primary assertion per test case for clarity and easier debugging

@@ -2,6 +2,10 @@
 
 This codebase uses React Router v7 with organization and space scoping in URLs (e.g., /org/{orgSlug}/space/{spaceSlug}/recipes). To maintain consistency, improve maintainability, and simplify navigation management across the application, all internal navigation must use centralized utilities instead of manual URL construction. This approach ensures that URL parameter handling (orgSlug, spaceSlug) is abstracted away and reduces the risk of broken links when routes change.
 
+## Scope
+
+apps/frontend/**/*.tsx
+
 ## Rules
 
 * Omit orgSlug and spaceSlug parameters to use current organization and space context by default and only specify them explicitly when navigating to a different organization or space.

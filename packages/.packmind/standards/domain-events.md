@@ -2,6 +2,10 @@
 
 Domain events enable communication between hexas without creating direct dependencies. Apply these rules when creating events, emitting them, or implementing listeners to react to events from other domains.
 
+## Scope
+
+**/*.ts
+
 ## Rules
 
 * Define payload as a separate `{EventName}Payload` interface
