@@ -50,6 +50,8 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toPackages: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/packages`,
+    toDistribution: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/distribution`,
     toPackage: (orgSlug: string, spaceSlug: string, packageId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`,
     toCreatePackage: (orgSlug: string, spaceSlug: string) =>
