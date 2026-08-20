@@ -14,6 +14,8 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   FindOrCreateGitRepoCommand,
   FindOrCreateGitRepoResponse,
+  CheckTrackedBranchExistsCommand,
+  CheckTrackedBranchExistsResponse,
   GetAvailableRemoteDirectoriesCommand,
   GetTrackedRepositoryCommand,
   GetTrackedRepositoryResponse,
@@ -265,10 +267,12 @@ export interface IGitPort {
    * a few minutes: pages that list many repositories ask this once per
    * repository on every render.
    *
-   * @param repositoryId - The repository whose tracked branch to check
-   * @returns Promise of boolean indicating if the tracked branch exists
+   * @param command - Command naming the repository whose tracked branch to check
+   * @returns Promise of whether the tracked branch exists
    */
-  checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean>;
+  checkTrackedBranchExists(
+    command: CheckTrackedBranchExistsCommand,
+  ): Promise<CheckTrackedBranchExistsResponse>;
 
   /**
    * Probe a git provider's stored credentials against the upstream API to

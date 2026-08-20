@@ -103,8 +103,14 @@ describe('GitRepositoriesController tracked repository routes', () => {
       >;
 
       beforeEach(async () => {
-        mockService.checkTrackedBranchExists.mockResolvedValue(false);
-        result = await controller.checkTrackedBranchExists(orgId, repositoryId);
+        mockService.checkTrackedBranchExists.mockResolvedValue({
+          exists: false,
+        });
+        result = await controller.checkTrackedBranchExists(
+          orgId,
+          mockRequest,
+          repositoryId,
+        );
       });
 
       it('reports the branch as absent', () => {
@@ -113,8 +119,10 @@ describe('GitRepositoriesController tracked repository routes', () => {
 
       // The branch is read from the stored repository, so the route needs no
       // branch parameter at all — nothing to escape, nothing to mangle.
-      it('asks about the repository', () => {
+      it('asks about the repository on behalf of the caller', () => {
         expect(mockService.checkTrackedBranchExists).toHaveBeenCalledWith(
+          userId,
+          orgId,
           repositoryId,
         );
       });
@@ -122,10 +130,12 @@ describe('GitRepositoriesController tracked repository routes', () => {
 
     describe('when the branch is still there', () => {
       it('reports the branch as present', async () => {
-        mockService.checkTrackedBranchExists.mockResolvedValue(true);
+        mockService.checkTrackedBranchExists.mockResolvedValue({
+          exists: true,
+        });
 
         await expect(
-          controller.checkTrackedBranchExists(orgId, repositoryId),
+          controller.checkTrackedBranchExists(orgId, mockRequest, repositoryId),
         ).resolves.toEqual({ exists: true });
       });
     });

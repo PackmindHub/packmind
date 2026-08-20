@@ -28,6 +28,8 @@ import {
   GitProviderId,
   GitRepo,
   GitRepoId,
+  CheckTrackedBranchExistsCommand,
+  CheckTrackedBranchExistsResponse,
   IAccountsPort,
   IAccountsPortName,
   IDeploymentPort,
@@ -429,8 +431,10 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     });
   }
 
-  public checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean> {
-    return this._checkTrackedBranchExists.execute({ repositoryId });
+  public checkTrackedBranchExists(
+    command: CheckTrackedBranchExistsCommand,
+  ): Promise<CheckTrackedBranchExistsResponse> {
+    return this._checkTrackedBranchExists.execute(command);
   }
 
   public commitToGit(

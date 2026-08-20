@@ -1,4 +1,8 @@
-import { GitRepoId } from '@packmind/types';
+import {
+  CheckTrackedBranchExistsCommand,
+  CheckTrackedBranchExistsResponse,
+  ICheckTrackedBranchExistsUseCase,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Cache } from '@packmind/node-utils';
 import { GitRepoService } from '../../GitRepoService';
@@ -14,10 +18,6 @@ const origin = 'CheckTrackedBranchExistsUseCase';
  */
 const CACHE_EXPIRATION_SECONDS = 300;
 
-export interface CheckTrackedBranchExistsUseCaseInput {
-  repositoryId: GitRepoId;
-}
-
 /**
  * Whether the branch a repository is tracked on still exists on its Git
  * provider. The branch is read from the stored repository rather than supplied
@@ -28,7 +28,7 @@ export interface CheckTrackedBranchExistsUseCaseInput {
  * the marketplace publish flow asks that use case about a branch it creates and
  * deletes within one run, and must keep getting a live answer.
  */
-export class CheckTrackedBranchExistsUseCase {
+export class CheckTrackedBranchExistsUseCase implements ICheckTrackedBranchExistsUseCase {
   private readonly cache: Cache;
 
   constructor(
@@ -39,8 +39,10 @@ export class CheckTrackedBranchExistsUseCase {
     this.cache = Cache.getInstance();
   }
 
-  async execute(input: CheckTrackedBranchExistsUseCaseInput): Promise<boolean> {
-    const { repositoryId } = input;
+  async execute(
+    command: CheckTrackedBranchExistsCommand,
+  ): Promise<CheckTrackedBranchExistsResponse> {
+    const { repositoryId } = command;
 
     if (!repositoryId) {
       throw new Error('Repository ID is required');
@@ -64,7 +66,7 @@ export class CheckTrackedBranchExistsUseCase {
         branch: gitRepo.branch,
         exists: cached,
       });
-      return cached;
+      return { exists: cached };
     }
 
     const exists = await this.checkBranchExists.execute({
@@ -84,6 +86,6 @@ export class CheckTrackedBranchExistsUseCase {
       exists,
     });
 
-    return exists;
+    return { exists };
   }
 }

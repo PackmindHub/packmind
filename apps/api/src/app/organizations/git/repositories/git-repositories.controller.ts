@@ -21,6 +21,7 @@ import {
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
+  CheckTrackedBranchExistsResponse,
   NoTrackedRepositoryError,
   OrganizationId,
   RemoveTrackedRepositoryResponse,
@@ -272,17 +273,19 @@ export class GitRepositoriesController {
   @Get(':id/tracked-branch-exists')
   async checkTrackedBranchExists(
     @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
     @Param('id') repositoryId: GitRepoId,
-  ): Promise<{ exists: boolean }> {
+  ): Promise<CheckTrackedBranchExistsResponse> {
     this.logger.info(
       'GET /organizations/:orgId/git/repositories/:id/tracked-branch-exists - Checking if the tracked branch still exists',
       { organizationId, repositoryId },
     );
 
-    const exists =
-      await this.gitRepositoriesService.checkTrackedBranchExists(repositoryId);
-
-    return { exists };
+    return this.gitRepositoriesService.checkTrackedBranchExists(
+      req.user.userId,
+      organizationId,
+      repositoryId,
+    );
   }
 
   @Get(':id/available-remote-directories')

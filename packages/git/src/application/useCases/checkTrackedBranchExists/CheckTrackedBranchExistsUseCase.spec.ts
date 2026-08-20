@@ -1,6 +1,12 @@
 import { Cache } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { GitRepo, createGitProviderId, createGitRepoId } from '@packmind/types';
+import {
+  GitRepo,
+  createGitProviderId,
+  createGitRepoId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { CheckBranchExistsUseCase } from '../checkBranchExists/CheckBranchExistsUseCase';
 import { CheckTrackedBranchExistsUseCase } from './CheckTrackedBranchExistsUseCase';
@@ -20,6 +26,11 @@ const mockCacheInstance = {
 const MockedCache = Cache as jest.Mocked<typeof Cache>;
 
 const repositoryId = createGitRepoId('repo-1');
+const command = {
+  repositoryId,
+  userId: createUserId('user-1'),
+  organizationId: createOrganizationId('org-1'),
+};
 
 const gitRepo = {
   id: repositoryId,
@@ -54,10 +65,10 @@ describe('CheckTrackedBranchExistsUseCase', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('when nothing is cached', () => {
-    let result: boolean;
+    let result: { exists: boolean };
 
     beforeEach(async () => {
-      result = await useCase.execute({ repositoryId });
+      result = await useCase.execute(command);
     });
 
     // The caller names a repository; the branch comes from the stored record.
@@ -71,7 +82,7 @@ describe('CheckTrackedBranchExistsUseCase', () => {
     });
 
     it('returns the provider answer', () => {
-      expect(result).toBe(true);
+      expect(result).toEqual({ exists: true });
     });
 
     // The branch belongs in the key: moving tracking must not inherit the
@@ -86,15 +97,15 @@ describe('CheckTrackedBranchExistsUseCase', () => {
   });
 
   describe('when a deleted branch is already cached', () => {
-    let result: boolean;
+    let result: { exists: boolean };
 
     beforeEach(async () => {
       mockCacheInstance.get.mockResolvedValue(false);
-      result = await useCase.execute({ repositoryId });
+      result = await useCase.execute(command);
     });
 
     it('returns the cached answer', () => {
-      expect(result).toBe(false);
+      expect(result).toEqual({ exists: false });
     });
 
     // A page listing many repositories would otherwise spend one provider API
@@ -110,7 +121,7 @@ describe('CheckTrackedBranchExistsUseCase', () => {
     });
 
     it('throws naming the repository', async () => {
-      await expect(useCase.execute({ repositoryId })).rejects.toThrow(
+      await expect(useCase.execute(command)).rejects.toThrow(
         `Repository with ID ${repositoryId} not found`,
       );
     });
@@ -119,7 +130,10 @@ describe('CheckTrackedBranchExistsUseCase', () => {
   describe('when no repository id is given', () => {
     it('throws', async () => {
       await expect(
-        useCase.execute({ repositoryId: '' as typeof repositoryId }),
+        useCase.execute({
+          ...command,
+          repositoryId: '' as typeof repositoryId,
+        }),
       ).rejects.toThrow('Repository ID is required');
     });
   });

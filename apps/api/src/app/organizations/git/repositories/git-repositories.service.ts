@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CheckDirectoryExistenceResult,
+  CheckTrackedBranchExistsResponse,
   ClientSource,
   GetTrackedRepositoryResponse,
   GitProviderId,
@@ -132,8 +133,16 @@ export class GitRepositoriesService {
    * provider. Asked about the repository rather than about a branch name so the
    * branch never travels through a URL: it is read from the stored repository.
    */
-  async checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean> {
-    return this.gitAdapter.checkTrackedBranchExists(repositoryId);
+  async checkTrackedBranchExists(
+    userId: UserId,
+    organizationId: OrganizationId,
+    repositoryId: GitRepoId,
+  ): Promise<CheckTrackedBranchExistsResponse> {
+    return this.gitAdapter.checkTrackedBranchExists({
+      userId,
+      organizationId,
+      repositoryId,
+    });
   }
 
   async getRepositoriesByProvider(
