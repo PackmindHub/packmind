@@ -1627,6 +1627,7 @@ describe('installCommand', () => {
               notifyArtefactsDistribution: mockNotifyArtefactsDistribution,
               getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
               getCurrentBranch: mockGetCurrentBranch,
+              isDetachedHead: jest.fn().mockReturnValue(false),
             }) as unknown as PackmindCliHexa,
         );
 
@@ -1689,6 +1690,7 @@ describe('installCommand', () => {
             getTrackedRepository: mockGetTrackedRepository,
             getGitRemoteUrlFromPath: jest.fn().mockReturnValue(remoteUrl),
             getCurrentBranch: jest.fn().mockReturnValue(branch),
+            isDetachedHead: jest.fn().mockReturnValue(false),
           }) as unknown as PackmindCliHexa,
       );
     };
@@ -1753,6 +1755,46 @@ describe('installCommand', () => {
           action: 'skip',
           reason: 'wrong_branch',
           trackedBranch: 'main',
+        });
+      });
+    });
+
+    describe('when HEAD is detached', () => {
+      it('skips with a detached_head reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => true,
+            detached: true,
+            lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+            // What git answers for a detached HEAD.
+            currentBranch: 'HEAD',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'detached_head',
+          trackedBranch: 'main',
+        });
+      });
+    });
+
+    describe('when HEAD is detached and the tracked branch is gone too', () => {
+      // The branch being gone is the one nobody can work around by checking it
+      // out, so it wins.
+      it('reports the missing branch rather than the detachment', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => false,
+            detached: true,
+            lookup: {
+              status: 'resolved',
+              trackedGitRepo: { branch: 'feature/login' },
+            },
+            currentBranch: 'HEAD',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'tracked_branch_gone',
+          trackedBranch: 'feature/login',
         });
       });
     });
@@ -1889,6 +1931,7 @@ describe('decideDistributionTracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
+          detached: false,
           lookup: { status: 'flag-off' },
           currentBranch: 'main',
         }),
@@ -1901,6 +1944,7 @@ describe('decideDistributionTracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
+          detached: false,
           lookup: { status: 'unavailable' },
           currentBranch: 'main',
         }),
@@ -1913,6 +1957,7 @@ describe('decideDistributionTracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: null },
           currentBranch: 'main',
         }),
@@ -1925,6 +1970,7 @@ describe('decideDistributionTracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'dev',
         }),
@@ -1941,6 +1987,7 @@ describe('decideDistributionTracking', () => {
       expect(
         decideDistributionTracking({
           branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'main',
         }),

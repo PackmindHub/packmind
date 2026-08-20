@@ -76,6 +76,15 @@ export type TrackRepositoryResult =
       trackedBranch: string;
     }
   | {
+      /**
+       * No branch is checked out and none was requested, so there is nothing to
+       * track: naming the branch is the caller's way out.
+       */
+      status: 'detached-head';
+      owner: string;
+      repo: string;
+    }
+  | {
       /** The requested branch does not exist in the local repository. */
       status: 'branch-not-found';
       owner: string;

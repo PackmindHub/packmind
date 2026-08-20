@@ -17,6 +17,8 @@ export type GetTrackingInfoResult =
       repo: string;
       trackedBranch: string;
       currentBranch: string;
+      /** True when HEAD is not on a branch, so `currentBranch` reads `HEAD`. */
+      currentBranchDetached: boolean;
       /**
        * Whether the tracked branch still exists locally. False after the branch
        * is deleted — a merged feature branch, typically — but also in a clone
@@ -29,6 +31,8 @@ export type GetTrackingInfoResult =
       owner: string;
       repo: string;
       currentBranch: string;
+      /** True when HEAD is not on a branch, so `currentBranch` reads `HEAD`. */
+      currentBranchDetached: boolean;
     };
 
 export type IGetTrackingInfoUseCase = IPublicUseCase<

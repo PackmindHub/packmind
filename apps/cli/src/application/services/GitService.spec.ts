@@ -254,7 +254,7 @@ describe('GitService', () => {
       });
 
       it('returns the current branch name', () => {
-        expect(result).toEqual({ branch: 'main' });
+        expect(result).toEqual({ branch: 'main', detached: false });
       });
 
       it('calls gitRunner with rev-parse command', () => {
@@ -270,17 +270,21 @@ describe('GitService', () => {
 
         const result = service.getCurrentBranch('/repo');
 
-        expect(result).toEqual({ branch: 'feature/my-feature' });
+        expect(result).toEqual({
+          branch: 'feature/my-feature',
+          detached: false,
+        });
       });
     });
 
+    // Mid-rebase, `git checkout <sha>`, or a CI job on a pull request merge ref.
     describe('when in detached HEAD state', () => {
-      it('returns HEAD', () => {
+      it('reports the detachment alongside what git answered', () => {
         gitRunner.mockReturnValue({ stdout: 'HEAD\n' });
 
         const result = service.getCurrentBranch('/repo');
 
-        expect(result).toEqual({ branch: 'HEAD' });
+        expect(result).toEqual({ branch: 'HEAD', detached: true });
       });
     });
 

@@ -32,7 +32,9 @@ describe('GetTrackingInfoUseCase', () => {
     };
     gitService = {
       getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
-      getCurrentBranch: jest.fn().mockReturnValue({ branch: 'dev' }),
+      getCurrentBranch: jest
+        .fn()
+        .mockReturnValue({ branch: 'dev', detached: false }),
       branchExists: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<IGitService>;
     useCase = new GetTrackingInfoUseCase(gateway, gitService);
@@ -69,6 +71,7 @@ describe('GetTrackingInfoUseCase', () => {
         trackedBranch: 'dev',
         currentBranch: 'dev',
         trackedBranchExists: true,
+        currentBranchDetached: false,
       });
     });
 
@@ -98,6 +101,7 @@ describe('GetTrackingInfoUseCase', () => {
         trackedBranch: 'main',
         currentBranch: 'dev',
         trackedBranchExists: true,
+        currentBranchDetached: false,
       });
     });
 
@@ -127,6 +131,7 @@ describe('GetTrackingInfoUseCase', () => {
         trackedBranch: 'feature/login',
         currentBranch: 'dev',
         trackedBranchExists: false,
+        currentBranchDetached: false,
       });
     });
   });
@@ -145,6 +150,7 @@ describe('GetTrackingInfoUseCase', () => {
         owner: 'my-orga',
         repo: 'my-repo',
         currentBranch: 'dev',
+        currentBranchDetached: false,
       });
     });
   });

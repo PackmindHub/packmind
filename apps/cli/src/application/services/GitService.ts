@@ -13,6 +13,12 @@ import {
 
 const origin = 'GitService';
 
+/**
+ * What `git rev-parse --abbrev-ref HEAD` answers when HEAD is not on a branch.
+ * Git refuses to create a branch under this name, so the string is unambiguous.
+ */
+const DETACHED_HEAD = 'HEAD';
+
 export type GitRunnerOptions = ExecSyncOptions & { maxBuffer?: number };
 export type GitRunnerResult = { stdout: string };
 export type GitRunner = (
@@ -105,12 +111,14 @@ export class GitService implements IGitService {
     );
 
     const branch = stdout.trim();
+    const detached = branch === DETACHED_HEAD;
     this.logger.debug('Resolved current branch', {
       repoPath,
       branch,
+      detached,
     });
 
-    return { branch };
+    return { branch, detached };
   }
 
   getCurrentBranches(repoPath: string): GitBranchesResult {

@@ -370,6 +370,11 @@ export class PackmindCliHexa {
       .branch;
   }
 
+  public isDetachedHead(repoPath: string): boolean {
+    return this.hexa.services.gitRemoteUrlService.getCurrentBranch(repoPath)
+      .detached;
+  }
+
   public branchExists(repoPath: string, branch: string): boolean {
     return this.hexa.services.gitRemoteUrlService.branchExists(
       repoPath,

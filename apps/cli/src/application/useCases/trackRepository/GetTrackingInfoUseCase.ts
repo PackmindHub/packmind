@@ -24,7 +24,7 @@ export class GetTrackingInfoUseCase implements IGetTrackingInfoUseCase {
     // Both throw with a clear message when not in a git repo or when there is
     // no remote, matching how `track` reports the same situations.
     const { gitRemoteUrl } = this.gitService.getGitRemoteUrl(repoPath);
-    const { branch: currentBranch } =
+    const { branch: currentBranch, detached: currentBranchDetached } =
       this.gitService.getCurrentBranch(repoPath);
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
 
@@ -34,7 +34,13 @@ export class GetTrackingInfoUseCase implements IGetTrackingInfoUseCase {
     });
 
     if (!gitRepo) {
-      return { status: 'not-tracked', owner, repo, currentBranch };
+      return {
+        status: 'not-tracked',
+        owner,
+        repo,
+        currentBranch,
+        currentBranchDetached,
+      };
     }
 
     return {
@@ -43,6 +49,7 @@ export class GetTrackingInfoUseCase implements IGetTrackingInfoUseCase {
       repo,
       trackedBranch: gitRepo.branch,
       currentBranch,
+      currentBranchDetached,
       // Skipped when it is the branch we are on: being on it proves it exists,
       // and this is the common case, so it saves a git call.
       trackedBranchExists:

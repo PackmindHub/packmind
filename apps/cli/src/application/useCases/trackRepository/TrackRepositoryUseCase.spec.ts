@@ -39,7 +39,9 @@ describe('TrackRepositoryUseCase', () => {
     };
     gitService = {
       getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
-      getCurrentBranch: jest.fn().mockReturnValue({ branch: 'dev' }),
+      getCurrentBranch: jest
+        .fn()
+        .mockReturnValue({ branch: 'dev', detached: false }),
       branchExists: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<IGitService>;
     confirm = jest.fn().mockResolvedValue(true);
@@ -448,6 +450,95 @@ describe('TrackRepositoryUseCase', () => {
 
     it('checks the requested branch exists', () => {
       expect(gitService.branchExists).toHaveBeenCalledWith('/repo', 'main');
+    });
+  });
+
+  describe('when HEAD is detached and no branch is requested', () => {
+    let result: TrackRepositoryResult;
+
+    beforeEach(async () => {
+      gitService.getCurrentBranch.mockReturnValue({
+        branch: 'HEAD',
+        detached: true,
+      });
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+
+      result = await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: false,
+        confirm,
+      });
+    });
+
+    // Tracking `HEAD` would name a branch nobody can check out.
+    it('returns the detached-head outcome', () => {
+      expect(result).toEqual({
+        status: 'detached-head',
+        owner: 'my-orga',
+        repo: 'my-repo',
+      });
+    });
+
+    it('tracks nothing', () => {
+      expect(gateway.setTrackedRepository).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when HEAD is detached and a branch is requested', () => {
+    beforeEach(async () => {
+      gitService.getCurrentBranch.mockReturnValue({
+        branch: 'HEAD',
+        detached: true,
+      });
+      gateway.getTrackedRepository.mockResolvedValue({ gitRepo: null });
+      gateway.setTrackedRepository.mockResolvedValue(makeGitRepo('main'));
+
+      await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: false,
+        branch: 'main',
+        confirm,
+      });
+    });
+
+    // `--branch` is exactly the way out of a detached HEAD.
+    it('tracks the requested branch', () => {
+      expect(gateway.setTrackedRepository).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'main' }),
+      );
+    });
+  });
+
+  describe('when HEAD is detached and tracking is removed', () => {
+    beforeEach(async () => {
+      gitService.getCurrentBranch.mockReturnValue({
+        branch: 'HEAD',
+        detached: true,
+      });
+      gateway.getTrackedRepository.mockResolvedValue({
+        gitRepo: makeGitRepo('main'),
+      });
+      gateway.removeTrackedRepository.mockResolvedValue({
+        status: 'removed',
+        gitRepo: makeGitRepo('main', false),
+      });
+
+      await useCase.execute({
+        repoPath: '/repo',
+        origin: 'track',
+        update: false,
+        remove: true,
+        confirm,
+      });
+    });
+
+    // `untrack` takes no branch, so the checked-out one is irrelevant to it.
+    it('still removes the tracking', () => {
+      expect(gateway.removeTrackedRepository).toHaveBeenCalled();
     });
   });
 

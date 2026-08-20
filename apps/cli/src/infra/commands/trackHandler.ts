@@ -95,6 +95,12 @@ export async function trackHandler(
       );
       process.exit(1);
       return;
+    case 'detached-head':
+      logErrorConsole(
+        `No branch is checked out for ${result.owner}/${result.repo} — HEAD is detached. Check a branch out, or name one with ${formatCommand('packmind git track --branch <name>')}.`,
+      );
+      process.exit(1);
+      return;
     case 'branch-not-found':
       logErrorConsole(
         `Branch ${result.branch} does not exist in ${result.owner}/${result.repo}. Check the spelling, or run ${formatCommand('git fetch')} first if the branch only exists on the remote.`,

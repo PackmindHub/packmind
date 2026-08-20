@@ -292,6 +292,27 @@ describe('trackHandler', () => {
     });
   });
 
+  describe('when HEAD is detached', () => {
+    beforeEach(async () => {
+      mockTrackRepository.mockResolvedValue({
+        status: 'detached-head',
+        owner: 'my-orga',
+        repo: 'my-repo',
+      });
+      await trackHandler(deps);
+    });
+
+    it('logs an error naming both ways out', () => {
+      expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+        'No branch is checked out for my-orga/my-repo — HEAD is detached. Check a branch out, or name one with packmind git track --branch <name>.',
+      );
+    });
+
+    it('exits with code 1', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
   describe('when the requested branch does not exist', () => {
     beforeEach(async () => {
       deps.branch = 'mian';

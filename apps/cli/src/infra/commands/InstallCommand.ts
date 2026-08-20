@@ -163,6 +163,7 @@ export type DistributionTrackingDecision =
   | { action: 'skip'; reason: 'repo_not_tracked' }
   | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
   | { action: 'skip'; reason: 'tracked_branch_gone'; trackedBranch: string }
+  | { action: 'skip'; reason: 'detached_head'; trackedBranch: string }
   | { action: 'inform' };
 
 export function decideDistributionTracking(params: {
@@ -174,8 +175,10 @@ export function decideDistributionTracking(params: {
    * wrong-branch message, which is never actively wrong.
    */
   branchExists: (branch: string) => boolean;
+  /** True when HEAD is not on a branch — a rebase, or a CI job on a merge ref. */
+  detached: boolean;
 }): DistributionTrackingDecision {
-  const { lookup, currentBranch, branchExists } = params;
+  const { lookup, currentBranch, branchExists, detached } = params;
 
   switch (lookup.status) {
     case 'flag-off':
@@ -188,13 +191,19 @@ export function decideDistributionTracking(params: {
         return { action: 'skip', reason: 'repo_not_tracked' };
       }
       if (tracked.branch !== currentBranch) {
-        // Telling someone to switch to a branch that was deleted with its
-        // merged pull request sends them after something that is not there.
+        // Worst cause first: a tracked branch that is gone records nothing for
+        // anybody, and a detached HEAD is not "being on the wrong branch" —
+        // git reports the branch as `HEAD`, which names no branch at all.
+        if (!branchExists(tracked.branch)) {
+          return {
+            action: 'skip',
+            reason: 'tracked_branch_gone',
+            trackedBranch: tracked.branch,
+          };
+        }
         return {
           action: 'skip',
-          reason: branchExists(tracked.branch)
-            ? 'wrong_branch'
-            : 'tracked_branch_gone',
+          reason: detached ? 'detached_head' : 'wrong_branch',
           trackedBranch: tracked.branch,
         };
       }
@@ -227,6 +236,10 @@ function reportDistributionTrackingDecision(
           `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
             'packmind git track',
           )} to start tracking it.`,
+        );
+      } else if (decision.reason === 'detached_head') {
+        logWarningConsole(
+          `Distribution not recorded — no branch is checked out here (HEAD is detached), and Packmind records distributions on '${decision.trackedBranch}'. Check that branch out to record this distribution.`,
         );
       } else if (decision.reason === 'tracked_branch_gone') {
         logWarningConsole(
@@ -281,9 +294,11 @@ async function computeDistributionTrackingDecision(
   let owner: string;
   let repo: string;
   let gitBranch: string;
+  let detached: boolean;
   try {
     const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
     gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+    detached = packmindCliHexa.isDetachedHead(gitRoot);
     ({ owner, repo } = parseOwnerRepo(gitRemoteUrl));
   } catch {
     const decision: DistributionTrackingDecision = { action: 'inform' };
@@ -303,6 +318,7 @@ async function computeDistributionTrackingDecision(
         return true;
       }
     },
+    detached,
   });
   reportDistributionTrackingDecision(decision, {
     owner,

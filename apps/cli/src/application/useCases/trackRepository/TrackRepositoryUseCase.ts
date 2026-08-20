@@ -70,11 +70,18 @@ export class TrackRepositoryUseCase implements ITrackRepositoryUseCase {
     // The branch is explicit when given, otherwise the checked-out one. Reading
     // HEAD unconditionally keeps the "not a git repository" error identical for
     // both paths.
-    const { branch: currentBranch } =
+    const { branch: currentBranch, detached } =
       this.gitService.getCurrentBranch(repoPath);
     const branch = requestedBranch ?? currentBranch;
     const { owner, repo } = parseOwnerRepo(gitRemoteUrl);
     const providerVendor = parseProviderVendor(gitRemoteUrl);
+
+    // Falling back to the checked-out branch is meaningless with a detached
+    // HEAD: git names it `HEAD`, and tracking that would record nothing under a
+    // branch nobody has. Removal is unaffected — it takes no branch at all.
+    if (detached && !requestedBranch && !remove) {
+      return { status: 'detached-head', owner, repo };
+    }
 
     // A branch that does not exist used to be tracked silently, and only
     // surfaced later as distributions that were never recorded. Only an
