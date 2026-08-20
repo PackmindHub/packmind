@@ -123,6 +123,30 @@ export class GitService implements IGitService {
     return { branches: this.parseBranches(stdout) };
   }
 
+  private getAllBranches(repoPath: string): GitBranchesResult {
+    const stdout = this.runGit(
+      'branch -a',
+      repoPath,
+      'Failed to get Git branches',
+    );
+
+    return { branches: this.parseBranches(stdout) };
+  }
+
+  /**
+   * Local and remote-tracking branches are both accepted: `git track --branch`
+   * does not require the branch to be checked out, only to exist.
+   *
+   * The branch name is matched in-process instead of being handed to git: it
+   * comes straight from `--branch`, and interpolating it into the command line
+   * would pass user input to the shell.
+   */
+  branchExists(repoPath: string, branch: string): boolean {
+    const { branches } = this.getAllBranches(repoPath);
+
+    return branches.includes(branch);
+  }
+
   getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {
     const stdout = this.runGit(
       'remote -v',

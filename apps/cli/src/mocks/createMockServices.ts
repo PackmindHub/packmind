@@ -62,6 +62,7 @@ export function createMockGitService(
     getGitRepositoryRootSync: jest.fn(),
     getCurrentBranch: jest.fn(),
     getCurrentBranches: jest.fn(),
+    branchExists: jest.fn(),
     getGitRemoteUrl: jest.fn(),
     getModifiedFiles: jest.fn(),
     getUntrackedFiles: jest.fn(),

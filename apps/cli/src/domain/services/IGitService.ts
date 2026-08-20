@@ -23,6 +23,13 @@ export interface IGitService {
 
   getCurrentBranches(repoPath: string): GitBranchesResult;
 
+  /**
+   * Whether `branch` exists in the repository, either as a local branch or as
+   * a remote-tracking branch. A branch that exists on the remote but was never
+   * fetched is unknown here.
+   */
+  branchExists(repoPath: string, branch: string): boolean;
+
   getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult;
 
   /**

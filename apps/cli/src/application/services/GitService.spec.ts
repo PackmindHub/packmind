@@ -165,6 +165,85 @@ describe('GitService', () => {
     });
   });
 
+  describe('branchExists', () => {
+    describe('when the branch is a local branch', () => {
+      let result: boolean;
+
+      beforeEach(() => {
+        gitRunner.mockReturnValue({
+          stdout: '* main\n  dev\n  remotes/origin/main\n',
+        });
+        result = service.branchExists('/repo', 'dev');
+      });
+
+      it('reports the branch exists', () => {
+        expect(result).toBe(true);
+      });
+
+      it('lists every branch, not only those containing HEAD', () => {
+        expect(gitRunner).toHaveBeenCalledWith('branch -a', { cwd: '/repo' });
+      });
+    });
+
+    describe('when the branch is the checked-out one', () => {
+      it('reports the branch exists despite the asterisk marker', () => {
+        gitRunner.mockReturnValue({ stdout: '* main\n  dev\n' });
+
+        expect(service.branchExists('/repo', 'main')).toBe(true);
+      });
+    });
+
+    describe('when the branch only exists on a remote', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: '* main\n  remotes/origin/main\n  remotes/origin/dev\n',
+        });
+
+        expect(service.branchExists('/repo', 'dev')).toBe(true);
+      });
+    });
+
+    describe('when the branch name contains slashes', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: '* main\n  remotes/origin/feature/login\n',
+        });
+
+        expect(service.branchExists('/repo', 'feature/login')).toBe(true);
+      });
+    });
+
+    describe('when the branch does not exist', () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({
+          stdout: '* main\n  remotes/origin/main\n',
+        });
+
+        expect(service.branchExists('/repo', 'mian')).toBe(false);
+      });
+    });
+
+    describe('when the repository has no branch yet', () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({ stdout: '' });
+
+        expect(service.branchExists('/repo', 'main')).toBe(false);
+      });
+    });
+
+    describe('when not in a git repository', () => {
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
+
+        expect(() => service.branchExists('/non-git', 'main')).toThrow(
+          'Failed to get Git branches',
+        );
+      });
+    });
+  });
+
   describe('getCurrentBranch', () => {
     describe('when on a branch', () => {
       let result: ReturnType<typeof service.getCurrentBranch>;
