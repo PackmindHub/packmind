@@ -197,6 +197,44 @@ describeForVersion('> 0.32.0', 'track --branch', () => {
   );
 });
 
+// Branch validation ships after 0.33.0: the released binary tracks a
+// misspelled branch without complaining, so gate this above the current release.
+describeForVersion('> 0.33.0', 'track --branch validation', () => {
+  describeWithUserSignedUp(
+    'when the requested branch does not exist',
+    (getContext) => {
+      let result: Awaited<ReturnType<typeof runCli>>;
+      let info: Awaited<ReturnType<typeof runCli>>;
+
+      beforeEach(async () => {
+        const context = await getContext();
+        await setupGitRepo(context.testDir);
+        result = await context.runCli('git track --branch mian');
+        info = await context.runCli('git info');
+      });
+
+      it('exits with an error', () => {
+        expect(result.returnCode).toBe(1);
+      });
+
+      it('reports that the branch does not exist', () => {
+        expect(result.stderr).toContain(
+          'Branch mian does not exist in PackmindHub/sample-repo',
+        );
+      });
+
+      // The typo used to be tracked silently, and only showed up later as
+      // distributions that were never recorded.
+      it('leaves the repository untracked', () => {
+        expect(info.stdout).toContain(
+          'PackmindHub/sample-repo is not tracked in Packmind',
+        );
+      });
+    },
+    { email: randomEmail },
+  );
+});
+
 // `untrack` ships after 0.32.0, so gate these above the current release: in
 // production mode the released binary has no such command and cmd-ts would
 // reject it as an unknown argument.
