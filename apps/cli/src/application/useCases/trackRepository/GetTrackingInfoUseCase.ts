@@ -43,6 +43,11 @@ export class GetTrackingInfoUseCase implements IGetTrackingInfoUseCase {
       repo,
       trackedBranch: gitRepo.branch,
       currentBranch,
+      // Skipped when it is the branch we are on: being on it proves it exists,
+      // and this is the common case, so it saves a git call.
+      trackedBranchExists:
+        gitRepo.branch === currentBranch ||
+        this.gitService.branchExists(repoPath, gitRepo.branch),
     };
   }
 }

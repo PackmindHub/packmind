@@ -51,11 +51,25 @@ export async function trackingInfoHandler(
   // Being on another branch is not an error, but it silently changes what gets
   // recorded — so it is called out rather than left for the user to spot.
   if (result.currentBranch !== result.trackedBranch) {
-    logWarningConsole(
-      `You are on '${result.currentBranch}', so distributions from here are not recorded. Run ${formatCommand(
-        'packmind git track --update',
-      )} to move tracking to '${result.currentBranch}'.`,
-    );
+    // A tracked branch nobody can check out again records nothing for anybody,
+    // so it gets its own warning instead of the generic "you are elsewhere"
+    // one. Both causes are named: telling someone their branch was deleted
+    // when they are simply in a shallow or single-branch clone would be wrong.
+    if (result.trackedBranchExists) {
+      logWarningConsole(
+        `You are on '${result.currentBranch}', so distributions from here are not recorded. Run ${formatCommand(
+          'packmind git track --update',
+        )} to move tracking to '${result.currentBranch}'.`,
+      );
+    } else {
+      logWarningConsole(
+        `Branch '${result.trackedBranch}' is not in this repository — deleted after a merge, or never fetched here — so no distribution is recorded anywhere. Run ${formatCommand(
+          'packmind git track --update',
+        )} to move tracking to '${result.currentBranch}', or ${formatCommand(
+          'git fetch',
+        )} if the branch is still on the remote.`,
+      );
+    }
   }
 
   process.exit(0);

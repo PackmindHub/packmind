@@ -17,6 +17,12 @@ export type GetTrackingInfoResult =
       repo: string;
       trackedBranch: string;
       currentBranch: string;
+      /**
+       * Whether the tracked branch still exists locally. False after the branch
+       * is deleted — a merged feature branch, typically — but also in a clone
+       * that never fetched it, which is why callers word it as both.
+       */
+      trackedBranchExists: boolean;
     }
   | {
       status: 'not-tracked';

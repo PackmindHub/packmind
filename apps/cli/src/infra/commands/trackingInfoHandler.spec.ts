@@ -55,6 +55,7 @@ describe('trackingInfoHandler', () => {
         repo: 'my-repo',
         trackedBranch: 'main',
         currentBranch: 'main',
+        trackedBranchExists: true,
       });
       await trackingInfoHandler(deps);
     });
@@ -82,6 +83,7 @@ describe('trackingInfoHandler', () => {
         repo: 'my-repo',
         trackedBranch: 'main',
         currentBranch: 'dev',
+        trackedBranchExists: true,
       });
       await trackingInfoHandler(deps);
     });
@@ -100,6 +102,34 @@ describe('trackingInfoHandler', () => {
     it('warns that distributions from here are not recorded', () => {
       expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
         "You are on 'dev', so distributions from here are not recorded. Run packmind git track --update to move tracking to 'dev'.",
+      );
+    });
+  });
+
+  describe('when the tracked branch no longer exists', () => {
+    beforeEach(async () => {
+      mockGetTrackingInfo.mockResolvedValue({
+        status: 'tracked',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        trackedBranch: 'feature/login',
+        currentBranch: 'dev',
+        trackedBranchExists: false,
+      });
+      await trackingInfoHandler(deps);
+    });
+
+    // Reporting the state is the whole job, and "the branch is gone" is a
+    // state, not a failure.
+    it('exits with code 0', () => {
+      expect(processExitSpy).toHaveBeenCalledWith(0);
+    });
+
+    // Nobody can check the branch out again, so no distribution lands anywhere
+    // until tracking moves — a stronger statement than "not from here".
+    it('warns that nothing is recorded anywhere and names both recoveries', () => {
+      expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+        "Branch 'feature/login' is not in this repository — deleted after a merge, or never fetched here — so no distribution is recorded anywhere. Run packmind git track --update to move tracking to 'dev', or git fetch if the branch is still on the remote.",
       );
     });
   });

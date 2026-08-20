@@ -33,6 +33,7 @@ describe('GetTrackingInfoUseCase', () => {
     gitService = {
       getGitRemoteUrl: jest.fn().mockReturnValue({ gitRemoteUrl: REMOTE_URL }),
       getCurrentBranch: jest.fn().mockReturnValue({ branch: 'dev' }),
+      branchExists: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<IGitService>;
     useCase = new GetTrackingInfoUseCase(gateway, gitService);
   });
@@ -67,7 +68,13 @@ describe('GetTrackingInfoUseCase', () => {
         repo: 'my-repo',
         trackedBranch: 'dev',
         currentBranch: 'dev',
+        trackedBranchExists: true,
       });
+    });
+
+    // Standing on the branch proves it exists.
+    it('does not ask git whether the branch exists', () => {
+      expect(gitService.branchExists).not.toHaveBeenCalled();
     });
   });
 
@@ -90,6 +97,36 @@ describe('GetTrackingInfoUseCase', () => {
         repo: 'my-repo',
         trackedBranch: 'main',
         currentBranch: 'dev',
+        trackedBranchExists: true,
+      });
+    });
+
+    it('checks the tracked branch against the repository', () => {
+      expect(gitService.branchExists).toHaveBeenCalledWith('/repo', 'main');
+    });
+  });
+
+  // The state left behind by a merged pull request whose branch was deleted:
+  // tracking survives the branch, and records nothing for anybody.
+  describe('when the tracked branch no longer exists', () => {
+    let result: GetTrackingInfoResult;
+
+    beforeEach(async () => {
+      gitService.branchExists.mockReturnValue(false);
+      gateway.getTrackedRepository.mockResolvedValue({
+        gitRepo: makeGitRepo('feature/login'),
+      });
+      result = await useCase.execute({ repoPath: '/repo' });
+    });
+
+    it('reports the tracked branch as gone', () => {
+      expect(result).toEqual({
+        status: 'tracked',
+        owner: 'my-orga',
+        repo: 'my-repo',
+        trackedBranch: 'feature/login',
+        currentBranch: 'dev',
+        trackedBranchExists: false,
       });
     });
   });
