@@ -56,6 +56,7 @@ import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/AddGitProviderUseCase';
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/AddGitRepoUseCase';
 import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/CheckBranchExistsUseCase';
+import { CheckTrackedBranchExistsUseCase } from '../useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
 import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
 import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
@@ -94,6 +95,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _updateGitProvider!: UpdateGitProviderUseCase;
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
+  private _checkTrackedBranchExists!: CheckTrackedBranchExistsUseCase;
   private _commitToGit!: CommitToGitUseCase;
   private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
@@ -211,6 +213,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
 
     this._checkBranchExists = new CheckBranchExistsUseCase(
       this.gitServices.getGitProviderService(),
+    );
+
+    this._checkTrackedBranchExists = new CheckTrackedBranchExistsUseCase(
+      this.gitServices.getGitRepoService(),
+      this._checkBranchExists,
     );
 
     this._commitToGit = new CommitToGitUseCase(
@@ -420,6 +427,10 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       repo,
       branch,
     });
+  }
+
+  public checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean> {
+    return this._checkTrackedBranchExists.execute({ repositoryId });
   }
 
   public commitToGit(

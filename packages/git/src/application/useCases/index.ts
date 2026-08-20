@@ -9,6 +9,7 @@ export { DeleteGitProviderUseCase } from './deleteGitProvider/DeleteGitProviderU
 export { DeleteGitRepoUseCase } from './deleteGitRepo/DeleteGitRepoUseCase';
 export { ListAvailableReposUseCase } from './listAvailableRepos/ListAvailableReposUseCase';
 export { CheckBranchExistsUseCase } from './checkBranchExists/CheckBranchExistsUseCase';
+export { CheckTrackedBranchExistsUseCase } from './checkTrackedBranchExists/CheckTrackedBranchExistsUseCase';
 export { CommitToGitUseCase } from './commitToGit/CommitToGitUseCase';
 export { GetFileFromRepoUseCase } from './getFileFromRepo/GetFileFromRepoUseCase';
 export { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase';

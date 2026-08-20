@@ -257,6 +257,20 @@ export interface IGitPort {
   ): Promise<boolean>;
 
   /**
+   * Check whether the branch a repository is tracked on still exists on its
+   * provider — the state a merged pull request leaves behind when its branch is
+   * deleted, in which no distribution is recorded any more.
+   *
+   * The branch is read from the stored repository, and the answer is cached for
+   * a few minutes: pages that list many repositories ask this once per
+   * repository on every render.
+   *
+   * @param repositoryId - The repository whose tracked branch to check
+   * @returns Promise of boolean indicating if the tracked branch exists
+   */
+  checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean>;
+
+  /**
    * Probe a git provider's stored credentials against the upstream API to
    * determine whether they still work. Used by the connection drawer to
    * surface a live status instead of relying on whether credentials are

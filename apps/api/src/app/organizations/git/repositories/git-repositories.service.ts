@@ -133,18 +133,7 @@ export class GitRepositoriesService {
    * branch never travels through a URL: it is read from the stored repository.
    */
   async checkTrackedBranchExists(repositoryId: GitRepoId): Promise<boolean> {
-    const gitRepo = await this.gitAdapter.getRepositoryById(repositoryId);
-
-    if (!gitRepo) {
-      throw new Error(`Repository with ID ${repositoryId} not found`);
-    }
-
-    return this.gitAdapter.checkBranchExists(
-      gitRepo.providerId,
-      gitRepo.owner,
-      gitRepo.repo,
-      gitRepo.branch,
-    );
+    return this.gitAdapter.checkTrackedBranchExists(repositoryId);
   }
 
   async getRepositoriesByProvider(
