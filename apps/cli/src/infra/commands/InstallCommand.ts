@@ -162,13 +162,20 @@ export type DistributionTrackingDecision =
   | { action: 'record-legacy' }
   | { action: 'skip'; reason: 'repo_not_tracked' }
   | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
+  | { action: 'skip'; reason: 'tracked_branch_gone'; trackedBranch: string }
   | { action: 'inform' };
 
 export function decideDistributionTracking(params: {
   lookup: TrackingLookup;
   currentBranch: string;
+  /**
+   * Asked only about a tracked branch we are not on, so the git call is skipped
+   * in the common cases. Answering `true` when it cannot tell keeps the plain
+   * wrong-branch message, which is never actively wrong.
+   */
+  branchExists: (branch: string) => boolean;
 }): DistributionTrackingDecision {
-  const { lookup, currentBranch } = params;
+  const { lookup, currentBranch, branchExists } = params;
 
   switch (lookup.status) {
     case 'flag-off':
@@ -181,9 +188,13 @@ export function decideDistributionTracking(params: {
         return { action: 'skip', reason: 'repo_not_tracked' };
       }
       if (tracked.branch !== currentBranch) {
+        // Telling someone to switch to a branch that was deleted with its
+        // merged pull request sends them after something that is not there.
         return {
           action: 'skip',
-          reason: 'wrong_branch',
+          reason: branchExists(tracked.branch)
+            ? 'wrong_branch'
+            : 'tracked_branch_gone',
           trackedBranch: tracked.branch,
         };
       }
@@ -216,6 +227,12 @@ function reportDistributionTrackingDecision(
           `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
             'packmind git track',
           )} to start tracking it.`,
+        );
+      } else if (decision.reason === 'tracked_branch_gone') {
+        logWarningConsole(
+          `Distribution not recorded — the tracked branch '${decision.trackedBranch}' is not in this repository, so nothing is recorded anywhere. Ask an admin to run ${formatCommand(
+            'packmind git track --update',
+          )} to move tracking to '${context.currentBranch}'.`,
         );
       } else {
         logWarningConsole(
@@ -278,6 +295,14 @@ async function computeDistributionTrackingDecision(
   const decision = decideDistributionTracking({
     lookup,
     currentBranch: gitBranch,
+    branchExists: (branch) => {
+      try {
+        return packmindCliHexa.branchExists(gitRoot, branch);
+      } catch {
+        // Unable to ask git: keep the message that assumes the branch is there.
+        return true;
+      }
+    },
   });
   reportDistributionTrackingDecision(decision, {
     owner,

@@ -370,6 +370,13 @@ export class PackmindCliHexa {
       .branch;
   }
 
+  public branchExists(repoPath: string, branch: string): boolean {
+    return this.hexa.services.gitRemoteUrlService.branchExists(
+      repoPath,
+      branch,
+    );
+  }
+
   public getGitRemoteUrlFromPath(repoPath: string): string {
     return this.hexa.services.gitRemoteUrlService.getGitRemoteUrl(repoPath)
       .gitRemoteUrl;

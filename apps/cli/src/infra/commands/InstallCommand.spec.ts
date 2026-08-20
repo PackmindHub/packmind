@@ -1718,6 +1718,45 @@ describe('installCommand', () => {
       mockFs.readdirSync.mockReturnValue([]);
     });
 
+    // A merged pull request whose branch was deleted leaves tracking pointing at
+    // a branch nobody can check out again.
+    describe('when the tracked branch is not in the repository', () => {
+      it('skips with a tracked_branch_gone reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => false,
+            lookup: {
+              status: 'resolved',
+              trackedGitRepo: { branch: 'feature/login' },
+            },
+            currentBranch: 'main',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'tracked_branch_gone',
+          trackedBranch: 'feature/login',
+        });
+      });
+    });
+
+    describe('when git cannot say whether the tracked branch exists', () => {
+      // Never claim a branch is gone on a guess: the plain mismatch message
+      // holds either way.
+      it('falls back to the wrong_branch reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => true,
+            lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+            currentBranch: 'dev',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'wrong_branch',
+          trackedBranch: 'main',
+        });
+      });
+    });
+
     describe('when on the tracked repository and branch', () => {
       beforeEach(async () => {
         mockGetTrackedRepository.mockResolvedValue({
@@ -1849,6 +1888,7 @@ describe('decideDistributionTracking', () => {
     it('records unconditionally (legacy behaviour)', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
           lookup: { status: 'flag-off' },
           currentBranch: 'main',
         }),
@@ -1860,6 +1900,7 @@ describe('decideDistributionTracking', () => {
     it('informs the user', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
           lookup: { status: 'unavailable' },
           currentBranch: 'main',
         }),
@@ -1871,6 +1912,7 @@ describe('decideDistributionTracking', () => {
     it('skips with a repo_not_tracked reason', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
           lookup: { status: 'resolved', trackedGitRepo: null },
           currentBranch: 'main',
         }),
@@ -1882,6 +1924,7 @@ describe('decideDistributionTracking', () => {
     it('skips with a wrong_branch reason and the tracked branch', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'dev',
         }),
@@ -1897,6 +1940,7 @@ describe('decideDistributionTracking', () => {
     it('records the distribution', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'main',
         }),
