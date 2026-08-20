@@ -84,7 +84,6 @@ describe('GitProvidersController', () => {
       | 'completeGithubAppManifest'
       | 'getGithubAppStatus'
       | 'revokeGithubApp'
-      | 'checkBranchExists'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -106,7 +105,6 @@ describe('GitProvidersController', () => {
       completeGithubAppManifest: jest.fn(),
       getGithubAppStatus: jest.fn(),
       revokeGithubApp: jest.fn(),
-      checkBranchExists: jest.fn(),
     };
     logger = stubLogger();
 
@@ -118,73 +116,6 @@ describe('GitProvidersController', () => {
   });
 
   afterEach(() => jest.clearAllMocks());
-
-  describe('checkBranchExists', () => {
-    const providerId = createGitProviderId('provider-1');
-
-    describe('when the branch name contains a slash', () => {
-      let result: Awaited<ReturnType<typeof controller.checkBranchExists>>;
-
-      beforeEach(async () => {
-        mockService.checkBranchExists.mockResolvedValue(false);
-        result = await controller.checkBranchExists(
-          orgId,
-          providerId,
-          'my-orga',
-          'my-repo',
-          'feature/login',
-        );
-      });
-
-      // The whole point of the query-parameter form: a path segment cannot
-      // carry a slash through nginx.
-      it('passes the branch through to the service unchanged', () => {
-        expect(mockService.checkBranchExists).toHaveBeenCalledWith(
-          orgId,
-          providerId,
-          'my-orga',
-          'my-repo',
-          'feature/login',
-        );
-      });
-
-      it('reports the branch as absent', () => {
-        expect(result).toEqual({ exists: false });
-      });
-    });
-
-    describe('when the branch parameter is missing', () => {
-      it('rejects the request', async () => {
-        await expect(
-          controller.checkBranchExists(
-            orgId,
-            providerId,
-            'my-orga',
-            'my-repo',
-            '',
-          ),
-        ).rejects.toThrow(BadRequestException);
-      });
-    });
-
-    describe('when the owner parameter is missing', () => {
-      beforeEach(async () => {
-        await expect(
-          controller.checkBranchExists(
-            orgId,
-            providerId,
-            '',
-            'my-repo',
-            'main',
-          ),
-        ).rejects.toThrow(BadRequestException);
-      });
-
-      it('does not reach the provider', () => {
-        expect(mockService.checkBranchExists).not.toHaveBeenCalled();
-      });
-    });
-  });
 
   describe('getGithubAppInstallUrl', () => {
     describe('when mode is shared', () => {

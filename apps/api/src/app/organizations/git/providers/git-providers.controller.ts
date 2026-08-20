@@ -469,65 +469,6 @@ export class GitProvidersController {
     }
   }
 
-  /**
-   * The branch travels as a query parameter, not as a path segment: `feature/x`
-   * is a perfectly ordinary branch name, and nginx sits in front of this API
-   * with a `proxy_pass` that carries a URI, which decodes `%2F` back into a
-   * separator before the request reaches Nest. Percent-encoding a branch into
-   * the path therefore cannot work in a deployed instance.
-   */
-  @Get(':id/branch-exists')
-  async checkBranchExists(
-    @Param('orgId') organizationId: OrganizationId,
-    @Param('id') gitProviderId: GitProviderId,
-    @Query('owner') owner: string,
-    @Query('repo') repo: string,
-    @Query('branch') branch: string,
-  ): Promise<{ exists: boolean }> {
-    this.logger.info(
-      'GET /organizations/:orgId/git/providers/:id/branch-exists - Checking if branch exists',
-      {
-        organizationId,
-        gitProviderId,
-        owner,
-        repo,
-        branch,
-      },
-    );
-
-    if (!owner || !repo || !branch) {
-      throw new BadRequestException(
-        'owner, repo and branch query parameters are required',
-      );
-    }
-
-    try {
-      const exists = await this.gitProvidersService.checkBranchExists(
-        organizationId,
-        gitProviderId,
-        owner,
-        repo,
-        branch,
-      );
-      return { exists };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/:id/repos/:owner/:repo/branches/:branch/exists - Failed to check if branch exists',
-        {
-          organizationId,
-          gitProviderId,
-          owner,
-          repo,
-          branch,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
   @Put(':id')
   async updateGitProvider(
     @Param('orgId') organizationId: OrganizationId,

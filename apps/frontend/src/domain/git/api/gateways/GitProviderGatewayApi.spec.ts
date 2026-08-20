@@ -123,63 +123,6 @@ describe('GitProviderGatewayApi', () => {
     });
   });
 
-  describe('checkBranchExists', () => {
-    describe('when the branch name contains a slash', () => {
-      beforeEach(async () => {
-        mockedApi.get.mockResolvedValue({ exists: false } as never);
-        await gateway.checkBranchExists(
-          organizationId,
-          providerId,
-          'my-orga',
-          'my-repo',
-          'feature/login',
-        );
-      });
-
-      // A slash in a path segment cannot survive nginx, which decodes %2F back
-      // into a separator before Nest sees the request.
-      it('passes the branch as a query parameter', () => {
-        expect(mockedApi.get).toHaveBeenCalledWith(
-          `/organizations/${organizationId}/git/providers/${providerId}/branch-exists?owner=my-orga&repo=my-repo&branch=feature%2Flogin`,
-        );
-      });
-    });
-
-    describe('when the provider answers', () => {
-      it('returns whether the branch exists', async () => {
-        mockedApi.get.mockResolvedValue({ exists: true } as never);
-
-        await expect(
-          gateway.checkBranchExists(
-            organizationId,
-            providerId,
-            'my-orga',
-            'my-repo',
-            'main',
-          ),
-        ).resolves.toBe(true);
-      });
-    });
-
-    describe('when the request fails', () => {
-      // Reporting "gone" because the call failed would accuse the branch of
-      // something the provider never said.
-      it('propagates the failure instead of answering false', async () => {
-        mockedApi.get.mockRejectedValue(new Error('network down'));
-
-        await expect(
-          gateway.checkBranchExists(
-            organizationId,
-            providerId,
-            'my-orga',
-            'my-repo',
-            'main',
-          ),
-        ).rejects.toThrow('network down');
-      });
-    });
-  });
-
   describe('updateGitProvider', () => {
     describe('when only displayName is provided', () => {
       beforeEach(async () => {

@@ -246,24 +246,6 @@ export class GitProviderGatewayApi
     );
   }
 
-  async checkBranchExists(
-    organizationId: OrganizationId,
-    providerId: GitProviderId,
-    owner: string,
-    repo: string,
-    branch: string,
-  ): Promise<boolean> {
-    // Query parameters rather than path segments: a branch name may contain
-    // slashes, which no amount of percent-encoding survives in a path once
-    // nginx has normalized the URI. Failures propagate — "we could not ask"
-    // must not be presented as "the branch is gone".
-    const query = new URLSearchParams({ owner, repo, branch });
-    const response = await this._api.get<{ exists: boolean }>(
-      `${this._endpoint}/${organizationId}/git/providers/${providerId}/branch-exists?${query}`,
-    );
-    return response.exists;
-  }
-
   async checkTrackedBranchExists(
     organizationId: OrganizationId,
     repositoryId: GitRepoId,
