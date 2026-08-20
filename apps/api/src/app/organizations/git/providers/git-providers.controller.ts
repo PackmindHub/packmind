@@ -469,16 +469,23 @@ export class GitProvidersController {
     }
   }
 
-  @Get(':id/repos/:owner/:repo/branches/:branch/exists')
+  /**
+   * The branch travels as a query parameter, not as a path segment: `feature/x`
+   * is a perfectly ordinary branch name, and nginx sits in front of this API
+   * with a `proxy_pass` that carries a URI, which decodes `%2F` back into a
+   * separator before the request reaches Nest. Percent-encoding a branch into
+   * the path therefore cannot work in a deployed instance.
+   */
+  @Get(':id/branch-exists')
   async checkBranchExists(
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') gitProviderId: GitProviderId,
-    @Param('owner') owner: string,
-    @Param('repo') repo: string,
-    @Param('branch') branch: string,
+    @Query('owner') owner: string,
+    @Query('repo') repo: string,
+    @Query('branch') branch: string,
   ): Promise<{ exists: boolean }> {
     this.logger.info(
-      'GET /organizations/:orgId/git/providers/:id/repos/:owner/:repo/branches/:branch/exists - Checking if branch exists',
+      'GET /organizations/:orgId/git/providers/:id/branch-exists - Checking if branch exists',
       {
         organizationId,
         gitProviderId,
@@ -487,6 +494,12 @@ export class GitProvidersController {
         branch,
       },
     );
+
+    if (!owner || !repo || !branch) {
+      throw new BadRequestException(
+        'owner, repo and branch query parameters are required',
+      );
+    }
 
     try {
       const exists = await this.gitProvidersService.checkBranchExists(
