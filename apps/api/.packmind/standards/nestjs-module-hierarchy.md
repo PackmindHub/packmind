@@ -2,6 +2,10 @@
 
 Establish a consistent NestJS module structure in the API application where each resource is encapsulated in its own module with proper hierarchical organization to enhance maintainability, scalability, and clear separation of concerns across the codebase. This standard applies to all modules (new and existing) in apps/api/src/app/ and ensures that the module structure mirrors the URL hierarchy, making it easier to navigate and understand the application's architecture.
 
+## Scope
+
+**/*.controller.ts,**/*.module.ts,**/*.service.ts
+
 ## Rules
 
 * Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays to ensure a single source of truth for the entire API route structure

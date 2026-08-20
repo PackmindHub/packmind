@@ -2,6 +2,10 @@
 
 Maintain a consistent and well-structured CHANGELOG.MD file following the Keep a Changelog format to ensure all releases are properly documented with accurate version links and dates. This standard applies whenever creating or updating the CHANGELOG.MD file in the repository root.
 
+## Scope
+
+CHANGELOG.MD
+
 ## Rules
 
 * Ensure all released versions have their corresponding comparison links defined at the bottom of the CHANGELOG.MD file in the format [X.Y.Z]: https://github.com/PackmindHub/packmind/compare/release/<previous>...release/X.Y.Z

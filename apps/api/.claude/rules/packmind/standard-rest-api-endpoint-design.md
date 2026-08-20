@@ -3,12 +3,12 @@ name: 'REST API Endpoint Design'
 paths:
   - "REST API route definitions and controller endpoints"
 alwaysApply: false
-description: 'Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent.'
+description: 'Conventions for designing REST API endpoints that are predictable, self-documenting, and aligned with distinct business actions. Favors dedicated action endpoints over generic status updates, and routes that reflect the ownership hierarchy without unrelated resource IDs.'
 ---
 
 # Standard: REST API Endpoint Design
 
-Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
+Conventions for designing REST API endpoints that are predictable, self-documenting, and aligned with distinct business actions. Favors dedicated action endpoints over generic status updates, and rout... :
 * Create one endpoint per business action rather than a single endpoint handling multiple actions via request body
 * Only include resource IDs from the ownership chain in the route — omit IDs of related but non-parent resources
 * Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body

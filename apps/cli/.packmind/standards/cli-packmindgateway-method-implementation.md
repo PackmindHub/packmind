@@ -2,6 +2,10 @@
 
 When adding new methods to the PackmindGateway class in the CLI application, use the PackmindHttpClient abstraction to avoid code duplication and maintain consistency. The older methods contain extensive boilerplate (manual API key decoding, JWT parsing, duplicated error handling) that should not be replicated.
 
+## Scope
+
+apps/cli/src/infra/repositories/*Gateway.ts
+
 ## Rules
 
 * Use `this.httpClient.getAuthContext()` to retrieve `organizationId` instead of manually decoding the API key and JWT

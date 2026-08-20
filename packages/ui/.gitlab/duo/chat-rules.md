@@ -11,7 +11,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 # Standard: Front-end UI and Design Systems
 
-Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components. :
+This standard establishes guidelines for using Chakra UI v3 through the @packmind/ui design system to ensure consistent UI implementation across the frontend application. The @packmind/ui package prov... :
 * Never use vanilla HTML tags (div, span, button, input, etc.) in frontend component code; always use corresponding @packmind/ui components (PMBox, PMText, PMButton, PMInput, etc.) to ensure consistent styling and theming.
 * Prefer using the design token 'full' instead of the literal value '100%' for width or height properties in UI components to maintain consistency with the design system.
 * Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to maintain a consistent UI abstraction layer, e.g., import { PMButton } from '@packmind/ui'; not import { Button } from '@chakra-ui/react';

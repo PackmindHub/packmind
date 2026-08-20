@@ -3,12 +3,12 @@ name: 'Compliance - Logging Personal Information'
 paths:
   - "**/*.ts"
 alwaysApply: false
-description: 'Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries.'
+description: 'This standard ensures personal information is not exposed in application logs across all environments (development, staging, and production). Logs are often forwarded to external processors such as Datadog, making it critical to prevent leaking sensitive user data. By masking personal information in logs, we maintain user privacy, comply with data protection regulations, and reduce security risks. This standard applies when logging user-related information, debugging authentication flows, tracking user actions, or handling error scenarios involving personal data.'
 ---
 
 # Standard: Compliance - Logging Personal Information
 
-Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
+This standard ensures personal information is not exposed in application logs across all environments (development, staging, and production). Logs are often forwarded to external processors such as Da... :
 * Never log personal information in clear text across all log levels. Always mask sensitive data such as emails, phone numbers, IP addresses, and other personally identifiable information before logging.
 * Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 

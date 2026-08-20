@@ -65,7 +65,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 # Standard: Back-end repositories SQL queries using TypeORM
 
-Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries. :
+This standard provides guidelines for writing SQL queries using TypeORM in back-end repositories located in /infra/repositories/\*Repository.ts. TypeORM offers multiple approaches to query data, but f... :
 * Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
 * Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
 * Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
@@ -74,7 +74,7 @@ Full standard is available here for further request: [Back-end repositories SQL 
 
 # Standard: Back-end TypeScript Clean Code Practices
 
-Establish back-end TypeScript clean code rules in the Packmind monorepo (/packages/**/*.ts)—including PackmindLogger constructor injection, disciplined logger.info/error usage, top-of-file static imports, custom Error subclasses, and adapter-created use cases with their own loggers—to improve maintainability, debuggability, and consistent architecture across services. :
+This standard establishes clean code practices in TypeScript for back-end development to enhance maintainability and ensure consistent patterns across services. It covers logging best practices, error... :
 * Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
 * Inject PackmindLogger as a constructor parameter with a default value using a variable or a string representing the class name.
 * Instantiate use cases in adapters without passing the adapter's logger; use cases must create their own logger for proper origin tracking.
@@ -85,7 +85,7 @@ Full standard is available here for further request: [Back-end TypeScript Clean 
 
 # Standard: Domain Events
 
-Standardize TypeScript domain events by defining `{EventName}Payload` interfaces and `Event`-suffixed classes in `packages/types/src/{domain}/events/` (barrel `index.ts`) extending `UserEvent`/`SystemEvent` with `static override readonly eventName` in `domain.entity.action` format, emitting via `eventEmitterService.emit(new MyEvent(payload))`, and handling via `PackmindListener<TAdapter>.registerHandlers()` with `this.subscribe(EventClass, this.handlerMethod)` and arrow-function handlers to enable decoupled cross-domain communication and reliable subscriptions. :
+Domain events enable communication between hexas without creating direct dependencies. Apply these rules when creating events, emitting them, or implementing listeners to react to events from other do... :
 * Define event classes in `packages/types/src/{domain}/events/` with an `index.ts` barrel file
 * Define payload as a separate `{EventName}Payload` interface
 * Extend `PackmindListener<TAdapter>` and implement `registerHandlers()` to subscribe to events
@@ -101,7 +101,7 @@ Full standard is available here for further request: [Domain Events](.packmind/s
 
 # Standard: Port-Adapter Cross-Domain Integration
 
-Define port interfaces and cross-domain contracts in @packmind/types and packages/types/src/<domain>/contracts/, expose adapters via Hexa getters, and use async HexaFactory.initialize() with registry isRegistered()/get() checks to prevent circular dependencies, maintain loose coupling, and support resilient synchronous and asynchronous cross-domain operations. :
+This standard defines how domain packages communicate with each other through the Port/Adapter pattern in our DDD monorepo architecture. By following these rules, you prevent circular dependencies, ma... :
 * Declare all Command and Response types that define contracts between domains in packages/types/src/<domain>/contracts/ to ensure a single source of truth and prevent import cycles between domain packages.
 * Define port interfaces in @packmind/types with domain-specific contracts that expose only the operations needed by consumers, where each method accepts a Command type and returns a Response type or domain entity.
 * Expose adapters through public getter methods in the Hexa class that return the port interface implementation, as this is the only way external domains should access another domain's functionality.
@@ -112,7 +112,7 @@ Full standard is available here for further request: [Port-Adapter Cross-Domain 
 
 # Standard: Scoped Repository Patterns
 
-Enforce tenant-safe repository query and write patterns in Packmind repositories extending SpaceScopedRepository or OrganizationScopedRepository by using createScopedQueryBuilder, avoiding findById overrides, requiring scope IDs on collection methods, delegating saves/updates to this.add(), and testing cross-scope isolation to ensure consistent data isolation and soft-delete correctness. :
+Enforce data isolation and consistent query patterns in repositories extending SpaceScopedRepository or OrganizationScopedRepository, ensuring tenant-safe data access across the Packmind codebase. :
 * Delegate write operations (`save`, `update`) to the inherited `this.add()` method
 * Do not override `findById` in scoped repositories — the base class handles soft delete via `QueryOption.includeDeleted`
 * Include `spaceId` or `organizationId` as a parameter on all collection-returning domain interface methods
@@ -123,7 +123,7 @@ Full standard is available here for further request: [Scoped Repository Patterns
 
 # Standard: Use Case Architecture Patterns
 
-Standardize Packmind monorepo hexagonal-architecture use cases with contract-per-file Command/Response/IUseCase types, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand inputs, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase execution methods to enforce consistent auth validation, separation of concerns, and type-safe command passing. :
+This standard defines how to structure use cases in the Packmind monorepo following hexagonal architecture principles. Use cases represent the entry points to domain logic and must follow consistent p... :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
 * Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both

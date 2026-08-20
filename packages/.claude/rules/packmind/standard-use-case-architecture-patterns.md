@@ -1,12 +1,12 @@
 ---
 name: 'Use Case Architecture Patterns'
 alwaysApply: true
-description: 'Standardize Packmind monorepo hexagonal-architecture use cases with contract-per-file Command/Response/IUseCase types, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand inputs, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase execution methods to enforce consistent auth validation, separation of concerns, and type-safe command passing.'
+description: 'This standard defines how to structure use cases in the Packmind monorepo following hexagonal architecture principles. Use cases represent the entry points to domain logic and must follow consistent patterns for authentication, authorization, and command/response structures. This standard applies when creating new use cases, refactoring existing ones, or implementing cross-domain integrations through hexagon facades. Each use case corresponds to a single business operation and must be properly typed, validated, and accessible through a clean contract interface. The standard enforces separation of concerns between public (unauthenticated), member (organization member), and admin (organization admin) operations.'
 ---
 
 # Standard: Use Case Architecture Patterns
 
-Standardize Packmind monorepo hexagonal-architecture use cases with contract-per-file Command/Response/IUseCase types, PackmindCommand/PublicPackmindCommand/SpaceMemberCommand inputs, and AbstractMemberUseCase/AbstractAdminUseCase/AbstractSpaceMemberUseCase execution methods to enforce consistent auth validation, separation of concerns, and type-safe command passing. :
+This standard defines how to structure use cases in the Packmind monorepo following hexagonal architecture principles. Use cases represent the entry points to domain logic and must follow consistent p... :
 * Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
 * Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
 * Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both

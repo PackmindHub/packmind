@@ -2,6 +2,10 @@
 
 Enforce clean separation between domain contracts and application logic in apps/cli use cases, ensuring use cases focus purely on business operations without presentation concerns like user output or generic error handling.
 
+## Scope
+
+Use case files in apps/cli/src/domain/useCases/ and apps/cli/src/application/useCases/
+
 ## Rules
 
 * Define use case interfaces in src/domain/useCases/ directory

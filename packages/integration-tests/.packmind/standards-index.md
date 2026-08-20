@@ -4,7 +4,7 @@ This standards index contains all available coding standards that can be used by
 
 ## Available Standards
 
-- [Integration Tests Structure and Patterns](./standards/integration-tests-structure-and-patterns.md) : Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage.
+- [Integration Tests Structure and Patterns](./standards/integration-tests-structure-and-patterns.md) : Define testing patterns for integration tests in the Packmind monorepo to ensure consistent organization, proper resource management, and comprehensive test coverage using hexagonal architecture principles.
 
 
 ---

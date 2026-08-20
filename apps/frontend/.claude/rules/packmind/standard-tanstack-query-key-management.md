@@ -3,12 +3,12 @@ name: 'TanStack Query Key Management'
 paths:
   - "apps/frontend/**/*.tsx"
 alwaysApply: false
-description: 'Standardize TanStack Query query key definitions in per-domain api/queryKeys.ts files using const base key arrays, separate scope constants, and operation enums with hierarchical organization→domain→operation→identifiers ordering to enable type-safe prefix-based cache invalidation without circular dependencies and to ensure mutations invalidate all affected sibling scopes.'
+description: 'TanStack Query uses prefix matching to invalidate cached queries, matching keys from left to right like a file path. Properly structured query keys enable efficient cache invalidation at any scope level (organization-wide, domain-wide, or specific operations). Each domain defines its query scope constant and operation enum in a dedicated queryKeys.ts file, ensuring type safety and preventing circular dependencies when domains import each other''s keys for invalidation.'
 ---
 
 # Standard: TanStack Query Key Management
 
-Standardize TanStack Query query key definitions in per-domain api/queryKeys.ts files using const base key arrays, separate scope constants, and operation enums with hierarchical organization→domain→operation→identifiers ordering to enable type-safe prefix-based cache invalidation without circular dependencies and to ensure mutations invalidate all affected sibling scopes. :
+TanStack Query uses prefix matching to invalidate cached queries, matching keys from left to right like a file path. Properly structured query keys enable efficient cache invalidation at any scope lev... :
 * Define base query key arrays as const to enable precise invalidation patterns and avoid duplication
 * Define domain query scope as a separate const outside enum to maintain clear separation between scope and operations
 * Define query keys in a dedicated queryKeys.ts file in the domain's api folder for centralized management

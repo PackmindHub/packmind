@@ -2,6 +2,10 @@
 
 Enforce data isolation and consistent query patterns in repositories extending SpaceScopedRepository or OrganizationScopedRepository, ensuring tenant-safe data access across the Packmind codebase.
 
+## Scope
+
+Repositories extending SpaceScopedRepository or OrganizationScopedRepository (**/infra/repositories/*Repository.ts)
+
 ## Rules
 
 * Use `createScopedQueryBuilder(spaceId)` or `createScopedQueryBuilder(organizationId)` for all finder methods in scoped repositories
