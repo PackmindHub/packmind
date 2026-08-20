@@ -50,6 +50,23 @@ function readStoredMode(): SpaceNavMode {
 }
 
 /**
+ * The one resolution rule, so a component and a loader cannot disagree about
+ * which mode is active: an explicit `nav` wins over what is stored, and a value
+ * neither of them recognises falls back to the default.
+ */
+function pickMode(requested: string | null): SpaceNavMode {
+  return isSpaceNavMode(requested) ? requested : readStoredMode();
+}
+
+/**
+ * The same answer for code that has a query string rather than hooks — a route
+ * `clientLoader` deciding where to send a landing page, for instance.
+ */
+export function resolveSpaceNavMode(search: string): SpaceNavMode {
+  return pickMode(new URLSearchParams(search).get('nav'));
+}
+
+/**
  * Holds the mode for the whole authenticated layout. `?nav=plugin-first` (or
  * `?nav=today`) wins over what is stored and is written back, so a link is
  * enough to pin a demo to one architecture — which is also how an e2e spec
@@ -60,9 +77,7 @@ export function SpaceNavModeProvider({
 }: Readonly<{ children: ReactNode }>) {
   const [searchParams] = useSearchParams();
   const requestedMode = searchParams.get('nav');
-  const [mode, setMode] = useState<SpaceNavMode>(() =>
-    isSpaceNavMode(requestedMode) ? requestedMode : readStoredMode(),
-  );
+  const [mode, setMode] = useState<SpaceNavMode>(() => pickMode(requestedMode));
 
   useEffect(() => {
     if (isSpaceNavMode(requestedMode)) {
