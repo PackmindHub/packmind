@@ -75,7 +75,11 @@ export function ContextPackagePane({
             of packages: the rail creates containers, this creates what goes in
             them, and side by side the two would read as the same gesture.
           */}
-          <ContextCreateMenu orgSlug={orgSlug} spaceSlug={spaceSlug} />
+          <ContextCreateMenu
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            packageId={pkg.id}
+          />
         </PMHStack>
       </PMHStack>
 

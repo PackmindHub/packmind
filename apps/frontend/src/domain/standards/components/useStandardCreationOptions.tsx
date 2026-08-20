@@ -13,9 +13,11 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
+import type { PackageId } from '@packmind/types';
 import { GETTING_STARTED_CREATE_STANDARD_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { routes } from '../../../shared/utils/routes';
+import { withPackageParam } from '../../deployments/hooks/useCreateIntoPackage';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 /**
@@ -33,7 +35,13 @@ import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/pr
 export function useStandardCreationOptions({
   orgSlug,
   spaceSlug,
-}: Readonly<{ orgSlug: string; spaceSlug: string }>): {
+  packageId,
+}: Readonly<{
+  orgSlug: string;
+  spaceSlug: string;
+  /** When set, a standard created from the form joins this package. */
+  packageId?: PackageId;
+}>): {
   items: ReactNode;
   dialogs: ReactNode;
 } {
@@ -87,7 +95,12 @@ export function useStandardCreationOptions({
         </PMVStack>
       </PMMenu.Item>
       <PMMenu.Item value="standard-blank" p={3} asChild cursor={'pointer'}>
-        <Link to={routes.space.toCreateStandard(orgSlug, spaceSlug)}>
+        <Link
+          to={withPackageParam(
+            routes.space.toCreateStandard(orgSlug, spaceSlug),
+            packageId,
+          )}
+        >
           <PMVStack alignItems={'flex-start'} gap={0}>
             <PMHStack gap={2} mb={1}>
               <PMIcon color="beige.200" size="lg">
@@ -98,7 +111,9 @@ export function useStandardCreationOptions({
               </PMText>
             </PMHStack>
             <PMText fontSize="xs" color="secondary">
-              Build a custom standard manually
+              {packageId
+                ? 'Build a custom standard, added to this package'
+                : 'Build a custom standard manually'}
             </PMText>
           </PMVStack>
         </Link>

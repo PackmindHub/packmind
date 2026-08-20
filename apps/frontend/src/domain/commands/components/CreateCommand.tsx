@@ -11,12 +11,14 @@ import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
+import { useCreateIntoPackage } from '../../deployments/hooks/useCreateIntoPackage';
 import { pmToaster } from '@packmind/ui';
 
 export const CreateCommand = () => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const nav = useNavigation();
+  const { attachToPackage } = useCreateIntoPackage();
 
   const [alert, setAlert] = useState<{
     type: 'success' | 'error';
@@ -54,7 +56,22 @@ export const CreateCommand = () => {
           pmToaster.success({
             title: RECIPE_MESSAGES.success.created,
           });
-          nav.space.toCommand(createdCommand.id);
+          /*
+           * Navigating only once the membership is settled, so the detail page
+           * shows the package the user created the command for.
+           */
+          void attachToPackage({ commandIds: [createdCommand.id] }).then(
+            (outcome) => {
+              if (outcome === 'failed') {
+                pmToaster.error({
+                  title: 'Command created, but not added to the package',
+                  description:
+                    'It is in the space. Add it to a package to distribute it.',
+                });
+              }
+              nav.space.toCommand(createdCommand.id);
+            },
+          );
         },
         onError: (error) => {
           console.error('Failed to create command:', error);

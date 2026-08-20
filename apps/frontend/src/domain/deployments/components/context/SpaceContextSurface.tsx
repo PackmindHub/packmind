@@ -9,13 +9,11 @@ import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { PackagesBlankState } from '../PackagesBlankState';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextPackagePane } from './ContextPackagePane';
 import { SpaceInventoryPane } from './SpaceInventoryPane';
-
-/** The rail's selection, in the URL rather than in state — see below. */
-const SELECTED_PACKAGE_PARAM = 'package';
 
 /**
  * What the same parameter says when the pane shows the space-wide inventory
@@ -84,7 +82,7 @@ export function SpaceContextSurface() {
    * Context with nothing open would make the surface look like it failed, and
    * landing on a package is what says the package is the unit here.
    */
-  const requestedId = searchParams.get(SELECTED_PACKAGE_PARAM);
+  const requestedId = searchParams.get(PACKAGE_PARAM);
   const showingInventory = requestedId === INVENTORY_VALUE;
   const selectedPackage =
     packages.find((pkg) => pkg.id === requestedId) ?? packages[0] ?? null;
@@ -95,7 +93,7 @@ export function SpaceContextSurface() {
       // user arrived with survives the selection.
       setSearchParams(
         (previous) => {
-          previous.set(SELECTED_PACKAGE_PARAM, value);
+          previous.set(PACKAGE_PARAM, value);
           return previous;
         },
         { replace: true },

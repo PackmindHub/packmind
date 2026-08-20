@@ -13,8 +13,10 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuBot, LuPencilLine } from 'react-icons/lu';
+import type { PackageId } from '@packmind/types';
 import { GETTING_STARTED_CREATE_COMMAND_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
+import { withPackageParam } from '../../deployments/hooks/useCreateIntoPackage';
 
 /**
  * The ways to create a command, as menu items plus the surfaces they open. See
@@ -23,7 +25,13 @@ import { routes } from '../../../shared/utils/routes';
 export function useCommandCreationOptions({
   orgSlug,
   spaceSlug,
-}: Readonly<{ orgSlug: string; spaceSlug: string }>): {
+  packageId,
+}: Readonly<{
+  orgSlug: string;
+  spaceSlug: string;
+  /** When set, a command created from the form joins this package. */
+  packageId?: PackageId;
+}>): {
   items: ReactNode;
   dialogs: ReactNode;
 } {
@@ -53,7 +61,12 @@ export function useCommandCreationOptions({
         </PMVStack>
       </PMMenu.Item>
       <PMMenu.Item value="command-blank" p={3} asChild cursor={'pointer'}>
-        <Link to={routes.space.toCreateCommand(orgSlug, spaceSlug)}>
+        <Link
+          to={withPackageParam(
+            routes.space.toCreateCommand(orgSlug, spaceSlug),
+            packageId,
+          )}
+        >
           <PMVStack alignItems={'flex-start'} gap={0}>
             <PMHStack gap={2} mb={1}>
               <PMIcon color="beige.200" size="lg">
@@ -64,7 +77,9 @@ export function useCommandCreationOptions({
               </PMText>
             </PMHStack>
             <PMText fontSize="xs" color="secondary">
-              Build a custom command manually
+              {packageId
+                ? 'Build a custom command, added to this package'
+                : 'Build a custom command manually'}
             </PMText>
           </PMVStack>
         </Link>

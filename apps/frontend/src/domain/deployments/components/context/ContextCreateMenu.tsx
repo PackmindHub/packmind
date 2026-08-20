@@ -1,4 +1,5 @@
 import { PMButton, PMMenu, PMPortal, PMText } from '@packmind/ui';
+import type { PackageId } from '@packmind/types';
 import { useStandardCreationOptions } from '../../../standards/components/useStandardCreationOptions';
 import { useCommandCreationOptions } from '../../../commands/components/useCommandCreationOptions';
 import { useSkillCreationOptions } from '../../../skills/components/useSkillCreationOptions';
@@ -21,13 +22,24 @@ import { COMPONENT_TYPE_LABELS } from './buildPackageContext';
  * entries is a form, because a skill is a folder of files rather than a page of
  * fields; both explain a route in. Listing them next to the others says a skill
  * can be made, which omitting them would deny.
+ *
+ * The package travels to the two manual forms, which create one component and
+ * know its id at the end, so it can join the package in the same gesture. The
+ * other paths cannot: an agent writes later and an import writes many at once,
+ * so what they produce lands in the space and is caught by the inventory's
+ * orphan line.
  */
 export function ContextCreateMenu({
   orgSlug,
   spaceSlug,
-}: Readonly<{ orgSlug: string; spaceSlug: string }>) {
-  const standards = useStandardCreationOptions({ orgSlug, spaceSlug });
-  const commands = useCommandCreationOptions({ orgSlug, spaceSlug });
+  packageId,
+}: Readonly<{ orgSlug: string; spaceSlug: string; packageId: PackageId }>) {
+  const standards = useStandardCreationOptions({
+    orgSlug,
+    spaceSlug,
+    packageId,
+  });
+  const commands = useCommandCreationOptions({ orgSlug, spaceSlug, packageId });
   const skills = useSkillCreationOptions();
 
   return (
