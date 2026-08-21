@@ -121,7 +121,12 @@ export function SpaceContextSurface() {
     );
   }
 
-  if (isError) {
+  /*
+   * The space and the organization are folded into the same branch as a failed
+   * query on purpose: without them the package query never ran, so there is
+   * nothing to show and nothing else to say about it.
+   */
+  if (isError || !spaceId || !organization) {
     return (
       <PMBox padding={6}>
         <PMText color="error">Error loading packages.</PMText>
@@ -173,7 +178,10 @@ export function SpaceContextSurface() {
               <ContextPackagePane
                 key={selectedPackage.id}
                 pkg={selectedPackage}
+                packages={packages}
                 catalogue={catalogue}
+                spaceId={spaceId}
+                organizationId={organization.id}
                 orgSlug={orgSlug}
                 spaceSlug={spaceSlug}
                 packageHref={routes.space.toPackage(

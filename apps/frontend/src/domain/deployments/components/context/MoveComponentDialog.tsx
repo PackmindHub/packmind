@@ -188,14 +188,16 @@ export function MoveComponentDialog({
 
             <PMDialog.Body>
               <PMVStack gap={4} alignItems="stretch">
-                <PMText variant="body" color="secondary">
-                  This {kind} leaves{' '}
-                  <PMText as="span" fontWeight={500} color="primary">
-                    {source.name}
-                  </PMText>{' '}
-                  and joins the package you pick. It stays in your library
-                  either way.
-                </PMText>
+                {targets.length > 0 && (
+                  <PMText variant="body" color="secondary">
+                    This {kind} leaves{' '}
+                    <PMText as="span" fontWeight={500} color="primary">
+                      {source.name}
+                    </PMText>{' '}
+                    and joins the package you pick. It stays in your library
+                    either way.
+                  </PMText>
+                )}
 
                 {sourcePlaces ? (
                   <PMHStack
@@ -284,15 +286,19 @@ export function MoveComponentDialog({
             </PMDialog.Body>
 
             <PMDialog.Footer>
-              <PMDialog.CloseTrigger asChild>
-                <PMButton
-                  variant="tertiary"
-                  size="sm"
-                  disabled={busyPackageId !== null}
-                >
-                  Cancel
-                </PMButton>
-              </PMDialog.CloseTrigger>
+              {/*
+                A plain button, not a CloseTrigger: Chakra pins the close
+                trigger to the top-right corner of the content, so one placed
+                in the footer lands on top of the header's own close button.
+              */}
+              <PMButton
+                variant="tertiary"
+                size="sm"
+                disabled={busyPackageId !== null}
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </PMButton>
             </PMDialog.Footer>
           </PMDialog.Content>
         </PMDialog.Positioner>

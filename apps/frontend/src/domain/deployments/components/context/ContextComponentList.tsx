@@ -1,9 +1,17 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { PMBox, PMIcon, PMText } from '@packmind/ui';
+import {
+  PMBox,
+  PMHStack,
+  PMIcon,
+  PMIconButton,
+  PMText,
+  PMTooltip,
+} from '@packmind/ui';
 import {
   LuBookCheck,
   LuChevronRight,
+  LuFolderInput,
   LuPackage,
   LuTerminal,
   LuWandSparkles,
@@ -43,9 +51,16 @@ export type ComponentListEntry = {
 export function ContextComponentList({
   entries,
   showPackages = false,
+  onMove,
 }: Readonly<{
   entries: readonly ComponentListEntry[];
   showPackages?: boolean;
+  /**
+   * Offered per list rather than per row, and only by a list that is scoped to
+   * one package: read across the space a component can sit in none or in
+   * several packages, so there is no source to move it out of.
+   */
+  onMove?: (component: ContextComponent) => void;
 }>) {
   return (
     <PMBox
@@ -60,6 +75,7 @@ export function ContextComponentList({
           entry={entry}
           isFirst={index === 0}
           showPackages={showPackages}
+          onMove={onMove}
         />
       ))}
     </PMBox>
@@ -70,74 +86,104 @@ function ComponentRow({
   entry,
   isFirst,
   showPackages,
+  onMove,
 }: Readonly<{
   entry: ComponentListEntry;
   isFirst: boolean;
   showPackages: boolean;
+  onMove?: (component: ContextComponent) => void;
 }>) {
   const { component, packageNames = [] } = entry;
 
   return (
     /*
-     * A real link rather than a box that navigates: the row is the whole target
-     * area, so it has to be openable in a new tab and readable as an address by
-     * anything that reads addresses. PMBox does not forward `to`, hence the
-     * wrapper — the styling stays on the box, which is also what hovers.
+     * The row is a link and an action side by side, not a link with a button
+     * inside it: a control nested in an anchor is activated by the anchor, so
+     * moving a component would first navigate away from the list it was moved
+     * from. The hover sits on the pair so the row still lights up as one thing.
      */
-    <Link to={component.href}>
-      <PMBox
-        display="flex"
-        width="full"
-        alignItems="center"
-        gap={3}
-        textAlign="left"
-        paddingX={3}
-        paddingY="10px"
-        borderTopWidth={isFirst ? '0' : '1px'}
-        borderColor="border.tertiary"
-        _hover={{ bg: 'background.secondary' }}
-        transition="background-color 150ms ease-out"
-      >
-        {/* On the name, not on the pair: the rule the rail beside it follows. */}
-        <PMIcon
-          fontSize="sm"
-          color="text.faded"
-          flexShrink={0}
-          alignSelf="flex-start"
-          marginTop="0.25em"
-        >
-          {COMPONENT_TYPE_ICONS[component.type]}
-        </PMIcon>
-        <PMBox flex={1} minW={0}>
-          <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
-            {component.name}
-          </PMText>
-          {component.summary && (
-            <PMText as="div" fontSize="xs" color="faded" truncate>
-              {component.summary}
+    <PMHStack
+      gap={0}
+      align="stretch"
+      borderTopWidth={isFirst ? '0' : '1px'}
+      borderColor="border.tertiary"
+      _hover={{ bg: 'background.secondary' }}
+      transition="background-color 150ms ease-out"
+    >
+      {/*
+        A real link rather than a box that navigates: the name is the whole
+        target area, so it has to be openable in a new tab and readable as an
+        address by anything that reads addresses. PMBox does not forward `to`,
+        hence the wrapper.
+      */}
+      <PMBox flex="1" minW={0} asChild>
+        <Link to={component.href}>
+          <PMBox
+            display="flex"
+            width="full"
+            alignItems="center"
+            gap={3}
+            textAlign="left"
+            paddingX={3}
+            paddingY="10px"
+          >
+            {/* On the name, not on the pair: the rule the rail beside it follows. */}
+            <PMIcon
+              fontSize="sm"
+              color="text.faded"
+              flexShrink={0}
+              alignSelf="flex-start"
+              marginTop="0.25em"
+            >
+              {COMPONENT_TYPE_ICONS[component.type]}
+            </PMIcon>
+            <PMBox flex={1} minW={0}>
+              <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
+                {component.name}
+              </PMText>
+              {component.summary && (
+                <PMText as="div" fontSize="xs" color="faded" truncate>
+                  {component.summary}
+                </PMText>
+              )}
+            </PMBox>
+            {showPackages && <PackageColumn names={packageNames} />}
+            {/*
+              A fixed width, not the width of the number: v12 is one character
+              wider than v5, and every column to its left would move with it.
+            */}
+            <PMText
+              fontSize="xs"
+              color="faded"
+              flexShrink={0}
+              width="32px"
+              textAlign="right"
+              fontVariantNumeric="tabular-nums"
+            >
+              v{component.version}
             </PMText>
-          )}
-        </PMBox>
-        {showPackages && <PackageColumn names={packageNames} />}
-        {/*
-          A fixed width, not the width of the number: v12 is one character wider
-          than v5, and every column to its left would move with it.
-        */}
-        <PMText
-          fontSize="xs"
-          color="faded"
-          flexShrink={0}
-          width="32px"
-          textAlign="right"
-          fontVariantNumeric="tabular-nums"
-        >
-          v{component.version}
-        </PMText>
-        <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-          <LuChevronRight />
-        </PMIcon>
+            <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+              <LuChevronRight />
+            </PMIcon>
+          </PMBox>
+        </Link>
       </PMBox>
-    </Link>
+      {onMove && (
+        <PMBox display="flex" alignItems="center" paddingRight={2}>
+          <PMTooltip label="Move to another package" showArrow>
+            <PMIconButton
+              aria-label={`Move ${component.name} to another package`}
+              variant="ghost"
+              size="xs"
+              color="text.faded"
+              onClick={() => onMove(component)}
+            >
+              <LuFolderInput />
+            </PMIconButton>
+          </PMTooltip>
+        </PMBox>
+      )}
+    </PMHStack>
   );
 }
 

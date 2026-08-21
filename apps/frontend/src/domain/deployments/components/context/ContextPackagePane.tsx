@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
   PMBadge,
@@ -10,13 +11,14 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import type { PackageResponse } from '@packmind/types';
+import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import { buildPackageContext } from './buildPackageContext';
-import type { SpaceCatalogue } from './buildPackageContext';
+import type { ContextComponent, SpaceCatalogue } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
+import { MoveComponentDialog } from './MoveComponentDialog';
 import { usePackageDrift } from './usePackageDrift';
 
 const CONTENT_TAB = 'content';
@@ -41,7 +43,10 @@ const TAB_PARAM = 'tab';
  */
 export function ContextPackagePane({
   pkg,
+  packages,
   catalogue,
+  spaceId,
+  organizationId,
   orgSlug,
   spaceSlug,
   packageHref,
@@ -49,7 +54,11 @@ export function ContextPackagePane({
   distributionHistoryHref,
 }: Readonly<{
   pkg: PackageResponse;
+  /** The whole space, so a component can be moved without a second query. */
+  packages: readonly PackageResponse[];
   catalogue: SpaceCatalogue;
+  spaceId: SpaceId;
+  organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
   /** The package's own page, which still holds everything not moved here. */
@@ -60,6 +69,12 @@ export function ContextPackagePane({
   distributionHistoryHref: string;
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
+  /*
+   * The component being moved, held here rather than in the row: the dialog has
+   * to outlive the list it was opened from, because the move rebuilds that list
+   * and the row the button sits on is gone by the time the toast appears.
+   */
+  const [moving, setMoving] = useState<ContextComponent | null>(null);
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
       ? DISTRIBUTION_TAB
@@ -83,7 +98,16 @@ export function ContextPackagePane({
     spaceSlug,
   });
 
-  const { drift, packages, isLoading, isError } = usePackageDrift(pkg.id);
+  /*
+   * Renamed on the way in: `packages` is now the space's package list, and the
+   * drift hook returns the landings of this one package.
+   */
+  const {
+    drift,
+    packages: driftPackages,
+    isLoading,
+    isError,
+  } = usePackageDrift(pkg.id);
   const distributionBadge = buildDistributionTabBadge(drift);
 
   return (
@@ -202,6 +226,7 @@ export function ContextPackagePane({
                     entries={group.components.map((component) => ({
                       component,
                     }))}
+                    onMove={setMoving}
                   />
                 </PMBox>
               </PMBox>
@@ -221,12 +246,28 @@ export function ContextPackagePane({
         <ContextPackageDistribution
           pkg={pkg}
           drift={drift}
-          packages={packages}
+          packages={driftPackages}
           isLoading={isLoading}
           isError={isError}
           distributionHistoryHref={distributionHistoryHref}
         />
       </PMTabsCompound.Content>
+
+      {moving && (
+        <MoveComponentDialog
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setMoving(null);
+          }}
+          component={moving}
+          source={pkg}
+          packages={packages}
+          spaceId={spaceId}
+          organizationId={organizationId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+        />
+      )}
     </PMTabsCompound.Root>
   );
 }
