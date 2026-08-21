@@ -138,9 +138,17 @@ A branch usually disappears the day its pull request is merged. Tracking survive
 
 Packmind checks the tracked branch against your Git provider and flags it when it is gone:
 
-- **The Deployments overview** — the repository card carries a **Branch deleted** marker.
+- **Settings → Targets** — the repository card carries a **Branch deleted** marker.
 - **The Git connection panel** — the tracked branch is marked in the repositories list, where an admin manages tracking.
 - **`packmind-cli git info`** — reports that the branch is not in the repository and offers to move tracking.
+
+<Note>
+  **Needs a Git connection** — checking a branch means asking your Git provider,
+  so the two web app markers only appear for repositories reached through a
+  connection. A repository Packmind knows only from `packmind-cli install`
+  carries no credentials to ask with, and `packmind-cli git info` is the signal
+  there.
+</Note>
 
 To start recording again, an organization admin moves tracking to a branch that exists:
 
