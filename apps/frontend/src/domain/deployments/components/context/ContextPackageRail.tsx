@@ -436,7 +436,7 @@ function ComponentMatchRow({
                 color="text.faded"
                 truncate
               >
-                {highlight(component.summary, needle)}
+                {highlight(summaryAround(component.summary, needle), needle)}
               </PMBox>
             )}
           </PMBox>
@@ -444,6 +444,35 @@ function ComponentMatchRow({
       </PMBox>
     </Link>
   );
+}
+
+/**
+ * How much of the description to keep in front of the hit. Enough to read the
+ * match as part of a sentence, little enough that it survives the rail's width.
+ */
+const SUMMARY_LEAD = 24;
+
+/**
+ * The description, cut around the hit rather than from its beginning.
+ *
+ * Printed from the start, a match forty words in never appears: the line
+ * truncates long before it, and the row shows a description with nothing marked
+ * in it, which is exactly the unexplained result the second line exists to
+ * prevent. Descriptions in this app are paragraphs, not labels.
+ *
+ * The cut lands on a word rather than at a fixed offset. "…ce lifetimes, async
+ * cancellation" costs the reader a second to parse and buys nothing over
+ * "…lifetimes, async cancellation".
+ */
+function summaryAround(text: string, needle: string): string {
+  if (!needle) return text;
+  const index = text.toLowerCase().indexOf(needle);
+  if (index <= SUMMARY_LEAD) return text;
+
+  const window = index - SUMMARY_LEAD;
+  const space = text.indexOf(' ', window);
+  const from = space >= 0 && space < index ? space + 1 : window;
+  return `…${text.slice(from)}`;
 }
 
 /**
