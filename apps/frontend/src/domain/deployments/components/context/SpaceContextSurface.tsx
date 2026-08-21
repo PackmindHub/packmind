@@ -153,7 +153,11 @@ export function SpaceContextSurface() {
           onShowInventory={showInventory}
           createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
         />
-        <PMBox flex="1" minW={0} minH={0} overflowY="auto">
+        {/*
+          No scroll here: each pane owns its own, because the package pane keeps
+          a header and a tab strip in place while only the body below them moves.
+        */}
+        <PMBox flex="1" minW={0} minH={0} display="flex" flexDirection="column">
           {showingInventory ? (
             <SpaceInventoryPane
               packages={packages}
@@ -179,6 +183,11 @@ export function SpaceContextSurface() {
                   spaceSlug,
                   selectedPackage.id,
                 )}
+                distributionHistoryHref={`${routes.space.toPackage(
+                  orgSlug,
+                  spaceSlug,
+                  selectedPackage.id,
+                )}?tab=distributions`}
               />
             )
           )}

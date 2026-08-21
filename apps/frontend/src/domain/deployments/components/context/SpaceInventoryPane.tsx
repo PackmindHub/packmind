@@ -51,7 +51,7 @@ export function SpaceInventoryPane({
     : inventory.groups;
 
   return (
-    <PMBox padding={6}>
+    <PMBox padding={6} flex="1" minH={0} overflowY="auto">
       <PMHeading level="h2">All components</PMHeading>
       <PMText as="div" color="secondary" paddingTop={1}>
         Everything this space owns, across its {packages.length} package
