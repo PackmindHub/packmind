@@ -146,6 +146,9 @@ export function SpaceContextSurface() {
       <PMHStack gap={0} align="stretch" height="100%">
         <ContextPackageRail
           packages={packages}
+          catalogue={catalogue}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
           selectedPackageId={selectedPackage?.id ?? null}
           showingInventory={showingInventory}
           inventoryCount={inventoryCount}

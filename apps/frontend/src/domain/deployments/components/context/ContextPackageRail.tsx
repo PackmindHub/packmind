@@ -1,9 +1,27 @@
-import type { ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { PMBox, PMButton, PMIcon, PMVStack } from '@packmind/ui';
-import { LuLayers, LuPackage, LuPlus } from 'react-icons/lu';
+import {
+  PMBox,
+  PMButton,
+  PMHStack,
+  PMIcon,
+  PMInput,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
+import { LuLayers, LuPackage, LuPlus, LuSearch } from 'react-icons/lu';
 import type { PackageId, PackageResponse } from '@packmind/types';
-import { packageComponentCount } from './buildPackageContext';
+import {
+  COMPONENT_TYPE_LABELS_SINGULAR,
+  packageComponentCount,
+  type ContextComponent,
+  type SpaceCatalogue,
+} from './buildPackageContext';
+import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import { searchPackages, type PackageSearchRow } from './searchPackages';
+
+/** Past this, one package's matches would out-scroll the list they sit in. */
+const MAX_SHOWN_MATCHES = 3;
 
 /**
  * The packages of a space, as the index of the Context surface.
@@ -11,9 +29,17 @@ import { packageComponentCount } from './buildPackageContext';
  * The rail lists containers, not kinds of thing: what a package holds is read
  * one level to the right, in the pane, so a new component type never lands
  * here. That is the whole difference with the navigation this surface replaces.
+ *
+ * The search is what keeps that affordable. Indexing by container means the
+ * name of a component is no longer a place you can go, so the rail has to be
+ * able to find one — and it answers with the package that carries it, which is
+ * the arrangement teaching itself.
  */
 export function ContextPackageRail({
   packages,
+  catalogue,
+  orgSlug,
+  spaceSlug,
   selectedPackageId,
   showingInventory,
   inventoryCount,
@@ -22,6 +48,10 @@ export function ContextPackageRail({
   createPackageHref,
 }: Readonly<{
   packages: readonly PackageResponse[];
+  /** What the space owns, so the search can look inside the packages. */
+  catalogue: SpaceCatalogue;
+  orgSlug: string;
+  spaceSlug: string;
   selectedPackageId: PackageId | null;
   /** The space-wide inventory is open, so no package row is the selected one. */
   showingInventory: boolean;
@@ -31,6 +61,25 @@ export function ContextPackageRail({
   onShowInventory: () => void;
   createPackageHref: string;
 }>) {
+  /*
+   * Local, and deliberately not in the URL beside the open package. The package
+   * is worth sending to someone; the two letters typed on the way to it are
+   * not, and a query in the address would travel into every link built from
+   * these params.
+   */
+  const [query, setQuery] = useState('');
+
+  const { rows, needle, matchCount } = useMemo(
+    () =>
+      searchPackages(
+        packages,
+        catalogue,
+        { orgSlug, spaceSlug },
+        { query, selectedPackageId },
+      ),
+    [packages, catalogue, orgSlug, spaceSlug, query, selectedPackageId],
+  );
+
   return (
     <PMBox
       // 320px, the width of the Distribution rail of the same app: the two
@@ -45,6 +94,53 @@ export function ContextPackageRail({
       flexDirection="column"
       minH={0}
     >
+      {/*
+        Same band, same offsets and same field size as the search of the
+        Distribution rail, so the two rails of this app have one anatomy: search
+        on top, the list in the middle, the action pinned under it.
+      */}
+      <PMBox
+        paddingX={3}
+        paddingY={3}
+        borderBottomWidth="1px"
+        borderColor="border.tertiary"
+        flexShrink={0}
+      >
+        <PMBox position="relative" minW={0}>
+          <PMBox
+            position="absolute"
+            left="10px"
+            top="50%"
+            transform="translateY(-50%)"
+            color="text.faded"
+            pointerEvents="none"
+            display="flex"
+            alignItems="center"
+            // PMInput is itself positioned and opaque, and it comes after this
+            // box in the DOM, so without a layer of its own the magnifier is
+            // painted over and the field looks like it lost its icon.
+            zIndex={1}
+          >
+            <PMIcon fontSize="sm">
+              <LuSearch />
+            </PMIcon>
+          </PMBox>
+          <PMInput
+            size="sm"
+            paddingLeft="32px"
+            /*
+             * Not "Search 12 packages". The count answers a question nobody
+             * asks and leaves the real one open: does this look inside a
+             * package? It does, so the placeholder names both levels.
+             */
+            placeholder="Search packages and components"
+            aria-label="Search packages and components"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </PMBox>
+      </PMBox>
+
       <PMBox flex={1} minH={0} overflowY="auto">
         {/*
           Deliberately not a package row: half the height, no crate, faded until
@@ -63,6 +159,10 @@ export function ContextPackageRail({
           real data: a component here belongs to any number of packages,
           including none, so the flat list says things the pane cannot say even
           when there is a single package.
+
+          It stays put under a search, above the results, because it is where a
+          component the search cannot reach is found: this list walks the
+          packages, and a component in none of them is only in there.
         */}
         <InventoryRow
           count={inventoryCount}
@@ -71,15 +171,18 @@ export function ContextPackageRail({
         />
 
         <PMVStack gap={0} align="stretch">
-          {packages.map((pkg) => (
+          {rows.map((row) => (
             <PackageRow
-              key={pkg.id}
-              pkg={pkg}
-              isActive={!showingInventory && pkg.id === selectedPackageId}
-              onClick={() => onSelect(pkg.id)}
+              key={row.pkg.id}
+              row={row}
+              needle={needle}
+              isActive={!showingInventory && row.pkg.id === selectedPackageId}
+              onClick={() => onSelect(row.pkg.id)}
             />
           ))}
         </PMVStack>
+
+        {needle !== '' && matchCount === 0 && <NoMatches query={query} />}
       </PMBox>
 
       {/*
@@ -107,6 +210,25 @@ export function ContextPackageRail({
         </PMButton>
       </PMBox>
     </PMBox>
+  );
+}
+
+/**
+ * What a search that reached nothing says. It names the two levels it looked
+ * at, and then the one place it could not look: a component belongs to any
+ * number of packages including none, and this list walks the packages.
+ */
+function NoMatches({ query }: Readonly<{ query: string }>) {
+  return (
+    <PMVStack gap={1} align="start" padding={4}>
+      <PMText as="div" fontSize="sm" color="secondary">
+        Nothing matches “{query}”.
+      </PMText>
+      <PMText as="div" fontSize="xs" color="faded">
+        The search covers package names and the components inside them. A
+        component in no package is in All components, above.
+      </PMText>
+    </PMVStack>
   );
 }
 
@@ -149,71 +271,201 @@ function InventoryRow({
 }
 
 function PackageRow({
-  pkg,
+  row,
+  needle,
   isActive,
   onClick,
 }: Readonly<{
-  pkg: PackageResponse;
+  row: PackageSearchRow;
+  needle: string;
   isActive: boolean;
   onClick: () => void;
 }>) {
+  const { pkg, matches, isPinned } = row;
   const count = packageComponentCount(pkg);
+  const shown = matches.slice(0, MAX_SHOWN_MATCHES);
+  const hidden = matches.length - shown.length;
 
   return (
     <PMBox
-      as="button"
-      display="flex"
-      alignItems="center"
-      gap={2}
-      width="full"
       maxWidth="100%"
       overflow="hidden"
-      textAlign="left"
-      paddingX={3}
-      paddingY="10px"
       borderBottomWidth="1px"
       borderColor="border.tertiary"
-      cursor="pointer"
       bg={isActive ? 'background.secondary' : 'transparent'}
-      _hover={isActive ? undefined : { bg: 'background.secondary' }}
-      transition="background-color 150ms ease-out"
-      onClick={onClick}
-      aria-current={isActive ? 'true' : undefined}
     >
       {/*
-        The crate, the same mark the sidebar keeps for the container. It sits on
-        the name's line rather than centred on the pair: centred, it sank into
-        the gap between the two lines and read as a bullet for the row instead
-        of as the type of the thing named.
+        The package and its matched components are separate targets: clicking
+        the name opens the package here, clicking a match opens that component.
+        One control wrapping both would force the user through the package to
+        reach the thing they were actually searching for.
       */}
-      <RowIcon color={isActive ? 'text.secondary' : 'text.faded'}>
-        <LuPackage />
-      </RowIcon>
-      <PMBox flex={1} minW={0}>
-        <PMBox
-          as="div"
-          fontSize="sm"
-          fontWeight={isActive ? 'semibold' : 'medium'}
-          color={isActive ? 'text.primary' : 'text.secondary'}
-          truncate
-        >
-          {pkg.name}
-        </PMBox>
+      <PMBox
+        as="button"
+        display="flex"
+        alignItems="center"
+        gap={2}
+        width="full"
+        textAlign="left"
+        paddingX={3}
+        paddingY="10px"
+        cursor="pointer"
+        _hover={isActive ? undefined : { bg: 'background.secondary' }}
+        transition="background-color 150ms ease-out"
+        onClick={onClick}
+        aria-current={isActive ? 'true' : undefined}
+      >
         {/*
-          One text node rather than a row of boxes, so the line ends in an
-          ellipsis instead of being cut mid-word by the rail.
+          The crate, the same mark the sidebar keeps for the container. It sits
+          on the name's line rather than centred on the pair: centred, it sank
+          into the gap between the two lines and read as a bullet for the row
+          instead of as the type of the thing named.
         */}
-        <PMBox
-          as="div"
-          paddingTop="3px"
-          color="text.faded"
-          fontSize="xs"
-          truncate
-        >
-          {count} component{count === 1 ? '' : 's'}
+        <RowIcon color={isActive ? 'text.secondary' : 'text.faded'}>
+          <LuPackage />
+        </RowIcon>
+        <PMBox flex={1} minW={0}>
+          <PMBox
+            as="div"
+            fontSize="sm"
+            fontWeight={isActive ? 'semibold' : 'medium'}
+            color={isActive ? 'text.primary' : 'text.secondary'}
+            truncate
+          >
+            {highlight(pkg.name, needle)}
+          </PMBox>
+          {/*
+            One text node rather than a row of boxes, so the line ends in an
+            ellipsis instead of being cut mid-word by the rail.
+
+            The word under a pinned row is the whole reason to mark it: it is
+            the only row of a search that the query did not reach, and without
+            it the package the pane happens to be showing reads as a result.
+          */}
+          <PMBox
+            as="div"
+            paddingTop="3px"
+            color="text.faded"
+            fontSize="xs"
+            truncate
+          >
+            {count} component{count === 1 ? '' : 's'}
+            {isPinned && ' · open, not a match'}
+          </PMBox>
         </PMBox>
       </PMBox>
+
+      {shown.length > 0 && (
+        <PMVStack gap={0} align="stretch" paddingX={2} paddingBottom={2}>
+          {shown.map((component) => (
+            <ComponentMatchRow
+              key={component.key}
+              component={component}
+              needle={needle}
+            />
+          ))}
+          {hidden > 0 && (
+            <PMText fontSize="2xs" color="faded" paddingLeft={2} paddingTop={1}>
+              +{hidden} more inside this package
+            </PMText>
+          )}
+        </PMVStack>
+      )}
     </PMBox>
+  );
+}
+
+/**
+ * A component the query reached, under the package that carries it.
+ *
+ * A link to its detail page, which is where the rows of the pane go too: the
+ * same object reached from two places has to behave the same way, and until the
+ * pane can show a component itself, that page is where one is read.
+ */
+function ComponentMatchRow({
+  component,
+  needle,
+}: Readonly<{ component: ContextComponent; needle: string }>) {
+  const nameMatches = component.name.toLowerCase().includes(needle);
+
+  return (
+    <Link to={component.href}>
+      <PMBox
+        display="block"
+        width="full"
+        maxWidth="100%"
+        overflow="hidden"
+        textAlign="left"
+        paddingX={2}
+        paddingY="4px"
+        borderRadius="sm"
+        _hover={{ bg: 'background.tertiary' }}
+        transition="background-color 150ms ease-out"
+      >
+        <PMHStack gap={2} minW={0} align="start">
+          <RowIcon fontSize="xs">
+            {COMPONENT_TYPE_ICONS[component.type]}
+          </RowIcon>
+          <PMBox flex={1} minW={0}>
+            <PMHStack gap={2} minW={0}>
+              <PMBox
+                as="span"
+                flex={1}
+                minW={0}
+                truncate
+                fontSize="xs"
+                color="text.secondary"
+              >
+                {highlight(component.name, nameMatches ? needle : '')}
+              </PMBox>
+              <PMText fontSize="2xs" color="faded" whiteSpace="nowrap">
+                {COMPONENT_TYPE_LABELS_SINGULAR[component.type]}
+              </PMText>
+            </PMHStack>
+            {/*
+              The name is not always where the hit landed. When it came from the
+              summary, the row has to show that line, or it reads as an
+              unexplained result. The icon stays on the name either way, the
+              same rule the package above it follows.
+            */}
+            {!nameMatches && (
+              <PMBox
+                as="div"
+                paddingTop="1px"
+                fontSize="2xs"
+                color="text.faded"
+                truncate
+              >
+                {highlight(component.summary, needle)}
+              </PMBox>
+            )}
+          </PMBox>
+        </PMHStack>
+      </PMBox>
+    </Link>
+  );
+}
+
+/**
+ * The matched fragment, so a row never has to be taken on faith.
+ *
+ * A value rather than a component: most calls have nothing to mark and hand
+ * back the string they were given, and a component that renders bare text is a
+ * fragment around one child.
+ */
+function highlight(text: string, needle: string): ReactNode {
+  if (!needle) return text;
+  const index = text.toLowerCase().indexOf(needle);
+  if (index < 0) return text;
+
+  return (
+    <>
+      {text.slice(0, index)}
+      <PMBox as="span" color="text.primary" fontWeight="semibold">
+        {text.slice(index, index + needle.length)}
+      </PMBox>
+      {text.slice(index + needle.length)}
+    </>
   );
 }
 
@@ -225,11 +477,12 @@ function PackageRow({
  */
 function RowIcon({
   children,
+  fontSize = 'sm',
   color = 'text.faded',
-}: Readonly<{ children: ReactNode; color?: string }>) {
+}: Readonly<{ children: ReactNode; fontSize?: string; color?: string }>) {
   return (
     <PMIcon
-      fontSize="sm"
+      fontSize={fontSize}
       color={color}
       flexShrink={0}
       alignSelf="flex-start"

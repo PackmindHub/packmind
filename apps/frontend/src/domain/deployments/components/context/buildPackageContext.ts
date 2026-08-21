@@ -76,6 +76,20 @@ export const COMPONENT_TYPE_LABELS: Record<ContextComponentType, string> = {
   skill: 'Skills',
 };
 
+/**
+ * The same names in the singular, for the places that qualify one component
+ * rather than heading a group of them — a search result in the rail says what
+ * kind of thing it found.
+ */
+export const COMPONENT_TYPE_LABELS_SINGULAR: Record<
+  ContextComponentType,
+  string
+> = {
+  standard: 'Standard',
+  command: 'Command',
+  skill: 'Skill',
+};
+
 /*
  * One mapper per type, exported because two surfaces build the same row from
  * the same entity: a package's own content and the space-wide inventory. Two
