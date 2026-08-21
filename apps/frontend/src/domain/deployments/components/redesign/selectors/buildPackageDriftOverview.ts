@@ -382,12 +382,16 @@ export function packageHasDrift(pkg: PackageDrift): boolean {
   );
 }
 
+function destinationKey(repoId: string, targetId: string): string {
+  return `${repoId}:${targetId}`;
+}
+
 export function packageBehindInstallCount(pkg: PackageDrift): number {
   const behind = new Set<string>();
   for (const a of pkg.artifacts) {
     for (const i of a.installs) {
       if (i.driftReason !== 'aligned') {
-        behind.add(`${i.repo.id}:${i.target.id}`);
+        behind.add(destinationKey(i.repo.id, i.target.id));
       }
     }
   }
@@ -420,6 +424,33 @@ export function totalFailedInstallCount(packages: PackageDrift[]): number {
   let total = 0;
   for (const pkg of packages) total += packageFailedInstallCount(pkg);
   return total;
+}
+
+/**
+ * How many destinations of this package need a hand: behind on at least one
+ * artifact, or last distributed with a failure.
+ *
+ * A union rather than the sum of the two counts, because a destination whose
+ * last push failed is usually also behind, and adding them up would say "2
+ * destinations" about one repository.
+ */
+export function packageAttentionInstallCount(pkg: PackageDrift): number {
+  const needingAttention = new Set<string>();
+  for (const artifact of pkg.artifacts) {
+    for (const install of artifact.installs) {
+      if (install.driftReason !== 'aligned') {
+        needingAttention.add(
+          destinationKey(install.repo.id, install.target.id),
+        );
+      }
+    }
+  }
+  for (const loc of pkg.installLocations) {
+    if (loc.lastDistributionStatus === DistributionStatus.failure) {
+      needingAttention.add(destinationKey(loc.repo.id, loc.target.id));
+    }
+  }
+  return needingAttention.size;
 }
 
 export function sortPackagesByDriftFirst(
