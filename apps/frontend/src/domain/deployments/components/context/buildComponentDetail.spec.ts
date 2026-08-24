@@ -9,6 +9,7 @@ import {
   componentEditHref,
   packageDetailHref,
   selectDetailComponent,
+  sortRulesByContent,
   withPaneDetailHref,
 } from './buildComponentDetail';
 
@@ -92,14 +93,14 @@ describe('withPaneDetailHref', () => {
     ).toBe('?package=pkg-1&component=command-1');
   });
 
-  it('leaves a standard on its own page', () => {
+  it('points a standard at the pane', () => {
     expect(
       withPaneDetailHref(
         component('standard', 'standard-1'),
         new URLSearchParams(),
         PACKAGE,
       ).href,
-    ).toBe('/org/acme/space/core/standards/standard-1');
+    ).toBe('?package=pkg-1&component=standard-1');
   });
 
   it('leaves a skill on its own page', () => {
@@ -137,6 +138,7 @@ describe('selectDetailComponent', () => {
       component('command', 'command-1'),
       component('command', 'command-2'),
     ]),
+    group('skill', [component('skill', 'skill-1')]),
   ];
 
   describe('when the address asks for nothing', () => {
@@ -153,12 +155,16 @@ describe('selectDetailComponent', () => {
     expect(selectDetailComponent(groups, 'command-1')?.type).toBe('command');
   });
 
+  it('finds the requested standard', () => {
+    expect(selectDetailComponent(groups, 'standard-1')?.type).toBe('standard');
+  });
+
   it('ignores a key no row carries', () => {
     expect(selectDetailComponent(groups, 'command-9')).toBeNull();
   });
 
   it('ignores a type the pane cannot render yet', () => {
-    expect(selectDetailComponent(groups, 'standard-1')).toBeNull();
+    expect(selectDetailComponent(groups, 'skill-1')).toBeNull();
   });
 
   it('ignores a request against an empty package', () => {
@@ -181,5 +187,32 @@ describe('componentEditHref', () => {
 
   it('has nowhere to send a skill', () => {
     expect(componentEditHref(component('skill', 'skill-1'), TARGET)).toBeNull();
+  });
+});
+
+describe('sortRulesByContent', () => {
+  const rule = (content: string) => ({ id: content, content });
+
+  it('orders the rules the way the standard page does', () => {
+    expect(
+      sortRulesByContent([rule('Never log'), rule('Always test')]).map(
+        (r) => r.content,
+      ),
+    ).toEqual(['Always test', 'Never log']);
+  });
+
+  it('ignores case, so a lowercase rule is not exiled to the end', () => {
+    expect(
+      sortRulesByContent([rule('beta'), rule('Alpha'), rule('Gamma')]).map(
+        (r) => r.content,
+      ),
+    ).toEqual(['Alpha', 'beta', 'Gamma']);
+  });
+
+  it('leaves the list it was given alone', () => {
+    const rules = [rule('Never log'), rule('Always test')];
+    sortRulesByContent(rules);
+
+    expect(rules[0].content).toBe('Never log');
   });
 });

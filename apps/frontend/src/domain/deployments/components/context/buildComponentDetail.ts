@@ -35,7 +35,7 @@ export const COMPONENT_PARAM = 'component';
  * added without answering the question here.
  */
 export const RENDERS_IN_PANE: Record<ContextComponentType, boolean> = {
-  standard: false,
+  standard: true,
   command: true,
   skill: false,
 };
@@ -129,6 +129,23 @@ export function selectDetailComponent(
  * already offers a way to open it, and two buttons landing in the same place
  * would both be lying about what one of them does.
  */
+/**
+ * The rules of a standard, in the order its own page lists them.
+ *
+ * Sorted here rather than left in the order the endpoint returns them, and
+ * sorted the same way, because the two surfaces show the same list: a reader
+ * moving between them would otherwise see the rules shuffle for no reason.
+ */
+export function sortRulesByContent<Rule extends { content: string }>(
+  rules: readonly Rule[],
+): Rule[] {
+  return [...rules].sort((first, second) =>
+    first.content.localeCompare(second.content, undefined, {
+      sensitivity: 'base',
+    }),
+  );
+}
+
 export function componentEditHref(
   component: Pick<ContextComponent, 'type' | 'key'>,
   { orgSlug, spaceSlug }: ContextLinkTarget,
