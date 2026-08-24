@@ -10,6 +10,7 @@ import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQu
 import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
+import { COMPONENT_PARAM } from './buildComponentDetail';
 import { PackagesBlankState } from '../PackagesBlankState';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextPackagePane } from './ContextPackagePane';
@@ -94,6 +95,11 @@ export function SpaceContextSurface() {
       setSearchParams(
         (previous) => {
           previous.set(PACKAGE_PARAM, value);
+          // A rail click asks for a container, so whatever component was open
+          // in the previous one stops being the answer. Left in place it would
+          // reopen in the package clicked next, the one case where the key is
+          // in both.
+          previous.delete(COMPONENT_PARAM);
           return previous;
         },
         { replace: true },

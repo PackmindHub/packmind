@@ -15,6 +15,14 @@ import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import { buildPackageContext } from './buildPackageContext';
 import type { ContextComponent, SpaceCatalogue } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import {
+  COMPONENT_PARAM,
+  componentEditHref,
+  packageDetailHref,
+  selectDetailComponent,
+  withPaneDetailHref,
+} from './buildComponentDetail';
+import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
@@ -40,6 +48,10 @@ const TAB_PARAM = 'tab';
  * repositories, and the components alone say nothing about whether the promise
  * is kept. The badge on the Distribution tab is what makes the second half
  * legible without opening it.
+ *
+ * A component opened from the Content tab takes the place of both halves: it is
+ * read here rather than on a page of its own, so the rail stays put and the way
+ * back is one link. Which types can be read here is `RENDERS_IN_PANE`.
  */
 export function ContextPackagePane({
   pkg,
@@ -109,6 +121,57 @@ export function ContextPackagePane({
     isError,
   } = usePackageDrift(pkg.id);
   const distributionBadge = buildDistributionTabBadge(drift);
+
+  /*
+   * The third thing this pane can show, beside its two tabs: one of the
+   * components, in place of the tab strip rather than under it.
+   *
+   * Resolved against the rows that were just built, which is what makes a
+   * successful move land somewhere sensible: the component is no longer in this
+   * package, so the detail gives way to the list it was opened from.
+   */
+  const detail = selectDetailComponent(
+    groups,
+    searchParams.get(COMPONENT_PARAM),
+  );
+
+  /*
+   * Built once and rendered by whichever half is on screen. The dialog has to
+   * outlive the thing it was opened from: from the list, the move rebuilds that
+   * list, and from the detail, the move empties the detail.
+   */
+  const moveDialog = moving && (
+    <MoveComponentDialog
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setMoving(null);
+      }}
+      component={moving}
+      source={pkg}
+      packages={packages}
+      spaceId={spaceId}
+      organizationId={organizationId}
+      orgSlug={orgSlug}
+      spaceSlug={spaceSlug}
+    />
+  );
+
+  if (detail) {
+    return (
+      <>
+        <PMBox flex="1" minH={0} overflowY="auto">
+          <ContextComponentDetail
+            component={detail}
+            packageName={pkg.name}
+            backHref={packageDetailHref(searchParams, pkg.id)}
+            editHref={componentEditHref(detail, { orgSlug, spaceSlug })}
+            onMove={() => setMoving(detail)}
+          />
+        </PMBox>
+        {moveDialog}
+      </>
+    );
+  }
 
   return (
     <PMTabsCompound.Root
@@ -224,7 +287,13 @@ export function ContextPackagePane({
                 <PMBox paddingTop={1}>
                   <ContextComponentList
                     entries={group.components.map((component) => ({
-                      component,
+                      // Pointed at this pane for the types it can show, and at
+                      // the component's own page for the ones it cannot yet.
+                      component: withPaneDetailHref(
+                        component,
+                        searchParams,
+                        pkg.id,
+                      ),
                     }))}
                     onMove={setMoving}
                   />
@@ -253,21 +322,7 @@ export function ContextPackagePane({
         />
       </PMTabsCompound.Content>
 
-      {moving && (
-        <MoveComponentDialog
-          open
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setMoving(null);
-          }}
-          component={moving}
-          source={pkg}
-          packages={packages}
-          spaceId={spaceId}
-          organizationId={organizationId}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
-        />
-      )}
+      {moveDialog}
     </PMTabsCompound.Root>
   );
 }
