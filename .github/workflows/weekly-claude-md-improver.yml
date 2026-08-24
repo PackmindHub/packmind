@@ -63,10 +63,17 @@ jobs:
             # CLAUDE.md is owned by the OSS repository's run of this same workflow -
             # auditing it in both repositories would diverge the files and conflict on the
             # next sync-from-oss-repository merge.
+            # Wiped before cloning: the self-hosted runner keeps /tmp between jobs, and
+            # git clone refuses a destination that already exists and is not empty - so
+            # from the second weekly run onwards the clone would fail and `set -e` would
+            # abort worklist resolution. The wipe also clears a partial checkout left by
+            # a cancelled or timed-out run.
+            OSS_CHECKOUT=/tmp/packmind-oss
+            rm -rf "$OSS_CHECKOUT"
             git clone --depth 1 --branch main \
-              https://github.com/PackmindHub/Packmind.git /tmp/packmind-oss
+              https://github.com/PackmindHub/Packmind.git "$OSS_CHECKOUT"
 
-            if [ ! -d /tmp/packmind-oss/packages ]; then
+            if [ ! -d "$OSS_CHECKOUT/packages" ]; then
               echo "::error::OSS checkout has no packages/ directory. Aborting."
               exit 1
             fi
@@ -74,7 +81,7 @@ jobs:
             : > tmp/claude-md-worklist.txt
             for DIR in apps/*/ packages/*/; do
               PROJ="${DIR%/}"
-              [ -d "/tmp/packmind-oss/${PROJ}" ] && continue
+              [ -d "${OSS_CHECKOUT}/${PROJ}" ] && continue
               # Listed whether or not the file exists yet: a missing entry is what tells
               # the skill to bootstrap that package's CLAUDE.md.
               echo "${PROJ}/CLAUDE.md" >> tmp/claude-md-worklist.txt

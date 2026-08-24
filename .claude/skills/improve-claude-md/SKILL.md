@@ -55,8 +55,8 @@ Print the paths, numbered, followed by the count — for example `Worklist: 8 fi
 list is the only record of what the run was supposed to cover, so print it in full before editing
 anything.
 
-Some paths may not exist yet. That is intentional: a listed path with no file behind it is a package
-whose `CLAUDE.md` has to be **created** (Step 3).
+Some paths may not exist yet. That is intentional: a listed path with no file behind it is an app or
+a package whose `CLAUDE.md` has to be **created** (Step 3).
 
 Process the files **one at a time**, in worklist order. Announce each path as `[n/total] <path>`
 before you start on it, so the CI log shows progress and a run that stops early is visible at a glance.
@@ -66,37 +66,46 @@ edits feel sufficient. Every file in the list gets its own pass through Steps 3-
 
 ## Step 3 — Create a missing CLAUDE.md
 
-When a worklist path does not exist, author it. Its directory is a package root — call it
-`packages/<pkg>/`.
+When a worklist path does not exist, author it. Call its directory `<root>/`: the worklist path with
+the trailing `/CLAUDE.md` removed. `<root>` is an Nx project root, and it is `apps/<app>/` as often
+as `packages/<pkg>/` — the workflow puts both kinds on the worklist. Every path below is relative to
+`<root>`, so resolve them against the entry you were actually given: never look under `packages/`
+for an `apps/` entry, or you will count zero source files and skip a real application as a stub.
 
-**First, check the package is worth documenting.** `Glob` `packages/<pkg>/src/**/*`. If it holds two
-files or fewer, the package is a stub barrel with nothing to say: **skip it**, create nothing, and
-record it in the Step 6 report as deliberately skipped with its file count. A `CLAUDE.md` that only
-restates the package name is worse than no file at all.
+**First, check the project is worth documenting.** `Glob` `<root>/src/**/*`. If it holds two files or
+fewer, the project is a stub barrel with nothing to say: **skip it**, create nothing, and record it
+in the Step 6 report as deliberately skipped with its file count. A `CLAUDE.md` that only restates
+the project name is worse than no file at all.
 
-Otherwise read enough of the package to describe it honestly — never guess:
+Otherwise read enough of the project to describe it honestly — never guess:
 
-- `project.json` (the Nx project name, and the `env:*` tag) and `package.json`
-- `README.md`, if there is one
-- `src/index.ts` (the public barrel) and `src/<Name>Hexa.ts` (the entry point)
-- the shape of `src/application/`, `src/domain/`, `src/infra/`, `src/nest-api/`, `test/` — whichever
-  are present
+- `<root>/project.json` (the Nx project name, and the `env:*` tag) and `<root>/package.json`
+- `<root>/README.md`, if there is one
+- the entry point: `<root>/src/index.ts` (the public barrel) and `<root>/src/<Name>Hexa.ts` for a
+  package, `<root>/src/main.ts` for an app
+- the shape of `<root>/src/application/`, `<root>/src/domain/`, `<root>/src/infra/`,
+  `<root>/src/nest-api/`, `<root>/test/` — whichever are present
 
-Then `Write` the file, matching the house style of the packages that already have one.
-`packages/git/CLAUDE.md` and `packages/llm/CLAUDE.md` are the two best models — read one before you
-start writing:
+Then `Write` the file, matching the house style of the siblings that already have one — and read a
+sibling of the **same kind** before you start writing: `packages/git/CLAUDE.md` and
+`packages/llm/CLAUDE.md` are the two best models for a package, `apps/api/CLAUDE.md` for an app.
 
-- `# <Name> Package` heading, then one or two sentences on what the package owns.
+- `# <Name> Package` heading for a package, `# <Name>` for an app, then one or two sentences on what
+  it owns.
 - Only sections that earn their place: what is non-obvious, what surprises a newcomer, what to reuse
   instead of rewriting, how to add a new case to an existing switch or factory. Concrete file paths
   and type names, not adjectives.
 - **Do not restate the shared conventions.** The generic package layout, the `env:*` tags and import
   boundaries, the `/test` subpath rule and branded IDs are all in `packages/CLAUDE.md` — a package
-  file that repeats them is duplicate content, which Step 5 would delete anyway.
-- Aim for 30-70 lines, in line with the existing package docs.
-- Close with the pointer line every sibling uses, verbatim:
+  file that repeats them is duplicate content, which Step 5 would delete anyway. The same holds for
+  an app and whatever `apps/CLAUDE.md` already says about it.
+- Aim for 30-70 lines, in line with the existing project docs.
+- For a **package**, close with the pointer line every sibling package uses, verbatim:
 
-  `Shared package conventions (env tags, layout, /test subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)`
+  ``Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)``
+
+  App docs carry no such line — `apps/CLAUDE.md` is an index of the applications, not a conventions
+  page — so do not invent one for an app.
 
 - Respect the repository's own standards. In the proprietary fork,
   `.claude/rules/packmind/standard-packmind-proprietary.md` forbids importing from
@@ -152,12 +161,12 @@ other file — and never move content from a `CLAUDE.md` into a new skill or doc
 End the run with a summary the pull-request reviewer can scan:
 
 - the skill count and the worklist count from Steps 1-2;
-- one line per file you **created**, saying in a sentence what the package does — these are new files
+- one line per file you **created**, saying in a sentence what the project does — these are new files
   with no diff to compare against, so this is the reviewer's only summary of them;
 - one line per file you edited, with what you fixed;
 - every deletion made for deduplication, naming the skill that justified it, so a reviewer can check
   none of them went too far;
-- every package skipped as too thin to document, with its `src/` file count;
+- every project skipped as too thin to document, with its `src/` file count;
 - anything you deliberately skipped as ambiguous.
 
 Files you left unchanged need no more than a single closing line listing them.
