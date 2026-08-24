@@ -38,11 +38,16 @@ whole run.
 
 ## Step 2 — Enumerate the target files
 
-Use `Glob` with the pattern `**/CLAUDE.md`, ignoring anything under `node_modules`. State how many
-files you found.
+Use `Glob` with the pattern `**/CLAUDE.md`, ignoring anything under `node_modules`. Print the full
+list of paths you found, numbered, followed by the count — for example `Found 19 CLAUDE.md file(s)`.
+This printed list is the run's worklist and the only record of what the run was supposed to cover, so
+print it in full before editing anything.
 
-Process them **one at a time**, in the order returned. Announce each file path before you start on it,
-so the CI log shows progress.
+Process the files **one at a time**, in the order returned. Announce each path as `[n/total] <path>`
+before you start on it, so the CI log shows progress and a run that stops early is visible at a glance.
+
+Never narrow the worklist on your own: no sampling, no "the rest look fine", no stopping once the
+edits feel sufficient. Every file in the list gets its own pass through Steps 3-4.
 
 ## Step 3 — Audit each file
 
@@ -96,3 +101,9 @@ End the run with a summary the pull-request reviewer can scan:
 - anything you deliberately skipped as ambiguous.
 
 Files you left unchanged need no more than a single closing line listing them.
+
+**Reconcile against the worklist.** Every path printed in Step 2 must appear in this summary, as
+edited, unchanged, or skipped — the counts have to add up. If any file went unaudited for any reason
+(you ran out of room, a read failed, you lost track), do not paper over it: end the report with a line
+that starts `INCOMPLETE RUN:` and names every file you did not audit. A silently partial run is worse
+than a loudly partial one, because the pull request it produces looks like a full audit.
