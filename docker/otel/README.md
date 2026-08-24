@@ -337,25 +337,46 @@ Our spans carry the instrumentation scope `packmind`, which is what distinguishe
 { instrumentation:name = "packmind" }
 ```
 
-### Filtering by organization
+### Filtering by organization and space
 
-Every request that carries an organization in its path gets
-`packmind.organization.id`, so a customer's traces are one query away:
+Requests carrying an organization or a space in their path get `packmind.organization.id` and
+`packmind.space.id`, so a customer's traces are one query away:
 
 ```
 { span.packmind.organization.id = "6940d397-f6f8-4cc9-bf56-9f7f365a45a8" }
+{ span.packmind.space.id = "fc6ff8a5-b8ad-4ab9-ae2d-721a4c4ba70a" }
 ```
 
-It is set in two places on purpose:
+Both are set in two places on purpose:
 
 - **The root span**, by `startIncomingSpanHook` on `instrumentation-http` in `apps/api/src/otel.ts`.
   This is the one that matters for navigation — Tempo's trace list and the Drilldown filters read
   root spans, so an attribute that only exists deeper down is findable in TraceQL but leaves the
   list unfilterable. The hook runs at span creation, before auth, so it has nothing but the URL and
-  matches a strict UUID shape: a literal `:orgId` or a slug never lands in the attribute. Requests
-  with no organization in the path (`/auth/me` and friends) simply get none.
-- **The use-case span**, from the validated command in `AbstractMemberUseCase`. Set before access
-  validation rather than after, so a rejected request stays attributable to whoever made it.
+  matches a strict UUID shape: a literal `:orgId` or a slug never lands in an attribute. Requests
+  with neither in the path (`/auth/me` and friends) get none. The two patterns are compiled once at
+  module scope, since this hook runs on every incoming request.
+- **The use-case span**, from the validated command. `AbstractMemberUseCase` sets the organization
+  before access validation rather than after, so a rejected request stays attributable to whoever
+  made it.
+
+Space ids need a seam on the use-case side, because `spaceId` lives on `SpaceMemberCommand` and not
+on `PackmindCommand` — only the space-scoped bases have one. So `AbstractMemberUseCase` exposes a
+protected `spanAttributes(command)` that `AbstractSpaceMemberUseCase` and
+`AbstractSpaceAdminUseCase` override:
+
+```ts
+protected override spanAttributes(command: Command): Attributes {
+  return {
+    ...super.spanAttributes(command),
+    'packmind.space.id': command.spaceId,
+  };
+}
+```
+
+Override that when a use case base gains another dimension worth filtering on. It keeps span
+concerns inside `execute()` instead of subclasses reaching for `trace.getActiveSpan()` from a nested
+call.
 
 > **Do not turn this into a span-metrics dimension.** Tenant ids are precisely the cardinality that
 > wrecks a Prometheus instance. Tempo indexes span attributes and is built for high cardinality;
@@ -364,9 +385,10 @@ It is set in two places on purpose:
 
 ### What else belongs on a span
 
-`organizationId` is on spans because it is a tenant identifier and because it is _already_ in the
-observability backend: the winston transport turns every `PackmindLogger` metadata key into a Loki
-label, so those log lines carry it regardless. Spans add no new exposure.
+`organizationId` and `spaceId` are on spans because they are tenant identifiers, and because they
+are _already_ in the observability backend: the winston transport turns every `PackmindLogger`
+metadata key into a Loki label, so those log lines carry them regardless. Spans add no new
+exposure.
 
 That reasoning does not generalise. `userId`, emails and the like stay off spans — the same reason
 `pg` keeps `enhancedDatabaseReporting: false` and bind values are never captured. Before reaching
