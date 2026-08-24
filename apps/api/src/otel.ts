@@ -12,6 +12,18 @@
  * Everything is gated on `OTEL_EXPORTER_OTLP_ENDPOINT`. Unset — which is the
  * case in production and in tests — and the SDK never starts: no hooks, no
  * exporter, no overhead. See docker/otel/README.md to switch it on locally.
+ *
+ * Do NOT source any of these through `Configuration.getConfig()`. It is async
+ * and may call out to Infisical, so the SDK would start only once that promise
+ * resolves — by which point pg, ioredis, express and winston have long been
+ * required, and none of them get patched. Nothing crashes; you simply get no
+ * spans, which is the worst kind of failure. The Sentry init in
+ * `instrument.ts` demonstrates the trap: its DSN resolves after bootstrap has
+ * already begun.
+ *
+ * These have to be real environment variables at process start. Only
+ * OTEL_EXPORTER_OTLP_HEADERS is sensitive, and the container entrypoint
+ * already exports secrets that way before `exec node main.js`.
  */
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';

@@ -49,7 +49,7 @@ build time.
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://otel-lgtm:4318` | Cloud endpoint | Cloud endpoint | *unset* |
 | `OTEL_EXPORTER_OTLP_HEADERS` | — | `Authorization=Basic …` | `Authorization=Basic …` | — |
 | `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment.name=local` | `…=staging,service.version=<tag>` | `…=production,service.version=<tag>` | — |
-| sampling | everything | everything | `traceidratio` ~0.1 | — |
+| sampling | everything | everything | tail sampling in a collector — see below | — |
 
 For staging and production these live in the Helm values in `PackmindHub/packmind-ai-helm-charts`.
 Compose defaults the local one, so locally the endpoint remains the only switch you need.
@@ -291,6 +291,16 @@ The SDK reads `OTEL_EXPORTER_OTLP_HEADERS` natively — verified by pointing the
 endpoint that requires auth and confirming the `Authorization: Basic …` header arrives on
 `/v1/traces` and `/v1/logs`. API traces and logs are done at that point.
 
+**These must be real environment variables**, not values fetched at runtime. `Configuration.getConfig()`
+is async and may call Infisical, so the SDK would only start once that promise resolved — after pg,
+ioredis, express and winston were already required and therefore never patched. Nothing would crash;
+you would just silently get no spans.
+
+Only the header is sensitive, and the container already has a mechanism for that: the prod entrypoint
+exports Docker secrets before `exec node main.js`, and Kubernetes does the same through a
+`secretKeyRef`. If Infisical has to remain the source of truth, fetch it there — in the entrypoint,
+before Node starts — rather than from inside the application.
+
 **Needs actual work:**
 
 1. **Span metrics must be switched on.** The RED dashboards depend on `traces_spanmetrics_*`, which
@@ -298,10 +308,23 @@ endpoint that requires auth and confirming the `Authorization: Basic …` header
    that is off by default, and the series it produces are billed as active series.
 2. **Datasource uids differ.** The bundled dashboard uses a `${ds}` variable rather than a hardcoded
    uid precisely so it can be repointed — pick the Cloud Prometheus datasource from the dropdown.
-3. **Volume becomes a bill.** Nothing is sampled today, and log export is on for every
-   `PackmindLogger` line. That is right for a laptop and wrong for production traffic: add a sampler
-   (`OTEL_TRACES_SAMPLER=parentbased_traceidratio`, `OTEL_TRACES_SAMPLER_ARG=0.1`) and consider
-   filtering logs below `warn` before pointing production at a paid backend.
+3. **Volume becomes a bill.** Measured on 50 real requests against the simplest endpoint:
+   **6.4 KB of traces and 7.4 KB of logs per request**, uncompressed OTLP/JSON. At 10 req/s that is
+   roughly 360 GB/month before compression, against a 50 GB free tier — so this needs a plan even at
+   modest traffic.
+
+   Note which half is bigger: **logs cost more than traces here**, and trace sampling does nothing
+   about them. Filtering logs to `warn` and above buys more than sampling, and costs no diagnostic
+   power since the traces stay complete. The other heavy field is `db.query.text` — TypeORM SELECTs
+   run ~900 characters.
+
+   On sampling itself, prefer **tail sampling in a collector** over
+   `OTEL_TRACES_SAMPLER=traceidratio`. Head sampling decides at random when the trace starts, so it
+   drops 90% of the errors and slow requests too — the ones you wanted — and Tempo's
+   metrics-generator only sees what arrives, so rates and percentiles end up computed on the sample.
+   A collector sees 100%, decides once the trace is complete (keep every error, keep everything over
+   800 ms, keep ~5% of the rest), and can compute span metrics *before* the sampling stage so the
+   metrics stay exact. The cost is one more component to run.
 4. **Sentry still overlaps.** Enabling OTel in an environment where `SENTRY_DSN_API` is set needs
    Sentry's `skipOpenTelemetrySetup` route — see the note in `apps/api/src/otel.ts`.
 
