@@ -337,13 +337,45 @@ Our spans carry the instrumentation scope `packmind`, which is what distinguishe
 { instrumentation:name = "packmind" }
 ```
 
-### Keep identifiers out of them
+### Filtering by organization
 
-`withSpan()` takes a name and no attributes by design, and the use-case span deliberately attaches
-none. `userId` and `organizationId` would put identifiers in the trace backend, which is the same
-reason `pg` stays on `enhancedDatabaseReporting: false` and bind values are never captured. If you
-do reach for `span.setAttribute`, apply that test first: traces are retained and queryable by
-anyone with Grafana access.
+Every request that carries an organization in its path gets
+`packmind.organization.id`, so a customer's traces are one query away:
+
+```
+{ span.packmind.organization.id = "6940d397-f6f8-4cc9-bf56-9f7f365a45a8" }
+```
+
+It is set in two places on purpose:
+
+- **The root span**, by `startIncomingSpanHook` on `instrumentation-http` in `apps/api/src/otel.ts`.
+  This is the one that matters for navigation — Tempo's trace list and the Drilldown filters read
+  root spans, so an attribute that only exists deeper down is findable in TraceQL but leaves the
+  list unfilterable. The hook runs at span creation, before auth, so it has nothing but the URL and
+  matches a strict UUID shape: a literal `:orgId` or a slug never lands in the attribute. Requests
+  with no organization in the path (`/auth/me` and friends) simply get none.
+- **The use-case span**, from the validated command in `AbstractMemberUseCase`. Set before access
+  validation rather than after, so a rejected request stays attributable to whoever made it.
+
+> **Do not turn this into a span-metrics dimension.** Tenant ids are precisely the cardinality that
+> wrecks a Prometheus instance. Tempo indexes span attributes and is built for high cardinality;
+> Prometheus is not. (The collector config inside `grafana/otel-lgtm` is internal to the image
+> anyway, so this is not a switch you can reach for locally.)
+
+### What else belongs on a span
+
+`organizationId` is on spans because it is a tenant identifier and because it is _already_ in the
+observability backend: the winston transport turns every `PackmindLogger` metadata key into a Loki
+label, so those log lines carry it regardless. Spans add no new exposure.
+
+That reasoning does not generalise. `userId`, emails and the like stay off spans — the same reason
+`pg` keeps `enhancedDatabaseReporting: false` and bind values are never captured. Before reaching
+for `span.setAttribute`, apply the test: traces are retained and queryable by anyone with Grafana
+access.
+
+While you are here, note the other half of that finding: because _every_ logger metadata key becomes
+a Loki label, per-request values like `connectionId` become unbounded label cardinality on the Loki
+side. Labels are not the place for those; Loki wants them in the line.
 
 ## Cloud vs self-hosted
 
