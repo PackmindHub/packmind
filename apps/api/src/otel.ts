@@ -39,6 +39,23 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 
 const ATTR_KEY_DEPLOYMENT_ENVIRONMENT = 'deployment.environment.name';
 
+/**
+ * Tenant and space are pulled off the request path to tag the root span. Strict
+ * about the UUID shape on purpose: a literal ":orgId" or a slug must never land
+ * in an attribute. Compiled once — startIncomingSpanHook runs per request.
+ *
+ * `/spaces/<uuid>` is unambiguous in this API: every route under
+ * `organizations/:orgId/spaces` takes a space id there, and `spaces-management`
+ * cannot match because of the trailing slash.
+ */
+const UUID_PATTERN =
+  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const ORGANIZATION_ID_IN_PATH = new RegExp(
+  `/organizations/(${UUID_PATTERN})`,
+  'i',
+);
+const SPACE_ID_IN_PATH = new RegExp(`/spaces/(${UUID_PATTERN})`, 'i');
+
 const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
 
 /**
@@ -118,24 +135,26 @@ if (otlpEndpoint && environment) {
           ignoreIncomingRequestHook: (request) =>
             request.url?.startsWith('/api/v0/healthcheck') ?? false,
 
-          // Stamp the tenant onto the ROOT span, which is what Tempo's trace
-          // list and the Drilldown filters read - an attribute buried on a
-          // child span is findable in TraceQL but does not make the trace list
-          // filterable. This runs at span creation, before auth, so the URL is
-          // all there is to go on; AbstractMemberUseCase sets the same
-          // attribute from the validated command for the rest.
+          // Stamp tenant and space onto the ROOT span, which is what Tempo's
+          // trace list and the Drilldown filters read - an attribute buried on
+          // a child span is findable in TraceQL but does not make the trace
+          // list filterable. This runs at span creation, before auth, so the
+          // URL is all there is to go on; the use case bases set the same
+          // attributes from the validated command for the rest.
           //
-          // Deliberately strict about the UUID shape so a literal ":orgId" or a
-          // slug never lands in the attribute. Requests that carry no org in
-          // the path (/auth/me and friends) simply get nothing.
+          // Requests carrying neither in the path (/auth/me and friends) get
+          // no attributes, which is why each key is spread conditionally.
           startIncomingSpanHook: (request) => {
-            const organizationId = request.url?.match(
-              /\/organizations\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
-            )?.[1];
+            const url = request.url ?? '';
+            const organizationId = url.match(ORGANIZATION_ID_IN_PATH)?.[1];
+            const spaceId = url.match(SPACE_ID_IN_PATH)?.[1];
 
-            return organizationId
-              ? { 'packmind.organization.id': organizationId }
-              : {};
+            return {
+              ...(organizationId && {
+                'packmind.organization.id': organizationId,
+              }),
+              ...(spaceId && { 'packmind.space.id': spaceId }),
+            };
           },
         },
 

@@ -1,3 +1,4 @@
+import { Attributes } from '@opentelemetry/api';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
@@ -28,6 +29,13 @@ export abstract class AbstractSpaceMemberUseCase<
     logger: PackmindLogger = new PackmindLogger(defaultOrigin),
   ) {
     super(accountsPort, logger);
+  }
+
+  protected override spanAttributes(command: Command): Attributes {
+    return {
+      ...super.spanAttributes(command),
+      'packmind.space.id': command.spaceId,
+    };
   }
 
   protected override async executeForMembers(

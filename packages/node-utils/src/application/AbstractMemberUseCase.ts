@@ -1,3 +1,4 @@
+import { Attributes } from '@opentelemetry/api';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
@@ -59,7 +60,7 @@ export abstract class AbstractMemberUseCase<
     return withSpan(this.constructor.name, async (span) => {
       // Set before validation, not after, so a rejected request is still
       // attributable to the organization that made it.
-      span.setAttribute('packmind.organization.id', command.organizationId);
+      span.setAttributes(this.spanAttributes(command));
 
       let context: MemberContext;
 
@@ -80,6 +81,18 @@ export abstract class AbstractMemberUseCase<
 
       return this.executeForMembers({ ...command, ...context });
     });
+  }
+
+  /**
+   * Attributes for this use case's span. Overridable so the space-scoped
+   * subclasses can add their own without reaching for trace.getActiveSpan()
+   * from inside a nested call - span concerns stay in execute().
+   *
+   * Tenant and space only. userId and emails stay off spans; see
+   * docker/otel/README.md.
+   */
+  protected spanAttributes(command: Command): Attributes {
+    return { 'packmind.organization.id': command.organizationId };
   }
 
   protected handleValidationError(
