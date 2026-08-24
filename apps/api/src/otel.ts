@@ -56,6 +56,33 @@ const ORGANIZATION_ID_IN_PATH = new RegExp(
 );
 const SPACE_ID_IN_PATH = new RegExp(`/spaces/(${UUID_PATTERN})`, 'i');
 
+/**
+ * Requests whose spans carry no diagnostic value and are dropped outright.
+ *
+ * - Both healthcheck paths are polled every few seconds by the container
+ *   runtime and would otherwise be most of what the trace list shows. The
+ *   root `/api/v0` is what docker-compose probes (see its `healthcheck.test`);
+ *   it is matched exactly and never as a prefix, or the whole API would go
+ *   untraced.
+ * - `/api/v0/sse/stream` is a long-lived event stream: its root span stays
+ *   open for the entire connection, so it surfaces as a multi-minute
+ *   "request" that dominates every duration sort and skews the latency
+ *   percentiles. What happens inside the stream is logged, not traced.
+ *
+ * Query string and trailing slashes are stripped so `/api/v0/` and
+ * `/api/v0?x=1` cannot slip through.
+ */
+const IGNORED_PATHS = new Set([
+  '/api/v0',
+  '/api/v0/healthcheck',
+  '/api/v0/sse/stream',
+]);
+
+function isNoiseRequest(url: string | undefined): boolean {
+  const path = (url ?? '').split('?')[0].replace(/\/+$/, '');
+  return IGNORED_PATHS.has(path);
+}
+
 const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
 
 /**
@@ -130,10 +157,7 @@ if (otlpEndpoint && environment) {
     instrumentations: [
       getNodeAutoInstrumentations({
         '@opentelemetry/instrumentation-http': {
-          // The healthcheck is polled by the container healthcheck and would
-          // otherwise be most of what you see in the trace list.
-          ignoreIncomingRequestHook: (request) =>
-            request.url?.startsWith('/api/v0/healthcheck') ?? false,
+          ignoreIncomingRequestHook: (request) => isNoiseRequest(request.url),
 
           // Stamp tenant and space onto the ROOT span, which is what Tempo's
           // trace list and the Drilldown filters read - an attribute buried on

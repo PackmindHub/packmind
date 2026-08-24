@@ -24,10 +24,12 @@ COMPOSE_PROFILES=observability
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318
 ```
 
-Grafana is then on <http://localhost:3001> (`admin` / `admin`).
+Grafana is then on <http://localhost:3001> (`admin` / `admin`), and the inbox that alert mail lands
+in on <http://localhost:8025> — the profile also starts a Mailpit container, see
+[Alerting on slow requests](#alerting-on-slow-requests).
 
-All three otel-lgtm ports are published on **loopback only**, because OTLP ingestion is
-unauthenticated and Grafana runs on default credentials. If you drive Docker from another machine —
+All otel-lgtm and Mailpit ports are published on **loopback only**, because OTLP ingestion is
+unauthenticated, Grafana runs on default credentials, and the inbox quotes endpoint paths. If you drive Docker from another machine —
 a remote host, or some WSL setups — the ports will look dead; drop the `127.0.0.1:` prefixes in
 `docker-compose.yml` to reach them.
 
@@ -139,6 +141,12 @@ It is six spans because two instrumentations are deliberately turned off in `app
 — see the comments there. Left at defaults the same request produced **24** spans, 18 of them
 Express middleware and duplicated routing noise named `middleware - patched`, which buried the four
 spans that actually tell you anything.
+
+Three routes emit no trace at all, filtered by `ignoreIncomingRequestHook` in the same file:
+`/api/v0` and `/api/v0/healthcheck` (polled every few seconds by the container healthcheck, and
+otherwise most of the trace list) and `/api/v0/sse/stream` (a long-lived event stream whose root
+span stays open for the whole connection, so it appeared as a multi-minute "request" that dominated
+every duration sort). If you ever need to debug one of them, drop it from `IGNORED_PATHS`.
 
 Click any `pg.query` span and read **`db.query.text`** for the SQL — the full statement TypeORM
 generated, joins and all. (It is `db.query.text`, not the older `db.statement`: `instrumentation-pg`
@@ -556,3 +564,10 @@ change — point `OTEL_EXPORTER_OTLP_ENDPOINT` somewhere else:
   `SentrySampler` / `SentryPropagator` / `SentryContextManager`.
 - **The image tag is pinned** (`0.30.2`). Its bundled Grafana provisioning and collector config are
   internal details that change between releases; bump deliberately, not automatically.
+- **Tempo cannot back an alert rule.** Its datasource plugin declares `alerting: false`, so
+  `{ traceDuration > 2s }` is a query and never a rule. Latency alerts go through the Prometheus span
+  metrics instead — see [Alerting on slow requests](#alerting-on-slow-requests).
+- **The image's default notification policy points at a receiver that does not exist** (named
+  `empty`). Out of the box a firing alert therefore notifies nothing and explains nothing;
+  `provisioning-alerting.yaml` replaces that root policy, which is why the file defines `policies`
+  and not just a contact point.
