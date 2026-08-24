@@ -11,12 +11,18 @@ permissions:
 
 jobs:
   improve-claude-md:
-    # This workflow file is synced into other repositories (including our proprietary
-    # codebase). It must only ever run on PackmindHub/packmind: everywhere else the job
-    # is skipped, so the schedule and workflow_dispatch triggers become no-ops.
-    if: github.repository == 'PackmindHub/packmind'
+    # This workflow file is synced between PackmindHub/packmind and our proprietary fork,
+    # and runs in both. What differs is the *scope* of the run, not whether it runs: the
+    # "Resolve CLAUDE.md worklist" step below decides which files each repository owns, so
+    # the two runs never touch the same file. Anywhere else the job is skipped, making the
+    # schedule and workflow_dispatch triggers no-ops.
+    if: >-
+      github.repository == 'PackmindHub/packmind' ||
+      github.repository == 'PackmindHub/packmind-proprietary'
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 45
+    # 60 rather than 45: the proprietary run authors missing CLAUDE.md files from scratch,
+    # which is heavier than auditing existing ones.
+    timeout-minutes: 60
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -47,6 +53,54 @@ jobs:
             || claude plugin marketplace update claude-plugins-official
           claude plugin install claude-md-management@claude-plugins-official
 
+      - name: Resolve CLAUDE.md worklist
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+
+          if [ "${{ github.repository }}" = 'PackmindHub/packmind-proprietary' ]; then
+            # Proprietary run: only projects that do NOT exist in OSS. Every shared
+            # CLAUDE.md is owned by the OSS repository's run of this same workflow -
+            # auditing it in both repositories would diverge the files and conflict on the
+            # next sync-from-oss-repository merge.
+            git clone --depth 1 --branch main \
+              https://github.com/PackmindHub/Packmind.git /tmp/packmind-oss
+
+            if [ ! -d /tmp/packmind-oss/packages ]; then
+              echo "::error::OSS checkout has no packages/ directory. Aborting."
+              exit 1
+            fi
+
+            : > tmp/claude-md-worklist.txt
+            for DIR in apps/*/ packages/*/; do
+              PROJ="${DIR%/}"
+              [ -d "/tmp/packmind-oss/${PROJ}" ] && continue
+              # Listed whether or not the file exists yet: a missing entry is what tells
+              # the skill to bootstrap that package's CLAUDE.md.
+              echo "${PROJ}/CLAUDE.md" >> tmp/claude-md-worklist.txt
+            done
+
+            if [ ! -s tmp/claude-md-worklist.txt ]; then
+              echo "::error::No proprietary-only project found - the OSS diff looks broken."
+              exit 1
+            fi
+
+            echo 'SCOPE_NOTE=Scope: proprietary-only packages (projects absent from PackmindHub/packmind).' >> "$GITHUB_ENV"
+          else
+            find . -name CLAUDE.md -not -path './node_modules/*' \
+              | sed 's|^\./||' | sort > tmp/claude-md-worklist.txt
+
+            if [ ! -s tmp/claude-md-worklist.txt ]; then
+              echo "::error::No CLAUDE.md found in the checkout. Aborting."
+              exit 1
+            fi
+
+            echo 'SCOPE_NOTE=Scope: every CLAUDE.md in the repository.' >> "$GITHUB_ENV"
+          fi
+
+          echo "=== worklist ($(wc -l < tmp/claude-md-worklist.txt) entries) ==="
+          cat tmp/claude-md-worklist.txt
+
       - name: Improve CLAUDE.md files with Claude
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -69,7 +123,10 @@ jobs:
             Automated weekly run of the `improve-claude-md` skill, which delegates the audit
             to Anthropic's `claude-md-improver`.
 
+            ${{ env.SCOPE_NOTE }}
+
             - Applied only high/medium priority fixes with clear impact.
+            - Missing `CLAUDE.md` files inside the run's scope were created from scratch.
             - Removed instructions that duplicate a repository skill (`.claude/skills/*/SKILL.md`), so
               deletions are expected in this diff - please check none of them went too far.
             - Packmind standards sections were left untouched.
