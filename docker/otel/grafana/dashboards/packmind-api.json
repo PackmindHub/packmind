@@ -40,10 +40,19 @@
       "datasource": { "type": "prometheus", "uid": "${ds}" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
       "fieldConfig": {
-        "defaults": { "unit": "s", "custom": { "lineWidth": 1, "fillOpacity": 5 } },
+        "defaults": {
+          "unit": "s",
+          "custom": { "lineWidth": 1, "fillOpacity": 5 }
+        },
         "overrides": []
       },
-      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["max"] } },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["max"]
+        }
+      },
       "targets": [
         {
           "refId": "A",
