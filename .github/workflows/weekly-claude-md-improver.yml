@@ -50,87 +50,12 @@ jobs:
       - name: Improve CLAUDE.md files with Claude
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: |
-          set -euo pipefail
-          mapfile -t FILES < <(find . -name CLAUDE.md -not -path '*/node_modules/*')
-          echo "Found ${#FILES[@]} CLAUDE.md file(s)"
-
-          # Skill inventory: every SKILL.md under any .claude/skills tree, at any depth - .claude/skills
-          # can itself live in a sub-directory, and skills may be nested. Only the YAML frontmatter
-          # (name + description) is collected; skill bodies are never inlined into the prompt.
-          mapfile -t SKILL_FILES < <(find . -path '*/.claude/skills/*/SKILL.md' -not -path '*/node_modules/*' | sort)
-          SKILLS_INVENTORY=""
-          SKILLS_COUNT=0
-          for skill in "${SKILL_FILES[@]}"; do
-            [ -z "$skill" ] && continue
-            frontmatter=$(awk '
-              NR==1 && $0 !~ /^---[[:space:]]*$/ {exit}
-              /^---[[:space:]]*$/ {n++; if (n==2) exit; next}
-              n!=1 {next}
-              /^[A-Za-z0-9_-]+:/ {keep = ($0 ~ /^(name|description):/); if (keep) print; next}
-              keep
-            ' "$skill")
-            [ -z "$frontmatter" ] && continue
-            SKILLS_INVENTORY+="- ${skill}"$'\n'"${frontmatter}"$'\n\n'
-            SKILLS_COUNT=$((SKILLS_COUNT + 1))
-            # Logged per skill so a regression that silently empties the inventory (a gitignored
-            # .claude/skills, a narrowed checkout, an edited find pattern) is visible in the run log
-            # instead of quietly degrading into "skip deduplication".
-            echo "  + $skill"
-          done
-          echo "Loaded frontmatter for $SKILLS_COUNT skill(s)"
-          [ "$SKILLS_COUNT" -eq 0 ] && SKILLS_INVENTORY="(no skills found in this repository)"
-
-          for file in "${FILES[@]}"; do
-          [ -z "$file" ] && continue
-          echo "::group::Improving $file"
-          # Unquoted heredoc: the shell expands $file and $SKILLS_INVENTORY below. Keep the prompt text
-          # free of '$' and backticks so nothing else gets interpreted. (Do not switch back to
-          # placeholder substitution: '&' inside a bash replacement expands to the matched text, which
-          # corrupts any skill description containing an ampersand.) The heredoc body and its EOF
-          # terminator must stay flush with the enclosing block, hence the un-indented loop body.
-          prompt=$(cat <<EOF
-          You are Claude Code running NON-INTERACTIVELY in CI (no human is available to confirm anything).
-
-          STEP 1 - Load the skill inventory below before doing anything else. It lists every skill available
-          in this repository (each SKILL.md found under any .claude/skills directory, at any depth), with
-          only its YAML frontmatter: the skill name and its description.
-
-          SKILL INVENTORY:
-          $SKILLS_INVENTORY
-
-          STEP 2 - Use the claude-md-improver skill (from the installed claude-md-management plugin) to
-          audit and improve the CLAUDE.md file at: $file
-
-          Because this is non-interactive, APPLY fixes directly to the file. Only apply HIGH and MEDIUM
-          priority fixes that have a clear, unambiguous positive impact (e.g. outdated or incorrect
-          commands, broken links or wrong file paths, stale structure or architecture references). Do NOT
-          make low-priority, subjective, or stylistic changes, and skip anything ambiguous.
-
-          DEDUPLICATION AGAINST SKILLS: CLAUDE.md must not restate what a skill already carries. Any
-          instruction, procedure, convention or example in this CLAUDE.md that is already covered by one of
-          the skills listed above is duplicate content: delete it outright, leaving no pointer or
-          cross-reference in its place. Rules:
-          - Delete only when the skill clearly and fully owns that topic. If a skill covers the topic only
-            partially, or you are in any doubt, leave the CLAUDE.md text untouched.
-          - You may read a SKILL.md body when its frontmatter description alone cannot settle whether
-            coverage is full.
-          - Never delete content that no skill covers.
-          - If the inventory above is "(no skills found in this repository)", skip deduplication entirely.
-
-          CRITICAL: Never modify content inside sections delimited by the markers
-          "<!-- start: Packmind standards -->" and "<!-- end: Packmind standards -->". Leave those regions
-          byte-for-byte unchanged; only edit content outside them - this outranks the deduplication rules
-          above, even if a skill appears to cover that content.
-
-          Do not create, delete, or rename files - only edit this one CLAUDE.md file.
-          EOF
-          )
-          claude -p "$prompt" \
-            --permission-mode acceptEdits \
-            --allowedTools "Read,Edit,Glob,Grep"
-          echo "::endgroup::"
-          done
+        # The whole procedure lives in .claude/skills/improve-claude-md/SKILL.md:
+        # which files to visit, what to fix, how to deduplicate against repository skills,
+        # and which regions never to touch. Change the rules there, not here. The skill's
+        # frontmatter also pins the model and the tool grant, so no --model / --allowedTools
+        # flags belong on this call.
+        run: claude -p "/improve-claude-md" --permission-mode acceptEdits
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -141,12 +66,15 @@ jobs:
           commit-message: 'chore: weekly CLAUDE.md improvements via claude-md-improver'
           title: 'chore: weekly CLAUDE.md improvements'
           body: |
-            Automated weekly run of the Anthropic `claude-md-improver` skill.
+            Automated weekly run of the `improve-claude-md` skill, which delegates the audit
+            to Anthropic's `claude-md-improver`.
 
             - Applied only high/medium priority fixes with clear impact.
             - Removed instructions that duplicate a repository skill (`.claude/skills/*/SKILL.md`), so
               deletions are expected in this diff - please check none of them went too far.
             - Packmind standards sections were left untouched.
+
+            To change what this run does, edit `.claude/skills/improve-claude-md/SKILL.md`.
 
             Please review before merging.
           labels: automated
