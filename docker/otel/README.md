@@ -295,8 +295,9 @@ with a live preview of what would have fired — then copy the result down into 
   low ones. The rule sets `noDataState: OK` — without it you get NoData mail every evening. You can
   watch this happen: endpoints you stopped calling show up as `Normal (NoData)`, not as breaches.
 - **`SPAN_KIND_SERVER` misses BullMQ jobs.** They are traced, but their traces are rooted at a
-  `withSpan()` span of kind `INTERNAL`, so a slow job never trips a rule written this way. Alerting
-  on those needs a separate rule keyed on the span name.
+  first-party span of kind `INTERNAL` — there is no incoming request to root them at — so a slow job
+  never trips a rule written this way. Alerting on those needs a separate rule keyed on the span
+  name.
 
 And one from further out: the span metrics carry `service`, `span_name`, `span_kind`, `status_code`
 and `le` — **not** `deployment.environment.name`. Two environments writing to one Prometheus blend
@@ -330,9 +331,9 @@ You also get **Node runtime metrics** for free — event-loop lag, heap and GC, 
 `runtime-node` instrumentation, which the SDK exports to Prometheus alongside the traces. Nobody
 configured this; it is on by default. Look for them in Explore → Prometheus.
 
-And from our own code: a span per authenticated use case, plus anything wrapped in `withSpan()`,
-both under the instrumentation scope `packmind` — see
-[Adding your own spans](#adding-your-own-spans).
+And from our own code, all under the instrumentation scope `packmind`: a span per authenticated use
+case, **a span per async method on every use case, service and repository**, and anything wrapped in
+`withSpan()` by hand. See [Adding your own spans](#adding-your-own-spans).
 
 Two known gaps:
 
@@ -342,15 +343,65 @@ Two known gaps:
   carrying the context through the job payload.
 - **TypeORM** produces no ORM-level spans, only the driver-level `pg` ones. The community
   `opentelemetry-instrumentation-typeorm` package is unmaintained and not part of
-  `opentelemetry-js-contrib`, so it is deliberately not used.
+  `opentelemetry-js-contrib`, so it is deliberately not used. Our own repository spans cover the
+  part that mattered — knowing which method issued a given statement — but nothing reports on
+  TypeORM's own work between the two.
 
 ## Adding your own spans
 
-Everything above comes from auto-instrumentation, which patches known library modules — `http`,
-`express`, `nestjs-core`, `pg`, `winston` — and nothing else. It has no way to discover your
-classes, so `packages/*` is invisible unless it instruments itself.
+Auto-instrumentation patches known library modules — `http`, `express`, `nestjs-core`, `pg`,
+`winston` — and nothing else. It has no way to discover your classes, so `packages/*` would be
+invisible unless it instruments itself.
 
-`withSpan()` from `@packmind/node-utils` is how it says so:
+**Almost certainly you do not need to do anything.** Use cases, services and repositories are
+already covered, automatically and with no per-method opt-in — read the next section for what that
+means, and reach for `withSpan()` only for the cases it does not reach.
+
+### The automatic layer
+
+`instrumentMethods()` from `@packmind/node-utils` walks an instance's **prototype chain** and wraps
+every async method in a span. Three calls apply it to the whole backend:
+
+| Called from                                   | Covers                                                                              |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `AbstractMemberUseCase` constructor           | every authenticated use case, through its three subclass bases                      |
+| `AbstractRepository` constructor              | its 26 subclasses, wherever they are constructed                                    |
+| each `*Services` / `*Repositories` aggregator | domain services, and the seven repositories that do not extend `AbstractRepository` |
+
+Patching the prototype rather than the instance is what makes **depth** work: a `this.b()` call from
+inside `this.a()` resolves through the same patched prototype, so nesting continues for as many
+levels as the call chain has. **Private methods are captured too** — TypeScript `private` is erased
+at runtime, so they are ordinary prototype properties. Span names are `Class.method`, resolved at
+call time, so an inherited `AbstractRepository.add` reports as `SkillRepository.add`.
+
+Three things it does **not** do, each worth knowing before you go looking for a missing span:
+
+- **Only `async` methods.** A span has to be active _while_ the original runs, or spans created
+  inside it become roots of their own instead of children — so the decision cannot wait until the
+  return value is in hand, and is made at patch time by asking whether the method is a native
+  `AsyncFunction`. A plain method that returns a promise, `list() { return this.repo.find(); }`, is
+  therefore skipped. Mark it `async`, or wrap it by hand.
+- **`execute()` is skipped** on use cases, because it already owns the explicit span named after the
+  class. Patching it too would nest an identical `<Subclass>.execute` above it.
+- **Adapters, controllers and free functions are not covered.** Nor are use cases implementing
+  `IPublicUseCase` directly — they bypass `AbstractMemberUseCase` and get no span at all, as before.
+
+`PACKMIND_OTEL_INSTRUMENT_METHODS=false` turns the whole thing off without also losing tracing. It
+is read straight off `process.env` at module load, not through `Configuration.getConfig()` — that is
+async, and prototypes are patched during construction, long before such a promise would resolve.
+
+> **This is a lot of spans.** A request that was 17 spans is now plausibly 60–100. Two consequences.
+> The default `BatchSpanProcessor` queue is 2048 spans in 512-span batches, so under load spans start
+> being dropped _silently_ — do not assume a trace is complete when you are chasing something under
+> load. And `span_name` is a Prometheus label on `traces_spanmetrics_*`, so going from ~150 distinct
+> names to well over a thousand multiplies active series; that bites hardest on Grafana Cloud. If
+> either does bite, the ladder is to drop the repository layer first — `pg` spans already cover that
+> ground — and reach for head sampling after that.
+
+### Doing it by hand
+
+`withSpan()` is still there for what the automatic layer does not reach, or when you want a name of
+your own:
 
 ```ts
 import { withSpan } from '@packmind/node-utils';
@@ -364,15 +415,12 @@ It nests under whatever span is currently active, records the exception and sets
 the callback throws, and ends the span on both paths. When no SDK is running — unit tests, or the
 API started without `OTEL_EXPORTER_OTLP_ENDPOINT` — `trace.getTracer()` returns a no-op tracer, so
 the callback still runs and the cost is a function call. There is nothing to guard and no reason to
-branch on whether tracing is on.
+branch on whether tracing is on. `instrumentMethods()` is built on it, so the two behave alike.
 
-**Use cases already have one.** `AbstractMemberUseCase.execute()` wraps every authenticated use case
-in a span named after its class, and `AbstractAdminUseCase`, `AbstractSpaceMemberUseCase` and
-`AbstractSpaceAdminUseCase` all inherit that method — so the domain layer is covered with no
-per-use-case opt-in. Public use cases implementing `IPublicUseCase` directly are the exception: they
-bypass the base class and get no span.
+### What it looks like
 
-A real capture of `GET /organizations/:orgId/spaces/:spaceId/skills`, first-party spans marked:
+A real capture of `GET /organizations/:orgId/spaces/:spaceId/skills`, taken **before** the automatic
+layer was added — kept because it is what shows why the layer was worth adding:
 
 ```
 2029.76ms  GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
@@ -398,6 +446,42 @@ Note this endpoint is 17 spans, not six: member and space-membership validation 
 connection and a query before the read the caller asked for. That is the kind of thing the use-case
 span makes visible — previously all thirteen `pg` spans hung off the controller with nothing to
 group them.
+
+But read the thirteen `pg` spans again: they are a flat list of siblings, and nothing in that
+capture says which of them is the membership lookup, which is the space read, and which is the query
+the caller actually asked for. Filling that in is what the automatic layer does. The same request now
+reads roughly:
+
+```
+GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
+  request handler - /api/v0/organizations/:orgId/spaces/:spaceId/skills
+    OrganizationsSpacesSkillsController.getSkills
+      getSkills
+        ListSkillsBySpaceUseCase                                  ← explicit, unchanged
+          ListSkillsBySpaceUseCase.validateMemberAccess           ← new
+            ListSkillsBySpaceUseCase.fetchUser                    ← new
+              pg-pool.connect
+              pg.query:SELECT packmind
+            ListSkillsBySpaceUseCase.fetchOrganization            ← new
+              pg.query:SELECT packmind
+          ListSkillsBySpaceUseCase.executeForMembers              ← new (space-membership check)
+            pg.query:SELECT packmind
+            ListSkillsBySpaceUseCase.executeForSpaceMembers       ← new
+              ListSkillsBySpaceUseCase.thisMethodTakesTwoSeconds  ← new, and private
+              SkillService.listSkillsBySpace                      ← new
+                SkillRepository.findBySpaceId                     ← new
+                  pg.query:SELECT packmind
+```
+
+`thisMethodTakesTwoSeconds` is the one to look at: it is `private`, nothing in the source wraps it,
+and it still gets a span. Find it with:
+
+```
+{ name = "ListSkillsBySpaceUseCase.thisMethodTakesTwoSeconds" }
+```
+
+> Re-capture this listing from a real trace next time the stack is up — the shape above is derived
+> from the code, not pasted out of Tempo, and the exact `pg` placement will differ.
 
 Our spans carry the instrumentation scope `packmind`, which is what distinguishes them from
 `@opentelemetry/instrumentation-pg` and friends. In TraceQL the intrinsic is

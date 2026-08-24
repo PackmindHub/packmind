@@ -2,7 +2,6 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractSpaceMemberUseCase,
   SpaceMemberContext,
-  withSpan,
 } from '@packmind/node-utils';
 import {
   ListSkillsBySpaceCommand,
@@ -89,15 +88,18 @@ export class ListSkillsBySpaceUseCase
   //
   // Exists to give the OTLP setup something unmistakable to find: a span with
   // a name nobody could mistake for real work, on an endpoint that is easy to
-  // hit. Look for it with `{ name = "thisMethodTakesTwoSeconds" }` in TraceQL,
-  // nested under the ListSkillsBySpaceUseCase span.
+  // hit. Look for it with
+  // `{ name = "ListSkillsBySpaceUseCase.thisMethodTakesTwoSeconds" }` in
+  // TraceQL, nested under the ListSkillsBySpaceUseCase span.
+  //
+  // Nothing here wraps it: the span comes from instrumentMethods(), which the
+  // AbstractMemberUseCase constructor applies to every async method on the
+  // class, private ones included. That this method still shows up is the proof.
   //
   // The wait is awaited rather than a busy-wait, so the event loop stays free
   // and concurrent requests are unaffected - it reads in the trace exactly
   // like a genuinely slow call would.
   private async thisMethodTakesTwoSeconds(): Promise<void> {
-    await withSpan('thisMethodTakesTwoSeconds', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }
