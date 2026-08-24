@@ -218,7 +218,10 @@ async function bootstrap() {
         stack: error.stack,
         pid: process.pid,
       });
-      process.exit(1);
+      // Flush first: the trace and logs of a fatal error are the ones worth
+      // keeping. shutdownOtel never rejects and is time-bounded, so this
+      // cannot stall the exit.
+      void shutdownOtel().finally(() => process.exit(1));
     });
 
     process.on('unhandledRejection', (reason) => {
@@ -228,7 +231,7 @@ async function bootstrap() {
         reason: errorMessage,
         pid: process.pid,
       });
-      process.exit(1);
+      void shutdownOtel().finally(() => process.exit(1));
     });
 
     Logger.log(
