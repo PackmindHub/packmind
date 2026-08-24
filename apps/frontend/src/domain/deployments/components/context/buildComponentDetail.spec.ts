@@ -9,6 +9,7 @@ import {
   componentEditHref,
   packageDetailHref,
   selectDetailComponent,
+  sortFilesByPath,
   sortRulesByContent,
   withPaneDetailHref,
 } from './buildComponentDetail';
@@ -103,14 +104,14 @@ describe('withPaneDetailHref', () => {
     ).toBe('?package=pkg-1&component=standard-1');
   });
 
-  it('leaves a skill on its own page', () => {
+  it('points a skill at the pane', () => {
     expect(
       withPaneDetailHref(
         component('skill', 'skill-1'),
         new URLSearchParams(),
         PACKAGE,
       ).href,
-    ).toBe('/org/acme/space/core/skills/skill-1');
+    ).toBe('?package=pkg-1&component=skill-1');
   });
 
   it('changes nothing else about the row', () => {
@@ -163,8 +164,8 @@ describe('selectDetailComponent', () => {
     expect(selectDetailComponent(groups, 'command-9')).toBeNull();
   });
 
-  it('ignores a type the pane cannot render yet', () => {
-    expect(selectDetailComponent(groups, 'skill-1')).toBeNull();
+  it('finds the requested skill', () => {
+    expect(selectDetailComponent(groups, 'skill-1')?.type).toBe('skill');
   });
 
   it('ignores a request against an empty package', () => {
@@ -214,5 +215,34 @@ describe('sortRulesByContent', () => {
     sortRulesByContent(rules);
 
     expect(rules[0].content).toBe('Never log');
+  });
+});
+
+describe('sortFilesByPath', () => {
+  const file = (path: string) => ({ path });
+
+  it('keeps the files of one folder together', () => {
+    expect(
+      sortFilesByPath([
+        file('scripts/run.sh'),
+        file('README.md'),
+        file('scripts/build.sh'),
+      ]).map((f) => f.path),
+    ).toEqual(['README.md', 'scripts/build.sh', 'scripts/run.sh']);
+  });
+
+  it('ignores case, so a lowercase folder is not exiled to the end', () => {
+    expect(
+      sortFilesByPath([file('templates/a.md'), file('Assets/b.png')]).map(
+        (f) => f.path,
+      ),
+    ).toEqual(['Assets/b.png', 'templates/a.md']);
+  });
+
+  it('leaves the list it was given alone', () => {
+    const files = [file('scripts/run.sh'), file('README.md')];
+    sortFilesByPath(files);
+
+    expect(files[0].path).toBe('scripts/run.sh');
   });
 });

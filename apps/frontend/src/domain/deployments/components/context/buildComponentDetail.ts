@@ -26,10 +26,14 @@ export const COMPONENT_PARAM = 'component';
 /**
  * Which types the pane can show itself, and the only place it is decided.
  *
- * The types that say no are not broken, they are not written yet: their rows
- * keep pointing at their own detail page, which is where they are read today.
- * One entry flips per increment, and when all three are true the per-type pages
- * have no reader left, which is what makes them removable.
+ * All three types say yes now, so no row in a package pane leads out of the
+ * surface any more. The per-type pages still have readers, though: the frame's
+ * "Open ..." button, the space inventory and the rail's search results all
+ * still point at them, and cutting those is a step of its own.
+ *
+ * The record stays because the question does. A fourth type arrives with no
+ * body written for it, and this is where it says so, rather than by leaving a
+ * blank pane behind a row that looked like the others.
  *
  * A record over the union rather than a list, so a new component type cannot be
  * added without answering the question here.
@@ -37,7 +41,7 @@ export const COMPONENT_PARAM = 'component';
 export const RENDERS_IN_PANE: Record<ContextComponentType, boolean> = {
   standard: true,
   command: true,
-  skill: false,
+  skill: true,
 };
 
 /**
@@ -122,14 +126,6 @@ export function selectDetailComponent(
 }
 
 /**
- * Where this component is edited, or null when it has no edit route of its own.
- *
- * Standards and skills are edited from their own page, which has no separate
- * edit address to send anyone to. Null rather than a link to the page: the pane
- * already offers a way to open it, and two buttons landing in the same place
- * would both be lying about what one of them does.
- */
-/**
  * The rules of a standard, in the order its own page lists them.
  *
  * Sorted here rather than left in the order the endpoint returns them, and
@@ -146,6 +142,32 @@ export function sortRulesByContent<Rule extends { content: string }>(
   );
 }
 
+/**
+ * The files a skill ships beside its instructions, in a stable order.
+ *
+ * The endpoint promises no order at all, which reads as none the moment a skill
+ * has a folder or two. Sorted by path, so the files of one folder stay
+ * together, and case-insensitively for the same reason the rules are: a
+ * lowercase name is not a less important one.
+ */
+export function sortFilesByPath<File extends { path: string }>(
+  files: readonly File[],
+): File[] {
+  return [...files].sort((first, second) =>
+    first.path.localeCompare(second.path, undefined, {
+      sensitivity: 'base',
+    }),
+  );
+}
+
+/**
+ * Where this component is edited, or null when it has no edit route of its own.
+ *
+ * Standards and skills are edited from their own page, which has no separate
+ * edit address to send anyone to. Null rather than a link to the page: the pane
+ * already offers a way to open it, and two buttons landing in the same place
+ * would both be lying about what one of them does.
+ */
 export function componentEditHref(
   component: Pick<ContextComponent, 'type' | 'key'>,
   { orgSlug, spaceSlug }: ContextLinkTarget,

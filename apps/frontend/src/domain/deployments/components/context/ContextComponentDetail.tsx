@@ -11,22 +11,26 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronLeft } from 'react-icons/lu';
+import { LuChevronLeft, LuFileCode } from 'react-icons/lu';
 import type {
   CommandId,
   OrganizationId,
   Rule,
+  SkillFile,
+  SkillId,
   SpaceId,
   StandardId,
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetCommandByIdQuery } from '../../../commands/api/queries/CommandsQueries';
+import { useGetSkillWithFilesByIdQuery } from '../../../skills/api/queries/SkillsQueries';
+import { SkillFrontmatterInfo } from '../../../skills/components/SkillFrontmatterInfo';
 import {
   useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
 } from '../../../standards/api/queries/StandardsQueries';
-import { sortRulesByContent } from './buildComponentDetail';
+import { sortFilesByPath, sortRulesByContent } from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
@@ -156,14 +160,8 @@ function ComponentBody({
       return <CommandBody commandId={component.key as CommandId} />;
     case 'standard':
       return <StandardBody standardId={component.key as StandardId} />;
-    /*
-     * The type whose body is not written yet. Unreachable rather than hidden:
-     * its rows still point at their own page, which is what the `false` entry
-     * of `RENDERS_IN_PANE` says. Null so that an address typed by hand shows
-     * the frame instead of crashing the surface.
-     */
     case 'skill':
-      return null;
+      return <SkillBody skillId={component.key as SkillId} />;
   }
 }
 
@@ -374,6 +372,125 @@ function RulesSection({
           <PMText fontSize="sm">{rule.content}</PMText>
         </PMBox>
       ))}
+    </PMBox>
+  );
+}
+
+/**
+ * A skill is a folder: what it declares, what it says to do, and the files that
+ * ship beside it. Read in that order, which is the order an agent reads them
+ * in — the frontmatter is what decides whether the instructions are opened at
+ * all.
+ *
+ * The frontmatter is the skill page's own component rather than a second
+ * rendering of it. `metadata` and `additionalProperties` are open-ended, and a
+ * skill declaring something this pane had never heard of would be the kind of
+ * disagreement nobody notices until the agent behaves differently from what the
+ * page showed.
+ */
+function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
+  const { data, isLoading, isError } = useGetSkillWithFilesByIdQuery(skillId);
+
+  const files = useMemo(
+    () => (data ? sortFilesByPath(data.files) : []),
+    [data],
+  );
+
+  if (isLoading) {
+    return (
+      <PMBox display="flex" justifyContent="center" paddingY={10}>
+        <PMSpinner />
+      </PMBox>
+    );
+  }
+
+  /*
+   * Null rather than an error for a skill that is gone, the same as the other
+   * two bodies: the row it was opened from came from a list that had it, so by
+   * the time this fails there is nothing useful to say beyond that it failed.
+   */
+  if (isError || !data) {
+    return <PMText color="error">Error loading this skill.</PMText>;
+  }
+
+  const { latestVersion } = data;
+
+  return (
+    <PMVStack gap={6} align="stretch" maxWidth="72ch">
+      <SkillFrontmatterInfo skillVersion={latestVersion} />
+
+      {latestVersion.prompt ? (
+        <PMBox>
+          <PMMarkdownViewer content={latestVersion.prompt} />
+        </PMBox>
+      ) : (
+        <PMText color="secondary">
+          This skill has no instructions yet. Its frontmatter tells an agent
+          when to reach for it, and nothing tells it what to do once it has.
+        </PMText>
+      )}
+
+      {files.length > 0 && <SkillFilesSection files={files} />}
+    </PMVStack>
+  );
+}
+
+/**
+ * What ships beside the instructions.
+ *
+ * Paths and nothing else: a row that looked like a link and did nothing would
+ * be worse than a line of text, and the pane cannot open a file yet. The way in
+ * is "Open skill", which lands on the tree that can.
+ *
+ * SKILL.md is absent from this list rather than missing from it. It is the
+ * instructions above, and the server keeps it out of `files` for that reason —
+ * the skill's own page rebuilds it from the version's prompt to put it in the
+ * tree.
+ */
+function SkillFilesSection({
+  files,
+}: Readonly<{ files: readonly SkillFile[] }>) {
+  return (
+    <PMBox>
+      <BodySectionLabel>
+        {`${files.length} file${files.length === 1 ? '' : 's'}`}
+      </BodySectionLabel>
+      <PMBox
+        marginTop={1}
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="sm"
+        overflow="hidden"
+      >
+        {files.map((file, index) => (
+          <PMHStack
+            key={file.path}
+            gap={3}
+            paddingX={3}
+            paddingY="8px"
+            borderTopWidth={index === 0 ? '0' : '1px'}
+            borderColor="border.tertiary"
+            align="center"
+          >
+            <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+              <LuFileCode />
+            </PMIcon>
+            <PMText fontSize="sm" fontFamily="mono" flex={1} minW={0} truncate>
+              {file.path}
+            </PMText>
+            {/*
+              Named rather than left to the extension: a binary file is the one
+              case where opening it shows nothing, and knowing that before
+              clicking is worth a word.
+            */}
+            {file.isBase64 && (
+              <PMText fontSize="xs" color="faded" flexShrink={0}>
+                binary
+              </PMText>
+            )}
+          </PMHStack>
+        ))}
+      </PMBox>
     </PMBox>
   );
 }
