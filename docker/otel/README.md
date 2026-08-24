@@ -44,12 +44,12 @@ the HTTP span, not at the click.
 Everything is environment variables — the same artifact runs everywhere, and nothing is baked in at
 build time.
 
-| | local | staging | production | self-hosted |
-| --- | --- | --- | --- | --- |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://otel-lgtm:4318` | Cloud endpoint | Cloud endpoint | *unset* |
-| `OTEL_EXPORTER_OTLP_HEADERS` | — | `Authorization=Basic …` | `Authorization=Basic …` | — |
-| `OTEL_RESOURCE_ATTRIBUTES` | `deployment.environment.name=local` | `…=staging,service.version=<tag>` | `…=production,service.version=<tag>` | — |
-| sampling | everything | everything | tail sampling in a collector — see below | — |
+|                               | local                               | staging                           | production                               | self-hosted |
+| ----------------------------- | ----------------------------------- | --------------------------------- | ---------------------------------------- | ----------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://otel-lgtm:4318`             | Cloud endpoint                    | Cloud endpoint                           | _unset_     |
+| `OTEL_EXPORTER_OTLP_HEADERS`  | —                                   | `Authorization=Basic …`           | `Authorization=Basic …`                  | —           |
+| `OTEL_RESOURCE_ATTRIBUTES`    | `deployment.environment.name=local` | `…=staging,service.version=<tag>` | `…=production,service.version=<tag>`     | —           |
+| sampling                      | everything                          | everything                        | tail sampling in a collector — see below | —           |
 
 For staging and production these live in the Helm values in `PackmindHub/packmind-ai-helm-charts`.
 Compose defaults the local one, so locally the endpoint remains the only switch you need.
@@ -93,8 +93,8 @@ User field, which is useful for a cross-environment overview but not for per-env
   (They are downloaded from grafana.com on first run, so they need outbound network once.)
 - **A provisioned dashboard** — `docker/otel/grafana/dashboards/packmind-api.json` ships with this
   repo and loads automatically: latency percentiles per endpoint, request and error rates, a latency
-  heatmap, and database call percentiles. Find it under Dashboards → *Packmind API — latency &
-  throughput*. Edit it in the UI and copy the JSON back if you want more.
+  heatmap, and database call percentiles. Find it under Dashboards → _Packmind API — latency &
+  throughput_. Edit it in the UI and copy the JSON back if you want more.
 
 The query languages below are the escape hatch for when the click-through UIs do not cover what you
 want. Worth reading once, not memorising. Five entry points, easiest first.
@@ -117,13 +117,22 @@ trace to get the waterfall. This is a real one, captured from a single request:
 ```
 24.2ms  POST /api/v0/auth/check-email-availability   ← HTTP span
 14.1ms    request handler - /api/v0/auth/check-…     ← Express routing
-13.2ms      AuthController.checkEmailAvailability    ← Nest handler
- 9.5ms        checkEmailAvailability                 ← use case
+13.2ms      AuthController.checkEmailAvailability    ← Nest controller
+ 9.5ms        checkEmailAvailability                 ← the same method, again
  0.2ms          pg-pool.connect                      ← waiting for a connection
  3.5ms          pg.query:SELECT packmind             ← the SQL
 ```
 
-Six spans, one per layer, reading top to bottom as HTTP → route → controller → use case → SQL.
+Six spans, reading top to bottom as HTTP → route → controller → SQL. The two Nest rows are one
+layer and not two: `instrumentation-nestjs-core` emits a `REQUEST_CONTEXT` span named
+`Controller.method` and, nested inside it, a `REQUEST_HANDLER` span named after `handler.name`
+alone. Both are the controller. Neither is the use case — it patches `RouterExplorer.createHandler`
+and nothing else, so a bare method name in a waterfall is still the route handler.
+
+That is also why nothing from `packages/*` appears in this trace: auto-instrumentation patches known
+library modules, never your own classes. First-party code has to say so itself — see
+[Adding your own spans](#adding-your-own-spans).
+
 An N+1 shows up as repeated sibling `pg.query` spans under the same parent.
 
 It is six spans because two instrumentations are deliberately turned off in `apps/api/src/otel.ts`
@@ -159,8 +168,8 @@ confuse:
 { name =~ "pg.query.*" && duration > 200ms && resource.deployment.environment.name = "production" }
 ```
 
-`duration` is per span, so `{duration > 800ms}` finds a slow *query* even inside a fast request,
-while `{traceDuration > 800ms}` finds slow *requests*. Both return the matching traces, and clicking
+`duration` is per span, so `{duration > 800ms}` finds a slow _query_ even inside a fast request,
+while `{traceDuration > 800ms}` finds slow _requests_. Both return the matching traces, and clicking
 one drops you into the waterfall.
 
 ### 3. "Latency distribution per endpoint" — Explore → Prometheus
@@ -224,10 +233,10 @@ The correlation is exact, not approximate — verified by capturing traces and l
 and cross-referencing them: the log records emitted inside a request carry the **same `trace_id` as
 the HTTP span**, and a `span_id` belonging to a span in that same trace. Startup logs, emitted
 outside any request, correctly carry no trace context. Inbound `traceparent` is honoured too, so a
-caller that already has a trace gets the API's spans *and* its log lines attached to it — which is
+caller that already has a trace gets the API's spans _and_ its log lines attached to it — which is
 what would let a future upstream service, or an instrumented browser, join the same trace.
 
-> **Do not drop `@opentelemetry/winston-transport` from the dependencies.** It is an *optional* peer
+> **Do not drop `@opentelemetry/winston-transport` from the dependencies.** It is an _optional_ peer
 > of `instrumentation-winston`, so nothing breaks loudly without it — logs simply never reach Loki,
 > and the only clue is an OTel diag warning you cannot see unless `OTEL_LOG_LEVEL` is set. Trace ids
 > still appear in the console, which makes it look like everything works.
@@ -236,12 +245,12 @@ what would let a future upstream service, or an instrumented browser, join the s
 
 Via `@opentelemetry/auto-instrumentations-node` in `apps/api/src/otel.ts`:
 
-| Spans you get | From |
-| --- | --- |
-| Incoming HTTP, Express middleware, Nest controllers | `http`, `express`, `nestjs-core` |
-| **PostgreSQL queries** (all TypeORM traffic) | `pg` — at driver level |
-| Redis: cache, SSE pub/sub, BullMQ connection | `ioredis` |
-| Outgoing LLM calls (OpenAI, Anthropic, Google GenAI) | `undici`, `openai` |
+| Spans you get                                        | From                             |
+| ---------------------------------------------------- | -------------------------------- |
+| Incoming HTTP, Express routing, Nest controllers     | `http`, `express`, `nestjs-core` |
+| **PostgreSQL queries** (all TypeORM traffic)         | `pg` — at driver level           |
+| Redis: cache, SSE pub/sub, BullMQ connection         | `ioredis`                        |
+| Outgoing LLM calls (OpenAI, Anthropic, Google GenAI) | `undici`, `openai`               |
 
 Prompt and completion **content** is not captured — only model and token metadata. Setting
 `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` would change that; don't, unless you have
@@ -251,14 +260,90 @@ You also get **Node runtime metrics** for free — event-loop lag, heap and GC, 
 `runtime-node` instrumentation, which the SDK exports to Prometheus alongside the traces. Nobody
 configured this; it is on by default. Look for them in Explore → Prometheus.
 
+And from our own code: a span per authenticated use case, plus anything wrapped in `withSpan()`,
+both under the instrumentation scope `packmind` — see
+[Adding your own spans](#adding-your-own-spans).
+
 Two known gaps:
 
-- **BullMQ jobs** are traced (they run in the API process) but are *not* linked to the HTTP request
+- **BullMQ jobs** are traced (they run in the API process) but are _not_ linked to the HTTP request
   that queued them — BullMQ has no auto-instrumentation, and crossing Redis needs a manual
-  `traceparent` inject/extract.
+  `traceparent` inject/extract. `withSpan()` is half of what that would need; the other half is
+  carrying the context through the job payload.
 - **TypeORM** produces no ORM-level spans, only the driver-level `pg` ones. The community
   `opentelemetry-instrumentation-typeorm` package is unmaintained and not part of
   `opentelemetry-js-contrib`, so it is deliberately not used.
+
+## Adding your own spans
+
+Everything above comes from auto-instrumentation, which patches known library modules — `http`,
+`express`, `nestjs-core`, `pg`, `winston` — and nothing else. It has no way to discover your
+classes, so `packages/*` is invisible unless it instruments itself.
+
+`withSpan()` from `@packmind/node-utils` is how it says so:
+
+```ts
+import { withSpan } from '@packmind/node-utils';
+
+await withSpan('renderAgentFiles', async () => {
+  // ...
+});
+```
+
+It nests under whatever span is currently active, records the exception and sets the error status if
+the callback throws, and ends the span on both paths. When no SDK is running — unit tests, or the
+API started without `OTEL_EXPORTER_OTLP_ENDPOINT` — `trace.getTracer()` returns a no-op tracer, so
+the callback still runs and the cost is a function call. There is nothing to guard and no reason to
+branch on whether tracing is on.
+
+**Use cases already have one.** `AbstractMemberUseCase.execute()` wraps every authenticated use case
+in a span named after its class, and `AbstractAdminUseCase`, `AbstractSpaceMemberUseCase` and
+`AbstractSpaceAdminUseCase` all inherit that method — so the domain layer is covered with no
+per-use-case opt-in. Public use cases implementing `IPublicUseCase` directly are the exception: they
+bypass the base class and get no span.
+
+A real capture of `GET /organizations/:orgId/spaces/:spaceId/skills`, first-party spans marked:
+
+```
+2029.76ms  GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
+2027.83ms    request handler - /api/v0/organizations/:orgId/spaces/:spaceId/skills
+2027.32ms      OrganizationsSpacesSkillsController.getSkills
+2024.63ms        getSkills
+2023.52ms          ListSkillsBySpaceUseCase                     ← scope=packmind
+   0.32ms            pg-pool.connect
+   1.25ms            pg.query:SELECT packmind
+   1.27ms            pg.query:SELECT packmind
+   0.11ms            pg-pool.connect
+   0.82ms            pg.query:SELECT packmind
+   0.09ms            pg-pool.connect
+   0.77ms            pg.query:SELECT packmind
+2001.10ms            thisMethodTakesTwoSeconds                  ← scope=packmind
+   0.19ms            pg-pool.connect
+   1.61ms            pg.query:SELECT packmind
+   0.17ms            pg-pool.connect
+   1.87ms            pg.query:SELECT packmind
+```
+
+Note this endpoint is 17 spans, not six: member and space-membership validation each cost a
+connection and a query before the read the caller asked for. That is the kind of thing the use-case
+span makes visible — previously all thirteen `pg` spans hung off the controller with nothing to
+group them.
+
+Our spans carry the instrumentation scope `packmind`, which is what distinguishes them from
+`@opentelemetry/instrumentation-pg` and friends. In TraceQL the intrinsic is
+`instrumentation:name`, **not** `scope.name` (which does not parse):
+
+```
+{ instrumentation:name = "packmind" }
+```
+
+### Keep identifiers out of them
+
+`withSpan()` takes a name and no attributes by design, and the use-case span deliberately attaches
+none. `userId` and `organizationId` would put identifiers in the trace backend, which is the same
+reason `pg` stays on `enhancedDatabaseReporting: false` and bind values are never captured. If you
+do reach for `span.setAttribute`, apply that test first: traces are retained and queryable by
+anyone with Grafana access.
 
 ## Cloud vs self-hosted
 
@@ -323,8 +408,9 @@ before Node starts — rather than from inside the application.
    drops 90% of the errors and slow requests too — the ones you wanted — and Tempo's
    metrics-generator only sees what arrives, so rates and percentiles end up computed on the sample.
    A collector sees 100%, decides once the trace is complete (keep every error, keep everything over
-   800 ms, keep ~5% of the rest), and can compute span metrics *before* the sampling stage so the
+   800 ms, keep ~5% of the rest), and can compute span metrics _before_ the sampling stage so the
    metrics stay exact. The cost is one more component to run.
+
 4. **Sentry still overlaps.** Enabling OTel in an environment where `SENTRY_DSN_API` is set needs
    Sentry's `skipOpenTelemetrySetup` route — see the note in `apps/api/src/otel.ts`.
 
