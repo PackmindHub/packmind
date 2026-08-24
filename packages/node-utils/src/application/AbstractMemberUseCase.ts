@@ -20,6 +20,7 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
+import { instrumentMethods } from '../observability/instrumentMethods';
 import { withSpan } from '../observability/withSpan';
 
 const defaultOrigin = 'AbstractMemberUseCase';
@@ -39,7 +40,18 @@ export abstract class AbstractMemberUseCase<
     protected readonly logger: PackmindLogger = new PackmindLogger(
       defaultOrigin,
     ),
-  ) {}
+  ) {
+    // Gives every async method on this use case - inherited, overridden or
+    // private - its own span, so the layer between the use-case span below and
+    // the pg spans stops being a blank. One call here covers every
+    // authenticated use case in the monorepo; nothing opts in per method.
+    //
+    // `execute` is skipped because it already owns the explicit span below.
+    // Patching it too would nest `<Subclass>.execute` above an identical
+    // `<Subclass>` span, and the bare name is what the recorded traces in
+    // docker/otel/README.md and any saved TraceQL queries look for.
+    instrumentMethods(this, { skip: ['execute'] });
+  }
 
   // Every authenticated use case in the monorepo funnels through here, so one
   // span at this single point gives the whole domain layer a place in the
