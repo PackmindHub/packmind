@@ -34,7 +34,10 @@ export abstract class AbstractSpaceMemberUseCase<
   protected override spanAttributes(command: Command): Attributes {
     return {
       ...super.spanAttributes(command),
-      'packmind.space.id': command.spaceId,
+      // Spread conditionally: spaceId is optional on some commands. The SDK
+      // does drop undefined attribute values silently, but relying on that
+      // makes a reader check OTel internals to know an absent space is fine.
+      ...(command.spaceId && { 'packmind.space.id': command.spaceId }),
     };
   }
 

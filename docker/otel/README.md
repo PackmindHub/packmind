@@ -241,6 +241,68 @@ what would let a future upstream service, or an instrumented browser, join the s
 > and the only clue is an OTel diag warning you cannot see unless `OTEL_LOG_LEVEL` is set. Trace ids
 > still appear in the console, which makes it look like everything works.
 
+## Alerting on slow requests
+
+There is one provisioned alert rule, and mail from it lands in a local inbox. Both come up with the
+`observability` profile — no extra switch, no account, no credential anywhere.
+
+```
+Alerting → Alert rules   →  Packmind / latency  →  "Packmind API — slow requests (root span p95 > 2s)"
+http://localhost:8025    →  the inbox the mail arrives in
+```
+
+### Why it queries Prometheus and not Tempo
+
+The obvious way to say "alert me when a trace takes too long" is TraceQL — `{ traceDuration > 2s }`
+— and it does not work. **Grafana only lets an alert rule query a datasource whose plugin declares
+`alerting: true`.** On this stack that is Prometheus and Loki; Tempo declares `false`. Tempo's
+TraceQL-metrics endpoint answers `quantile_over_time(duration, .95)` perfectly well when you curl it,
+and Explore will happily graph it — it simply cannot back a rule.
+
+So the rule reads `traces_spanmetrics_latency_bucket` instead, filtered to `span_kind="SPAN_KIND_SERVER"`.
+That is not a compromise as much as it sounds: **the root span of an API trace is the HTTP server
+span, and it covers the whole request**, so its duration _is_ the trace's total duration. TraceQL
+stays the tool for finding the individual offenders once the alert has told you which endpoint —
+which is exactly what the mail's description tells you to do.
+
+### Editing it
+
+Everything lives in `docker/otel/grafana/provisioning-alerting.yaml` — contact point, notification
+policy and rule in one file, mounted into the image's `provisioning/alerting/` directory the same way
+the dashboard is. It is in git, which is the whole reason the notification channel is a local mail
+catcher: a Slack or Discord webhook URL is a secret and could not be committed.
+
+**Provisioned alerting is read-only in the UI.** Change the threshold in the file and restart the
+container. If you are still iterating, build the rule in the UI first — it is the far better editor,
+with a live preview of what would have fired — then copy the result down into the YAML.
+
+### Four things that will bite you
+
+- **The threshold is in SECONDS.** `traces_spanmetrics_latency_*` is a seconds histogram. `2000`
+  looks like a sane millisecond budget and would never fire.
+- **`/sse/stream` has to be excluded**, and so will any future streaming endpoint. It is a long-lived
+  connection whose root span legitimately runs for minutes; left in the query it holds the rule
+  permanently firing. It is excluded by name in the `expr`.
+- **`rate()` over an idle window returns NaN**, so a quiet local API produces no series rather than
+  low ones. The rule sets `noDataState: OK` — without it you get NoData mail every evening. You can
+  watch this happen: endpoints you stopped calling show up as `Normal (NoData)`, not as breaches.
+- **`SPAN_KIND_SERVER` misses BullMQ jobs.** They are traced, but their traces are rooted at a
+  `withSpan()` span of kind `INTERNAL`, so a slow job never trips a rule written this way. Alerting
+  on those needs a separate rule keyed on the span name.
+
+And one from further out: the span metrics carry `service`, `span_name`, `span_kind`, `status_code`
+and `le` — **not** `deployment.environment.name`. Two environments writing to one Prometheus blend
+their percentiles, and this rule cannot tell them apart. Same caveat as the dashboard, described
+under [One image, several environments](#one-image-several-environments).
+
+### Swapping mail for something real
+
+Mailpit is right for local and wrong for anywhere else. Grafana offers Slack, Discord, PagerDuty,
+Telegram, Teams, OpsGenie and a generic webhook in this build; all of them are a `type` and a
+`settings` block in the same `contactPoints` list. The moment you pick one that needs a URL or token,
+that value stops being committable — pass it through an env var and reference it as `$SLACK_URL` in
+the YAML, the way Grafana provisioning expects.
+
 ## What is instrumented
 
 Via `@opentelemetry/auto-instrumentations-node` in `apps/api/src/otel.ts`:
@@ -369,7 +431,7 @@ protected `spanAttributes(command)` that `AbstractSpaceMemberUseCase` and
 protected override spanAttributes(command: Command): Attributes {
   return {
     ...super.spanAttributes(command),
-    'packmind.space.id': command.spaceId,
+    ...(command.spaceId && { 'packmind.space.id': command.spaceId }),
   };
 }
 ```
@@ -377,6 +439,11 @@ protected override spanAttributes(command: Command): Attributes {
 Override that when a use case base gains another dimension worth filtering on. It keeps span
 concerns inside `execute()` instead of subclasses reaching for `trace.getActiveSpan()` from a nested
 call.
+
+Note the conditional spread: `spaceId` is optional on some commands, and a trace for a request with
+no space should carry no `packmind.space.id` at all rather than an empty one. The SDK does drop
+`undefined` attribute values silently — verified — but spreading conditionally means a reader does
+not have to know that to see the intent.
 
 > **Do not turn this into a span-metrics dimension.** Tenant ids are precisely the cardinality that
 > wrecks a Prometheus instance. Tempo indexes span attributes and is built for high cardinality;
