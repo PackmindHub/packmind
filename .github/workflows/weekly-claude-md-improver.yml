@@ -50,12 +50,12 @@ jobs:
       - name: Improve CLAUDE.md files with Claude
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        # The whole procedure lives in .claude/skills/weekly-claude-md-improver/SKILL.md:
+        # The whole procedure lives in .claude/skills/improve-claude-md/SKILL.md:
         # which files to visit, what to fix, how to deduplicate against repository skills,
         # and which regions never to touch. Change the rules there, not here. The skill's
         # frontmatter also pins the model and the tool grant, so no --model / --allowedTools
         # flags belong on this call.
-        run: claude -p "/weekly-claude-md-improver" --permission-mode acceptEdits
+        run: claude -p "/improve-claude-md" --permission-mode acceptEdits
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -66,7 +66,7 @@ jobs:
           commit-message: 'chore: weekly CLAUDE.md improvements via claude-md-improver'
           title: 'chore: weekly CLAUDE.md improvements'
           body: |
-            Automated weekly run of the `weekly-claude-md-improver` skill, which delegates the audit
+            Automated weekly run of the `improve-claude-md` skill, which delegates the audit
             to Anthropic's `claude-md-improver`.
 
             - Applied only high/medium priority fixes with clear impact.
@@ -74,7 +74,7 @@ jobs:
               deletions are expected in this diff - please check none of them went too far.
             - Packmind standards sections were left untouched.
 
-            To change what this run does, edit `.claude/skills/weekly-claude-md-improver/SKILL.md`.
+            To change what this run does, edit `.claude/skills/improve-claude-md/SKILL.md`.
 
             Please review before merging.
           labels: automated

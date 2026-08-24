@@ -1,12 +1,12 @@
 ---
-name: 'weekly-claude-md-improver'
-description: 'Audit and improve every CLAUDE.md in the Packmind monorepo: apply only high/medium priority fixes and delete instructions already fully covered by a repository skill. Invoked non-interactively by the "Weekly CLAUDE.md Improvement" GitHub workflow (.github/workflows/weekly-claude-md-improver.yml); not intended for interactive use.'
+name: 'improve-claude-md'
+description: 'Audit and improve every CLAUDE.md in the Packmind monorepo: apply only high/medium priority fixes and delete instructions already fully covered by a repository skill. Driven non-interactively by a GitHub workflow (.github/workflows/weekly-claude-md-improver.yml owns the schedule); not intended for interactive use.'
 model: opus
 allowed-tools: Read Edit Glob Grep Skill
 disable-model-invocation: true
 ---
 
-# Weekly CLAUDE.md Improver
+# CLAUDE.md Improver
 
 Audit and improve every `CLAUDE.md` file in this repository, then report what changed.
 
@@ -22,7 +22,7 @@ Before touching any `CLAUDE.md`, list every skill available in this repository.
 
 Use `Glob` with the pattern `**/.claude/skills/**/SKILL.md`. Match at any depth: a `.claude/skills`
 directory can itself live in a sub-directory, and skills may be nested. Ignore any hit under
-`node_modules`. Ignore **this** skill (`weekly-claude-md-improver`) — it is CI tooling, not a
+`node_modules`. Ignore **this** skill (`improve-claude-md`) — it is CI tooling, not a
 developer convention, so it never justifies deleting anything.
 
 For each remaining `SKILL.md`, collect **only** the YAML frontmatter `name` and `description`. Do not
