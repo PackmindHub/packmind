@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
 import { ICommandsRepositories } from '../../domain/repositories/ICommandsRepositories';
 import { ICommandRepository } from '../../domain/repositories/ICommandRepository';
@@ -18,6 +19,15 @@ export class CommandsRepositories implements ICommandsRepositories {
     this.commandVersionRepository = new CommandVersionRepository(
       this.dataSource.getRepository(CommandVersionSchema),
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.commandRepository,
+      this.commandVersionRepository,
+    ]);
   }
 
   getCommandRepository(): ICommandRepository {

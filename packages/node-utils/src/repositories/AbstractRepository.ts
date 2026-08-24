@@ -14,6 +14,7 @@ import {
 } from 'typeorm';
 import assert from 'assert';
 import { BadRequestException } from '@nestjs/common';
+import { instrumentMethods } from '../observability/instrumentMethods';
 
 const origin = 'AbstractRepository';
 
@@ -25,7 +26,16 @@ export abstract class AbstractRepository<
     protected readonly repository: Repository<Entity>,
     private readonly schema: EntitySchema<WithSoftDelete<Entity>>,
     protected readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+  ) {
+    // Names the repository method that produced each pg span. Without it the
+    // driver-level spans hang off the use case as loose siblings and nothing
+    // says which query came from where.
+    //
+    // Covers the 26 subclasses of this class wherever they are constructed,
+    // including the localDataSource default-argument path. Repositories that
+    // do not extend it are instrumented by their *Repositories aggregator.
+    instrumentMethods(this);
+  }
 
   async add(entity: Entity): Promise<Entity> {
     this.logger.info(`Adding ${this.entityName} to database`, {
