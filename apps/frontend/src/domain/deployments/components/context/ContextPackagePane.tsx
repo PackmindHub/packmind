@@ -12,14 +12,11 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
-import { buildPackageContext } from './buildPackageContext';
-import type { ContextComponent, SpaceCatalogue } from './buildPackageContext';
+import type { ContextComponent, ContextGroup } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import {
-  COMPONENT_PARAM,
   componentEditHref,
   packageDetailHref,
-  selectDetailComponent,
   withPaneDetailHref,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -50,13 +47,19 @@ const TAB_PARAM = 'tab';
  * legible without opening it.
  *
  * A component opened from the Content tab takes the place of both halves: it is
- * read here rather than on a page of its own, so the rail stays put and the way
- * back is one link. Which types can be read here is `RENDERS_IN_PANE`.
+ * read here rather than on a page of its own, and the way back is one link.
+ * Which types can be read here is `RENDERS_IN_PANE`.
+ *
+ * It arrives already resolved rather than read from the address here, because
+ * the surface needs the same answer for the rail beside this pane, and one
+ * parameter read in two places is one chance too many to disagree.
  */
 export function ContextPackagePane({
   pkg,
   packages,
-  catalogue,
+  groups,
+  total,
+  detail,
   spaceId,
   organizationId,
   orgSlug,
@@ -68,7 +71,12 @@ export function ContextPackagePane({
   pkg: PackageResponse;
   /** The whole space, so a component can be moved without a second query. */
   packages: readonly PackageResponse[];
-  catalogue: SpaceCatalogue;
+  /** What this package holds, grouped by type, built by the surface. */
+  groups: readonly ContextGroup[];
+  /** Components in the package, which the Content tab carries as its count. */
+  total: number;
+  /** The component the address asks for, or null to show the list. */
+  detail: ContextComponent | null;
   spaceId: SpaceId;
   organizationId: OrganizationId;
   orgSlug: string;
@@ -105,11 +113,6 @@ export function ContextPackagePane({
     );
   };
 
-  const { groups, total } = buildPackageContext(pkg, catalogue, {
-    orgSlug,
-    spaceSlug,
-  });
-
   /*
    * Renamed on the way in: `packages` is now the space's package list, and the
    * drift hook returns the landings of this one package.
@@ -121,19 +124,6 @@ export function ContextPackagePane({
     isError,
   } = usePackageDrift(pkg.id);
   const distributionBadge = buildDistributionTabBadge(drift);
-
-  /*
-   * The third thing this pane can show, beside its two tabs: one of the
-   * components, in place of the tab strip rather than under it.
-   *
-   * Resolved against the rows that were just built, which is what makes a
-   * successful move land somewhere sensible: the component is no longer in this
-   * package, so the detail gives way to the list it was opened from.
-   */
-  const detail = selectDetailComponent(
-    groups,
-    searchParams.get(COMPONENT_PARAM),
-  );
 
   /*
    * Built once and rendered by whichever half is on screen. The dialog has to
@@ -156,6 +146,10 @@ export function ContextPackagePane({
     />
   );
 
+  /*
+   * The third thing this pane can show, beside its two tabs: one of the
+   * components, in place of the tab strip rather than under it.
+   */
   if (detail) {
     return (
       <>

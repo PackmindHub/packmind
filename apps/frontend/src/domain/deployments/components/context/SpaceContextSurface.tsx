@@ -10,7 +10,8 @@ import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQu
 import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
-import { COMPONENT_PARAM } from './buildComponentDetail';
+import { buildPackageContext } from './buildPackageContext';
+import { COMPONENT_PARAM, selectDetailComponent } from './buildComponentDetail';
 import { PackagesBlankState } from '../PackagesBlankState';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextPackagePane } from './ContextPackagePane';
@@ -87,6 +88,30 @@ export function SpaceContextSurface() {
   const showingInventory = requestedId === INVENTORY_VALUE;
   const selectedPackage =
     packages.find((pkg) => pkg.id === requestedId) ?? packages[0] ?? null;
+
+  /*
+   * The contents of the open package, and the one of them the address asks for.
+   *
+   * Resolved here rather than in the pane because the rail needs the answer
+   * too: a skill open in the pane takes the rail with it. Two resolutions of
+   * the same parameter would be two chances to disagree about what is open, so
+   * there is one, and the pane is handed its result.
+   */
+  const { groups, total } = useMemo(
+    () =>
+      selectedPackage
+        ? buildPackageContext(selectedPackage, catalogue, {
+            orgSlug,
+            spaceSlug,
+          })
+        : { groups: [], total: 0 },
+    [selectedPackage, catalogue, orgSlug, spaceSlug],
+  );
+
+  const detail = selectDetailComponent(
+    groups,
+    searchParams.get(COMPONENT_PARAM),
+  );
 
   const show = useCallback(
     (value: string) => {
@@ -185,7 +210,9 @@ export function SpaceContextSurface() {
                 key={selectedPackage.id}
                 pkg={selectedPackage}
                 packages={packages}
-                catalogue={catalogue}
+                groups={groups}
+                total={total}
+                detail={detail}
                 spaceId={spaceId}
                 organizationId={organization.id}
                 orgSlug={orgSlug}
