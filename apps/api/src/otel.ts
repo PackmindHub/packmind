@@ -29,7 +29,10 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { ExpressLayerType } from '@opentelemetry/instrumentation-express';
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
+import {
+  defaultResource,
+  resourceFromAttributes,
+} from '@opentelemetry/resources';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
@@ -114,6 +117,26 @@ if (otlpEndpoint && environment) {
           // otherwise be most of what you see in the trace list.
           ignoreIncomingRequestHook: (request) =>
             request.url?.startsWith('/api/v0/healthcheck') ?? false,
+
+          // Stamp the tenant onto the ROOT span, which is what Tempo's trace
+          // list and the Drilldown filters read - an attribute buried on a
+          // child span is findable in TraceQL but does not make the trace list
+          // filterable. This runs at span creation, before auth, so the URL is
+          // all there is to go on; AbstractMemberUseCase sets the same
+          // attribute from the validated command for the rest.
+          //
+          // Deliberately strict about the UUID shape so a literal ":orgId" or a
+          // slug never lands in the attribute. Requests that carry no org in
+          // the path (/auth/me and friends) simply get nothing.
+          startIncomingSpanHook: (request) => {
+            const organizationId = request.url?.match(
+              /\/organizations\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+            )?.[1];
+
+            return organizationId
+              ? { 'packmind.organization.id': organizationId }
+              : {};
+          },
         },
 
         '@opentelemetry/instrumentation-express': {

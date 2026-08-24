@@ -46,15 +46,21 @@ export abstract class AbstractMemberUseCase<
   // previously blank. AbstractAdminUseCase, AbstractSpaceMemberUseCase and
   // AbstractSpaceAdminUseCase all extend this class and inherit this method.
   //
-  // Deliberately no span attributes: userId and organizationId would ship
-  // identifiers to the trace backend, which is the same reason pg stays on
-  // enhancedDatabaseReporting: false. The class name is the whole point.
+  // The span carries the organization and nothing else. A tenant id is what
+  // makes traces filterable per customer, and it is already a Loki label on
+  // every log line the winston transport exports, so spans add no new
+  // exposure. userId and the rest stay off: that is still the reason pg keeps
+  // enhancedDatabaseReporting: false.
   async execute(command: Command): Promise<Result> {
     // this.constructor.name rather than a literal, so each subclass names its
     // own span. It survives production bundling because terser runs with
     // keep_classnames: true (apps/api/webpack.config.js), already required for
     // NestJS DI.
-    return withSpan(this.constructor.name, async () => {
+    return withSpan(this.constructor.name, async (span) => {
+      // Set before validation, not after, so a rejected request is still
+      // attributable to the organization that made it.
+      span.setAttribute('packmind.organization.id', command.organizationId);
+
       let context: MemberContext;
 
       try {
