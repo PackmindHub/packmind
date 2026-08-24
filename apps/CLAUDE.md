@@ -10,7 +10,7 @@ This directory contains all deployable applications in the Packmind monorepo.
 
 ### Frontend & CLI
 
-- **frontend** - React Router v7 SPA
+- **frontend** - React Router v8 SPA
 - **cli** - Command-line interface built with cmd-ts (Nx project name: `packmind-cli`)
 - **playground** - UI/UX prototype sandbox — see the `working-with-playground-app` skill, which owns
   how to run it and the rules for building a prototype. There is intentionally no
