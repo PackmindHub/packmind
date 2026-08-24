@@ -21,6 +21,7 @@ In OSS, all of these resolve to `packages/editions/src/index.ts`:
 - `@packmind/import-practices-legacy`
 - `@packmind/spaces-management`
 - `@packmind/playbook-change-management` (and `@packmind/playbook-change-management/test`)
+- `@packmind/marketplaces`
 
 So a "cannot find module `@packmind/linter`" or a missing export from one of those specifiers is
 almost always a missing `export *` in `src/index.ts`, not a missing dependency.
@@ -38,6 +39,7 @@ One folder per seam module, each with its own `*Hexa.ts`:
 | `src/oss/spaces-management/` | `SpacesManagementHexa` |
 | `src/oss/playbook-change-management/` | `PlaybookChangeManagementHexa` |
 | `src/oss/practices-import-legacy/` | `ImportPracticeLegacyHexa` |
+| `src/oss/marketplaces/` | `MarketplacesHexa` |
 
 `src/oss/apiHexaPlugins.ts` exports `apiHexaPlugins`, an array of `BaseHexa` constructors the API
 registers **in addition** to the core hexas. It is the documented override point for edition-specific
