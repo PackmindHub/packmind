@@ -11,15 +11,22 @@ import {
   PMTooltip,
   PMVStack,
 } from '@packmind/ui';
-import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
+import type {
+  OrganizationId,
+  PackageResponse,
+  SkillFile,
+  SpaceId,
+} from '@packmind/types';
 import type { ContextComponent, ContextGroup } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import {
   componentEditHref,
+  componentEntryHref,
   packageDetailHref,
   withPaneDetailHref,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
+import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
@@ -60,6 +67,7 @@ export function ContextPackagePane({
   groups,
   total,
   detail,
+  detailFile,
   spaceId,
   organizationId,
   orgSlug,
@@ -77,6 +85,8 @@ export function ContextPackagePane({
   total: number;
   /** The component the address asks for, or null to show the list. */
   detail: ContextComponent | null;
+  /** One of that component's files, or null to show the component itself. */
+  detailFile: SkillFile | null;
   spaceId: SpaceId;
   organizationId: OrganizationId;
   orgSlug: string;
@@ -154,13 +164,26 @@ export function ContextPackagePane({
     return (
       <>
         <PMBox flex="1" minH={0} overflowY="auto">
-          <ContextComponentDetail
-            component={detail}
-            packageName={pkg.name}
-            backHref={packageDetailHref(searchParams, pkg.id)}
-            editHref={componentEditHref(detail, { orgSlug, spaceSlug })}
-            onMove={() => setMoving(detail)}
-          />
+          {/*
+            A file in place of the component, not beside it. The tree in the
+            rail is what says which of the two is on screen, and the component
+            is one row of it: its first.
+          */}
+          {detailFile ? (
+            <ContextSkillFileDetail
+              file={detailFile}
+              skillName={detail.name}
+              backHref={componentEntryHref(searchParams)}
+            />
+          ) : (
+            <ContextComponentDetail
+              component={detail}
+              packageName={pkg.name}
+              backHref={packageDetailHref(searchParams, pkg.id)}
+              editHref={componentEditHref(detail, { orgSlug, spaceSlug })}
+              onMove={() => setMoving(detail)}
+            />
+          )}
         </PMBox>
         {moveDialog}
       </>

@@ -11,12 +11,11 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronLeft, LuFileCode } from 'react-icons/lu';
+import { LuChevronLeft } from 'react-icons/lu';
 import type {
   CommandId,
   OrganizationId,
   Rule,
-  SkillFile,
   SkillId,
   SpaceId,
   StandardId,
@@ -30,7 +29,7 @@ import {
   useGetRulesByStandardIdQuery,
   useGetStandardByIdQuery,
 } from '../../../standards/api/queries/StandardsQueries';
-import { sortFilesByPath, sortRulesByContent } from './buildComponentDetail';
+import { sortRulesByContent } from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
 import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
@@ -391,11 +390,6 @@ function RulesSection({
 function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
   const { data, isLoading, isError } = useGetSkillWithFilesByIdQuery(skillId);
 
-  const files = useMemo(
-    () => (data ? sortFilesByPath(data.files) : []),
-    [data],
-  );
-
   if (isLoading) {
     return (
       <PMBox display="flex" justifyContent="center" paddingY={10}>
@@ -430,67 +424,12 @@ function SkillBody({ skillId }: Readonly<{ skillId: SkillId }>) {
         </PMText>
       )}
 
-      {files.length > 0 && <SkillFilesSection files={files} />}
+      {/*
+        No list of files here. The surface reads the same query and turns the
+        rail into this skill's file tree whenever there is one, so a list in the
+        body would be the same folder printed twice, and the copy without links
+        would be the one people clicked at.
+      */}
     </PMVStack>
-  );
-}
-
-/**
- * What ships beside the instructions.
- *
- * Paths and nothing else: a row that looked like a link and did nothing would
- * be worse than a line of text, and the pane cannot open a file yet. The way in
- * is "Open skill", which lands on the tree that can.
- *
- * SKILL.md is absent from this list rather than missing from it. It is the
- * instructions above, and the server keeps it out of `files` for that reason —
- * the skill's own page rebuilds it from the version's prompt to put it in the
- * tree.
- */
-function SkillFilesSection({
-  files,
-}: Readonly<{ files: readonly SkillFile[] }>) {
-  return (
-    <PMBox>
-      <BodySectionLabel>
-        {`${files.length} file${files.length === 1 ? '' : 's'}`}
-      </BodySectionLabel>
-      <PMBox
-        marginTop={1}
-        borderWidth="1px"
-        borderColor="border.tertiary"
-        borderRadius="sm"
-        overflow="hidden"
-      >
-        {files.map((file, index) => (
-          <PMHStack
-            key={file.path}
-            gap={3}
-            paddingX={3}
-            paddingY="8px"
-            borderTopWidth={index === 0 ? '0' : '1px'}
-            borderColor="border.tertiary"
-            align="center"
-          >
-            <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
-              <LuFileCode />
-            </PMIcon>
-            <PMText fontSize="sm" fontFamily="mono" flex={1} minW={0} truncate>
-              {file.path}
-            </PMText>
-            {/*
-              Named rather than left to the extension: a binary file is the one
-              case where opening it shows nothing, and knowing that before
-              clicking is worth a word.
-            */}
-            {file.isBase64 && (
-              <PMText fontSize="xs" color="faded" flexShrink={0}>
-                binary
-              </PMText>
-            )}
-          </PMHStack>
-        ))}
-      </PMBox>
-    </PMBox>
   );
 }

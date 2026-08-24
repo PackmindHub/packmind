@@ -24,6 +24,20 @@ import type {
 export const COMPONENT_PARAM = 'component';
 
 /**
+ * The file of that component the pane is showing, when the component is a
+ * folder rather than a document.
+ *
+ * Only a skill has files, so only a skill ever puts this in the address. Its
+ * value is the file's path, which is what the skill's own routes use too, so
+ * the same file is named the same way on both surfaces.
+ *
+ * SKILL.md is never in here. It is not a file the API returns, it is the
+ * component itself, and the address that shows it is the one with no file in
+ * it at all.
+ */
+export const FILE_PARAM = 'file';
+
+/**
  * Which types the pane can show itself, and the only place it is decided.
  *
  * All three types say yes now, so no row in a package pane leads out of the
@@ -63,6 +77,9 @@ export function componentDetailHref(
   const next = new URLSearchParams(searchParams);
   next.set(PACKAGE_PARAM, packageId);
   next.set(COMPONENT_PARAM, componentKey);
+  // A file belongs to the component it was opened from, so a different
+  // component cannot inherit it. Two skills can hold the same path.
+  next.delete(FILE_PARAM);
   return `?${next.toString()}`;
 }
 
@@ -74,7 +91,49 @@ export function packageDetailHref(
   const next = new URLSearchParams(searchParams);
   next.set(PACKAGE_PARAM, packageId);
   next.delete(COMPONENT_PARAM);
+  next.delete(FILE_PARAM);
   return `?${next.toString()}`;
+}
+
+/**
+ * The address of one file of the component that is already open.
+ *
+ * It names no component, only the file. The rail that builds these links is the
+ * open component's own file tree, so a link that could name another one would
+ * be a link that can lie about what the tree is showing.
+ */
+export function componentFileHref(
+  searchParams: URLSearchParams,
+  path: string,
+): string {
+  const next = new URLSearchParams(searchParams);
+  next.set(FILE_PARAM, path);
+  return `?${next.toString()}`;
+}
+
+/** The way back from a file to the component that carries it. */
+export function componentEntryHref(searchParams: URLSearchParams): string {
+  const next = new URLSearchParams(searchParams);
+  next.delete(FILE_PARAM);
+  return `?${next.toString()}`;
+}
+
+/**
+ * The file the address asks for, or null to show the component itself.
+ *
+ * Resolved against the files the query returned, so a path that is no longer in
+ * the skill falls back to its instructions instead of an empty frame.
+ *
+ * SKILL.md resolves to null by the same rule rather than by a special case: it
+ * is not one of these files, it is the component, and the address that shows it
+ * is the one with no file in it.
+ */
+export function selectSkillFile<File extends { path: string }>(
+  files: readonly File[],
+  requested: string | null,
+): File | null {
+  if (!requested) return null;
+  return files.find((file) => file.path === requested) ?? null;
 }
 
 /**

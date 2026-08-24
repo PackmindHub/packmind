@@ -1,19 +1,34 @@
 import { useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
-import type { PackageId } from '@packmind/types';
+import type { PackageId, SkillId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetCommandsQuery } from '../../../commands/api/queries/CommandsQueries';
-import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
+import {
+  useGetSkillsQuery,
+  useGetSkillWithFilesByIdQuery,
+} from '../../../skills/api/queries/SkillsQueries';
+import {
+  buildVirtualSkillMdFile,
+  SKILL_MD_FILENAME,
+} from '../../../skills/utils/skillMdUtils';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
-import { COMPONENT_PARAM, selectDetailComponent } from './buildComponentDetail';
+import {
+  COMPONENT_PARAM,
+  FILE_PARAM,
+  packageDetailHref,
+  selectDetailComponent,
+  selectSkillFile,
+  sortFilesByPath,
+} from './buildComponentDetail';
 import { PackagesBlankState } from '../PackagesBlankState';
 import { ContextPackageRail } from './ContextPackageRail';
+import { ContextSkillFileRail } from './ContextSkillFileRail';
 import { ContextPackagePane } from './ContextPackagePane';
 import { SpaceInventoryPane } from './SpaceInventoryPane';
 
@@ -113,6 +128,46 @@ export function SpaceContextSurface() {
     searchParams.get(COMPONENT_PARAM),
   );
 
+  /*
+   * The files of the open skill, when that is what is open.
+   *
+   * The query is the one the pane's own body runs, by the same id, so the two
+   * read one cache entry rather than two answers that could differ. It is
+   * disabled for the other two types, which have no files.
+   */
+  const { data: skillWithFiles } = useGetSkillWithFilesByIdQuery(
+    detail?.type === 'skill' ? (detail.key as SkillId) : undefined,
+  );
+
+  /*
+   * The tree the rail shows, or null to leave the packages in place.
+   *
+   * Null when the skill has nothing beside its instructions: most skills are a
+   * single SKILL.md, and a tree of one row would cost the reader their place in
+   * the space for nothing. Null too while the query is in flight, so the rail
+   * does not flash an empty tree on the way in.
+   *
+   * SKILL.md is put back at the head of the list. It is not one of the files the
+   * API returns, it is the component, and the tree pins it above the rest for
+   * exactly that reason.
+   */
+  const treeFiles = useMemo(() => {
+    if (!skillWithFiles || skillWithFiles.files.length === 0) return null;
+    return [
+      buildVirtualSkillMdFile(skillWithFiles.latestVersion),
+      ...sortFilesByPath(skillWithFiles.files),
+    ];
+  }, [skillWithFiles]);
+
+  /*
+   * Resolved against the files themselves and not against the tree, so the row
+   * for SKILL.md answers with nothing to show: the instructions are the
+   * component, and the component is what the pane shows when no file is open.
+   */
+  const selectedFile = skillWithFiles
+    ? selectSkillFile(skillWithFiles.files, searchParams.get(FILE_PARAM))
+    : null;
+
   const show = useCallback(
     (value: string) => {
       // Mutating the params we were handed, so `?nav=` and anything else the
@@ -125,6 +180,26 @@ export function SpaceContextSurface() {
           // reopen in the package clicked next, the one case where the key is
           // in both.
           previous.delete(COMPONENT_PARAM);
+          previous.delete(FILE_PARAM);
+          return previous;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  /*
+   * Choosing a file in the tree, and choosing its first row, which is the same
+   * gesture with the opposite meaning: SKILL.md is the component, so asking for
+   * it is asking for no file at all.
+   */
+  const selectFile = useCallback(
+    (path: string) => {
+      setSearchParams(
+        (previous) => {
+          if (path === SKILL_MD_FILENAME) previous.delete(FILE_PARAM);
+          else previous.set(FILE_PARAM, path);
           return previous;
         },
         { replace: true },
@@ -180,18 +255,36 @@ export function SpaceContextSurface() {
       minHeight="480px"
     >
       <PMHStack gap={0} align="stretch" height="100%">
-        <ContextPackageRail
-          packages={packages}
-          catalogue={catalogue}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
-          selectedPackageId={selectedPackage?.id ?? null}
-          showingInventory={showingInventory}
-          inventoryCount={inventoryCount}
-          onSelect={selectPackage}
-          onShowInventory={showInventory}
-          createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
-        />
+        {/*
+          The rail is the open skill's file tree while there is one with files
+          in it, and the space's packages the rest of the time. The inventory
+          holds it back: an address can name a component and the inventory at
+          once, and the tree of something the pane is not showing would be a
+          third thing on screen, answering to nobody.
+        */}
+        {selectedPackage && detail && treeFiles && !showingInventory ? (
+          <ContextSkillFileRail
+            skillName={detail.name}
+            packageName={selectedPackage.name}
+            backHref={packageDetailHref(searchParams, selectedPackage.id)}
+            files={treeFiles}
+            selectedPath={selectedFile?.path ?? SKILL_MD_FILENAME}
+            onSelectFile={selectFile}
+          />
+        ) : (
+          <ContextPackageRail
+            packages={packages}
+            catalogue={catalogue}
+            orgSlug={orgSlug}
+            spaceSlug={spaceSlug}
+            selectedPackageId={selectedPackage?.id ?? null}
+            showingInventory={showingInventory}
+            inventoryCount={inventoryCount}
+            onSelect={selectPackage}
+            onShowInventory={showInventory}
+            createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
+          />
+        )}
         {/*
           No scroll here: each pane owns its own, because the package pane keeps
           a header and a tab strip in place while only the body below them moves.
@@ -213,6 +306,7 @@ export function SpaceContextSurface() {
                 groups={groups}
                 total={total}
                 detail={detail}
+                detailFile={selectedFile}
                 spaceId={spaceId}
                 organizationId={organization.id}
                 orgSlug={orgSlug}

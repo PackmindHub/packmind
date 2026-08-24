@@ -1,11 +1,38 @@
 import { stringify } from 'yaml';
 
-import type { SkillVersion } from '@packmind/types';
+import type { SkillFile, SkillVersion } from '@packmind/types';
 import {
   camelToKebab,
   CAMEL_TO_YAML_KEY,
+  createSkillFileId,
   sortAdditionalPropertiesKeys,
 } from '@packmind/types';
+
+/** The entry file of a skill, the one an agent reads before any other. */
+export const SKILL_MD_FILENAME = 'SKILL.md';
+
+/**
+ * SKILL.md as a file, which is the one thing it is not in storage.
+ *
+ * A skill's frontmatter and body are columns of its version, not a row in its
+ * files, so nothing the API returns ever contains SKILL.md. Every surface that
+ * shows a skill as a folder has to put it back, and they were each putting back
+ * their own: this is now the one place that decides what it looks like.
+ *
+ * The content is the body alone, because the frontmatter is shown beside it
+ * rather than inside it. `buildSkillMdContent` is what reassembles the two, for
+ * a copy or a download that has to be the real file.
+ */
+export function buildVirtualSkillMdFile(version: SkillVersion): SkillFile {
+  return {
+    id: createSkillFileId(''),
+    skillVersionId: version.id,
+    permissions: '',
+    path: SKILL_MD_FILENAME,
+    content: version.prompt,
+    isBase64: false,
+  };
+}
 
 /**
  * Reconstructs the full SKILL.md file content from a SkillVersion.

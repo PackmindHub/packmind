@@ -7,8 +7,11 @@ import type {
 import {
   componentDetailHref,
   componentEditHref,
+  componentEntryHref,
+  componentFileHref,
   packageDetailHref,
   selectDetailComponent,
+  selectSkillFile,
   sortFilesByPath,
   sortRulesByContent,
   withPaneDetailHref,
@@ -52,6 +55,16 @@ describe('componentDetailHref', () => {
     ).toBe('?nav=plugin-first&package=pkg-1&component=command-1');
   });
 
+  it('drops the file the previous component was open on', () => {
+    expect(
+      componentDetailHref(
+        new URLSearchParams('component=skill-0&file=SCRIPT.md'),
+        PACKAGE,
+        'skill-1',
+      ),
+    ).toBe('?component=skill-1&package=pkg-1');
+  });
+
   it('replaces the component already in the address', () => {
     expect(
       componentDetailHref(
@@ -68,6 +81,15 @@ describe('packageDetailHref', () => {
     expect(
       packageDetailHref(
         new URLSearchParams('package=pkg-1&component=command-1'),
+        PACKAGE,
+      ),
+    ).toBe('?package=pkg-1');
+  });
+
+  it('drops the file as well as the component', () => {
+    expect(
+      packageDetailHref(
+        new URLSearchParams('component=skill-1&file=scripts/run.sh'),
         PACKAGE,
       ),
     ).toBe('?package=pkg-1');
@@ -244,5 +266,59 @@ describe('sortFilesByPath', () => {
     sortFilesByPath(files);
 
     expect(files[0].path).toBe('scripts/run.sh');
+  });
+});
+
+describe('componentFileHref', () => {
+  it('names the file and leaves the rest alone', () => {
+    expect(
+      componentFileHref(
+        new URLSearchParams('package=pkg-1&component=skill-1'),
+        'scripts/run.sh',
+      ),
+    ).toBe('?package=pkg-1&component=skill-1&file=scripts%2Frun.sh');
+  });
+
+  it('replaces the file already open', () => {
+    expect(
+      componentFileHref(
+        new URLSearchParams('component=skill-1&file=a.md'),
+        'b.md',
+      ),
+    ).toBe('?component=skill-1&file=b.md');
+  });
+});
+
+describe('componentEntryHref', () => {
+  it('keeps the component and drops the file', () => {
+    expect(
+      componentEntryHref(
+        new URLSearchParams('package=pkg-1&component=skill-1&file=a.md'),
+      ),
+    ).toBe('?package=pkg-1&component=skill-1');
+  });
+});
+
+describe('selectSkillFile', () => {
+  const files = [{ path: 'scripts/run.sh' }, { path: 'references/why.md' }];
+
+  describe('when the address asks for nothing', () => {
+    it('shows the component itself', () => {
+      expect(selectSkillFile(files, null)).toBeNull();
+    });
+  });
+
+  it('finds the requested file', () => {
+    expect(selectSkillFile(files, 'references/why.md')?.path).toBe(
+      'references/why.md',
+    );
+  });
+
+  it('ignores a path the skill no longer carries', () => {
+    expect(selectSkillFile(files, 'scripts/gone.sh')).toBeNull();
+  });
+
+  it('falls back to the instructions for SKILL.md, which is not a file', () => {
+    expect(selectSkillFile(files, 'SKILL.md')).toBeNull();
   });
 });

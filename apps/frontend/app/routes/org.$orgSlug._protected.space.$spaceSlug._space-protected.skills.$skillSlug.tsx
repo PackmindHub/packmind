@@ -8,7 +8,6 @@ import {
   useParams,
 } from 'react-router';
 import {
-  createSkillFileId,
   ChangeProposalStatus,
   Skill,
   SkillFile,
@@ -33,9 +32,11 @@ import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/Sk
 import { useSkillSectionNavigation } from '../../src/domain/skills/hooks/useSkillSectionNavigation';
 import { SkillActions } from '../../src/domain/skills/components/SkillActions';
 import { SKILL_MESSAGES } from '../../src/domain/skills/constants/messages';
+import {
+  buildVirtualSkillMdFile,
+  SKILL_MD_FILENAME,
+} from '../../src/domain/skills/utils/skillMdUtils';
 import { useListChangeProposalsBySkillQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
-
-const SKILL_MD_FILENAME = 'SKILL.md';
 
 export interface ISkillDetailsOutletContext {
   skill: Skill;
@@ -147,18 +148,13 @@ export default function SkillDetailLayoutRouteModule() {
     return null;
   }, [location.pathname]);
 
-  // Create virtual SKILL.md file
-  const skillMdFile = useMemo<SkillFile | null>(() => {
-    if (!skillWithFiles) return null;
-    return {
-      id: createSkillFileId(''),
-      skillVersionId: skillWithFiles.latestVersion.id,
-      permissions: '',
-      path: SKILL_MD_FILENAME,
-      content: skillWithFiles.latestVersion.prompt,
-      isBase64: false,
-    };
-  }, [skillWithFiles]);
+  const skillMdFile = useMemo<SkillFile | null>(
+    () =>
+      skillWithFiles
+        ? buildVirtualSkillMdFile(skillWithFiles.latestVersion)
+        : null,
+    [skillWithFiles],
+  );
 
   // Combine virtual SKILL.md with other files for the sidebar
   const allFiles = useMemo(() => {
