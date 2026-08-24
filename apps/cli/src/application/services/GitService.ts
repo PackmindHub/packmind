@@ -19,6 +19,12 @@ const origin = 'GitService';
  */
 const DETACHED_HEAD = 'HEAD';
 
+/** Ref namespaces holding branches: local ones, and remote-tracking ones. */
+const LOCAL_REF_NAMESPACE = 'refs/heads';
+const REMOTE_REF_NAMESPACE = 'refs/remotes';
+const LOCAL_REF_PREFIX = `${LOCAL_REF_NAMESPACE}/`;
+const REMOTE_REF_PREFIX = `${REMOTE_REF_NAMESPACE}/`;
+
 export type GitRunnerOptions = ExecSyncOptions & { maxBuffer?: number };
 export type GitRunnerResult = { stdout: string };
 export type GitRunner = (
@@ -133,17 +139,24 @@ export class GitService implements IGitService {
 
   private getAllBranches(repoPath: string): GitBranchesResult {
     const stdout = this.runGit(
-      'branch -a',
+      `for-each-ref --format="%(refname)" ${LOCAL_REF_NAMESPACE} ${REMOTE_REF_NAMESPACE}`,
       repoPath,
       'Failed to get Git branches',
     );
 
-    return { branches: this.parseBranches(stdout) };
+    return { branches: this.parseRefNames(stdout) };
   }
 
   /**
    * Local and remote-tracking branches are both accepted: `git track --branch`
    * does not require the branch to be checked out, only to exist.
+   *
+   * `for-each-ref` is plumbing, so its output is the list of refs and nothing
+   * else. `git branch -a` renders for humans, and every decoration it adds used
+   * to be read as part of the branch name — refusing branches that do exist:
+   * `+ feature` for a branch held by a linked worktree, ANSI escapes under
+   * `color.ui = always`, and every branch on one line under `column.ui = always`
+   * (the last two are forced through a pipe, which is how the CLI runs git).
    *
    * The branch name is matched in-process instead of being handed to git: it
    * comes straight from `--branch`, and interpolating it into the command line
@@ -153,6 +166,45 @@ export class GitService implements IGitService {
     const { branches } = this.getAllBranches(repoPath);
 
     return branches.includes(branch);
+  }
+
+  /**
+   * Turns full refnames into branch names.
+   *
+   * The remote name is dropped, so a branch that exists only on a remote counts
+   * as existing — what `--branch` promises, since it does not require a local
+   * checkout. `refs/remotes/<remote>/HEAD` is skipped: it is a symref to the
+   * remote's default branch, not a branch of its own.
+   */
+  private parseRefNames(forEachRefOutput: string): string[] {
+    const branchNames = new Set<string>();
+
+    for (const line of forEachRefOutput.split('\n')) {
+      const refName = line.trim();
+
+      if (refName.startsWith(LOCAL_REF_PREFIX)) {
+        branchNames.add(refName.substring(LOCAL_REF_PREFIX.length));
+        continue;
+      }
+
+      if (!refName.startsWith(REMOTE_REF_PREFIX)) {
+        continue;
+      }
+
+      const withoutNamespace = refName.substring(REMOTE_REF_PREFIX.length);
+      const remoteSeparator = withoutNamespace.indexOf('/');
+      // A ref sitting directly under refs/remotes/ names no branch.
+      if (remoteSeparator === -1) {
+        continue;
+      }
+
+      const branchName = withoutNamespace.substring(remoteSeparator + 1);
+      if (branchName && branchName !== DETACHED_HEAD) {
+        branchNames.add(branchName);
+      }
+    }
+
+    return Array.from(branchNames);
   }
 
   getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {

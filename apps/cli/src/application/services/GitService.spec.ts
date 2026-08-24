@@ -166,12 +166,15 @@ describe('GitService', () => {
   });
 
   describe('branchExists', () => {
+    const FOR_EACH_REF =
+      'for-each-ref --format="%(refname)" refs/heads refs/remotes';
+
     describe('when the branch is a local branch', () => {
       let result: boolean;
 
       beforeEach(() => {
         gitRunner.mockReturnValue({
-          stdout: '* main\n  dev\n  remotes/origin/main\n',
+          stdout: 'refs/heads/main\nrefs/heads/dev\nrefs/remotes/origin/main\n',
         });
         result = service.branchExists('/repo', 'dev');
       });
@@ -180,14 +183,17 @@ describe('GitService', () => {
         expect(result).toBe(true);
       });
 
-      it('lists every branch, not only those containing HEAD', () => {
-        expect(gitRunner).toHaveBeenCalledWith('branch -a', { cwd: '/repo' });
+      // Plumbing, so no checkout markers, no color and no columns to strip.
+      it('lists refs instead of parsing the human-facing branch listing', () => {
+        expect(gitRunner).toHaveBeenCalledWith(FOR_EACH_REF, { cwd: '/repo' });
       });
     });
 
     describe('when the branch is the checked-out one', () => {
-      it('reports the branch exists despite the asterisk marker', () => {
-        gitRunner.mockReturnValue({ stdout: '* main\n  dev\n' });
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/heads/dev\n',
+        });
 
         expect(service.branchExists('/repo', 'main')).toBe(true);
       });
@@ -196,7 +202,18 @@ describe('GitService', () => {
     describe('when the branch only exists on a remote', () => {
       it('reports the branch exists', () => {
         gitRunner.mockReturnValue({
-          stdout: '* main\n  remotes/origin/main\n  remotes/origin/dev\n',
+          stdout:
+            'refs/heads/main\nrefs/remotes/origin/main\nrefs/remotes/origin/dev\n',
+        });
+
+        expect(service.branchExists('/repo', 'dev')).toBe(true);
+      });
+    });
+
+    describe('when the branch only exists on a remote other than origin', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/upstream/dev\n',
         });
 
         expect(service.branchExists('/repo', 'dev')).toBe(true);
@@ -206,17 +223,28 @@ describe('GitService', () => {
     describe('when the branch name contains slashes', () => {
       it('reports the branch exists', () => {
         gitRunner.mockReturnValue({
-          stdout: '* main\n  remotes/origin/feature/login\n',
+          stdout: 'refs/heads/main\nrefs/remotes/origin/feature/login\n',
         });
 
         expect(service.branchExists('/repo', 'feature/login')).toBe(true);
       });
     });
 
+    // A symref to the remote's default branch, not a branch anyone can track.
+    describe("when asked for the remote's HEAD symref", () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/origin/HEAD\n',
+        });
+
+        expect(service.branchExists('/repo', 'HEAD')).toBe(false);
+      });
+    });
+
     describe('when the branch does not exist', () => {
       it('reports the branch is unknown', () => {
         gitRunner.mockReturnValue({
-          stdout: '* main\n  remotes/origin/main\n',
+          stdout: 'refs/heads/main\nrefs/remotes/origin/main\n',
         });
 
         expect(service.branchExists('/repo', 'mian')).toBe(false);
