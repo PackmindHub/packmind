@@ -88,13 +88,18 @@ export function instrumentMethods(
  * like) call this from their constructor. Deliberately takes an explicit list
  * rather than reflecting over the aggregator's fields — those also hold a
  * TypeORM `DataSource`, which must not be patched.
+ *
+ * Nullish entries are skipped, so an optional collaborator can be listed
+ * unconditionally.
  */
 export function instrumentComponents(
-  instances: readonly object[],
+  instances: readonly (object | null | undefined)[],
   options: InstrumentMethodsOptions = {},
 ): void {
   for (const instance of instances) {
-    instrumentMethods(instance, options);
+    if (instance) {
+      instrumentMethods(instance, options);
+    }
   }
 }
 

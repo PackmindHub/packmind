@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
 import { SkillFileService } from './SkillFileService';
 import { SkillService } from './SkillService';
@@ -20,6 +21,14 @@ export class SkillsServices {
     this.skillFileService = new SkillFileService(
       this.skillsRepositories.getSkillFileRepository(),
     );
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.skillService,
+      this.skillVersionService,
+      this.skillFileService,
+    ]);
   }
 
   getSkillService(): SkillService {
