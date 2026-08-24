@@ -23,6 +23,7 @@ export * from './application';
 export * from './errors';
 export * from './mail';
 export * from './nest';
+export * from './observability/instrumentMethods';
 export * from './observability/withSpan';
 export * from './git';
 export * from './repositories/AbstractRepository';
