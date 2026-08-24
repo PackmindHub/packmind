@@ -31,6 +31,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-nx-sock:/nx-sock
     environment:
       <<: *nx-env
@@ -114,6 +115,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-corepack-cache:/root/.cache/node/corepack
       - dev-pnpm-store:/root/.local/share/pnpm
 
@@ -137,6 +139,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-corepack-cache:/root/.cache/node/corepack
       - dev-pnpm-store:/root/.local/share/pnpm
     depends_on:
@@ -187,6 +190,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-dist:/packmind/dist
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
@@ -243,6 +247,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-dist:/packmind/dist
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
@@ -288,6 +293,7 @@ services:
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
+      - dev-nx:/packmind/.nx
       - dev-dist:/packmind/dist
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
@@ -309,6 +315,7 @@ services:
 
 volumes:
   dev-nx-sock:
+  dev-nx:
   dev-postgres-data:
   dev-redis-data:
   dev-pgadmin:
