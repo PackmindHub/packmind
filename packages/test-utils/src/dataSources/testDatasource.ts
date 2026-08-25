@@ -1,5 +1,5 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import { DataType, newDb } from 'pg-mem';
+import { newDb } from 'pg-mem';
 
 export async function makeTestDatasource(
   entities: EntitySchema[],
@@ -18,20 +18,6 @@ export async function makeTestDatasource(
       return '17';
     },
     name: 'version',
-  });
-
-  // DEMO ONLY - revert this with the rest of the span demo.
-  //
-  // SkillRepository.findBySpaceId carries a `(SELECT pg_sleep(2)) IS NOT NULL`
-  // predicate so slow SQL shows up in Tempo. pg-mem implements very few native
-  // functions and pg_sleep is not one of them, so the query fails outright
-  // without a stub. This one does not sleep - it just has to be non-null so the
-  // predicate keeps every row, which is what it does on real Postgres too.
-  db.public.registerFunction({
-    name: 'pg_sleep',
-    args: [DataType.integer],
-    returns: DataType.text,
-    implementation: () => '',
   });
 
   return db.adapters.createTypeormDataSource({

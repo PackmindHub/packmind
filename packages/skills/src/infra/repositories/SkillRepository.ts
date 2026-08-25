@@ -1,6 +1,6 @@
 import { ISkillRepository } from '../../domain/repositories/ISkillRepository';
 import { SkillSchema } from '../schemas/SkillSchema';
-import { Raw, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import {
@@ -86,25 +86,9 @@ export class SkillRepository
     });
 
     try {
-      // DEMO ONLY - revert this with the rest of the span demo.
-      //
-      // Makes the real skills SELECT slow, so the pg.query span shows what a
-      // genuinely slow statement looks like in Tempo, with the sleep visible in
-      // `db.query.text` next to the actual query.
-      //
-      // The subquery form matters. `(SELECT pg_sleep(2)) IS NOT NULL` is
-      // uncorrelated, so Postgres hoists it into an InitPlan and evaluates it
-      // once - measured at 1.0s across 5 rows. Written bare as
-      // `pg_sleep(2) IS NOT NULL` it is volatile and runs per row instead: 4
-      // rows at 0.5s each took 2.0s. `IS NOT NULL` on void is true, so the
-      // predicate filters nothing out.
-      //
       // First, get all skills for the space with user information
       const skills = await this.repository.find({
-        where: {
-          spaceId,
-          id: Raw(() => '(SELECT pg_sleep(2)) IS NOT NULL'),
-        },
+        where: { spaceId },
         withDeleted: opts?.includeDeleted ?? false,
       });
 
