@@ -1,6 +1,12 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { node } from '@opentelemetry/sdk-node';
-import { instrumentComponents, instrumentMethods } from './instrumentMethods';
+import {
+  instrumentComponents,
+  instrumentMethods,
+  instrumentUseCase,
+  instrumentUseCases,
+} from './instrumentMethods';
+import { withSpan } from './withSpan';
 
 // A real in-memory provider rather than the no-op tracer the rest of the suite
 // runs against: parentage and span names are the whole point of this helper,
@@ -259,5 +265,111 @@ describe('instrumentComponents', () => {
     await second.work();
 
     expect(names()).toEqual(['Collaborator.work', 'Collaborator.work']);
+  });
+});
+
+describe('instrumentUseCase', () => {
+  class ExampleUseCase {
+    async execute(): Promise<void> {
+      await this.step();
+    }
+
+    private async step(): Promise<void> {
+      // Nothing to do - the span names are the assertion.
+    }
+  }
+
+  it('returns the instance it was given', () => {
+    const useCase = new ExampleUseCase();
+
+    expect(instrumentUseCase(useCase)).toBe(useCase);
+  });
+
+  it('names the execute span after the class alone', async () => {
+    await instrumentUseCase(new ExampleUseCase()).execute();
+
+    expect(names()).toEqual(['ExampleUseCase.step', 'ExampleUseCase']);
+  });
+});
+
+describe('instrumentUseCases', () => {
+  class SweptUseCase {
+    async execute(): Promise<void> {
+      // Nothing to do - the span name is the assertion.
+    }
+  }
+
+  class PlainCollaborator {
+    async work(): Promise<void> {
+      // Nothing to do - the absence of a span is the assertion.
+    }
+  }
+
+  // Mirrors an adapter: use cases in fields, alongside the collaborators and
+  // the not-yet-wired ports one also holds.
+  class Owner {
+    public readonly _swept = new SweptUseCase();
+    public readonly collaborator = new PlainCollaborator();
+    public readonly port: object | null = null;
+    public readonly missing: object | undefined = undefined;
+    public getterReads = 0;
+
+    get lazy(): string {
+      this.getterReads++;
+      return 'lazy';
+    }
+  }
+
+  let owner: Owner;
+
+  beforeEach(() => {
+    owner = new Owner();
+    instrumentUseCases(owner);
+  });
+
+  it('instruments the use case it holds', async () => {
+    await owner._swept.execute();
+
+    expect(names()).toEqual(['SweptUseCase']);
+  });
+
+  it('leaves collaborators that are not use cases alone', async () => {
+    await owner.collaborator.work();
+
+    expect(names()).toEqual([]);
+  });
+
+  it('does not read getters on the owner', () => {
+    expect(owner.getterReads).toBe(0);
+  });
+
+  describe('when a use case already instrumented itself', () => {
+    class SelfInstrumentingUseCase {
+      constructor() {
+        instrumentMethods(this, { skip: ['execute'] });
+      }
+
+      async execute(): Promise<void> {
+        await withSpan(this.constructor.name, async () => {
+          await this.step();
+        });
+      }
+
+      private async step(): Promise<void> {
+        // Nothing to do - the span names are the assertion.
+      }
+    }
+
+    it('does not add a second span to execute', async () => {
+      const alreadyDone = { _useCase: new SelfInstrumentingUseCase() };
+      instrumentUseCases(alreadyDone);
+
+      await alreadyDone._useCase.execute();
+
+      expect(names()).toEqual([
+        'SelfInstrumentingUseCase.step',
+        'SelfInstrumentingUseCase',
+      ]);
+    });
   });
 });

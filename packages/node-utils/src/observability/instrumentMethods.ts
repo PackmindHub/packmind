@@ -114,6 +114,66 @@ export function instrumentComponents(
   }
 }
 
+/**
+ * The span shape a use case gets: a bare `<UseCaseName>` span for `execute`,
+ * `<UseCaseName>.<method>` for everything else.
+ *
+ * That is what `AbstractMemberUseCase` produces, and roughly a third of the
+ * use cases in the monorepo extend no base class at all - they implement
+ * `IUseCase` or nothing, so no constructor opts them in and they emit no span
+ * whatsoever. This gives them the same shape from the outside, so one TraceQL
+ * query matches a use case however it happens to be instrumented.
+ *
+ * Returns the instance, so it can wrap a `new` expression where a use case is
+ * built per call rather than stored in a field.
+ *
+ * The `bare` name lands on `execute` only. The use cases that name their entry
+ * point after the domain instead - `CommitToGitUseCase.commitToGit` and the
+ * dozen or so like it - report qualified, which is no worse than the
+ * `Class.method` every service already gets.
+ */
+export function instrumentUseCase<T extends object>(useCase: T): T {
+  instrumentMethods(useCase, { bare: ['execute'] });
+  return useCase;
+}
+
+/**
+ * `instrumentUseCase` for every use case `owner` holds in a field. The seam for
+ * the domain adapters, which build the whole domain's use cases at the end of
+ * `initialize()`.
+ *
+ * Reflective, where `instrumentComponents` deliberately is not: an adapter
+ * holds up to forty use cases in forty separate fields, and a list that long
+ * drifts the first time somebody adds one - which is how this gap opened. The
+ * risk `instrumentComponents` was avoiding does not apply here either, because
+ * an adapter holds ports and services, never a TypeORM `DataSource`.
+ *
+ * Selects on the VALUE's constructor name rather than the field name: the
+ * fields are `_addGitProvider` and `_commitToGit` in GitAdapter, and only the
+ * class they hold says what they are. Class names survive production bundling
+ * because terser already runs with `keep_classnames: true` for NestJS DI.
+ *
+ * Reads own properties off the instance, so no getter on `owner` is invoked -
+ * the same care `patchPrototype` takes below.
+ *
+ * Use cases that DO extend a base class are reached too, and cost nothing: the
+ * base patched their prototype at construction, so the marker check makes this
+ * a no-op and their `execute` keeps the single span it already had.
+ */
+export function instrumentUseCases(owner: object): void {
+  for (const name of Object.getOwnPropertyNames(owner)) {
+    const value = (owner as Record<string, unknown>)[name];
+
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      value.constructor?.name.endsWith('UseCase')
+    ) {
+      instrumentUseCase(value);
+    }
+  }
+}
+
 function patchPrototype(
   prototype: object,
   skip: readonly string[],
