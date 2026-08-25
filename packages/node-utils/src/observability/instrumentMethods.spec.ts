@@ -187,38 +187,6 @@ describe('instrumentMethods', () => {
     });
   });
 
-  describe('when a method is named bare', () => {
-    class Bare {
-      constructor() {
-        instrumentMethods(this, { bare: ['execute'] });
-      }
-
-      async execute(): Promise<void> {
-        await this.helper();
-      }
-
-      async helper(): Promise<void> {
-        // Nothing to do - the span names are the assertion.
-      }
-    }
-
-    beforeEach(async () => {
-      await new Bare().execute();
-    });
-
-    it('names its span after the class alone', () => {
-      expect(names()).toContain('Bare');
-    });
-
-    it('leaves the other methods qualified', () => {
-      expect(names()).toContain('Bare.helper');
-    });
-
-    it('still nests what the bare method calls', () => {
-      expect(isChildOf('Bare.helper', 'Bare')).toBe(true);
-    });
-  });
-
   describe('when a method rejects', () => {
     const failure = new Error('the method blew up');
 
@@ -285,10 +253,10 @@ describe('instrumentUseCase', () => {
     expect(instrumentUseCase(useCase)).toBe(useCase);
   });
 
-  it('names the execute span after the class alone', async () => {
+  it('qualifies the execute span like every other method', async () => {
     await instrumentUseCase(new ExampleUseCase()).execute();
 
-    expect(names()).toEqual(['ExampleUseCase.step', 'ExampleUseCase']);
+    expect(names()).toEqual(['ExampleUseCase.step', 'ExampleUseCase.execute']);
   });
 });
 
@@ -330,7 +298,7 @@ describe('instrumentUseCases', () => {
   it('instruments the use case it holds', async () => {
     await owner._swept.execute();
 
-    expect(names()).toEqual(['SweptUseCase']);
+    expect(names()).toEqual(['SweptUseCase.execute']);
   });
 
   it('leaves collaborators that are not use cases alone', async () => {
@@ -350,7 +318,7 @@ describe('instrumentUseCases', () => {
       }
 
       async execute(): Promise<void> {
-        await withSpan(this.constructor.name, async () => {
+        await withSpan(`${this.constructor.name}.execute`, async () => {
           await this.step();
         });
       }
@@ -368,7 +336,7 @@ describe('instrumentUseCases', () => {
 
       expect(names()).toEqual([
         'SelfInstrumentingUseCase.step',
-        'SelfInstrumentingUseCase',
+        'SelfInstrumentingUseCase.execute',
       ]);
     });
   });

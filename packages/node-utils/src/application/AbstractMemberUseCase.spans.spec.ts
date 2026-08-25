@@ -77,19 +77,19 @@ describe('AbstractMemberUseCase tracing', () => {
     names = exporter.getFinishedSpans().map((span) => span.name);
   });
 
-  it('keeps the use-case span named after the class alone', () => {
-    expect(names).toContain('TracedMemberUseCase');
+  it('qualifies the use-case span like every other method', () => {
+    expect(names).toContain('TracedMemberUseCase.execute');
   });
 
-  it('does not duplicate it with an execute span', () => {
-    expect(names).not.toContain('TracedMemberUseCase.execute');
+  it('does not also emit a bare class-named span', () => {
+    expect(names).not.toContain('TracedMemberUseCase');
   });
 
   it('spans the access validation inherited from the base', () => {
     expect(
       isChildOf(
         'TracedMemberUseCase.validateMemberAccess',
-        'TracedMemberUseCase',
+        'TracedMemberUseCase.execute',
       ),
     ).toBe(true);
   });
@@ -105,7 +105,10 @@ describe('AbstractMemberUseCase tracing', () => {
 
   it('spans the subclass entry point', () => {
     expect(
-      isChildOf('TracedMemberUseCase.executeForMembers', 'TracedMemberUseCase'),
+      isChildOf(
+        'TracedMemberUseCase.executeForMembers',
+        'TracedMemberUseCase.execute',
+      ),
     ).toBe(true);
   });
 

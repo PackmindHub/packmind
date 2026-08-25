@@ -46,10 +46,11 @@ export abstract class AbstractMemberUseCase<
     // the repository spans stops being a blank. One call here covers every
     // authenticated use case in the monorepo; nothing opts in per method.
     //
-    // `execute` is skipped because it already owns the explicit span below.
-    // Patching it too would nest `<Subclass>.execute` above an identical
-    // `<Subclass>` span, and the bare name is what the recorded traces in
-    // docker/otel/README.md and any saved TraceQL queries look for.
+    // `execute` is skipped because it already owns the explicit span below,
+    // which this cannot replace: that call site is the only one holding the
+    // validated command, so it is the only place the tenant attributes can be
+    // set from. Patching it too would nest a second, identical
+    // `<Subclass>.execute` span above it.
     instrumentMethods(this, { skip: ['execute'] });
   }
 
@@ -70,8 +71,9 @@ export abstract class AbstractMemberUseCase<
     // this.constructor.name rather than a literal, so each subclass names its
     // own span. It survives production bundling because terser runs with
     // keep_classnames: true (apps/api/webpack.config.js), already required for
-    // NestJS DI.
-    return withSpan(this.constructor.name, async (span) => {
+    // NestJS DI. The `.execute` suffix is added by hand here so this span has
+    // the same `Class.method` shape instrumentMethods() gives every other one.
+    return withSpan(`${this.constructor.name}.execute`, async (span) => {
       // Set before validation, not after, so a rejected request is still
       // attributable to the organization that made it.
       span.setAttributes(this.spanAttributes(command));
