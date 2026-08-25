@@ -118,27 +118,6 @@
           "expr": "sum by (le) (rate(traces_spanmetrics_latency_bucket{span_name=\"$endpoint\"}[$__rate_interval]))"
         }
       ]
-    },
-    {
-      "id": 5,
-      "type": "timeseries",
-      "title": "Database call latency (p95 / p99)",
-      "description": "Client spans — pg.query and friends. When these track the endpoint percentiles above, the tail is the database rather than our code.",
-      "datasource": { "type": "prometheus", "uid": "${ds}" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 26 },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "targets": [
-        {
-          "refId": "A",
-          "legendFormat": "p95 {{span_name}}",
-          "expr": "histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval])))"
-        },
-        {
-          "refId": "B",
-          "legendFormat": "p99 {{span_name}}",
-          "expr": "histogram_quantile(0.99, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind=\"SPAN_KIND_CLIENT\"}[$__rate_interval])))"
-        }
-      ]
     }
   ]
 }
