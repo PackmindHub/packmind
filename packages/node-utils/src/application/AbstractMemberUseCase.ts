@@ -98,15 +98,28 @@ export abstract class AbstractMemberUseCase<
   }
 
   /**
-   * Attributes for this use case's span. Overridable so the space-scoped
-   * subclasses can add their own without reaching for trace.getActiveSpan()
-   * from inside a nested call - span concerns stay in execute().
+   * Attributes for this use case's span. Overridable so a subclass can add its
+   * own without reaching for trace.getActiveSpan() from inside a nested call -
+   * span concerns stay in execute().
    *
    * Tenant and space only. userId and emails stay off spans; see
    * docker/otel/README.md.
+   *
+   * spaceId is read off the command here rather than in the space-scoped
+   * subclasses: AbstractSpaceMemberUseCase and AbstractSpaceAdminUseCase both
+   * extend this class and neither extends the other, so an override there has
+   * to exist twice, verbatim, and drift the moment one is edited. The cast is
+   * what PackmindCommand cannot express - only its space-scoped extensions
+   * declare spaceId - and it is spread conditionally, so a command without one
+   * contributes no attribute rather than an empty string.
    */
   protected spanAttributes(command: Command): Attributes {
-    return { 'packmind.organization.id': command.organizationId };
+    const { spaceId } = command as Command & { spaceId?: string };
+
+    return {
+      'packmind.organization.id': command.organizationId,
+      ...(spaceId && { 'packmind.space.id': spaceId }),
+    };
   }
 
   protected handleValidationError(

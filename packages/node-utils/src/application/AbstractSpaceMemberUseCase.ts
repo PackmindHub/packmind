@@ -1,4 +1,3 @@
-import { Attributes } from '@opentelemetry/api';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
@@ -29,16 +28,6 @@ export abstract class AbstractSpaceMemberUseCase<
     logger: PackmindLogger = new PackmindLogger(defaultOrigin),
   ) {
     super(accountsPort, logger);
-  }
-
-  protected override spanAttributes(command: Command): Attributes {
-    return {
-      ...super.spanAttributes(command),
-      // Spread conditionally: spaceId is optional on some commands. The SDK
-      // does drop undefined attribute values silently, but relying on that
-      // makes a reader check OTel internals to know an absent space is fine.
-      ...(command.spaceId && { 'packmind.space.id': command.spaceId }),
-    };
   }
 
   protected override async executeForMembers(

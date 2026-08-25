@@ -3,7 +3,16 @@ import { join, relative, resolve } from 'node:path';
 
 // packages/node-utils/src/observability -> the repo root.
 const repoRoot = resolve(__dirname, '../../../..');
-const packages = join(repoRoot, 'packages');
+
+/**
+ * Everywhere that runs with the OTel SDK started. `apps/api` builds no use
+ * cases today, but it is in scope so that it cannot start to without the rule
+ * noticing.
+ */
+const scanned = [
+  join(repoRoot, 'packages'),
+  join(repoRoot, 'apps', 'api', 'src'),
+];
 
 /**
  * A use case emits no span unless something opts it in, and nothing about
@@ -32,7 +41,8 @@ const sourceFiles = (dir: string): string[] =>
   });
 
 describe('instrumentUseCases coverage', () => {
-  const buildsAUseCase = sourceFiles(packages)
+  const buildsAUseCase = scanned
+    .flatMap(sourceFiles)
     .map((path) => ({ path, source: readFileSync(path, 'utf8') }))
     .filter(({ source }) => /new [A-Za-z0-9_]*UseCase\(/.test(source));
 
