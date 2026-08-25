@@ -39,7 +39,7 @@ export async function deletePluginHandler(
 
   if (ctx.mode === 'none') {
     deps.error(
-      'No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found in this directory.',
+      'No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found in this directory.',
     );
     deps.exit(1);
     return;

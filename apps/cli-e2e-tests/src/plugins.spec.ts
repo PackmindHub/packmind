@@ -430,7 +430,7 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         });
       });
 
-      describe('when neither manifest is present', () => {
+      describe('when no manifest is present', () => {
         let pkg: Package;
         let result: RunCliResult;
 
@@ -448,7 +448,7 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         it('reports that no plugin manifest was found', () => {
           const combined = result.stdout + result.stderr;
           expect(combined).toContain(
-            'No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found',
+            'No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found',
           );
         });
       });
