@@ -10,8 +10,9 @@ title: 'Change Proposals'
 Change proposals are one of two ways to update your playbook. Unlike [direct updates](/playbook-maintenance/updating-your-playbook#direct-updates), change proposals require team review before changes are applied.
 
 <Note>
-  Change Proposals require **CLI version 0.23.0 or later**. Run `packmind-cli
-  --version` to check your version, and see [CLI
+  Change Proposals require **CLI version 0.23.0 or later**. Run `packmind
+  --version` to check your version — on 0.23.x the command is `packmind-cli
+  --version`, which is the only name that install has — and see [CLI
   Installation](/tools/cli#installation) to upgrade.
 </Note>
 
@@ -22,7 +23,7 @@ Change Proposals enable users to propose modifications to distributed artifacts 
 There are two ways to submit change proposals:
 
 1. **Use the `packmind-update-playbook` skill** — the skill analyzes your coding session, identifies relevant changes, and submits proposals on your behalf automatically. This is the recommended approach.
-2. **Edit local files manually and use the CLI** — modify distributed artifact files directly, then use `packmind-cli playbook` commands to stage and submit your changes.
+2. **Edit local files manually and use the CLI** — modify distributed artifact files directly, then use `packmind playbook` commands to stage and submit your changes.
 
 ## Submitting Changes with the `packmind-update-playbook` Skill
 
@@ -58,29 +59,29 @@ Local changes must be made on files deployed by Packmind during distribution —
 The `playbook` command uses a git-like staging workflow. You stage changes individually, then submit them all at once:
 
 1. Edit local artifact files (standards, commands, or skills)
-2. Run `packmind-cli playbook diff` to preview what changed
-3. Run `packmind-cli playbook status` to see staged and untracked changes
-4. Run `packmind-cli playbook add <path>` to stage the changes you want to submit
-5. Run `packmind-cli playbook submit -m "message"` to submit staged changes as proposals
+2. Run `packmind playbook diff` to preview what changed
+3. Run `packmind playbook status` to see staged and untracked changes
+4. Run `packmind playbook add <path>` to stage the changes you want to submit
+5. Run `packmind playbook submit -m "message"` to submit staged changes as proposals
 
 ### View local changes
 
 To see what local changes differ from the published versions:
 
 ```bash
-packmind-cli playbook diff
+packmind playbook diff
 ```
 
 To include changes that have already been submitted:
 
 ```bash
-packmind-cli playbook diff --include-submitted
+packmind playbook diff --include-submitted
 ```
 
 To limit the analysis to a specific path:
 
 ```bash
-packmind-cli playbook diff -p .claude/rules/
+packmind playbook diff -p .claude/rules/
 ```
 
 ### Check playbook status
@@ -88,7 +89,7 @@ packmind-cli playbook diff -p .claude/rules/
 To see which changes are staged for submission and which are untracked:
 
 ```bash
-packmind-cli playbook status
+packmind playbook status
 ```
 
 **Example output:**
@@ -110,7 +111,7 @@ Use `packmind playbook add <path>` to track them
 To stage a local artifact change for submission:
 
 ```bash
-packmind-cli playbook add <path>
+packmind playbook add <path>
 ```
 
 This stages the artifact but does **not** submit it. Packmind automatically detects whether the change is a creation or an update by comparing with the deployed version.
@@ -149,7 +150,7 @@ The command will fail if:
 To stage an artifact for removal from packages:
 
 ```bash
-packmind-cli playbook rm <path>
+packmind playbook rm <path>
 ```
 
 The artifact must have been distributed by Packmind. The command will fail if the artifact was not deployed by Packmind (error: _"This {type} does not come from Packmind"_).
@@ -165,7 +166,7 @@ If someone submits a modification and someone else submits a removal for the sam
 To remove a previously staged change without submitting it:
 
 ```bash
-packmind-cli playbook unstage <path>
+packmind playbook unstage <path>
 ```
 
 ### Submit staged changes
@@ -173,7 +174,7 @@ packmind-cli playbook unstage <path>
 To submit all staged changes as proposals:
 
 ```bash
-packmind-cli playbook submit -m "Clarify error handling rules for API endpoints"
+packmind playbook submit -m "Clarify error handling rules for API endpoints"
 ```
 
 The message has a maximum length of 1024 characters. If you omit the `-m` flag in interactive mode, an editor will open for you to write the message.
@@ -187,24 +188,24 @@ Error: A standard named "My Standard" already exists in this space.
 Use "playbook unstage" to remove it or rename the artifact.
 ```
 
-To resolve this, either rename your local artifact file or run `packmind-cli playbook unstage <path>` to remove it from the staged changes.
+To resolve this, either rename your local artifact file or run `packmind playbook unstage <path>` to remove it from the staged changes.
 
 <Tip>
   If you see an error like **Failed to submit "{name}": {artifactType} is
-  outdated, please run packmind-cli install to update it**, it means the local
-  artifact version is stale. Run `packmind-cli install` to fetch the latest
+  outdated, please run packmind install to update it**, it means the local
+  artifact version is stale. Run `packmind install` to fetch the latest
   versions, reapply your changes, and submit again.
 </Tip>
 
 ## Important: Pending Changes and the Install Command
 
 <Warning>
-  While changes are pending (not yet accepted), running `packmind-cli install`
-  will overwrite your local modifications with the server version. This will
-  erase any unstaged or unsubmitted changes.
+  While changes are pending (not yet accepted), running `packmind install` will
+  overwrite your local modifications with the server version. This will erase
+  any unstaged or unsubmitted changes.
 </Warning>
 
-Always submit your staged changes with `packmind-cli playbook submit` before running `packmind-cli install` to avoid losing your work.
+Always submit your staged changes with `packmind playbook submit` before running `packmind install` to avoid losing your work.
 
 ## Reviewing Change Proposals in the UI
 

@@ -30,7 +30,7 @@ For a detailed breakdown of where standards, commands, and skills appear for eac
 There are two ways to distribute packages to your repositories:
 
 1. **Using the Packmind app** - Distribute packages through the web interface with full control over targets and repositories
-2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
+2. **Using the Packmind CLI** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
 
 ### Distribution Methods Overview
 
@@ -65,20 +65,20 @@ This approach is useful when you want to:
 
 For more information on creating and managing packages, see [Packages Management](/concepts/packages-management).
 
-## Distribute via packmind-cli
+## Distribute via the Packmind CLI
 
-You can also distribute packages directly from your terminal using the `packmind-cli` command:
+You can also distribute packages directly from your terminal using the `packmind` command:
 
 ```bash
-packmind-cli install <package-slug>
+packmind install <package-slug>
 ```
 
 For example:
 
 ```bash
-packmind-cli install backend-standards frontend-react
+packmind install backend-standards frontend-react
 # Note: when using multiple spaces, you will need to prefix the packages with the space slug
-packmind-cli install @backend/standards @frontend/react
+packmind install @backend/standards @frontend/react
 ```
 
 <Note>
@@ -116,7 +116,7 @@ The CLI approach is ideal for:
 
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
-- **Monorepos** - Use `packmind-cli install` to install packages for all `packmind.json` files in the repository
+- **Monorepos** - Use `packmind install` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
 
 ## Distribution History and the Tracked Branch
@@ -140,20 +140,19 @@ Packmind checks the tracked branch against your Git provider and flags it when i
 
 - **Settings → Targets** — the repository card carries a **Branch deleted** marker.
 - **The Git connection panel** — the tracked branch is marked in the repositories list, where an admin manages tracking.
-- **`packmind-cli git info`** — reports that the branch is not in the repository and offers to move tracking.
+- **`packmind git info`** — reports that the branch is not in the repository and offers to move tracking.
 
 <Note>
   **Needs a Git connection** — checking a branch means asking your Git provider,
   so the two web app markers only appear for repositories reached through a
-  connection. A repository Packmind knows only from `packmind-cli install`
-  carries no credentials to ask with, and `packmind-cli git info` is the signal
-  there.
+  connection. A repository Packmind knows only from `packmind install` carries
+  no credentials to ask with, and `packmind git info` is the signal there.
 </Note>
 
 To start recording again, an organization admin moves tracking to a branch that exists:
 
 ```bash
-packmind-cli git track --update --branch main
+packmind git track --update --branch main
 ```
 
 Nothing recorded on the deleted branch is lost — its history is kept, exactly as when tracking moves for any other reason.
@@ -170,14 +169,14 @@ So a team that tracks `main`, moves to `dev` for a while, then returns to `main`
 <Note>
   **Only one branch at a time** — Packmind shows the tracked branch's history
   rather than several branches side by side. To see another branch's history,
-  ask an organization admin to move tracking to it with `packmind-cli git track
+  ask an organization admin to move tracking to it with `packmind git track
   --update`.
 </Note>
 
 ### Removing Tracking
 
 An organization admin can take a repository out of the governance views entirely by running
-`packmind-cli git untrack` from a clone of it (see [Git Untrack](/tools/cli#git-untrack)).
+`packmind git untrack` from a clone of it (see [Git Untrack](/tools/cli#git-untrack)).
 The repository disappears from Distribution History and the Deployments overview.
 
 Nothing is deleted. Every distribution recorded before the removal is kept, and tracking the same
@@ -185,7 +184,7 @@ branch again brings the whole history back, with new distributions appended to i
 different branch instead starts that branch's history fresh, while the original branch's history
 stays retained and returns whenever you track it again.
 
-While a repository is untracked, `packmind-cli install` behaves exactly as it does for a repository
+While a repository is untracked, `packmind install` behaves exactly as it does for a repository
 that was never tracked: it completes locally and tells you the distribution was not recorded.
 
 ## Removing Packages
@@ -207,13 +206,13 @@ There are two ways to remove packages using the CLI:
 **Option 1: Use the remove command**
 
 ```bash
-packmind-cli uninstall <package-slug>
+packmind uninstall <package-slug>
 ```
 
 For example:
 
 ```bash
-packmind-cli uninstall backend-standards
+packmind uninstall backend-standards
 ```
 
 **Option 2: Edit packmind.json and reinstall**
@@ -223,7 +222,7 @@ packmind-cli uninstall backend-standards
 3. Run the install command to update your repository:
 
 ```bash
-packmind-cli install
+packmind install
 ```
 
 This approach is useful when you want to make multiple changes to your package configuration at once.

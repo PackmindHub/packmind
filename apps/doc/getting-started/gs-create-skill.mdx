@@ -19,7 +19,7 @@ Skills are reusable knowledge packages that AI coding agents can discover and us
 ## Prerequisites
 
 - The CLI must be installed: see [CLI Installation](/tools/cli#installation)
-- You must be authenticated: run `packmind-cli login`
+- You must be authenticated: run `packmind login`
 
 ## Understanding the Skill Format
 
@@ -90,8 +90,8 @@ Skills are imported one at a time, and each row shows its own result. A skill th
 Once you have a skill folder ready, upload it to Packmind using the CLI:
 
 ```bash
-packmind-cli playbook add ./my-skill
-packmind-cli playbook submit --no-review
+packmind playbook add ./my-skill
+packmind playbook submit --no-review
 ```
 
 <Info>
@@ -109,13 +109,13 @@ The CLI will upload the skill to your Packmind organization and display a confir
 `playbook add` takes as many folders as you like, so a collection of skills goes up in one pair of commands:
 
 ```bash
-packmind-cli playbook add .claude/skills/*/
-packmind-cli playbook submit --no-review
+packmind playbook add .claude/skills/*/
+packmind playbook submit --no-review
 ```
 
 If one of the folders cannot be staged, the others still are: the command reports which one failed and how many were staged, so you can fix that one and add it on its own.
 
-The same applies when submitting. If a skill's name is already taken, it is skipped and stays staged while the rest are submitted — rename it and run `packmind-cli playbook submit --no-review` again to finish the job.
+The same applies when submitting. If a skill's name is already taken, it is skipped and stays staged while the rest are submitted — rename it and run `packmind playbook submit --no-review` again to finish the job.
 
 ## View Your Skill
 

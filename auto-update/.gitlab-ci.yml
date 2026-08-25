@@ -23,7 +23,7 @@ nightly-packmind-update:
         git checkout -b packmind-cli-update
       fi
     - npm install -g @packmind/cli
-    - packmind-cli install
+    - packmind install
     - |
       if [ -z "$(git status --porcelain)" ]; then
         echo "No artifact changes — skipping commit/push."
@@ -36,4 +36,4 @@ nightly-packmind-update:
         -o merge_request.create \
         -o merge_request.target=${CI_DEFAULT_BRANCH} \
         -o merge_request.title="chore(packmind): nightly artifacts update" \
-        -o merge_request.description="Automated nightly update of Packmind artifacts via \`packmind-cli install\`. Review the diff under \`.packmind/\` and \`packmind-lock.json\`."
+        -o merge_request.description="Automated nightly update of Packmind artifacts via 'packmind install'. Review the diff under '.packmind/' and 'packmind-lock.json'."
