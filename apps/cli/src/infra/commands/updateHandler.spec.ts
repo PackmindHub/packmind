@@ -754,12 +754,17 @@ describe('updateHandler', () => {
         );
       });
 
-      it('leaves packmind-cli in place rather than deleting it', () => {
+      it('does not unlink packmind-cli', () => {
         createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
 
         expect(fs.unlinkSync).not.toHaveBeenCalledWith(
           '/usr/local/bin/packmind-cli',
         );
+      });
+
+      it('does not rename anything', () => {
+        createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
+
         expect(fs.renameSync).not.toHaveBeenCalled();
       });
 
@@ -933,8 +938,11 @@ describe('updateHandler', () => {
         expect(fs.chmodSync).not.toHaveBeenCalled();
       });
 
-      it('leaves the running packmind-cli.exe alone', () => {
+      it('does not unlink the running packmind-cli.exe', () => {
         expect(fs.unlinkSync).not.toHaveBeenCalled();
+      });
+
+      it('does not create a legacy alias', () => {
         expect(fs.symlinkSync).not.toHaveBeenCalled();
       });
 

@@ -26,10 +26,12 @@ describe('resolveExecName', () => {
       ).toBe('packmind');
     });
 
-    it('reads the legacy name from argv0 when invoked through a symlink', () => {
-      expect(
-        resolveExecName(['bun', BUNFS_ENTRY, 'lint'], './packmind-cli'),
-      ).toBe('packmind-cli');
+    describe('when invoked through a symlink', () => {
+      it('reads the legacy name from argv0', () => {
+        expect(
+          resolveExecName(['bun', BUNFS_ENTRY, 'lint'], './packmind-cli'),
+        ).toBe('packmind-cli');
+      });
     });
 
     it('reads the legacy name from a bare argv0', () => {
@@ -76,10 +78,12 @@ describe('resolveExecName', () => {
       ).toBe('packmind');
     });
 
-    it('ignores a bunfs argv[1] when argv0 is unrecognised', () => {
-      expect(resolveExecName(['bun', '/$bunfs/root/packmind-cli'], 'bun')).toBe(
-        'packmind',
-      );
+    describe('when argv0 is unrecognised', () => {
+      it('ignores a bunfs argv[1]', () => {
+        expect(
+          resolveExecName(['bun', '/$bunfs/root/packmind-cli'], 'bun'),
+        ).toBe('packmind');
+      });
     });
 
     it('ignores a bunfs argv[0]', () => {
@@ -108,13 +112,15 @@ describe('resolveExecName', () => {
       ).toBe('packmind-cli');
     });
 
-    it('reads the name when the runtime is bun', () => {
-      expect(
-        resolveExecName(
-          ['/home/dev/.bun/bin/bun', '/usr/local/bin/packmind'],
-          'bun',
-        ),
-      ).toBe('packmind');
+    describe('when the runtime is bun', () => {
+      it('reads the name', () => {
+        expect(
+          resolveExecName(
+            ['/home/dev/.bun/bin/bun', '/usr/local/bin/packmind'],
+            'bun',
+          ),
+        ).toBe('packmind');
+      });
     });
   });
 
@@ -137,51 +143,65 @@ describe('resolveExecName', () => {
     });
   });
 
-  it('prefers argv0 over argv[0] and argv[1] when several are known names', () => {
-    expect(
-      resolveExecName(
-        ['/home/dev/.packmind/bin/packmind', '/usr/local/bin/packmind'],
-        '/home/dev/.packmind/bin/packmind-cli',
-      ),
-    ).toBe('packmind-cli');
+  describe('when several candidates are known names', () => {
+    it('prefers argv0 over argv[0] and argv[1]', () => {
+      expect(
+        resolveExecName(
+          ['/home/dev/.packmind/bin/packmind', '/usr/local/bin/packmind'],
+          '/home/dev/.packmind/bin/packmind-cli',
+        ),
+      ).toBe('packmind-cli');
+    });
   });
 
-  it('prefers argv[0] over argv[1] when argv0 is unrecognised', () => {
-    expect(
-      resolveExecName(
-        ['/home/dev/.packmind/bin/packmind-cli', '/usr/local/bin/packmind'],
-        'node',
-      ),
-    ).toBe('packmind-cli');
+  describe('when argv0 is unrecognised', () => {
+    it('prefers argv[0] over argv[1]', () => {
+      expect(
+        resolveExecName(
+          ['/home/dev/.packmind/bin/packmind-cli', '/usr/local/bin/packmind'],
+          'node',
+        ),
+      ).toBe('packmind-cli');
+    });
   });
 });
 
 describe('isLegacyExecName', () => {
-  it('is true when a compiled binary is invoked as packmind-cli', () => {
-    expect(isLegacyExecName(['bun', BUNFS_ENTRY], './packmind-cli')).toBe(true);
+  describe('when a compiled binary is invoked as packmind-cli', () => {
+    it('is true', () => {
+      expect(isLegacyExecName(['bun', BUNFS_ENTRY], './packmind-cli')).toBe(
+        true,
+      );
+    });
   });
 
-  it('is false when a compiled binary is invoked as packmind', () => {
-    expect(
-      isLegacyExecName(
-        ['bun', BUNFS_ENTRY],
-        '/home/dev/.packmind/bin/packmind',
-      ),
-    ).toBe(false);
+  describe('when a compiled binary is invoked as packmind', () => {
+    it('is false', () => {
+      expect(
+        isLegacyExecName(
+          ['bun', BUNFS_ENTRY],
+          '/home/dev/.packmind/bin/packmind',
+        ),
+      ).toBe(false);
+    });
   });
 
-  it('is true when the npm shim is packmind-cli', () => {
-    expect(
-      isLegacyExecName(
-        ['/usr/local/bin/node', '/usr/local/bin/packmind-cli'],
-        'node',
-      ),
-    ).toBe(true);
+  describe('when the npm shim is packmind-cli', () => {
+    it('is true', () => {
+      expect(
+        isLegacyExecName(
+          ['/usr/local/bin/node', '/usr/local/bin/packmind-cli'],
+          'node',
+        ),
+      ).toBe(true);
+    });
   });
 
-  it('is false when the invoked name is unknown', () => {
-    expect(
-      isLegacyExecName(['/usr/local/bin/node', '/repo/main.cjs'], 'node'),
-    ).toBe(false);
+  describe('when the invoked name is unknown', () => {
+    it('is false', () => {
+      expect(
+        isLegacyExecName(['/usr/local/bin/node', '/repo/main.cjs'], 'node'),
+      ).toBe(false);
+    });
   });
 });

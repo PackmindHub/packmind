@@ -83,32 +83,36 @@ describe('the startup deprecation warning', () => {
 });
 
 describe('the console log prefix', () => {
-  it('is the legacy name when invoked as the legacy name', () => {
-    const logger = { warn: jest.fn() } as unknown as Console;
+  function warnConsole(argv0: string): string[] {
+    const warnings: string[] = [];
+    const logger = {
+      warn: (...args: unknown[]) => {
+        warnings.push(args.map(String).join(' '));
+      },
+    } as unknown as Console;
 
-    asInvoked(LEGACY_INVOCATION, COMPILED_ARGV, () => {
+    asInvoked(argv0, COMPILED_ARGV, () => {
       const { logWarningConsole } = require('./consoleLogger');
       logWarningConsole('something happened', logger);
     });
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('packmind-cli'),
-      expect.anything(),
-    );
+    return warnings;
+  }
+
+  describe('when invoked as the legacy name', () => {
+    it('carries the legacy name', () => {
+      expect(warnConsole(LEGACY_INVOCATION)).toEqual([
+        expect.stringContaining('packmind-cli'),
+      ]);
+    });
   });
 
-  it('is the canonical name when invoked as the canonical name', () => {
-    const logger = { warn: jest.fn() } as unknown as Console;
-
-    asInvoked(CANONICAL_INVOCATION, COMPILED_ARGV, () => {
-      const { logWarningConsole } = require('./consoleLogger');
-      logWarningConsole('something happened', logger);
+  describe('when invoked as the canonical name', () => {
+    it('carries the canonical name', () => {
+      expect(warnConsole(CANONICAL_INVOCATION)).toEqual([
+        expect.not.stringContaining('packmind-cli'),
+      ]);
     });
-
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.not.stringContaining('packmind-cli'),
-      expect.anything(),
-    );
   });
 });
 
@@ -136,15 +140,19 @@ describe('a handler usage hint', () => {
     return errors;
   }
 
-  it('names the legacy executable when invoked as the legacy name', () => {
-    expect(unstageWithoutPath(LEGACY_INVOCATION)).toEqual([
-      expect.stringContaining('packmind-cli playbook unstage <path>'),
-    ]);
+  describe('when invoked as the legacy name', () => {
+    it('names the legacy executable', () => {
+      expect(unstageWithoutPath(LEGACY_INVOCATION)).toEqual([
+        expect.stringContaining('packmind-cli playbook unstage <path>'),
+      ]);
+    });
   });
 
-  it('names the canonical executable when invoked as the canonical name', () => {
-    expect(unstageWithoutPath(CANONICAL_INVOCATION)).toEqual([
-      expect.stringContaining('packmind playbook unstage <path>'),
-    ]);
+  describe('when invoked as the canonical name', () => {
+    it('names the canonical executable', () => {
+      expect(unstageWithoutPath(CANONICAL_INVOCATION)).toEqual([
+        expect.stringContaining('packmind playbook unstage <path>'),
+      ]);
+    });
   });
 });
