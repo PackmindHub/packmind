@@ -18,6 +18,7 @@ import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
+import type { InventoryCoverage } from './buildSpaceInventory';
 import {
   COMPONENT_PARAM,
   FILE_PARAM,
@@ -43,6 +44,18 @@ import { SpaceInventoryPane } from './SpaceInventoryPane';
  * reachable by link but never the default.
  */
 const INVENTORY_VALUE = 'all';
+
+/**
+ * What the inventory is filtered on, when it is.
+ *
+ * A parameter of its own rather than another value of the one above, which says
+ * what the pane shows: this says how much of it, and folding the two into one
+ * would make "the inventory" and "the part of it nothing carries" two places
+ * instead of one place read two ways. Absent means unfiltered, so the plain
+ * inventory has one address and not two.
+ */
+const COVERAGE_PARAM = 'coverage';
+const NO_PACKAGE_VALUE: InventoryCoverage = 'none';
 
 /**
  * The Context surface of a space: its packages on the left, what the selected
@@ -101,6 +114,16 @@ export function SpaceContextSurface() {
    */
   const requestedId = searchParams.get(PACKAGE_PARAM);
   const showingInventory = requestedId === INVENTORY_VALUE;
+
+  /*
+   * Anything other than the one value it takes reads as unfiltered, rather than
+   * as an error: a hand-edited or truncated address answers with the inventory,
+   * which is what the parameter it sits beside already asked for.
+   */
+  const coverage: InventoryCoverage =
+    searchParams.get(COVERAGE_PARAM) === NO_PACKAGE_VALUE
+      ? NO_PACKAGE_VALUE
+      : 'all';
   const selectedPackage =
     packages.find((pkg) => pkg.id === requestedId) ?? packages[0] ?? null;
 
@@ -181,6 +204,29 @@ export function SpaceContextSurface() {
           // in both.
           previous.delete(COMPONENT_PARAM);
           previous.delete(FILE_PARAM);
+          // A rail click asks for the whole of what it names, so a filter left
+          // over from the previous selection would answer a question the click
+          // did not ask. Clicking "All components" is what turns it back off.
+          previous.delete(COVERAGE_PARAM);
+          return previous;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  /*
+   * Turning the coverage filter on and off. Off deletes the parameter rather
+   * than writing `all`, so the unfiltered inventory keeps one address.
+   */
+  const setCoverage = useCallback(
+    (next: InventoryCoverage) => {
+      setSearchParams(
+        (previous) => {
+          if (next === NO_PACKAGE_VALUE)
+            previous.set(COVERAGE_PARAM, NO_PACKAGE_VALUE);
+          else previous.delete(COVERAGE_PARAM);
           return previous;
         },
         { replace: true },
@@ -221,6 +267,7 @@ export function SpaceContextSurface() {
         previous.delete(PACKAGE_PARAM);
         previous.delete(COMPONENT_PARAM);
         previous.delete(FILE_PARAM);
+        previous.delete(COVERAGE_PARAM);
         return previous;
       },
       { replace: true },
@@ -313,6 +360,8 @@ export function SpaceContextSurface() {
             <SpaceInventoryPane
               packages={packages}
               catalogue={catalogue}
+              coverage={coverage}
+              onCoverageChange={setCoverage}
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
             />
