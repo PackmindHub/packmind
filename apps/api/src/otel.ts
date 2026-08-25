@@ -121,6 +121,23 @@ const environment = declaredEnvironment();
 let sdk: NodeSDK | undefined;
 
 /**
+ * Whether this module registered the global tracer provider.
+ *
+ * `instrument.ts` reads it to decide Sentry's `skipOpenTelemetrySetup`, because
+ * @sentry/nestjs is ITSELF built on OpenTelemetry and registers a provider of
+ * its own. Until now the two could never collide: each is gated on a different
+ * variable — SENTRY_DSN_API is unset locally, OTEL_EXPORTER_OTLP_ENDPOINT is
+ * unset in production — so enabling OTLP in production would have been the
+ * first time both ran in one process, and Sentry's provider would have
+ * displaced this one. Silently: the API keeps serving, the traces just stop.
+ *
+ * Exported rather than re-derived, because Sentry's init resolves its DSN
+ * asynchronously and therefore always runs after this module. `let` + mutation
+ * is what lets a consumer read the outcome of that earlier decision.
+ */
+export let otelStarted = false;
+
+/**
  * Bounded so an unreachable collector cannot hold the process past the SIGKILL
  * grace period a container runtime allows after SIGTERM.
  */
@@ -239,13 +256,8 @@ if (otlpEndpoint && environment) {
     ],
   });
 
-  // NOTE: @sentry/nestjs v10 is itself built on OpenTelemetry and registers its
-  // own tracer provider. The two never overlap today because each is gated on a
-  // different variable — SENTRY_DSN_API is unset locally, and
-  // OTEL_EXPORTER_OTLP_ENDPOINT is unset in production. Running both in one
-  // environment requires Sentry's `skipOpenTelemetrySetup: true` plus its
-  // SentrySampler / SentryPropagator / SentryContextManager.
   sdk.start();
+  otelStarted = true;
 
   console.log(
     `[otel] OpenTelemetry started for "${environment}", exporting to ${otlpEndpoint}`,

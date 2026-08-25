@@ -74,12 +74,11 @@ Two traps worth knowing before this goes past local:
   production workloads, and our cluster already runs DD Agents, so production would set
   `OTEL_EXPORTER_OTLP_ENDPOINT=http://<agent>:4318` instead. Logs over that path additionally need
   `DD_LOGS_ENABLED=true` and `DD_OTLP_CONFIG_LOGS_ENABLED=true` on the Agent.
-- **Sentry and OpenTelemetry both want to own the tracer provider.** `@sentry/nestjs` is itself
-  OTel-based. They have never collided because each is gated on a different variable —
-  `SENTRY_DSN_API` is unset locally, `OTEL_EXPORTER_OTLP_ENDPOINT` is unset in production. Enabling
-  Datadog in production collides for the first time, and needs Sentry's
-  `skipOpenTelemetrySetup: true` plus its `SentrySampler` / `SentryPropagator` /
-  `SentryContextManager` — or a decision that Datadog replaces Sentry tracing.
+- **Sentry no longer competes for the tracer provider, but it costs you trace links.** Enabling
+  Datadog in production is the first time `SENTRY_DSN_API` and `OTEL_EXPORTER_OTLP_ENDPOINT` are
+  both set. `instrument.ts` handles it — see [Sentry](#sentry) — by narrowing Sentry to error
+  reporting. Sentry issues therefore carry no trace id, so there is no click-through from an issue
+  to its trace.
 
 ### Falling back to local Grafana
 
@@ -532,15 +531,45 @@ endpoint requiring auth and confirming the header arrives on `/v1/traces` and `/
    complete (keep every error, keep everything over 800 ms, keep ~5% of the rest), and can compute
    span metrics _before_ sampling so they stay exact. The cost is one more component to run.
 
-4. **Sentry still overlaps** — see the gotcha below.
+4. **Sentry stops doing tracing** the moment you set the endpoint — see [Sentry](#sentry).
+
+## Sentry
+
+`@sentry/nestjs` is built on OpenTelemetry and registers a tracer provider of its own. Until OTLP
+export existed the two could never meet: `SENTRY_DSN_API` is unset locally, and
+`OTEL_EXPORTER_OTLP_ENDPOINT` is unset in production. Setting both in one process is new, and
+whichever initialises last would win — silently, because the API keeps serving and only the traces
+stop.
+
+`apps/api/src/otel.ts` exports `otelStarted`, and `apps/api/src/instrument.ts` passes it straight
+through as Sentry's `skipOpenTelemetrySetup`:
+
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `SENTRY_DSN_API` | What happens                                                      |
+| ----------------------------- | ---------------- | ----------------------------------------------------------------- |
+| unset                         | unset            | neither starts — tests and CI                                     |
+| set                           | unset            | OpenTelemetry only                                                |
+| unset                         | set              | Sentry owns tracing, exactly as before — production today         |
+| set                           | set              | OpenTelemetry owns tracing; Sentry is narrowed to error reporting |
+
+Only the last row is new behaviour. Note that Sentry's init reads its DSN through
+`Configuration.getConfig`, which is async, so it always runs _after_ `otel.ts` — which is why the
+flag is exported rather than recomputed.
+
+**Sentry's own OTel helpers are deliberately not used.** `SentrySampler` defers to the client's
+`tracesSampleRate`; that is unset here, an unset rate means tracing is disabled, and the measured
+result is that **every span is dropped — including the ones bound for OTLP**. `SentryPropagator` and
+`SentryContextManager` are out for the same reason, that tracing is not Sentry's job in this
+configuration: an OTLP backend expects the default W3C propagator. So there is no
+`@sentry/opentelemetry` dependency, and nothing to keep version-matched.
+
+The trade is that Sentry issues carry no trace id — no click-through from an issue to its trace. If
+you want that back, the move is not to re-add the sampler but to set `tracesSampleRate` explicitly
+and accept paying for spans twice.
 
 ## Gotchas
 
-- **Sentry also uses OpenTelemetry.** `@sentry/nestjs` v10 sets up its own tracer provider, so running
-  both without coordination gives two competing providers. Today they never overlap (`SENTRY_DSN_API`
-  is unset locally, `OTEL_EXPORTER_OTLP_ENDPOINT` is unset in production). Enabling both in one
-  environment requires Sentry's `skipOpenTelemetrySetup: true` plus its `SentrySampler` /
-  `SentryPropagator` / `SentryContextManager`.
+- **Sentry also uses OpenTelemetry.** See [Sentry](#sentry) — it is handled, but the mechanism is
+  worth knowing before you touch either bootstrap file.
 - **The image tag is pinned** (`0.30.2`). Its bundled Grafana provisioning and collector config are
   internal details that change between releases; bump deliberately, not automatically.
 - **Tempo cannot back an alert rule.** Its datasource plugin declares `alerting: false`, so
