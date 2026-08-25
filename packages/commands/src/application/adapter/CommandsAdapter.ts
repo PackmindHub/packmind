@@ -3,6 +3,7 @@ import {
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   CaptureCommandCommand,
@@ -174,6 +175,11 @@ export class CommandsAdapter
     this._deleteCommandsBatch = new DeleteCommandsBatchUseCase(
       this._deleteCommand,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('RecipesAdapter initialized successfully');
   }

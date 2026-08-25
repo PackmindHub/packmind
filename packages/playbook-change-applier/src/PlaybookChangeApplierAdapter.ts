@@ -1,3 +1,4 @@
+import { instrumentUseCases } from '@packmind/node-utils';
 import {
   ApplyPlaybookCommand,
   ApplyPlaybookResponse,
@@ -27,6 +28,11 @@ export class PlaybookChangeApplierAdapter implements IPlaybookChangeApplierPort 
       ports.recipesPort,
       ports.spacesPort,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
   }
 
   async applyPlaybook(

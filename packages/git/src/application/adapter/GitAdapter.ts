@@ -3,6 +3,7 @@ import {
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
@@ -298,6 +299,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.eventEmitterService,
       this.accountsPort,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('GitAdapter initialized successfully with all use cases');
   }
