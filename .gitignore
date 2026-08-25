@@ -48,6 +48,10 @@ DECISIONS.md
 LEARNINGS.md
 test-results/
 .env
+# Any .env variant too: ad-hoc backups (.env.bak-*, .env.local) hold real
+# credentials, and GitGuardian runs on CI. Negate explicitly if a committed
+# template is ever added.
+.env.*
 compose.env
 .mcp.json
 !scripts/michel/.mcp.json
