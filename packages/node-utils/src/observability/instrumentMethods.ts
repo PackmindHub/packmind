@@ -29,6 +29,16 @@ const enabled = process.env['PACKMIND_OTEL_INSTRUMENT_METHODS'] !== 'false';
 export type InstrumentMethodsOptions = {
   /** Method names to leave alone. Matched on every prototype in the chain. */
   skip?: readonly string[];
+  /**
+   * Method names whose span is named after the class ALONE, with no `.method`
+   * suffix - the shape `AbstractMemberUseCase.execute` produces by hand.
+   *
+   * A use case's entry point is that class's whole story, so naming its span
+   * `SignInUserUseCase` rather than `SignInUserUseCase.execute` is what lets
+   * one TraceQL query match every use case however it was instrumented. Also
+   * matched on every prototype in the chain.
+   */
+  bare?: readonly string[];
 };
 
 /**
@@ -71,11 +81,12 @@ export function instrumentMethods(
   }
 
   const skip = options.skip ?? [];
+  const bare = options.bare ?? [];
 
   // Stop at Object.prototype: `toString` and friends are not ours to touch.
   let prototype = Object.getPrototypeOf(instance);
   while (prototype && prototype !== Object.prototype) {
-    patchPrototype(prototype, skip);
+    patchPrototype(prototype, skip, bare);
     prototype = Object.getPrototypeOf(prototype);
   }
 }
@@ -103,7 +114,11 @@ export function instrumentComponents(
   }
 }
 
-function patchPrototype(prototype: object, skip: readonly string[]): void {
+function patchPrototype(
+  prototype: object,
+  skip: readonly string[],
+  bare: readonly string[],
+): void {
   // hasOwnProperty, not `in`: a subclass inherits its parent's marker, and
   // treating that as "already done" would leave the subclass unpatched.
   if (Object.prototype.hasOwnProperty.call(prototype, INSTRUMENTED)) {
@@ -140,7 +155,7 @@ function patchPrototype(prototype: object, skip: readonly string[]): void {
 
     Object.defineProperty(prototype, name, {
       ...descriptor,
-      value: instrument(original, name),
+      value: instrument(original, name, bare.includes(name)),
     });
   }
 }
@@ -148,12 +163,16 @@ function patchPrototype(prototype: object, skip: readonly string[]): void {
 function instrument(
   original: (...args: unknown[]) => Promise<unknown>,
   name: string,
+  bare: boolean,
 ): (...args: unknown[]) => Promise<unknown> {
   function instrumented(this: object, ...args: unknown[]): Promise<unknown> {
     // Resolved per call, not per patch: an inherited AbstractRepository.add
     // has to report as `SkillRepository.add`, naming the class that was
     // actually used rather than the one that happens to declare the method.
-    return withSpan(`${this?.constructor?.name}.${name}`, () =>
+    // The same reason keeps the `bare` branch here rather than at patch time.
+    const className = this?.constructor?.name;
+
+    return withSpan(bare ? `${className}` : `${className}.${name}`, () =>
       original.apply(this, args),
     );
   }

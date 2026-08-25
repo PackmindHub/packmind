@@ -181,6 +181,38 @@ describe('instrumentMethods', () => {
     });
   });
 
+  describe('when a method is named bare', () => {
+    class Bare {
+      constructor() {
+        instrumentMethods(this, { bare: ['execute'] });
+      }
+
+      async execute(): Promise<void> {
+        await this.helper();
+      }
+
+      async helper(): Promise<void> {
+        // Nothing to do - the span names are the assertion.
+      }
+    }
+
+    beforeEach(async () => {
+      await new Bare().execute();
+    });
+
+    it('names its span after the class alone', () => {
+      expect(names()).toContain('Bare');
+    });
+
+    it('leaves the other methods qualified', () => {
+      expect(names()).toContain('Bare.helper');
+    });
+
+    it('still nests what the bare method calls', () => {
+      expect(isChildOf('Bare.helper', 'Bare')).toBe(true);
+    });
+  });
+
   describe('when a method rejects', () => {
     const failure = new Error('the method blew up');
 
