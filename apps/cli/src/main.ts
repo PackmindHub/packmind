@@ -25,6 +25,12 @@ import { updateCommand } from './infra/commands/UpdateCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 import { gitCommand } from './infra/commands/git/gitCommand';
+import { warnOnLegacyExecName } from './infra/commands/legacyExecNameWarning';
+import { EXEC_NAME } from './infra/utils/execName';
+
+// Warn before anything else runs, so even early-exit flags such as `--version`
+// surface the deprecation of the legacy executable name.
+warnOnLegacyExecName();
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -89,12 +95,12 @@ if (hasEmbeddedWasmFiles()) {
 // Check for --version or -v flag
 const args = process.argv.slice(2);
 if (args.includes('--version') || args.includes('-v')) {
-  logConsole(`packmind-cli version ${CLI_VERSION}`);
+  logConsole(`${EXEC_NAME} version ${CLI_VERSION}`);
   process.exit(0);
 }
 
 const app = subcommands({
-  name: 'packmind-cli',
+  name: EXEC_NAME,
   description: 'Packmind CLI tool',
   cmds: {
     commands: commandsCommand,
