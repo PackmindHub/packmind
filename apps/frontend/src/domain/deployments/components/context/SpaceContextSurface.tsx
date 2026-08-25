@@ -362,6 +362,8 @@ export function SpaceContextSurface() {
               catalogue={catalogue}
               coverage={coverage}
               onCoverageChange={setCoverage}
+              spaceId={spaceId}
+              organizationId={organization.id}
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
             />

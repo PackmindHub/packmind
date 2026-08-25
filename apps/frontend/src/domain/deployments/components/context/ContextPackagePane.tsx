@@ -41,6 +41,7 @@ import { ContextSkillFileDetail } from './ContextSkillFileDetail';
 import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
+import { ContextSelectionBar } from './ContextSelectionBar';
 import { MoveComponentDialog } from './MoveComponentDialog';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
@@ -413,9 +414,10 @@ export function ContextPackagePane({
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
-              <SelectionBar
+              <ContextSelectionBar
                 count={selection.length}
-                onMove={() => setMoving(selection)}
+                actionLabel="Move to another package"
+                onAct={() => setMoving(selection)}
                 onClear={clearSelection}
               />
             )}
@@ -503,53 +505,6 @@ export function ContextPackagePane({
         isLoading={isDeleting}
       />
     </PMTabsCompound.Root>
-  );
-}
-
-/**
- * What is picked, and what can be done with it.
- *
- * Sticky at the top of the list rather than at the bottom of the pane: a
- * selection is made by running down a list, so the row that was just ticked is
- * near the pointer and the action has to be too. Pinned because a package with
- * four groups out-scrolls the viewport, and a bar left at the top of the
- * document would be off screen exactly when it is needed.
- *
- * It counts rather than naming: at three components the names no longer fit on
- * the line, and the list behind the bar is already showing which ones they are.
- */
-function SelectionBar({
-  count,
-  onMove,
-  onClear,
-}: Readonly<{ count: number; onMove: () => void; onClear: () => void }>) {
-  return (
-    <PMHStack
-      position="sticky"
-      top={0}
-      zIndex={1}
-      gap={3}
-      align="center"
-      justify="space-between"
-      paddingX={3}
-      paddingY={2}
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="sm"
-      bg="background.secondary"
-    >
-      <PMText fontSize="sm" fontWeight="medium">
-        {count} selected
-      </PMText>
-      <PMHStack gap={2}>
-        <PMButton variant="secondary" size="xs" onClick={onMove}>
-          Move to another package
-        </PMButton>
-        <PMButton variant="tertiary" size="xs" onClick={onClear}>
-          Clear
-        </PMButton>
-      </PMHStack>
-    </PMHStack>
   );
 }
 

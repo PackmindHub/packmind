@@ -109,6 +109,11 @@ export function packageHoldsComponent(
  * so the whole decision is local. Asking the server which packages hold a
  * component would also mean the dialog could disagree with the rail behind it.
  *
+ * A null source is the components read from the space inventory rather than
+ * from a package: the ones no package carries have nowhere to leave from, so
+ * every package of the space is a candidate and none of them is excluded as
+ * the one being read.
+ *
  * Alphabetical, the order of the rail. Hoisting the packages that do not hold
  * the components yet would put the list in a different order than the one the
  * user just read it in, to save a glance at a label that is on the row anyway.
@@ -116,7 +121,7 @@ export function packageHoldsComponent(
 export function buildMoveTargets(
   packages: readonly PackageResponse[],
   components: readonly MovableComponent[],
-  sourcePackageId: PackageId,
+  sourcePackageId: PackageId | null,
 ): MoveTarget[] {
   return packages
     .filter((pkg) => pkg.id !== sourcePackageId)

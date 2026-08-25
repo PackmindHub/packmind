@@ -49,6 +49,13 @@ const SEARCHABLE_FROM = 7;
  * Moving what is picked out of the package it is being read from and into
  * another one of the same space: one component, or a whole selection.
  *
+ * With no source it is the same dialog with one half missing. The components
+ * read from the space inventory that no package carries have nowhere to leave
+ * from, so the add is the whole operation and the wording says join rather than
+ * move. Same dialog rather than a second one: the list of candidates, the
+ * already-holds notes and the deployment warnings are the same question asked
+ * of the same packages, and two dialogs would have answered it two ways.
+ *
  * There is no move endpoint: the server knows how to add components to a
  * package and how to remove them from one. The order is what makes it a move
  * rather than a gap: the add goes first, so a failure between the two leaves
@@ -82,8 +89,11 @@ export function MoveComponentDialog({
   onOpenChange: (open: boolean) => void;
   /** What is being moved, in the order it was read. Never empty. */
   components: readonly ContextComponent[];
-  /** The package the components are being read from, and the one they leave. */
-  source: PackageResponse;
+  /**
+   * The package the components are being read from, and the one they leave.
+   * Null when they are read from the space inventory and belong to none.
+   */
+  source: PackageResponse | null;
   /** Every package of the space, membership ids included. */
   packages: readonly PackageResponse[];
   spaceId: SpaceId;
@@ -109,8 +119,8 @@ export function MoveComponentDialog({
   const single = components.length === 1;
 
   const targets = useMemo(
-    () => buildMoveTargets(packages, components, source.id),
-    [packages, components, source.id],
+    () => buildMoveTargets(packages, components, source?.id ?? null),
+    [packages, components, source],
   );
   const shown = useMemo(
     () => filterMoveTargets(targets, query),
@@ -135,17 +145,19 @@ export function MoveComponentDialog({
     components.length === 1
       ? components[0].name
       : `${components.length} ${kind}`;
-  const sourcePlaces = deployedPlaceParts(
-    getDeployedTargets(source.id),
-    getDeployedMarketplaces(source.id),
-  ).join(' and ');
+  const sourcePlaces = source
+    ? deployedPlaceParts(
+        getDeployedTargets(source.id),
+        getDeployedMarketplaces(source.id),
+      ).join(' and ')
+    : '';
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
     if (!isOpen) setQuery('');
   };
 
-  const move = async (target: MoveTarget) => {
+  const apply = async (target: MoveTarget) => {
     setBusyPackageId(target.pkg.id);
     let added = false;
     try {
@@ -169,26 +181,36 @@ export function MoveComponentDialog({
           pmToaster.create({
             type: 'error',
             title: `Couldn't add to ${target.pkg.name}`,
-            description: `${subject} ${
-              components.length === 1 ? 'is' : 'are'
-            } still in ${source.name}.`,
+            description: source
+              ? `${subject} ${
+                  components.length === 1 ? 'is' : 'are'
+                } still in ${source.name}.`
+              : 'Nothing was added.',
           });
           return;
         }
         added = true;
       }
 
-      await removeArtefacts({
-        spaceId,
-        packageId: source.id,
-        ...componentIdsPayload(components),
-      });
+      /*
+       * Skipped without a source: what was picked is in no package, so there is
+       * nothing to leave and the add was the whole operation.
+       */
+      if (source) {
+        await removeArtefacts({
+          spaceId,
+          packageId: source.id,
+          ...componentIdsPayload(components),
+        });
+      }
 
       pmToaster.create({
         type: 'success',
-        title: holdsEverything(target)
-          ? `Removed from ${source.name}`
-          : `Moved to ${target.pkg.name}`,
+        title: !source
+          ? `Added to ${target.pkg.name}`
+          : holdsEverything(target)
+            ? `Removed from ${source.name}`
+            : `Moved to ${target.pkg.name}`,
         description: `${subject} now ${
           components.length === 1 ? 'ships' : 'ship'
         } with ${target.pkg.name}.`,
@@ -201,12 +223,15 @@ export function MoveComponentDialog({
         // The half-done state, said in full. What was picked is in both
         // packages and the dialog can finish the job: reopening it on the same
         // destination now offers to remove it from here.
-        title: added
-          ? `${subject} ${components.length === 1 ? 'is' : 'are'} in both packages`
-          : `Couldn't remove from ${source.name}`,
-        description: added
-          ? `Added to ${target.pkg.name} but not removed from ${source.name}. Move again to finish.`
-          : 'Try again, or check your space access.',
+        title: !source
+          ? `Couldn't add to ${target.pkg.name}`
+          : added
+            ? `${subject} ${components.length === 1 ? 'is' : 'are'} in both packages`
+            : `Couldn't remove from ${source.name}`,
+        description:
+          source && added
+            ? `Added to ${target.pkg.name} but not removed from ${source.name}. Move again to finish.`
+            : 'Try again, or check your space access.',
       });
     } finally {
       setBusyPackageId(null);
@@ -225,7 +250,9 @@ export function MoveComponentDialog({
         <PMDialog.Positioner>
           <PMDialog.Content>
             <PMDialog.Header>
-              <PMDialog.Title>Move {subject}</PMDialog.Title>
+              <PMDialog.Title>
+                {source ? `Move ${subject}` : `Add ${subject} to a package`}
+              </PMDialog.Title>
               <PMDialog.CloseTrigger asChild>
                 <PMCloseButton disabled={busyPackageId !== null} />
               </PMDialog.CloseTrigger>
@@ -235,18 +262,35 @@ export function MoveComponentDialog({
               <PMVStack gap={4} alignItems="stretch">
                 {targets.length > 0 && (
                   <PMText variant="body" color="secondary">
-                    {single ? 'This' : 'These'} {single ? kind : subject}{' '}
-                    {single ? 'leaves' : 'leave'}{' '}
-                    <PMText as="span" fontWeight={500} color="primary">
-                      {source.name}
-                    </PMText>{' '}
-                    and {single ? 'joins' : 'join'} the package you pick.{' '}
-                    {single ? 'It stays' : 'They stay'} in your library either
-                    way.
+                    {source ? (
+                      <>
+                        {single ? 'This' : 'These'} {single ? kind : subject}{' '}
+                        {single ? 'leaves' : 'leave'}{' '}
+                        <PMText as="span" fontWeight={500} color="primary">
+                          {source.name}
+                        </PMText>{' '}
+                        and {single ? 'joins' : 'join'} the package you pick.{' '}
+                        {single ? 'It stays' : 'They stay'} in your library
+                        either way.
+                      </>
+                    ) : (
+                      <>
+                        {single ? 'This' : 'These'} {single ? kind : subject}{' '}
+                        {single ? 'is' : 'are'} in no package, so nothing
+                        distributes {single ? 'it' : 'them'} yet.{' '}
+                        {single ? 'It joins' : 'They join'} the package you
+                        pick.
+                      </>
+                    )}
                   </PMText>
                 )}
 
-                {sourcePlaces ? (
+                {/*
+                  `sourcePlaces` is only ever set when there is a source, but
+                  naming the source in the condition is what says so to the
+                  reader and to the compiler.
+                */}
+                {source && sourcePlaces ? (
                   <PMHStack
                     gap={2.5}
                     alignItems="flex-start"
@@ -267,7 +311,11 @@ export function MoveComponentDialog({
                 ) : null}
 
                 {targets.length === 0 ? (
-                  <NowhereToGo orgSlug={orgSlug} spaceSlug={spaceSlug} />
+                  <NowhereToGo
+                    hasSource={source !== null}
+                    orgSlug={orgSlug}
+                    spaceSlug={spaceSlug}
+                  />
                 ) : (
                   <PMVStack gap={2} alignItems="stretch">
                     {targets.length >= SEARCHABLE_FROM && (
@@ -314,6 +362,7 @@ export function MoveComponentDialog({
                             target={target}
                             isFirst={index === 0}
                             picked={components.length}
+                            hasSource={source !== null}
                             deployedPlaces={deployedPlaceParts(
                               getDeployedTargets(target.pkg.id),
                               getDeployedMarketplaces(target.pkg.id),
@@ -323,7 +372,7 @@ export function MoveComponentDialog({
                               busyPackageId !== null &&
                               busyPackageId !== target.pkg.id
                             }
-                            onPick={() => void move(target)}
+                            onPick={() => void apply(target)}
                           />
                         ))}
                       </PMVStack>
@@ -365,11 +414,17 @@ export function MoveComponentDialog({
  * be readable before the click: "already holds 2 of 5" says that three
  * memberships are about to be created and two are not, which is the difference
  * between this row and the one below it.
+ *
+ * With no source the same row has one fewer thing to offer: a package that
+ * already carries everything picked leaves nothing to do, since there is no
+ * membership to detach, so the button is spent rather than renamed. The note
+ * beside it already says why.
  */
 function TargetRow({
   target,
   isFirst,
   picked,
+  hasSource,
   deployedPlaces,
   isBusy,
   disabled,
@@ -379,6 +434,8 @@ function TargetRow({
   isFirst: boolean;
   /** How many components are being moved, so the row can say how many it has. */
   picked: number;
+  /** There is a package to leave, so a held component can still be detached. */
+  hasSource: boolean;
   deployedPlaces: string;
   isBusy: boolean;
   disabled: boolean;
@@ -386,6 +443,7 @@ function TargetRow({
 }>) {
   const { pkg, held } = target;
   const alreadyHolds = holdsEverything(target);
+  const isSettled = alreadyHolds && !hasSource;
   const heldNote = alreadyHolds
     ? picked === 1
       ? 'Already in this package'
@@ -418,29 +476,39 @@ function TargetRow({
         variant={alreadyHolds ? 'tertiary' : 'secondary'}
         size="xs"
         loading={isBusy}
-        disabled={disabled}
+        disabled={disabled || isSettled}
         onClick={onPick}
       >
-        {alreadyHolds ? 'Remove from source' : 'Move here'}
+        {!hasSource
+          ? 'Add here'
+          : alreadyHolds
+            ? 'Remove from source'
+            : 'Move here'}
       </PMButton>
     </PMHStack>
   );
 }
 
 /**
- * A space with a single package. Nothing to move into, and the honest answer is
- * that a second package has to exist first.
+ * A space with nowhere to put anything: a single package when the components
+ * are being moved out of it, none at all otherwise. The honest answer either
+ * way is that another package has to exist first.
  */
 function NowhereToGo({
+  hasSource,
   orgSlug,
   spaceSlug,
-}: Readonly<{ orgSlug: string; spaceSlug: string }>) {
+}: Readonly<{ hasSource: boolean; orgSlug: string; spaceSlug: string }>) {
   return (
     <PMVStack gap={2} alignItems="flex-start">
-      <PMText variant="body">This space has only one package.</PMText>
+      <PMText variant="body">
+        {hasSource
+          ? 'This space has only one package.'
+          : 'This space has no package.'}
+      </PMText>
       <PMLink asChild variant="underline" fontSize="sm">
         <RouterLink to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
-          Create another one
+          {hasSource ? 'Create another one' : 'Create one'}
         </RouterLink>
       </PMLink>
     </PMVStack>

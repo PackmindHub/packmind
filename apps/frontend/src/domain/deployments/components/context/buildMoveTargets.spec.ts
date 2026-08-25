@@ -309,3 +309,29 @@ describe('filterMoveTargets', () => {
     });
   });
 });
+
+describe('when the components come from no package', () => {
+  let targets: MoveTarget[];
+
+  beforeEach(() => {
+    targets = buildMoveTargets(
+      [
+        pack('p1', 'Backend', { standards: [createStandardId('s1')] }),
+        pack('p2', 'Frontend'),
+      ],
+      [component('standard', 's1')],
+      null,
+    );
+  });
+
+  it('offers every package of the space', () => {
+    expect(targets.map((target) => target.pkg.name)).toEqual([
+      'Backend',
+      'Frontend',
+    ]);
+  });
+
+  it('still says which of them already carries the component', () => {
+    expect(holdsEverything(targets[0])).toBe(true);
+  });
+});

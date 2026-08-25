@@ -1,9 +1,18 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { LuPackageX } from 'react-icons/lu';
-import { PMBox, PMHStack, PMHeading, PMIcon, PMText } from '@packmind/ui';
-import type { PackageResponse } from '@packmind/types';
+import {
+  PMBox,
+  PMHStack,
+  PMHeading,
+  PMIcon,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
+import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
+  componentSelectionKey,
+  type ContextComponent,
   type ContextComponentType,
   type SpaceCatalogue,
 } from './buildPackageContext';
@@ -16,6 +25,8 @@ import {
   COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
+import { ContextSelectionBar } from './ContextSelectionBar';
+import { MoveComponentDialog } from './MoveComponentDialog';
 
 /**
  * Every component of the space, whatever package carries it.
@@ -27,16 +38,24 @@ import {
  * answers it once, and a new component type adds a chip rather than a place
  * to go.
  *
- * Read-only on purpose. Creating belongs to a package, because a component
+ * Nothing is created here. Creating belongs to a package, because a component
  * without one is distributed to nobody, and a New button here would have to ask
  * which package before doing anything — the question the surface is built to
  * make you answer first.
+ *
+ * Memberships are another matter, and the filtered list is where they belong: a
+ * list of components nothing distributes that could only be looked at would be
+ * a to-do list with no way to do anything about it. Picking rows and giving them
+ * a package is the same gesture the package pane already has, minus the half
+ * that detaches them from somewhere.
  */
 export function SpaceInventoryPane({
   packages,
   catalogue,
   coverage,
   onCoverageChange,
+  spaceId,
+  organizationId,
   orgSlug,
   spaceSlug,
 }: Readonly<{
@@ -51,10 +70,24 @@ export function SpaceInventoryPane({
    */
   coverage: InventoryCoverage;
   onCoverageChange: (coverage: InventoryCoverage) => void;
+  spaceId: SpaceId;
+  organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
 }>) {
   const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
+    null,
+  );
+  /*
+   * What is picked and what is being placed, held for the same reasons the
+   * package pane holds them: by key, because the groups are rebuilt on every
+   * render of the surface, and not in the URL, because a selection is a gesture
+   * in progress rather than a place.
+   */
+  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [placing, setPlacing] = useState<readonly ContextComponent[] | null>(
     null,
   );
 
@@ -79,6 +112,42 @@ export function SpaceInventoryPane({
     : covered;
 
   const showingOrphans = coverage === 'none';
+
+  /*
+   * Picking is offered under the filter and nowhere else. The action it leads to
+   * is "give this a package", which is only ever true of the components no
+   * package carries: offered on the full catalogue it would mean adding a
+   * membership to something that already has one, a different operation with the
+   * same button, and the dialog would be explaining the wrong thing.
+   *
+   * Resolved against what is on screen rather than against the whole space, so
+   * the bar cannot act on rows a filter is hiding. That is also what repairs the
+   * selection afterwards: a component that just joined a package leaves the
+   * filtered list, so it drops out of the selection on its own.
+   */
+  const selection = useMemo(
+    () =>
+      showingOrphans
+        ? shownGroups
+            .flatMap((group) => group.entries)
+            .map((entry) => entry.component)
+            .filter((component) =>
+              selectedKeys.has(componentSelectionKey(component)),
+            )
+        : [],
+    [showingOrphans, shownGroups, selectedKeys],
+  );
+
+  const toggleSelect = useCallback((component: ContextComponent) => {
+    setSelectedKeys((previous) => {
+      const next = new Set(previous);
+      const key = componentSelectionKey(component);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
 
   return (
     <PMBox padding={6} flex="1" minH={0} overflowY="auto">
@@ -167,12 +236,15 @@ export function SpaceInventoryPane({
             of this space is in a package.
           </PMText>
         ) : (
-          <PMBox
-            display="flex"
-            flexDirection="column"
-            gap={5}
-            alignItems="stretch"
-          >
+          <PMVStack gap={5} align="stretch">
+            {selection.length > 0 && (
+              <ContextSelectionBar
+                count={selection.length}
+                actionLabel="Add to a package"
+                onAct={() => setPlacing(selection)}
+                onClear={clearSelection}
+              />
+            )}
             {shownGroups.map((group) => (
               <PMBox key={group.type}>
                 {/*
@@ -189,13 +261,45 @@ export function SpaceInventoryPane({
                   {group.label}
                 </PMText>
                 <PMBox paddingTop={1}>
-                  <ContextComponentList entries={group.entries} showPackages />
+                  <ContextComponentList
+                    entries={group.entries}
+                    /*
+                      Dropped under the filter: every row of it would read "No
+                      package", which is what the filter already said, and the
+                      column it sits in is 180px the descriptions can use.
+                    */
+                    showPackages={!showingOrphans}
+                    selectedKeys={selectedKeys}
+                    onToggleSelect={showingOrphans ? toggleSelect : undefined}
+                  />
                 </PMBox>
               </PMBox>
             ))}
-          </PMBox>
+          </PMVStack>
         )}
       </PMBox>
+
+      {/*
+        No source: what is picked here is being given a package rather than
+        moved between two, and the components the filter shows are in none. The
+        dialog is the same one the package pane opens, with that half missing.
+      */}
+      {placing && placing.length > 0 && (
+        <MoveComponentDialog
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setPlacing(null);
+          }}
+          components={placing}
+          source={null}
+          packages={packages}
+          spaceId={spaceId}
+          organizationId={organizationId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+          onMoved={clearSelection}
+        />
+      )}
     </PMBox>
   );
 }
