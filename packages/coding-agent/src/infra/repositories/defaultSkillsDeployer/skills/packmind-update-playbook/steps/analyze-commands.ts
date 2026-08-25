@@ -1,4 +1,6 @@
-export const ANALYZE_COMMANDS = `# Commands Domain Analysis
+export const ANALYZE_COMMANDS = (
+  execName: string,
+) => `# Commands Domain Analysis
 
 Scan existing commands, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
@@ -14,7 +16,7 @@ Search the project root and all subdirectories.
 
 ### Step 1: List Commands
 
-Run \`packmind-cli commands list\` to get slugs and names. Do NOT read individual command files yet.
+Run \`${execName} commands list\` to get slugs and names. Do NOT read individual command files yet.
 
 ### Step 2: Filter Relevant Commands
 

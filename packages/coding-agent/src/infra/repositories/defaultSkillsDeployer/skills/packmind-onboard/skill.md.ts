@@ -19,8 +19,8 @@ export const skillMd: SkillMD = {
     license: 'Complete terms in LICENSE.txt',
   },
   title: 'packmind-onboard',
-  versions: ['0.16.0', '0.23.0'],
-  getPrompt: function (): string {
+  versions: ['0.16.0', '0.23.0', '0.35.0'],
+  getPrompt: function (_agentName: string, execName: string): string {
     return `
 Action skill. Provides **complete automated onboarding** for Packmind:
 1. Creates or selects a package
@@ -51,7 +51,7 @@ ${STEP_0_INTRODUCTION}
 
 ---
 
-${STEP_1_GET_REPOSITORY_NAME}
+${STEP_1_GET_REPOSITORY_NAME(execName)}
 
 ---
 
@@ -91,7 +91,7 @@ ${STEP_10_COMPLETION_SUMMARY}
 
 ---
 
-${EDGE_CASES}
+${EDGE_CASES(execName)}
 `;
   },
 };

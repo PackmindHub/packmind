@@ -12,6 +12,7 @@ import { ANALYZE_COMMANDS } from './skills/packmind-update-playbook/steps/analyz
 import { ANALYZE_SKILLS } from './skills/packmind-update-playbook/steps/analyze-skills';
 import { APPLY_CHANGES_0210 } from './skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes';
 import { APPLY_CHANGES_0230 } from './skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes';
+import { APPLY_CHANGES_0350 } from './skills/packmind-update-playbook/packmind-versions/0.35.0/apply-changes';
 import { CREATE_STANDARD_PROCEDURE } from './skills/packmind-update-playbook/references/create-standard-procedure';
 import { CREATE_COMMAND_PROCEDURE } from './skills/packmind-update-playbook/references/create-command-procedure';
 import { CREATE_SKILL_PROCEDURE } from './skills/packmind-update-playbook/references/create-skill-procedure';
@@ -19,6 +20,7 @@ import { CREATE_SKILL_PROCEDURE } from './skills/packmind-update-playbook/refere
 const applyChangesByVersion: Record<SemVer, string> = {
   '0.21.0': APPLY_CHANGES_0210,
   '0.23.0': APPLY_CHANGES_0230,
+  '0.35.0': APPLY_CHANGES_0350,
 };
 
 export class UpdatePlaybookDeployer
@@ -37,24 +39,25 @@ export class UpdatePlaybookDeployer
   ): FileUpdates {
     const basePath = `${skillsFolderPath}${this.slug}`;
     const includeNext = options?.includeNext ?? false;
+    const execName = this.resolveExecName(options?.cliVersion);
 
     const createOrUpdate = [
       {
         path: `${basePath}/SKILL.md`,
-        content: this.getSkillMd(agentName, skillMd),
+        content: this.getSkillMd(agentName, skillMd, execName),
       },
       { path: `${basePath}/LICENSE.txt`, content: LICENSE_TXT },
       {
         path: `${basePath}/steps/analyze-standards.md`,
-        content: ANALYZE_STANDARDS,
+        content: ANALYZE_STANDARDS(execName),
       },
       {
         path: `${basePath}/steps/analyze-commands.md`,
-        content: ANALYZE_COMMANDS,
+        content: ANALYZE_COMMANDS(execName),
       },
       {
         path: `${basePath}/steps/analyze-skills.md`,
-        content: ANALYZE_SKILLS,
+        content: ANALYZE_SKILLS(execName),
       },
       ...skillMd.versions.map((version) => ({
         path: `${basePath}/packmind-versions/${version}/apply-changes.md`,

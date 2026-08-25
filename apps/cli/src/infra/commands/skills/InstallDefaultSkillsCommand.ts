@@ -16,6 +16,7 @@ import {
   configuredAgentsSupportSkills,
 } from '../skillsCapabilityWarning';
 import { isSkillsInitBootstrapError } from '../../../domain/errors/SkillsInitBootstrapError';
+import { EXEC_NAME } from '../../utils/execName';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -66,13 +67,16 @@ export const installDefaultSkillsCommand = command({
 
       const result = await packmindCliHexa.installDefaultSkills({
         includeBeta,
-        cliVersion: includeBeta ? undefined : CLI_VERSION,
+        // Always report the real version: `includeBeta` already bypasses the
+        // version filter on its own, and the version is what picks the
+        // executable name the deployed skills tell the agent to run.
+        cliVersion: CLI_VERSION,
         baseDirectory,
       });
 
       if (result.skippedSkillsCount > 0) {
         logWarningConsole(
-          `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+          `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of ${EXEC_NAME}. Run "${formatCommand(`${EXEC_NAME} update`)}" to get the latest version.`,
         );
       }
 

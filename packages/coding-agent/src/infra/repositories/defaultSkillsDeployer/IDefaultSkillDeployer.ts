@@ -2,6 +2,13 @@ import { FileUpdates } from '@packmind/types';
 
 export type SkillDeployOptions = {
   includeNext?: boolean;
+  /**
+   * Version of the CLI requesting the deployment. Drives which executable name
+   * unversioned skill content names (see
+   * `AbstractDefaultSkillDeployer.resolveExecName`). Undefined when the caller
+   * is not a CLI (the web app, for instance).
+   */
+  cliVersion?: string;
 };
 
 export interface ISkillDeployer {

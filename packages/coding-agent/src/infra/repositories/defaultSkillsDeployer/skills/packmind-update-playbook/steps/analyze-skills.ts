@@ -1,4 +1,4 @@
-export const ANALYZE_SKILLS = `# Skills Domain Analysis
+export const ANALYZE_SKILLS = (execName: string) => `# Skills Domain Analysis
 
 Scan existing skills, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
@@ -16,7 +16,7 @@ For the complete format specification (frontmatter fields, naming rules, directo
 
 ### Step 1: List Skills
 
-Run \`packmind-cli skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
+Run \`${execName} skills list\` to get slugs, names, and descriptions. Do NOT read SKILL.md bodies or reference files yet.
 
 **Exclude default artifacts**: skip any skill whose slug starts with \`packmind-\`. These are managed by Packmind and must not be analyzed or modified by this workflow.
 

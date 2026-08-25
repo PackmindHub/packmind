@@ -1,4 +1,6 @@
-export const ANALYZE_STANDARDS = `# Standards Domain Analysis
+export const ANALYZE_STANDARDS = (
+  execName: string,
+) => `# Standards Domain Analysis
 
 Scan existing standards, identify which are relevant to the user's validated intent, then perform deep analysis on those in one pass.
 
@@ -14,7 +16,7 @@ Search the project root and all subdirectories.
 
 ### Step 1: List Standards
 
-Run \`packmind-cli standards list\` to get slugs, names, and descriptions. Do NOT read individual standard files yet.
+Run \`${execName} standards list\` to get slugs, names, and descriptions. Do NOT read individual standard files yet.
 
 ### Step 2: Filter Relevant Standards
 

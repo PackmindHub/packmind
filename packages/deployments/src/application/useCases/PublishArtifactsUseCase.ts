@@ -601,6 +601,15 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
+      // Fetched once per target: `cliVersion` tells the default-skills renderer
+      // which CLI executable name the installation actually exposes, and the
+      // same lock file is merged into the freshly built one below. This is a git
+      // read, so it must not be fetched twice.
+      const existingLockFile = await this.fetchExistingLockFile(
+        gitRepo,
+        target,
+      );
+
       // Include default skills for root targets
       if (target.path === '/') {
         this.logger.info(
@@ -616,14 +625,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           baseFileUpdates,
           gitRepo,
           targetCodingAgents,
+          existingLockFile?.cliVersion,
         );
       }
 
       // Generate lock file and merge with existing to preserve inaccessible package entries
-      const existingLockFile = await this.fetchExistingLockFile(
-        gitRepo,
-        target,
-      );
       const lockFile = this.lockFileService.buildLockFile({
         fileModifications: baseFileUpdates.createOrUpdate.filter(
           (f) => f.artifactType && f.artifactId,
@@ -1112,6 +1118,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   /**
    * Deploys default skills using the DeployDefaultSkillsUseCase and merges them
    * into the provided file updates.
+   *
+   * `cliVersion` comes from the target repository's existing lock file so the
+   * rendered skill content names the CLI executable that installation actually
+   * has (`packmind-cli` before 0.24.0, `packmind` from then on). It stays
+   * undefined for a repository with no lock file - that repository has never
+   * been installed by a CLI, so there is no legacy expectation to honour and
+   * the canonical name is correct.
    * Returns the names of newly added Packmind skills (skills not already in the repository).
    */
   private async includeDefaultSkills(
@@ -1120,12 +1133,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     fileUpdates: FileUpdates,
     gitRepo: GitRepo,
     targetCodingAgents: CodingAgent[],
+    cliVersion: string | undefined,
   ): Promise<string[]> {
     const result = await this.deployDefaultSkillsUseCase.execute({
       userId,
       organizationId,
       agents: targetCodingAgents,
       excludeDeprecated: true,
+      cliVersion,
     });
 
     // Extract skill names from paths and determine which are new

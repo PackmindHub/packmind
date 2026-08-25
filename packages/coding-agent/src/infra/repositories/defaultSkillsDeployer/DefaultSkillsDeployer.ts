@@ -73,6 +73,7 @@ export class DefaultSkillsDeployer {
     const allFileUpdates = filteredDeployers.map((deployer) =>
       deployer.deploy(this.agentName, this.skillsFolderPath, {
         includeNext: options.includeBeta,
+        cliVersion: options.cliVersion,
       }),
     );
 

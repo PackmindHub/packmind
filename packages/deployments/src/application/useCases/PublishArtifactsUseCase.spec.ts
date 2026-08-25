@@ -35,6 +35,7 @@ import {
   Rule,
   SkillFile,
   CodingAgents,
+  PackmindLockFile,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
@@ -2846,6 +2847,190 @@ describe('PublishArtifactsUseCase', () => {
       const executeCall =
         mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
       expect(executeCall.excludeDeprecated).toBe(true);
+    });
+  });
+
+  describe('when deploying default skills to a repository with a lock file', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof commandVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    const isLockFilePath = (path: string) =>
+      path.endsWith('packmind-lock.json');
+
+    const mockLockFileContent = (
+      lockFile: Partial<PackmindLockFile> | null,
+    ) => {
+      mockGitPort.getFileFromRepo.mockImplementation(
+        async (_gitRepo: GitRepo, path: string) => {
+          if (isLockFilePath(path) && lockFile) {
+            return { sha: 'lock-sha', content: JSON.stringify(lockFile) };
+          }
+          return null;
+        },
+      );
+    };
+
+    const lockFileReadCount = () =>
+      mockGitPort.getFileFromRepo.mock.calls.filter(([, path]) =>
+        isLockFilePath(path as string),
+      ).length;
+
+    beforeEach(() => {
+      recipeVersion = commandVersionFactory({
+        id: createCommandVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Root Target',
+        path: '/',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockDeployDefaultSkillsUseCase.execute.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/default-skill/SKILL.md',
+              content: 'default skill content',
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      mockCommandsPort.getCommandVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveCommandVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveCommandVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+      mockLockFileContent(null);
+    });
+
+    describe('when the lock file records a pre-rename CLI version', () => {
+      beforeEach(() => {
+        mockLockFileContent({
+          lockfileVersion: 2,
+          cliVersion: '0.23.0',
+          packageSlugs: [],
+          agents: activeCodingAgents,
+          artifacts: {},
+        });
+      });
+
+      it('passes that CLI version to the default skills deployment', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.cliVersion).toBe('0.23.0');
+      });
+    });
+
+    describe('when the lock file records a modern CLI version', () => {
+      beforeEach(() => {
+        mockLockFileContent({
+          lockfileVersion: 2,
+          cliVersion: '0.34.0',
+          packageSlugs: [],
+          agents: activeCodingAgents,
+          artifacts: {},
+        });
+      });
+
+      it('passes that CLI version to the default skills deployment', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.cliVersion).toBe('0.34.0');
+      });
+    });
+
+    describe('when the lock file has no cliVersion field', () => {
+      beforeEach(() => {
+        mockLockFileContent({
+          lockfileVersion: 2,
+          packageSlugs: [],
+          agents: activeCodingAgents,
+          artifacts: {},
+        });
+      });
+
+      it('leaves the CLI version undefined', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.cliVersion).toBeUndefined();
+      });
+    });
+
+    describe('when the repository has no lock file', () => {
+      it('leaves the CLI version undefined', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.cliVersion).toBeUndefined();
+      });
+    });
+
+    it('reads the lock file only once per target', async () => {
+      mockLockFileContent({
+        lockfileVersion: 2,
+        cliVersion: '0.23.0',
+        packageSlugs: [],
+        agents: activeCodingAgents,
+        artifacts: {},
+      });
+
+      await useCase.execute(command);
+
+      expect(lockFileReadCount()).toBe(1);
     });
   });
 
