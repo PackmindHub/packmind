@@ -39,7 +39,24 @@ describe('detectPluginMode', () => {
 
       expect(detectPluginMode(tmp)).toEqual({
         mode: 'marketplace',
+        vendor: 'claude',
         manifestPath: join(tmp, '.claude-plugin/marketplace.json'),
+      });
+    });
+  });
+
+  describe('when only .github/plugin/marketplace.json exists', () => {
+    it('returns marketplace mode with the copilot vendor and manifest path', () => {
+      mkdirSync(join(tmp, '.github/plugin'), { recursive: true });
+      writeFileSync(
+        join(tmp, '.github/plugin/marketplace.json'),
+        '{"plugins":[]}',
+      );
+
+      expect(detectPluginMode(tmp)).toEqual({
+        mode: 'marketplace',
+        vendor: 'copilot',
+        manifestPath: join(tmp, '.github/plugin/marketplace.json'),
       });
     });
   });
@@ -53,6 +70,16 @@ describe('detectPluginMode', () => {
       );
 
       expect(detectPluginMode(tmp).mode).toBe('standalone');
+    });
+
+    it('returns the claude vendor', () => {
+      mkdirSync(join(tmp, '.claude-plugin'));
+      writeFileSync(
+        join(tmp, '.claude-plugin/plugin.json'),
+        '{"name":"security"}',
+      );
+
+      expect(detectPluginMode(tmp).vendor).toBe('claude');
     });
   });
 
@@ -69,6 +96,27 @@ describe('detectPluginMode', () => {
       );
 
       expect(detectPluginMode(tmp).mode).toBe('marketplace');
+    });
+  });
+
+  describe('when both claude and copilot marketplace manifests exist', () => {
+    it('returns the claude marketplace result, honoring first-found-wins ordering', () => {
+      mkdirSync(join(tmp, '.claude-plugin'));
+      mkdirSync(join(tmp, '.github/plugin'), { recursive: true });
+      writeFileSync(
+        join(tmp, '.claude-plugin/marketplace.json'),
+        '{"plugins":[]}',
+      );
+      writeFileSync(
+        join(tmp, '.github/plugin/marketplace.json'),
+        '{"plugins":[]}',
+      );
+
+      expect(detectPluginMode(tmp)).toEqual({
+        mode: 'marketplace',
+        vendor: 'claude',
+        manifestPath: join(tmp, '.claude-plugin/marketplace.json'),
+      });
     });
   });
 

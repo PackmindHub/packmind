@@ -3,19 +3,50 @@ import { join } from 'path';
 
 export type PluginMode = 'marketplace' | 'standalone' | 'none';
 
+export type PluginVendor = 'claude' | 'copilot';
+
 export type PluginContext = {
   mode: PluginMode;
+  vendor?: PluginVendor;
   manifestPath?: string;
 };
 
+/**
+ * Detects which local plugin descriptor (if any) governs this directory.
+ *
+ * Candidates are probed in a fixed, deliberate order and the first match
+ * wins — never content-sniffed. This mirrors the backend's
+ * `MARKETPLACE_DESCRIPTOR_PATHS` pattern: a repo's marketplace config
+ * targets either GitHub Copilot or Claude Code, never both. If somehow
+ * multiple candidate files exist, the earlier entry in this ordered list
+ * wins:
+ *
+ *   1. `.claude-plugin/marketplace.json` -> marketplace mode, claude vendor
+ *   2. `.github/plugin/marketplace.json` -> marketplace mode, copilot vendor
+ *   3. `.claude-plugin/plugin.json`      -> standalone mode, claude vendor
+ *      (standalone mode is Claude-only; there is no Copilot equivalent)
+ *   4. none of the above                 -> `{ mode: 'none' }`
+ */
 export function detectPluginMode(cwd: string): PluginContext {
-  const marketplace = join(cwd, '.claude-plugin/marketplace.json');
+  const claudeMarketplace = join(cwd, '.claude-plugin/marketplace.json');
+  const copilotMarketplace = join(cwd, '.github/plugin/marketplace.json');
   const standalone = join(cwd, '.claude-plugin/plugin.json');
-  if (existsSync(marketplace)) {
-    return { mode: 'marketplace', manifestPath: marketplace };
+  if (existsSync(claudeMarketplace)) {
+    return {
+      mode: 'marketplace',
+      vendor: 'claude',
+      manifestPath: claudeMarketplace,
+    };
+  }
+  if (existsSync(copilotMarketplace)) {
+    return {
+      mode: 'marketplace',
+      vendor: 'copilot',
+      manifestPath: copilotMarketplace,
+    };
   }
   if (existsSync(standalone)) {
-    return { mode: 'standalone', manifestPath: standalone };
+    return { mode: 'standalone', vendor: 'claude', manifestPath: standalone };
   }
   return { mode: 'none' };
 }

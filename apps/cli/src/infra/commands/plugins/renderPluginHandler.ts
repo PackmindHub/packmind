@@ -13,6 +13,7 @@ import {
   findPluginEntry,
   upsertPluginEntry,
   classifySource,
+  Marketplace,
 } from './pluginsContext';
 import { resolveGitContext } from './resolveGitContext';
 
@@ -38,7 +39,7 @@ export async function renderPluginHandler(
 
   if (ctx.mode === 'none') {
     deps.error(
-      'No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found in this directory.',
+      'No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found in this directory.',
     );
     deps.exit(1);
     return;
@@ -53,7 +54,19 @@ export async function renderPluginHandler(
 
   if (ctx.mode === 'marketplace') {
     const manifestPath = ctx.manifestPath as string;
-    const marketplace = readMarketplace(manifestPath);
+    const targetVendor = ctx.vendor === 'copilot' ? 'github' : 'anthropic';
+
+    let marketplace: Marketplace;
+    try {
+      marketplace = readMarketplace(manifestPath);
+    } catch {
+      deps.error(
+        `${manifestPath} is not valid JSON. Fix the file and try again.`,
+      );
+      deps.exit(1);
+      return;
+    }
+
     const existing = findPluginEntry(marketplace, pluginName);
 
     if (existing) {
@@ -85,6 +98,7 @@ export async function renderPluginHandler(
         pluginName,
         gitRemoteUrl,
         gitBranch,
+        targetVendor,
       });
 
       writeFiles(cwd, response.files);
@@ -114,6 +128,7 @@ export async function renderPluginHandler(
       pluginName,
       gitRemoteUrl,
       gitBranch,
+      targetVendor,
     });
 
     writeFiles(cwd, response.files);
