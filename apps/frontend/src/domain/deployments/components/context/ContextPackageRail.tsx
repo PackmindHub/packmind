@@ -112,7 +112,10 @@ export function ContextPackageRail({
             left="10px"
             top="50%"
             transform="translateY(-50%)"
-            color="text.faded"
+            // The step the placeholder beside it now uses. Left at
+            // `text.faded` the magnifier read as dimmer than the words it
+            // labels, and the two stopped looking like one control.
+            color="text.tertiary"
             pointerEvents="none"
             display="flex"
             alignItems="center"
