@@ -475,7 +475,7 @@ describe('GitService', () => {
 
       it('does not name an unrelated command', () => {
         expect(() => service.getGitRemoteUrl('/non-git')).not.toThrow(
-          /packmind-cli lint/,
+          /packmind(-cli)? lint/,
         );
       });
     });

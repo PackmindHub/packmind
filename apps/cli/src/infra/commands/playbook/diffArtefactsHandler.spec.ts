@@ -5,6 +5,7 @@ import {
 } from './diffArtefactsHandler';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { ChangeProposalType, createSkillFileId } from '@packmind/types';
+import { EXEC_NAME } from '../../utils/execName';
 
 jest.mock('fs/promises');
 jest.mock('../../utils/consoleLogger', () => ({
@@ -1256,7 +1257,9 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       expect(logInfoConsole).toHaveBeenCalledWith(
-        expect.stringContaining('run `packmind-cli diff --include-submitted`'),
+        expect.stringContaining(
+          `run \`${EXEC_NAME} playbook diff --include-submitted\``,
+        ),
       );
     });
 

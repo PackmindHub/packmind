@@ -8,6 +8,7 @@ import {
   StagePathOutcome,
   StageSinglePathDependencies,
 } from './add/stageSinglePath';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type PlaybookAddHandlerDependencies = Omit<
   StageSinglePathDependencies,
@@ -24,7 +25,7 @@ export async function playbookAddHandler(
 
   if (filePaths.length === 0) {
     logErrorConsole(
-      'No path provided. Usage: packmind-cli playbook add <paths...>',
+      `No path provided. Usage: ${EXEC_NAME} playbook add <paths...>`,
     );
     exit(1);
     return;
@@ -54,7 +55,7 @@ export async function playbookAddHandler(
 
   if (stagedCount > 0) {
     logInfoConsole(
-      `Run ${formatLabel('packmind playbook submit')} when you're ready to publish your changes.`,
+      `Run ${formatLabel(`${EXEC_NAME} playbook submit`)} when you're ready to publish your changes.`,
     );
   }
 

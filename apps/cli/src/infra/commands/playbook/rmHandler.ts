@@ -12,6 +12,7 @@ import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type PlaybookRmHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -47,7 +48,7 @@ export async function playbookRmHandler(
 
   if (!filePath) {
     logErrorConsole(
-      'Missing file path. Usage: packmind-cli playbook rm <path>',
+      `Missing file path. Usage: ${EXEC_NAME} playbook rm <path>`,
     );
     exit(1);
     return;
@@ -100,7 +101,7 @@ export async function playbookRmHandler(
 
   if (artifactType === 'skill' && isSkillSupportFile(absolutePath)) {
     logErrorConsole(
-      'Cannot remove an individual skill file. Point to the skill folder to remove the full skill, or manually delete the file and run `packmind playbook add <skill-folder>/` to stage the change.',
+      `Cannot remove an individual skill file. Point to the skill folder to remove the full skill, or manually delete the file and run \`${EXEC_NAME} playbook add <skill-folder>/\` to stage the change.`,
     );
     exit(1);
     return;

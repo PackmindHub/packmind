@@ -19,6 +19,7 @@ import {
   logInfoConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
+import { EXEC_NAME } from '../utils/execName';
 
 jest.mock('fs/promises');
 jest.mock('../utils/consoleLogger', () => ({
@@ -614,7 +615,7 @@ describe('lintHandler', () => {
         });
 
         await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
-          'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
+          `No packmind.json config found. Run \`${EXEC_NAME} install <some-package>\` first to set up linting.`,
         );
       });
     });
@@ -658,7 +659,7 @@ describe('lintHandler', () => {
           });
 
           await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
-            'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
+            `No packmind.json config found. Run \`${EXEC_NAME} install <some-package>\` first to set up linting.`,
           );
         });
       });
@@ -1049,7 +1050,7 @@ describe('lintHandler', () => {
 
       it('logs warning message', () => {
         expect(logWarningConsole).toHaveBeenCalledWith(
-          'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
+          `Warning: Not logged in to Packmind, linting is skipped. Run \`${EXEC_NAME} login\` to authenticate.`,
         );
       });
 
@@ -1097,7 +1098,7 @@ describe('lintHandler', () => {
 
       it('logs warning message', () => {
         expect(logWarningConsole).toHaveBeenCalledWith(
-          'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
+          `Warning: Not logged in to Packmind, linting is skipped. Run \`${EXEC_NAME} login\` to authenticate.`,
         );
       });
 

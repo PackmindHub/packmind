@@ -7,6 +7,7 @@ import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepo
 import { ISpaceService } from '../../domain/services/ISpaceService';
 import { IInstallUseCase } from '../../domain/useCases/IInstallUseCase';
 import { normalizePackageSlugs } from '../utils/normalizePackageSlugs';
+import { EXEC_NAME } from '../../infra/utils/execName';
 
 export class UninstallUseCase implements IUninstallUseCase {
   constructor(
@@ -28,7 +29,7 @@ export class UninstallUseCase implements IUninstallUseCase {
         );
       }
       throw new Error(
-        'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+        `No packmind.json found in this directory. Run \`${EXEC_NAME} install <@space/package>\` first to install your packages.`,
       );
     }
 

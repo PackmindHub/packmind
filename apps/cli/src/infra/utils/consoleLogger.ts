@@ -1,18 +1,19 @@
 import chalk from 'chalk';
+import { EXEC_NAME } from './execName';
 
-const CLI_PREFIX = 'packmind-cli';
+const CLI_PREFIX = EXEC_NAME;
 
 export function logConsole(message: string, logger = console): void {
   logger.log(message);
 }
 
 // ============================================
-// Console Log Functions (with packmind-cli prefix)
+// Console Log Functions (with the invoked exec name as prefix)
 // ============================================
 
 /**
  * Logs a warning message to the console with yellow styling.
- * Format: [packmind-cli] message
+ * Format: [<exec name>] message
  */
 export function logWarningConsole(message: string, logger = console): void {
   logger.warn(chalk.bgYellow.bold(CLI_PREFIX), chalk.yellow(message));
@@ -20,7 +21,7 @@ export function logWarningConsole(message: string, logger = console): void {
 
 /**
  * Logs an info message to the console with blue styling.
- * Format: [packmind-cli] message
+ * Format: [<exec name>] message
  */
 export function logInfoConsole(message: string, logger = console): void {
   logger.log(chalk.bgBlue.bold(CLI_PREFIX), chalk.blue(message));
@@ -28,7 +29,7 @@ export function logInfoConsole(message: string, logger = console): void {
 
 /**
  * Logs an error message to the console with red styling.
- * Format: [packmind-cli] message
+ * Format: [<exec name>] message
  */
 export function logErrorConsole(message: string, logger = console): void {
   logger.error(chalk.bgRed.bold(CLI_PREFIX), chalk.red(message));
@@ -36,7 +37,7 @@ export function logErrorConsole(message: string, logger = console): void {
 
 /**
  * Logs a success message to the console with green styling.
- * Format: [packmind-cli] message
+ * Format: [<exec name>] message
  */
 export function logSuccessConsole(message: string, logger = console): void {
   logger.log(chalk.bgGreen.bold(CLI_PREFIX), chalk.green.bold(message));

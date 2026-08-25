@@ -9,6 +9,7 @@ import {
 } from '../utils/consoleLogger';
 import { IWhoamiResult } from '../../domain/useCases/IWhoamiUseCase';
 import { displayVersionNotice } from './versionCheckNotice';
+import { EXEC_NAME } from '../utils/execName';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -51,7 +52,7 @@ function displayAuthInfo(
   logInfoConsole(`Source: ${result.source}`);
 
   if (result.isExpired) {
-    logConsole('\nRun `packmind-cli login` to re-authenticate.');
+    logConsole(`\nRun \`${EXEC_NAME} login\` to re-authenticate.`);
   }
 }
 
@@ -72,7 +73,7 @@ export const whoamiCommand = command({
     if (!result.isAuthenticated) {
       logErrorConsole('Not authenticated');
       logConsole(
-        `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
+        `\nNo credentials found. Run \`${EXEC_NAME} login\` to authenticate.`,
       );
       logConsole(`\nCredentials are loaded from (in order of priority):`);
       logConsole(`  1. PACKMIND_API_KEY environment variable`);

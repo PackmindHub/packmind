@@ -16,6 +16,7 @@ import {
   SpaceType,
 } from '@packmind/types';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../../infra/utils/execName';
 
 jest.mock('fs/promises');
 
@@ -111,7 +112,7 @@ describe('InstallUseCase', () => {
       await expect(
         useCase.execute({ baseDirectory: '/test', cliVersion: '0.0.0-test' }),
       ).rejects.toThrow(
-        'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+        `No packmind.json found in this directory. Run \`${EXEC_NAME} install <@space/package>\` first to install your packages.`,
       );
     });
   });

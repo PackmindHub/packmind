@@ -37,6 +37,7 @@ import {
   displayableParsedPackageSlug,
   ParsedPackageSlug,
 } from '../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../utils/execName';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -234,7 +235,7 @@ function reportDistributionTrackingDecision(
       if (decision.reason === 'repo_not_tracked') {
         logWarningConsole(
           `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
-            'packmind git track',
+            `${EXEC_NAME} git track`,
           )} to start tracking it.`,
         );
       } else if (decision.reason === 'detached_head') {
@@ -244,7 +245,7 @@ function reportDistributionTrackingDecision(
       } else if (decision.reason === 'tracked_branch_gone') {
         logWarningConsole(
           `Distribution not recorded — the tracked branch '${decision.trackedBranch}' is not in this repository, so nothing is recorded anywhere. Ask an admin to run ${formatCommand(
-            'packmind git track --update',
+            `${EXEC_NAME} git track --update`,
           )} to move tracking to '${context.currentBranch}'.`,
         );
       } else {

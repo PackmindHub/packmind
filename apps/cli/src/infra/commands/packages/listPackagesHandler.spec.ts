@@ -7,6 +7,7 @@ import { IOutput } from '../../../domain/repositories/IOutput';
 import { createMockOutput } from '../../../mocks/createMockRepositories';
 import { spaceFactory } from '@packmind/spaces/test';
 import { packageFactory } from '@packmind/deployments/test';
+import { EXEC_NAME } from '../../utils/execName';
 
 describe('listPackagesHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
@@ -131,7 +132,7 @@ describe('listPackagesHandler', () => {
         expect.anything(),
         expect.objectContaining({
           exampleCommand: expect.stringContaining(
-            'packmind-cli install @global/alpha',
+            `${EXEC_NAME} install @global/alpha`,
           ),
         }),
       );

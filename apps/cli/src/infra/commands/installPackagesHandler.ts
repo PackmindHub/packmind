@@ -4,6 +4,7 @@ import {
   ConfigWithTarget,
   PackmindFileConfig,
 } from '@packmind/types';
+import { EXEC_NAME } from '../utils/execName';
 
 export type InstallHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -195,12 +196,12 @@ export async function uninstallPackagesHandler(
   if (!packagesSlugs || packagesSlugs.length === 0) {
     error('❌ No packages specified.');
     log('');
-    log('Usage: packmind-cli uninstall <package-slug> [package-slug...]');
-    log('       packmind-cli remove <package-slug> [package-slug...]');
+    log(`Usage: ${EXEC_NAME} uninstall <package-slug> [package-slug...]`);
+    log(`       ${EXEC_NAME} remove <package-slug> [package-slug...]`);
     log('');
     log('Examples:');
-    log('  packmind-cli uninstall backend');
-    log('  packmind-cli remove backend frontend');
+    log(`  ${EXEC_NAME} uninstall backend`);
+    log(`  ${EXEC_NAME} remove backend frontend`);
     exit(1);
     return {
       filesDeleted: 0,
@@ -245,7 +246,7 @@ export async function uninstallPackagesHandler(
     }
     log('');
     log('💡 There are no packages to uninstall.');
-    log('   To install packages, run: packmind-cli install <package-slug>');
+    log(`   To install packages, run: ${EXEC_NAME} install <package-slug>`);
     exit(1);
     return {
       filesDeleted: 0,

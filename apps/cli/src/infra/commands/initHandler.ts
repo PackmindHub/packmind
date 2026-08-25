@@ -25,6 +25,7 @@ import {
 } from './skillsCapabilityWarning';
 import { TrackRepositoryFunction } from './trackHandler';
 import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
+import { EXEC_NAME } from '../utils/execName';
 
 export type InstallDefaultSkillsFunction = (options: {
   includeBeta: boolean;
@@ -136,7 +137,7 @@ export async function initHandler(
 
     if (result.skippedSkillsCount > 0) {
       logWarningConsole(
-        `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of packmind-cli. Run "${formatCommand('packmind-cli update')}" to get the latest version.`,
+        `${result.skippedSkillsCount} skill(s) were skipped because they require a newer version of ${EXEC_NAME}. Run "${formatCommand(`${EXEC_NAME} update`)}" to get the latest version.`,
       );
     }
 

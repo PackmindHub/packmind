@@ -3,6 +3,7 @@ import {
   buildInstallSummary,
   buildIncapableArtifactsWarning,
 } from './installSummary';
+import { EXEC_NAME } from '../utils/execName';
 
 const baseResult: IInstallResult = {
   filesCreated: 0,
@@ -305,7 +306,7 @@ describe('buildIncapableArtifactsWarning', () => {
     });
 
     it('includes the config agents command', () => {
-      expect(warning).toContain('packmind-cli config agents');
+      expect(warning).toContain(`${EXEC_NAME} config agents`);
     });
   });
 

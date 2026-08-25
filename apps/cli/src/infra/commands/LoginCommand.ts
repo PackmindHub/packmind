@@ -8,6 +8,7 @@ import {
   logInfoConsole,
   logConsole,
 } from '../utils/consoleLogger';
+import { EXEC_NAME } from '../utils/execName';
 
 const DEFAULT_HOST = 'https://app.packmind.ai';
 
@@ -56,7 +57,7 @@ export const loginCommand = command({
       logSuccessConsole('Login successful!');
       logConsole(`\nCredentials saved to: ${result.credentialsPath}`);
       logConsole(
-        '\nYou can now use packmind-cli commands with your authenticated account.',
+        `\nYou can now use ${EXEC_NAME} commands with your authenticated account.`,
       );
     } catch (error) {
       if (error instanceof Error) {

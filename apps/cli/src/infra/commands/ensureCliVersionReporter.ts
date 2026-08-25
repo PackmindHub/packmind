@@ -16,13 +16,11 @@ export function reportEnsureCliVersionOutcome(
   switch (outcome.kind) {
     case 'older':
       logWarningConsole(
-        `[packmind-cli] Your CLI version ${currentCliVersion} is older than the version recorded in packmind-lock.json (${outcome.lockVersion}). Please update your CLI.`,
+        `Your CLI version ${currentCliVersion} is older than the version recorded in packmind-lock.json (${outcome.lockVersion}). Please update your CLI.`,
       );
       break;
     case 'newer':
-      logInfoConsole(
-        '[packmind-cli] CLI upgrade detected — refreshing default skills.',
-      );
+      logInfoConsole('CLI upgrade detected — refreshing default skills.');
       break;
     case 'match':
     case 'no-lockfile':

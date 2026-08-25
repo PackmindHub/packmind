@@ -8,6 +8,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { handleTrackingError } from './trackingErrors';
+import { EXEC_NAME } from '../utils/execName';
 
 export type GetTrackingInfoFunction = (
   command: GetTrackingInfoCommand,
@@ -40,10 +41,10 @@ export async function trackingInfoHandler(
     logInfoConsole(
       result.currentBranchDetached
         ? `${result.owner}/${result.repo} is not tracked in Packmind. No branch is checked out here — run ${formatCommand(
-            'packmind git track --branch <name>',
+            `${EXEC_NAME} git track --branch <name>`,
           )} to track one.`
         : `${result.owner}/${result.repo} is not tracked in Packmind. Run ${formatCommand(
-            'packmind git track',
+            `${EXEC_NAME} git track`,
           )} to track branch '${result.currentBranch}'.`,
     );
     process.exit(0);
@@ -77,8 +78,8 @@ function mismatchWarning(
   result: Extract<GetTrackingInfoResult, { status: 'tracked' }>,
 ): string {
   const moveTracking = result.currentBranchDetached
-    ? `${formatCommand('packmind git track --update --branch <name>')} to move tracking to a branch that exists`
-    : `${formatCommand('packmind git track --update')} to move tracking to '${result.currentBranch}'`;
+    ? `${formatCommand(`${EXEC_NAME} git track --update --branch <name>`)} to move tracking to a branch that exists`
+    : `${formatCommand(`${EXEC_NAME} git track --update`)} to move tracking to '${result.currentBranch}'`;
 
   if (!result.trackedBranchExists) {
     return `Branch '${result.trackedBranch}' is not in this repository — deleted after a merge, or never fetched here — so no distribution is recorded anywhere. Run ${moveTracking}, or ${formatCommand(

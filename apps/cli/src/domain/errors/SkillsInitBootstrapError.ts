@@ -1,5 +1,7 @@
+import { EXEC_NAME } from '../../infra/utils/execName';
+
 /**
- * Error thrown when `packmind-cli skills init` cannot bootstrap a fresh
+ * Error thrown when `packmind skills init` cannot bootstrap a fresh
  * directory (both packmind.json and packmind-lock.json absent) because the
  * organization's render-mode configuration could not be determined — either
  * because the call to the deployment gateway failed, or because the org
@@ -14,7 +16,7 @@ export class SkillsInitBootstrapError extends Error {
 
   constructor() {
     super(
-      "Couldn't determine your organization's coding agents. Run `packmind init` to configure them interactively.",
+      `Couldn't determine your organization's coding agents. Run \`${EXEC_NAME} init\` to configure them interactively.`,
     );
     this.name = 'SkillsInitBootstrapError';
   }

@@ -10,6 +10,7 @@ import {
   logSuccessConsole,
 } from '../../utils/consoleLogger';
 import { parsePackageSlug } from '../../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../../utils/execName';
 
 jest.mock('../../utils/consoleLogger', () => ({
   logErrorConsole: jest.fn(),
@@ -125,7 +126,7 @@ describe('addToPackageHandler', () => {
 
       it('hints to run packages list', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli packages list'),
+          expect.stringContaining(`${EXEC_NAME} packages list`),
         );
       });
 
@@ -221,7 +222,7 @@ describe('addToPackageHandler', () => {
 
     it('shows the install hint with the full @space/package slug', () => {
       expect(mockLogSuccessConsole).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-cli install @global/my-pkg'),
+        expect.stringContaining(`${EXEC_NAME} install @global/my-pkg`),
       );
     });
   });
@@ -270,7 +271,7 @@ describe('addToPackageHandler', () => {
 
       it('hints to run the list command with --space flag', () => {
         expect(mockLogInfoConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli standards list --space global'),
+          expect.stringContaining(`${EXEC_NAME} standards list --space global`),
         );
       });
 
@@ -300,7 +301,7 @@ describe('addToPackageHandler', () => {
       describe('hints to run the list command without --space flag', () => {
         it('suggests the list command', () => {
           expect(mockLogInfoConsole).toHaveBeenCalledWith(
-            expect.stringContaining('packmind-cli standards list'),
+            expect.stringContaining(`${EXEC_NAME} standards list`),
           );
         });
 

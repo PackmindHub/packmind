@@ -78,6 +78,7 @@ import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../utils/execName';
 
 const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
   typeof bootstrapInstallContext
@@ -1108,9 +1109,9 @@ describe('installCommand', () => {
         );
       });
 
-      it('includes the actionable hint pointing to packmind-cli config agents', () => {
+      it('includes the actionable hint pointing to the config agents command', () => {
         expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli config agents'),
+          expect.stringContaining(`${EXEC_NAME} config agents`),
         );
       });
 

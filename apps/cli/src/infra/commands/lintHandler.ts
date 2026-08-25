@@ -15,6 +15,7 @@ import {
 } from '../utils/consoleLogger';
 import { PackmindIgnoreReader } from '../../application/services/PackmindIgnoreReader';
 import { matchesGlobPattern } from '../../application/services/ListFiles';
+import { EXEC_NAME } from '../utils/execName';
 
 const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
   [DetectionSeverity.WARNING]: 0,
@@ -157,7 +158,7 @@ export async function lintHandler(
 
       if (!hierarchicalConfig.hasConfigs) {
         throw new Error(
-          'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
+          `No packmind.json config found. Run \`${EXEC_NAME} install <some-package>\` first to set up linting.`,
         );
       }
 
@@ -171,13 +172,13 @@ export async function lintHandler(
   } catch (error) {
     if (isNotLoggedInError(error) && continueOnMissingKey) {
       logWarningConsole(
-        'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
+        `Warning: Not logged in to Packmind, linting is skipped. Run \`${EXEC_NAME} login\` to authenticate.`,
       );
       exit(0);
       return;
     }
     if (error instanceof CommunityEditionError) {
-      logInfoConsole(`packmind-cli ${error.message}`);
+      logInfoConsole(error.message);
       logInfoConsole('Linting skipped.');
       exit(0);
       return;

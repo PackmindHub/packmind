@@ -10,6 +10,7 @@ import {
 } from '../../../utils/consoleLogger';
 import { SELECTABLE_AGENTS } from '../configAgentsHandler';
 import { getRelativePath, resolveStartDirectory } from './agentsHandlerUtils';
+import { EXEC_NAME } from '../../../utils/execName';
 
 export type RemoveAgentsHandlerArgs = {
   agentNames: string[];
@@ -106,7 +107,7 @@ export async function removeAgentsHandler(
 
   if (anyUpdated) {
     logInfoConsole(
-      `Run "${formatCommand('packmind install')}" to apply changes and remove agent artifacts.`,
+      `Run "${formatCommand(`${EXEC_NAME} install`)}" to apply changes and remove agent artifacts.`,
     );
   }
   exit(0);

@@ -18,6 +18,7 @@ import {
   isFullParsedPackageSlug,
   ParsedPackageSlug,
 } from '../../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../../utils/execName';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ function resolvePackageRef(
       logInfoConsole(`  --to @${s.slug}/${to.packageSlug}`);
     });
     logInfoConsole(
-      `Run \`packmind-cli packages list\` to see available packages per space.`,
+      `Run \`${EXEC_NAME} packages list\` to see available packages per space.`,
     );
     exit(1);
   }
@@ -119,7 +120,7 @@ async function executeAddToPackage(
         `${formatItemType(itemType, result.added.length)} ${formatItemList(result.added)} added to "${fullPackageSlug}"`,
       );
       logSuccessConsole(
-        `Run ${formatCommand(`packmind-cli install ${fullPackageSlug}`)} to install the ${pluralize(itemType, result.added.length)}`,
+        `Run ${formatCommand(`${EXEC_NAME} install ${fullPackageSlug}`)} to install the ${pluralize(itemType, result.added.length)}`,
       );
     }
 
@@ -136,7 +137,7 @@ async function executeAddToPackage(
     if (error instanceof ItemNotFoundError) {
       const spaceFlag = error.spaceSlug ? ` --space ${error.spaceSlug}` : '';
       const command = formatCommand(
-        `packmind-cli ${error.itemType}s list${spaceFlag}`,
+        `${EXEC_NAME} ${error.itemType}s list${spaceFlag}`,
       );
 
       logInfoConsole(

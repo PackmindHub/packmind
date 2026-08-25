@@ -6,6 +6,7 @@ import {
 } from '@packmind/types';
 import { IInstallResult } from '../../domain/useCases/IInstallUseCase';
 import { formatCommand } from '../utils/consoleLogger';
+import { EXEC_NAME } from '../utils/execName';
 
 function pluralize(noun: string, count: number): string {
   return count === 1 ? noun : `${noun}s`;
@@ -134,7 +135,7 @@ export function buildIncapableArtifactsWarning(
       ({ noun, count, capable }) =>
         `   - ${count} ${pluralize(noun, count)}: try ${formatCapableList(capable)}`,
     ),
-    `   Run ${formatCommand('packmind-cli config agents')} to add a capable agent.`,
+    `   Run ${formatCommand(`${EXEC_NAME} config agents`)} to add a capable agent.`,
   ];
 
   return lines.join('\n');

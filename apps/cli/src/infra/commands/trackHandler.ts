@@ -10,6 +10,7 @@ import {
 } from '../utils/consoleLogger';
 import { handleTrackingError } from './trackingErrors';
 import { ConfirmPromptFn, createTrackConfirm } from './trackingPrompts';
+import { EXEC_NAME } from '../utils/execName';
 
 export type TrackRepositoryFunction = (
   command: TrackRepositoryCommand,
@@ -89,15 +90,15 @@ export async function trackHandler(
           // `--update` alone moves tracking to the checked-out branch, which is
           // not the target when a branch was named explicitly.
           deps.branch
-            ? `packmind git track --update --branch ${result.branch}`
-            : 'packmind git track --update',
+            ? `${EXEC_NAME} git track --update --branch ${result.branch}`
+            : `${EXEC_NAME} git track --update`,
         )} to move it to ${result.branch}.`,
       );
       process.exit(1);
       return;
     case 'detached-head':
       logErrorConsole(
-        `No branch is checked out for ${result.owner}/${result.repo} — HEAD is detached. Check a branch out, or name one with ${formatCommand('packmind git track --branch <name>')}.`,
+        `No branch is checked out for ${result.owner}/${result.repo} — HEAD is detached. Check a branch out, or name one with ${formatCommand(`${EXEC_NAME} git track --branch <name>`)}.`,
       );
       process.exit(1);
       return;
@@ -109,7 +110,7 @@ export async function trackHandler(
       return;
     case 'nothing-tracked':
       logErrorConsole(
-        `Nothing is tracked yet — run ${formatCommand('packmind init')} or ${formatCommand('packmind git track')} to start tracking.`,
+        `Nothing is tracked yet — run ${formatCommand(`${EXEC_NAME} init`)} or ${formatCommand(`${EXEC_NAME} git track`)} to start tracking.`,
       );
       process.exit(1);
       return;

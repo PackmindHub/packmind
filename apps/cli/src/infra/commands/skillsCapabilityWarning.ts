@@ -1,5 +1,6 @@
 import { CodingAgent, hasCapableAgent } from '@packmind/types';
 import { formatCommand } from '../utils/consoleLogger';
+import { EXEC_NAME } from '../utils/execName';
 
 export function configuredAgentsSupportSkills(
   configuredAgents: CodingAgent[],
@@ -10,7 +11,7 @@ export function configuredAgentsSupportSkills(
 export function buildSkillsSkippedWarning(
   configuredAgents: CodingAgent[],
 ): string {
-  const configHint = formatCommand('packmind-cli config agents');
+  const configHint = formatCommand(`${EXEC_NAME} config agents`);
 
   if (configuredAgents.length === 0) {
     return `Skipping default skills — no coding agents are configured. Run ${configHint} to add one (e.g. claude).`;

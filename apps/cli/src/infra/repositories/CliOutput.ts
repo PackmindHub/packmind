@@ -5,8 +5,9 @@ import {
   Artefact,
 } from '../../domain/repositories/IOutput';
 import logUpdate from 'log-update';
+import { EXEC_NAME } from '../utils/execName';
 
-const CLI_PREFIX = 'packmind-cli';
+const CLI_PREFIX = EXEC_NAME;
 
 class CliFormatter {
   public static success(message: string) {

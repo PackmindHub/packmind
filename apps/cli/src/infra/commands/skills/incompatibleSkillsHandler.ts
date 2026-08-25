@@ -7,6 +7,7 @@ import {
   logInfoConsole,
   logWarningConsole,
 } from '../../utils/consoleLogger';
+import { EXEC_NAME } from '../../utils/execName';
 
 /**
  * Silent confirm callback: always resolves true.
@@ -37,7 +38,7 @@ export async function handleIncompatibleInstalledSkills(
 ): Promise<void> {
   const skillNames = skills.map((s) => s.skillName).join(', ');
   logWarningConsole(
-    `The following skill(s) are installed but are not compatible with this version of packmind-cli: ${skillNames}`,
+    `The following skill(s) are installed but are not compatible with this version of ${EXEC_NAME}: ${skillNames}`,
   );
   logInfoConsole('These skills will be deleted.');
 
