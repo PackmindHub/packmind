@@ -1,0 +1,143 @@
+# Mounted into the otel-lgtm image's Grafana provisioning directory, exactly
+# like provisioning-dashboards.yaml. See docker-compose.yml.
+#
+# Grafana alert rules can only query a datasource whose plugin declares
+# `alerting: true`. On this stack that is Prometheus and Loki — Tempo does NOT,
+# so `{ traceDuration > 2s }` is queryable in Explore but cannot back a rule.
+# Latency alerting therefore goes through the span metrics Tempo's
+# metrics-generator already remote-writes into Prometheus.
+#
+# Everything provisioned from a file is READ-ONLY in the UI. To change a
+# threshold, edit this file and restart the container. Build rules in the UI
+# first if you are still iterating, then copy them down here.
+apiVersion: 1
+
+# Mailpit, on the compose network. No account, no credential: it accepts
+# unauthenticated SMTP and shows whatever it receives at
+# http://localhost:8025. Nothing here is a secret, which is the whole reason
+# this file can live in git — a Slack or Discord webhook URL could not.
+contactPoints:
+  - orgId: 1
+    name: local-inbox
+    receivers:
+      - uid: local-inbox-email
+        type: email
+        settings:
+          # Mailpit accepts any recipient; the address is a label, not a real
+          # mailbox. Everything lands in the same inbox regardless.
+          addresses: dev@packmind.local
+
+# WARNING: this REPLACES the root notification policy rather than adding to it.
+# That is desirable here — the image ships a root policy pointing at a receiver
+# named "empty" which does not exist, so out of the box a firing alert notifies
+# nothing and says nothing about why.
+policies:
+  - orgId: 1
+    receiver: local-inbox
+    group_by:
+      - grafana_folder
+      - alertname
+    # Deliberately impatient compared to Grafana's 30s/5m/4h defaults: locally
+    # you want the mail while you are still looking at the trace that caused it.
+    group_wait: 10s
+    group_interval: 1m
+    repeat_interval: 1h
+
+groups:
+  - orgId: 1
+    name: latency
+    # Created if missing; groups the rule under Alerting → Alert rules.
+    folder: Packmind
+    interval: 1m
+    rules:
+      - uid: packmind-api-slow-requests
+        title: Packmind API — slow requests (root span p95 > 2s)
+        condition: C
+        # rate() over a window with no traffic returns NaN, and an idle local
+        # API therefore produces no series at all. Without this a quiet
+        # afternoon is indistinguishable from a broken rule, and you get
+        # NoData mail every evening.
+        noDataState: OK
+        execErrState: Error
+        # Must stay slow for 5m before mailing, so one cold-start request or a
+        # single pathological query does not page anyone.
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: >-
+            p95 of {{ $labels.span_name }} is {{ humanizeDuration $values.B.Value }},
+            over the 2s budget.
+          description: >-
+            Root-span p95 per endpoint, from traces_spanmetrics_latency_bucket.
+            The root span of an API trace IS the whole request, so this is total
+            trace duration. Find the offending traces in Explore → Tempo with
+            TraceQL: { traceDuration > 2s }
+        data:
+          # The metric is labelled service/span_name/span_kind/status_code/le.
+          # Note deployment.environment.name is NOT among them, so if several
+          # environments ever share one Prometheus their percentiles blend and
+          # this rule cannot tell them apart. See README.md.
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              editorMode: code
+              instant: false
+              range: true
+              # span_kind=SPAN_KIND_SERVER keeps this to root HTTP spans.
+              # Caveat: it therefore misses BullMQ jobs, whose traces are
+              # rooted at a withSpan() span of kind INTERNAL.
+              #
+              # /sse/stream is excluded because it is a long-lived streaming
+              # connection whose root span legitimately runs for minutes — left
+              # in, it holds this rule permanently firing.
+              expr: >-
+                histogram_quantile(0.95, sum by (le, span_name) (rate(
+                  traces_spanmetrics_latency_bucket{
+                    service="packmind-api",
+                    span_kind="SPAN_KIND_SERVER",
+                    span_name!="GET /api/v0/sse/stream"
+                  }[5m]
+                )))
+
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              reducer: last
+              expression: A
+              # dropNN discards the NaN buckets an intermittently-idle window
+              # leaves behind, so "last" means last real value rather than NaN.
+              settings:
+                mode: dropNN
+              datasource:
+                type: __expr__
+                uid: __expr__
+
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              # SECONDS. traces_spanmetrics_latency_* is a seconds histogram,
+              # not milliseconds — a threshold of 2000 would never fire.
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 2
+              datasource:
+                type: __expr__
+                uid: __expr__

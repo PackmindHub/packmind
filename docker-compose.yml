@@ -101,7 +101,7 @@ services:
     # machine or through a remote Docker host.
     ports:
       - '127.0.0.1:4317:4317' # OTLP/gRPC
-      - '127.0.0.1:4318:4318' # OTLP/HTTP — the browser posts here directly
+      - '127.0.0.1:4318:4318' # OTLP/HTTP — where the API exports
       - '127.0.0.1:3001:3000' # Grafana UI (3000 belongs to the API)
     # run-grafana.sh in the image launches vanilla `grafana server` and states
     # it respects user-provided env vars, so the standard GF_* overrides apply.
