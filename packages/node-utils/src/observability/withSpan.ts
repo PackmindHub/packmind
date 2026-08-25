@@ -2,7 +2,7 @@ import { Span, SpanStatusCode, trace } from '@opentelemetry/api';
 
 // The instrumentation scope, surfaced in Tempo as `scope.name`. It is what
 // distinguishes our own spans from those the auto-instrumentations emit
-// (`@opentelemetry/instrumentation-pg` and friends).
+// (`@opentelemetry/instrumentation-http` and friends).
 const tracer = trace.getTracer('packmind');
 
 /**
@@ -10,8 +10,8 @@ const tracer = trace.getTracer('packmind');
  * active.
  *
  * Auto-instrumentation only patches known library modules — http, express,
- * nestjs-core, pg, winston — so first-party code is invisible in a trace
- * unless it says so itself. This is how it says so.
+ * nestjs-core, winston — so first-party code is invisible in a trace unless it
+ * says so itself. This is how it says so.
  *
  * When no OTel SDK is running (unit tests, or the API started without
  * OTEL_EXPORTER_OTLP_ENDPOINT) `trace.getTracer` hands back a no-op tracer:

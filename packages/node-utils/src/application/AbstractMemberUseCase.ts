@@ -43,7 +43,7 @@ export abstract class AbstractMemberUseCase<
   ) {
     // Gives every async method on this use case - inherited, overridden or
     // private - its own span, so the layer between the use-case span below and
-    // the pg spans stops being a blank. One call here covers every
+    // the repository spans stops being a blank. One call here covers every
     // authenticated use case in the monorepo; nothing opts in per method.
     //
     // `execute` is skipped because it already owns the explicit span below.
@@ -55,15 +55,17 @@ export abstract class AbstractMemberUseCase<
 
   // Every authenticated use case in the monorepo funnels through here, so one
   // span at this single point gives the whole domain layer a place in the
-  // trace - the level between the Nest handler span and the pg spans that was
-  // previously blank. AbstractAdminUseCase, AbstractSpaceMemberUseCase and
-  // AbstractSpaceAdminUseCase all extend this class and inherit this method.
+  // trace - the level between the Nest handler span and the repository spans
+  // that was previously blank. AbstractAdminUseCase, AbstractSpaceMemberUseCase
+  // and AbstractSpaceAdminUseCase all extend this class and inherit this
+  // method.
   //
   // The span carries the organization and nothing else. A tenant id is what
   // makes traces filterable per customer, and it is already a Loki label on
   // every log line the winston transport exports, so spans add no new
-  // exposure. userId and the rest stay off: that is still the reason pg keeps
-  // enhancedDatabaseReporting: false.
+  // exposure. userId and the rest stay off, for the same reason the pg
+  // instrumentation did not record bind values: a trace backend is not the
+  // place for per-user data.
   async execute(command: Command): Promise<Result> {
     // this.constructor.name rather than a literal, so each subclass names its
     // own span. It survives production bundling because terser runs with

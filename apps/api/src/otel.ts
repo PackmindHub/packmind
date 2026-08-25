@@ -15,7 +15,7 @@
  *
  * Do NOT source any of these through `Configuration.getConfig()`. It is async
  * and may call out to Infisical, so the SDK would start only once that promise
- * resolves — by which point pg, ioredis, express and winston have long been
+ * resolves — by which point ioredis, express and winston have long been
  * required, and none of them get patched. Nothing crashes; you simply get no
  * spans, which is the worst kind of failure. The Sentry init in
  * `instrument.ts` demonstrates the trap: its DSN resolves after bootstrap has
@@ -202,13 +202,24 @@ if (otlpEndpoint && environment) {
         // this ground, so the router instrumentation is pure noise here.
         '@opentelemetry/instrumentation-router': { enabled: false },
 
+        // Postgres belongs to Datadog now. Database Monitoring reads
+        // `pg_stat_statements` and expects `dd-trace`, so it cannot consume
+        // these spans anyway — and meanwhile a single repository call expanded
+        // into eight-plus `pg.query` / `pg-pool.connect` children, burying the
+        // first-party spans that say what the request was actually doing.
+        //
+        // One flag covers every one of those rows: the package registers a `pg`
+        // AND a `pg-pool` module definition. It also stops the pg
+        // connection-pool metrics, which is what DBM reports instead.
+        //
+        // Slow queries are still visible, just one level up: `instrumentMethods`
+        // (see @packmind/node-utils) spans every repository method, so a slow
+        // SELECT still surfaces as a slow `<Name>Repository.<method>` span —
+        // without the statement text. Datadog has the statement.
+        '@opentelemetry/instrumentation-pg': { enabled: false },
+
         // Everything else stays at its defaults, which is deliberate:
         //
-        // - `pg` keeps `enhancedDatabaseReporting: false`, so spans carry the
-        //   parameterized SQL in `db.query.text` (the stable semconv name, not
-        //   the older `db.statement`) but never the bind values — a lookup by
-        //   email records `LOWER("user"."email") = LOWER($1)` and not the
-        //   address. This is what keeps user data out of the trace backend.
         // - `winston` keeps both trace-context injection AND log sending on.
         //   Log sending additionally requires `@opentelemetry/winston-transport`
         //   to be installed — it is an OPTIONAL peer, and without it the

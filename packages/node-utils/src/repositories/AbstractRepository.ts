@@ -27,9 +27,10 @@ export abstract class AbstractRepository<
     private readonly schema: EntitySchema<WithSoftDelete<Entity>>,
     protected readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    // Names the repository method that produced each pg span. Without it the
-    // driver-level spans hang off the use case as loose siblings and nothing
-    // says which query came from where.
+    // Since the pg instrumentation is off (see apps/api/src/otel.ts), this is
+    // the only place a trace records database work at all: the repository
+    // method is the span, and its duration is the query's. Datadog Database
+    // Monitoring has the statement; this says which method asked for it.
     //
     // Covers the 26 subclasses of this class wherever they are constructed,
     // including the localDataSource default-argument path. Repositories that
