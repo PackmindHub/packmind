@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import { IBaseAdapter, instrumentUseCases } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -98,6 +98,11 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this._getAvailableProviders = new GetAvailableProvidersUseCase(
       this.accountsPort,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('LlmAdapter initialized successfully');
   }

@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
@@ -32,6 +33,17 @@ export class StandardsRepositories implements IStandardsRepositories {
     this.ruleExampleRepository = new RuleExampleRepository(
       this.dataSource.getRepository(RuleExampleSchema),
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.standardRepository,
+      this.standardVersionRepository,
+      this.ruleRepository,
+      this.ruleExampleRepository,
+    ]);
   }
 
   getStandardRepository(): IStandardRepository {

@@ -1,4 +1,4 @@
-import { PackmindLogger, LogLevel } from './PackmindLogger';
+import { PackmindLogger, LogLevel, formatConsoleLine } from './PackmindLogger';
 
 describe('PackmindLogger', () => {
   let logger: PackmindLogger;
@@ -220,6 +220,63 @@ describe('PackmindLogger', () => {
       expect(() => {
         logger.error('Error after switching from silent');
       }).not.toThrow();
+    });
+  });
+
+  describe('formatConsoleLine', () => {
+    const baseRecord = {
+      timestamp: '2026-08-14T17:00:00.000Z',
+      level: 'info',
+      message: 'Something happened',
+      label: 'TestService',
+    };
+
+    // What @opentelemetry/instrumentation-winston injects into a record while a
+    // span is active.
+    const traceContext = {
+      trace_id: 'abcdef0123456789abcdef0123456789',
+      span_id: '0123456789abcdef',
+      trace_flags: '01',
+    };
+
+    describe('when a span is active', () => {
+      it('renders the shortened trace marker', () => {
+        const line = formatConsoleLine({ ...baseRecord, ...traceContext });
+
+        expect(line).toContain('[trace=abcdef01]');
+      });
+
+      it('keeps the trace fields out of the metadata blob', () => {
+        const line = formatConsoleLine({ ...baseRecord, ...traceContext });
+
+        expect(line).not.toContain('span_id');
+      });
+
+      it('still renders unrelated metadata', () => {
+        const line = formatConsoleLine({
+          ...baseRecord,
+          ...traceContext,
+          userId: '42',
+        });
+
+        expect(line).toContain('{"userId":"42"}');
+      });
+    });
+
+    describe('when no span is active', () => {
+      it('omits the trace marker', () => {
+        const line = formatConsoleLine(baseRecord);
+
+        expect(line).not.toContain('[trace=');
+      });
+
+      it('keeps the timestamp, label, level and message', () => {
+        const line = formatConsoleLine(baseRecord);
+
+        expect(line).toBe(
+          '2026-08-14T17:00:00.000Z [TestService] info: Something happened',
+        );
+      });
     });
   });
 

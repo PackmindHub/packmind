@@ -40,6 +40,12 @@ class TestSpaceMemberUseCase extends AbstractSpaceMemberUseCase<
     super(spacesPort, accountsPort, logger);
   }
 
+  // Exposes the protected hook so the span attributes can be asserted without
+  // standing up a real tracer provider.
+  publicSpanAttributes(command: SpaceMemberCommand) {
+    return this.spanAttributes(command);
+  }
+
   protected executeForSpaceMembers(
     command: SpaceMemberCommand & SpaceMemberContext,
   ): Promise<TestResponse> {
@@ -243,6 +249,29 @@ describe('AbstractSpaceMemberUseCase', () => {
         await useCase.execute(command).catch(() => undefined);
 
         expect(mockExecuteForSpaceMembers).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('spanAttributes', () => {
+    it('carries the organization and the space', () => {
+      expect(useCase.publicSpanAttributes(command)).toEqual({
+        'packmind.organization.id': command.organizationId,
+        'packmind.space.id': spaceId,
+      });
+    });
+
+    describe('when the command carries no space', () => {
+      it('omits the space id rather than sending an empty one', () => {
+        // The cast stands in for spaceId being optional on some commands.
+        const spaceless = {
+          ...command,
+          spaceId: undefined,
+        } as unknown as SpaceMemberCommand;
+
+        expect(useCase.publicSpanAttributes(spaceless)).toEqual({
+          'packmind.organization.id': command.organizationId,
+        });
       });
     });
   });

@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
@@ -62,6 +63,20 @@ export class AccountsRepositories implements IAccountsRepositories {
     this.userMetadataRepository = new UserMetadataRepository(
       this.dataSource.getRepository(UserMetadataSchema),
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.userRepository,
+      this.organizationRepository,
+      this.invitationRepository,
+      this.passwordResetTokenRepository,
+      this.userOrganizationMembershipRepository,
+      this.cliLoginCodeRepository,
+      this.userMetadataRepository,
+    ]);
   }
 
   getUserRepository(): IUserRepository {

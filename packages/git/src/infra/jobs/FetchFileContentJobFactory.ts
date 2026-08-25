@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
+import {
+  IJobFactory,
+  IJobQueue,
+  instrumentUseCase,
+  queueFactory,
+} from '@packmind/node-utils';
 import { GitProviderService } from '../../application/GitProviderService';
 import { GitRepoService } from '../../application/GitRepoService';
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
@@ -22,9 +27,10 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
   async createQueue(): Promise<IJobQueue<FetchFileContentInput>> {
     this.logger.info('Creating FetchFileContent job queue');
 
-    const getFileFromRepo = new GetFileFromRepoUseCase(
-      this.gitProviderService,
-      this.gitRepoFactory,
+    // The one use case built outside an adapter, so it opts itself in rather
+    // than being picked up by instrumentUseCases(this) - see docker/otel/README.md.
+    const getFileFromRepo = instrumentUseCase(
+      new GetFileFromRepoUseCase(this.gitProviderService, this.gitRepoFactory),
     );
 
     this._delayedJob = new FetchFileContentDelayedJob(

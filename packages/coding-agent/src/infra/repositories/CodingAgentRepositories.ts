@@ -1,6 +1,7 @@
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
 import { CodingAgentDeployerRegistry } from './CodingAgentDeployerRegistry';
+import { instrumentComponents } from '@packmind/node-utils';
 import { IStandardsPort, IGitPort } from '@packmind/types';
 
 /**
@@ -19,6 +20,12 @@ export class CodingAgentRepositories implements ICodingAgentRepositories {
       standardsPort,
       gitPort,
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([this.deployerRegistry]);
   }
 
   getDeployerRegistry(): ICodingAgentDeployerRegistry {

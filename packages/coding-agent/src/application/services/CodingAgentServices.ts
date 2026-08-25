@@ -11,6 +11,7 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
+import { instrumentComponents, instrumentMethods } from '@packmind/node-utils';
 import { DeployerService } from './DeployerService';
 
 const origin = 'CodingAgentServices';
@@ -21,6 +22,12 @@ export class CodingAgentServices {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('CodingAgentServices initialized');
+
+    // Unlike the other *Services classes this one is a service in its own
+    // right rather than a pure aggregator, so it instruments itself as well as
+    // the deployer it holds.
+    instrumentMethods(this);
+    instrumentComponents([this.deployerService]);
   }
 
   async prepareCommandsDeployment(

@@ -1,6 +1,7 @@
 import {
   IBaseAdapter,
   PackmindEventEmitterService,
+  instrumentUseCase,
 } from '@packmind/node-utils';
 import {
   AddMembersToSpaceCommand,
@@ -56,10 +57,12 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
 
   async createSpace(command: CreateSpaceCommand): Promise<CreateSpaceResponse> {
     const spaceService = this.hexa.getSpaceService();
-    const useCase = new CreateSpaceUseCase(
-      spaceService,
-      this.accountsPort,
-      this.eventEmitterService,
+    const useCase = instrumentUseCase(
+      new CreateSpaceUseCase(
+        spaceService,
+        this.accountsPort,
+        this.eventEmitterService,
+      ),
     );
     return useCase.execute(command);
   }
@@ -97,7 +100,9 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: ListUserSpacesCommand,
   ): Promise<ListUserSpacesResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    const useCase = new ListUserSpacesUseCase(membershipService);
+    const useCase = instrumentUseCase(
+      new ListUserSpacesUseCase(membershipService),
+    );
     return useCase.execute(command);
   }
 
@@ -105,7 +110,9 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: GetDefaultSpaceCommand,
   ): Promise<GetDefaultSpaceResponse> {
     const spaceService = this.hexa.getSpaceService();
-    const useCase = new GetDefaultSpaceUseCase(spaceService, this.accountsPort);
+    const useCase = instrumentUseCase(
+      new GetDefaultSpaceUseCase(spaceService, this.accountsPort),
+    );
     return useCase.execute(command);
   }
 
@@ -185,10 +192,8 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: ListSpaceMembersCommand,
   ): Promise<ListSpaceMembersResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    const useCase = new ListSpaceMembersUseCase(
-      membershipService,
-      this,
-      this.accountsPort,
+    const useCase = instrumentUseCase(
+      new ListSpaceMembersUseCase(membershipService, this, this.accountsPort),
     );
     return useCase.execute(command);
   }
@@ -197,11 +202,13 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: AddMembersToSpaceCommand,
   ): Promise<AddMembersToSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    const useCase = new AddMembersToSpaceUseCase(
-      this,
-      membershipService,
-      this.accountsPort,
-      this.eventEmitterService,
+    const useCase = instrumentUseCase(
+      new AddMembersToSpaceUseCase(
+        this,
+        membershipService,
+        this.accountsPort,
+        this.eventEmitterService,
+      ),
     );
     return useCase.execute(command);
   }
@@ -210,11 +217,13 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: RemoveMemberFromSpaceCommand,
   ): Promise<RemoveMemberFromSpaceResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    const useCase = new RemoveMemberFromSpaceUseCase(
-      this,
-      membershipService,
-      this.accountsPort,
-      this.eventEmitterService,
+    const useCase = instrumentUseCase(
+      new RemoveMemberFromSpaceUseCase(
+        this,
+        membershipService,
+        this.accountsPort,
+        this.eventEmitterService,
+      ),
     );
     return useCase.execute(command);
   }
@@ -275,11 +284,13 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
     command: UpdateMemberRoleCommand,
   ): Promise<UpdateMemberRoleResponse> {
     const membershipService = this.hexa.getUserSpaceMembershipService();
-    const useCase = new UpdateMemberRoleUseCase(
-      this,
-      membershipService,
-      this.accountsPort,
-      this.eventEmitterService,
+    const useCase = instrumentUseCase(
+      new UpdateMemberRoleUseCase(
+        this,
+        membershipService,
+        this.accountsPort,
+        this.eventEmitterService,
+      ),
     );
     return useCase.execute(command);
   }

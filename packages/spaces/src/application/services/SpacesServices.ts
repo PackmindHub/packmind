@@ -1,5 +1,6 @@
 import { SpaceService } from './SpaceService';
 import { UserSpaceMembershipService } from './UserSpaceMembershipService';
+import { instrumentComponents } from '@packmind/node-utils';
 import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositories';
 
 /**
@@ -25,6 +26,10 @@ export class SpacesServices {
       this.spacesRepositories.getUserSpaceMembershipRepository(),
       this.spacesRepositories.getSpaceRepository(),
     );
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([this.spaceService, this.userSpaceMembershipService]);
   }
 
   getSpaceService(): SpaceService {

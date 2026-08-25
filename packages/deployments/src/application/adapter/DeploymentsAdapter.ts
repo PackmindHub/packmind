@@ -3,6 +3,7 @@ import {
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   AddArtefactsToPackageCommand,
@@ -570,6 +571,11 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
   }
 
   /**

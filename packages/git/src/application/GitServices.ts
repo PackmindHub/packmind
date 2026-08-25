@@ -1,6 +1,7 @@
 import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
+import { instrumentComponents } from '@packmind/node-utils';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
@@ -31,6 +32,14 @@ export class GitServices {
     this.gitCommitService = new GitCommitService(
       this.gitRepositories.getGitCommitRepository(),
     );
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.gitProviderService,
+      this.gitRepoService,
+      this.gitCommitService,
+    ]);
   }
 
   getGitProviderService(): GitProviderService {

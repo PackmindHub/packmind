@@ -29,6 +29,8 @@
  *       this.services.getRecipeService(),
  *       this.gitPort!,
  *     );
+ *
+ *     instrumentUseCases(this);
  *   }
  *
  *   public isReady(): boolean {
@@ -53,7 +55,14 @@ export interface IBaseAdapter<TPort = void> {
    * 1. Set all port properties from the ports parameter
    * 2. Validate all required ports are set using isReady()
    * 3. Create all use cases with non-null ports
-   * 4. Perform any async initialization (e.g., queue setup, external connections)
+   * 4. Call `instrumentUseCases(this)` so those use cases produce spans
+   * 5. Perform any async initialization (e.g., queue setup, external connections)
+   *
+   * Step 4 is not optional. A use case has no base class to instrument it the
+   * way repositories and services have, and roughly a third of them extend
+   * nothing at all - so the adapter is the only seam. Nothing fails at runtime
+   * when it is missing; the traces just stop one level short, silently. There
+   * is a test for it: instrumentUseCases.arch.spec.ts in @packmind/node-utils.
    *
    * @param ports - Record of port names to port instances
    * @throws Error if required ports are not provided
@@ -72,6 +81,8 @@ export interface IBaseAdapter<TPort = void> {
    *   }
    *
    *   this._someUseCase = new SomeUseCase(this.services, this.gitPort!);
+   *
+   *   instrumentUseCases(this);
    *
    *   // Perform async initialization if needed
    *   await this.setupQueues();
