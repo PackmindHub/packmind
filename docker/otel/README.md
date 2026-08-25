@@ -390,13 +390,14 @@ Three things it does **not** do, each worth knowing before you go looking for a 
 is read straight off `process.env` at module load, not through `Configuration.getConfig()` — that is
 async, and prototypes are patched during construction, long before such a promise would resolve.
 
-> **This is a lot of spans.** A request that was 17 spans is now plausibly 60–100. Two consequences.
+> **This is a lot of spans.** A request that was 16 spans is now plausibly 60–100. Two consequences.
 > The default `BatchSpanProcessor` queue is 2048 spans in 512-span batches, so under load spans start
 > being dropped _silently_ — do not assume a trace is complete when you are chasing something under
 > load. And `span_name` is a Prometheus label on `traces_spanmetrics_*`, so going from ~150 distinct
 > names to well over a thousand multiplies active series; that bites hardest on Grafana Cloud. If
-> either does bite, the ladder is to drop the repository layer first — `pg` spans already cover that
-> ground — and reach for head sampling after that.
+> either does bite, reach for head sampling — not for the repository layer. With the `pg`
+> instrumentation disabled, those repository spans are the only record a trace has of database work
+> at all.
 
 ### Doing it by hand
 
@@ -419,15 +420,15 @@ branch on whether tracing is on. `instrumentMethods()` is built on it, so the tw
 
 ### What it looks like
 
-A real capture of `GET /organizations/:orgId/spaces/:spaceId/skills`, taken **before** the automatic
+A capture of `GET /organizations/:orgId/spaces/:spaceId/skills`, taken **before** the automatic
 layer was added — kept because it is what shows why the layer was worth adding:
 
 ```
-2029.76ms  GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
-2027.83ms    request handler - /api/v0/organizations/:orgId/spaces/:spaceId/skills
-2027.32ms      OrganizationsSpacesSkillsController.getSkills
-2024.63ms        getSkills
-2023.52ms          ListSkillsBySpaceUseCase                     ← scope=packmind
+  28.66ms  GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
+  26.73ms    request handler - /api/v0/organizations/:orgId/spaces/:spaceId/skills
+  26.22ms      OrganizationsSpacesSkillsController.getSkills
+  23.53ms        getSkills
+  22.42ms          ListSkillsBySpaceUseCase                     ← scope=packmind
    0.32ms            pg-pool.connect
    1.25ms            pg.query:SELECT packmind
    1.27ms            pg.query:SELECT packmind
@@ -435,19 +436,22 @@ layer was added — kept because it is what shows why the layer was worth adding
    0.82ms            pg.query:SELECT packmind
    0.09ms            pg-pool.connect
    0.77ms            pg.query:SELECT packmind
-2001.10ms            thisMethodTakesTwoSeconds                  ← scope=packmind
    0.19ms            pg-pool.connect
    1.61ms            pg.query:SELECT packmind
    0.17ms            pg-pool.connect
    1.87ms            pg.query:SELECT packmind
 ```
 
-Note this endpoint is 17 spans, not six: member and space-membership validation each cost a
+The original capture also carried a deliberate two-second sleep, added to prove a first-party span
+shows up at all. That demo is gone, so its span and the 2001ms it contributed to every ancestor have
+been subtracted here; the leaf timings are untouched.
+
+Note this endpoint is 16 spans, not six: member and space-membership validation each cost a
 connection and a query before the read the caller asked for. That is the kind of thing the use-case
-span makes visible — previously all thirteen `pg` spans hung off the controller with nothing to
+span makes visible — previously all eleven `pg` spans hung off the controller with nothing to
 group them.
 
-But read the thirteen `pg` spans again: they are a flat list of siblings, and nothing in that
+But read the eleven `pg` spans again: they are a flat list of siblings, and nothing in that
 capture says which of them is the membership lookup, which is the space read, and which is the query
 the caller actually asked for. Filling that in is what the automatic layer does. The same request now
 reads roughly:
@@ -467,17 +471,17 @@ GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
           ListSkillsBySpaceUseCase.executeForMembers              ← new (space-membership check)
             pg.query:SELECT packmind
             ListSkillsBySpaceUseCase.executeForSpaceMembers       ← new
-              ListSkillsBySpaceUseCase.thisMethodTakesTwoSeconds  ← new, and private
               SkillService.listSkillsBySpace                      ← new
                 SkillRepository.findBySpaceId                     ← new
                   pg.query:SELECT packmind
 ```
 
-`thisMethodTakesTwoSeconds` is the one to look at: it is `private`, nothing in the source wraps it,
-and it still gets a span. Find it with:
+`fetchUser` is the one to look at: it is `private`, it is declared on `AbstractMemberUseCase` rather
+than on the subclass, nothing in the source wraps it, and it still gets a span — named after the
+concrete use case. Find it with:
 
 ```
-{ name = "ListSkillsBySpaceUseCase.thisMethodTakesTwoSeconds" }
+{ name = "ListSkillsBySpaceUseCase.fetchUser" }
 ```
 
 > Re-capture this listing from a real trace next time the stack is up — the shape above is derived
