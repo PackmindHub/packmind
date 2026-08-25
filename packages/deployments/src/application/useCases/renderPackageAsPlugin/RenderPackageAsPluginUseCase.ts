@@ -4,7 +4,11 @@ import {
   MemberContext,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { ClaudePluginDeployer } from '@packmind/coding-agent';
+import {
+  ClaudePluginDeployer,
+  CopilotPluginDeployer,
+  ICodingAgentDeployer,
+} from '@packmind/coding-agent';
 import {
   Distribution,
   DistributedPackage,
@@ -16,6 +20,7 @@ import {
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  MarketplaceVendor,
   OrganizationId,
   PackageNotPublishableAsPluginError,
   PackageWithArtefacts,
@@ -51,11 +56,13 @@ const PLUGIN_VERSION = '0.1.0';
 const DEFAULT_GIT_BRANCH = 'main';
 
 /**
- * Renders a single Packmind package as a Claude plugin.
+ * Renders a single Packmind package as a Claude Code or GitHub Copilot
+ * plugin, depending on `command.targetVendor`.
  *
  * The use case finds and validates the package, fetches the latest version of
- * each artefact, then delegates rendering to {@link ClaudePluginDeployer}.
- * Standards are intentionally skipped; the count is surfaced to the caller.
+ * each artefact, then delegates rendering to {@link ClaudePluginDeployer} or
+ * {@link CopilotPluginDeployer}. Standards are intentionally skipped; the
+ * count is surfaced to the caller.
  */
 export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
   RenderPackageAsPluginCommand,
@@ -111,21 +118,34 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     // its slug stays stable. Always emit the package slug so the plugin stays
     // installable, and so `name` matches the `plugins/<slug>` source path.
     const pluginName = pkg.slug;
+    const targetVendor: MarketplaceVendor = command.targetVendor ?? 'anthropic';
 
-    const deployer = new ClaudePluginDeployer();
     const target = this.buildSyntheticTarget(command.pluginRoot);
-    // ClaudePluginDeployer does not read repository contents; only the id is
-    // referenced in logs. A minimal synthetic repo keeps the contract honest.
+    // Neither deployer reads repository contents; only the id is referenced
+    // in logs. A minimal synthetic repo keeps the contract honest.
     const gitRepo = { id: target.gitRepoId } as GitRepo;
 
-    const manifestUpdate = deployer.deployPluginManifest(
-      {
-        name: pluginName,
-        description: pkg.description || undefined,
-        version: PLUGIN_VERSION,
-      },
-      target,
-    );
+    // GitHub Copilot plugins have no manifest equivalent, and
+    // CopilotPluginDeployer has no deployPluginManifest method (it is not
+    // part of the shared ICodingAgentDeployer contract), so the manifest is
+    // only ever produced on the Claude branch.
+    let manifestUpdate: FileUpdates = { createOrUpdate: [], delete: [] };
+    let deployer: ICodingAgentDeployer;
+    if (targetVendor === 'github') {
+      deployer = new CopilotPluginDeployer();
+    } else {
+      const claudeDeployer = new ClaudePluginDeployer();
+      manifestUpdate = claudeDeployer.deployPluginManifest(
+        {
+          name: pluginName,
+          description: pkg.description || undefined,
+          version: PLUGIN_VERSION,
+        },
+        target,
+      );
+      deployer = claudeDeployer;
+    }
+
     const commandsUpdate = await deployer.deployCommands(
       recipeVersions,
       gitRepo,
@@ -156,6 +176,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       recipeVersions,
       skillVersions,
       standardVersions,
+      targetVendor,
     });
 
     return {
@@ -179,9 +200,16 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
     standardVersions: StandardVersion[];
+    targetVendor: MarketplaceVendor;
   }): Promise<string | undefined> {
-    const { command, pkg, recipeVersions, skillVersions, standardVersions } =
-      params;
+    const {
+      command,
+      pkg,
+      recipeVersions,
+      skillVersions,
+      standardVersions,
+      targetVendor,
+    } = params;
     const userId = command.user.id;
     const organizationId = command.organization.id;
     const gitRemoteUrl = command.gitRemoteUrl?.trim()
@@ -201,6 +229,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
           recipeVersions,
           skillVersions,
           standardVersions,
+          targetVendor,
         });
       }
 
@@ -214,6 +243,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
           mode: command.mode,
           pluginRoot: command.pluginRoot,
           ...(gitRemoteUrl ? { marketplaceRepo: gitRemoteUrl } : {}),
+          vendor: targetVendor,
         }),
       );
 
@@ -233,6 +263,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     recipeVersions: CommandVersion[];
     skillVersions: SkillVersion[];
     standardVersions: StandardVersion[];
+    targetVendor: MarketplaceVendor;
   }): Promise<string> {
     const {
       command,
@@ -243,6 +274,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       recipeVersions,
       skillVersions,
       standardVersions,
+      targetVendor,
     } = params;
 
     const target =
@@ -273,7 +305,11 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       organizationId,
       target,
       status: DistributionStatus.success,
-      renderModes: [RenderMode.CLAUDE_PLUGIN],
+      renderModes: [
+        targetVendor === 'github'
+          ? RenderMode.COPILOT_PLUGIN
+          : RenderMode.CLAUDE_PLUGIN,
+      ],
       source: 'cli',
     };
 

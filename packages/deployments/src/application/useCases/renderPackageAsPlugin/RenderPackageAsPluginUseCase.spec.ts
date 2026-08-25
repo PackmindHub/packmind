@@ -396,6 +396,91 @@ describe('RenderPackageAsPluginUseCase', () => {
     });
   });
 
+  describe('when targetVendor is github', () => {
+    beforeEach(() => {
+      const recipes = [buildCommandEntity('r1', 'audit')];
+      const skills = [buildSkill('sk1', 'threat-model')];
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        buildPackage({ recipes, skills }),
+      ]);
+      commandsPort.listCommandVersions.mockResolvedValue([
+        buildCommandVersion('r1', 'audit', '# audit'),
+      ]);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(
+        buildSkillVersion('sk1', 'threat-model', '# tm'),
+      );
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('does not render a Claude plugin manifest file', async () => {
+      const result = await useCase.execute(
+        buildCommand({ targetVendor: 'github' }),
+      );
+
+      expect(
+        result.files.some((f) => f.path.endsWith('.claude-plugin/plugin.json')),
+      ).toBe(false);
+    });
+
+    it('renders commands as Copilot prompt files', async () => {
+      const result = await useCase.execute(
+        buildCommand({ targetVendor: 'github' }),
+      );
+
+      expect(result.files.map((f) => f.path)).toContain(
+        'plugins/security/.github/prompts/audit.prompt.md',
+      );
+    });
+
+    it('renders skills under the skills folder', async () => {
+      const result = await useCase.execute(
+        buildCommand({ targetVendor: 'github' }),
+      );
+
+      expect(result.files.map((f) => f.path)).toContain(
+        'plugins/security/skills/threat-model/SKILL.md',
+      );
+    });
+
+    describe('distribution tracking', () => {
+      let distribution: Distribution;
+
+      beforeEach(async () => {
+        await useCase.execute(
+          buildCommand({
+            targetVendor: 'github',
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+        distribution = distributionRepository.add.mock
+          .calls[0][0] as Distribution;
+      });
+
+      it('sets renderModes to COPILOT_PLUGIN', () => {
+        expect(distribution.renderModes).toEqual([RenderMode.COPILOT_PLUGIN]);
+      });
+    });
+
+    describe('PluginRenderedEvent', () => {
+      let emitted: PluginRenderedEvent;
+
+      beforeEach(async () => {
+        await useCase.execute(
+          buildCommand({
+            targetVendor: 'github',
+            gitRemoteUrl: 'https://github.com/acme/marketplace.git',
+          }),
+        );
+        emitted = eventEmitterService.emit.mock
+          .calls[0][0] as PluginRenderedEvent;
+      });
+
+      it('sets vendor to github in the payload', () => {
+        expect(emitted.payload.vendor).toBe('github');
+      });
+    });
+  });
+
   describe('when the package name contains spaces', () => {
     // A package renamed to a free-text name (e.g. "definition of ready") keeps
     // its slug, but its name gains spaces. The marketplace publish flow passes
@@ -615,6 +700,7 @@ describe('RenderPackageAsPluginUseCase', () => {
             mode: 'marketplace',
             pluginRoot: 'plugins/security/',
             marketplaceRepo: 'https://github.com/acme/marketplace.git',
+            vendor: 'anthropic',
           });
         });
       });
@@ -679,6 +765,7 @@ describe('RenderPackageAsPluginUseCase', () => {
             packageSlug: pkg.slug,
             mode: 'marketplace',
             pluginRoot: 'plugins/security/',
+            vendor: 'anthropic',
           });
         });
 
