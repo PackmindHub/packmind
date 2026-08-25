@@ -182,6 +182,7 @@ single span, which is the distinction people trip on:
 { resource.service.name = "packmind-api" && duration > 800ms }
 { instrumentation:name = "packmind" }                      # our own spans only
 { name =~ "SkillRepository.*" && duration > 200ms }        # slow database work
+{ name =~ ".*UseCase.execute" }                            # every use-case entry point
 { span.packmind.organization.id = "6940d397-f6f8-4cc9-bf56-9f7f365a45a8" }
 ```
 
@@ -352,19 +353,19 @@ as the call chain has. **Private methods are captured too** — TypeScript `priv
 runtime, so they are ordinary prototype properties. Span names are `Class.method` resolved at call
 time, so an inherited `AbstractRepository.add` reports as `SkillRepository.add`.
 
-Five things to know before you go looking for a missing span:
+Four things to know before you go looking for a missing span:
 
 - **Only `async` methods.** A span has to be active _while_ the original runs, or spans created inside
   it become roots of their own — so the decision is made at patch time by asking whether the method is
   a native `AsyncFunction`. A plain method returning a promise, `list() { return this.repo.find(); }`,
   is skipped. Mark it `async`, or wrap it by hand.
-- **A use case's entry point is named after the class alone**, `SignInUserUseCase` rather than
-  `SignInUserUseCase.execute`, so one TraceQL query matches a use case however it was instrumented.
-  `AbstractMemberUseCase` gets there by skipping `execute` and wrapping it by hand — it also needs
-  that call site to set the tenant attributes; the adapter sweep gets there with the `bare` option.
-- **Use cases naming their entry point after the domain report qualified.** The `bare` name lands on
-  `execute`, so the twenty or so classes exposing `commitToGit()` or `getStandardVersion()` show up as
-  `CommitToGitUseCase.commitToGit` — the same shape every service gets.
+- **Every first-party span is `Class.method`, with no exceptions** — a use case's entry point
+  included, so `SignInUserUseCase.execute`, and `CommitToGitUseCase.commitToGit` for the twenty or so
+  classes naming theirs after the domain instead. `{ name =~ ".*UseCase.execute" }` finds the ones
+  that use the conventional name. `AbstractMemberUseCase` is the one place that builds its span by
+  hand rather than through `instrumentMethods()`, because that call site is the only one holding the
+  validated command and therefore the only one that can set the tenant attributes below; it skips
+  `execute` in the sweep so the span is not emitted twice.
 - **Adapters, controllers and free functions are not covered.** An adapter's delegating methods are
   not `async` — they `return this._useCase.execute(command)` — so the async-only rule skips them.
   Nothing is lost: the use-case span sits immediately beneath the Nest handler either way.
@@ -413,7 +414,7 @@ GET /api/v0/organizations/:orgId/spaces/:spaceId/skills
   request handler - /api/v0/organizations/:orgId/spaces/:spaceId/skills
     OrganizationsSpacesSkillsController.getSkills
       getSkills
-        ListSkillsBySpaceUseCase                            ← scope=packmind, class-named
+        ListSkillsBySpaceUseCase.execute                    ← scope=packmind
           ListSkillsBySpaceUseCase.validateMemberAccess
             ListSkillsBySpaceUseCase.fetchUser              ← private, and inherited
             ListSkillsBySpaceUseCase.fetchOrganization
