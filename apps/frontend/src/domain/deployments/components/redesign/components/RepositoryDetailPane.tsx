@@ -228,7 +228,7 @@ export function RepositoryDetailPane({
 
   const headerLockTooltip = (() => {
     if (lockProfile === 'all-no-app-token') {
-      return 'Use `packmind-cli install` to update distributions on this repository.';
+      return 'Use `packmind install` to update distributions on this repository.';
     }
     if (lockProfile === 'all-in-progress') {
       return 'A distribution is in progress for every drifted target.';
@@ -324,7 +324,7 @@ export function RepositoryDetailPane({
               </PMAlert.Indicator>
               <PMAlert.Content>
                 <PMAlert.Title>
-                  Use `packmind-cli install` to update distributions on this
+                  Use `packmind install` to update distributions on this
                   repository.
                 </PMAlert.Title>
               </PMAlert.Content>
@@ -541,7 +541,7 @@ type PackageOnTargetRowProps = {
 
 const LOCK_TOOLTIP: Record<string, string> = {
   'in-progress': 'Distribution in progress for this package on this target.',
-  'no-app-token': 'Use `packmind-cli install` to update this distribution.',
+  'no-app-token': 'Use `packmind install` to update this distribution.',
 };
 
 function PackageOnTargetRow({

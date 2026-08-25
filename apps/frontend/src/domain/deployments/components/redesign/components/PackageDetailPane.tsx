@@ -160,9 +160,9 @@ export function PackageDetailPane({
       return 'A distribution is already in progress for every drifted target.';
     }
     if (driftedLockCounts.noAppToken === driftedKeys.length) {
-      return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
+      return 'Every drifted target lives on a provider without a token — use `packmind install`.';
     }
-    return 'Every drifted target is either in progress or distributed via `packmind-cli install`.';
+    return 'Every drifted target is either in progress or distributed via `packmind install`.';
   })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
@@ -579,7 +579,7 @@ type InstallRowProps = {
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
   'in-progress': 'Distribution in progress for this target.',
   'no-app-token':
-    'This provider has no token — use `packmind-cli install` to update this distribution.',
+    'This provider has no token — use `packmind install` to update this distribution.',
 };
 
 function InstallRow({
@@ -1117,7 +1117,7 @@ const MODE_META: Record<
           bg="background.tertiary"
           borderRadius="sm"
         >
-          packmind-cli install
+          packmind install
         </PMText>{' '}
         from each repo.
       </>

@@ -307,7 +307,7 @@ export const CreateFromCodeContent: React.FC<CreateFromCodeContentProps> = ({
               </PMText>
               <PMBox width="1/2">
                 <CopiableTextField
-                  value="packmind-cli init"
+                  value="packmind init"
                   readOnly
                   label="Terminal"
                 />

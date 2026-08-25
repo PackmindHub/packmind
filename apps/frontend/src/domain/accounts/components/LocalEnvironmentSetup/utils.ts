@@ -41,7 +41,7 @@ export const buildCurlInstallCommand = (loginCode: string): string => {
 
 export const buildCliLoginCommand = (): string => {
   const hostFlag = isDefaultHost() ? '' : ` --host ${getCurrentHost()}`;
-  return `packmind-cli login${hostFlag}`;
+  return `packmind login${hostFlag}`;
 };
 
 export const formatExpirationDate = (expiresAt?: string | Date): string => {

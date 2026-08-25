@@ -95,7 +95,7 @@ export const OutdatedDistributeBanner: React.FC<
       disabledTooltip = 'Outdated packages are being distributed';
     } else if (hasIneligibleTargets) {
       disabledTooltip =
-        'Outdated targets are not configured for in-app distribution. Use `packmind-cli install` to distribute.';
+        'Outdated targets are not configured for in-app distribution. Use `packmind install` to distribute.';
     }
   }
 

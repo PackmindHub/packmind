@@ -102,7 +102,7 @@ const renderStatusNode = (
   if (isDeleted) {
     return (
       <PMTooltip
-        label={`The ${artifactType} deletion will be effective on the repository after a \`packmind-cli install\` or git distribution from web app`}
+        label={`The ${artifactType} deletion will be effective on the repository after a \`packmind install\` or git distribution from web app`}
         placement="top"
       >
         <PMBadge colorPalette="red" size="sm">
