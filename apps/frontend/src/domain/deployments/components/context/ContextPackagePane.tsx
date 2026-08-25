@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
   PMBadge,
@@ -17,7 +17,11 @@ import type {
   SkillFile,
   SpaceId,
 } from '@packmind/types';
-import type { ContextComponent, ContextGroup } from './buildPackageContext';
+import {
+  componentSelectionKey,
+  type ContextComponent,
+  type ContextGroup,
+} from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import {
   componentEditHref,
@@ -100,11 +104,57 @@ export function ContextPackagePane({
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
   /*
-   * The component being moved, held here rather than in the row: the dialog has
-   * to outlive the list it was opened from, because the move rebuilds that list
+   * What is being moved, held here rather than in the row: the dialog has to
+   * outlive the list it was opened from, because the move rebuilds that list
    * and the row the button sits on is gone by the time the toast appears.
+   *
+   * A list rather than one component, so a row's own button and the selection
+   * bar open the same dialog. A move of one is a move of a list of one.
    */
-  const [moving, setMoving] = useState<ContextComponent | null>(null);
+  const [moving, setMoving] = useState<readonly ContextComponent[] | null>(
+    null,
+  );
+  /*
+   * What is picked, by `componentSelectionKey` rather than by component: the
+   * groups are rebuilt on every render of the surface, so holding the objects
+   * would compare identities that change for reasons that have nothing to do
+   * with the selection.
+   *
+   * Not in the URL, unlike the open package and the open component. A selection
+   * is a gesture in progress, not a place: it means nothing to send to someone,
+   * and it is over as soon as it is acted on. The pane is keyed by package in
+   * the surface, so changing package drops it, which is what leaving the list
+   * it was made in should do.
+   */
+  const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  /*
+   * The picked components, resolved against what the package still holds. That
+   * is also what repairs the selection after a move: the components that left
+   * are no longer in the groups, so they drop out of it on their own.
+   */
+  const selection = useMemo(
+    () =>
+      groups
+        .flatMap((group) => group.components)
+        .filter((component) =>
+          selectedKeys.has(componentSelectionKey(component)),
+        ),
+    [groups, selectedKeys],
+  );
+
+  const toggleSelect = useCallback((component: ContextComponent) => {
+    setSelectedKeys((previous) => {
+      const next = new Set(previous);
+      const key = componentSelectionKey(component);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
       ? DISTRIBUTION_TAB
@@ -140,19 +190,20 @@ export function ContextPackagePane({
    * outlive the thing it was opened from: from the list, the move rebuilds that
    * list, and from the detail, the move empties the detail.
    */
-  const moveDialog = moving && (
+  const moveDialog = moving && moving.length > 0 && (
     <MoveComponentDialog
       open
       onOpenChange={(isOpen) => {
         if (!isOpen) setMoving(null);
       }}
-      component={moving}
+      components={moving}
       source={pkg}
       packages={packages}
       spaceId={spaceId}
       organizationId={organizationId}
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
+      onMoved={clearSelection}
     />
   );
 
@@ -181,7 +232,7 @@ export function ContextPackagePane({
               packageName={pkg.name}
               backHref={packageDetailHref(searchParams, pkg.id)}
               editHref={componentEditHref(detail, { orgSlug, spaceSlug })}
-              onMove={() => setMoving(detail)}
+              onMove={() => setMoving([detail])}
             />
           )}
         </PMBox>
@@ -276,6 +327,13 @@ export function ContextPackagePane({
           <EmptyPackageBody packageEditHref={packageEditHref} />
         ) : (
           <PMVStack gap={5} align="stretch">
+            {selection.length > 0 && (
+              <SelectionBar
+                count={selection.length}
+                onMove={() => setMoving(selection)}
+                onClear={clearSelection}
+              />
+            )}
             {groups.map((group) => (
               <PMBox key={group.type}>
                 <PMHStack gap={2} align="baseline">
@@ -312,7 +370,9 @@ export function ContextPackagePane({
                         pkg.id,
                       ),
                     }))}
-                    onMove={setMoving}
+                    onMove={(component) => setMoving([component])}
+                    selectedKeys={selectedKeys}
+                    onToggleSelect={toggleSelect}
                   />
                 </PMBox>
               </PMBox>
@@ -341,6 +401,53 @@ export function ContextPackagePane({
 
       {moveDialog}
     </PMTabsCompound.Root>
+  );
+}
+
+/**
+ * What is picked, and what can be done with it.
+ *
+ * Sticky at the top of the list rather than at the bottom of the pane: a
+ * selection is made by running down a list, so the row that was just ticked is
+ * near the pointer and the action has to be too. Pinned because a package with
+ * four groups out-scrolls the viewport, and a bar left at the top of the
+ * document would be off screen exactly when it is needed.
+ *
+ * It counts rather than naming: at three components the names no longer fit on
+ * the line, and the list behind the bar is already showing which ones they are.
+ */
+function SelectionBar({
+  count,
+  onMove,
+  onClear,
+}: Readonly<{ count: number; onMove: () => void; onClear: () => void }>) {
+  return (
+    <PMHStack
+      position="sticky"
+      top={0}
+      zIndex={1}
+      gap={3}
+      align="center"
+      justify="space-between"
+      paddingX={3}
+      paddingY={2}
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="sm"
+      bg="background.secondary"
+    >
+      <PMText fontSize="sm" fontWeight="medium">
+        {count} selected
+      </PMText>
+      <PMHStack gap={2}>
+        <PMButton variant="secondary" size="xs" onClick={onMove}>
+          Move to another package
+        </PMButton>
+        <PMButton variant="tertiary" size="xs" onClick={onClear}>
+          Clear
+        </PMButton>
+      </PMHStack>
+    </PMHStack>
   );
 }
 

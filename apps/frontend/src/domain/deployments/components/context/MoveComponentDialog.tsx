@@ -32,9 +32,12 @@ import {
   buildMoveTargets,
   componentIdsPayload,
   filterMoveTargets,
+  holdsEverything,
+  movedComponentCount,
   type MoveTarget,
 } from './buildMoveTargets';
 import {
+  COMPONENT_TYPE_LABELS,
   COMPONENT_TYPE_LABELS_SINGULAR,
   type ContextComponent,
 } from './buildPackageContext';
@@ -43,14 +46,18 @@ import {
 const SEARCHABLE_FROM = 7;
 
 /**
- * Moving one component out of the package it is being read from and into
- * another one of the same space.
+ * Moving what is picked out of the package it is being read from and into
+ * another one of the same space: one component, or a whole selection.
  *
- * There is no move endpoint: the server knows how to add a component to a
- * package and how to remove it from one. The order is what makes it a move
- * rather than a gap — the add goes first, so a failure between the two leaves
- * the component in both packages instead of in none. That state is recoverable
- * from this same dialog, which then offers to remove it from here.
+ * There is no move endpoint: the server knows how to add components to a
+ * package and how to remove them from one. The order is what makes it a move
+ * rather than a gap: the add goes first, so a failure between the two leaves
+ * the components in both packages instead of in none. That state is recoverable
+ * from this same dialog, which then offers to remove them from here.
+ *
+ * A selection is two calls, not two calls per component. Both mutations take a
+ * bag of ids grouped by type, so a mixed selection leaves the source in one
+ * request and cannot half-leave it.
  *
  * One dialog and no second confirmation, unlike the manage-packages drawer.
  * What that drawer confirms is a removal it presents as a removal; here the
@@ -62,18 +69,20 @@ const SEARCHABLE_FROM = 7;
 export function MoveComponentDialog({
   open,
   onOpenChange,
-  component,
+  components,
   source,
   packages,
   spaceId,
   organizationId,
   orgSlug,
   spaceSlug,
+  onMoved,
 }: Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  component: ContextComponent;
-  /** The package the component is being read from, and the one it leaves. */
+  /** What is being moved, in the order it was read. Never empty. */
+  components: readonly ContextComponent[];
+  /** The package the components are being read from, and the one they leave. */
   source: PackageResponse;
   /** Every package of the space, membership ids included. */
   packages: readonly PackageResponse[];
@@ -81,6 +90,12 @@ export function MoveComponentDialog({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
+  /**
+   * The move went through, so whoever holds the selection can drop it. Called
+   * before the dialog closes, and only on the path where the source no longer
+   * holds what was picked.
+   */
+  onMoved?: () => void;
 }>) {
   const [query, setQuery] = useState('');
   const [busyPackageId, setBusyPackageId] = useState<PackageId | null>(null);
@@ -90,17 +105,36 @@ export function MoveComponentDialog({
     useRemoveArtefactsFromPackageMutation();
   const { getDeployedTargets, getDeployedMarketplaces } =
     usePackageDeploymentStatus(spaceId, organizationId);
+  /* Read often enough below that the comparison is worth a name. */
+  const single = components.length === 1;
 
   const targets = useMemo(
-    () => buildMoveTargets(packages, component, source.id),
-    [packages, component, source.id],
+    () => buildMoveTargets(packages, components, source.id),
+    [packages, components, source.id],
   );
   const shown = useMemo(
     () => filterMoveTargets(targets, query),
     [targets, query],
   );
 
-  const kind = COMPONENT_TYPE_LABELS_SINGULAR[component.type].toLowerCase();
+  /*
+   * What the selection is called. A mixed one has no kind of its own, so it is
+   * "components": naming the first type would say something untrue about the
+   * rest, and counting the types would read as a summary of the list the user
+   * just built.
+   */
+  const types = new Set(components.map((picked) => picked.type));
+  const kind =
+    components.length === 1
+      ? COMPONENT_TYPE_LABELS_SINGULAR[components[0].type].toLowerCase()
+      : types.size === 1
+        ? COMPONENT_TYPE_LABELS[components[0].type].toLowerCase()
+        : 'components';
+  /* What a message calls them: one is named, several are counted. */
+  const subject =
+    components.length === 1
+      ? components[0].name
+      : `${components.length} ${kind}`;
   const sourcePlaces = deployedPlaceParts(
     getDeployedTargets(source.id),
     getDeployedMarketplaces(source.id),
@@ -115,13 +149,19 @@ export function MoveComponentDialog({
     setBusyPackageId(target.pkg.id);
     let added = false;
     try {
-      if (!target.alreadyHolds) {
+      /*
+       * Only what the destination does not carry yet. Sending the whole
+       * selection would be harmless for the server and wrong for the reader:
+       * the outcome it reports would cover memberships this move did not
+       * create.
+       */
+      if (target.missing.length > 0) {
         const outcomes = await addArtefacts({
           spaceId,
           entries: [
             {
               packageId: target.pkg.id,
-              ...componentIdsPayload(component),
+              ...componentIdsPayload(target.missing),
             },
           ],
         });
@@ -129,7 +169,9 @@ export function MoveComponentDialog({
           pmToaster.create({
             type: 'error',
             title: `Couldn't add to ${target.pkg.name}`,
-            description: `${component.name} is still in ${source.name}.`,
+            description: `${subject} ${
+              components.length === 1 ? 'is' : 'are'
+            } still in ${source.name}.`,
           });
           return;
         }
@@ -139,28 +181,31 @@ export function MoveComponentDialog({
       await removeArtefacts({
         spaceId,
         packageId: source.id,
-        ...componentIdsPayload(component),
+        ...componentIdsPayload(components),
       });
 
       pmToaster.create({
         type: 'success',
-        title: target.alreadyHolds
+        title: holdsEverything(target)
           ? `Removed from ${source.name}`
           : `Moved to ${target.pkg.name}`,
-        description: `${component.name} now ships with ${target.pkg.name}.`,
+        description: `${subject} now ${
+          components.length === 1 ? 'ships' : 'ship'
+        } with ${target.pkg.name}.`,
       });
+      onMoved?.();
       handleOpenChange(false);
     } catch {
       pmToaster.create({
         type: 'error',
-        // The half-done state, said in full. The component is in both packages
-        // and the dialog can finish the job: reopening it on the same
+        // The half-done state, said in full. What was picked is in both
+        // packages and the dialog can finish the job: reopening it on the same
         // destination now offers to remove it from here.
         title: added
-          ? `${component.name} is in both packages`
+          ? `${subject} ${components.length === 1 ? 'is' : 'are'} in both packages`
           : `Couldn't remove from ${source.name}`,
         description: added
-          ? `It was added to ${target.pkg.name} but could not be removed from ${source.name}. Move it again to finish.`
+          ? `Added to ${target.pkg.name} but not removed from ${source.name}. Move again to finish.`
           : 'Try again, or check your space access.',
       });
     } finally {
@@ -180,7 +225,7 @@ export function MoveComponentDialog({
         <PMDialog.Positioner>
           <PMDialog.Content>
             <PMDialog.Header>
-              <PMDialog.Title>Move {component.name}</PMDialog.Title>
+              <PMDialog.Title>Move {subject}</PMDialog.Title>
               <PMDialog.CloseTrigger asChild>
                 <PMCloseButton disabled={busyPackageId !== null} />
               </PMDialog.CloseTrigger>
@@ -190,12 +235,14 @@ export function MoveComponentDialog({
               <PMVStack gap={4} alignItems="stretch">
                 {targets.length > 0 && (
                   <PMText variant="body" color="secondary">
-                    This {kind} leaves{' '}
+                    {single ? 'This' : 'These'} {single ? kind : subject}{' '}
+                    {single ? 'leaves' : 'leave'}{' '}
                     <PMText as="span" fontWeight={500} color="primary">
                       {source.name}
                     </PMText>{' '}
-                    and joins the package you pick. It stays in your library
-                    either way.
+                    and {single ? 'joins' : 'join'} the package you pick.{' '}
+                    {single ? 'It stays' : 'They stay'} in your library either
+                    way.
                   </PMText>
                 )}
 
@@ -266,6 +313,7 @@ export function MoveComponentDialog({
                             key={target.pkg.id}
                             target={target}
                             isFirst={index === 0}
+                            picked={components.length}
                             deployedPlaces={deployedPlaceParts(
                               getDeployedTargets(target.pkg.id),
                               getDeployedMarketplaces(target.pkg.id),
@@ -309,13 +357,19 @@ export function MoveComponentDialog({
 
 /**
  * One candidate. The button says what will happen rather than always saying
- * "Move here": on a package that already carries the component, the only thing
- * left to do is to detach it from the source, and calling that a move would
- * promise a second membership the component already has.
+ * "Move here": on a package that already carries everything picked, the only
+ * thing left to do is to detach it from the source, and calling that a move
+ * would promise memberships the components already have.
+ *
+ * The partial case is the one a selection adds, and it is the one that has to
+ * be readable before the click: "already holds 2 of 5" says that three
+ * memberships are about to be created and two are not, which is the difference
+ * between this row and the one below it.
  */
 function TargetRow({
   target,
   isFirst,
+  picked,
   deployedPlaces,
   isBusy,
   disabled,
@@ -323,12 +377,22 @@ function TargetRow({
 }: Readonly<{
   target: MoveTarget;
   isFirst: boolean;
+  /** How many components are being moved, so the row can say how many it has. */
+  picked: number;
   deployedPlaces: string;
   isBusy: boolean;
   disabled: boolean;
   onPick: () => void;
 }>) {
-  const { pkg, alreadyHolds } = target;
+  const { pkg, held } = target;
+  const alreadyHolds = holdsEverything(target);
+  const heldNote = alreadyHolds
+    ? picked === 1
+      ? 'Already in this package'
+      : `Already holds all ${movedComponentCount(target)}`
+    : held.length > 0
+      ? `Already holds ${held.length} of ${movedComponentCount(target)}`
+      : '';
 
   return (
     <PMHStack
@@ -344,11 +408,10 @@ function TargetRow({
           {pkg.name}
         </PMText>
         <PMText as="div" fontSize="xs" color="faded" truncate>
-          {alreadyHolds
-            ? 'Already in this package'
-            : deployedPlaces
+          {heldNote ||
+            (deployedPlaces
               ? `Deployed to ${deployedPlaces}`
-              : pkg.description || 'Not deployed anywhere'}
+              : pkg.description || 'Not deployed anywhere')}
         </PMText>
       </PMBox>
       <PMButton

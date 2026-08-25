@@ -10,6 +10,8 @@ import {
   buildMoveTargets,
   componentIdsPayload,
   filterMoveTargets,
+  holdsEverything,
+  movedComponentCount,
   packageHoldsComponent,
   type MoveTarget,
 } from './buildMoveTargets';
@@ -41,27 +43,61 @@ const SOURCE = createPackageId('source');
 
 describe('componentIdsPayload', () => {
   it('addresses a standard by its standard id', () => {
-    expect(componentIdsPayload(component('standard', 's1'))).toEqual({
+    expect(componentIdsPayload([component('standard', 's1')])).toEqual({
       standardIds: [createStandardId('s1')],
     });
   });
 
   it('addresses a command by its command id', () => {
-    expect(componentIdsPayload(component('command', 'c1'))).toEqual({
+    expect(componentIdsPayload([component('command', 'c1')])).toEqual({
       commandIds: [createCommandId('c1')],
     });
   });
 
   it('addresses a skill by its skill id', () => {
-    expect(componentIdsPayload(component('skill', 'k1'))).toEqual({
+    expect(componentIdsPayload([component('skill', 'k1')])).toEqual({
       skillIds: [createSkillId('k1')],
     });
   });
 
   it('leaves the types it is not about out of the payload', () => {
-    expect(Object.keys(componentIdsPayload(component('skill', 'k1')))).toEqual([
-      'skillIds',
-    ]);
+    expect(
+      Object.keys(componentIdsPayload([component('skill', 'k1')])),
+    ).toEqual(['skillIds']);
+  });
+
+  describe('when several components of one type are picked', () => {
+    it('carries them in one array', () => {
+      expect(
+        componentIdsPayload([
+          component('standard', 's1'),
+          component('standard', 's2'),
+        ]),
+      ).toEqual({
+        standardIds: [createStandardId('s1'), createStandardId('s2')],
+      });
+    });
+  });
+
+  describe('when the selection mixes types', () => {
+    it('groups the ids by type', () => {
+      expect(
+        componentIdsPayload([
+          component('standard', 's1'),
+          component('skill', 'k1'),
+          component('standard', 's2'),
+        ]),
+      ).toEqual({
+        standardIds: [createStandardId('s1'), createStandardId('s2')],
+        skillIds: [createSkillId('k1')],
+      });
+    });
+  });
+
+  describe('when nothing is picked', () => {
+    it('says nothing about any type', () => {
+      expect(componentIdsPayload([])).toEqual({});
+    });
   });
 });
 
@@ -122,7 +158,7 @@ describe('buildMoveTargets', () => {
           { ...pack('source', 'Source'), id: SOURCE },
           pack('alpha', 'Alpha', { standards: [createStandardId('s1')] }),
         ],
-        component('standard', 's1'),
+        [component('standard', 's1')],
         SOURCE,
       );
     });
@@ -136,21 +172,81 @@ describe('buildMoveTargets', () => {
 
     it('marks the one that already carries the component', () => {
       expect(
-        targets.find((target) => target.pkg.name === 'Alpha')?.alreadyHolds,
+        holdsEverything(
+          targets.find((target) => target.pkg.name === 'Alpha') as MoveTarget,
+        ),
       ).toBe(true);
     });
 
     it('leaves the others open to a real move', () => {
       expect(
-        targets.find((target) => target.pkg.name === 'Zulu')?.alreadyHolds,
+        holdsEverything(
+          targets.find((target) => target.pkg.name === 'Zulu') as MoveTarget,
+        ),
       ).toBe(false);
+    });
+  });
+
+  describe('when several components are picked', () => {
+    const PICKED = [
+      component('standard', 's1'),
+      component('command', 'c1'),
+      component('skill', 'k1'),
+    ];
+    let partial: MoveTarget;
+
+    beforeEach(() => {
+      [partial] = buildMoveTargets(
+        [
+          pack('alpha', 'Alpha', {
+            standards: [createStandardId('s1')],
+            skills: [createSkillId('k1')],
+          }),
+        ],
+        PICKED,
+        SOURCE,
+      );
+    });
+
+    it('keeps the ones the candidate already carries', () => {
+      expect(partial.held.map((held) => held.key)).toEqual(['s1', 'k1']);
+    });
+
+    it('keeps the ones the move has to add', () => {
+      expect(partial.missing.map((missing) => missing.key)).toEqual(['c1']);
+    });
+
+    it('is not a plain detach while one of them is new', () => {
+      expect(holdsEverything(partial)).toBe(false);
+    });
+
+    it('counts what the candidate is being asked about', () => {
+      expect(movedComponentCount(partial)).toBe(3);
+    });
+
+    describe('when the candidate carries all of them', () => {
+      it('has nothing left to add', () => {
+        const [target] = buildMoveTargets(
+          [
+            pack('alpha', 'Alpha', {
+              standards: [createStandardId('s1')],
+              commands: [createCommandId('c1')],
+              skills: [createSkillId('k1')],
+            }),
+          ],
+          PICKED,
+          SOURCE,
+        );
+
+        expect(holdsEverything(target)).toBe(true);
+      });
     });
   });
 
   it('sorts by name rather than by the order the space returned', () => {
     const targets = buildMoveTargets(
       [pack('p1', 'Rendering'), pack('p2', 'Backend'), pack('p3', 'API')],
-      component('skill', 'k1'),
+      [component('skill', 'k1')],
       SOURCE,
     );
 
@@ -165,7 +261,7 @@ describe('buildMoveTargets', () => {
     it('offers nowhere to go', () => {
       const targets = buildMoveTargets(
         [{ ...pack('source', 'Source'), id: SOURCE }],
-        component('command', 'c1'),
+        [component('command', 'c1')],
         SOURCE,
       );
 
@@ -181,7 +277,7 @@ describe('filterMoveTargets', () => {
       pack('p2', 'Frontend rules', {}, 'How the app is written'),
       pack('p3', 'Docs', {}, 'Everything about the product'),
     ],
-    component('standard', 's1'),
+    [component('standard', 's1')],
     SOURCE,
   );
 

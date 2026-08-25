@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
+  PMCheckbox,
   PMHStack,
   PMIcon,
   PMIconButton,
@@ -16,9 +17,10 @@ import {
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
-import type {
-  ContextComponent,
-  ContextComponentType,
+import {
+  componentSelectionKey,
+  type ContextComponent,
+  type ContextComponentType,
 } from './buildPackageContext';
 
 /**
@@ -52,6 +54,8 @@ export function ContextComponentList({
   entries,
   showPackages = false,
   onMove,
+  selectedKeys,
+  onToggleSelect,
 }: Readonly<{
   entries: readonly ComponentListEntry[];
   showPackages?: boolean;
@@ -61,6 +65,14 @@ export function ContextComponentList({
    * several packages, so there is no source to move it out of.
    */
   onMove?: (component: ContextComponent) => void;
+  /** Which rows are picked, by `componentSelectionKey`. */
+  selectedKeys?: ReadonlySet<string>;
+  /**
+   * Picking a row, which is what turns the per-row move into a bulk one. Comes
+   * with `selectedKeys` and under the same condition as `onMove`: the selection
+   * only means something in a list that has a package to leave.
+   */
+  onToggleSelect?: (component: ContextComponent) => void;
 }>) {
   return (
     <PMBox
@@ -71,11 +83,15 @@ export function ContextComponentList({
     >
       {entries.map((entry, index) => (
         <ComponentRow
-          key={entry.component.key}
+          key={componentSelectionKey(entry.component)}
           entry={entry}
           isFirst={index === 0}
           showPackages={showPackages}
           onMove={onMove}
+          isSelected={
+            selectedKeys?.has(componentSelectionKey(entry.component)) ?? false
+          }
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </PMBox>
@@ -87,11 +103,15 @@ function ComponentRow({
   isFirst,
   showPackages,
   onMove,
+  isSelected,
+  onToggleSelect,
 }: Readonly<{
   entry: ComponentListEntry;
   isFirst: boolean;
   showPackages: boolean;
   onMove?: (component: ContextComponent) => void;
+  isSelected: boolean;
+  onToggleSelect?: (component: ContextComponent) => void;
 }>) {
   const { component, packageNames = [] } = entry;
 
@@ -108,8 +128,26 @@ function ComponentRow({
       borderTopWidth={isFirst ? '0' : '1px'}
       borderColor="border.tertiary"
       _hover={{ bg: 'background.secondary' }}
+      // The picked row stays legible once the pointer has left it: the hover
+      // tint alone would make the selection disappear the moment it is read.
+      bg={isSelected ? 'background.secondary' : undefined}
       transition="background-color 150ms ease-out"
     >
+      {onToggleSelect && (
+        /*
+          Beside the link and not inside it, for the reason the move button is:
+          a control nested in an anchor is activated by the anchor, so ticking a
+          row would open it.
+        */
+        <PMBox display="flex" alignItems="center" paddingLeft={3}>
+          <PMCheckbox
+            size="sm"
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(component)}
+            inputProps={{ 'aria-label': `Select ${component.name}` }}
+          />
+        </PMBox>
+      )}
       {/*
         A real link rather than a box that navigates: the name is the whole
         target area, so it has to be openable in a new tab and readable as an

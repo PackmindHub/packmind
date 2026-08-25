@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import {
   buildPackageContext,
+  componentSelectionKey,
   packageComponentCount,
   type PackageComponentIds,
   type PackageContext,
@@ -255,5 +256,19 @@ describe('packageComponentCount', () => {
 
   it('is zero for an empty package', () => {
     expect(packageComponentCount(pkg())).toBe(0);
+  });
+});
+
+describe('componentSelectionKey', () => {
+  it('tells two types that share an id apart', () => {
+    expect(componentSelectionKey({ type: 'standard', key: 'x' })).not.toEqual(
+      componentSelectionKey({ type: 'skill', key: 'x' }),
+    );
+  });
+
+  it('gives the same component the same key twice', () => {
+    expect(componentSelectionKey({ type: 'command', key: 'c1' })).toEqual(
+      componentSelectionKey({ type: 'command', key: 'c1' }),
+    );
   });
 });

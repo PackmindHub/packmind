@@ -31,6 +31,20 @@ export type ContextComponent = {
   href: string;
 };
 
+/**
+ * How a component is told apart while several are picked at once.
+ *
+ * Not `key` alone. That is the entity id, and two entities of different types
+ * can carry the same one: the membership payload separates them by type, so a
+ * selection built on the id alone would tick two rows at once and move a
+ * component nobody picked.
+ */
+export function componentSelectionKey(
+  component: Pick<ContextComponent, 'type' | 'key'>,
+): string {
+  return `${component.type}:${component.key}`;
+}
+
 export type ContextGroup = {
   type: ContextComponentType;
   label: string;
