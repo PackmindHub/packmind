@@ -1,16 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
+  PMAlertDialog,
   PMBadge,
   PMBox,
   PMButton,
   PMHStack,
   PMHeading,
+  PMIcon,
+  PMIconButton,
+  PMMenu,
+  PMPortal,
   PMTabsCompound,
   PMText,
   PMTooltip,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
+import { LuEllipsisVertical, LuTrash2 } from 'react-icons/lu';
 import type {
   OrganizationId,
   PackageResponse,
@@ -36,6 +43,8 @@ import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { MoveComponentDialog } from './MoveComponentDialog';
 import { usePackageDrift } from './usePackageDrift';
+import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 const CONTENT_TAB = 'content';
 const DISTRIBUTION_TAB = 'distribution';
@@ -79,6 +88,7 @@ export function ContextPackagePane({
   packageHref,
   packageEditHref,
   distributionHistoryHref,
+  onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
   /** The whole space, so a component can be moved without a second query. */
@@ -101,6 +111,12 @@ export function ContextPackagePane({
   packageEditHref: string;
   /** Where the distribution events of this package are listed. */
   distributionHistoryHref: string;
+  /**
+   * The package is gone, so the surface has to stop asking for it. Deleting is
+   * the one action here that outlives the pane: everything else changes what
+   * the pane shows, this removes what it was showing.
+   */
+  onDeleted: () => void;
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
   /*
@@ -129,6 +145,9 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { mutateAsync: deletePackages, isPending: isDeleting } =
+    useDeletePackagesBatchMutation();
   /*
    * The picked components, resolved against what the package still holds. That
    * is also what repairs the selection after a move: the components that left
@@ -154,6 +173,36 @@ export function ContextPackagePane({
   }, []);
 
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+
+  /*
+   * The batch mutation with one id in it, which is what the package page does
+   * too: there is no single-package endpoint, and reaching for one here would
+   * be a second way of deleting a package that could start behaving
+   * differently.
+   */
+  const deleteThisPackage = async () => {
+    try {
+      await deletePackages({
+        packageIds: [pkg.id],
+        spaceId,
+        organizationId,
+      });
+      pmToaster.create({
+        type: 'success',
+        title: `Deleted ${pkg.name}`,
+        description:
+          'The standards, commands and skills it held stay in the space.',
+      });
+      setConfirmingDelete(false);
+      onDeleted();
+    } catch {
+      pmToaster.create({
+        type: 'error',
+        title: `Couldn't delete ${pkg.name}`,
+        description: 'Try again, or check your space access.',
+      });
+    }
+  };
 
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
@@ -282,6 +331,42 @@ export function ContextPackagePane({
               spaceSlug={spaceSlug}
               packageId={pkg.id}
             />
+            {/*
+              Deleting the package, behind a menu rather than beside the two
+              buttons: the plugin-first navigation has no packages list, so this
+              is the only place the action exists, and a destructive control on
+              a screen made for reading should not be one stray click from the
+              one that creates things.
+            */}
+            <PMMenu.Root>
+              <PMMenu.Trigger asChild>
+                <PMIconButton
+                  aria-label={`More actions for ${pkg.name}`}
+                  variant="tertiary"
+                  size="sm"
+                >
+                  <LuEllipsisVertical />
+                </PMIconButton>
+              </PMMenu.Trigger>
+              <PMPortal>
+                <PMMenu.Positioner>
+                  <PMMenu.Content>
+                    <PMMenu.Item
+                      value="delete-package"
+                      color="text.error"
+                      onClick={() => setConfirmingDelete(true)}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>
+                          <LuTrash2 />
+                        </PMIcon>
+                        Delete package
+                      </PMHStack>
+                    </PMMenu.Item>
+                  </PMMenu.Content>
+                </PMMenu.Positioner>
+              </PMPortal>
+            </PMMenu.Root>
           </PMHStack>
         </PMHStack>
 
@@ -400,6 +485,23 @@ export function ContextPackagePane({
       </PMTabsCompound.Content>
 
       {moveDialog}
+      {/*
+        What the message adds to the confirmation the packages list uses: a
+        package is a set of memberships, so deleting one is not deleting what it
+        holds, and that is the question the dialog is answering.
+      */}
+      <PMAlertDialog
+        title="Delete package"
+        message={`${PACKAGE_MESSAGES.confirmation.deletePackage(
+          pkg.name,
+        )} The standards, commands and skills it holds stay in the space.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => void deleteThisPackage()}
+        open={confirmingDelete}
+        onOpenChange={({ open }) => setConfirmingDelete(open)}
+        isLoading={isDeleting}
+      />
     </PMTabsCompound.Root>
   );
 }

@@ -208,6 +208,25 @@ export function SpaceContextSurface() {
     [setSearchParams],
   );
 
+  /*
+   * The open package was deleted, so the address stops naming it: left in
+   * place, a shared link would ask for a package the space no longer has, and
+   * the surface would answer with the first one under a URL that says
+   * otherwise. Dropping the parameter falls back to the first package, or to
+   * the blank state when that was the last one.
+   */
+  const forgetPackage = useCallback(() => {
+    setSearchParams(
+      (previous) => {
+        previous.delete(PACKAGE_PARAM);
+        previous.delete(COMPONENT_PARAM);
+        previous.delete(FILE_PARAM);
+        return previous;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   const selectPackage = useCallback(
     (packageId: PackageId) => show(packageId),
     [show],
@@ -326,6 +345,7 @@ export function SpaceContextSurface() {
                   spaceSlug,
                   selectedPackage.id,
                 )}?tab=distributions`}
+                onDeleted={forgetPackage}
               />
             )
           )}
