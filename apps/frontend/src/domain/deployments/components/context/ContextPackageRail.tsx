@@ -255,13 +255,20 @@ function NoMatches({ query }: Readonly<{ query: string }>) {
 /**
  * The inventory, and the part of it worth a shortcut.
  *
- * The second line is the components no package carries. It is here rather than
- * only inside the pane because it is the one subset of the inventory that is a
- * piece of work rather than a way of reading: something in no package reaches no
- * repository, and finding out how many there are should not cost a click.
- * Indented under the row it filters, because it is not a third place to be.
+ * Built on the two shapes the rail already has rather than a third one: a
+ * container row with its name on one line and a count under it, exactly like a
+ * package, and one inset pill under it, exactly like a component the search
+ * found inside a package. The first version of this made the second line a
+ * 10px caption glued to the row above, which read as a stray label rather than
+ * as something to click.
  *
- * Only one of the two is tinted at a time, the deepest one that is open, so the
+ * The pill is the components no package carries. It is in the rail rather than
+ * only inside the pane because it is the one part of the inventory that is a
+ * piece of work rather than a way of reading: something in no package reaches
+ * no repository. It is absent when the space has none, so a rail without the
+ * line is a space where everything reaches somewhere.
+ *
+ * Only one of the two is marked at a time, the deeper one that is open, so the
  * rail never looks like it has two selections.
  */
 function InventoryRow({
@@ -279,8 +286,16 @@ function InventoryRow({
   showingOrphans: boolean;
   onShowOrphans: () => void;
 }>) {
+  const isWholeActive = isActive && !showingOrphans;
+
   return (
-    <PMBox borderBottomWidth="1px" borderColor="border.tertiary">
+    <PMBox
+      maxWidth="100%"
+      overflow="hidden"
+      borderBottomWidth="1px"
+      borderColor="border.tertiary"
+      bg={isActive ? 'background.secondary' : 'transparent'}
+    >
       <PMBox
         as="button"
         display="flex"
@@ -289,56 +304,81 @@ function InventoryRow({
         width="full"
         textAlign="left"
         paddingX={3}
-        paddingY="7px"
+        paddingY="10px"
         cursor="pointer"
-        bg={
-          isActive && !showingOrphans ? 'background.secondary' : 'transparent'
-        }
-        color={isActive ? 'text.primary' : 'text.faded'}
-        _hover={
-          isActive && !showingOrphans
-            ? undefined
-            : { bg: 'background.secondary' }
-        }
+        _hover={isActive ? undefined : { bg: 'background.secondary' }}
         transition="background-color 150ms ease-out"
         onClick={onClick}
-        aria-current={isActive && !showingOrphans ? 'true' : undefined}
+        aria-current={isWholeActive ? 'true' : undefined}
       >
-        <PMIcon fontSize="xs" flexShrink={0}>
+        <RowIcon color={isWholeActive ? 'text.secondary' : 'text.faded'}>
           <LuLayers />
-        </PMIcon>
-        <PMBox as="span" flex={1} minW={0} fontSize="xs" truncate>
-          All components
-        </PMBox>
-        <PMBox as="span" fontSize="xs" fontVariantNumeric="tabular-nums">
-          {count}
+        </RowIcon>
+        <PMBox flex={1} minW={0}>
+          <PMBox
+            as="div"
+            fontSize="sm"
+            fontWeight={isWholeActive ? 'semibold' : 'medium'}
+            color={isWholeActive ? 'text.primary' : 'text.secondary'}
+            truncate
+          >
+            All components
+          </PMBox>
+          {/*
+            The count where a package keeps its own, and worded so it does not
+            repeat the label above it: "8 components" under "All components"
+            says the same word twice for nothing.
+          */}
+          <PMBox
+            as="div"
+            paddingTop="3px"
+            color="text.faded"
+            fontSize="xs"
+            truncate
+          >
+            {count} in this space
+          </PMBox>
         </PMBox>
       </PMBox>
 
       {orphanCount > 0 && (
-        <PMBox
-          as="button"
-          display="flex"
-          alignItems="center"
-          gap={2}
-          width="full"
-          textAlign="left"
-          paddingLeft="30px"
-          paddingRight={3}
-          paddingBottom="7px"
-          cursor="pointer"
-          bg={showingOrphans ? 'background.secondary' : 'transparent'}
-          color={showingOrphans ? 'text.primary' : 'text.faded'}
-          _hover={showingOrphans ? undefined : { bg: 'background.secondary' }}
-          transition="background-color 150ms ease-out"
-          onClick={onShowOrphans}
-          aria-current={showingOrphans ? 'true' : undefined}
-        >
-          <PMIcon fontSize="2xs" flexShrink={0}>
-            <LuPackageX />
-          </PMIcon>
-          <PMBox as="span" flex={1} minW={0} fontSize="2xs" truncate>
-            {orphanCount} in no package
+        <PMBox paddingX={2} paddingBottom={2}>
+          <PMBox
+            as="button"
+            display="block"
+            width="full"
+            maxWidth="100%"
+            overflow="hidden"
+            textAlign="left"
+            paddingX={2}
+            paddingY="4px"
+            borderRadius="sm"
+            cursor="pointer"
+            bg={showingOrphans ? 'background.tertiary' : 'transparent'}
+            _hover={showingOrphans ? undefined : { bg: 'background.tertiary' }}
+            transition="background-color 150ms ease-out"
+            onClick={onShowOrphans}
+            aria-current={showingOrphans ? 'true' : undefined}
+          >
+            <PMHStack gap={2} minW={0} align="center">
+              <RowIcon
+                fontSize="xs"
+                color={showingOrphans ? 'text.secondary' : 'text.faded'}
+              >
+                <LuPackageX />
+              </RowIcon>
+              <PMBox
+                as="span"
+                flex={1}
+                minW={0}
+                truncate
+                fontSize="xs"
+                fontWeight={showingOrphans ? 'medium' : 'normal'}
+                color={showingOrphans ? 'text.primary' : 'text.secondary'}
+              >
+                {orphanCount} in no package
+              </PMBox>
+            </PMHStack>
           </PMBox>
         </PMBox>
       )}
