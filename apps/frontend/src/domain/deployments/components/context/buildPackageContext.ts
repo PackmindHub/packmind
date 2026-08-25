@@ -29,6 +29,14 @@ export type ContextComponent = {
   summary: string;
   version: number;
   href: string;
+  /**
+   * When the entity was created, as the API sends it, or null when it sent
+   * none. Carried on the row because the inventory orders the components in no
+   * package by it: alphabetical is the right order for reading a catalogue and
+   * the wrong one for reading a backlog, where the newest one is the one just
+   * created and not yet placed.
+   */
+  createdAt: string | null;
 };
 
 /**
@@ -110,6 +118,24 @@ export const COMPONENT_TYPE_LABELS_SINGULAR: Record<
  * copies would have grown two ideas of what a row of this app is.
  */
 
+/**
+ * The creation date of a standard, a command or a skill, normalised to the
+ * string the API sends.
+ *
+ * Read through a cast because the three domain types disagree with the payload:
+ * all three tables carry `created_at` through `timestampsSchemas` and all three
+ * responses have it, but only `Skill` declares it, and it declares a `Date`
+ * where the wire carries a string. Declaring it on the other two would add a
+ * required field to types that a large number of fixtures build by hand, for a
+ * sort. `CommandVersionsListDrawer` reads a timestamp the same way, for the
+ * same reason.
+ */
+function creationDateOf(entity: Standard | Command | Skill): string | null {
+  const value = (entity as { createdAt?: Date | string | null }).createdAt;
+  if (!value) return null;
+  return value instanceof Date ? value.toISOString() : value;
+}
+
 export function standardToComponent(
   standard: Standard,
   { orgSlug, spaceSlug }: ContextLinkTarget,
@@ -121,6 +147,7 @@ export function standardToComponent(
     summary: standard.description ?? '',
     version: standard.version,
     href: routes.space.toStandard(orgSlug, spaceSlug, standard.id),
+    createdAt: creationDateOf(standard),
   };
 }
 
@@ -135,6 +162,7 @@ export function commandToComponent(
     summary: '',
     version: command.version,
     href: routes.space.toCommand(orgSlug, spaceSlug, command.id),
+    createdAt: creationDateOf(command),
   };
 }
 
@@ -154,6 +182,7 @@ export function skillToComponent(
     summary: skill.description ?? '',
     version: skill.version,
     href: routes.space.toSkill(orgSlug, spaceSlug, skill.slug),
+    createdAt: creationDateOf(skill),
   };
 }
 

@@ -17,13 +17,21 @@ import {
 
 const TARGET = { orgSlug: 'acme', spaceSlug: 'platform' };
 
-const standard = (id: string, name: string, description = ''): Standard =>
+const standard = (
+  id: string,
+  name: string,
+  description = '',
+  createdAt?: string,
+): Standard =>
   ({
     id: createStandardId(id),
     name,
     slug: name.toLowerCase(),
     description,
     version: 3,
+    // Absent from the declared type and present in the payload, which is the
+    // whole reason the mapper reads it through a cast.
+    ...(createdAt ? { createdAt } : {}),
   }) as Standard;
 
 const command = (id: string, name: string): Command =>
@@ -35,13 +43,19 @@ const command = (id: string, name: string): Command =>
     version: 1,
   }) as Command;
 
-const skill = (id: string, name: string, slug: string): Skill =>
+const skill = (
+  id: string,
+  name: string,
+  slug: string,
+  createdAt?: Date,
+): Skill =>
   ({
     id: createSkillId(id),
     name,
     slug,
     description: `About ${name}`,
     version: 7,
+    ...(createdAt ? { createdAt } : {}),
   }) as Skill;
 
 const catalogue = (
@@ -238,6 +252,55 @@ describe('buildPackageContext', () => {
     );
 
     expect(context.groups[0].components[0].version).toBe(7);
+  });
+});
+
+describe('the creation date of a row', () => {
+  it('carries the date the payload sent', () => {
+    const context = buildPackageContext(
+      pkg({ standards: [createStandardId('s1')] }),
+      catalogue({
+        standards: [standard('s1', 'Naming', '', '2026-03-04T10:00:00.000Z')],
+      }),
+      TARGET,
+    );
+
+    expect(context.groups[0].components[0].createdAt).toBe(
+      '2026-03-04T10:00:00.000Z',
+    );
+  });
+
+  it('normalises a Date to the string the other two arrive as', () => {
+    const context = buildPackageContext(
+      pkg({ skills: [createSkillId('k1')] }),
+      catalogue({
+        skills: [
+          skill(
+            'k1',
+            'Refactor',
+            'refactor',
+            new Date('2026-03-04T10:00:00.000Z'),
+          ),
+        ],
+      }),
+      TARGET,
+    );
+
+    expect(context.groups[0].components[0].createdAt).toBe(
+      '2026-03-04T10:00:00.000Z',
+    );
+  });
+
+  describe('when the entity carries none', () => {
+    it('is null', () => {
+      const context = buildPackageContext(
+        pkg({ commands: [createCommandId('c1')] }),
+        catalogue({ commands: [command('c1', 'Release')] }),
+        TARGET,
+      );
+
+      expect(context.groups[0].components[0].createdAt).toBeNull();
+    });
   });
 });
 

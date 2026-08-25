@@ -11,18 +11,23 @@ import {
 import type { SpaceCatalogue } from './buildPackageContext';
 import {
   buildSpaceInventory,
+  filterInventoryGroups,
+  type InventoryGroup,
   type SpaceInventory,
 } from './buildSpaceInventory';
 
 const TARGET = { orgSlug: 'acme', spaceSlug: 'platform' };
 
-const standard = (id: string, name: string): Standard =>
+const standard = (id: string, name: string, createdAt?: string): Standard =>
   ({
     id: createStandardId(id),
     name,
     slug: name.toLowerCase(),
     description: `About ${name}`,
     version: 2,
+    // Absent from the declared type and present in the payload, see
+    // `creationDateOf` in buildPackageContext.
+    ...(createdAt ? { createdAt } : {}),
   }) as Standard;
 
 const command = (id: string, name: string): Command =>
@@ -247,5 +252,136 @@ describe('buildSpaceInventory', () => {
     expect(inventory.groups[0].entries[0].component.href).toBe(
       '/org/acme/space/platform/skills/refactor',
     );
+  });
+});
+
+describe('filterInventoryGroups', () => {
+  const inventoryOf = (packages: PackageResponse[], cat: SpaceCatalogue) =>
+    buildSpaceInventory(packages, cat, TARGET);
+
+  describe('when the filter is off', () => {
+    it('returns every group', () => {
+      const inventory = inventoryOf(
+        [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+        }),
+      );
+
+      expect(
+        filterInventoryGroups(inventory.groups, 'all')[0].entries,
+      ).toHaveLength(2);
+    });
+  });
+
+  describe('when only the components in no package are wanted', () => {
+    let groups: InventoryGroup[];
+
+    beforeEach(() => {
+      const inventory = inventoryOf(
+        [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+          skills: [skill('k1', 'Refactor')],
+        }),
+      );
+      groups = filterInventoryGroups(inventory.groups, 'none');
+    });
+
+    it('keeps the ones no package carries', () => {
+      expect(
+        groups.flatMap((group) =>
+          group.entries.map((entry) => entry.component.name),
+        ),
+      ).toEqual(['Testing', 'Refactor']);
+    });
+
+    it('leaves out the ones a package carries', () => {
+      expect(
+        groups.flatMap((group) =>
+          group.entries.map((entry) => entry.component.name),
+        ),
+      ).not.toContain('Naming');
+    });
+  });
+
+  it('drops a type that has no component in no package', () => {
+    const inventory = inventoryOf(
+      [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+      catalogue({
+        standards: [standard('s1', 'Naming')],
+        skills: [skill('k1', 'Refactor')],
+      }),
+    );
+
+    expect(filterInventoryGroups(inventory.groups, 'none')).toHaveLength(1);
+  });
+
+  it('orders them newest first rather than by name', () => {
+    const inventory = inventoryOf(
+      [],
+      catalogue({
+        standards: [
+          standard('s1', 'Auditing', '2026-01-01T00:00:00.000Z'),
+          standard('s2', 'Naming', '2026-03-01T00:00:00.000Z'),
+          standard('s3', 'Zoning', '2026-02-01T00:00:00.000Z'),
+        ],
+      }),
+    );
+
+    expect(
+      filterInventoryGroups(inventory.groups, 'none')[0].entries.map(
+        (entry) => entry.component.name,
+      ),
+    ).toEqual(['Naming', 'Zoning', 'Auditing']);
+  });
+
+  it('sinks the ones with no date to the bottom', () => {
+    const inventory = inventoryOf(
+      [],
+      catalogue({
+        standards: [
+          standard('s1', 'Auditing'),
+          standard('s2', 'Naming', '2026-01-01T00:00:00.000Z'),
+        ],
+      }),
+    );
+
+    expect(
+      filterInventoryGroups(inventory.groups, 'none')[0].entries.map(
+        (entry) => entry.component.name,
+      ),
+    ).toEqual(['Naming', 'Auditing']);
+  });
+
+  it('falls back to the name for two components created at the same moment', () => {
+    const inventory = inventoryOf(
+      [],
+      catalogue({
+        standards: [
+          standard('s1', 'Zoning', '2026-01-01T00:00:00.000Z'),
+          standard('s2', 'Auditing', '2026-01-01T00:00:00.000Z'),
+        ],
+      }),
+    );
+
+    expect(
+      filterInventoryGroups(inventory.groups, 'none')[0].entries.map(
+        (entry) => entry.component.name,
+      ),
+    ).toEqual(['Auditing', 'Zoning']);
+  });
+
+  it('leaves the counts of the space alone', () => {
+    const inventory = inventoryOf(
+      [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+      catalogue({
+        standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+      }),
+    );
+
+    filterInventoryGroups(inventory.groups, 'none');
+
+    expect(inventory.total).toBe(2);
   });
 });

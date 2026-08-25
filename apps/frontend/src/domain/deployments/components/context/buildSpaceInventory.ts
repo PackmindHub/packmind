@@ -32,6 +32,19 @@ export type InventoryGroup = {
   entries: InventoryEntry[];
 };
 
+/**
+ * Which components the inventory shows.
+ *
+ * A second axis beside the type, and deliberately not a fourth chip in the row
+ * of types: those are one choice among the kinds of thing a space owns, and
+ * coverage is a different question about the same list. Sharing a row would let
+ * two of them be active at once with neither meaning anything.
+ *
+ * `none` is the string the address carries too, so the surface, the pane and
+ * the URL all say coverage the same way.
+ */
+export type InventoryCoverage = 'all' | 'none';
+
 export type SpaceInventory = {
   groups: InventoryGroup[];
   countsByType: Record<ContextComponentType, number>;
@@ -94,8 +107,65 @@ export function buildSpaceInventory(
       skill: byType.skill.length,
     },
     total: all.length,
-    orphanCount: all.filter((entry) => entry.packageNames.length === 0).length,
+    orphanCount: all.filter(isOrphan).length,
   };
+}
+
+/** No package carries it, so nothing distributes it. */
+export function isOrphan(entry: InventoryEntry): boolean {
+  return entry.packageNames.length === 0;
+}
+
+/**
+ * The groups the inventory shows under a coverage filter.
+ *
+ * Separate from `buildSpaceInventory`, which stays the whole truth about the
+ * space: the counts the chips and the toggle are labelled with have to keep
+ * counting the space and not the current view, or turning a filter on would
+ * renumber the control that turned it on.
+ *
+ * The order changes with the filter, on purpose. Alphabetical is how a
+ * catalogue is read, and a name is what the eye runs down when looking
+ * something up. The components in no package are not being looked up, they are
+ * being worked through, and the newest is the one most likely to be a component
+ * created a moment ago and not yet placed. Empty groups are dropped rather than
+ * shown empty, so a type that has no orphan does not read as a heading with a
+ * missing list under it.
+ */
+export function filterInventoryGroups(
+  groups: readonly InventoryGroup[],
+  coverage: InventoryCoverage,
+): InventoryGroup[] {
+  if (coverage === 'all') return [...groups];
+
+  return groups
+    .map((group) => ({
+      ...group,
+      entries: group.entries.filter(isOrphan).sort(byNewestFirst),
+    }))
+    .filter((group) => group.entries.length > 0);
+}
+
+/**
+ * Newest first, by the date the API sent. ISO strings compare in chronological
+ * order, so no parsing is needed to order them.
+ *
+ * A row with no date sinks to the bottom instead of to one end of the sequence:
+ * it cannot be placed in it, and the whole point of the order is the head of
+ * the list. Two rows the sort cannot separate fall back to the name, so the
+ * list is stable and never reshuffles between two renders.
+ */
+function byNewestFirst(a: InventoryEntry, b: InventoryEntry): number {
+  const left = a.component.createdAt;
+  const right = b.component.createdAt;
+
+  if (left !== right) {
+    if (!left) return 1;
+    if (!right) return -1;
+    return left < right ? 1 : -1;
+  }
+
+  return a.component.name.localeCompare(b.component.name);
 }
 
 /**
