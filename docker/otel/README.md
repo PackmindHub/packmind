@@ -331,8 +331,8 @@ You also get **Node runtime metrics** for free — event-loop lag, heap and GC, 
 `runtime-node` instrumentation, which the SDK exports to Prometheus alongside the traces. Nobody
 configured this; it is on by default. Look for them in Explore → Prometheus.
 
-And from our own code, all under the instrumentation scope `packmind`: a span per authenticated use
-case, **a span per async method on every use case, service and repository**, and anything wrapped in
+And from our own code, all under the instrumentation scope `packmind`: a span per use case,
+**a span per async method on every use case, service and repository**, and anything wrapped in
 `withSpan()` by hand. See [Adding your own spans](#adding-your-own-spans).
 
 Two known gaps:
@@ -360,13 +360,29 @@ means, and reach for `withSpan()` only for the cases it does not reach.
 ### The automatic layer
 
 `instrumentMethods()` from `@packmind/node-utils` walks an instance's **prototype chain** and wraps
-every async method in a span. Three calls apply it to the whole backend:
+every async method in a span. Four calls apply it to the whole backend:
 
 | Called from                                   | Covers                                                                              |
 | --------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `AbstractMemberUseCase` constructor           | every authenticated use case, through its three subclass bases                      |
+| each domain adapter's `initialize()`          | every other use case — roughly a third of them extend no base class at all          |
 | `AbstractRepository` constructor              | its 26 subclasses, wherever they are constructed                                    |
 | each `*Services` / `*Repositories` aggregator | domain services, and the seven repositories that do not extend `AbstractRepository` |
+
+The adapter row is the odd one out, and deliberately so. A use case has no shared base class the way
+repositories and services do — 68 of them implement `IUseCase` or nothing, so no constructor opts
+them in and they emitted no span whatsoever. What they do have in common is where they are built: nine
+adapters construct the whole domain's use cases at the end of `initialize()`, and one
+`instrumentUseCases(this)` there covers all of them. It reflects over the adapter's own fields and
+keeps the values whose class name ends in `UseCase` — selecting on the class, not the field, because
+`GitAdapter` calls its fields `_addGitProvider` and `_commitToGit`.
+
+That call is part of the `IBaseAdapter` contract and there is a test for it
+(`instrumentUseCases.arch.spec.ts` in `@packmind/node-utils`), because forgetting it fails nothing at
+runtime — the traces just stop one level short, silently, which is how the gap opened in the first
+place. `SpacesAdapter` builds a use case per call rather than storing it, so it wraps at the `new`
+site with `instrumentUseCase()` instead; so does `FetchFileContentJobFactory`, the one use case wired
+outside an adapter.
 
 Patching the prototype rather than the instance is what makes **depth** work: a `this.b()` call from
 inside `this.a()` resolves through the same patched prototype, so nesting continues for as many
@@ -374,23 +390,38 @@ levels as the call chain has. **Private methods are captured too** — TypeScrip
 at runtime, so they are ordinary prototype properties. Span names are `Class.method`, resolved at
 call time, so an inherited `AbstractRepository.add` reports as `SkillRepository.add`.
 
-Three things it does **not** do, each worth knowing before you go looking for a missing span:
+Five things to know about it, each worth having read before you go looking for a missing span:
 
 - **Only `async` methods.** A span has to be active _while_ the original runs, or spans created
   inside it become roots of their own instead of children — so the decision cannot wait until the
   return value is in hand, and is made at patch time by asking whether the method is a native
   `AsyncFunction`. A plain method that returns a promise, `list() { return this.repo.find(); }`, is
   therefore skipped. Mark it `async`, or wrap it by hand.
-- **`execute()` is skipped** on use cases, because it already owns the explicit span named after the
-  class. Patching it too would nest an identical `<Subclass>.execute` above it.
-- **Adapters, controllers and free functions are not covered.** Nor are use cases implementing
-  `IPublicUseCase` directly — they bypass `AbstractMemberUseCase` and get no span at all, as before.
+- **A use case's entry point is named after the class alone**, `SignInUserUseCase` rather than
+  `SignInUserUseCase.execute`, so one TraceQL query matches a use case however it was instrumented.
+  `AbstractMemberUseCase` gets there by skipping `execute` and wrapping it by hand — it also needs
+  that call site to set the tenant attributes; the adapter sweep gets there with the `bare` option.
+  Either way, patching `execute` under its qualified name too would nest an identical
+  `<Subclass>.execute` above the class-named span.
+- **Adapters, controllers and free functions are not covered.** An adapter's delegating methods are
+  not `async` — they `return this._useCase.execute(command)` — so the async-only rule above skips
+  them even where instrumentation is applied. Nothing is lost: the use case span sits immediately
+  beneath the Nest handler either way.
+- **Use cases that name their entry point after the domain report qualified.** The `bare` name lands
+  on `execute`, so the twenty or so classes that expose `commitToGit()` or `getStandardVersion()`
+  instead show up as `CommitToGitUseCase.commitToGit`. That is the same shape every service gets.
+- **Only the authenticated use cases carry `packmind.organization.id`** on their own span; it comes
+  from `AbstractMemberUseCase.spanAttributes()`, which the swept ones have no equivalent of.
+  Filtering by tenant still works — `startIncomingSpanHook` in `apps/api/src/otel.ts` puts the same
+  attribute on the root span of every request.
 
 `PACKMIND_OTEL_INSTRUMENT_METHODS=false` turns the whole thing off without also losing tracing. It
 is read straight off `process.env` at module load, not through `Configuration.getConfig()` — that is
 async, and prototypes are patched during construction, long before such a promise would resolve.
 
-> **This is a lot of spans.** A request that was 16 spans is now plausibly 60–100. Two consequences.
+> **This is a lot of spans**, and the adapter sweep widened it again — the endpoints that gained the
+> most are the ones that had nothing before, all through `accounts`, `deployments` and `git`. A
+> request that was 16 spans is now plausibly 60–100. Two consequences.
 > The default `BatchSpanProcessor` queue is 2048 spans in 512-span batches, so under load spans start
 > being dropped _silently_ — do not assume a trace is complete when you are chasing something under
 > load. And `span_name` is a Prometheus label on `traces_spanmetrics_*`, so going from ~150 distinct
