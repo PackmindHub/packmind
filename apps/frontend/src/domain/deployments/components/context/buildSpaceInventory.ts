@@ -111,6 +111,28 @@ export function buildSpaceInventory(
   };
 }
 
+/**
+ * How many components of the space no package carries, without building a row
+ * for any of them.
+ *
+ * For the rail, which needs the number and none of the rest: `buildSpaceInventory`
+ * resolves every component into a row with an address, which is work the pane
+ * needs and a sidebar label does not. Both read the same package memberships, so
+ * the two answers cannot disagree.
+ */
+export function countComponentsInNoPackage(
+  packages: readonly PackageResponse[],
+  catalogue: SpaceCatalogue,
+): number {
+  const owners = buildOwnerIndex(packages);
+  const ids = [
+    ...catalogue.standards.map((standard) => standard.id),
+    ...catalogue.commands.map((command) => command.id),
+    ...catalogue.skills.map((skill) => skill.id),
+  ];
+  return ids.filter((id) => !owners.has(id)).length;
+}
+
 /** No package carries it, so nothing distributes it. */
 export function isOrphan(entry: InventoryEntry): boolean {
   return entry.packageNames.length === 0;

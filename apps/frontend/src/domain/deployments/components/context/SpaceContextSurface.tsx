@@ -18,7 +18,10 @@ import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
-import type { InventoryCoverage } from './buildSpaceInventory';
+import {
+  countComponentsInNoPackage,
+  type InventoryCoverage,
+} from './buildSpaceInventory';
 import {
   COMPONENT_PARAM,
   FILE_PARAM,
@@ -192,7 +195,7 @@ export function SpaceContextSurface() {
     : null;
 
   const show = useCallback(
-    (value: string) => {
+    (value: string, coverage: InventoryCoverage = 'all') => {
       // Mutating the params we were handed, so `?nav=` and anything else the
       // user arrived with survives the selection.
       setSearchParams(
@@ -204,10 +207,13 @@ export function SpaceContextSurface() {
           // in both.
           previous.delete(COMPONENT_PARAM);
           previous.delete(FILE_PARAM);
-          // A rail click asks for the whole of what it names, so a filter left
-          // over from the previous selection would answer a question the click
-          // did not ask. Clicking "All components" is what turns it back off.
-          previous.delete(COVERAGE_PARAM);
+          // A rail click asks for the whole of what it names unless it names
+          // the filtered part itself, so a filter left over from the previous
+          // selection would answer a question the click did not ask. Clicking
+          // "All components" is what turns it back off.
+          if (coverage === NO_PACKAGE_VALUE)
+            previous.set(COVERAGE_PARAM, NO_PACKAGE_VALUE);
+          else previous.delete(COVERAGE_PARAM);
           return previous;
         },
         { replace: true },
@@ -279,11 +285,24 @@ export function SpaceContextSurface() {
     [show],
   );
   const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
+  const showOrphans = useCallback(
+    () => show(INVENTORY_VALUE, NO_PACKAGE_VALUE),
+    [show],
+  );
 
   const inventoryCount =
     catalogue.standards.length +
     catalogue.commands.length +
     catalogue.skills.length;
+  /*
+   * Counted for the rail, which needs the number and not the rows. The pane
+   * counts it again from the same memberships when it is on screen, so the two
+   * cannot disagree.
+   */
+  const orphanCount = useMemo(
+    () => countComponentsInNoPackage(packages, catalogue),
+    [packages, catalogue],
+  );
 
   if (isLoadingSpace || isLoadingPackages) {
     return (
@@ -346,8 +365,11 @@ export function SpaceContextSurface() {
             selectedPackageId={selectedPackage?.id ?? null}
             showingInventory={showingInventory}
             inventoryCount={inventoryCount}
+            orphanCount={orphanCount}
+            showingOrphans={showingInventory && coverage === NO_PACKAGE_VALUE}
             onSelect={selectPackage}
             onShowInventory={showInventory}
+            onShowOrphans={showOrphans}
             createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
           />
         )}

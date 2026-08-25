@@ -11,6 +11,7 @@ import {
 import type { SpaceCatalogue } from './buildPackageContext';
 import {
   buildSpaceInventory,
+  countComponentsInNoPackage,
   filterInventoryGroups,
   type InventoryGroup,
   type SpaceInventory,
@@ -383,5 +384,56 @@ describe('filterInventoryGroups', () => {
     filterInventoryGroups(inventory.groups, 'none');
 
     expect(inventory.total).toBe(2);
+  });
+});
+
+describe('countComponentsInNoPackage', () => {
+  it('counts the ones no package carries', () => {
+    expect(
+      countComponentsInNoPackage(
+        [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+        catalogue({
+          standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+        }),
+      ),
+    ).toBe(1);
+  });
+
+  it('counts across the three types', () => {
+    expect(
+      countComponentsInNoPackage(
+        [],
+        catalogue({
+          standards: [standard('s1', 'Naming')],
+          commands: [command('c1', 'Release')],
+          skills: [skill('k1', 'Refactor')],
+        }),
+      ),
+    ).toBe(3);
+  });
+
+  it('agrees with the count the inventory reports', () => {
+    const packages = [
+      pack('p1', 'Backend', { standards: [createStandardId('s1')] }),
+    ];
+    const cat = catalogue({
+      standards: [standard('s1', 'Naming'), standard('s2', 'Testing')],
+      skills: [skill('k1', 'Refactor')],
+    });
+
+    expect(countComponentsInNoPackage(packages, cat)).toBe(
+      buildSpaceInventory(packages, cat, TARGET).orphanCount,
+    );
+  });
+
+  describe('when every component is carried', () => {
+    it('is zero', () => {
+      expect(
+        countComponentsInNoPackage(
+          [pack('p1', 'Backend', { standards: [createStandardId('s1')] })],
+          catalogue({ standards: [standard('s1', 'Naming')] }),
+        ),
+      ).toBe(0);
+    });
   });
 });

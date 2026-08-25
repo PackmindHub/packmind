@@ -9,7 +9,13 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuLayers, LuPackage, LuPlus, LuSearch } from 'react-icons/lu';
+import {
+  LuLayers,
+  LuPackage,
+  LuPackageX,
+  LuPlus,
+  LuSearch,
+} from 'react-icons/lu';
 import type { PackageId, PackageResponse } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -43,8 +49,11 @@ export function ContextPackageRail({
   selectedPackageId,
   showingInventory,
   inventoryCount,
+  orphanCount,
+  showingOrphans,
   onSelect,
   onShowInventory,
+  onShowOrphans,
   createPackageHref,
 }: Readonly<{
   packages: readonly PackageResponse[];
@@ -57,8 +66,13 @@ export function ContextPackageRail({
   showingInventory: boolean;
   /** Components in the space, which is not the sum over the packages. */
   inventoryCount: number;
+  /** How many of them no package carries. Zero hides the line entirely. */
+  orphanCount: number;
+  /** The inventory is open and filtered down to those. */
+  showingOrphans: boolean;
   onSelect: (packageId: PackageId) => void;
   onShowInventory: () => void;
+  onShowOrphans: () => void;
   createPackageHref: string;
 }>) {
   /*
@@ -171,6 +185,9 @@ export function ContextPackageRail({
           count={inventoryCount}
           isActive={showingInventory}
           onClick={onShowInventory}
+          orphanCount={orphanCount}
+          showingOrphans={showingOrphans}
+          onShowOrphans={onShowOrphans}
         />
 
         <PMVStack gap={0} align="stretch">
@@ -235,40 +252,96 @@ function NoMatches({ query }: Readonly<{ query: string }>) {
   );
 }
 
+/**
+ * The inventory, and the part of it worth a shortcut.
+ *
+ * The second line is the components no package carries. It is here rather than
+ * only inside the pane because it is the one subset of the inventory that is a
+ * piece of work rather than a way of reading: something in no package reaches no
+ * repository, and finding out how many there are should not cost a click.
+ * Indented under the row it filters, because it is not a third place to be.
+ *
+ * Only one of the two is tinted at a time, the deepest one that is open, so the
+ * rail never looks like it has two selections.
+ */
 function InventoryRow({
   count,
   isActive,
   onClick,
-}: Readonly<{ count: number; isActive: boolean; onClick: () => void }>) {
+  orphanCount,
+  showingOrphans,
+  onShowOrphans,
+}: Readonly<{
+  count: number;
+  isActive: boolean;
+  onClick: () => void;
+  orphanCount: number;
+  showingOrphans: boolean;
+  onShowOrphans: () => void;
+}>) {
   return (
-    <PMBox
-      as="button"
-      display="flex"
-      alignItems="center"
-      gap={2}
-      width="full"
-      textAlign="left"
-      paddingX={3}
-      paddingY="7px"
-      borderBottomWidth="1px"
-      borderColor="border.tertiary"
-      cursor="pointer"
-      bg={isActive ? 'background.secondary' : 'transparent'}
-      color={isActive ? 'text.primary' : 'text.faded'}
-      _hover={isActive ? undefined : { bg: 'background.secondary' }}
-      transition="background-color 150ms ease-out"
-      onClick={onClick}
-      aria-current={isActive ? 'true' : undefined}
-    >
-      <PMIcon fontSize="xs" flexShrink={0}>
-        <LuLayers />
-      </PMIcon>
-      <PMBox as="span" flex={1} minW={0} fontSize="xs" truncate>
-        All components
+    <PMBox borderBottomWidth="1px" borderColor="border.tertiary">
+      <PMBox
+        as="button"
+        display="flex"
+        alignItems="center"
+        gap={2}
+        width="full"
+        textAlign="left"
+        paddingX={3}
+        paddingY="7px"
+        cursor="pointer"
+        bg={
+          isActive && !showingOrphans ? 'background.secondary' : 'transparent'
+        }
+        color={isActive ? 'text.primary' : 'text.faded'}
+        _hover={
+          isActive && !showingOrphans
+            ? undefined
+            : { bg: 'background.secondary' }
+        }
+        transition="background-color 150ms ease-out"
+        onClick={onClick}
+        aria-current={isActive && !showingOrphans ? 'true' : undefined}
+      >
+        <PMIcon fontSize="xs" flexShrink={0}>
+          <LuLayers />
+        </PMIcon>
+        <PMBox as="span" flex={1} minW={0} fontSize="xs" truncate>
+          All components
+        </PMBox>
+        <PMBox as="span" fontSize="xs" fontVariantNumeric="tabular-nums">
+          {count}
+        </PMBox>
       </PMBox>
-      <PMBox as="span" fontSize="xs" fontVariantNumeric="tabular-nums">
-        {count}
-      </PMBox>
+
+      {orphanCount > 0 && (
+        <PMBox
+          as="button"
+          display="flex"
+          alignItems="center"
+          gap={2}
+          width="full"
+          textAlign="left"
+          paddingLeft="30px"
+          paddingRight={3}
+          paddingBottom="7px"
+          cursor="pointer"
+          bg={showingOrphans ? 'background.secondary' : 'transparent'}
+          color={showingOrphans ? 'text.primary' : 'text.faded'}
+          _hover={showingOrphans ? undefined : { bg: 'background.secondary' }}
+          transition="background-color 150ms ease-out"
+          onClick={onShowOrphans}
+          aria-current={showingOrphans ? 'true' : undefined}
+        >
+          <PMIcon fontSize="2xs" flexShrink={0}>
+            <LuPackageX />
+          </PMIcon>
+          <PMBox as="span" flex={1} minW={0} fontSize="2xs" truncate>
+            {orphanCount} in no package
+          </PMBox>
+        </PMBox>
+      )}
     </PMBox>
   );
 }
