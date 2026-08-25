@@ -1,13 +1,14 @@
 import { command, flag } from 'cmd-ts';
 import { hasEmbeddedWasmFiles } from '../../wasm-runtime';
 import { updateHandler } from './updateHandler';
+import { CANONICAL_EXEC_NAME } from '../utils/execName';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
 
 export const updateCommand = command({
   name: 'update',
-  description: 'Update packmind-cli to the latest version',
+  description: `Update ${CANONICAL_EXEC_NAME} to the latest version`,
   args: {
     check: flag({
       long: 'check',

@@ -12,7 +12,15 @@ set -eu
 
 # Configuration
 REPO="PackmindHub/packmind"
-BINARY_NAME="packmind-cli"
+# Name of the binary we install and tell users about.
+BINARY_NAME="packmind"
+# Deprecated name, kept as a symlink to BINARY_NAME so existing scripts keep
+# working. It will be dropped in a later release.
+LEGACY_BINARY_NAME="packmind-cli"
+# Basename of the published GitHub release asset. Decoupled from BINARY_NAME on
+# purpose: already-installed CLIs self-update by fetching this exact filename,
+# so renaming release assets would break them.
+ASSET_BASENAME="packmind-cli"
 DEFAULT_INSTALL_DIR="$HOME/.packmind/bin"
 DEFAULT_HOST="https://app.packmind.ai"
 
@@ -176,10 +184,10 @@ download_binary() {
     # Construct filename based on platform
     case "$PLATFORM" in
         windows-*)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}.exe"
+            filename="${ASSET_BASENAME}-${PLATFORM}-${VERSION}.exe"
             ;;
         *)
-            filename="${BINARY_NAME}-${PLATFORM}-${VERSION}"
+            filename="${ASSET_BASENAME}-${PLATFORM}-${VERSION}"
             ;;
     esac
 
@@ -213,22 +221,31 @@ install_binary() {
         mkdir -p "$INSTALL_DIR"
     fi
 
-    # Determine target filename
+    # Determine target and legacy alias filenames
     case "$PLATFORM" in
         windows-*)
             target_name="${BINARY_NAME}.exe"
+            legacy_name="${LEGACY_BINARY_NAME}.exe"
             ;;
         *)
             target_name="$BINARY_NAME"
+            legacy_name="$LEGACY_BINARY_NAME"
             ;;
     esac
 
     target_path="${INSTALL_DIR}/${target_name}"
+    legacy_path="${INSTALL_DIR}/${legacy_name}"
 
-    # Check if already installed
-    if [ -f "$target_path" ]; then
+    # Check if already installed (-e misses a dangling symlink, hence -L too)
+    if [ -e "$target_path" ] || [ -L "$target_path" ]; then
         info "Replacing existing installation at $target_path"
     fi
+
+    # Installs made before the rename shipped the real binary as
+    # "$legacy_name" with "$target_name" as a symlink pointing at it. Remove the
+    # target first, otherwise "mv" follows that symlink and clobbers the old
+    # binary instead of installing the new one under the canonical name.
+    rm -f "$target_path" 2>/dev/null || abort "Could not remove $target_path. Close any running Packmind process and try again."
 
     # Move binary to install directory
     mv "$BINARY_PATH" "$target_path"
@@ -244,20 +261,12 @@ install_binary() {
 
     success "Installed to: $target_path"
 
-    # Create forward-compatible symlink: packmind -> packmind-cli
-    case "$PLATFORM" in
-        windows-*)
-            alias_name="packmind.exe"
-            ;;
-        *)
-            alias_name="packmind"
-            ;;
-    esac
-    alias_path="${INSTALL_DIR}/${alias_name}"
-    if ln -sf "$target_name" "$alias_path" 2>/dev/null; then
-        info "Created symlink: $alias_path -> $target_name"
+    # Create the deprecated alias: packmind-cli -> packmind. Transitional, so
+    # existing scripts keep working; it will be dropped in a later release.
+    if rm -f "$legacy_path" 2>/dev/null && ln -s "$target_name" "$legacy_path" 2>/dev/null; then
+        info "Created legacy alias: $legacy_path -> $target_name"
     else
-        warn "Could not create symlink: $alias_path -> $target_name (non-critical)"
+        warn "Could not create legacy alias: $legacy_path -> $target_name (non-critical)"
     fi
 }
 
@@ -286,7 +295,7 @@ auto_login() {
 
     if "$cli_path" login --code "$PACKMIND_LOGIN_CODE" --host "$HOST"; then
         success "Login successful!"
-        info "Run 'packmind-cli init' in your repository to start using Packmind."
+        info "Run '${BINARY_NAME} init' in your repository to start using Packmind."
         LOGIN_SUCCESS=0
     else
         warn "Login failed. You can try again later with: $BINARY_NAME login"
