@@ -43,11 +43,11 @@ import { MoveComponentDialog } from './MoveComponentDialog';
  * which package before doing anything — the question the surface is built to
  * make you answer first.
  *
- * Memberships are another matter, and the filtered list is where they belong: a
- * list of components nothing distributes that could only be looked at would be
- * a to-do list with no way to do anything about it. Picking rows and giving them
- * a package is the same gesture the package pane already has, minus the half
- * that detaches them from somewhere.
+ * Memberships are another matter, and this is where they belong: a list of
+ * components nothing distributes that could only be looked at would be a to-do
+ * list with no way to do anything about it. Picking rows and giving them a
+ * package is the same gesture the package pane already has, minus the half that
+ * detaches them from somewhere.
  */
 export function SpaceInventoryPane({
   packages,
@@ -114,11 +114,13 @@ export function SpaceInventoryPane({
   const showingOrphans = coverage === 'none';
 
   /*
-   * Picking is offered under the filter and nowhere else. The action it leads to
-   * is "give this a package", which is only ever true of the components no
-   * package carries: offered on the full catalogue it would mean adding a
-   * membership to something that already has one, a different operation with the
-   * same button, and the dialog would be explaining the wrong thing.
+   * Picking is offered on every row of this list, filtered or not. A first
+   * version offered it only under the filter, on the grounds that "give this a
+   * package" is only ever a real need for the components in none; what that
+   * actually produced was one list that grows and loses checkboxes as a chip is
+   * clicked, which is a worse thing to explain than the operation itself. The
+   * dialog already handles a component that is somewhere: it adds a membership
+   * and says so, and it can tell how many of the picked ones have none.
    *
    * Resolved against what is on screen rather than against the whole space, so
    * the bar cannot act on rows a filter is hiding. That is also what repairs the
@@ -127,15 +129,13 @@ export function SpaceInventoryPane({
    */
   const selection = useMemo(
     () =>
-      showingOrphans
-        ? shownGroups
-            .flatMap((group) => group.entries)
-            .map((entry) => entry.component)
-            .filter((component) =>
-              selectedKeys.has(componentSelectionKey(component)),
-            )
-        : [],
-    [showingOrphans, shownGroups, selectedKeys],
+      shownGroups
+        .flatMap((group) => group.entries)
+        .map((entry) => entry.component)
+        .filter((component) =>
+          selectedKeys.has(componentSelectionKey(component)),
+        ),
+    [shownGroups, selectedKeys],
   );
 
   const toggleSelect = useCallback((component: ContextComponent) => {
@@ -270,7 +270,7 @@ export function SpaceInventoryPane({
                     */
                     showPackages={!showingOrphans}
                     selectedKeys={selectedKeys}
-                    onToggleSelect={showingOrphans ? toggleSelect : undefined}
+                    onToggleSelect={toggleSelect}
                   />
                 </PMBox>
               </PMBox>

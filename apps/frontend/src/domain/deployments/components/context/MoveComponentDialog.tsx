@@ -34,6 +34,7 @@ import {
   filterMoveTargets,
   holdsEverything,
   movedComponentCount,
+  packageHoldsComponent,
   type MoveTarget,
 } from './buildMoveTargets';
 import {
@@ -49,12 +50,15 @@ const SEARCHABLE_FROM = 7;
  * Moving what is picked out of the package it is being read from and into
  * another one of the same space: one component, or a whole selection.
  *
- * With no source it is the same dialog with one half missing. The components
- * read from the space inventory that no package carries have nowhere to leave
- * from, so the add is the whole operation and the wording says join rather than
- * move. Same dialog rather than a second one: the list of candidates, the
- * already-holds notes and the deployment warnings are the same question asked
- * of the same packages, and two dialogs would have answered it two ways.
+ * With no source it is the same dialog with one half missing. Components read
+ * from the space inventory are not being read out of a package, so there is
+ * nothing for them to leave: the add is the whole operation and the wording says
+ * join rather than move. Most of them will be components no package carries,
+ * which is what the inventory's filter is for, but not all, so the dialog counts
+ * how many have none rather than assuming. Same dialog rather than a second one:
+ * the list of candidates, the already-holds notes and the deployment warnings
+ * are the same question asked of the same packages, and two dialogs would have
+ * answered it two ways.
  *
  * There is no move endpoint: the server knows how to add components to a
  * package and how to remove them from one. The order is what makes it a move
@@ -145,6 +149,17 @@ export function MoveComponentDialog({
     components.length === 1
       ? components[0].name
       : `${components.length} ${kind}`;
+  /*
+   * How many of the picked components no package carries. Read off the same
+   * package list the candidates are built from, so the sentence and the rows
+   * cannot disagree. Only used without a source: with one, every picked
+   * component is in at least that package.
+   */
+  const unplaced = components.filter(
+    (component) =>
+      !packages.some((pkg) => packageHoldsComponent(pkg, component)),
+  ).length;
+
   const sourcePlaces = source
     ? deployedPlaceParts(
         getDeployedTargets(source.id),
@@ -273,13 +288,24 @@ export function MoveComponentDialog({
                         {single ? 'It stays' : 'They stay'} in your library
                         either way.
                       </>
-                    ) : (
+                    ) : unplaced === components.length ? (
                       <>
                         {single ? 'This' : 'These'} {single ? kind : subject}{' '}
                         {single ? 'is' : 'are'} in no package, so nothing
                         distributes {single ? 'it' : 'them'} yet.{' '}
                         {single ? 'It joins' : 'They join'} the package you
                         pick.
+                      </>
+                    ) : (
+                      <>
+                        {single ? 'This' : 'These'} {single ? kind : subject}{' '}
+                        {single ? 'joins' : 'join'} the package you pick and{' '}
+                        {single ? 'stays' : 'stay'} in the ones already carrying{' '}
+                        {single ? 'it' : 'them'}.
+                        {unplaced > 0 &&
+                          ` ${unplaced} of them ${
+                            unplaced === 1 ? 'is' : 'are'
+                          } in no package today.`}
                       </>
                     )}
                   </PMText>
