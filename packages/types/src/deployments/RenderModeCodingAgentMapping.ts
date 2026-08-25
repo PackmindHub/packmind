@@ -1,7 +1,10 @@
 import { CodingAgent, CodingAgents } from '../coding-agent';
 import { RenderMode } from './RenderMode';
 
-export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
+export const RENDER_MODE_TO_CODING_AGENT: Record<
+  RenderMode,
+  CodingAgent | undefined
+> = {
   [RenderMode.PACKMIND]: CodingAgents.packmind,
   [RenderMode.OPENCODE]: CodingAgents.opencode,
   [RenderMode.AGENTS_MD]: CodingAgents.agents_md,
@@ -9,6 +12,9 @@ export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
   [RenderMode.GH_COPILOT]: CodingAgents.copilot,
   [RenderMode.CLAUDE]: CodingAgents.claude,
   [RenderMode.CLAUDE_PLUGIN]: CodingAgents.claude_plugin,
+  // No dedicated CodingAgent/deployer exists yet for the Copilot plugin
+  // format — wiring it up (and populating this entry) is a later task.
+  [RenderMode.COPILOT_PLUGIN]: undefined,
   [RenderMode.CURSOR]: CodingAgents.cursor,
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
   [RenderMode.CONTINUE]: CodingAgents.continue,
@@ -19,7 +25,10 @@ export const CODING_AGENT_TO_RENDER_MODE: Partial<
   Record<CodingAgent, RenderMode>
 > = Object.entries(RENDER_MODE_TO_CODING_AGENT).reduce(
   (acc, [renderMode, codingAgent]) => {
-    acc[codingAgent as CodingAgent] = renderMode as RenderMode;
+    if (codingAgent === undefined) {
+      return acc;
+    }
+    acc[codingAgent] = renderMode as RenderMode;
     return acc;
   },
   {} as Partial<Record<CodingAgent, RenderMode>>,
