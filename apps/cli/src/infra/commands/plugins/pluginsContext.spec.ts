@@ -165,6 +165,29 @@ describe('marketplace.json helpers', () => {
 
       expect(mp.plugins.map((p) => p.name)).toEqual(['backend', 'frontend']);
     });
+
+    describe('when the file starts with a UTF-8 byte-order mark', () => {
+      let bomPath: string;
+
+      const bom = String.fromCharCode(0xfeff);
+
+      beforeEach(() => {
+        bomPath = join(tmp, 'marketplace-bom.json');
+        writeFileSync(bomPath, `${bom}${JSON.stringify(fixture, null, 2)}`);
+      });
+
+      it('parses the plugins array with the correct length', () => {
+        const mp = readMarketplace(bomPath);
+
+        expect(mp.plugins).toHaveLength(2);
+      });
+
+      it('parses the plugins array with the correct names', () => {
+        const mp = readMarketplace(bomPath);
+
+        expect(mp.plugins.map((p) => p.name)).toEqual(['backend', 'frontend']);
+      });
+    });
   });
 
   describe('classifySource', () => {
