@@ -7,7 +7,6 @@ import {
 import {
   ClaudePluginDeployer,
   CopilotPluginDeployer,
-  ICodingAgentDeployer,
 } from '@packmind/coding-agent';
 import {
   Distribution,
@@ -130,7 +129,7 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     // part of the shared ICodingAgentDeployer contract), so the manifest is
     // only ever produced on the Claude branch.
     let manifestUpdate: FileUpdates = { createOrUpdate: [], delete: [] };
-    let deployer: ICodingAgentDeployer;
+    let deployer: ClaudePluginDeployer | CopilotPluginDeployer;
     if (targetVendor === 'github') {
       deployer = new CopilotPluginDeployer();
     } else {
