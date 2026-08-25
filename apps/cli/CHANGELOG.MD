@@ -1,9 +1,10 @@
-# [Unreleased]
+# [0.34.1] - 2026-08-25
 
 ## Added
 
 - `playbook add` and `playbook submit` now read the `## Scope` section of a `.packmind/standards/*.md` file as the standard's glob scope. Patterns go comma-separated on one line or one per `-`/`*` bullet, and both forms are stored as a comma-separated list. Rules are still found with or without a `## Rules` heading, including when they follow the Scope section. `playbook diff` reports scope changes for these files like it already did for `.claude`/`.cursor` standards. The section used to be swallowed into the description
 - New `git info` command reports whether Packmind tracks the current repository and on which branch. When the tracked branch is not the one checked out, it warns that distributions from here are not recorded and points to `git track --update`. When the repository is not tracked, it proposes `git track` to track the current branch. Available to every member, not only organization admins.
+- `plugins render` now recognizes a local `.github/plugin/marketplace.json` file, in addition to the existing `.claude-plugin/marketplace.json`, and renders a GitHub Copilot plugin into it instead of a Claude Code one. Which file is present determines the target — a workspace can only be one or the other, never both, and if both exist `.claude-plugin/marketplace.json` wins.
 
 ## Changed
 
@@ -22,6 +23,8 @@
 - `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.
 - `track --remove` gets the same migration message as `track`, naming `git untrack`, instead of failing with a raw "unknown arguments" parser error.
 - Running a command outside a git repository no longer claims `lint` must be run in a Git repository — `git info`, `git track` and `install` share those git helpers — and no longer prints git's own `fatal: not a git repository` line after the explanation.
+- `plugins render` no longer crashes on a marketplace or plugin manifest file saved with a UTF-8 byte-order mark (common from Windows editors) — the BOM is stripped before parsing instead of surfacing as a raw `SyntaxError`.
+- `plugins render` reports a clearer error when no supported manifest is found, naming all three checked paths (`.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`, `.claude-plugin/plugin.json`), and now also reports a clean error — instead of crashing — when the manifest it does find is not valid JSON.
 
 ## Removed
 
@@ -461,7 +464,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...HEAD
+[0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1
 [0.33.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...release-cli/0.33.0
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
 [0.31.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.1...release-cli/0.31.0
