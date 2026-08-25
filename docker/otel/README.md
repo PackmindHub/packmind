@@ -35,6 +35,63 @@ it reads `pg_stat_statements` and expects `dd-trace`, so it cannot consume OTLP 
 `pg` instrumentation is switched off in `apps/api/src/otel.ts` — see
 [What is instrumented](#what-is-instrumented).
 
+## Pointing it at Datadog
+
+Datadog ingests OTLP natively, so switching backends is an **environment change, not a code change** —
+the same gate, the same spans, a different endpoint. Verified working against Datadog EU1.
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.eu \
+OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<key>,compute_stats=true \
+OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=local,service.version=dev \
+docker compose up
+```
+
+Keep the key in the gitignored root `.env`, never in `docker-compose.yml` — it is a bearer
+credential and GitGuardian runs on CI. Note that Compose only forwards variables it names, which
+`docker-compose.yml` already does for all four.
+
+**Do not adopt `dd-trace`.** Datadog's docs push their proprietary Node.js tracer, and it would
+replace the SDK wholesale: the noise filtering, the express-middleware suppression, the router
+double-instrumentation fix, the tenant/space `startIncomingSpanHook` and the
+`withSpan`/`instrumentMethods` layer in `@packmind/node-utils` all go with it. Since retargeting is
+one env var, vendor lock-in buys nothing.
+
+Three things that make this work with no extra mapping:
+
+- **Unified Service Tagging is free.** Datadog reads `service.name` as `service`,
+  `deployment.environment.name` as `env` and `service.version` as `version` — all three are already
+  set above and in the Helm values.
+- **`compute_stats=true` is not optional** if you want APM trace metrics. Without it you get
+  traces but empty service dashboards.
+- **The direct intake takes `http/protobuf` and `http/json`, never gRPC.** We are on
+  `exporter-trace-otlp-http`, which defaults to protobuf, so there is nothing to change.
+
+Two traps worth knowing before this goes past local:
+
+- **The agentless endpoint is gated per organisation** — an unapproved org gets `403` with a
+  perfectly valid key. Datadog also recommends an Agent or Collector over direct intake for
+  production workloads, and our cluster already runs DD Agents, so production would set
+  `OTEL_EXPORTER_OTLP_ENDPOINT=http://<agent>:4318` instead. Logs over that path additionally need
+  `DD_LOGS_ENABLED=true` and `DD_OTLP_CONFIG_LOGS_ENABLED=true` on the Agent.
+- **Sentry and OpenTelemetry both want to own the tracer provider.** `@sentry/nestjs` is itself
+  OTel-based. They have never collided because each is gated on a different variable —
+  `SENTRY_DSN_API` is unset locally, `OTEL_EXPORTER_OTLP_ENDPOINT` is unset in production. Enabling
+  Datadog in production collides for the first time, and needs Sentry's
+  `skipOpenTelemetrySetup: true` plus its `SentrySampler` / `SentryPropagator` /
+  `SentryContextManager` — or a decision that Datadog replaces Sentry tracing.
+
+### Falling back to local Grafana
+
+An inline variable beats `.env`, so the stack below still works with a Datadog endpoint configured —
+useful for offline work or for reading spans without leaving the machine:
+
+```bash
+COMPOSE_PROFILES=observability \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
+docker compose up
+```
+
 ## One image, several environments
 
 Everything is environment variables; the same artifact runs everywhere with nothing baked in at
