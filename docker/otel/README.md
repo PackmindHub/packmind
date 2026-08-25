@@ -347,6 +347,13 @@ stop one level short, silently, which is how the gap opened in the first place. 
 a use case per call rather than storing it, so it wraps at the `new` site with `instrumentUseCase()`;
 so does `FetchFileContentJobFactory`, the one use case wired outside an adapter.
 
+The aggregator row has a test for the same reason (`instrumentComponents.arch.spec.ts`): it opened the
+same gap one level lower, in a domain whose aggregator shipped without the call. Two rules — every
+`*Services` / `*Repositories` file calls `instrumentComponents(`, and every repository directly under
+`infra/repositories/` either extends `AbstractRepository` or is named in one of those lists. A domain
+that builds its services at the `new` site instead of holding an aggregator satisfies the second rule
+and is not reached by the first, so it opts in wherever it constructs them.
+
 Patching the prototype rather than the instance is what makes **depth** work: a `this.b()` call from
 inside `this.a()` resolves through the same patched prototype, so nesting continues for as many levels
 as the call chain has. **Private methods are captured too** — TypeScript `private` is erased at
