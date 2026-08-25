@@ -400,5 +400,39 @@ describe('deletePluginHandler', () => {
         expect(trackPluginDeleted).not.toHaveBeenCalled();
       });
     });
+
+    describe('when the manifest starts with a UTF-8 byte-order mark', () => {
+      const bom = String.fromCharCode(0xfeff);
+
+      beforeEach(() => {
+        mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+        writeFileSync(
+          join(tmp, '.claude-plugin/plugin.json'),
+          `${bom}${JSON.stringify({ name: 'security' })}`,
+        );
+        mkdirSync(join(tmp, 'commands'), { recursive: true });
+        writeFileSync(join(tmp, 'commands/a.md'), 'A');
+        confirmOverwrite.mockResolvedValue(true);
+      });
+
+      beforeEach(async () => {
+        await deletePluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+      });
+
+      it('does not report a name mismatch', () => {
+        expect(printedErrors).toHaveLength(0);
+      });
+
+      it('removes the rendered commands directory', () => {
+        expect(existsSync(join(tmp, 'commands'))).toBe(false);
+      });
+
+      it('exits zero', () => {
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
   });
 });

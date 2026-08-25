@@ -69,13 +69,18 @@ export type Marketplace = {
   [key: string]: unknown;
 };
 
+/**
+ * A file saved with a UTF-8 byte-order mark (U+FEFF) is still valid JSON,
+ * but JSON.parse rejects the leading BOM outright. Strip it — and only a
+ * BOM at position 0 — before parsing.
+ */
+export function stripBom(content: string): string {
+  return content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+}
+
 export function readMarketplace(path: string): Marketplace {
   const raw = readFileSync(path, 'utf8');
-  // A file saved with a UTF-8 byte-order mark (U+FEFF) is still valid JSON,
-  // but JSON.parse rejects the leading BOM outright. Strip it — and only a
-  // BOM at position 0 — before parsing.
-  const content = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
-  const parsed = JSON.parse(content) as Marketplace;
+  const parsed = JSON.parse(stripBom(raw)) as Marketplace;
   return { ...parsed, plugins: parsed.plugins ?? [] };
 }
 

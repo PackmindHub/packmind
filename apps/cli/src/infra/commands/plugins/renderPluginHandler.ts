@@ -14,6 +14,7 @@ import {
   upsertPluginEntry,
   classifySource,
   Marketplace,
+  stripBom,
 } from './pluginsContext';
 import { resolveGitContext } from './resolveGitContext';
 
@@ -149,7 +150,9 @@ export async function renderPluginHandler(
 
   if (ctx.mode === 'standalone') {
     const manifestPath = ctx.manifestPath as string;
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+    const manifest = JSON.parse(
+      stripBom(readFileSync(manifestPath, 'utf8')),
+    ) as {
       name?: string;
     };
 

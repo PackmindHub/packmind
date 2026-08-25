@@ -645,5 +645,41 @@ describe('renderPluginHandler', () => {
         expect(existsSync(join(tmp, 'commands/a.md'))).toBe(false);
       });
     });
+
+    describe('when the manifest starts with a UTF-8 byte-order mark', () => {
+      const bom = String.fromCharCode(0xfeff);
+
+      beforeEach(() => {
+        mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+        writeFileSync(
+          join(tmp, '.claude-plugin/plugin.json'),
+          `${bom}${JSON.stringify({ name: 'security' })}`,
+        );
+        confirmOverwrite.mockResolvedValue(true);
+      });
+
+      it('renders in standalone mode instead of reporting a name mismatch', async () => {
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
+        expect(renderPlugin).toHaveBeenCalledWith(
+          expect.objectContaining({
+            mode: 'standalone',
+            pluginName: 'security',
+          }),
+        );
+      });
+
+      it('exits zero', async () => {
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
+        expect(exit).toHaveBeenCalledWith(0);
+      });
+    });
   });
 });
