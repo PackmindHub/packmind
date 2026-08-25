@@ -51,7 +51,15 @@ export function ContextCreateMenu({
         </PMMenu.Trigger>
         <PMPortal>
           <PMMenu.Positioner>
-            <PMMenu.Content minW="350px">
+            {/*
+              Seven items each carrying a line of explanation come to about
+              620px, which is taller than the viewport of a laptop once the
+              trigger's own offset is taken off. Chakra leaves `max-height`
+              unset, so the menu did not scroll, it hung off the edge: the
+              positioner flipped it upward and cut the first group's heading.
+              Clamped to the viewport instead, so the overflow becomes a scroll.
+            */}
+            <PMMenu.Content minW="350px" maxH="calc(100vh - 10rem)">
               <PMMenu.ItemGroup>
                 <GroupLabel>{COMPONENT_TYPE_LABELS.standard}</GroupLabel>
                 {standards.items}
