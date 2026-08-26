@@ -18,7 +18,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuEllipsisVertical, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuEllipsisVertical, LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
 import type {
   OrganizationId,
   PackageResponse,
@@ -30,6 +30,7 @@ import {
   componentSelectionKey,
   type ContextComponent,
   type ContextGroup,
+  type SpaceCatalogue,
 } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
 import {
@@ -45,6 +46,7 @@ import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
+import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { usePackageDrift } from './usePackageDrift';
@@ -83,6 +85,7 @@ const TAB_PARAM = 'tab';
 export function ContextPackagePane({
   pkg,
   packages,
+  catalogue,
   groups,
   total,
   detail,
@@ -92,13 +95,17 @@ export function ContextPackagePane({
   orgSlug,
   spaceSlug,
   packageHref,
-  packageEditHref,
   distributionHistoryHref,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
   /** The whole space, so a component can be moved without a second query. */
   packages: readonly PackageResponse[];
+  /**
+   * Everything the space owns, for the same reason: a component can be added to
+   * this package without asking the server what there is to add.
+   */
+  catalogue: SpaceCatalogue;
   /** What this package holds, grouped by type, built by the surface. */
   groups: readonly ContextGroup[];
   /** Components in the package, which the Content tab carries as its count. */
@@ -113,8 +120,6 @@ export function ContextPackagePane({
   spaceSlug: string;
   /** The package's own page, which still holds everything not moved here. */
   packageHref: string;
-  /** Where membership is chosen, until a component can be added from here. */
-  packageEditHref: string;
   /** Where the distribution events of this package are listed. */
   distributionHistoryHref: string;
   /**
@@ -151,6 +156,7 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [addingComponents, setAddingComponents] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { mutateAsync: deletePackages, isPending: isDeleting } =
@@ -400,6 +406,28 @@ export function ContextPackagePane({
               <Link to={packageHref}>Open package</Link>
             </PMButton>
             {/*
+              Adding what exists, beside creating what does not. Two controls
+              and not one menu: the question "which of these do I want" and the
+              question "what kind of thing am I writing" are answered from
+              opposite ends, one by a list of the space and one by a list of
+              types, and folding them together would hide whichever one the
+              reader came for behind the other.
+
+              Secondary, because Create is the primary of this pair: a package
+              is filled with components that mostly do not exist yet on the day
+              it is made.
+            */}
+            <PMButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setAddingComponents(true)}
+            >
+              <PMIcon fontSize="xs">
+                <LuPlus />
+              </PMIcon>
+              Add components
+            </PMButton>
+            {/*
               Creating sits here, on the pane, and not in the rail below the list
               of packages: the rail creates containers, this creates what goes in
               them, and side by side the two would read as the same gesture.
@@ -503,7 +531,7 @@ export function ContextPackagePane({
         paddingY={5}
       >
         {groups.length === 0 ? (
-          <EmptyPackageBody packageEditHref={packageEditHref} />
+          <EmptyPackageBody onAdd={() => setAddingComponents(true)} />
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
@@ -582,6 +610,26 @@ export function ContextPackagePane({
       {moveDrawer}
       {deleteComponentDialog}
       {/*
+        Mounted only while it is open, like the drawer below it, so the picks
+        start empty every time: what was ticked and abandoned last time is not a
+        draft worth keeping, and the candidates it was ticked from may not even
+        be candidates any more.
+      */}
+      {addingComponents && (
+        <AddComponentsDrawer
+          pkg={pkg}
+          catalogue={catalogue}
+          spaceId={spaceId}
+          organizationId={organizationId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setAddingComponents(false);
+          }}
+        />
+      )}
+      {/*
         Mounted only while it is open, rather than kept around hidden, so its two
         fields start from what the package currently says: they are drafts held
         inside the drawer, and a drawer that outlived its own closing would
@@ -624,9 +672,7 @@ export function ContextPackagePane({
  * the user to admire an empty frame: an empty package gives an agent nothing to
  * read and distributes nothing.
  */
-function EmptyPackageBody({
-  packageEditHref,
-}: Readonly<{ packageEditHref: string }>) {
+function EmptyPackageBody({ onAdd }: Readonly<{ onAdd: () => void }>) {
   return (
     <PMBox
       borderWidth="1px"
@@ -640,12 +686,12 @@ function EmptyPackageBody({
       </PMText>
       <PMText as="div" color="secondary" paddingTop={1}>
         A package with no component gives an agent nothing to read and
-        distributes nothing. Add standards, commands or skills to it from its
-        own edit form, and it is distributable as soon as you save.
+        distributes nothing. Pick standards, commands or skills the space
+        already owns, and it is distributable as soon as you add them.
       </PMText>
       <PMBox paddingTop={4}>
-        <PMButton variant="primary" size="sm" asChild>
-          <Link to={packageEditHref}>Add components</Link>
+        <PMButton variant="primary" size="sm" onClick={onAdd}>
+          Add components
         </PMButton>
       </PMBox>
     </PMBox>

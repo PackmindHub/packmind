@@ -395,6 +395,7 @@ export function SpaceContextSurface() {
                 key={selectedPackage.id}
                 pkg={selectedPackage}
                 packages={packages}
+                catalogue={catalogue}
                 groups={groups}
                 total={total}
                 detail={detail}
@@ -404,11 +405,6 @@ export function SpaceContextSurface() {
                 orgSlug={orgSlug}
                 spaceSlug={spaceSlug}
                 packageHref={routes.space.toPackage(
-                  orgSlug,
-                  spaceSlug,
-                  selectedPackage.id,
-                )}
-                packageEditHref={routes.space.toPackageEdit(
                   orgSlug,
                   spaceSlug,
                   selectedPackage.id,
