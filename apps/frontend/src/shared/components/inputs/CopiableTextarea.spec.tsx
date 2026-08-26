@@ -9,11 +9,28 @@ import { CopiableTextarea } from './CopiableTextarea';
 // sibling spec in the same worker has installed its own stub, the assignment
 // throws "Cannot set property clipboard of #<Navigator> which has only a
 // getter". Defining the property outright is order-independent.
+// jsdom's `navigator` is shared by every spec in the worker, so the stub is put
+// back at the end of the file rather than left on the global for whoever runs
+// next.
 const mockWriteText = vi.fn();
+const originalClipboard = Object.getOwnPropertyDescriptor(
+  navigator,
+  'clipboard',
+);
 Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: mockWriteText },
   configurable: true,
   writable: true,
+});
+
+afterAll(() => {
+  if (originalClipboard) {
+    Object.defineProperty(navigator, 'clipboard', originalClipboard);
+  } else {
+    // Nothing owned it before: dropping the own property re-exposes jsdom's
+    // prototype accessor.
+    delete (navigator as unknown as { clipboard?: unknown }).clipboard;
+  }
 });
 
 const renderWithUI = (component: React.ReactElement) => {
