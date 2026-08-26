@@ -18,6 +18,7 @@ import {
   UserCannotExcludeSelfError,
 } from '../../domain/errors';
 import * as bcrypt from 'bcrypt';
+import { getPasswordSaltRounds } from './passwordHashing';
 
 // Mock bcrypt
 jest.mock('bcrypt');
@@ -409,8 +410,11 @@ describe('UserService', () => {
         ).toHaveBeenCalledWith(email);
       });
 
-      it('hashes the password with correct salt rounds', () => {
-        expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      it('hashes the password with the configured salt rounds', () => {
+        expect(bcrypt.hash).toHaveBeenCalledWith(
+          password,
+          getPasswordSaltRounds(),
+        );
       });
 
       it('persists user with correct email', () => {
@@ -828,8 +832,8 @@ describe('UserService', () => {
       result = await userService.hashPassword(password);
     });
 
-    it('calls bcrypt with correct salt rounds', () => {
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+    it('calls bcrypt with the configured salt rounds', () => {
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, getPasswordSaltRounds());
     });
 
     it('returns hashed password', () => {
