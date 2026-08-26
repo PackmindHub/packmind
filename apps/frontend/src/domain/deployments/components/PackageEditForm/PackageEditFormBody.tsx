@@ -28,6 +28,8 @@ import {
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
+import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
+import { contextPackageHref } from '../context/buildComponentDetail';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -54,8 +56,20 @@ export const PackageEditFormBody = ({
   spaceSlug,
 }: PackageEditFormBodyProps) => {
   const navigate = useNavigate();
+  const { mode } = useSpaceNavMode();
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
+
+  /*
+   * The package, on the surface the reader has. Its own page has no entry in
+   * the plugin-first sidebar, so leaving the form there leaves the navigation;
+   * Context shows the same package, open on what was just changed. Saved or
+   * cancelled makes no difference to where this goes.
+   */
+  const packageHref =
+    mode === 'plugin-first'
+      ? contextPackageHref({ orgSlug, spaceSlug }, id)
+      : routes.space.toPackage(orgSlug, spaceSlug, id);
 
   const [editName, setEditName] = useState(pkg.name);
   const [editDescription, setEditDescription] = useState(pkg.description ?? '');
@@ -73,7 +87,7 @@ export const PackageEditFormBody = ({
   const updatePackageMutation = useUpdatePackageMutation();
 
   const handleCancel = () => {
-    navigate(routes.space.toPackage(orgSlug, spaceSlug, id));
+    navigate(packageHref);
   };
 
   const handleSave = async () => {
@@ -105,7 +119,7 @@ export const PackageEditFormBody = ({
         description: `"${editName}" has been updated`,
       });
 
-      navigate(routes.space.toPackage(orgSlug, spaceSlug, id));
+      navigate(packageHref);
     } catch (err) {
       console.error('Failed to update package:', err);
       const errorMessage =
