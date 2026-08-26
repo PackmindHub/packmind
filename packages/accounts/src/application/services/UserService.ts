@@ -9,7 +9,6 @@ import { OrganizationId } from '@packmind/types';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import * as bcrypt from 'bcrypt';
-import { getPasswordSaltRounds } from './passwordHashing';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
@@ -64,7 +63,8 @@ export class UserService {
       }
 
       // Hash password
-      const passwordHash = await bcrypt.hash(password, getPasswordSaltRounds());
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
 
       // Create user
       const id = createUserId(uuidv4());
@@ -239,7 +239,8 @@ export class UserService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, getPasswordSaltRounds());
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
   }
 
   async listUsers(): Promise<User[]> {
