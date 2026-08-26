@@ -96,6 +96,33 @@ export function packageDetailHref(
 }
 
 /**
+ * The Context surface of a space, opened on one package and, when asked, on one
+ * of its components.
+ *
+ * A whole path, unlike the search-only builders above it, because its callers
+ * are not on this surface: they are the create and edit forms, which are pages
+ * of their own and have to come back. Coming back is the point. The pages they
+ * landed on until now have no entry in the plugin-first sidebar, so finishing a
+ * form left the user outside the navigation, and the way back in opened the
+ * first package of the space rather than the one being filled.
+ *
+ * It carries only what it names. These callers arrive from a page rather than
+ * from a selection, so there is no address of theirs worth keeping: the mode is
+ * read from storage and everything else was left behind when the form opened.
+ */
+export function contextPackageHref(
+  { orgSlug, spaceSlug }: ContextLinkTarget,
+  packageId: PackageId,
+  componentKey?: string,
+): string {
+  const params = new URLSearchParams({ [PACKAGE_PARAM]: packageId });
+  if (componentKey) {
+    params.set(COMPONENT_PARAM, componentKey);
+  }
+  return `${routes.space.toContext(orgSlug, spaceSlug)}?${params.toString()}`;
+}
+
+/**
  * The address of one file of the component that is already open.
  *
  * It names no component, only the file. The rail that builds these links is the

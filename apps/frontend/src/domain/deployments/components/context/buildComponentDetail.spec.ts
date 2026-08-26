@@ -9,6 +9,7 @@ import {
   componentEditHref,
   componentEntryHref,
   componentFileHref,
+  contextPackageHref,
   packageDetailHref,
   selectDetailComponent,
   selectSkillFile,
@@ -102,6 +103,30 @@ describe('packageDetailHref', () => {
         PACKAGE,
       ),
     ).toBe('?tab=distribution&package=pkg-1');
+  });
+});
+
+describe('contextPackageHref', () => {
+  it('names the surface and the package', () => {
+    expect(contextPackageHref(TARGET, PACKAGE)).toBe(
+      '/org/acme/space/core/context?package=pkg-1',
+    );
+  });
+
+  describe('when a component is asked for', () => {
+    it('opens it in the package', () => {
+      expect(contextPackageHref(TARGET, PACKAGE, 'standard-1')).toBe(
+        '/org/acme/space/core/context?package=pkg-1&component=standard-1',
+      );
+    });
+  });
+
+  describe('when the component key needs escaping', () => {
+    it('escapes it', () => {
+      expect(contextPackageHref(TARGET, PACKAGE, 'a b&c')).toBe(
+        '/org/acme/space/core/context?package=pkg-1&component=a+b%26c',
+      );
+    });
   });
 });
 
