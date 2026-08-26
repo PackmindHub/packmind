@@ -10,9 +10,20 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import type { MockedFunction } from 'vitest';
 
-vi.mock('../hooks/useAuthContext');
-vi.mock('../../spaces/api/queries/SpacesQueries');
-vi.mock('../../deployments/api/queries/DeploymentsQueries');
+// Named factories rather than bare automocks: an automock and a sibling spec's
+// factory mock for the same module share one mock entry, so whichever ran first
+// in the worker decides the shape. Every other spec mocking these modules uses a
+// factory, so this spec used to inherit their plain arrow exports and lose the
+// `vi.fn()` controls it needs.
+vi.mock('../hooks/useAuthContext', () => ({
+  useAuthContext: vi.fn(),
+}));
+vi.mock('../../spaces/api/queries/SpacesQueries', () => ({
+  useGetSpacesQuery: vi.fn(),
+}));
+vi.mock('../../deployments/api/queries/DeploymentsQueries', () => ({
+  useListPackagesBySpaceQuery: vi.fn(),
+}));
 vi.mock('./LocalEnvironmentSetup/hooks', () => ({
   useCliLoginCode: vi.fn(() => ({
     loginCode: 'TEST-CODE-123',
