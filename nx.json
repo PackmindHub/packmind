@@ -7,11 +7,14 @@
       "{workspaceRoot}/eslint-rules/**/*"
     ],
     "sharedGlobals": [
+      "{workspaceRoot}/jest.preset.js",
       "{workspaceRoot}/jest.preset.ts",
       "{workspaceRoot}/jest-utils.ts",
       "{workspaceRoot}/jest.setup.ts",
       "{workspaceRoot}/jest.env-setup.ts",
-      "{workspaceRoot}/tsconfig.base.json"
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/tsconfig.paths.oss.json",
+      "{workspaceRoot}/tsconfig.paths.proprietary.json"
     ]
   },
   "plugins": [

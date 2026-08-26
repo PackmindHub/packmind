@@ -164,6 +164,16 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      # Nx skips build/test for any project whose inputs are unchanged, but only
+      # if it can see a previous run's results. Without this the cache is empty
+      # on every run and every project is rebuilt and retested from scratch.
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-packages-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-${{ github.sha }}
+          restore-keys: |
+            nx-packages-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -174,11 +184,13 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx run-many -t build -p packages/*
+      # @packmind/integration-tests runs in its own job (test-integration) so it
+      # does not sit on this job's critical path.
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests
 
       - name: Upload standard samples artifacts
         uses: actions/upload-artifact@v4
@@ -186,6 +198,46 @@ jobs:
           name: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/packages/standards/samples/generated/
           if-no-files-found: ignore
+
+  # Split out of build-packages: it is the longest single test target, so running
+  # it on its own runner takes it off that job's critical path.
+  test-integration:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-integration-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-${{ github.sha }}
+          restore-keys: |
+            nx-integration-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Test integration tests
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: ./node_modules/.bin/nx test @packmind/integration-tests
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
