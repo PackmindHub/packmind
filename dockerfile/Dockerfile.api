@@ -7,8 +7,8 @@ ENV NODE_ENV=production
 
 # Update OpenSSL and install required system dependencies
 RUN apk update && \
-    apk add --no-cache \
-        openssl=3.5.7-r0 \
+    apk add --no-cache --upgrade \
+        openssl=3.5.8-r0 \
         bash=5.3.3-r1 \
         ca-certificates=20260611-r0 && \
     rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/cache/apk
