@@ -169,11 +169,14 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build packages
+      # `build` is transpile-only (see nx.json). Type errors are caught by the
+      # `typecheck` target, which resolves deps from source and so needs no
+      # build ordering - both targets fan out with no chain between them.
+      - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/*
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}

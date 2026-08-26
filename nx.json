@@ -107,10 +107,13 @@
       "dependsOn": ["^build"],
       "inputs": ["default", "^default"]
     },
+    "// @nx/js:swc": "Transpile only. Without skipTypeCheck the executor also runs tsc --emitDeclarationOnly per package, which costs ~2s/package and resolves each dependency from its dist/ .d.ts - that is what forced 'dependsOn: ^build' and serialised the 22 package builds into a 9-deep chain. Nothing consumes dist/packages/*, so the declarations were dead output: every @packmind/* path in tsconfig.base.json maps to packages/*/src, and api/frontend/cli all bundle from source. Type errors are caught by each package's 'typecheck' target instead, which checks against source and needs no build ordering.",
     "@nx/js:swc": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^default"]
+      "inputs": ["default", "^default"],
+      "options": {
+        "skipTypeCheck": true
+      }
     },
     "typecheck": {
       "cache": true,
