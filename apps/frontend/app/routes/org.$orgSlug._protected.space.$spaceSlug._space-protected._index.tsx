@@ -11,20 +11,26 @@ export async function clientLoader({ params, request }: LoaderFunctionArgs) {
   /*
    * Overview has no entry in the plugin-first navigation, and clicking a space
    * lands here, so in that mode this route would be a page the sidebar does not
-   * list. Send it to the first entry instead. The check comes before any
-   * fetching: Overview's data is worth nothing if we are leaving.
+   * list. Send it to the first entry instead, before fetching anything the
+   * redirect would throw away.
+   *
+   * Who is asking comes first, because the default mode depends on it and the
+   * sidebar resolves the same way: answering without the email here would send
+   * a beta member to a page their own navigation does not list. It costs no
+   * request — the protected layout's middleware has already ensured the org
+   * context, so this reads the query cache.
    *
    * `nav` is carried over when it is what put us in this mode, so a pinned demo
    * link survives the redirect.
    */
+  const me = await ensureOrgContext(params.orgSlug!);
   const url = new URL(request.url);
-  if (resolveSpaceNavMode(url.search) === 'plugin-first') {
+  if (resolveSpaceNavMode(url.search, me.user?.email) === 'plugin-first') {
     const target = routes.space.toContext(params.orgSlug!, params.spaceSlug!);
     const requested = url.searchParams.get('nav');
     return redirect(requested ? `${target}?nav=${requested}` : target);
   }
 
-  const me = await ensureOrgContext(params.orgSlug!);
   const space = await queryClient.ensureQueryData(
     getSpaceBySlugQueryOptions(params.spaceSlug!, me.organization.id),
   );

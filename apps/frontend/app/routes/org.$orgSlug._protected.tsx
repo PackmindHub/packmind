@@ -82,13 +82,16 @@ export default function AuthenticatedLayout() {
     params.orgSlug &&
     me.organization?.slug !== params.orgSlug;
 
-  if (isLoading || !me || isSwitchingOrg) {
+  // An unauthenticated answer gets the skeleton too, while the effect above
+  // sends it to sign-in: nothing below can be rendered for it, and the nav mode
+  // provider needs a user to pick a navigation from.
+  if (isLoading || !me || !me.authenticated || isSwitchingOrg) {
     return <SkeletonLayout />;
   }
 
   return (
     <SidebarCollapseProvider value={sidebarCollapseValue}>
-      <SpaceNavModeProvider>
+      <SpaceNavModeProvider userEmail={me.user.email}>
         <PMHStack
           h="100%"
           w="100%"
