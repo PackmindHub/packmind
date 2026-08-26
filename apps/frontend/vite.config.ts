@@ -38,6 +38,17 @@ const LEAKY_SPECS = [
   // profiling snapshot; they fail under a shared registry and pass isolated.
   'src/domain/accounts/components/DeployWithCliModal.spec.tsx',
   'src/domain/deployments/components/MembershipChips/MembershipChips.test.tsx',
+  // Proprietary-edition-only specs the issue profiled as leaky. They do not
+  // exist in the OSS tree (the `change-proposals`/`marketplaces` domains and
+  // the deployments-overview redesign spec are proprietary), so on OSS these
+  // entries simply match nothing — harmless. This block is not edition-gated,
+  // so keeping them here is what quarantines those specs under
+  // `PACKMIND_EDITION=proprietary`, where they would otherwise rejoin the fast
+  // `shared` project and re-pollute its per-worker registry.
+  'src/domain/change-proposals/api/gateways/ChangeProposalsGatewayApi.spec.ts',
+  'src/domain/change-proposals/api/queries/ChangeProposalsQueries.spec.tsx',
+  'src/domain/deployments/components/redesign/DeploymentsOverviewRedesign.spec.tsx',
+  'src/domain/marketplaces/components/MarketplaceDetailLayout.spec.tsx',
 ];
 
 export default defineConfig(() => {
