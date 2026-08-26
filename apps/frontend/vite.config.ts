@@ -1,9 +1,44 @@
 import { defineConfig } from 'vite';
+import { defaultExclude } from 'vitest/config';
 import { reactRouter } from '@react-router/dev/vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
 import path from 'path';
+
+// Glob patterns for the whole frontend spec set. Set on the `shared` project
+// (not the root `test` config) because `extends: true` concatenates array
+// options — see the note next to `test.include` below.
+const INCLUDE_GLOBS = [
+  'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+  'app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+];
+
+// Specs that leak module or global state and therefore cannot share a module
+// registry with their neighbours. They run in the dedicated `isolated` Vitest
+// project (`isolate: true`); everything else runs in the fast `shared` project
+// (`isolate: false`). Root causes: the shared axios instance in
+// `src/services/api/ApiService.ts` (the gateway specs), the clipboard global
+// (the CopiableText* specs) and several component specs that rely on a fresh
+// module registry. Shrink this list as the underlying leaks get fixed — each
+// entry removed rejoins the fast project.
+const LEAKY_SPECS = [
+  'src/services/api/ApiService.test.ts',
+  'src/domain/accounts/api/gateways/AuthGatewayApi.test.ts',
+  'src/domain/accounts/api/gateways/OrganizationGatewayApi.test.ts',
+  'src/domain/accounts/api/gateways/UserGatewayApi.test.ts',
+  'src/domain/git/api/gateways/GitProviderGatewayApi.spec.ts',
+  'src/domain/skills/api/gateways/SkillsGatewayApi.test.ts',
+  'src/shared/components/inputs/CopiableTextField.spec.tsx',
+  'src/shared/components/inputs/CopiableTextarea.spec.tsx',
+  'src/domain/git/components/ConnectionDrawer/ManageReposPanel.spec.tsx',
+  'src/domain/git/components/ManageGitProvider/__tests__/GitProviderAdvancedPanel.spec.tsx',
+  'src/domain/spaces/components/SpacesManagementPage/SpacesManagementPage.test.tsx',
+  // Surfaced as leaky once the suite drifted past the issue's original
+  // profiling snapshot; they fail under a shared registry and pass isolated.
+  'src/domain/accounts/components/DeployWithCliModal.spec.tsx',
+  'src/domain/deployments/components/MembershipChips/MembershipChips.test.tsx',
+];
 
 export default defineConfig(() => {
   // Determine edition mode (defaults to OSS if not explicitly set to 'proprietary')
@@ -118,10 +153,10 @@ export default defineConfig(() => {
       globals: true,
       environment: 'jsdom',
       setupFiles: ['./src/test-setup.ts'],
-      include: [
-        'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-        'app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      ],
+      // NOTE: `include` is intentionally set per-project below, not here.
+      // `extends: true` *concatenates* array options, so a root `include`
+      // would be appended to each project's `include` and the `isolated`
+      // project would end up matching every spec instead of just LEAKY_SPECS.
       // Carried over from the retired jest.config.ts. Vitest defaults to 5s,
       // which is not enough for the heavier component suites under full-suite
       // parallelism — the shortfall showed up as an intermittent timeout.
@@ -131,6 +166,37 @@ export default defineConfig(() => {
         reportsDirectory: '../../coverage/apps/frontend',
         provider: 'v8' as const,
       },
+      // Vitest's default `isolate: true` gives each spec a fresh module
+      // registry, so Chakra + `@packmind/ui` (~1.3s to import, ~830ms of it
+      // Chakra alone) get re-evaluated once per file instead of once per
+      // worker. Roughly half the specs pay that cost, which dominates the
+      // suite's wall clock. Sharing the registry (`isolate: false`) collapses
+      // those imports to one per worker and cuts the run ~2.5-3x.
+      //
+      // A handful of specs leak module/global state (a shared axios instance
+      // in `ApiService`, the clipboard global, a few component specs), so they
+      // stay in a dedicated `isolated` project; everything else runs in the
+      // fast `shared` project. Removing a file from LEAKY_SPECS (e.g. once the
+      // ApiService singleton is fixed) moves it into the fast project.
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'shared',
+            isolate: false,
+            include: INCLUDE_GLOBS,
+            exclude: [...defaultExclude, ...LEAKY_SPECS],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'isolated',
+            isolate: true,
+            include: LEAKY_SPECS,
+          },
+        },
+      ],
     },
   };
 });
