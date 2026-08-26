@@ -37,6 +37,8 @@ import {
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { routes } from '../../../../shared/utils/routes';
+import { useSpaceNavMode } from '../../../organizations/components/SpaceNavModeContext';
+import { contextPackageHref } from '../context/buildComponentDetail';
 
 export interface CreatePackagePageProps {
   organizationSlug: string;
@@ -458,8 +460,20 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   spaceSlug,
 }) => {
   const navigate = useNavigate();
+  const { mode } = useSpaceNavMode();
   const { spaceId, space, isLoading: isLoadingSpace } = useCurrentSpace();
   const organizationId = space?.organizationId;
+
+  /*
+   * Where the form goes when it is over, which is not the same screen in the
+   * two navigations. The packages list has no entry in the plugin-first
+   * sidebar: landing there is landing outside the navigation, and Context is
+   * the screen the "New package" button was pressed on.
+   */
+  const isPluginFirst = mode === 'plugin-first';
+  const listingHref = isPluginFirst
+    ? routes.space.toContext(organizationSlug, spaceSlug)
+    : routes.space.toPackages(organizationSlug, spaceSlug);
 
   const {
     data: commandsResponse,
@@ -511,7 +525,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     setIsSubmitting(true);
 
     try {
-      await createPackageMutation.mutateAsync({
+      const created = await createPackageMutation.mutateAsync({
         spaceId,
         organizationId,
         name,
@@ -527,7 +541,19 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         description: `"${name}" has been created`,
       });
 
-      navigate(`/org/${organizationSlug}/space/${spaceSlug}/packages`);
+      /*
+       * Opened on the package that was just created rather than on the list of
+       * them: the rail falls back to the first package of the space in
+       * alphabetical order, and a new package is almost never that one.
+       */
+      navigate(
+        isPluginFirst
+          ? contextPackageHref(
+              { orgSlug: organizationSlug, spaceSlug },
+              created.package.id,
+            )
+          : listingHref,
+      );
     } catch (error) {
       console.error('Failed to create package:', error);
       const errorMessage =
@@ -665,9 +691,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
           </PMButton>
           <PMButton
             variant="secondary"
-            onClick={() =>
-              navigate(`/org/${organizationSlug}/space/${spaceSlug}/packages`)
-            }
+            onClick={() => navigate(listingHref)}
             type="button"
             disabled={isPending}
             size="lg"

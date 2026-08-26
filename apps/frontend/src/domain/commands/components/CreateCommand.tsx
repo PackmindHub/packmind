@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useParams } from 'react-router';
 import {
   useCreateCommandMutation,
   useGetCommandsQuery,
@@ -12,13 +13,18 @@ import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import { useCreateIntoPackage } from '../../deployments/hooks/useCreateIntoPackage';
+import { contextPackageHref } from '../../deployments/components/context/buildComponentDetail';
 import { pmToaster } from '@packmind/ui';
 
 export const CreateCommand = () => {
+  const { orgSlug, spaceSlug } = useParams() as {
+    orgSlug: string;
+    spaceSlug: string;
+  };
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const nav = useNavigation();
-  const { attachToPackage } = useCreateIntoPackage();
+  const { packageId, attachToPackage } = useCreateIntoPackage();
 
   const [alert, setAlert] = useState<{
     type: 'success' | 'error';
@@ -57,8 +63,8 @@ export const CreateCommand = () => {
             title: RECIPE_MESSAGES.success.created,
           });
           /*
-           * Navigating only once the membership is settled, so the detail page
-           * shows the package the user created the command for.
+           * Navigating only once the membership is settled, so whichever screen
+           * comes next shows the command in the package it was created for.
            */
           void attachToPackage({ commandIds: [createdCommand.id] }).then(
             (outcome) => {
@@ -69,7 +75,24 @@ export const CreateCommand = () => {
                     'It is in the space. Add it to a package to distribute it.',
                 });
               }
-              nav.space.toCommand(createdCommand.id);
+              /*
+               * Back where the form was opened from. A package in the address
+               * means this form was reached from the Context surface, so that is
+               * the screen the user was working on, with the new command open in
+               * it. The command's own page is where the per-type pages send it,
+               * and it is still the right answer for them.
+               */
+              if (packageId) {
+                nav.to(
+                  contextPackageHref(
+                    { orgSlug, spaceSlug },
+                    packageId,
+                    createdCommand.id,
+                  ),
+                );
+              } else {
+                nav.space.toCommand(createdCommand.id);
+              }
             },
           );
         },
