@@ -126,6 +126,18 @@ export default defineConfig(() => {
       // which is not enough for the heavier component suites under full-suite
       // parallelism — the shortfall showed up as an intermittent timeout.
       testTimeout: 15000,
+      // Vitest's default `isolate: true` recycles the worker for every spec, so
+      // each file re-evaluates the whole module graph from scratch — Chakra plus
+      // the `@packmind/ui` barrel is ~3s of import on its own, and nearly every
+      // spec pulls it in. That per-file re-evaluation, not the tests, dominated
+      // the suite's wall clock (~110s for 95 files on a 4-core runner).
+      //
+      // Sharing the worker collapses those imports to once per worker (~2.8x
+      // faster). The catch is that Vitest only resets the module and mock
+      // registries between files when `isolate` is true, so mocks would leak
+      // across specs; `src/test-setup.ts` restores that reset by hand. Keep the
+      // two settings together — `isolate: false` without that hook is unsound.
+      isolate: false,
       reporters: ['default'],
       coverage: {
         reportsDirectory: '../../coverage/apps/frontend',
