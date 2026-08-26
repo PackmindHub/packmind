@@ -87,7 +87,7 @@ const MODULE_MOCKING_SPECS = collectModuleMockingSpecs(
 // hand-listed non-mock leaks. Everything else stays in the fast shared project.
 const LEAKY_SPECS = Array.from(
   new Set([...ALWAYS_ISOLATE, ...MODULE_MOCKING_SPECS]),
-).sort();
+).sort((a, b) => a.localeCompare(b));
 
 export default defineConfig(() => {
   // Determine edition mode (defaults to OSS if not explicitly set to 'proprietary')
