@@ -26,7 +26,7 @@ import {
   ContextComponentList,
 } from './ContextComponentList';
 import { ContextSelectionBar } from './ContextSelectionBar';
-import { MoveComponentDialog } from './MoveComponentDialog';
+import { MoveComponentDrawer } from './MoveComponentDrawer';
 
 /**
  * Every component of the space, whatever package carries it.
@@ -119,7 +119,7 @@ export function SpaceInventoryPane({
    * package" is only ever a real need for the components in none; what that
    * actually produced was one list that grows and loses checkboxes as a chip is
    * clicked, which is a worse thing to explain than the operation itself. The
-   * dialog already handles a component that is somewhere: it adds a membership
+   * drawer already handles a component that is somewhere: it adds a membership
    * and says so, and it can tell how many of the picked ones have none.
    *
    * Resolved against what is on screen rather than against the whole space, so
@@ -282,10 +282,10 @@ export function SpaceInventoryPane({
       {/*
         No source: what is picked here is being given a package rather than
         moved between two, and the components the filter shows are in none. The
-        dialog is the same one the package pane opens, with that half missing.
+        drawer is the same one the package pane opens, with that half missing.
       */}
       {placing && placing.length > 0 && (
-        <MoveComponentDialog
+        <MoveComponentDrawer
           open
           onOpenChange={(isOpen) => {
             if (!isOpen) setPlacing(null);

@@ -46,7 +46,7 @@ import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
-import { MoveComponentDialog } from './MoveComponentDialog';
+import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
@@ -126,12 +126,12 @@ export function ContextPackagePane({
 }>) {
   const [searchParams, setSearchParams] = useSearchParams();
   /*
-   * What is being moved, held here rather than in the row: the dialog has to
+   * What is being moved, held here rather than in the row: the drawer has to
    * outlive the list it was opened from, because the move rebuilds that list
    * and the row the button sits on is gone by the time the toast appears.
    *
    * A list rather than one component, so a row's own button and the selection
-   * bar open the same dialog. A move of one is a move of a list of one.
+   * bar open the same drawer. A move of one is a move of a list of one.
    */
   const [moving, setMoving] = useState<readonly ContextComponent[] | null>(
     null,
@@ -276,12 +276,12 @@ export function ContextPackagePane({
   const distributionBadge = buildDistributionTabBadge(drift);
 
   /*
-   * Built once and rendered by whichever half is on screen. The dialog has to
+   * Built once and rendered by whichever half is on screen. The drawer has to
    * outlive the thing it was opened from: from the list, the move rebuilds that
    * list, and from the detail, the move empties the detail.
    */
-  const moveDialog = moving && moving.length > 0 && (
-    <MoveComponentDialog
+  const moveDrawer = moving && moving.length > 0 && (
+    <MoveComponentDrawer
       open
       onOpenChange={(isOpen) => {
         if (!isOpen) setMoving(null);
@@ -354,7 +354,7 @@ export function ContextPackagePane({
             />
           )}
         </PMBox>
-        {moveDialog}
+        {moveDrawer}
         {deleteComponentDialog}
       </>
     );
@@ -579,7 +579,7 @@ export function ContextPackagePane({
         />
       </PMTabsCompound.Content>
 
-      {moveDialog}
+      {moveDrawer}
       {deleteComponentDialog}
       {/*
         Mounted only while it is open, rather than kept around hidden, so its two

@@ -5,7 +5,7 @@ import {
   PMBox,
   PMButton,
   PMCloseButton,
-  PMDialog,
+  PMDrawer,
   PMHStack,
   PMIcon,
   PMInput,
@@ -50,34 +50,40 @@ const SEARCHABLE_FROM = 7;
  * Moving what is picked out of the package it is being read from and into
  * another one of the same space: one component, or a whole selection.
  *
- * With no source it is the same dialog with one half missing. Components read
+ * A drawer, like the other panels that edit something in place. What is on
+ * screen is a list of candidate packages with notes on each, which is a panel to
+ * work through rather than a question to answer, and it leaves the surface it
+ * was opened from visible beside it: the package the components are leaving
+ * stays in view while the destination is picked.
+ *
+ * With no source it is the same drawer with one half missing. Components read
  * from the space inventory are not being read out of a package, so there is
  * nothing for them to leave: the add is the whole operation and the wording says
  * join rather than move. Most of them will be components no package carries,
- * which is what the inventory's filter is for, but not all, so the dialog counts
- * how many have none rather than assuming. Same dialog rather than a second one:
+ * which is what the inventory's filter is for, but not all, so the drawer counts
+ * how many have none rather than assuming. Same drawer rather than a second one:
  * the list of candidates, the already-holds notes and the deployment warnings
- * are the same question asked of the same packages, and two dialogs would have
+ * are the same question asked of the same packages, and two of them would have
  * answered it two ways.
  *
  * There is no move endpoint: the server knows how to add components to a
  * package and how to remove them from one. The order is what makes it a move
  * rather than a gap: the add goes first, so a failure between the two leaves
  * the components in both packages instead of in none. That state is recoverable
- * from this same dialog, which then offers to remove them from here.
+ * from this same drawer, which then offers to remove them from here.
  *
  * A selection is two calls, not two calls per component. Both mutations take a
  * bag of ids grouped by type, so a mixed selection leaves the source in one
  * request and cannot half-leave it.
  *
- * One dialog and no second confirmation, unlike the manage-packages drawer.
- * What that drawer confirms is a removal it presents as a removal; here the
+ * One drawer and no second confirmation, unlike the manage-packages drawer.
+ * What that one confirms is a removal it presents as a removal; here the
  * word on the button is already "move", the destination is already picked, and
  * what a removal would cost is on screen before the click: the banner names the
  * repositories the source is live on, and each row names the ones the
  * destination is live on.
  */
-export function MoveComponentDialog({
+export function MoveComponentDrawer({
   open,
   onOpenChange,
   components,
@@ -106,7 +112,7 @@ export function MoveComponentDialog({
   spaceSlug: string;
   /**
    * The move went through, so whoever holds the selection can drop it. Called
-   * before the dialog closes, and only on the path where the source no longer
+   * before the drawer closes, and only on the path where the source no longer
    * holds what was picked.
    */
   onMoved?: () => void;
@@ -236,7 +242,7 @@ export function MoveComponentDialog({
       pmToaster.create({
         type: 'error',
         // The half-done state, said in full. What was picked is in both
-        // packages and the dialog can finish the job: reopening it on the same
+        // packages and the drawer can finish the job: reopening it on the same
         // destination now offers to remove it from here.
         title: !source
           ? `Couldn't add to ${target.pkg.name}`
@@ -254,26 +260,27 @@ export function MoveComponentDialog({
   };
 
   return (
-    <PMDialog.Root
+    <PMDrawer.Root
       open={open}
       onOpenChange={(details) => handleOpenChange(details.open)}
       closeOnInteractOutside={busyPackageId === null}
-      size="md"
+      placement="end"
+      size="lg"
     >
       <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>
+        <PMDrawer.Backdrop />
+        <PMDrawer.Positioner>
+          <PMDrawer.Content>
+            <PMDrawer.Header>
+              <PMDrawer.Title>
                 {source ? `Move ${subject}` : `Add ${subject} to a package`}
-              </PMDialog.Title>
-              <PMDialog.CloseTrigger asChild>
+              </PMDrawer.Title>
+              <PMDrawer.CloseTrigger asChild>
                 <PMCloseButton disabled={busyPackageId !== null} />
-              </PMDialog.CloseTrigger>
-            </PMDialog.Header>
+              </PMDrawer.CloseTrigger>
+            </PMDrawer.Header>
 
-            <PMDialog.Body>
+            <PMDrawer.Body>
               <PMVStack gap={4} alignItems="stretch">
                 {targets.length > 0 && (
                   <PMText variant="body" color="secondary">
@@ -406,9 +413,9 @@ export function MoveComponentDialog({
                   </PMVStack>
                 )}
               </PMVStack>
-            </PMDialog.Body>
+            </PMDrawer.Body>
 
-            <PMDialog.Footer>
+            <PMDrawer.Footer>
               {/*
                 A plain button, not a CloseTrigger: Chakra pins the close
                 trigger to the top-right corner of the content, so one placed
@@ -422,11 +429,11 @@ export function MoveComponentDialog({
               >
                 Cancel
               </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
+            </PMDrawer.Footer>
+          </PMDrawer.Content>
+        </PMDrawer.Positioner>
       </PMPortal>
-    </PMDialog.Root>
+    </PMDrawer.Root>
   );
 }
 
