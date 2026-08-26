@@ -4,8 +4,13 @@ import { PackmindError } from './errors/PackmindError';
 import { PackmindConflictError } from './errors/PackmindConflictError';
 import type { Mock, Mocked } from 'vitest';
 
-// Mock axios
-vi.mock('axios');
+// Mock axios. A factory rather than a bare automock, so the shape is this
+// file's own and cannot be decided by another spec's registration for the same
+// module — see the isolate:false note in vite.config.ts. `create` is the only
+// axios export ApiService touches; the rest are type-only imports.
+vi.mock('axios', () => ({
+  default: { create: vi.fn() },
+}));
 
 const mockedAxios = axios as Mocked<typeof axios>;
 

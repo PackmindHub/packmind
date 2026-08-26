@@ -8,7 +8,14 @@ import { formatPackageNames } from './PackagesDropdown';
 import { createPackageId, createStandardId, Package } from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
 
-vi.mock('../../hooks/usePackagesForArtifact');
+// A factory rather than a bare automock, so the shape is this file's own and
+// cannot be decided by another spec's registration for the same module — see the
+// isolate:false note in vite.config.ts. Both exports are stubbed, matching what
+// the automock used to produce.
+vi.mock('../../hooks/usePackagesForArtifact', () => ({
+  usePackagesForArtifact: vi.fn(),
+  getArtifactPackages: vi.fn(),
+}));
 
 const mockUsePackagesForArtifact = vi.spyOn(
   usePackagesForArtifactModule,
