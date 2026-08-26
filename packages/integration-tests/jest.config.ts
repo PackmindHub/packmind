@@ -22,4 +22,7 @@ module.exports = {
   testTimeout: 30000,
   // Run integration tests in parallel - each test file uses its own database fixture
   maxWorkers: 4,
+  // Specs here seed once per file and share a TestApp across tests (see
+  // createIntegrationTestFixture), so spies must not leak between tests.
+  restoreMocks: true,
 };

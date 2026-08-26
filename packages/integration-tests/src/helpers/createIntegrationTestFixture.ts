@@ -1,5 +1,5 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
+import { createTestDatasourceFixture } from '@packmind/test-utils';
 import { TestApp } from './TestApp';
 import { DataFactory } from './DataFactory';
 
@@ -34,65 +34,43 @@ import { DataFactory } from './DataFactory';
  *   afterAll(() => fixture.destroy());
  * });
  * ```
+ *
+ * Seeding the same rows for every test in a file is the dominant cost of this
+ * suite — a sign-up plus a handful of entities runs to a few hundred
+ * milliseconds, paid once per test. When every test starts from the same seed,
+ * build it once in `beforeAll` and call `snapshot()`; `cleanup()` then rewinds
+ * to it in O(1) rather than truncating and re-seeding:
+ *
+ * ```typescript
+ * beforeAll(async () => {
+ *   await fixture.initialize();
+ *   testApp = await fixture.createTestApp();
+ *   // ... seed the entities the tests read ...
+ *   fixture.snapshot();
+ * });
+ *
+ * afterEach(() => fixture.cleanup()); // back to the seeded state
+ * ```
+ *
+ * Note that `testApp` is then shared by every test in the file, so specs doing
+ * this must let Jest undo their spies — `restoreMocks` is enabled for this
+ * project, so `jest.spyOn` is reverted after each test automatically.
  */
 export function createIntegrationTestFixture(entities: EntitySchema[]) {
-  let datasource: DataSource | null = null;
-  let tableNames: string[] = [];
+  const fixture = createTestDatasourceFixture(entities);
 
   return {
     get datasource(): DataSource {
-      if (!datasource) {
-        throw new Error(
-          'Datasource not initialized. Call initialize() in beforeAll.',
-        );
-      }
-      return datasource;
+      return fixture.datasource;
     },
 
-    async initialize(): Promise<DataSource> {
-      datasource = await makeTestDatasource(entities);
-      await datasource.initialize();
-      await datasource.synchronize();
+    initialize: () => fixture.initialize(),
 
-      // Cache table names for fast cleanup
-      tableNames = datasource.entityMetadatas.map(
-        (metadata) => metadata.tableName,
-      );
+    snapshot: () => fixture.snapshot(),
 
-      return datasource;
-    },
+    cleanup: () => fixture.cleanup(),
 
-    /**
-     * Truncates all tables to reset state between tests.
-     * Much faster than dropping and recreating the schema.
-     */
-    async cleanup(): Promise<void> {
-      if (!datasource?.isInitialized) return;
-
-      // Truncate all tables in a single transaction
-      // Use CASCADE to handle foreign key constraints
-      const queryRunner = datasource.createQueryRunner();
-      try {
-        await queryRunner.startTransaction();
-        for (const tableName of tableNames) {
-          await queryRunner.query(`TRUNCATE TABLE "${tableName}" CASCADE`);
-        }
-        await queryRunner.commitTransaction();
-      } catch (error) {
-        await queryRunner.rollbackTransaction();
-        throw error;
-      } finally {
-        await queryRunner.release();
-      }
-    },
-
-    async destroy(): Promise<void> {
-      if (datasource?.isInitialized) {
-        await datasource.destroy();
-      }
-      datasource = null;
-      tableNames = [];
-    },
+    destroy: () => fixture.destroy(),
 
     /**
      * Creates a new TestApp instance bound to the fixture's datasource.
