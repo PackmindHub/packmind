@@ -44,12 +44,31 @@ targeted error.
 | --- | --- |
 | `helpers/integrationTest.ts` | `integrationTest` / `integrationTestWithUser` wrappers; give the `getContext` accessor |
 | `helpers/TestApp.ts` | reach a domain through `testContext.testApp.<domain>Hexa.getAdapter()` |
-| `helpers/createIntegrationTestFixture.ts` | schema created once per file, tables truncated between tests |
+| `helpers/createIntegrationTestFixture.ts` | schema created once per file; `snapshot()` / `cleanup()` rewind between tests |
 | `helpers/DataFactory.ts` / `DataQuery.ts` | seed and read fixture data |
 | `helpers/StubStandardsListener.ts` | assert standards domain events without a real listener |
 
 `jest.config.ts` sets a 30s timeout and `maxWorkers: 4` — each spec file gets its own database
 fixture, so files are safe to parallelise but tests within a file share state.
+
+## Seed once per file, not once per test
+
+Building fixture data is what these specs spend their time on: a sign-up plus a handful of entities
+is a few hundred milliseconds of pg-mem work, and doing it in `beforeEach` multiplies that by the
+test count. So **seed in `beforeAll` and call `fixture.snapshot()`**; `afterEach`'s
+`fixture.cleanup()` then rewinds the database to that seed in O(1) instead of truncating it. The
+`integrationTest` / `integrationTestWithUser` wrappers already do this for the context they build.
+
+Two things follow from the `TestApp` being shared across a file:
+
+- **Spies must be re-installed per test.** `restoreMocks` is on for this project, so a `jest.spyOn`
+  is reverted after each test. Anything a spec stubs for every test — typically
+  `gitHexa.getAdapter().commitToGit` — belongs in a `beforeEach`, not in the seed block.
+- **Anything torn down in `afterEach` must be re-established in `beforeEach`** — an event listener
+  removed by `eventEmitterService.removeAllListeners()`, for instance.
+
+Rows a single test needs are still created inside that test (or its own nested `beforeEach`); the
+rewind undoes them.
 
 Note `src/coding-agents-deployments/` is where each coding agent's emitted file layout is asserted;
 that is the home for those tests, not `packages/coding-agent`.

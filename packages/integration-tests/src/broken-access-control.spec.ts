@@ -15,9 +15,11 @@ describe('Broken access control - target ownership validation', () => {
   let orgA: DataFactory;
   let orgB: DataFactory;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
@@ -32,6 +34,8 @@ describe('Broken access control - target ownership validation', () => {
     const commit = await createGitCommit();
     const gitAdapter = testApp.gitHexa.getAdapter();
     jest.spyOn(gitAdapter, 'commitToGit').mockResolvedValue(commit);
+
+    fixture.snapshot();
   });
 
   afterEach(async () => {

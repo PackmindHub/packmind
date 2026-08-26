@@ -1,5 +1,3 @@
-// @ts-expect-error Missing types for the lib
-import stage from 'jest-stage';
 import { createIntegrationTestFixture } from './createIntegrationTestFixture';
 import { accountsSchemas } from '@packmind/accounts';
 import { spacesSchemas } from '@packmind/spaces';
@@ -28,40 +26,63 @@ export type IntegrationTest<
   T extends IntegrationTestContext = IntegrationTestContext,
 > = (tests: (getContext: () => Promise<T>) => void) => () => void;
 
-export const integrationTest: IntegrationTest = (tests) => {
-  return () => {
-    const fixture = createIntegrationTestFixture([
-      ...accountsSchemas,
-      ...spacesSchemas,
-      ...commandsSchemas,
-      ...standardsSchemas,
-      ...skillsSchemas,
-      ...gitSchemas,
-      ...playbookChangeManagementSchemas,
-      ...deploymentsSchemas,
-    ]);
+const integrationTestSchemas = [
+  ...accountsSchemas,
+  ...spacesSchemas,
+  ...commandsSchemas,
+  ...standardsSchemas,
+  ...skillsSchemas,
+  ...gitSchemas,
+  ...playbookChangeManagementSchemas,
+  ...deploymentsSchemas,
+];
 
-    beforeAll(() => fixture.initialize());
+/**
+ * Builds the describe body shared by `integrationTest` and
+ * `integrationTestWithUser`.
+ *
+ * The context is built **once per file**, in `beforeAll`, and the rows it
+ * creates are snapshotted. `getContext()` then hands every test the same
+ * context and `afterEach` rewinds the database to the snapshot, so a sign-up —
+ * the most expensive thing these fixtures do — is paid once per file rather
+ * than once per test.
+ *
+ * Because the context is shared, anything a test spies on stays spied on
+ * without help; `restoreMocks` is enabled for this project, so `jest.spyOn` is
+ * reverted after each test.
+ */
+function describeWithContext<T extends IntegrationTestContext>(
+  buildContext: (base: IntegrationTestContext) => Promise<T>,
+): IntegrationTest<T> {
+  return (tests) => {
+    return () => {
+      const fixture = createIntegrationTestFixture(integrationTestSchemas);
 
-    afterAll(() => fixture.destroy());
+      let context: T;
 
-    afterEach(async () => {
-      await fixture.cleanup();
-    });
+      beforeAll(async () => {
+        await fixture.initialize();
 
-    stage(async () => {
-      const testApp = new TestApp(fixture.datasource);
-      await testApp.initialize();
+        const testApp = await fixture.createTestApp();
+        context = await buildContext({ testApp });
 
-      return {
-        testApp,
-        fixture,
-      };
-    });
+        fixture.snapshot();
+      });
 
-    tests(async () => stage());
+      afterEach(async () => {
+        await fixture.cleanup();
+      });
+
+      afterAll(() => fixture.destroy());
+
+      tests(async () => context);
+    };
   };
-};
+}
+
+export const integrationTest: IntegrationTest = describeWithContext(
+  async (base) => base,
+);
 
 export type IntegrationTestWithUserContext = IntegrationTestContext & {
   user: User;
@@ -84,49 +105,37 @@ const defaultIntegrationTestWithUserInput: IntegrationTestWithUserInput = {
   password: uuidv4(),
 };
 
-export const integrationTestWithUser: IntegrationTest<
-  IntegrationTestWithUserContext
-> = (tests, testData?: Partial<IntegrationTestWithUserInput>) => {
-  return integrationTest(() => {
-    stage(async ({ testApp }: IntegrationTestContext) => {
-      const fullTestData = {
-        ...defaultIntegrationTestWithUserInput,
-        ...testData,
-      };
+export const integrationTestWithUser: IntegrationTest<IntegrationTestWithUserContext> =
+  describeWithContext(async ({ testApp }) => {
+    const signUpResponse = await testApp.accountsHexa
+      .getAdapter()
+      .signUpWithOrganization({
+        email: defaultIntegrationTestWithUserInput.email,
+        password: defaultIntegrationTestWithUserInput.password,
+        method: 'password',
+      });
+    const user = signUpResponse.user;
+    const organization = signUpResponse.organization;
 
-      const signUpResponse = await testApp.accountsHexa
-        .getAdapter()
-        .signUpWithOrganization({
-          email: fullTestData.email,
-          password: fullTestData.password,
-          method: 'password',
-        });
-      const user = signUpResponse.user;
-      const organization = signUpResponse.organization;
+    const globalSpace = await testApp.spacesHexa
+      .getAdapter()
+      .getSpaceBySlug('global', organization.id);
+    if (!globalSpace) {
+      throw new Error(
+        `No default space found in organization: ${organization}`,
+      );
+    }
+    const space = globalSpace;
 
-      const globalSpace = await testApp.spacesHexa
-        .getAdapter()
-        .getSpaceBySlug('global', organization.id);
-      if (!globalSpace) {
-        throw new Error(
-          `No default space found in organization: ${organization}`,
-        );
-      }
-      const space = globalSpace;
-
-      return {
-        testApp,
-        user,
-        organization,
-        space,
-        basePackmindCommand: {
-          userId: user.id,
-          organizationId: organization.id,
-          spaceId: space.id,
-        },
-      };
-    });
-
-    tests(async () => stage());
+    return {
+      testApp,
+      user,
+      organization,
+      space,
+      basePackmindCommand: {
+        userId: user.id,
+        organizationId: organization.id,
+        spaceId: space.id,
+      },
+    };
   });
-};
