@@ -4,7 +4,11 @@ import { reactRouter } from '@react-router/dev/vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import path from 'path';
+
+const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 // Glob patterns for the whole frontend spec set. Set on the `shared` project
 // (not the root `test` config) because `extends: true` concatenates array
@@ -14,42 +18,76 @@ const INCLUDE_GLOBS = [
   'app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
 ];
 
-// Specs that leak module or global state and therefore cannot share a module
-// registry with their neighbours. They run in the dedicated `isolated` Vitest
-// project (`isolate: true`); everything else runs in the fast `shared` project
-// (`isolate: false`). Root causes: the shared axios instance in
-// `src/services/api/ApiService.ts` (the gateway specs), the clipboard global
-// (the CopiableText* specs) and several component specs that rely on a fresh
-// module registry. Shrink this list as the underlying leaks get fixed — each
-// entry removed rejoins the fast project.
-const LEAKY_SPECS = [
-  'src/services/api/ApiService.test.ts',
-  'src/domain/accounts/api/gateways/AuthGatewayApi.test.ts',
-  'src/domain/accounts/api/gateways/OrganizationGatewayApi.test.ts',
-  'src/domain/accounts/api/gateways/UserGatewayApi.test.ts',
-  'src/domain/git/api/gateways/GitProviderGatewayApi.spec.ts',
-  'src/domain/skills/api/gateways/SkillsGatewayApi.test.ts',
+// Specs that leak module/global state WITHOUT calling `vi.mock`/`vi.doMock`,
+// so the content scan below cannot detect them. They must be listed by hand.
+// Right now this is only the clipboard-global leak in the CopiableText* specs
+// and the proprietary-edition-only specs that don't exist in the OSS tree (on
+// OSS these entries simply match nothing — harmless; under
+// `PACKMIND_EDITION=proprietary` they are quarantined even if a future edit
+// drops their `vi.mock` calls). Everything that mocks a module is picked up
+// automatically — see `MODULE_MOCKING_SPECS`.
+const ALWAYS_ISOLATE = [
   'src/shared/components/inputs/CopiableTextField.spec.tsx',
   'src/shared/components/inputs/CopiableTextarea.spec.tsx',
-  'src/domain/git/components/ConnectionDrawer/ManageReposPanel.spec.tsx',
-  'src/domain/git/components/ManageGitProvider/__tests__/GitProviderAdvancedPanel.spec.tsx',
-  'src/domain/spaces/components/SpacesManagementPage/SpacesManagementPage.test.tsx',
-  // Surfaced as leaky once the suite drifted past the issue's original
-  // profiling snapshot; they fail under a shared registry and pass isolated.
-  'src/domain/accounts/components/DeployWithCliModal.spec.tsx',
-  'src/domain/deployments/components/MembershipChips/MembershipChips.test.tsx',
-  // Proprietary-edition-only specs the issue profiled as leaky. They do not
-  // exist in the OSS tree (the `change-proposals`/`marketplaces` domains and
-  // the deployments-overview redesign spec are proprietary), so on OSS these
-  // entries simply match nothing — harmless. This block is not edition-gated,
-  // so keeping them here is what quarantines those specs under
-  // `PACKMIND_EDITION=proprietary`, where they would otherwise rejoin the fast
-  // `shared` project and re-pollute its per-worker registry.
   'src/domain/change-proposals/api/gateways/ChangeProposalsGatewayApi.spec.ts',
   'src/domain/change-proposals/api/queries/ChangeProposalsQueries.spec.tsx',
   'src/domain/deployments/components/redesign/DeploymentsOverviewRedesign.spec.tsx',
   'src/domain/marketplaces/components/MarketplaceDetailLayout.spec.tsx',
 ];
+
+// Any spec that calls `vi.mock`/`vi.doMock` cannot share a module registry with
+// its neighbours: under `isolate: false` the shared registry may already hold
+// the real (unmocked) module by the time the spec's hoisted mock runs — or a
+// neighbour's mock lingers into this spec — so mocks silently fail to apply.
+// The symptoms are order-dependent and drift run-to-run (`… is not a function`,
+// `useAuthService must be used within AuthProvider`, `No QueryClient set`),
+// which is exactly why a hand-maintained leaky list kept going stale. Instead,
+// scan the spec files once at config-eval time and route every module-mocking
+// spec into the isolated project automatically. This is deterministic and
+// self-maintaining: a spec that adds or drops `vi.mock` moves projects on its
+// own, no list to update.
+const SPEC_FILENAME_RE = /\.(test|spec)\.(js|mjs|cjs|ts|mts|cts|jsx|tsx)$/;
+const MODULE_MOCK_RE = /\bvi\s*\.\s*(mock|doMock)\b/;
+
+function collectModuleMockingSpecs(dir: string): string[] {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const found: string[] = [];
+  for (const entry of entries) {
+    const absolute = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules') continue;
+      found.push(...collectModuleMockingSpecs(absolute));
+    } else if (entry.isFile() && SPEC_FILENAME_RE.test(entry.name)) {
+      let content = '';
+      try {
+        content = fs.readFileSync(absolute, 'utf8');
+      } catch {
+        continue;
+      }
+      if (MODULE_MOCK_RE.test(content)) {
+        found.push(
+          path.relative(CONFIG_DIR, absolute).split(path.sep).join('/'),
+        );
+      }
+    }
+  }
+  return found;
+}
+
+const MODULE_MOCKING_SPECS = collectModuleMockingSpecs(
+  path.join(CONFIG_DIR, 'src'),
+);
+
+// The isolated project's include list: every module-mocking spec plus the
+// hand-listed non-mock leaks. Everything else stays in the fast shared project.
+const LEAKY_SPECS = Array.from(
+  new Set([...ALWAYS_ISOLATE, ...MODULE_MOCKING_SPECS]),
+).sort();
 
 export default defineConfig(() => {
   // Determine edition mode (defaults to OSS if not explicitly set to 'proprietary')
@@ -167,7 +205,7 @@ export default defineConfig(() => {
       // NOTE: `include` is intentionally set per-project below, not here.
       // `extends: true` *concatenates* array options, so a root `include`
       // would be appended to each project's `include` and the `isolated`
-      // project would end up matching every spec instead of just LEAKY_SPECS.
+      // project would end up matching every spec instead of just the leaky set.
       // Carried over from the retired jest.config.ts. Vitest defaults to 5s,
       // which is not enough for the heavier component suites under full-suite
       // parallelism — the shortfall showed up as an intermittent timeout.
@@ -184,11 +222,11 @@ export default defineConfig(() => {
       // suite's wall clock. Sharing the registry (`isolate: false`) collapses
       // those imports to one per worker and cuts the run ~2.5-3x.
       //
-      // A handful of specs leak module/global state (a shared axios instance
-      // in `ApiService`, the clipboard global, a few component specs), so they
-      // stay in a dedicated `isolated` project; everything else runs in the
-      // fast `shared` project. Removing a file from LEAKY_SPECS (e.g. once the
-      // ApiService singleton is fixed) moves it into the fast project.
+      // Specs that mock modules (or leak a global) can't share a registry, so
+      // they run in a dedicated `isolated` project; everything else runs in the
+      // fast `shared` project. Membership is computed above (LEAKY_SPECS) from a
+      // content scan for `vi.mock`/`vi.doMock` plus the ALWAYS_ISOLATE list, so
+      // it stays in sync automatically as specs add or drop module mocking.
       projects: [
         {
           extends: true,
