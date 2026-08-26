@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
 import path from 'path';
 import { readFileSync } from 'fs';
@@ -132,7 +131,6 @@ export default defineConfig(() => {
       // suite dies with "can't detect preamble". Tests do not need the plugin:
       // `jsx: "react-jsx"` lets esbuild handle the JSX transform on its own.
       !process.env.VITEST && reactRouter(),
-      nxCopyAssetsPlugin(['*.md']),
       // enableBuild: false keeps the checker to the dev-server overlay. Its build
       // path spawns a bare `tsc --noEmit` from the workspace root — which has no
       // tsconfig.json, so tsc prints its usage and exits 1 — then calls
@@ -147,6 +145,11 @@ export default defineConfig(() => {
     //  plugins: [ nxViteTsPaths() ],
     // },
     build: {
+      // react-router build owns the real output location and writes the app to
+      // apps/frontend/build/{client,server} — which is what project.json
+      // declares as this target's output and what Dockerfile.frontend copies.
+      // outDir only reaches plugins that write through it, so keep it pointing
+      // somewhere harmless rather than implying it is the app's build directory.
       outDir: '../../dist/apps/frontend',
       emptyOutDir: true,
       reportCompressedSize: true,
