@@ -235,6 +235,28 @@ if (otlpEndpoint && environment) {
         // without the statement text. Datadog has the statement.
         '@opentelemetry/instrumentation-pg': { enabled: false },
 
+        // Redis is off for the same reason Postgres is: volume without signal.
+        // Nearly every span was BullMQ's own bookkeeping — an `evalsha` of
+        // moveToActive per worker poll, plus the QueueEvents blocking XREAD —
+        // emitted continuously whether or not a job exists, and each one
+        // attached to whichever request happened to create the worker, so they
+        // also corrupted the trace they landed in.
+        //
+        // This also drops the calls that were worth something: Cache gets/sets
+        // and SSE pub/sub. Those stay visible one level up, inside the
+        // enclosing `<Name>Service.<method>` span that `instrumentMethods`
+        // gives them — without the command text.
+        //
+        // Those poll spans exist at all only because of a context leak: the
+        // instrumentation defaults to `requireParentSpan: true`, so a Redis
+        // call with no active span is never traced — but a BullMQ worker built
+        // lazily on the first addJob() (see
+        // AbstractAIDelayedJob.ensureInitialized) captures that request's span
+        // context for the lifetime of its poll loop. The leak is still there
+        // and still mis-parents job-processing spans; this flag only stops it
+        // from being loud.
+        '@opentelemetry/instrumentation-ioredis': { enabled: false },
+
         // Everything else stays at its defaults, which is deliberate:
         //
         // - `winston` keeps both trace-context injection AND log sending on.

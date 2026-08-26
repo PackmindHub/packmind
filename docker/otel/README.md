@@ -196,7 +196,7 @@ accordingly.
 # p95 per operation
 histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket[5m])))
 
-# incoming endpoints only (server spans), or outbound calls only (redis, LLM APIs)
+# incoming endpoints only (server spans), or outbound calls only (the LLM APIs)
 histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_SERVER"}[5m])))
 histogram_quantile(0.99, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{span_kind="SPAN_KIND_CLIENT"}[5m])))
 
@@ -212,8 +212,8 @@ an empty panel rather than a broken setup — widen the window or generate load.
 no route collapse to a bare `POST` span name, so 404s and unmatched paths share one bucket.
 
 **Service Graph** (Explore → Tempo → Service Graph) — a live diagram with request and error rates on
-each edge, synthesized from client spans. Redis and the outbound LLM APIs appear; Postgres does not,
-since nothing emits client spans for it any more.
+each edge, synthesized from client spans. The outbound LLM APIs appear; Postgres and Redis do not,
+since nothing emits client spans for either one any more.
 
 ### Logs ↔ traces
 
@@ -282,7 +282,6 @@ Via `@opentelemetry/auto-instrumentations-node` in `apps/api/src/otel.ts`:
 | Spans you get                                        | From                             |
 | ---------------------------------------------------- | -------------------------------- |
 | Incoming HTTP, Express routing, Nest controllers     | `http`, `express`, `nestjs-core` |
-| Redis: cache, SSE pub/sub, BullMQ connection         | `ioredis`                        |
 | Outgoing LLM calls (OpenAI, Anthropic, Google GenAI) | `undici`, `openai`               |
 
 Prompt and completion **content** is not captured — only model and token metadata. Setting
@@ -296,13 +295,24 @@ And from our own code, all under the instrumentation scope `packmind`: a span pe
 per async method on every use case, service and repository**, and anything wrapped in `withSpan()` by
 hand. See [Adding your own spans](#adding-your-own-spans).
 
-Three known gaps:
+Four known gaps:
 
 - **Postgres, deliberately.** No `pg.query` or `pg-pool.connect` spans; the repository-method span is
   what a trace records about a database call, and Datadog DBM has the statement. Re-enable by
   deleting the `instrumentation-pg` line in `apps/api/src/otel.ts` if you ever need statement-level
   spans locally — and note that with it off, the repository spans are the _only_ record of database
   work in a trace, so they are not the layer to drop when trimming span volume.
+- **Redis, deliberately.** No `ioredis` spans either. Nearly all of them were BullMQ bookkeeping — an
+  `evalsha` of `moveToActive` per worker poll plus the `QueueEvents` blocking `XREAD`, emitted
+  continuously whether or not a job exists — and they arrived parented to whichever request happened
+  to create the worker, so they polluted that trace too. What goes with them is Cache gets/sets and
+  SSE pub/sub, which remain inside the enclosing `<Name>Service.<method>` span, without the command
+  text. Re-enable by deleting the `instrumentation-ioredis` line in `apps/api/src/otel.ts`. The
+  context leak behind those poll spans is untouched: the instrumentation defaults to
+  `requireParentSpan: true`, so a Redis call outside a span is never traced — but
+  `AbstractAIDelayedJob.ensureInitialized()` builds its worker on the first `addJob()`, inside a
+  request's active span, and the poll loop then holds that context for the life of the process. So
+  job-processing spans still hang off a long-finished request trace.
 - **TypeORM** produces no ORM-level spans. The community `opentelemetry-instrumentation-typeorm` is
   unmaintained and not part of `opentelemetry-js-contrib`, so it is deliberately not used. Our
   repository spans cover the part that mattered — which method issued a given statement — but nothing
