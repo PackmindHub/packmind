@@ -169,9 +169,9 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      # `build` is transpile-only (see nx.json). Type errors are caught by the
-      # `typecheck` target, which resolves deps from source and so needs no
-      # build ordering - both targets fan out with no chain between them.
+      # `build` type checks via `dependsOn: [typecheck]` (see nx.json), so the
+      # gate holds for `nx build` anywhere. `typecheck` is still listed here to
+      # cover `migrations`, which has a typecheck target but no build target.
       - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
