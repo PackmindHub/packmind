@@ -3,7 +3,7 @@ applyTo: 'Use case files in apps/cli/src/domain/useCases/ and apps/cli/src/appli
 ---
 # Standard: CLI Use Case Structure
 
-Enforce CLI use case separation by defining IPublicUseCase<Command, Response> interfaces with co-located Command/Response types in apps/cli/src/domain/useCases/ and implementing business-only logic in apps/cli/src/application/useCases/ using custom errors from apps/cli/src/domain/errors/ (no console or output handlers) to improve modularity, reuse, and predictable error handling. :
+Enforce clean separation between domain contracts and application logic in apps/cli use cases, ensuring use cases focus purely on business operations without presentation concerns like user output or ... :
 * Base all use case interfaces on IPublicUseCase<Command, Response> from @packmind/types
 * Create new error classes for domain-specific failure scenarios when existing errors do not apply
 * Define Command and Response types in the same file as the use case interface

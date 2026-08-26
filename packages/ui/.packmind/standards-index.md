@@ -4,7 +4,7 @@ This standards index contains all available coding standards that can be used by
 
 ## Available Standards
 
-- [Front-end UI and Design Systems](./standards/front-end-ui-and-design-systems.md) : Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components.
+- [Front-end UI and Design Systems](./standards/front-end-ui-and-design-systems.md) : This standard establishes guidelines for using Chakra UI v3 through the @packmind/ui design system to ensure consistent UI implementation across the frontend application. The @packmind/ui package provides a mapping of Chakra UI components with the same names and props, enhanced with Packmind-specific theming and semantic tokens. Apply this standard when building or modifying any React components in the frontend application to maintain visual consistency and leverage the centralized design system.
 
 
 ---

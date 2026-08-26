@@ -2,6 +2,10 @@
 
 TanStack Query uses prefix matching to invalidate cached queries, matching keys from left to right like a file path. Properly structured query keys enable efficient cache invalidation at any scope level (organization-wide, domain-wide, or specific operations). Each domain defines its query scope constant and operation enum in a dedicated queryKeys.ts file, ensuring type safety and preventing circular dependencies when domains import each other's keys for invalidation.
 
+## Scope
+
+apps/frontend/**/*.tsx
+
 ## Rules
 
 * Limit cross-domain imports to only query key constants and enums to prevent runtime coupling and circular dependencies
