@@ -86,16 +86,31 @@ export function componentDetailHref(
   return `?${next.toString()}`;
 }
 
+/**
+ * The address of the package with no component open in it.
+ *
+ * Separate from the href below because two callers want two shapes of the same
+ * answer: a back link wants a string to navigate to, and a component that has
+ * just been deleted wants the parameters themselves, to set in place. Both go
+ * through here so the two cannot drift apart on what "no component open" means.
+ */
+export function packageDetailParams(
+  searchParams: URLSearchParams,
+  packageId: PackageId,
+): URLSearchParams {
+  const next = new URLSearchParams(searchParams);
+  next.set(PACKAGE_PARAM, packageId);
+  next.delete(COMPONENT_PARAM);
+  next.delete(FILE_PARAM);
+  return next;
+}
+
 /** The way back out of a component, to the package it was read from. */
 export function packageDetailHref(
   searchParams: URLSearchParams,
   packageId: PackageId,
 ): string {
-  const next = new URLSearchParams(searchParams);
-  next.set(PACKAGE_PARAM, packageId);
-  next.delete(COMPONENT_PARAM);
-  next.delete(FILE_PARAM);
-  return `?${next.toString()}`;
+  return `?${packageDetailParams(searchParams, packageId).toString()}`;
 }
 
 /**

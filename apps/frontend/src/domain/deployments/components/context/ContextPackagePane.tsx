@@ -25,6 +25,7 @@ import type {
   SpaceId,
 } from '@packmind/types';
 import {
+  COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
   type ContextComponent,
   type ContextGroup,
@@ -34,6 +35,7 @@ import {
   componentEditHref,
   componentEntryHref,
   packageDetailHref,
+  packageDetailParams,
   withPaneDetailHref,
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
@@ -44,6 +46,7 @@ import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
 import { MoveComponentDialog } from './MoveComponentDialog';
 import { usePackageDrift } from './usePackageDrift';
+import { useDeleteContextComponent } from './useDeleteContextComponent';
 import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
@@ -150,6 +153,15 @@ export function ContextPackagePane({
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*
+   * Which component is being deleted, rather than a boolean, for the reason the
+   * move dialog holds a list: the confirmation has to outlive the row and the
+   * detail it was opened from, because deleting rebuilds both.
+   */
+  const [deletingComponent, setDeletingComponent] =
+    useState<ContextComponent | null>(null);
+  const { deleteComponent, isDeleting: isDeletingComponent } =
+    useDeleteContextComponent({ spaceId, organizationId });
+  /*
    * The picked components, resolved against what the package still holds. That
    * is also what repairs the selection after a move: the components that left
    * are no longer in the groups, so they drop out of it on their own.
@@ -200,6 +212,31 @@ export function ContextPackagePane({
       pmToaster.create({
         type: 'error',
         title: `Couldn't delete ${pkg.name}`,
+        description: 'Try again, or check your space access.',
+      });
+    }
+  };
+
+  /*
+   * Deleting the component the pane is showing, which means the pane has to
+   * stop showing it: the address is what says a component is open, so it is the
+   * address that closes. The package stays selected, so what comes back is the
+   * list the component was read from.
+   */
+  const deleteThisComponent = async (component: ContextComponent) => {
+    try {
+      await deleteComponent(component);
+      pmToaster.create({
+        type: 'success',
+        title: `Deleted ${component.name}`,
+        description: 'It is gone from the space, not only from this package.',
+      });
+      setDeletingComponent(null);
+      setSearchParams(packageDetailParams(searchParams, pkg.id));
+    } catch {
+      pmToaster.create({
+        type: 'error',
+        title: `Couldn't delete ${component.name}`,
         description: 'Try again, or check your space access.',
       });
     }
@@ -258,6 +295,29 @@ export function ContextPackagePane({
   );
 
   /*
+   * Built here rather than inside the detail, and rendered in both branches of
+   * this pane, because the component it is confirming the deletion of stops
+   * existing the moment it is confirmed: a dialog living inside the detail
+   * would be unmounted by its own success.
+   */
+  const deleteComponentDialog = deletingComponent && (
+    <PMAlertDialog
+      title={`Delete ${COMPONENT_TYPE_LABELS_SINGULAR[
+        deletingComponent.type
+      ].toLowerCase()}`}
+      message={`Delete "${deletingComponent.name}"? It leaves the space, not just this package, and every package that holds it. This cannot be undone.`}
+      confirmText="Delete"
+      cancelText="Cancel"
+      onConfirm={() => void deleteThisComponent(deletingComponent)}
+      open
+      onOpenChange={({ open }) => {
+        if (!open) setDeletingComponent(null);
+      }}
+      isLoading={isDeletingComponent}
+    />
+  );
+
+  /*
    * The third thing this pane can show, beside its two tabs: one of the
    * components, in place of the tab strip rather than under it.
    */
@@ -287,10 +347,12 @@ export function ContextPackagePane({
                 pkg.id,
               )}
               onMove={() => setMoving([detail])}
+              onDelete={() => setDeletingComponent(detail)}
             />
           )}
         </PMBox>
         {moveDialog}
+        {deleteComponentDialog}
       </>
     );
   }
@@ -491,6 +553,7 @@ export function ContextPackagePane({
       </PMTabsCompound.Content>
 
       {moveDialog}
+      {deleteComponentDialog}
       {/*
         What the message adds to the confirmation the packages list uses: a
         package is a set of memberships, so deleting one is not deleting what it

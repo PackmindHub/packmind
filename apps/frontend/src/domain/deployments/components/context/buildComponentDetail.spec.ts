@@ -11,6 +11,7 @@ import {
   componentFileHref,
   contextPackageHref,
   packageDetailHref,
+  packageDetailParams,
   selectDetailComponent,
   selectSkillFile,
   sortFilesByPath,
@@ -74,6 +75,36 @@ describe('componentDetailHref', () => {
         'command-1',
       ),
     ).toBe('?package=pkg-1&component=command-1');
+  });
+});
+
+describe('packageDetailParams', () => {
+  it('leaves the package open with no component in it', () => {
+    expect(
+      packageDetailParams(
+        new URLSearchParams('package=pkg-1&component=command-1&file=run.sh'),
+        PACKAGE,
+      ).toString(),
+    ).toBe('package=pkg-1');
+  });
+
+  describe('when the caller was reading another package', () => {
+    it('names the one it was given', () => {
+      expect(
+        packageDetailParams(
+          new URLSearchParams('package=pkg-9&component=command-1'),
+          PACKAGE,
+        ).get('package'),
+      ).toBe('pkg-1');
+    });
+  });
+
+  it('hands back a copy, so the caller keeps its own parameters', () => {
+    const original = new URLSearchParams('package=pkg-1&component=command-1');
+
+    packageDetailParams(original, PACKAGE);
+
+    expect(original.get('component')).toBe('command-1');
   });
 });
 

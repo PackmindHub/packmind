@@ -6,12 +6,15 @@ import {
   PMHStack,
   PMHeading,
   PMIcon,
+  PMIconButton,
   PMMarkdownViewer,
+  PMMenu,
+  PMPortal,
   PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronLeft } from 'react-icons/lu';
+import { LuChevronLeft, LuEllipsisVertical, LuTrash2 } from 'react-icons/lu';
 import type {
   CommandId,
   OrganizationId,
@@ -53,6 +56,7 @@ export function ContextComponentDetail({
   backHref,
   editHref,
   onMove,
+  onDelete,
 }: Readonly<{
   component: ContextComponent;
   packageName: string;
@@ -61,6 +65,7 @@ export function ContextComponentDetail({
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
   onMove: () => void;
+  onDelete: () => void;
 }>) {
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type];
 
@@ -136,6 +141,44 @@ export function ContextComponentDetail({
               <Link to={editHref}>Edit</Link>
             </PMButton>
           )}
+          {/*
+            Deleting, behind a menu for the same reason the package's own
+            deletion is: it is the one action here that destroys what the screen
+            is showing, and it should not sit one stray click away from Edit.
+
+            It was only reachable from the component's own page until now, which
+            made deleting the one maintenance task that forced the reader out of
+            this surface.
+          */}
+          <PMMenu.Root>
+            <PMMenu.Trigger asChild>
+              <PMIconButton
+                aria-label={`More actions for ${component.name}`}
+                variant="tertiary"
+                size="sm"
+              >
+                <LuEllipsisVertical />
+              </PMIconButton>
+            </PMMenu.Trigger>
+            <PMPortal>
+              <PMMenu.Positioner>
+                <PMMenu.Content>
+                  <PMMenu.Item
+                    value="delete-component"
+                    color="text.error"
+                    onClick={onDelete}
+                  >
+                    <PMHStack gap={2}>
+                      <PMIcon>
+                        <LuTrash2 />
+                      </PMIcon>
+                      {`Delete ${label.toLowerCase()}`}
+                    </PMHStack>
+                  </PMMenu.Item>
+                </PMMenu.Content>
+              </PMMenu.Positioner>
+            </PMPortal>
+          </PMMenu.Root>
         </PMHStack>
       </PMHStack>
 
