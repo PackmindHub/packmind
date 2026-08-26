@@ -9,6 +9,7 @@ import {
   PMHeading,
   PMIcon,
   PMIconButton,
+  PMMarkdownViewer,
   PMMenu,
   PMPortal,
   PMTabsCompound,
@@ -17,7 +18,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuEllipsisVertical, LuTrash2 } from 'react-icons/lu';
+import { LuEllipsisVertical, LuPencil, LuTrash2 } from 'react-icons/lu';
 import type {
   OrganizationId,
   PackageResponse,
@@ -44,6 +45,7 @@ import { ContextComponentList } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
+import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDialog } from './MoveComponentDialog';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
@@ -149,6 +151,7 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
@@ -374,9 +377,17 @@ export function ContextPackagePane({
           <PMBox minW={0} maxWidth="68ch">
             <PMHeading level="h2">{pkg.name}</PMHeading>
             {pkg.description && (
-              <PMText as="div" color="secondary" paddingTop={1}>
-                {pkg.description}
-              </PMText>
+              <PMBox color="secondary" paddingTop={1}>
+                {/*
+                  Rendered, not printed. The description is markdown, which the
+                  package's own page has always shown as markdown while this
+                  header showed the asterisks. Nobody noticed while descriptions
+                  could only be written on a page; the dialog beside this heading
+                  makes writing one from here the normal way, so the two
+                  surfaces have to agree on what the field is.
+                */}
+                <PMMarkdownViewer content={pkg.description} />
+              </PMBox>
             )}
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
@@ -418,6 +429,22 @@ export function ContextPackagePane({
               <PMPortal>
                 <PMMenu.Positioner>
                   <PMMenu.Content>
+                    {/*
+                      Renaming, in the menu beside the deletion rather than as a
+                      link out: the name and the description are two fields, and
+                      the screen they are corrected from is this one.
+                    */}
+                    <PMMenu.Item
+                      value="edit-package-details"
+                      onClick={() => setEditingDetails(true)}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>
+                          <LuPencil />
+                        </PMIcon>
+                        Edit details
+                      </PMHStack>
+                    </PMMenu.Item>
                     <PMMenu.Item
                       value="delete-package"
                       color="text.error"
@@ -554,6 +581,23 @@ export function ContextPackagePane({
 
       {moveDialog}
       {deleteComponentDialog}
+      {/*
+        Mounted only while it is open, rather than kept around hidden, so its two
+        fields start from what the package currently says: they are drafts held
+        inside the drawer, and a drawer that outlived its own closing would
+        reopen on the edits that were abandoned last time.
+      */}
+      {editingDetails && (
+        <EditPackageDetailsDrawer
+          pkg={pkg}
+          spaceId={spaceId}
+          organizationId={organizationId}
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setEditingDetails(false);
+          }}
+        />
+      )}
       {/*
         What the message adds to the confirmation the packages list uses: a
         package is a set of memberships, so deleting one is not deleting what it
