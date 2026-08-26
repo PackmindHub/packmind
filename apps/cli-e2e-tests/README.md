@@ -96,3 +96,53 @@ console.log(result.stderr); // Standard error
 2. Use `runCli()` to execute CLI commands
 3. Check `returnCode`, `stdout`, and `stderr` in assertions
 4. Each test suite gets a fresh user account with a unique email
+
+## Performance
+
+This suite is the longest job of the build stage, so it gates everything that
+runs after it. Two properties of its design drive that cost:
+
+- **Setup runs per test, not per suite.** `jest-stage` re-runs the
+  `describeWithUserSignedUp` setup before every `it`, so each test pays a fresh
+  signup, signin, API-key generation and space lookup — plus whatever the
+  suite's own `beforeEach` adds (a git repo, a package, an `install` run).
+  A suite with 62 one-assertion tests pays that 62 times.
+- **Wall clock is bounded by the longest single suite.** Jest spreads suites
+  over workers but never splits one, so no amount of extra workers takes the
+  run below the duration of the slowest file.
+
+### Benchmarking a change
+
+`scripts/cli-e2e-benchmark-report.mjs` turns Jest's JSON report into the
+metrics that make those two properties visible:
+
+```bash
+nx test cli-e2e-tests --skip-nx-cache --json --outputFile=/tmp/baseline.workers-3.json
+node scripts/cli-e2e-benchmark-report.mjs report /tmp/baseline.workers-3.json
+```
+
+| Metric                 | Reading                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `wall`                 | what CI waits for                                                                                             |
+| `serial`               | Σ suite durations — the work to spread over the workers                                                       |
+| `floor`                | longest single suite — the hard lower bound on `wall`                                                         |
+| `hooks` vs test bodies | setup cost versus the assertions themselves                                                                   |
+| worker efficiency      | `serial / (wall × workers)`; ~1.0 means the workers are saturated and only less work or more workers can help |
+
+The label and worker count are read back out of the file name
+(`<label>.workers-<n>.json`), because Jest's JSON records neither. Pass several
+reports to `compare` to get one row each:
+
+```bash
+node scripts/cli-e2e-benchmark-report.mjs compare /tmp/baseline.workers-3.json /tmp/api-only.workers-6.json
+```
+
+To measure on CI hardware, run the **CLI E2E Benchmark** workflow
+(`.github/workflows/cli-e2e-benchmark.yml`). It takes a runner label, a list of
+variants and a worker count, runs each variant against its own stack, and posts
+the per-variant tables and the comparison to the job summary.
+
+`docker-compose.cli-e2e.yml` is the overlay its `api-only` variants use: it
+publishes the API port so `PACKMIND_INSTANCE_URL` can point straight at the API,
+which lets the job start `backend` alone instead of the whole stack — no
+frontend dev server, no nginx, and no Vite proxy hop on every request.

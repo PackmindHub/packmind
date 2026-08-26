@@ -1,0 +1,29 @@
+# Compose overlay for the CLI end-to-end tests.
+#
+# Those tests drive the `packmind` binary against the HTTP API and never render
+# a page, so the `frontend` dev server and the `nginx` TLS front are dead weight
+# for them: `docker compose up --wait` waits for the frontend to compile and
+# report healthy before nginx even starts, and both keep file watchers running
+# for the rest of the job, competing for the same runner CPUs as the API,
+# Postgres and the Jest workers.
+#
+# Publishing the API port is what makes skipping them possible: with it,
+# PACKMIND_INSTANCE_URL can point straight at the API and the job can bring up
+# `backend` alone (Compose still pulls in install-dependencies, run-migrations,
+# postgres and redis as its dependencies). It also removes the Vite dev-server
+# proxy hop from every request the suite makes — and the suite makes several
+# per test.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.cli-e2e.yml \
+#     up -d --wait backend
+services:
+  backend:
+    ports:
+      - '${PACKMIND_API_PORT:-3000}:3000'
+    environment:
+      # The repo reaches the container through a bind mount, which delivers
+      # inotify events on Linux, so polling the whole monorepo every 200ms only
+      # takes CPU away from the tests.
+      CHOKIDAR_USEPOLLING: 'false'
+      WATCHPACK_POLLING: 'false'
