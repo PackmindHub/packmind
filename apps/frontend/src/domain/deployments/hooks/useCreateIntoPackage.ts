@@ -72,15 +72,28 @@ export function useAttachToPackage(packageId: PackageId | null) {
 }
 
 /**
+ * The package the address names, or null when it names none.
+ *
+ * Its own function because two kinds of screen ask the question for two
+ * reasons. A create form asks so it can put the new component in that package.
+ * An edit form asks only to know where it was opened from: the component is
+ * already a member, so there is nothing to attach, and the answer is used for
+ * nothing but finding the way back.
+ */
+export function usePackageInAddress(): PackageId | null {
+  const [searchParams] = useSearchParams();
+
+  const requested = searchParams.get(PACKAGE_PARAM);
+  return requested ? (requested as PackageId) : null;
+}
+
+/**
  * The same thing for a screen that learns its package from the address rather
  * than from a caller: the create forms, which are reached by navigation and
  * have nothing else to go on.
  */
 export function useCreateIntoPackage() {
-  const [searchParams] = useSearchParams();
-
-  const requested = searchParams.get(PACKAGE_PARAM);
-  const packageId = requested ? (requested as PackageId) : null;
+  const packageId = usePackageInAddress();
 
   return { packageId, attachToPackage: useAttachToPackage(packageId) };
 }

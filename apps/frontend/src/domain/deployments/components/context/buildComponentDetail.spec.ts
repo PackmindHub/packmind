@@ -227,14 +227,34 @@ describe('componentEditHref', () => {
     );
   });
 
-  it('has nowhere to send a standard', () => {
-    expect(
-      componentEditHref(component('standard', 'standard-1'), TARGET),
-    ).toBeNull();
+  it('points a standard at its edit form', () => {
+    expect(componentEditHref(component('standard', 'standard-1'), TARGET)).toBe(
+      '/org/acme/space/core/standards/standard-1/edit',
+    );
   });
 
   it('has nowhere to send a skill', () => {
     expect(componentEditHref(component('skill', 'skill-1'), TARGET)).toBeNull();
+  });
+
+  describe('when a package is given', () => {
+    it('carries it into a command edit form', () => {
+      expect(
+        componentEditHref(component('command', 'command-1'), TARGET, PACKAGE),
+      ).toBe('/org/acme/space/core/commands/command-1/edit?package=pkg-1');
+    });
+
+    it('carries it into a standard edit form', () => {
+      expect(
+        componentEditHref(component('standard', 'standard-1'), TARGET, PACKAGE),
+      ).toBe('/org/acme/space/core/standards/standard-1/edit?package=pkg-1');
+    });
+
+    it('still has nowhere to send a skill', () => {
+      expect(
+        componentEditHref(component('skill', 'skill-1'), TARGET, PACKAGE),
+      ).toBeNull();
+    });
   });
 });
 

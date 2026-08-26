@@ -1,6 +1,9 @@
-import type { CommandId, PackageId } from '@packmind/types';
+import type { CommandId, PackageId, StandardId } from '@packmind/types';
 import { routes } from '../../../../shared/utils/routes';
-import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
+import {
+  PACKAGE_PARAM,
+  withPackageParam,
+} from '../../hooks/useCreateIntoPackage';
 import type {
   ContextComponent,
   ContextComponentType,
@@ -247,25 +250,43 @@ export function sortFilesByPath<File extends { path: string }>(
 }
 
 /**
- * Where this component is edited, or null when it has no edit route of its own.
+ * Where this component is edited, or null when it has no edit form to send
+ * anyone to.
  *
- * Standards and skills are edited from their own page, which has no separate
- * edit address to send anyone to. Null rather than a link to the page: the pane
- * already offers a way to open it, and two buttons landing in the same place
- * would both be lying about what one of them does.
+ * A skill is the null. It has no single form: its instructions and each of its
+ * files are edited one at a time, on its own page, so there is no one address
+ * that means "edit this skill". Null rather than a link to that page, because
+ * the pane already offers a way to open it and two buttons landing in the same
+ * place would both be lying about what one of them does.
+ *
+ * The package rides along in the address when there is one. The form is a page
+ * of its own and has to come back; the package is the only thing that says
+ * where from, since by then the pane that opened it is gone.
  */
 export function componentEditHref(
   component: Pick<ContextComponent, 'type' | 'key'>,
   { orgSlug, spaceSlug }: ContextLinkTarget,
+  packageId?: PackageId,
 ): string | null {
   switch (component.type) {
     case 'command':
-      return routes.space.toEditCommand(
-        orgSlug,
-        spaceSlug,
-        component.key as CommandId,
+      return withPackageParam(
+        routes.space.toEditCommand(
+          orgSlug,
+          spaceSlug,
+          component.key as CommandId,
+        ),
+        packageId,
       );
     case 'standard':
+      return withPackageParam(
+        routes.space.toStandardEdit(
+          orgSlug,
+          spaceSlug,
+          component.key as StandardId,
+        ),
+        packageId,
+      );
     case 'skill':
       return null;
   }

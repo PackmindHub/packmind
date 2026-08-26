@@ -281,7 +281,11 @@ export function ContextPackagePane({
               component={detail}
               packageName={pkg.name}
               backHref={packageDetailHref(searchParams, pkg.id)}
-              editHref={componentEditHref(detail, { orgSlug, spaceSlug })}
+              editHref={componentEditHref(
+                detail,
+                { orgSlug, spaceSlug },
+                pkg.id,
+              )}
               onMove={() => setMoving([detail])}
             />
           )}

@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import {
@@ -39,8 +40,10 @@ vi.mock('../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({ spaceId: 'space-1' }),
 }));
 
+const nav = vi.hoisted(() => ({ to: vi.fn(), toCommand: vi.fn() }));
+
 vi.mock('../../../shared/hooks/useNavigation', () => ({
-  useNavigation: () => ({ space: { toCommand: vi.fn() } }),
+  useNavigation: () => ({ to: nav.to, space: { toCommand: nav.toCommand } }),
 }));
 
 vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
@@ -52,14 +55,21 @@ vi.mock('../../../shared/components/editor/MarkdownEditor', () => ({
 vi.mock('./CommandForm', () => ({
   CommandForm: ({
     onSubmit,
+    onCancel,
   }: {
     onSubmit: (data: CommandFormData) => void;
+    onCancel: () => void;
   }) => (
-    <button
-      onClick={() => onSubmit({ name: 'Release cli', content: 'Updated body' })}
-    >
-      Save command
-    </button>
+    <>
+      <button
+        onClick={() =>
+          onSubmit({ name: 'Release cli', content: 'Updated body' })
+        }
+      >
+        Save command
+      </button>
+      <button onClick={onCancel}>Cancel command</button>
+    </>
   ),
 }));
 
@@ -96,6 +106,13 @@ describe('EditCommand', () => {
 
   beforeEach(() => {
     updateMutate = vi.fn();
+    /*
+     * Hoisted so the mock factory can close over them, which puts them outside
+     * the reach of restoreAllMocks: cleared by hand or every assertion on them
+     * also sees the previous test's navigation.
+     */
+    nav.to.mockClear();
+    nav.toCommand.mockClear();
 
     vi.spyOn(CommandsQueriesModule, 'useUpdateCommandMutation').mockReturnValue(
       {
@@ -116,10 +133,25 @@ describe('EditCommand', () => {
     vi.restoreAllMocks();
   });
 
-  const renderEditCommand = () =>
+  /*
+   * Mounted under the real route pattern rather than bare, because the component
+   * reads the space it is in from the path and the package it was opened from
+   * from the query. Rendered outside a router it would only ever see neither.
+   */
+  const EDIT_ROUTE = '/org/:orgSlug/space/:spaceSlug/commands/:commandId/edit';
+  const EDIT_ADDRESS = '/org/acme/space/core/commands/command-1/edit';
+
+  const renderEditCommand = (address: string = EDIT_ADDRESS) =>
     render(
       <UIProvider>
-        <EditCommand recipe={recipe} />
+        <MemoryRouter initialEntries={[address]}>
+          <Routes>
+            <Route
+              path={EDIT_ROUTE}
+              element={<EditCommand recipe={recipe} />}
+            />
+          </Routes>
+        </MemoryRouter>
       </UIProvider>,
     );
 
@@ -218,6 +250,40 @@ describe('EditCommand', () => {
           }),
           expect.anything(),
         );
+      });
+    });
+  });
+
+  describe('when the user leaves the form', () => {
+    beforeEach(() => {
+      mockPendingProposals(0);
+    });
+
+    const cancelForm = () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel command' }));
+    };
+
+    describe('when a package opened the form', () => {
+      it('goes back to that package, on the command', () => {
+        renderEditCommand(`${EDIT_ADDRESS}?package=pkg-1`);
+
+        cancelForm();
+
+        expect(nav.to).toHaveBeenCalledWith(
+          '/org/acme/space/core/context?package=pkg-1&component=command-1',
+        );
+        expect(nav.toCommand).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no package opened the form', () => {
+      it("goes back to the command's own page", () => {
+        renderEditCommand();
+
+        cancelForm();
+
+        expect(nav.toCommand).toHaveBeenCalledWith(recipe.id);
+        expect(nav.to).not.toHaveBeenCalled();
       });
     });
   });

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useParams } from 'react-router';
 import {
   useUpdateCommandMutation,
   useGetCommandsQuery,
@@ -10,6 +11,8 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
+import { usePackageInAddress } from '../../deployments/hooks/useCreateIntoPackage';
+import { contextPackageHref } from '../../deployments/components/context/buildComponentDetail';
 import { useListChangeProposalsByCommandQuery } from '@packmind/proprietary/frontend/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import {
   countPendingChangeProposals,
@@ -25,6 +28,26 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const nav = useNavigation();
+  const { orgSlug, spaceSlug } = useParams() as {
+    orgSlug: string;
+    spaceSlug: string;
+  };
+  const packageId = usePackageInAddress();
+
+  /*
+   * Back where the form was opened from, saved or cancelled alike. A package in
+   * the address means Edit was pressed on the Context surface, so that is the
+   * screen the user was working on, with this command open in it. The command's
+   * own page is where its own Edit button leads back to, and it stays the right
+   * answer there.
+   */
+  const goBack = () => {
+    if (packageId) {
+      nav.to(contextPackageHref({ orgSlug, spaceSlug }, packageId, recipe.id));
+    } else {
+      nav.space.toCommand(recipe.id);
+    }
+  };
 
   const [alert, setAlert] = useState<{
     type: 'success' | 'error';
@@ -74,7 +97,7 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
           });
           setTimeout(() => {
             setAlert(null);
-            nav.space.toCommand(recipe.id);
+            goBack();
           }, 1500);
         },
         onError: (error) => {
@@ -107,7 +130,7 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
   };
 
   const handleCancel = () => {
-    nav.space.toCommand(recipe.id);
+    goBack();
   };
 
   return (
