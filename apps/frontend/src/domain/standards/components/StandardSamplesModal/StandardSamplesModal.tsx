@@ -13,6 +13,7 @@ import {
   PMHeading,
   PMHStack,
   PMInput,
+  PMPortal,
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
@@ -20,6 +21,7 @@ import {
   standardSamples,
   type Sample,
   type SampleInput,
+  type Standard,
 } from '@packmind/types';
 import { useCreateStandardsFromSamplesMutation } from '../../api/queries/StandardsQueries';
 import { SampleIcon } from './SampleIcon';
@@ -27,11 +29,18 @@ import { SampleIcon } from './SampleIcon';
 interface IStandardSamplesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * What was just created, for a caller that has somewhere to put it. The modal
+   * reports rather than asks: it knows nothing about packages, and the screen
+   * that opened it is the one that knows whether there is a package in play.
+   */
+  onCreated?: (created: Standard[]) => void;
 }
 
 export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
   open,
   onOpenChange,
+  onCreated,
 }) => {
   const [selectedLanguages, setSelectedLanguages] = React.useState<string[]>(
     [],
@@ -80,6 +89,9 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
         setSelectedFrameworks([]);
         setSearchQuery('');
         onOpenChange(false);
+        if (data.created.length > 0) {
+          onCreated?.(data.created);
+        }
       },
       onError: () => {
         pmToaster.error({
@@ -106,81 +118,89 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
       size="xl"
       scrollBehavior="inside"
     >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content>
-          <PMDialog.Header>
-            <PMDialog.Title>Select Standard Samples</PMDialog.Title>
-            <PMDialog.CloseTrigger asChild>
-              <PMCloseButton />
-            </PMDialog.CloseTrigger>
-          </PMDialog.Header>
-          <PMDialog.Body>
-            <PMVStack gap={6} align="stretch">
-              <PMInput
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
+      {/*
+        Portalled, like every other dialog in the app. Without it the dialog
+        renders where it is mounted, which was harmless while this modal was only
+        ever mounted on a full page, and stops being harmless anywhere inside a
+        scrolling or clipping container.
+      */}
+      <PMPortal>
+        <PMDialog.Backdrop />
+        <PMDialog.Positioner>
+          <PMDialog.Content>
+            <PMDialog.Header>
+              <PMDialog.Title>Select Standard Samples</PMDialog.Title>
+              <PMDialog.CloseTrigger asChild>
+                <PMCloseButton />
+              </PMDialog.CloseTrigger>
+            </PMDialog.Header>
+            <PMDialog.Body>
+              <PMVStack gap={6} align="stretch">
+                <PMInput
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
 
-              {filteredLanguages.length > 0 && (
-                <PMVStack gap={4} align="stretch">
-                  <PMHStack gap={2} align="center">
-                    <PMHeading size="sm">Languages</PMHeading>
-                    <PMBadge>{filteredLanguages.length}</PMBadge>
-                  </PMHStack>
-                  <SampleCardGrid
-                    samples={filteredLanguages}
-                    selectedValues={selectedLanguages}
-                    onValueChange={setSelectedLanguages}
-                  />
-                </PMVStack>
-              )}
-
-              {filteredFrameworks.length > 0 && (
-                <PMVStack gap={4} align="stretch">
-                  <PMHStack gap={2} align="center">
-                    <PMHeading size="sm">Frameworks</PMHeading>
-                    <PMBadge>{filteredFrameworks.length}</PMBadge>
-                  </PMHStack>
-                  <SampleCardGrid
-                    samples={filteredFrameworks}
-                    selectedValues={selectedFrameworks}
-                    onValueChange={setSelectedFrameworks}
-                  />
-                </PMVStack>
-              )}
-
-              {filteredLanguages.length === 0 &&
-                filteredFrameworks.length === 0 &&
-                searchQuery && (
-                  <PMEmptyState
-                    title="No samples found"
-                    description={`No languages or frameworks match "${searchQuery}"`}
-                  />
+                {filteredLanguages.length > 0 && (
+                  <PMVStack gap={4} align="stretch">
+                    <PMHStack gap={2} align="center">
+                      <PMHeading size="sm">Languages</PMHeading>
+                      <PMBadge>{filteredLanguages.length}</PMBadge>
+                    </PMHStack>
+                    <SampleCardGrid
+                      samples={filteredLanguages}
+                      selectedValues={selectedLanguages}
+                      onValueChange={setSelectedLanguages}
+                    />
+                  </PMVStack>
                 )}
-            </PMVStack>
-          </PMDialog.Body>
-          <PMDialog.Footer>
-            <PMButtonGroup size="sm">
-              <PMButton variant="tertiary" onClick={handleCancel}>
-                Cancel
-              </PMButton>
-              <PMButton
-                variant="primary"
-                onClick={handleCreate}
-                loading={createMutation.isPending}
-                disabled={
-                  selectedLanguages.length === 0 &&
-                  selectedFrameworks.length === 0
-                }
-              >
-                Create
-              </PMButton>
-            </PMButtonGroup>
-          </PMDialog.Footer>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
+
+                {filteredFrameworks.length > 0 && (
+                  <PMVStack gap={4} align="stretch">
+                    <PMHStack gap={2} align="center">
+                      <PMHeading size="sm">Frameworks</PMHeading>
+                      <PMBadge>{filteredFrameworks.length}</PMBadge>
+                    </PMHStack>
+                    <SampleCardGrid
+                      samples={filteredFrameworks}
+                      selectedValues={selectedFrameworks}
+                      onValueChange={setSelectedFrameworks}
+                    />
+                  </PMVStack>
+                )}
+
+                {filteredLanguages.length === 0 &&
+                  filteredFrameworks.length === 0 &&
+                  searchQuery && (
+                    <PMEmptyState
+                      title="No samples found"
+                      description={`No languages or frameworks match "${searchQuery}"`}
+                    />
+                  )}
+              </PMVStack>
+            </PMDialog.Body>
+            <PMDialog.Footer>
+              <PMButtonGroup size="sm">
+                <PMButton variant="tertiary" onClick={handleCancel}>
+                  Cancel
+                </PMButton>
+                <PMButton
+                  variant="primary"
+                  onClick={handleCreate}
+                  loading={createMutation.isPending}
+                  disabled={
+                    selectedLanguages.length === 0 &&
+                    selectedFrameworks.length === 0
+                  }
+                >
+                  Create
+                </PMButton>
+              </PMButtonGroup>
+            </PMDialog.Footer>
+          </PMDialog.Content>
+        </PMDialog.Positioner>
+      </PMPortal>
     </PMDialog.Root>
   );
 };

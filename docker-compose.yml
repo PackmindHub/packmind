@@ -76,6 +76,79 @@ services:
       retries: 10
       start_period: 1s
 
+  # Self-hosted OTLP backend: OTel Collector + Tempo (traces) + Prometheus
+  # (metrics) + Loki (logs) + Grafana, in one container. Opt-in, because it is a
+  # heavy image most days you do not need it:
+  #
+  #   COMPOSE_PROFILES=observability \
+  #   OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
+  #   docker compose up
+  #
+  # Both switches are needed: the profile starts this container, the env var is
+  # what makes the API export (it stays inert when unset). See docker/otel/README.md.
+  otel-lgtm:
+    profiles:
+      - observability
+    # Pinned rather than :latest — the bundled Grafana datasource provisioning
+    # and collector config are internal to the image and do change across
+    # releases.
+    image: grafana/otel-lgtm:0.30.2
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-otel-lgtm
+    # Loopback-only on purpose. OTLP ingestion is unauthenticated and Grafana
+    # runs on default credentials, and traces carry SQL statements, request URLs
+    # and log lines — none of that should be reachable from the local network.
+    # Drop the 127.0.0.1 prefixes if you need to reach the stack from another
+    # machine or through a remote Docker host.
+    ports:
+      - '127.0.0.1:4317:4317' # OTLP/gRPC
+      - '127.0.0.1:4318:4318' # OTLP/HTTP — where the API exports
+      - '127.0.0.1:3001:3000' # Grafana UI (3000 belongs to the API)
+    # run-grafana.sh in the image launches vanilla `grafana server` and states
+    # it respects user-provided env vars, so the standard GF_* overrides apply.
+    # SMTP is disabled in the image's defaults.ini, which is why alerting
+    # notifies nowhere until this block exists.
+    environment:
+      GF_SMTP_ENABLED: 'true'
+      GF_SMTP_HOST: mailpit:1025
+      GF_SMTP_FROM_ADDRESS: grafana@packmind.local
+      GF_SMTP_FROM_NAME: Packmind Grafana
+      # Mailpit needs no credentials, so there is nothing to skip verifying —
+      # but Grafana still attempts STARTTLS against a plaintext listener
+      # without this.
+      GF_SMTP_SKIP_VERIFY: 'true'
+      # Makes the "View alert" links in the mail point somewhere clickable.
+      # Grafana serves on 3000 inside the container; 3001 is where it is
+      # published, and the mail is read from the host.
+      GF_SERVER_ROOT_URL: http://localhost:3001
+    volumes:
+      - dev-otel-lgtm:/data
+      # Ready-made dashboards, so nobody has to write PromQL by hand. The image
+      # provisions datasources but ships no dashboards of its own.
+      - ./docker/otel/grafana/provisioning-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/packmind.yaml:ro
+      - ./docker/otel/grafana/dashboards:/otel-lgtm/grafana/dashboards/packmind:ro
+      # Contact point, notification policy and the latency alert rule.
+      - ./docker/otel/grafana/provisioning-alerting.yaml:/otel-lgtm/grafana/conf/provisioning/alerting/packmind.yaml:ro
+
+  # Where Grafana's alert mail goes. A throwaway mail catcher: it accepts
+  # unauthenticated SMTP on 1025, delivers nothing onward, and shows what it
+  # received at http://localhost:8025.
+  #
+  # Chosen over Slack/Discord because it needs no account and no webhook URL,
+  # which means the whole setup is committable — see
+  # docker/otel/grafana/provisioning-alerting.yaml.
+  mailpit:
+    profiles:
+      - observability
+    # Pinned for the same reason otel-lgtm is.
+    image: axllent/mailpit:v1.31.0
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-mailpit
+    # Loopback-only, consistent with otel-lgtm: alert mail quotes span names and
+    # endpoint paths, and the inbox is unauthenticated.
+    ports:
+      - '127.0.0.1:8025:8025' # web inbox
+    # No volume on purpose. Mail is throwaway; keeping it across restarts would
+    # only make yesterday's alerts look like today's.
+
   pgadmin:
     profiles:
       - dev
@@ -239,6 +312,23 @@ services:
       WATCHPACK_POLLING: 'true'
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
       APP_WEB_URL: ${APP_WEB_URL:-http://localhost:${PACKMIND_WEB_PORT:-4200}}
+      # Empty by default: apps/api/src/otel.ts starts the OpenTelemetry SDK only
+      # when this is set, so tracing is entirely off unless you opt in.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: packmind-api
+      # Declaring the environment is mandatory when exporting — otel.ts refuses
+      # to export without it, so that staging can never report itself as
+      # production. Defaulted here so local stays a one-variable opt-in.
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment.name=local}
+      # Only needed to export somewhere authenticated — Grafana Cloud and
+      # friends. Empty locally, where otel-lgtm's OTLP ingestion takes anything.
+      # Compose only forwards variables named here, so without this line an
+      # OTEL_EXPORTER_OTLP_HEADERS in .env is silently invisible to the API and
+      # every export comes back 401.
+      #
+      # Keep the value in .env (gitignored) and never in this file: it is a
+      # bearer credential for the whole stack, and GitGuardian runs on CI.
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
 
     volumes:
       - .:/packmind
@@ -317,3 +407,4 @@ volumes:
   dev-node_modules:
   dev-corepack-cache:
   dev-pnpm-store:
+  dev-otel-lgtm:

@@ -1,6 +1,7 @@
 import { StandardService } from './StandardService';
 import { StandardVersionService } from './StandardVersionService';
 import { StandardBookService } from './StandardBookService';
+import { instrumentComponents } from '@packmind/node-utils';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import type { ILinterPort } from '@packmind/types';
 
@@ -27,6 +28,14 @@ export class StandardsServices {
       // Don't pass logger - let StandardVersionService create its own with correct origin
     );
     this.standardBookService = new StandardBookService();
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.standardService,
+      this.standardVersionService,
+      this.standardBookService,
+    ]);
   }
 
   getStandardService(): StandardService {

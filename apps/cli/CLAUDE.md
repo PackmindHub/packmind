@@ -8,10 +8,8 @@ Packmind CLI. Nx project name is `packmind-cli`.
 
 Everything else about authoring a command — the `*Command.ts` / `*Handler.ts` split, grouping into
 per-domain subdirectories under `src/infra/commands/`, gateway methods, use case structure — is owned
-by the three standards in `.claude/rules/packmind/`: *CLI Command Structure*, *CLI Gateway
+by the three standards in `apps/cli/.claude/rules/packmind/`: *CLI Command Structure*, *CLI Gateway
 Implementation*, *CLI Use Case Structure*. A command file must **not** contain handler logic.
-
-E2E coverage for the CLI lives in `apps/cli-e2e-tests/`; see the **`cli-e2e-test-authoring`** skill.
 
 ## Stack specifics
 

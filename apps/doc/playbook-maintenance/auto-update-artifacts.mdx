@@ -2,10 +2,10 @@
 title: 'Automate Repo Updates'
 ---
 
-When standards, commands, or skills evolve on Packmind, your repositories don't pick up the changes on their own — someone has to run `packmind-cli install` to refresh the artifacts on disk. This page shows how to delegate that step to a scheduled CI/CD job: the job runs `packmind-cli install` on a cadence you choose and opens a pull/merge request whenever artifacts change, so your team reviews updates instead of remembering to fetch them.
+When standards, commands, or skills evolve on Packmind, your repositories don't pick up the changes on their own — someone has to run `packmind install` to refresh the artifacts on disk. This page shows how to delegate that step to a scheduled CI/CD job: the job runs `packmind install` on a cadence you choose and opens a pull/merge request whenever artifacts change, so your team reviews updates instead of remembering to fetch them.
 
 **Use this if** you maintain several repositories, or your playbook evolves often.
-**Manual `packmind-cli install` is fine if** a single maintainer touches the repo and updates are rare.
+**Manual `packmind install` is fine if** a single maintainer touches the repo and updates are rare.
 
 ## How it works
 
@@ -14,8 +14,8 @@ When standards, commands, or skills evolve on Packmind, your repositories don't 
     A cron-scheduled CI job runs in your repository (typically nightly).
   </Step>
   <Step title="Sync with Packmind">
-    The job runs `packmind-cli install`, which pulls the latest standards,
-    commands, and skills.
+    The job runs `packmind install`, which pulls the latest standards, commands,
+    and skills.
   </Step>
   <Step title="Open a PR/MR for review">
     If anything changed, the job commits to a dedicated branch
@@ -119,7 +119,7 @@ When standards, commands, or skills evolve on Packmind, your repositories don't 
             git checkout -b packmind-cli-update
           fi
         - npm install -g @packmind/cli
-        - packmind-cli install
+        - packmind install
         - |
           if [ -z "$(git status --porcelain)" ]; then
             echo "No artifact changes — skipping commit/push."
@@ -185,7 +185,7 @@ The example uses `0 2 * * 1-5` — every weeknight at 02:00 UTC (03:00 Paris in 
     Either no artifacts changed (check the logs for `No artifact changes`), or the job lacked write permissions. On GitHub, verify the `permissions:` block includes `contents: write` and `pull-requests: write`. On GitLab, verify the Project Access Token has `write_repository` and `api` scopes and a role of at least Developer.
   </Accordion>
 
-<Accordion title="Authentication error from packmind-cli">
+<Accordion title="Authentication error from the Packmind CLI">
   The API key is missing, mistyped, or revoked. Regenerate it from your Packmind
   profile and update the `PACKMIND_API_KEY` secret. Make sure the variable name
   matches exactly.
@@ -207,4 +207,4 @@ The example uses `0 2 * * 1-5` — every weeknight at 02:00 UTC (03:00 Paris in 
 
 - [Distribution](/governance/distribution) — Distribute artifacts to your team manually or via CLI
 - [Updating Your Playbook](/playbook-maintenance/updating-your-playbook) — Other ways to update artifacts
-- [CLI Reference](/tools/cli) — Full reference for `packmind-cli install` and other commands
+- [CLI Reference](/tools/cli) — Full reference for `packmind install` and other commands

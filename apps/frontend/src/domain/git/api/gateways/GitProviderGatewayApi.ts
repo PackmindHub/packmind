@@ -246,22 +246,14 @@ export class GitProviderGatewayApi
     );
   }
 
-  async checkBranchExists(
+  async checkTrackedBranchExists(
     organizationId: OrganizationId,
-    providerId: GitProviderId,
-    owner: string,
-    repo: string,
-    branch: string,
+    repositoryId: GitRepoId,
   ): Promise<boolean> {
-    try {
-      const response = await this._api.get<{ exists: boolean }>(
-        `${this._endpoint}/${organizationId}/git/providers/${providerId}/repos/${owner}/${repo}/branches/${branch}/exists`,
-      );
-      return response.exists;
-    } catch (error) {
-      console.error('Failed to check if branch exists:', error);
-      return false;
-    }
+    const response = await this._api.get<{ exists: boolean }>(
+      `${this._endpoint}/${organizationId}/git/repositories/${repositoryId}/tracked-branch-exists`,
+    );
+    return response.exists;
   }
 
   async getAvailableRemoteDirectories(

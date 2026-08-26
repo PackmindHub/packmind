@@ -15,6 +15,8 @@ import { TargetWithRepository, Target } from '@packmind/types';
 import { GitRepoId } from '@packmind/types';
 import { TargetBadge } from '../TargetBadge/TargetBadge';
 import { TargetManagementDialog } from '../TargetManagementDialog/TargetManagementDialog';
+import { useCheckTrackedBranchExistsQuery } from '../../../git/api/queries';
+import { DeletedBranchBadge } from '../../../../shared/components/DeletedBranchBadge';
 
 interface RepositoryTargetCardProps {
   repositoryName: string;
@@ -35,6 +37,15 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
     string | undefined
   >();
   const processingSelectionRef = useRef(false);
+
+  // Distributions are recorded on the tracked branch only, so a branch deleted
+  // with its merged pull request silently stops everything. Skipped without
+  // provider credentials: the probe would only fail.
+  const trackedBranch = useCheckTrackedBranchExistsQuery(gitRepoId, {
+    enabled: hasAuth,
+  });
+  const deletedBranch =
+    trackedBranch.data === false ? targets[0]?.repository.branch : undefined;
 
   const handleTargetClick = useCallback((target: Target) => {
     setSelectedTargetId(target.id);
@@ -73,9 +84,12 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
             <PMText fontSize="lg" fontWeight="semibold" color="primary">
               {repositoryName}
             </PMText>
-            <PMText fontSize="sm" color="secondary">
-              {providerUrl}
-            </PMText>
+            <PMHStack gap={2} align="center">
+              <PMText fontSize="sm" color="secondary">
+                {providerUrl}
+              </PMText>
+              {deletedBranch && <DeletedBranchBadge branch={deletedBranch} />}
+            </PMHStack>
           </PMVStack>
           <div>
             {hasAuth ? (
@@ -95,7 +109,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
                 }
               />
             ) : (
-              <PMTooltip label="Targets are automatically managed by packmind-cli install commands">
+              <PMTooltip label="Targets are automatically managed by packmind install commands">
                 <PMFlex align="center" gap={1} color="faded">
                   <PMIcon as={LuCircleHelp} boxSize={4} />
                   <PMText fontSize="sm">Auto-managed</PMText>
@@ -147,7 +161,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
               description={
                 hasAuth
                   ? "Click 'Manage Targets' to create your first deployment target"
-                  : 'Run packmind-cli install to create targets for this repository'
+                  : 'Run packmind install to create targets for this repository'
               }
               icon={<PMIcon as={LuTarget} boxSize="8" color="gray.400" />}
             />

@@ -12,11 +12,16 @@ import { CREATE_PACKAGE_0160 } from './skills/packmind-onboard/packmind-versions
 import { LIST_PACKAGES_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/list-packages';
 import { SELECT_PACKAGE_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/select-package';
 import { CREATE_ITEMS_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/create-items';
+import { CREATE_ITEMS_0350 } from './skills/packmind-onboard/packmind-versions/0.35.0/create-items';
 import { CREATE_PACKAGE_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/create-package';
+import { CREATE_PACKAGE_0350 } from './skills/packmind-onboard/packmind-versions/0.35.0/create-package';
 import { LIST_PACKAGES_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/list-packages';
+import { LIST_PACKAGES_0350 } from './skills/packmind-onboard/packmind-versions/0.35.0/list-packages';
 import { SELECT_PACKAGE_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/select-package';
+import { SELECT_PACKAGE_0350 } from './skills/packmind-onboard/packmind-versions/0.35.0/select-package';
 import { COMPLETION_SUMMARY_0160 } from './skills/packmind-onboard/packmind-versions/0.16.0/completion-summary';
 import { COMPLETION_SUMMARY_0230 } from './skills/packmind-onboard/packmind-versions/0.23.0/completion-summary';
+import { COMPLETION_SUMMARY_0350 } from './skills/packmind-onboard/packmind-versions/0.35.0/completion-summary';
 import {
   AbstractDefaultSkillDeployer,
   SemVer,
@@ -25,26 +30,31 @@ import {
 const createItemsByVersion: Record<SemVer, string> = {
   '0.16.0': CREATE_ITEMS_0160,
   '0.23.0': CREATE_ITEMS_0230,
+  '0.35.0': CREATE_ITEMS_0350,
 };
 
 const listPackagesByVersion: Record<SemVer, string> = {
   '0.16.0': LIST_PACKAGES_0160,
   '0.23.0': LIST_PACKAGES_0230,
+  '0.35.0': LIST_PACKAGES_0350,
 };
 
 const createPackageByVersion: Record<SemVer, string> = {
   '0.16.0': CREATE_PACKAGE_0160,
   '0.23.0': CREATE_PACKAGE_0230,
+  '0.35.0': CREATE_PACKAGE_0350,
 };
 
 const selectPackageByVersion: Record<SemVer, string> = {
   '0.16.0': SELECT_PACKAGE_0160,
   '0.23.0': SELECT_PACKAGE_0230,
+  '0.35.0': SELECT_PACKAGE_0350,
 };
 
 const completionSummaryByVersion: Record<SemVer, string> = {
   '0.16.0': COMPLETION_SUMMARY_0160,
   '0.23.0': COMPLETION_SUMMARY_0230,
+  '0.35.0': COMPLETION_SUMMARY_0350,
 };
 
 export class OnboardDeployer
@@ -64,11 +74,12 @@ export class OnboardDeployer
     const basePath = `${skillsFolderPath}packmind-onboard`;
     const referencesPath = `${basePath}/references`;
     const includeNext = options?.includeNext ?? false;
+    const execName = this.resolveExecName(options?.cliVersion);
 
     const createOrUpdate = [
       {
         path: `${basePath}/SKILL.md`,
-        content: this.getSkillMd(agentName, skillMd),
+        content: this.getSkillMd(agentName, skillMd, execName),
       },
       {
         path: `${basePath}/README.md`,

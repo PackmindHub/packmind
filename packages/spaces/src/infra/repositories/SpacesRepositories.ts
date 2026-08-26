@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
 import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositories';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
@@ -25,6 +26,15 @@ export class SpacesRepositories implements ISpacesRepositories {
     this.userSpaceMembershipRepository = new UserSpaceMembershipRepository(
       this.dataSource.getRepository(UserSpaceMembershipSchema),
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.spaceRepository,
+      this.userSpaceMembershipRepository,
+    ]);
   }
 
   getSpaceRepository(): ISpaceRepository {

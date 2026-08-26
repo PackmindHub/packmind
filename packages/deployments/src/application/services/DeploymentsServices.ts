@@ -1,6 +1,7 @@
 import { TargetService } from './TargetService';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { PackageService } from './PackageService';
+import { instrumentComponents } from '@packmind/node-utils';
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';
 
 /**
@@ -28,6 +29,14 @@ export class DeploymentsServices {
     this.packageService = new PackageService(
       this.deploymentsRepositories.getPackageRepository(),
     );
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.targetService,
+      this.renderModeConfigurationService,
+      this.packageService,
+    ]);
   }
 
   getRepositories(): IDeploymentsRepositories {

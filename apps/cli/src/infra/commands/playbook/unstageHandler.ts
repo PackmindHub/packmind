@@ -8,6 +8,7 @@ import { findNearestConfigDir } from '../../../application/utils/findNearestConf
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { IPlaybookLocalRepository } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { logErrorConsole, logSuccessConsole } from '../../utils/consoleLogger';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type PlaybookUnstageHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -32,7 +33,7 @@ export async function playbookUnstageHandler(
 
   if (!filePath) {
     logErrorConsole(
-      'Missing file path. Usage: packmind playbook unstage <path>',
+      `Missing file path. Usage: ${EXEC_NAME} playbook unstage <path>`,
     );
     exit(1);
     return;

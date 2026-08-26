@@ -4,6 +4,7 @@ import {
   statusHandler,
   InstallHandlerDependencies,
 } from './installPackagesHandler';
+import { EXEC_NAME } from '../utils/execName';
 
 // Mock the consoleLogger module to avoid chalk ESM issues
 jest.mock('../utils/consoleLogger', () => ({
@@ -70,7 +71,7 @@ describe('installPackagesHandler', () => {
 
       it('displays usage help', () => {
         expect(mockLog).toHaveBeenCalledWith(
-          'Usage: packmind-cli uninstall <package-slug> [package-slug...]',
+          `Usage: ${EXEC_NAME} uninstall <package-slug> [package-slug...]`,
         );
       });
 

@@ -276,7 +276,7 @@ function RepositoryRow({
     ? `${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'} failed`
     : hasDrift
       ? lockProfile === 'all-no-app-token'
-        ? `${behindInstallCount} drifted, all via packmind-cli install`
+        ? `${behindInstallCount} drifted, all via packmind install`
         : lockProfile === 'all-in-progress'
           ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} in progress`
           : `${behindInstallCount} of ${totalTargets} target${totalTargets === 1 ? '' : 's'} need redistribution`

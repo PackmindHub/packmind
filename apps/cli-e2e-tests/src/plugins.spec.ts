@@ -430,7 +430,7 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
         });
       });
 
-      describe('when neither manifest is present', () => {
+      describe('when no manifest is present', () => {
         let pkg: Package;
         let result: RunCliResult;
 
@@ -447,8 +447,16 @@ describeForVersion('> 0.29.1', 'plugins render/delete', () => {
 
         it('reports that no plugin manifest was found', () => {
           const combined = result.stdout + result.stderr;
-          expect(combined).toContain(
-            'No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found',
+          // Matched loosely on purpose. This suite runs twice: once against
+          // the build in this tree, once against the CLI published on npm,
+          // and the list of probed paths grows between releases: the copilot
+          // marketplace path joined it after 0.33.0. Pinning the full wording
+          // here means every such addition turns the production run red until
+          // the next release ships. What this test is for is that the CLI says
+          // it found nothing; the exact list is pinned by the unit spec of the
+          // handler, which always runs against this tree.
+          expect(combined).toMatch(
+            /No \.claude-plugin\/marketplace\.json.* \.claude-plugin\/plugin\.json found/,
           );
         });
       });

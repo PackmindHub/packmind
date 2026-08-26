@@ -17,6 +17,7 @@ import {
 } from '../utils/consoleLogger';
 import { initHandler, InstallDefaultSkillsFunction } from './initHandler';
 import { AGENT_DISPLAY_NAMES } from './config/configAgentsHandler';
+import { EXEC_NAME } from '../utils/execName';
 
 export type BootstrapInstallContextDependencies = {
   configRepository: IConfigFileRepository;
@@ -135,7 +136,7 @@ export async function bootstrapInstallContext(
 
   if (!isTTY) {
     logWarningConsole(
-      'No packmind.json and no agent context detected — run `packmind-cli init` to configure.',
+      `No packmind.json and no agent context detected — run \`${EXEC_NAME} init\` to configure.`,
     );
     return {
       configReady: false,

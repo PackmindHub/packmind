@@ -13,6 +13,7 @@ import {
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
 import { PackmindLockFileEntry } from '../../../domain/repositories/PackmindLockFile';
 import { fetchDeployedFiles } from '../../utils/deployedFilesUtils';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type PlaybookStatusHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -334,7 +335,7 @@ export async function playbookStatusHandler(
       );
     }
     logConsole('');
-    logConsole('Use `packmind playbook submit` to send them');
+    logConsole(`Use \`${EXEC_NAME} playbook submit\` to send them`);
   }
 
   if (groupedUntracked.length > 0) {
@@ -350,7 +351,7 @@ export async function playbookStatusHandler(
       );
     }
     logConsole('');
-    logConsole('Use `packmind playbook add <path>` to track them');
+    logConsole(`Use \`${EXEC_NAME} playbook add <path>\` to track them`);
   }
 
   if (groupedStaged.length === 0 && groupedUntracked.length === 0) {

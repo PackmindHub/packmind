@@ -261,8 +261,8 @@ export const PackageDetails = ({
   const isPackageEmpty =
     commandCount === 0 && standardCount === 0 && skillCount === 0;
 
-  const installCommand = `packmind-cli install @${spaceSlug}/${pkg.slug}`;
-  const installAsClaudePluginCommand = `packmind-cli plugins render @${spaceSlug}/${pkg.slug}`;
+  const installCommand = `packmind install @${spaceSlug}/${pkg.slug}`;
+  const installAsClaudePluginCommand = `packmind plugins render @${spaceSlug}/${pkg.slug}`;
 
   return (
     <PMPage

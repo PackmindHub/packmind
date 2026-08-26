@@ -72,7 +72,7 @@ const ApiKeyContent: React.FC = () => {
       {hasActiveApiKey && orgSlug && (
         <SectionCard
           title="Your CLI is ready"
-          description="Want it to run automatically? Schedule packmind-cli install on your CI to keep artifacts fresh without manual effort."
+          description="Want it to run automatically? Schedule packmind install on your CI to keep artifacts fresh without manual effort."
           variant="primary"
         >
           <PMLink href={routes.org.toSetupAutoUpdate(orgSlug)}>
@@ -241,7 +241,7 @@ export const SetupCliPage: React.FC = () => {
         </PMPageSection>
 
         <PMText variant="small" color="tertiary">
-          Want to run <code>packmind-cli install</code> on a schedule?{' '}
+          Want to run <code>packmind install</code> on a schedule?{' '}
           <PMLink href={orgSlug ? routes.org.toSetupAutoUpdate(orgSlug) : '#'}>
             Set up Auto-update →
           </PMLink>

@@ -7,6 +7,7 @@ export * from './MarketplaceDriftHasPendingChangesError';
 export * from './MarketplaceNotFoundError';
 export * from './MarketplacePluginNameConflictError';
 export * from './MarketplaceUrlNotReachableError';
+export * from './MarketplaceVendorMismatchError';
 export * from './PluginDistributionInvalidStateError';
 export * from './PluginDistributionNotFoundError';
 export * from './UnknownMarketplaceDescriptorError';

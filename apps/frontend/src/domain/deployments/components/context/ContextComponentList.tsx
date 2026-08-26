@@ -1,0 +1,271 @@
+import type { ReactNode } from 'react';
+import { Link } from 'react-router';
+import {
+  PMBox,
+  PMCheckbox,
+  PMHStack,
+  PMIcon,
+  PMIconButton,
+  PMText,
+  PMTooltip,
+} from '@packmind/ui';
+import {
+  LuBookCheck,
+  LuChevronRight,
+  LuFolderInput,
+  LuPackage,
+  LuTerminal,
+  LuWandSparkles,
+} from 'react-icons/lu';
+import {
+  componentSelectionKey,
+  type ContextComponent,
+  type ContextComponentType,
+} from './buildPackageContext';
+
+/**
+ * The mark of each type, in one place. The two panes and the filter chips read
+ * it, so a type cannot end up wearing two icons depending on where it is shown.
+ */
+export const COMPONENT_TYPE_ICONS: Record<ContextComponentType, ReactNode> = {
+  standard: <LuBookCheck />,
+  command: <LuTerminal />,
+  skill: <LuWandSparkles />,
+};
+
+/**
+ * One row of the list, and optionally the packages the component belongs to.
+ * The pair travels together rather than the component alone because the same
+ * list is read scoped to one package and unscoped across the space, and in the
+ * second case the owner is the column that makes the row mean something.
+ */
+export type ComponentListEntry = {
+  component: ContextComponent;
+  packageNames?: string[];
+};
+
+/**
+ * The list of components, shared by a package's own content and by the
+ * space-wide inventory. Extracted the day the second one appeared: two lists of
+ * the same objects would have grown two row heights and two ideas of what a
+ * version looks like.
+ */
+export function ContextComponentList({
+  entries,
+  showPackages = false,
+  onMove,
+  selectedKeys,
+  onToggleSelect,
+}: Readonly<{
+  entries: readonly ComponentListEntry[];
+  showPackages?: boolean;
+  /**
+   * Offered per list rather than per row, and only by a list that is scoped to
+   * one package: read across the space a component can sit in none or in
+   * several packages, so there is no source to move it out of.
+   */
+  onMove?: (component: ContextComponent) => void;
+  /** Which rows are picked, by `componentSelectionKey`. */
+  selectedKeys?: ReadonlySet<string>;
+  /**
+   * Picking a row, which is what turns the per-row move into a bulk one. Comes
+   * with `selectedKeys` and under the same condition as `onMove`: the selection
+   * only means something in a list that has a package to leave.
+   */
+  onToggleSelect?: (component: ContextComponent) => void;
+}>) {
+  return (
+    <PMBox
+      borderWidth="1px"
+      borderColor="border.tertiary"
+      borderRadius="sm"
+      overflow="hidden"
+    >
+      {entries.map((entry, index) => (
+        <ComponentRow
+          key={componentSelectionKey(entry.component)}
+          entry={entry}
+          isFirst={index === 0}
+          showPackages={showPackages}
+          onMove={onMove}
+          isSelected={
+            selectedKeys?.has(componentSelectionKey(entry.component)) ?? false
+          }
+          onToggleSelect={onToggleSelect}
+        />
+      ))}
+    </PMBox>
+  );
+}
+
+function ComponentRow({
+  entry,
+  isFirst,
+  showPackages,
+  onMove,
+  isSelected,
+  onToggleSelect,
+}: Readonly<{
+  entry: ComponentListEntry;
+  isFirst: boolean;
+  showPackages: boolean;
+  onMove?: (component: ContextComponent) => void;
+  isSelected: boolean;
+  onToggleSelect?: (component: ContextComponent) => void;
+}>) {
+  const { component, packageNames = [] } = entry;
+
+  return (
+    /*
+     * The row is a link and an action side by side, not a link with a button
+     * inside it: a control nested in an anchor is activated by the anchor, so
+     * moving a component would first navigate away from the list it was moved
+     * from. The hover sits on the pair so the row still lights up as one thing.
+     */
+    <PMHStack
+      gap={0}
+      align="stretch"
+      borderTopWidth={isFirst ? '0' : '1px'}
+      borderColor="border.tertiary"
+      _hover={{ bg: 'background.secondary' }}
+      // The picked row stays legible once the pointer has left it: the hover
+      // tint alone would make the selection disappear the moment it is read.
+      bg={isSelected ? 'background.secondary' : undefined}
+      transition="background-color 150ms ease-out"
+    >
+      {onToggleSelect && (
+        /*
+          Beside the link and not inside it, for the reason the move button is:
+          a control nested in an anchor is activated by the anchor, so ticking a
+          row would open it.
+        */
+        <PMBox display="flex" alignItems="center" paddingLeft={3}>
+          <PMCheckbox
+            size="sm"
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(component)}
+            inputProps={{ 'aria-label': `Select ${component.name}` }}
+          />
+        </PMBox>
+      )}
+      {/*
+        A real link rather than a box that navigates: the name is the whole
+        target area, so it has to be openable in a new tab and readable as an
+        address by anything that reads addresses. PMBox does not forward `to`,
+        hence the wrapper.
+      */}
+      <PMBox flex="1" minW={0} asChild>
+        <Link to={component.href}>
+          <PMBox
+            display="flex"
+            width="full"
+            alignItems="center"
+            gap={3}
+            textAlign="left"
+            paddingX={3}
+            paddingY="10px"
+          >
+            {/* On the name, not on the pair: the rule the rail beside it follows. */}
+            <PMIcon
+              fontSize="sm"
+              color="text.faded"
+              flexShrink={0}
+              alignSelf="flex-start"
+              marginTop="0.25em"
+            >
+              {COMPONENT_TYPE_ICONS[component.type]}
+            </PMIcon>
+            <PMBox flex={1} minW={0}>
+              <PMText as="div" fontSize="sm" fontWeight="medium" truncate>
+                {component.name}
+              </PMText>
+              {component.summary && (
+                <PMText as="div" fontSize="xs" color="faded" truncate>
+                  {component.summary}
+                </PMText>
+              )}
+            </PMBox>
+            {showPackages && <PackageColumn names={packageNames} />}
+            {/*
+              A fixed width, not the width of the number: v12 is one character
+              wider than v5, and every column to its left would move with it.
+            */}
+            <PMText
+              fontSize="xs"
+              color="faded"
+              flexShrink={0}
+              width="32px"
+              textAlign="right"
+              fontVariantNumeric="tabular-nums"
+            >
+              v{component.version}
+            </PMText>
+            <PMIcon fontSize="xs" color="text.faded" flexShrink={0}>
+              <LuChevronRight />
+            </PMIcon>
+          </PMBox>
+        </Link>
+      </PMBox>
+      {onMove && (
+        <PMBox display="flex" alignItems="center" paddingRight={2}>
+          <PMTooltip label="Move to another package" showArrow>
+            <PMIconButton
+              aria-label={`Move ${component.name} to another package`}
+              variant="ghost"
+              size="xs"
+              color="text.faded"
+              onClick={() => onMove(component)}
+            >
+              <LuFolderInput />
+            </PMIconButton>
+          </PMTooltip>
+        </PMBox>
+      )}
+    </PMHStack>
+  );
+}
+
+/**
+ * Who carries this component. A column rather than a word on the second line:
+ * read across the space, the owner is what the eye runs down.
+ *
+ * The empty case is the one that matters. A component in no package is
+ * distributed to nobody, and this list is the only place in the plugin-first
+ * navigation where it appears at all — so it says so in words rather than
+ * leaving the cell blank, which would read as a rendering gap.
+ */
+function PackageColumn({ names }: Readonly<{ names: string[] }>) {
+  const label =
+    names.length === 0
+      ? 'No package'
+      : names.length === 1
+        ? names[0]
+        : `${names.length} packages`;
+
+  return (
+    <PMBox
+      flexShrink={0}
+      width="180px"
+      minW={0}
+      display="flex"
+      alignItems="center"
+      gap="6px"
+      color={names.length === 0 ? 'text.secondary' : 'text.faded'}
+    >
+      <PMIcon fontSize="xs" flexShrink={0}>
+        <LuPackage />
+      </PMIcon>
+      <PMBox
+        as="span"
+        fontSize="xs"
+        truncate
+        // The whole list on hover: "3 packages" is the scannable form, but which
+        // three is a fair question to ask without leaving the row.
+        title={names.length > 1 ? names.join(', ') : undefined}
+        fontStyle={names.length === 0 ? 'italic' : undefined}
+      >
+        {label}
+      </PMBox>
+    </PMBox>
+  );
+}

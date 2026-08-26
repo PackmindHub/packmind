@@ -806,21 +806,6 @@ export class GitProvidersService {
     });
   }
 
-  async checkBranchExists(
-    organizationId: OrganizationId,
-    gitProviderId: GitProviderId,
-    owner: string,
-    repo: string,
-    branch: string,
-  ): Promise<boolean> {
-    return this.gitAdapter.checkBranchExists(
-      gitProviderId,
-      owner,
-      repo,
-      branch,
-    );
-  }
-
   async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,

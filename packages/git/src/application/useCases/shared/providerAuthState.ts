@@ -3,7 +3,7 @@ import { GitProvider } from '@packmind/types';
 /**
  * Whether a git provider has usable credentials (PAT or active GitHub App
  * installation). Providers without auth are CLI-managed: they are created as a
- * side-effect of `packmind-cli` pull sessions and are not configurable from
+ * side-effect of `packmind` pull sessions and are not configurable from
  * the settings UI.
  */
 export function providerHasAuth(

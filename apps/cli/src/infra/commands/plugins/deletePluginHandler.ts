@@ -12,6 +12,7 @@ import {
   findPluginEntry,
   removePluginEntry,
   classifySource,
+  stripBom,
 } from './pluginsContext';
 import { resolveGitContext } from './resolveGitContext';
 import { logWarningConsole } from '../../utils/consoleLogger';
@@ -38,7 +39,7 @@ export async function deletePluginHandler(
 
   if (ctx.mode === 'none') {
     deps.error(
-      'No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found in this directory.',
+      'No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found in this directory.',
     );
     deps.exit(1);
     return;
@@ -89,7 +90,9 @@ export async function deletePluginHandler(
 
   if (ctx.mode === 'standalone') {
     const manifestPath = ctx.manifestPath as string;
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+    const manifest = JSON.parse(
+      stripBom(readFileSync(manifestPath, 'utf8')),
+    ) as {
       name?: string;
     };
 

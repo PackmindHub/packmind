@@ -2,6 +2,7 @@ import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { resolveSpaceFromArgs } from '../../utils/spaceFilterUtils';
 import { resolveUrlBuilder } from '../../utils/urlBuilderUtils';
 import { groupArtefactBySpaces } from '../../utils/groupArtefactsBySpaces';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type ListPackagesArgs = { space?: string };
 
@@ -77,7 +78,7 @@ export async function listPackagesHandler(
       scopedArtefacts,
       {
         content: 'How to install a package:',
-        exampleCommand: `packmind-cli install ${firstSlug}`,
+        exampleCommand: `${EXEC_NAME} install ${firstSlug}`,
       },
     );
     exit(0);

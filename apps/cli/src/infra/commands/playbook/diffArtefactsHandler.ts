@@ -20,6 +20,7 @@ import {
 import { formatContentDiff } from '../../utils/diffFormatter';
 import { formatAdditionalPropertyDiff } from '../formatAdditionalPropertyDiff';
 import chalk from 'chalk';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type DiffHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -170,7 +171,7 @@ function buildSubmittedFooter(submittedDiffs: CheckDiffItemResult[]): string {
   const proposalWord =
     proposalCount === 1 ? 'change proposal' : 'change proposals';
 
-  return `${proposalCount} ${proposalWord} ignored, run \`packmind-cli diff --include-submitted\` to see what's waiting for validation`;
+  return `${proposalCount} ${proposalWord} ignored, run \`${EXEC_NAME} playbook diff --include-submitted\` to see what's waiting for validation`;
 }
 
 /**

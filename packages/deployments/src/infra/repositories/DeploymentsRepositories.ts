@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource, Repository } from 'typeorm';
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
@@ -71,6 +72,19 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
         DistributedPackageSchema,
       ) as Repository<DistributedPackage>,
     );
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.targetRepository,
+      this.packagesDeploymentRepository,
+      this.renderModeConfigurationRepository,
+      this.packageRepository,
+      this.distributionRepository,
+      this.distributedPackageRepository,
+    ]);
   }
 
   getTargetRepository(): ITargetRepository {

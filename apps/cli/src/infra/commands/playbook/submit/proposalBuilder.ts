@@ -18,6 +18,7 @@ import { logWarningConsole } from '../../../utils/consoleLogger';
 import { PlaybookChangeEntry } from '../../../../domain/repositories/IPlaybookLocalRepository';
 import { PackmindLockFile } from '../../../../domain/repositories/PackmindLockFile';
 import { TargetContext } from './targetContextResolver';
+import { EXEC_NAME } from '../../../utils/execName';
 
 export type ProposalItem = {
   type: ChangeProposalType;
@@ -538,7 +539,7 @@ export async function buildProposals(
         (entry.artifactType === 'standard' || entry.artifactType === 'command')
       ) {
         logWarningConsole(
-          `Skipping "${entry.artifactName}" — deployed content unavailable. Run \`packmind pull\` to sync before submitting updates.`,
+          `Skipping "${entry.artifactName}" — deployed content unavailable. Run \`${EXEC_NAME} pull\` to sync before submitting updates.`,
         );
         skipped.push(toSkippedEntry(entry, 'deployed content unavailable'));
         continue;

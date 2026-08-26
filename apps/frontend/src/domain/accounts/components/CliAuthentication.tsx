@@ -26,7 +26,7 @@ const buildCliLoginCommand = () => {
   const currentHost = window.location.origin;
   const isDefaultHost = currentHost === DEFAULT_HOST;
   const hostFlag = isDefaultHost ? '' : ` --host ${currentHost}`;
-  return `packmind-cli login${hostFlag}`;
+  return `packmind login${hostFlag}`;
 };
 
 const formatExpirationDate = (expiresAt?: string | Date) => {

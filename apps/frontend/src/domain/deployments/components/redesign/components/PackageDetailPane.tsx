@@ -89,6 +89,13 @@ type PackageDetailPaneProps = {
   distributionHistoryHref: string | null;
   /** Link to the package's detail page (default tab). */
   packagePageHref?: string | null;
+  /**
+   * When the pane is embedded on a surface that already shows the package name
+   * and description (e.g. the package detail page), hide the identity header so
+   * it isn't duplicated. The summary stats, distribute CTA, and install list
+   * remain. Defaults to `false` (full header, as on the deployments overview).
+   */
+  hideIdentityHeader?: boolean;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -104,6 +111,7 @@ export function PackageDetailPane({
   onSyncPackage,
   distributionHistoryHref,
   packagePageHref,
+  hideIdentityHeader = false,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -152,9 +160,9 @@ export function PackageDetailPane({
       return 'A distribution is already in progress for every drifted target.';
     }
     if (driftedLockCounts.noAppToken === driftedKeys.length) {
-      return 'Every drifted target lives on a provider without a token — use `packmind-cli install`.';
+      return 'Every drifted target lives on a provider without a token — use `packmind install`.';
     }
-    return 'Every drifted target is either in progress or distributed via `packmind-cli install`.';
+    return 'Every drifted target is either in progress or distributed via `packmind install`.';
   })();
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
@@ -254,67 +262,71 @@ export function PackageDetailPane({
         bg="background.primary"
       >
         <PMVStack gap={2.5} align="stretch">
-          <PMHStack gap={3} align="start" justify="space-between">
-            <PMVStack gap={1} align="start" flex={1} minW={0}>
-              <PMHStack gap={2} align="center" minW={0}>
-                <PMHeading level="h3" color="primary">
-                  {pkg.name}
-                </PMHeading>
-                {packagePageHref && (
-                  <PMTooltip
-                    label="Open package page"
-                    showArrow
-                    openDelay={300}
-                  >
-                    <PMLink
-                      asChild
-                      aria-label={`Open ${pkg.name} package page`}
-                    >
-                      <Link to={packagePageHref}>
-                        <PMBox
-                          display="inline-flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          width="28px"
-                          height="28px"
-                          borderRadius="sm"
-                          color="text.faded"
-                          transition="color 120ms ease-out, background-color 120ms ease-out"
-                          _hover={{
-                            color: 'text.primary',
-                            bg: 'background.tertiary',
-                          }}
+          {(!hideIdentityHeader || hasDrift) && (
+            <PMHStack gap={3} align="start" justify="space-between">
+              {!hideIdentityHeader && (
+                <PMVStack gap={1} align="start" flex={1} minW={0}>
+                  <PMHStack gap={2} align="center" minW={0}>
+                    <PMHeading level="h3" color="primary">
+                      {pkg.name}
+                    </PMHeading>
+                    {packagePageHref && (
+                      <PMTooltip
+                        label="Open package page"
+                        showArrow
+                        openDelay={300}
+                      >
+                        <PMLink
+                          asChild
+                          aria-label={`Open ${pkg.name} package page`}
                         >
-                          <PMIcon fontSize="sm">
-                            <LuArrowUpRight />
-                          </PMIcon>
-                        </PMBox>
-                      </Link>
-                    </PMLink>
-                  </PMTooltip>
-                )}
-              </PMHStack>
-              <PMText fontSize="sm" color="secondary" maxW="68ch">
-                {pkg.description}
-              </PMText>
-            </PMVStack>
-            {hasDrift && (
-              <PMTooltip label={headerLockTooltip} placement="top">
-                <PMButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onSyncPackage(pkg.id)}
-                  disabled={allDriftedLocked}
-                  title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
-                >
-                  <PMIcon fontSize="sm">
-                    <LuRotateCw />
-                  </PMIcon>
-                  Distribute package
-                </PMButton>
-              </PMTooltip>
-            )}
-          </PMHStack>
+                          <Link to={packagePageHref}>
+                            <PMBox
+                              display="inline-flex"
+                              alignItems="center"
+                              justifyContent="center"
+                              width="28px"
+                              height="28px"
+                              borderRadius="sm"
+                              color="text.faded"
+                              transition="color 120ms ease-out, background-color 120ms ease-out"
+                              _hover={{
+                                color: 'text.primary',
+                                bg: 'background.tertiary',
+                              }}
+                            >
+                              <PMIcon fontSize="sm">
+                                <LuArrowUpRight />
+                              </PMIcon>
+                            </PMBox>
+                          </Link>
+                        </PMLink>
+                      </PMTooltip>
+                    )}
+                  </PMHStack>
+                  <PMText fontSize="sm" color="secondary" maxW="68ch">
+                    {pkg.description}
+                  </PMText>
+                </PMVStack>
+              )}
+              {hasDrift && (
+                <PMTooltip label={headerLockTooltip} placement="top">
+                  <PMButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onSyncPackage(pkg.id)}
+                    disabled={allDriftedLocked}
+                    title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
+                  >
+                    <PMIcon fontSize="sm">
+                      <LuRotateCw />
+                    </PMIcon>
+                    Distribute package
+                  </PMButton>
+                </PMTooltip>
+              )}
+            </PMHStack>
+          )}
           <PMHStack gap={5} align="center" wrap="wrap">
             <SummaryStat
               label="Artifacts"
@@ -567,7 +579,7 @@ type InstallRowProps = {
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
   'in-progress': 'Distribution in progress for this target.',
   'no-app-token':
-    'This provider has no token — use `packmind-cli install` to update this distribution.',
+    'This provider has no token — use `packmind install` to update this distribution.',
 };
 
 function InstallRow({
@@ -1105,7 +1117,7 @@ const MODE_META: Record<
           bg="background.tertiary"
           borderRadius="sm"
         >
-          packmind-cli install
+          packmind install
         </PMText>{' '}
         from each repo.
       </>

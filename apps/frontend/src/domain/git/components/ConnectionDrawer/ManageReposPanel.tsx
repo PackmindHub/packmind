@@ -11,12 +11,15 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuCheck, LuGitBranch, LuPlus, LuSearch } from 'react-icons/lu';
+import { GitRepoId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useGetAvailableRepositoriesQuery,
   useGetRepositoriesByProviderQuery,
 } from '../../api/queries';
 import { ApplyProgress, RepoSelection, RepoTuple, tupleKey } from './types';
+import { useCheckTrackedBranchExistsQuery } from '../../api/queries';
+import { DeletedBranchBadge } from '../../../../shared/components/DeletedBranchBadge';
 
 export interface ManageReposPanelProps {
   provider: GitProviderUI;
@@ -34,6 +37,11 @@ type TrackedGroup = {
   defaultBranch: string;
   trackedBranches: string[];
   knownFromProvider: boolean;
+  /**
+   * Repository id per already-saved branch. A branch the user just added in
+   * this drawer has none, and is not probed: there is nothing tracked yet.
+   */
+  savedRepoIdByBranch: Map<string, GitRepoId>;
 };
 
 type UntrackedRepo = {
@@ -76,6 +84,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
             defaultBranch: t.branch,
             trackedBranches: [],
             knownFromProvider: false,
+            savedRepoIdByBranch: new Map(),
           };
           groupMap.set(key, group);
           branchSets.set(key, new Set());
@@ -90,6 +99,13 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
           group.defaultBranch = r.defaultBranch;
           group.knownFromProvider = true;
         }
+      }
+
+      // Saved repositories carry the id the branch probe needs.
+      for (const r of tracked.data ?? []) {
+        groupMap
+          .get(`${r.owner}/${r.repo}`)
+          ?.savedRepoIdByBranch.set(r.branch, r.id);
       }
 
       for (const g of groupMap.values()) {
@@ -129,7 +145,7 @@ export const ManageReposPanel: React.FC<ManageReposPanelProps> = ({
       );
 
       return { trackedGroups, untrackedRepos, repoCount, totalRepos };
-    }, [available.data, selection.tuples, filter]);
+    }, [available.data, tracked.data, selection.tuples, filter]);
 
   if (isLoading) {
     return (
@@ -545,6 +561,7 @@ const TrackedRepoSection: React.FC<{
         <BranchRow
           key={branch}
           branch={branch}
+          gitRepoId={group.savedRepoIdByBranch.get(branch)}
           onRemove={() => onRemove(branch)}
         />
       ))}
@@ -554,55 +571,63 @@ const TrackedRepoSection: React.FC<{
 
 const BranchRow: React.FC<{
   branch: string;
+  /** Absent for a branch added in this drawer and not saved yet. */
+  gitRepoId?: GitRepoId;
   onRemove: () => void;
-}> = ({ branch, onRemove }) => (
-  <PMBox
-    role="checkbox"
-    aria-checked="true"
-    tabIndex={0}
-    data-testid="manage-repos-row"
-    data-branch={branch}
-    onClick={onRemove}
-    onKeyDown={(e: React.KeyboardEvent) => {
-      if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault();
-        onRemove();
-      }
-    }}
-    paddingX={3}
-    paddingY={2}
-    paddingLeft={6}
-    cursor="pointer"
-    transition="background 120ms ease-out"
-    _hover={{ bg: 'background.tertiary' }}
-  >
-    <PMHStack gap={3} align="center">
-      <PMBox
-        aria-hidden
-        width="14px"
-        height="14px"
-        borderRadius="sm"
-        borderWidth="1px"
-        borderColor="branding.primary"
-        bg="branding.primary"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        flexShrink={0}
-      >
-        <PMIcon fontSize="2xs" color="background.primary">
-          <LuCheck />
+}> = ({ branch, gitRepoId, onRemove }) => {
+  const trackedBranch = useCheckTrackedBranchExistsQuery(gitRepoId);
+  const branchDeleted = trackedBranch.data === false;
+
+  return (
+    <PMBox
+      role="checkbox"
+      aria-checked="true"
+      tabIndex={0}
+      data-testid="manage-repos-row"
+      data-branch={branch}
+      onClick={onRemove}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          onRemove();
+        }
+      }}
+      paddingX={3}
+      paddingY={2}
+      paddingLeft={6}
+      cursor="pointer"
+      transition="background 120ms ease-out"
+      _hover={{ bg: 'background.tertiary' }}
+    >
+      <PMHStack gap={3} align="center">
+        <PMBox
+          aria-hidden
+          width="14px"
+          height="14px"
+          borderRadius="sm"
+          borderWidth="1px"
+          borderColor="branding.primary"
+          bg="branding.primary"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexShrink={0}
+        >
+          <PMIcon fontSize="2xs" color="background.primary">
+            <LuCheck />
+          </PMIcon>
+        </PMBox>
+        <PMIcon fontSize="2xs" color="text.faded">
+          <LuGitBranch />
         </PMIcon>
-      </PMBox>
-      <PMIcon fontSize="2xs" color="text.faded">
-        <LuGitBranch />
-      </PMIcon>
-      <PMText fontSize="sm" color="primary" truncate>
-        {branch}
-      </PMText>
-    </PMHStack>
-  </PMBox>
-);
+        <PMText fontSize="sm" color="primary" truncate>
+          {branch}
+        </PMText>
+        {branchDeleted && <DeletedBranchBadge branch={branch} />}
+      </PMHStack>
+    </PMBox>
+  );
+};
 
 const ProgressIndicator: React.FC<{ progress: ApplyProgress }> = ({
   progress,

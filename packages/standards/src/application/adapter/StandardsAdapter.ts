@@ -3,6 +3,7 @@ import {
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   AddRuleToStandardCommand,
@@ -288,6 +289,11 @@ export class StandardsAdapter
       this.eventEmitterService,
       this.linterPort,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info(
       'StandardsAdapter initialized successfully with all use cases',

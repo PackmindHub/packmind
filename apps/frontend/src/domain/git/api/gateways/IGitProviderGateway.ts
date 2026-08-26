@@ -91,12 +91,13 @@ export interface IGitProviderGateway {
   ): Promise<CheckProviderAuthResponse>;
 
   // Branch operations
-  checkBranchExists(
+  /**
+   * Whether the branch a repository is tracked on still exists on the provider.
+   * Keyed by repository, so the branch never has to survive a URL.
+   */
+  checkTrackedBranchExists(
     organizationId: OrganizationId,
-    providerId: GitProviderId,
-    owner: string,
-    repo: string,
-    branch: string,
+    repositoryId: GitRepoId,
   ): Promise<boolean>;
 
   // Target operations

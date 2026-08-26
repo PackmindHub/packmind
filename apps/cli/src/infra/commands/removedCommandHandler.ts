@@ -1,4 +1,5 @@
 import { HelpMessage } from '../../domain/repositories/IOutput';
+import { EXEC_NAME } from '../utils/execName';
 
 export type NotifyErrorFunction = (message: string, help?: HelpMessage) => void;
 
@@ -25,11 +26,12 @@ function reportRemovedCommand(
   replacementCommand: string,
   carriedFlags: string[] = [],
 ): void {
-  notifyError(`Command "packmind ${removedCommand}" has been removed.`, {
+  notifyError(`Command "${EXEC_NAME} ${removedCommand}" has been removed.`, {
     content: `Use the "${replacementCommand}" command instead:`,
-    exampleCommand: [`packmind ${replacementCommand}`, ...carriedFlags].join(
-      ' ',
-    ),
+    exampleCommand: [
+      `${EXEC_NAME} ${replacementCommand}`,
+      ...carriedFlags,
+    ].join(' '),
   });
 }
 

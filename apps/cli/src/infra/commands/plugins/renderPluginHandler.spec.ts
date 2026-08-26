@@ -85,8 +85,10 @@ describe('renderPluginHandler', () => {
       );
     });
 
-    it('prints an error', () => {
-      expect(printedErrors[0]).toMatch(/No .claude-plugin/);
+    it('prints the three-path error message', () => {
+      expect(printedErrors[0]).toBe(
+        'No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found in this directory.',
+      );
     });
 
     it('exits non-zero', () => {
@@ -95,6 +97,54 @@ describe('renderPluginHandler', () => {
 
     it('does not call renderPlugin', () => {
       expect(renderPlugin).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('marketplace mode with malformed JSON at the manifest path', () => {
+    let manifestPath: string;
+
+    beforeEach(async () => {
+      manifestPath = join(tmp, '.claude-plugin/marketplace.json');
+      mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+      writeFileSync(manifestPath, '{not valid json');
+
+      await renderPluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+    });
+
+    it('prints an error mentioning the malformed manifest path', () => {
+      expect(printedErrors[0]).toContain(manifestPath);
+    });
+
+    it('exits non-zero', () => {
+      expect(exit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call renderPlugin', () => {
+      expect(renderPlugin).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('copilot marketplace mode first render', () => {
+    beforeEach(() => {
+      mkdirSync(join(tmp, '.github/plugin'), { recursive: true });
+      writeFileSync(
+        join(tmp, '.github/plugin/marketplace.json'),
+        JSON.stringify({ name: 'mp', plugins: [] }, null, 2),
+      );
+    });
+
+    it('calls renderPlugin with targetVendor github', async () => {
+      await renderPluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
+      expect(renderPlugin).toHaveBeenCalledWith(
+        expect.objectContaining({ targetVendor: 'github' }),
+      );
     });
   });
 
@@ -116,6 +166,7 @@ describe('renderPluginHandler', () => {
         pluginName: 'security',
         gitRemoteUrl: 'git@github.com:org/repo.git',
         gitBranch: 'main',
+        targetVendor: 'anthropic',
       });
     });
 
@@ -277,6 +328,7 @@ describe('renderPluginHandler', () => {
           pluginName: 'security',
           gitRemoteUrl: 'git@github.com:org/repo.git',
           gitBranch: 'main',
+          targetVendor: 'anthropic',
         });
       });
 
@@ -591,6 +643,42 @@ describe('renderPluginHandler', () => {
 
       it('writes no files', () => {
         expect(existsSync(join(tmp, 'commands/a.md'))).toBe(false);
+      });
+    });
+
+    describe('when the manifest starts with a UTF-8 byte-order mark', () => {
+      const bom = String.fromCharCode(0xfeff);
+
+      beforeEach(() => {
+        mkdirSync(join(tmp, '.claude-plugin'), { recursive: true });
+        writeFileSync(
+          join(tmp, '.claude-plugin/plugin.json'),
+          `${bom}${JSON.stringify({ name: 'security' })}`,
+        );
+        confirmOverwrite.mockResolvedValue(true);
+      });
+
+      it('renders in standalone mode instead of reporting a name mismatch', async () => {
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
+        expect(renderPlugin).toHaveBeenCalledWith(
+          expect.objectContaining({
+            mode: 'standalone',
+            pluginName: 'security',
+          }),
+        );
+      });
+
+      it('exits zero', async () => {
+        await renderPluginHandler(
+          { packageSlug: { packageSlug: 'security' } },
+          buildDeps(),
+        );
+
+        expect(exit).toHaveBeenCalledWith(0);
       });
     });
   });

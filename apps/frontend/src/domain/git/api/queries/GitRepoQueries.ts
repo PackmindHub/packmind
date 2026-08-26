@@ -13,6 +13,7 @@ import {
   GET_REPOSITORIES_BY_PROVIDER_KEY,
   GET_AVAILABLE_REPOSITORIES_KEY,
   GET_AVAILABLE_TARGETS_KEY,
+  CHECK_TRACKED_BRANCH_EXISTS_KEY,
   GIT_QUERY_SCOPE,
 } from '../queryKeys';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
@@ -51,6 +52,47 @@ export const useGetRepositoriesByProviderQuery = (
       );
     },
     enabled: !!organization?.id && !!providerId,
+  });
+};
+
+/**
+ * Live probe of the branch a repository is tracked on. A branch deleted with
+ * its merged pull request leaves tracking pointing at nothing, and distributions
+ * stop being recorded without any error anywhere — so the pages that show the
+ * repository ask the provider rather than waiting for someone to notice.
+ *
+ * `undefined` while loading and on failure: "we could not ask" must never be
+ * rendered as "the branch is gone".
+ */
+export const useCheckTrackedBranchExistsQuery = (
+  repositoryId: GitRepoId | undefined,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [
+      ...CHECK_TRACKED_BRANCH_EXISTS_KEY,
+      organization?.id,
+      repositoryId,
+    ],
+    queryFn: () => {
+      if (!organization?.id || !repositoryId) {
+        throw new Error(
+          'Organization and repository IDs are required to probe the tracked branch',
+        );
+      }
+      return gitProviderGateway.checkTrackedBranchExists(
+        organization.id,
+        repositoryId,
+      );
+    },
+    enabled: enabled && !!organization?.id && !!repositoryId,
+    // Each probe is a provider API call and a page can show many repositories,
+    // so the answer is kept for a while: a deleted branch does not come back.
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 };
 

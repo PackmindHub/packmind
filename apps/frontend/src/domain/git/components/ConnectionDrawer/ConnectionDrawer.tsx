@@ -13,7 +13,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { LuArrowLeft, LuGitBranch, LuPencil, LuTrash2 } from 'react-icons/lu';
-import { GitProviderVendor, OrganizationId } from '@packmind/types';
+import { GitProviderVendor, GitRepoId, OrganizationId } from '@packmind/types';
 import { GitProviderUI } from '../../types/GitProviderTypes';
 import {
   useAddRepositoryMutation,
@@ -27,6 +27,7 @@ import {
 import { extractErrorMessage } from '../../utils/errorUtils';
 import { redirectTo } from '../../../../shared/utils/navigation';
 import { DisplayNameEditor } from './DisplayNameEditor';
+import { PreviewBranchRow } from './PreviewBranchRow';
 import { VendorMark, vendorLabel } from '../shared/VendorMark';
 import { ConnectionStatusPill } from '../shared/ConnectionStatusPill';
 import {
@@ -701,7 +702,13 @@ const RepositoriesPreview: React.FC<{
   const rows = tracked.data ?? [];
 
   const groups = useMemo(() => {
-    const map = new Map<string, { fullName: string; branches: string[] }>();
+    // Each branch keeps its repository id: this list is what the drawer opens
+    // on, so it is where a deleted tracked branch has to be visible, and the
+    // probe is keyed on the repository.
+    const map = new Map<
+      string,
+      { fullName: string; branches: { name: string; gitRepoId: GitRepoId }[] }
+    >();
     for (const r of rows) {
       const key = `${r.owner}/${r.repo}`;
       let group = map.get(key);
@@ -709,10 +716,10 @@ const RepositoriesPreview: React.FC<{
         group = { fullName: key, branches: [] };
         map.set(key, group);
       }
-      group.branches.push(r.branch);
+      group.branches.push({ name: r.branch, gitRepoId: r.id });
     }
     for (const g of map.values()) {
-      g.branches.sort((a, b) => a.localeCompare(b));
+      g.branches.sort((a, b) => a.name.localeCompare(b.name));
     }
     return Array.from(map.values()).sort((a, b) =>
       a.fullName.localeCompare(b.fullName),
@@ -772,16 +779,11 @@ const RepositoriesPreview: React.FC<{
             </PMText>
           </PMBox>
           {group.branches.map((branch) => (
-            <PMBox key={branch} paddingX={3} paddingY={1.5} paddingLeft={6}>
-              <PMHStack gap={2} align="center" minW={0}>
-                <PMIcon fontSize="2xs" color="text.faded">
-                  <LuGitBranch />
-                </PMIcon>
-                <PMText fontSize="sm" color="secondary" truncate>
-                  {branch}
-                </PMText>
-              </PMHStack>
-            </PMBox>
+            <PreviewBranchRow
+              key={branch.name}
+              branch={branch.name}
+              gitRepoId={branch.gitRepoId}
+            />
           ))}
         </PMBox>
       ))}

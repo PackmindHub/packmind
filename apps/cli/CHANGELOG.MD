@@ -2,8 +2,19 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [0.34.1] - 2026-08-25
+
+## Added
+
 - `playbook add` and `playbook submit` now read the `## Scope` section of a `.packmind/standards/*.md` file as the standard's glob scope. Patterns go comma-separated on one line or one per `-`/`*` bullet, and both forms are stored as a comma-separated list. Rules are still found with or without a `## Rules` heading, including when they follow the Scope section. `playbook diff` reports scope changes for these files like it already did for `.claude`/`.cursor` standards. The section used to be swallowed into the description
 - New `git info` command reports whether Packmind tracks the current repository and on which branch. When the tracked branch is not the one checked out, it warns that distributions from here are not recorded and points to `git track --update`. When the repository is not tracked, it proposes `git track` to track the current branch. Available to every member, not only organization admins.
+- `plugins render` now recognizes a local `.github/plugin/marketplace.json` file, in addition to the existing `.claude-plugin/marketplace.json`, and renders a GitHub Copilot plugin into it instead of a Claude Code one. Which file is present determines the target — a workspace can only be one or the other, never both, and if both exist `.claude-plugin/marketplace.json` wins.
 
 ## Changed
 
@@ -11,13 +22,21 @@
 - Change `untrack` command to `git untrack` command
 - `--help` now lists the old `track` and `untrack` as `[Removed] Use "git track" instead`, matching what running them says. They used to be listed as `[Deprecated]` while answering "has been removed".
 - `git track --help` no longer describes `--update` as moving tracking to the current branch, which stopped being true when `--branch` shipped. Both entries now say the two options combine.
+- The command is now `packmind`. The installer and `packmind update` maintain a single real executable under that name, and the older `packmind-cli` becomes a symlink to it — the two swapped roles, so `packmind-cli` keeps working and keeps receiving updates instead of silently freezing at the version it was installed at. Running it now prints a deprecation warning: it will be removed in a later release, so scripts and CI jobs calling `packmind-cli` should be moved over
+- Messages now name the executable you actually invoked instead of hardcoding `packmind-cli`. The log prefix, `--help` usage output, `--version` and every suggested command follow the name you typed, so a suggestion can always be copied and run as-is. Previously the CLI could greet you as `packmind-cli` and then tell you to run `packmind init`
 
 ## Fixed
 
+- `git track` no longer tracks a branch called `HEAD` when no branch is checked out. A detached `HEAD` — mid-rebase, on a commit, or in a CI job on a pull request merge ref — is reported as such, with `--branch <name>` named as the way to track a branch from there anyway. `git info` and `install` stop claiming you are "on" a branch in that state too, and `git info` on an untracked repository offers `git track --branch <name>` instead of offering to track `HEAD`. `git untrack` is unaffected: it takes no branch.
+- `git info` and `install` no longer describe a deleted tracked branch as if it were still there. `git info` reports that the branch is not in the repository — deleted after a merge, or never fetched here — and states that nothing is recorded anywhere until tracking moves, instead of only saying distributions "from here" are not recorded. `install` stops telling you to switch to a branch that does not exist and names `git track --update` instead.
+- `git track --branch <name>` now refuses a branch that does not exist in the repository instead of tracking it silently. A typo used to be accepted and only showed up later as distributions that were never recorded. Local and fetched remote branches both count, and the error points at `git fetch` for a branch that only exists on the remote.
+- `git track --branch <name>` no longer refuses a branch that does exist. The check read `git branch -a`, whose decorations were taken for part of the branch name: a branch checked out in a linked worktree is listed as `+ feature`, and `color.ui = always` or `column.ui = always` colorize and columnize the listing even through a pipe. Any of the three made every `--branch` fail with "does not exist", pointing at a spelling mistake and `git fetch` that would not have helped. Branches are now read from git's ref list instead of its human-facing listing, which also fixes `git info` and `install` claiming a tracked branch was deleted in those repositories.
 - Messages left pointing at the removed `track` command now name its replacement: `install` on an untracked repository, the "nothing is tracked yet" error and the server-side equivalent all say `packmind git track`.
 - `git track --branch <name>` on a repository tracked elsewhere now suggests `git track --update --branch <name>`. It used to suggest a bare `git track --update`, which moves tracking to the checked-out branch instead of the requested one.
 - `track --remove` gets the same migration message as `track`, naming `git untrack`, instead of failing with a raw "unknown arguments" parser error.
 - Running a command outside a git repository no longer claims `lint` must be run in a Git repository — `git info`, `git track` and `install` share those git helpers — and no longer prints git's own `fatal: not a git repository` line after the explanation.
+- `plugins render` no longer crashes on a marketplace or plugin manifest file saved with a UTF-8 byte-order mark (common from Windows editors) — the BOM is stripped before parsing instead of surfacing as a raw `SyntaxError`.
+- `plugins render` reports a clearer error when no supported manifest is found, naming all three checked paths (`.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`, `.claude-plugin/plugin.json`), and now also reports a clean error — instead of crashing — when the manifest it does find is not valid JSON.
 
 ## Removed
 
@@ -457,7 +476,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...HEAD
+[0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1
 [0.33.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...release-cli/0.33.0
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
 [0.31.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.30.1...release-cli/0.31.0

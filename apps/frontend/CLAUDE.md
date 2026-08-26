@@ -1,16 +1,14 @@
 # Frontend Application
 
-React Router v7 SPA for Packmind.
+React Router v8 SPA for Packmind.
 
 ## Owned elsewhere
 
 - **Route data flow** — how routes fetch, where query options and hooks live, gateway typing:
-  `.claude/rules/packmind/standard-frontend-data-flow.md`. It is `alwaysApply: true`, so its rules are
-  already in context; do not look for them here.
+  `apps/frontend/.claude/rules/packmind/standard-frontend-data-flow.md`. It is `alwaysApply: true`, so
+  its rules are already in context; do not look for them here.
 - **Query keys**, **navigation** (the `routes` utility and `useNavigation()`), and **error handling**:
-  the other three standards in `.claude/rules/packmind/`.
-- **UI components** — use `@packmind/ui` PM components, never `@chakra-ui/react` directly: the
-  **`working-with-pm-design-kit`** skill.
+  the other three standards in `apps/frontend/.claude/rules/packmind/`.
 
 ## Stack specifics
 

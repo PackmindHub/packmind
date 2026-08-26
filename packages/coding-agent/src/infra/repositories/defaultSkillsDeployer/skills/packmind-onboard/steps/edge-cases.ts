@@ -1,14 +1,14 @@
-export const EDGE_CASES = `## Edge Cases
+export const EDGE_CASES = (execName: string) => `## Edge Cases
 
 ### Package creation fails
 
-If \`packmind-cli packages create\` fails:
+If \`${execName} packages create\` fails:
 
 \`\`\`
 ❌ Failed to create package: [error message]
 
 Please check:
-  - You are logged in: \`packmind-cli login\`
+  - You are logged in: \`${execName} login\`
   - Your network connection is working
   - The package name is valid
 
@@ -25,7 +25,7 @@ If CLI commands fail with authentication errors:
 ❌ Not logged in to Packmind
 
 Please run:
-  packmind-cli login
+  ${execName} login
 
 Then re-run this skill.
 \`\`\`

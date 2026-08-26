@@ -180,7 +180,7 @@ export class GitProviderDisplayNameAlreadyUsedError extends Error {
 
 /**
  * Error thrown when attempting to edit the display name of a CLI-managed git
- * provider (one created automatically by `packmind-cli` and not configurable
+ * provider (one created automatically by `packmind` and not configurable
  * from the UI).
  */
 export class GitProviderDisplayNameNotEditableError extends Error {

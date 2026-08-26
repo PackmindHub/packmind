@@ -7,6 +7,7 @@ import {
 } from '../../../utils/consoleLogger';
 import { resolveUrlBuilder } from '../../../utils/urlBuilderUtils';
 import { PackmindCliHexa } from '../../../../PackmindCliHexa';
+import { EXEC_NAME } from '../../../utils/execName';
 
 export async function fetchAvailablePackageSlugs(
   packmindCliHexa: PackmindCliHexa,
@@ -55,20 +56,20 @@ export function logPackageAddGuidance(
     logInfoConsole('To add the created artifact to a package, run:');
     if (standards.length === 1) {
       logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard ${standards[0].slug}\``)}`,
+        `  ${formatCommand(`\`${EXEC_NAME} packages add --to ${pkgPlaceholder} --standard ${standards[0].slug}\``)}`,
       );
     } else if (commands.length === 1) {
       logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --command ${commands[0].slug}\``)}`,
+        `  ${formatCommand(`\`${EXEC_NAME} packages add --to ${pkgPlaceholder} --command ${commands[0].slug}\``)}`,
       );
     } else if (skills.length === 1) {
       logInfoConsole(
-        `  ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --skill ${skills[0].slug}\``)}`,
+        `  ${formatCommand(`\`${EXEC_NAME} packages add --to ${pkgPlaceholder} --skill ${skills[0].slug}\``)}`,
       );
     }
   } else {
     logInfoConsole(
-      `To add the created artifacts to a package, use ${formatCommand(`\`packmind-cli packages add --to ${pkgPlaceholder} --standard <artifact-slug>\``)} for each artifact.`,
+      `To add the created artifacts to a package, use ${formatCommand(`\`${EXEC_NAME} packages add --to ${pkgPlaceholder} --standard <artifact-slug>\``)} for each artifact.`,
     );
   }
 

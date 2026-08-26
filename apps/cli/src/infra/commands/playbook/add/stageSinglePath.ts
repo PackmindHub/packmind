@@ -34,6 +34,7 @@ import {
   adoptArtifactIntoLockFile,
   ExistingArtifact,
 } from './linkExistingArtifact';
+import { EXEC_NAME } from '../../../utils/execName';
 
 export type SkillFile = {
   path: string;
@@ -416,7 +417,7 @@ export async function stageSinglePath(
       return {
         status: 'failed',
         filePath,
-        message: `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: packmind-cli playbook add --space ${allSpaces[0].slug} <path>`,
+        message: `Multiple spaces found. Use --space to specify the target space:\n${formatSpaceList(allSpaces)}\n\nExample: ${EXEC_NAME} playbook add --space ${allSpaces[0].slug} <path>`,
       };
     }
   }
@@ -450,7 +451,7 @@ export async function stageSinglePath(
       filePath,
       message:
         `Cannot add this ${artifactType}: it is rendered for the "${codingAgent}" agent, which is not in your configured agents (${earlyLockFile.agents.join(', ')}).\n` +
-        `This file is no longer managed by Packmind. Re-add "${codingAgent}" to your agents and run ${formatLabel('packmind-cli install')} to manage it again, or delete the file if it is no longer needed.`,
+        `This file is no longer managed by Packmind. Re-add "${codingAgent}" to your agents and run ${formatLabel(`${EXEC_NAME} install`)} to manage it again, or delete the file if it is no longer needed.`,
     };
   }
 
@@ -469,7 +470,7 @@ export async function stageSinglePath(
         return {
           status: 'failed',
           filePath,
-          message: `"${artifactName}" is outdated (local: v${existingLockEntry.version}, remote: v${remoteVersion}).\nRun ${formatLabel('packmind-cli install')} to update before making changes.`,
+          message: `"${artifactName}" is outdated (local: v${existingLockEntry.version}, remote: v${remoteVersion}).\nRun ${formatLabel(`${EXEC_NAME} install`)} to update before making changes.`,
         };
       }
     } catch (err) {

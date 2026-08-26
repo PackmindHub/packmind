@@ -4,7 +4,7 @@ import { InvitationService } from './InvitationService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
-import { SmtpMailService } from '@packmind/node-utils';
+import { instrumentComponents, SmtpMailService } from '@packmind/node-utils';
 
 /**
  * AccountsServices - Service aggregator for the Accounts application layer
@@ -38,6 +38,16 @@ export class AccountsServices {
       this.accountsRepositories.getPasswordResetTokenRepository(),
       new SmtpMailService(),
     );
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.userService,
+      this.organizationService,
+      this.invitationService,
+      this.loginRateLimiterService,
+      this.passwordResetTokenService,
+    ]);
   }
 
   getUserService(): UserService {

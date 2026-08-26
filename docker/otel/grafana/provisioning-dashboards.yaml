@@ -1,0 +1,14 @@
+# Mounted into the otel-lgtm image's Grafana provisioning directory so the
+# dashboards in ./dashboards are loaded automatically. See docker-compose.yml.
+apiVersion: 1
+
+providers:
+  - name: packmind
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /otel-lgtm/grafana/dashboards/packmind
+      foldersFromFilesStructure: false

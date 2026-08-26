@@ -6,8 +6,8 @@ export const skillMd: SkillMD = {
       'Use when updating, adding, fixing, changing, or deprecating Packmind playbook artifacts (standards, commands, skills). Triggers on explicit phrases like "update packmind standard", "add a packmind skill", "fix packmind command", "change packmind playbook", "deprecate a standard". Also triggers — even without an explicit request — whenever the conversation reveals an opportunity: a new coding convention was just agreed on, a recurring pattern emerged, a workflow changed, a rule was found outdated, or the user says things like "we always do X", "let us remember to Y", "that is the pattern we use". If there is any chance the conversation established a convention or exposed a gap, invoke this skill proactively. This skill defines a mandatory workflow: do NOT edit artifact files directly — follow all phases regardless of change size.',
   },
   title: 'Update Playbook',
-  versions: ['0.21.0', '0.23.0'],
-  getPrompt(): string {
+  versions: ['0.21.0', '0.23.0', '0.35.0'],
+  getPrompt(_agentName: string, execName: string): string {
     return `Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes using the \`playbook\` CLI workflow.
 
 **⚠️ MANDATORY WORKFLOW — This skill defines a strict sequence: Understanding Your Request → Summarizing Changes → Analyzing Playbook → Change Report → Applying Changes. Do NOT skip steps or edit artifact files directly. Even for a single-line change, follow every step. The workflow ensures changes are reviewed, approved, submitted, and propagated correctly.**
@@ -64,7 +64,7 @@ This intent summary is passed as input to all subagents.
 
 ### Analyzing Playbook
 
-> **CLI health check**: Before launching subagents, run \`packmind-cli --version\`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
+> **CLI health check**: Before launching subagents, run \`${execName} --version\`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
 
 > **No subagent support?** If the \`Task\` tool is unavailable, perform all three domain analyses sequentially in the current session — run each \`steps/analyze-*.md\` analysis one after another before proceeding to Change Report.
 

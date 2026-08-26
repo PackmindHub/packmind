@@ -9,7 +9,17 @@ export type GitBranchesResult = {
 };
 
 export type GitCurrentBranchResult = {
+  /**
+   * The checked-out branch, or the literal `HEAD` when none is — see `detached`.
+   * Kept as a plain string so callers can still name what git reported.
+   */
   branch: string;
+  /**
+   * True when HEAD points straight at a commit instead of a branch: a rebase in
+   * flight, `git checkout <sha>`, or a CI job that checked out a pull request
+   * merge ref. There is no branch to track or record against in that state.
+   */
+  detached: boolean;
 };
 
 export interface IGitService {
@@ -22,6 +32,13 @@ export interface IGitService {
   getCurrentBranch(repoPath: string): GitCurrentBranchResult;
 
   getCurrentBranches(repoPath: string): GitBranchesResult;
+
+  /**
+   * Whether `branch` exists in the repository, either as a local branch or as
+   * a remote-tracking branch. A branch that exists on the remote but was never
+   * fetched is unknown here.
+   */
+  branchExists(repoPath: string, branch: string): boolean;
 
   getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult;
 

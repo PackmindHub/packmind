@@ -3,6 +3,7 @@ import {
   IBaseAdapter,
   JobsService,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
@@ -28,6 +29,8 @@ import {
   GitProviderId,
   GitRepo,
   GitRepoId,
+  CheckTrackedBranchExistsCommand,
+  CheckTrackedBranchExistsResponse,
   IAccountsPort,
   IAccountsPortName,
   IDeploymentPort,
@@ -56,6 +59,7 @@ import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/AddGitProviderUseCase';
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/AddGitRepoUseCase';
 import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/CheckBranchExistsUseCase';
+import { CheckTrackedBranchExistsUseCase } from '../useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/CheckDirectoryExistenceUseCase';
 import { CheckProviderAuthUseCase } from '../useCases/checkProviderAuth/CheckProviderAuthUseCase';
 import { CommitToGitUseCase } from '../useCases/commitToGit/CommitToGitUseCase';
@@ -94,6 +98,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   private _updateGitProvider!: UpdateGitProviderUseCase;
   private _listAvailableRepos!: ListAvailableReposUseCase;
   private _checkBranchExists!: CheckBranchExistsUseCase;
+  private _checkTrackedBranchExists!: CheckTrackedBranchExistsUseCase;
   private _commitToGit!: CommitToGitUseCase;
   private _getFileFromRepo!: GetFileFromRepoUseCase;
   private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
@@ -213,6 +218,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitProviderService(),
     );
 
+    this._checkTrackedBranchExists = new CheckTrackedBranchExistsUseCase(
+      this.gitServices.getGitRepoService(),
+      this._checkBranchExists,
+    );
+
     this._commitToGit = new CommitToGitUseCase(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
@@ -298,6 +308,11 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.eventEmitterService,
       this.accountsPort,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('GitAdapter initialized successfully with all use cases');
   }
@@ -420,6 +435,12 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       repo,
       branch,
     });
+  }
+
+  public checkTrackedBranchExists(
+    command: CheckTrackedBranchExistsCommand,
+  ): Promise<CheckTrackedBranchExistsResponse> {
+    return this._checkTrackedBranchExists.execute(command);
   }
 
   public commitToGit(

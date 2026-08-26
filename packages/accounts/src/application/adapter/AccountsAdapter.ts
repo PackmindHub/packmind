@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IBaseAdapter,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   ActivateUserAccountCommand,
@@ -331,6 +332,11 @@ export class AccountsAdapter
     } else {
       this.logger.debug('API key use cases skipped - service not available');
     }
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('AccountsAdapter initialized successfully');
   }

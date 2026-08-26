@@ -26,6 +26,7 @@ import { getAgentHomeDirPrefix } from '../../infra/utils/agentHomeDirectory';
 import { stripFullStandardLinkFooter } from '../../infra/utils/stripFullStandardLinkFooter';
 import { displayableParsedPackageSlug } from '../../domain/entities/PackageSlug';
 import assert from 'assert';
+import { EXEC_NAME } from '../../infra/utils/execName';
 
 export class InstallUseCase implements IInstallUseCase {
   constructor(
@@ -85,7 +86,7 @@ export class InstallUseCase implements IInstallUseCase {
         );
       }
       throw new Error(
-        'No packmind.json found in this directory. Run `packmind-cli install <@space/package>` first to install your packages.',
+        `No packmind.json found in this directory. Run \`${EXEC_NAME} install <@space/package>\` first to install your packages.`,
       );
     }
 

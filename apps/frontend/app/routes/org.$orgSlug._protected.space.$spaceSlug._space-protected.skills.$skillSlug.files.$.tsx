@@ -1,17 +1,18 @@
 import { useCallback, useMemo, type MouseEvent } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { PMVStack } from '@packmind/ui';
-import { createSkillFileId, SkillFile } from '@packmind/types';
 
 import { SkillFilePreview } from '../../src/domain/skills/components/SkillFilePreview';
 import { SkillFrontmatterInfo } from '../../src/domain/skills/components/SkillFrontmatterInfo';
-import { buildSkillMdContent } from '../../src/domain/skills/utils/skillMdUtils';
+import {
+  buildSkillMdContent,
+  buildVirtualSkillMdFile,
+  SKILL_MD_FILENAME,
+} from '../../src/domain/skills/utils/skillMdUtils';
 import { buildSkillLinkTransformer } from '../../src/domain/skills/utils/skillLinkUtils';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useGetSpaceMembersQuery } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import type { ISkillDetailsOutletContext } from './org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug';
-
-const SKILL_MD_FILENAME = 'SKILL.md';
 
 export default function SkillFilesRouteModule() {
   const {
@@ -42,16 +43,8 @@ export default function SkillFilesRouteModule() {
   const isCreator = skill.userId === user?.id;
   const canEditSkillFiles = isSpaceAdmin || isOrgAdmin || isCreator;
 
-  // Create virtual SKILL.md file (content is body only — frontmatter is shown separately)
-  const skillMdFile = useMemo<SkillFile>(
-    () => ({
-      id: createSkillFileId(''),
-      skillVersionId: latestVersion.id,
-      permissions: '',
-      path: SKILL_MD_FILENAME,
-      content: latestVersion.prompt,
-      isBase64: false,
-    }),
+  const skillMdFile = useMemo(
+    () => buildVirtualSkillMdFile(latestVersion),
     [latestVersion],
   );
 

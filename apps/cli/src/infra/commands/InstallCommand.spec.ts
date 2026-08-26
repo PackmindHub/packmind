@@ -78,6 +78,7 @@ import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { bootstrapInstallContext } from './bootstrapInstallContext';
 import { isAgentHomeDirectory } from '../utils/agentHomeDirectory';
 import { parsePackageSlug } from '../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../utils/execName';
 
 const mockBootstrap = bootstrapInstallContext as jest.MockedFunction<
   typeof bootstrapInstallContext
@@ -1108,9 +1109,9 @@ describe('installCommand', () => {
         );
       });
 
-      it('includes the actionable hint pointing to packmind-cli config agents', () => {
+      it('includes the actionable hint pointing to the config agents command', () => {
         expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
-          expect.stringContaining('packmind-cli config agents'),
+          expect.stringContaining(`${EXEC_NAME} config agents`),
         );
       });
 
@@ -1627,6 +1628,7 @@ describe('installCommand', () => {
               notifyArtefactsDistribution: mockNotifyArtefactsDistribution,
               getGitRemoteUrlFromPath: mockGetGitRemoteUrlFromPath,
               getCurrentBranch: mockGetCurrentBranch,
+              isDetachedHead: jest.fn().mockReturnValue(false),
             }) as unknown as PackmindCliHexa,
         );
 
@@ -1689,6 +1691,7 @@ describe('installCommand', () => {
             getTrackedRepository: mockGetTrackedRepository,
             getGitRemoteUrlFromPath: jest.fn().mockReturnValue(remoteUrl),
             getCurrentBranch: jest.fn().mockReturnValue(branch),
+            isDetachedHead: jest.fn().mockReturnValue(false),
           }) as unknown as PackmindCliHexa,
       );
     };
@@ -1716,6 +1719,85 @@ describe('installCommand', () => {
     afterEach(() => {
       readFileSyncSpy.mockRestore();
       mockFs.readdirSync.mockReturnValue([]);
+    });
+
+    // A merged pull request whose branch was deleted leaves tracking pointing at
+    // a branch nobody can check out again.
+    describe('when the tracked branch is not in the repository', () => {
+      it('skips with a tracked_branch_gone reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => false,
+            lookup: {
+              status: 'resolved',
+              trackedGitRepo: { branch: 'feature/login' },
+            },
+            currentBranch: 'main',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'tracked_branch_gone',
+          trackedBranch: 'feature/login',
+        });
+      });
+    });
+
+    describe('when git cannot say whether the tracked branch exists', () => {
+      // Never claim a branch is gone on a guess: the plain mismatch message
+      // holds either way.
+      it('falls back to the wrong_branch reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => true,
+            lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+            currentBranch: 'dev',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'wrong_branch',
+          trackedBranch: 'main',
+        });
+      });
+    });
+
+    describe('when HEAD is detached', () => {
+      it('skips with a detached_head reason', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => true,
+            detached: true,
+            lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
+            // What git answers for a detached HEAD.
+            currentBranch: 'HEAD',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'detached_head',
+          trackedBranch: 'main',
+        });
+      });
+    });
+
+    describe('when HEAD is detached and the tracked branch is gone too', () => {
+      // The branch being gone is the one nobody can work around by checking it
+      // out, so it wins.
+      it('reports the missing branch rather than the detachment', () => {
+        expect(
+          decideDistributionTracking({
+            branchExists: () => false,
+            detached: true,
+            lookup: {
+              status: 'resolved',
+              trackedGitRepo: { branch: 'feature/login' },
+            },
+            currentBranch: 'HEAD',
+          }),
+        ).toEqual({
+          action: 'skip',
+          reason: 'tracked_branch_gone',
+          trackedBranch: 'feature/login',
+        });
+      });
     });
 
     describe('when on the tracked repository and branch', () => {
@@ -1849,6 +1931,8 @@ describe('decideDistributionTracking', () => {
     it('records unconditionally (legacy behaviour)', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
+          detached: false,
           lookup: { status: 'flag-off' },
           currentBranch: 'main',
         }),
@@ -1860,6 +1944,8 @@ describe('decideDistributionTracking', () => {
     it('informs the user', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
+          detached: false,
           lookup: { status: 'unavailable' },
           currentBranch: 'main',
         }),
@@ -1871,6 +1957,8 @@ describe('decideDistributionTracking', () => {
     it('skips with a repo_not_tracked reason', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: null },
           currentBranch: 'main',
         }),
@@ -1882,6 +1970,8 @@ describe('decideDistributionTracking', () => {
     it('skips with a wrong_branch reason and the tracked branch', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'dev',
         }),
@@ -1897,6 +1987,8 @@ describe('decideDistributionTracking', () => {
     it('records the distribution', () => {
       expect(
         decideDistributionTracking({
+          branchExists: () => true,
+          detached: false,
           lookup: { status: 'resolved', trackedGitRepo: { branch: 'main' } },
           currentBranch: 'main',
         }),

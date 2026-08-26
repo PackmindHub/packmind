@@ -11,6 +11,7 @@ import * as configAgentsHandlerModule from './config/configAgentsHandler';
 import * as incompatibleSkillsHandler from './skills/incompatibleSkillsHandler';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 import { TrackRepositoryFunction } from './trackHandler';
+import { EXEC_NAME } from '../utils/execName';
 
 jest.mock('inquirer', () => ({
   __esModule: true,
@@ -467,9 +468,9 @@ describe('initHandler', () => {
       );
     });
 
-    it('includes the actionable hint pointing to packmind-cli config agents', () => {
+    it('includes the actionable hint pointing to the config agents command', () => {
       expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
-        expect.stringContaining('packmind-cli config agents'),
+        expect.stringContaining(`${EXEC_NAME} config agents`),
       );
     });
 

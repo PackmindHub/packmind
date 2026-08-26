@@ -48,7 +48,7 @@ export const CliManagedTable: React.FC<CliManagedTableProps> = ({
                 bg="background.tertiary"
                 color="text.primary"
               >
-                packmind-cli
+                packmind
               </PMBox>
             </PMText>
           </PMAlert.Title>
@@ -282,7 +282,7 @@ const EmptyState: React.FC = () => (
         bg="background.tertiary"
         color="text.faded"
       >
-        packmind-cli pull
+        packmind pull
       </PMBox>{' '}
       against a repo.
     </PMText>

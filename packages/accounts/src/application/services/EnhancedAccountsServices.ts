@@ -9,7 +9,7 @@ import { UserMetadataService } from './UserMetadataService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { SmtpMailService } from '@packmind/node-utils';
+import { instrumentComponents, SmtpMailService } from '@packmind/node-utils';
 
 /**
  * Enhanced AccountsServices that can accept an optional API key service
@@ -61,6 +61,19 @@ export class EnhancedAccountsServices {
     logger.info('EnhancedAccountsServices initialized', {
       hasApiKeyService: !!this.apiKeyService,
     });
+
+    // Services are where the domain logic that is not a query lives, and they
+    // have no shared base class to hook - so the aggregator is the seam.
+    instrumentComponents([
+      this.userService,
+      this.organizationService,
+      this.membershipResolutionService,
+      this.invitationService,
+      this.passwordResetTokenService,
+      this.loginRateLimiterService,
+      this.userMetadataService,
+      this.apiKeyService,
+    ]);
   }
 
   getUserService(): UserService {

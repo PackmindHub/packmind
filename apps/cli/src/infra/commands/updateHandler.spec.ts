@@ -2,19 +2,24 @@ import {
   updateHandler,
   IUpdateHandlerDependencies,
   getPlatformAssetSuffix,
+  getReleaseAssetName,
   fetchLatestVersionFromNpm,
   fetchLatestVersionFromGitHub,
   isLocalNpmPackage,
   isHomebrewInstall,
-  createForwardCompatSymlink,
+  createLegacyExecAlias,
+  resolveUpdateTargetPath,
 } from './updateHandler';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as fs from 'fs';
+import * as childProcess from 'child_process';
+import { Writable } from 'stream';
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
   logSuccessConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
   logConsole: jest.fn(),
 }));
 
@@ -23,7 +28,41 @@ jest.mock('fs', () => ({
   realpathSync: jest.fn((p: string) => p),
   symlinkSync: jest.fn(),
   unlinkSync: jest.fn(),
+  lstatSync: jest.fn(),
+  statSync: jest.fn(),
+  renameSync: jest.fn(),
+  chmodSync: jest.fn(),
+  createWriteStream: jest.fn(),
 }));
+
+// The npm-mode update shells out to `npm install -g`. Without this mock the
+// suite really installed the package globally on the developer's machine,
+// downgrading their CLI to whatever version the test mocked.
+jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
+  execSync: jest.fn(),
+}));
+
+// A downloaded-asset response whose body streams a few bytes.
+function downloadResponse(): Response {
+  return {
+    ok: true,
+    body: new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(16));
+        controller.close();
+      },
+    }),
+  } as unknown as Response;
+}
+
+function discardingWriteStream(): Writable {
+  return new Writable({
+    write(_chunk, _encoding, callback) {
+      callback();
+    },
+  });
+}
 
 const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
@@ -35,7 +74,23 @@ describe('updateHandler', () => {
     .mockImplementation(() => undefined as never);
 
   beforeEach(() => {
+    // clearAllMocks() keeps implementations, so a suite that makes one of these
+    // throw would otherwise leak that behavior into every later suite.
+    (fs.symlinkSync as jest.Mock).mockReset();
+    (fs.unlinkSync as jest.Mock).mockReset();
+    (fs.renameSync as jest.Mock).mockReset();
+    (fs.chmodSync as jest.Mock).mockReset();
+    (childProcess.execSync as jest.Mock).mockReset();
+
     (fs.realpathSync as jest.Mock).mockImplementation((p: string) => p);
+    // Fresh install by default: nothing at the target path yet
+    (fs.lstatSync as jest.Mock).mockImplementation(() => {
+      throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+    });
+    (fs.statSync as jest.Mock).mockReturnValue({ size: 2_000_000 });
+    (fs.createWriteStream as jest.Mock).mockImplementation(() =>
+      discardingWriteStream(),
+    );
 
     mockFetch = jest.fn();
     deps = {
@@ -68,14 +123,40 @@ describe('updateHandler', () => {
       expect(getPlatformAssetSuffix('linux', 'arm64')).toBe('linux-arm64');
     });
 
-    it('returns windows-x64.exe for win32 x64', () => {
-      expect(getPlatformAssetSuffix('win32', 'x64')).toBe('windows-x64.exe');
+    it('returns windows-x64 for win32 x64', () => {
+      expect(getPlatformAssetSuffix('win32', 'x64')).toBe('windows-x64');
     });
 
     it('throws for unsupported platform', () => {
       expect(() => getPlatformAssetSuffix('freebsd', 'x64')).toThrow(
         'Unsupported platform: freebsd',
       );
+    });
+  });
+
+  describe('getReleaseAssetName', () => {
+    // These are the names published by .github/workflows/publish-cli-release.yml
+    // and downloaded by apps/cli/scripts/install.sh. They are the contract:
+    // every existing install self-updates against these exact strings.
+    it.each([
+      ['linux', 'x64', 'packmind-cli-linux-x64-0.19.0'],
+      ['linux', 'arm64', 'packmind-cli-linux-arm64-0.19.0'],
+      ['darwin', 'arm64', 'packmind-cli-macos-arm64-0.19.0'],
+      ['darwin', 'x64', 'packmind-cli-macos-x64-baseline-0.19.0'],
+    ])('names the %s %s asset without an extension', (platform, arch, name) => {
+      expect(getReleaseAssetName(platform, arch, '0.19.0')).toBe(name);
+    });
+
+    describe('on win32', () => {
+      // The .exe must come LAST, after the version. Appending it to the
+      // platform suffix produced `packmind-cli-windows-x64.exe-0.19.0`, which
+      // is never published, so every Windows update 404'd.
+      it.each([
+        ['x64', 'packmind-cli-windows-x64-0.19.0.exe'],
+        ['arm64', 'packmind-cli-windows-arm64-0.19.0.exe'],
+      ])('puts .exe after the version for %s', (arch, name) => {
+        expect(getReleaseAssetName('win32', arch, '0.19.0')).toBe(name);
+      });
     });
   });
 
@@ -368,22 +449,35 @@ describe('updateHandler', () => {
       });
     });
 
-    it('fetches from npm registry', async () => {
-      deps.isExecutableMode = false;
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ version: '0.19.0' }),
-      } as Response);
+    describe('when an update is available', () => {
+      beforeEach(async () => {
+        deps.isExecutableMode = false;
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ version: '0.19.0' }),
+        } as Response);
 
-      try {
         await updateHandler(deps);
-      } catch {
-        // execSync will throw in test environment
-      }
+      });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://registry.npmjs.org/@packmind/cli/latest',
-      );
+      it('fetches from npm registry', () => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://registry.npmjs.org/@packmind/cli/latest',
+        );
+      });
+
+      it('installs the new version globally via npm', () => {
+        expect(childProcess.execSync).toHaveBeenCalledWith(
+          'npm install -g @packmind/cli@0.19.0',
+          { stdio: 'inherit' },
+        );
+      });
+
+      it('reports the update', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Updated to v0.19.0',
+        );
+      });
     });
 
     describe('when version check fails', () => {
@@ -451,63 +545,173 @@ describe('updateHandler', () => {
     });
   });
 
-  describe('createForwardCompatSymlink', () => {
+  describe('resolveUpdateTargetPath', () => {
+    it('targets packmind next to the invoked binary', () => {
+      expect(
+        resolveUpdateTargetPath('/home/user/.packmind/bin/packmind', 'linux'),
+      ).toBe('/home/user/.packmind/bin/packmind');
+    });
+
+    describe('when invoked under the legacy name', () => {
+      it('still targets packmind', () => {
+        expect(
+          resolveUpdateTargetPath(
+            '/home/user/.packmind/bin/packmind-cli',
+            'linux',
+          ),
+        ).toBe('/home/user/.packmind/bin/packmind');
+      });
+    });
+
+    it('appends .exe on win32', () => {
+      expect(
+        resolveUpdateTargetPath(
+          'C:/Users/u/.packmind/bin/packmind-cli.exe',
+          'win32',
+        ),
+      ).toBe('C:/Users/u/.packmind/bin/packmind.exe');
+    });
+
+    describe('when the binary was invoked under an unrecognised name', () => {
+      // The getting-started guide presents running the downloaded asset
+      // directly as a supported layout (moving it into PATH is "Optional"), so
+      // this name reaches `update` in the wild. Redirecting it would write a
+      // stray `packmind` and leave the invoked binary on its old version.
+      it('updates the invoked binary in place', () => {
+        expect(
+          resolveUpdateTargetPath(
+            '/home/user/Downloads/packmind-cli-linux-x64-0.33.0',
+            'linux',
+          ),
+        ).toBe('/home/user/Downloads/packmind-cli-linux-x64-0.33.0');
+      });
+
+      it('does not append .exe on win32 either', () => {
+        expect(
+          resolveUpdateTargetPath(
+            'C:/Users/u/Downloads/packmind-cli-windows-x64-0.33.0.exe',
+            'win32',
+          ),
+        ).toBe('C:/Users/u/Downloads/packmind-cli-windows-x64-0.33.0.exe');
+      });
+    });
+  });
+
+  describe('createLegacyExecAlias', () => {
     beforeEach(() => {
       (fs.unlinkSync as jest.Mock).mockReset();
       (fs.symlinkSync as jest.Mock).mockReset();
     });
 
-    describe('when running as packmind-cli', () => {
+    describe('on a POSIX install', () => {
       beforeEach(() => {
-        createForwardCompatSymlink('/usr/local/bin/packmind-cli', 'linux');
-      });
-
-      it('creates packmind symlink', () => {
-        expect(fs.symlinkSync).toHaveBeenCalledWith(
-          'packmind-cli',
-          '/usr/local/bin/packmind',
+        createLegacyExecAlias(
+          '/home/user/.packmind/bin/packmind',
+          'linux',
+          '/home/user/.packmind/bin/packmind',
         );
       });
 
-      it('removes existing symlink before creating new one', () => {
-        expect(fs.unlinkSync).toHaveBeenCalledWith('/usr/local/bin/packmind');
-      });
-    });
-
-    describe('when running as packmind', () => {
-      beforeEach(() => {
-        createForwardCompatSymlink('/usr/local/bin/packmind', 'linux');
-      });
-
-      it('does not create any symlink', () => {
-        expect(fs.symlinkSync).not.toHaveBeenCalled();
-      });
-
-      it('does not remove any file', () => {
-        expect(fs.unlinkSync).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when running on Windows', () => {
-      it('uses .exe extension', () => {
-        createForwardCompatSymlink('C:/bin/packmind-cli.exe', 'win32');
-
+      it('stages the symlink under a temporary name', () => {
         expect(fs.symlinkSync).toHaveBeenCalledWith(
-          'packmind-cli.exe',
+          'packmind',
+          '/home/user/.packmind/bin/packmind-cli.new-alias',
+        );
+      });
+
+      it('renames the staged link over packmind-cli', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind-cli.new-alias',
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+      });
+
+      // The point of staging: packmind-cli is the name existing user scripts
+      // call, so it must never be removed before a replacement exists.
+      it('never unlinks packmind-cli itself', () => {
+        expect(fs.unlinkSync).not.toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+      });
+
+      it('returns true', () => {
+        expect(
+          createLegacyExecAlias(
+            '/home/user/.packmind/bin/packmind',
+            'linux',
+            '/home/user/.packmind/bin/packmind',
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when invoked through the legacy name on POSIX', () => {
+      it('still replaces packmind-cli with a symlink', () => {
+        createLegacyExecAlias(
+          '/home/user/.packmind/bin/packmind',
+          'linux',
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind-cli.new-alias',
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+      });
+    });
+
+    describe('on win32', () => {
+      it('uses the .exe extension', () => {
+        createLegacyExecAlias(
+          'C:/bin/packmind.exe',
+          'win32',
           'C:/bin/packmind.exe',
         );
+
+        expect(fs.symlinkSync).toHaveBeenCalledWith(
+          'packmind.exe',
+          'C:/bin/packmind-cli.exe.new-alias',
+        );
       });
     });
 
-    describe('when running with an unknown binary name', () => {
-      it('does nothing', () => {
-        createForwardCompatSymlink('/usr/local/bin/custom-cli', 'linux');
+    describe('when the legacy binary is the running executable on win32', () => {
+      beforeEach(() => {
+        createLegacyExecAlias(
+          'C:/bin/packmind.exe',
+          'win32',
+          'C:\\bin\\packmind-cli.exe',
+        );
+      });
 
+      it('does not remove the running executable', () => {
+        expect(fs.unlinkSync).not.toHaveBeenCalled();
+      });
+
+      it('does not create the alias', () => {
         expect(fs.symlinkSync).not.toHaveBeenCalled();
       });
+
+      it('tells the user how to finish the switch', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Windows cannot replace a running executable',
+          ),
+        );
+      });
+
+      it('reports that the alias was not created', () => {
+        expect(
+          createLegacyExecAlias(
+            'C:/bin/packmind.exe',
+            'win32',
+            'C:\\bin\\packmind-cli.exe',
+          ),
+        ).toBe(false);
+      });
     });
 
-    describe('when unlink throws (symlink does not exist)', () => {
+    describe('when unlink throws (no leftover staged link)', () => {
       beforeEach(() => {
         (fs.unlinkSync as jest.Mock).mockImplementation(() => {
           throw new Error('ENOENT');
@@ -516,14 +720,360 @@ describe('updateHandler', () => {
 
       it('does not fail', () => {
         expect(() =>
-          createForwardCompatSymlink('/usr/local/bin/packmind-cli', 'linux'),
+          createLegacyExecAlias('/usr/local/bin/packmind', 'linux'),
         ).not.toThrow();
       });
 
-      it('still creates the symlink', () => {
-        createForwardCompatSymlink('/usr/local/bin/packmind-cli', 'linux');
+      it('still creates the alias', () => {
+        createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
 
         expect(fs.symlinkSync).toHaveBeenCalled();
+      });
+    });
+
+    describe('when symlink creation fails', () => {
+      beforeEach(() => {
+        (fs.symlinkSync as jest.Mock).mockImplementation(() => {
+          throw new Error('EPERM');
+        });
+      });
+
+      it('does not fail', () => {
+        expect(() =>
+          createLegacyExecAlias('/usr/local/bin/packmind', 'linux'),
+        ).not.toThrow();
+      });
+
+      // Same wording and severity as install.sh: the failure must not be
+      // silent, because packmind-cli is the name existing scripts invoke.
+      it('warns that the alias could not be created', () => {
+        createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
+
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          'Could not create legacy alias: /usr/local/bin/packmind-cli -> packmind (non-critical)',
+        );
+      });
+
+      it('does not unlink packmind-cli', () => {
+        createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
+
+        expect(fs.unlinkSync).not.toHaveBeenCalledWith(
+          '/usr/local/bin/packmind-cli',
+        );
+      });
+
+      it('does not rename anything', () => {
+        createLegacyExecAlias('/usr/local/bin/packmind', 'linux');
+
+        expect(fs.renameSync).not.toHaveBeenCalled();
+      });
+
+      it('reports that the alias was not created', () => {
+        expect(createLegacyExecAlias('/usr/local/bin/packmind', 'linux')).toBe(
+          false,
+        );
+      });
+    });
+  });
+
+  describe('updateHandler - executable replace', () => {
+    const originalArgv = process.argv;
+
+    beforeEach(() => {
+      deps.isExecutableMode = true;
+      deps.platform = 'linux';
+      deps.arch = 'x64';
+      deps.executablePath = '/home/user/.packmind/bin/packmind';
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [{ tag_name: 'release-cli/0.19.0' }],
+        } as Response)
+        .mockResolvedValueOnce(downloadResponse());
+    });
+
+    afterEach(() => {
+      process.argv = originalArgv;
+    });
+
+    describe('on a fresh install', () => {
+      beforeEach(async () => {
+        await updateHandler(deps);
+      });
+
+      it('downloads the unchanged release asset name', () => {
+        expect(mockFetch).toHaveBeenLastCalledWith(
+          'https://github.com/PackmindHub/packmind/releases/download/release-cli/0.19.0/packmind-cli-linux-x64-0.19.0',
+          { redirect: 'follow' },
+        );
+      });
+
+      it('renames the download onto packmind', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind.update-tmp',
+          '/home/user/.packmind/bin/packmind',
+        );
+      });
+
+      it('does not unlink the target', () => {
+        expect(fs.unlinkSync).not.toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind',
+        );
+      });
+
+      it('makes packmind executable', () => {
+        expect(fs.chmodSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind',
+          0o755,
+        );
+      });
+
+      it('points packmind-cli at packmind', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind-cli.new-alias',
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+      });
+
+      it('reports the canonical binary location', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          'Binary location: /home/user/.packmind/bin/packmind',
+        );
+      });
+    });
+
+    describe('when migrating an old-layout install', () => {
+      beforeEach(async () => {
+        // packmind is still a symlink pointing at the real packmind-cli binary
+        (fs.lstatSync as jest.Mock).mockReturnValue({
+          isSymbolicLink: () => true,
+        });
+        await updateHandler(deps);
+      });
+
+      it('unlinks the packmind symlink', () => {
+        expect(fs.unlinkSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind',
+        );
+      });
+
+      it('unlinks it before renaming the download into place', () => {
+        const unlinkOrder = (fs.unlinkSync as jest.Mock).mock
+          .invocationCallOrder[0];
+        const renameOrder = (fs.renameSync as jest.Mock).mock
+          .invocationCallOrder[0];
+
+        expect(unlinkOrder).toBeLessThan(renameOrder);
+      });
+
+      it('still installs at the canonical name', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind.update-tmp',
+          '/home/user/.packmind/bin/packmind',
+        );
+      });
+
+      it('inverts the alias so packmind-cli points at packmind', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind-cli.new-alias',
+          '/home/user/.packmind/bin/packmind-cli',
+        );
+      });
+    });
+
+    describe('when invoked under the legacy name', () => {
+      beforeEach(async () => {
+        deps.executablePath = '/home/user/.packmind/bin/packmind-cli';
+        process.argv = ['/home/user/.packmind/bin/packmind-cli', 'update'];
+        await updateHandler(deps);
+      });
+
+      it('names the canonical executable as the one being updated', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "The 'packmind' executable is the one being updated",
+          ),
+        );
+      });
+
+      it('updates packmind rather than the invoked binary', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/.packmind/bin/packmind.update-tmp',
+          '/home/user/.packmind/bin/packmind',
+        );
+      });
+
+      it('reports a successful update', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Updated to v0.19.0',
+        );
+      });
+    });
+
+    describe('when the running executable is packmind-cli.exe on win32', () => {
+      beforeEach(async () => {
+        deps.platform = 'win32';
+        deps.executablePath = 'C:/Users/u/.packmind/bin/packmind-cli.exe';
+        await updateHandler(deps);
+      });
+
+      // The published Windows asset carries the extension AFTER the version.
+      // This URL is the whole point of the fix: the previous one
+      // (…/packmind-cli-windows-x64.exe-0.19.0) does not exist.
+      it('downloads the published windows asset URL', () => {
+        expect(mockFetch).toHaveBeenLastCalledWith(
+          'https://github.com/PackmindHub/packmind/releases/download/release-cli/0.19.0/packmind-cli-windows-x64-0.19.0.exe',
+          { redirect: 'follow' },
+        );
+      });
+
+      it('installs packmind.exe', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          'C:/Users/u/.packmind/bin/packmind.exe.update-tmp',
+          'C:/Users/u/.packmind/bin/packmind.exe',
+        );
+      });
+
+      it('does not chmod on win32', () => {
+        expect(fs.chmodSync).not.toHaveBeenCalled();
+      });
+
+      it('does not unlink the running packmind-cli.exe', () => {
+        expect(fs.unlinkSync).not.toHaveBeenCalled();
+      });
+
+      it('does not create a legacy alias', () => {
+        expect(fs.symlinkSync).not.toHaveBeenCalled();
+      });
+
+      // packmind-cli.exe is typically a real copy on Windows, so it stays on
+      // the old version. Printing a bare "Updated to vX" here contradicted the
+      // adjacent hint and the version the user would keep seeing.
+      it('reports which executable actually advanced', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Updated packmind.exe to v0.19.0',
+        );
+      });
+
+      it('warns that the invoked executable was not updated', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          'packmind-cli.exe was NOT updated and still runs v0.18.0.\n' +
+            "Run 'packmind' from now on, or re-run the installer to replace packmind-cli.exe.",
+        );
+      });
+
+      it('does not claim a plain success', () => {
+        expect(mockConsoleLogger.logSuccessConsole).not.toHaveBeenCalledWith(
+          'Updated to v0.19.0',
+        );
+      });
+    });
+
+    describe('when packmind.exe itself is the running executable on win32', () => {
+      beforeEach(async () => {
+        deps.platform = 'win32';
+        deps.executablePath = 'C:/Users/u/.packmind/bin/packmind.exe';
+        await updateHandler(deps);
+      });
+
+      it('downloads the published windows asset URL', () => {
+        expect(mockFetch).toHaveBeenLastCalledWith(
+          'https://github.com/PackmindHub/packmind/releases/download/release-cli/0.19.0/packmind-cli-windows-x64-0.19.0.exe',
+          { redirect: 'follow' },
+        );
+      });
+
+      it('installs packmind.exe', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          'C:/Users/u/.packmind/bin/packmind.exe.update-tmp',
+          'C:/Users/u/.packmind/bin/packmind.exe',
+        );
+      });
+
+      it('reports a plain success, since the invoked file advanced', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Updated to v0.19.0',
+        );
+      });
+    });
+
+    describe('when the binary was invoked under an unrecognised name', () => {
+      beforeEach(async () => {
+        deps.executablePath =
+          '/home/user/Downloads/packmind-cli-linux-x64-0.18.0';
+        await updateHandler(deps);
+      });
+
+      it('replaces the invoked binary in place', () => {
+        expect(fs.renameSync).toHaveBeenCalledWith(
+          '/home/user/Downloads/packmind-cli-linux-x64-0.18.0.update-tmp',
+          '/home/user/Downloads/packmind-cli-linux-x64-0.18.0',
+        );
+      });
+
+      it('does not write a stray packmind next to it', () => {
+        expect(fs.renameSync).not.toHaveBeenCalledWith(
+          expect.anything(),
+          '/home/user/Downloads/packmind',
+        );
+      });
+
+      it('does not create a legacy alias beside it', () => {
+        expect(fs.symlinkSync).not.toHaveBeenCalled();
+      });
+
+      it('reports the invoked binary as the updated one', () => {
+        expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
+          'Binary location: /home/user/Downloads/packmind-cli-linux-x64-0.18.0',
+        );
+      });
+
+      it('reports a plain success, since the invoked file advanced', () => {
+        expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
+          'Updated to v0.19.0',
+        );
+      });
+    });
+
+    describe('when an unrelated regular file already sits at the target', () => {
+      beforeEach(async () => {
+        deps.executablePath = '/home/user/.packmind/bin/packmind-cli';
+        (fs.lstatSync as jest.Mock).mockReturnValue({
+          isSymbolicLink: () => false,
+          isFile: () => true,
+        });
+        await updateHandler(deps);
+      });
+
+      it('says it is replacing that file instead of doing it silently', () => {
+        expect(mockConsoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          'Replacing the existing file at /home/user/.packmind/bin/packmind',
+        );
+      });
+    });
+
+    describe('when the target path is not a file', () => {
+      beforeEach(async () => {
+        deps.executablePath = '/home/user/.packmind/bin/packmind-cli';
+        (fs.lstatSync as jest.Mock).mockReturnValue({
+          isSymbolicLink: () => false,
+          isFile: () => false,
+        });
+        await updateHandler(deps);
+      });
+
+      it('refuses to install over it', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          'Update failed: Cannot install at /home/user/.packmind/bin/packmind: it already exists and is not a file.',
+        );
+      });
+
+      it('installs nothing', () => {
+        expect(fs.renameSync).not.toHaveBeenCalled();
+      });
+
+      it('does not download the asset', () => {
+        expect(mockFetch).toHaveBeenCalledTimes(1);
       });
     });
   });

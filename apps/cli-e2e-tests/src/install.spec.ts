@@ -294,8 +294,8 @@ describe('...', () => {
                 expect(result.stdout).toContain('skills');
               });
 
-              it('suggests packmind-cli config agents', () => {
-                expect(result.stdout).toContain('packmind-cli config agents');
+              it('suggests packmind config agents', () => {
+                expect(result.stdout).toContain('packmind config agents');
               });
             });
           });

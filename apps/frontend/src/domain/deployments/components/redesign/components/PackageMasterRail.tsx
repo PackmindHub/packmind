@@ -276,7 +276,7 @@ function PackageRow({
     ? `${failedInstallCount} of ${totalInstalls} distribution${totalInstalls === 1 ? '' : 's'} failed`
     : hasDrift
       ? lockProfile === 'all-no-app-token'
-        ? `${behindInstallCount} drifted, all via packmind-cli install`
+        ? `${behindInstallCount} drifted, all via packmind install`
         : lockProfile === 'all-in-progress'
           ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} in progress`
           : `${behindInstallCount} of ${totalInstalls} distributions behind`
@@ -285,7 +285,7 @@ function PackageRow({
     ? `Package ${pkg.name}, ${failedInstallCount} of ${totalInstalls} distributions failed`
     : hasDrift
       ? lockProfile === 'all-no-app-token'
-        ? `Package ${pkg.name}, ${behindInstallCount} drifted via packmind-cli install`
+        ? `Package ${pkg.name}, ${behindInstallCount} drifted via packmind install`
         : lockProfile === 'all-in-progress'
           ? `Package ${pkg.name}, ${behindInstallCount} in progress`
           : `Package ${pkg.name}, ${behindInstallCount} of ${totalInstalls} distributions behind`

@@ -26,6 +26,7 @@ import {
 
 import {
   buildPackageDriftOverview,
+  packageAttentionInstallCount,
   packageFailedInstallCount,
   packageHasDrift,
   packageHasFailedDistribution,
@@ -831,6 +832,71 @@ describe('sortPackagesByDriftFirst', () => {
 
       const sorted = sortPackagesByDriftFirst(packages);
       expect(sorted.map((p) => p.name)).toEqual(['Beta', 'Alpha']);
+    });
+  });
+});
+
+describe('packageAttentionInstallCount', () => {
+  describe('when the destination that failed is also behind', () => {
+    it('counts the destination once rather than both reasons', () => {
+      const packages = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 5, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageAttentionInstallCount(packages[0])).toBe(1);
+    });
+  });
+
+  describe('when one destination is behind and another one failed', () => {
+    it('counts both', () => {
+      const packages = buildPackageDriftOverview([
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-a') }),
+          target: makeTarget({ id: createTargetId('target-a') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 5, deployed: 1 })],
+            }),
+          ],
+        }),
+        makeByTarget({
+          gitRepo: makeRepo({ id: createGitRepoId('repo-b') }),
+          target: makeTarget({ id: createTargetId('target-b') }),
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.failure,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageAttentionInstallCount(packages[0])).toBe(2);
+    });
+  });
+
+  describe('when every destination is aligned and its last push succeeded', () => {
+    it('counts nothing', () => {
+      const packages = buildPackageDriftOverview([
+        makeByTarget({
+          packages: [
+            distributedPackage({
+              lastDistributionStatus: DistributionStatus.success,
+              standards: [makeStandardInfo({ latest: 1, deployed: 1 })],
+            }),
+          ],
+        }),
+      ]);
+
+      expect(packageAttentionInstallCount(packages[0])).toBe(0);
     });
   });
 });

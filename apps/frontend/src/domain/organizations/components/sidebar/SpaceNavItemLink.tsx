@@ -8,6 +8,12 @@ interface SpaceNavItemLinkProps {
   exact?: boolean;
   icon?: React.ReactNode;
   badge?: {
+    /*
+     * The palette name. Passed to PMBadge as `colorPalette`, which is what
+     * Chakra v3 calls it: `colorScheme` is the v2 name and is silently ignored,
+     * so every badge rendered here was the default grey whatever it asked for.
+     * The field keeps the older name because it is set from the other repo.
+     */
     text: string;
     colorScheme: string;
     tooltipLabel?: string;
@@ -66,14 +72,14 @@ export function SpaceNavItemLink(
               <PMTooltip label={badge.tooltipLabel}>
                 <PMBadge
                   size="sm"
-                  colorScheme={badge.colorScheme}
+                  colorPalette={badge.colorScheme}
                   fontSize="xs"
                 >
                   {badge.text}
                 </PMBadge>
               </PMTooltip>
             ) : (
-              <PMBadge size="sm" colorScheme={badge.colorScheme} fontSize="xs">
+              <PMBadge size="sm" colorPalette={badge.colorScheme} fontSize="xs">
                 {badge.text}
               </PMBadge>
             ))}

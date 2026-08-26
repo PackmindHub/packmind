@@ -15,6 +15,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreatePackageUseCase } from '../../application/useCases/CreatePackageUseCase';
 import { originSkillOption } from './sharedOptions';
 import { SpaceSlug } from './customParameters/SpaceSlug';
+import { EXEC_NAME } from '../utils/execName';
 
 export const createPackageCommand = command({
   name: 'create',
@@ -66,7 +67,7 @@ export const createPackageCommand = command({
           logConsole(`  ${formatLabel('Link:')}  ${result.webappUrl}`);
         }
         logConsole(
-          `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli install ${result.slug}`)}`,
+          `  ${formatLabel('Install:')}  ${formatCommand(`${EXEC_NAME} install ${result.slug}`)}`,
         );
         if (result.deduplicated) {
           logWarningConsole(

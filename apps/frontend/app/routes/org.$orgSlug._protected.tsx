@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 import { SidebarCollapseProvider } from '../../src/domain/organizations/components/SidebarCollapseContext';
+import { SpaceNavModeProvider } from '../../src/domain/organizations/components/SpaceNavModeContext';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries/UserQueries';
 import { useAuthErrorHandler } from '../../src/domain/accounts/hooks/useAuthErrorHandler';
 import {
@@ -87,23 +88,25 @@ export default function AuthenticatedLayout() {
 
   return (
     <SidebarCollapseProvider value={sidebarCollapseValue}>
-      <PMHStack
-        h="100%"
-        w="100%"
-        alignItems={'stretch'}
-        gap={0}
-        overflow={'hidden'}
-      >
-        <SidebarNavigation
-          organization={me.organization}
-          contentAreaRef={contentAreaRef}
-        />
-        <PMBox flex={'1'} h="100%" overflow={'auto'} position="relative">
-          <div ref={contentAreaRef} style={{ height: '100%' }}>
-            <Outlet />
-          </div>
-        </PMBox>
-      </PMHStack>
+      <SpaceNavModeProvider>
+        <PMHStack
+          h="100%"
+          w="100%"
+          alignItems={'stretch'}
+          gap={0}
+          overflow={'hidden'}
+        >
+          <SidebarNavigation
+            organization={me.organization}
+            contentAreaRef={contentAreaRef}
+          />
+          <PMBox flex={'1'} h="100%" overflow={'auto'} position="relative">
+            <div ref={contentAreaRef} style={{ height: '100%' }}>
+              <Outlet />
+            </div>
+          </PMBox>
+        </PMHStack>
+      </SpaceNavModeProvider>
     </SidebarCollapseProvider>
   );
 }

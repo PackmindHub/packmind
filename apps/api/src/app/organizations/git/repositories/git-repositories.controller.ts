@@ -21,6 +21,7 @@ import {
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
+  CheckTrackedBranchExistsResponse,
   NoTrackedRepositoryError,
   OrganizationId,
   RemoveTrackedRepositoryResponse,
@@ -261,6 +262,30 @@ export class GitRepositoriesController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Live probe against the Git provider: a branch deleted with its merged pull
+   * request leaves tracking pointing at something that is no longer there, and
+   * nothing records anymore. Not folded into `GET tracked-repository`, which
+   * the CLI calls on every `install` and must stay a database read.
+   */
+  @Get(':id/tracked-branch-exists')
+  async checkTrackedBranchExists(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Param('id') repositoryId: GitRepoId,
+  ): Promise<CheckTrackedBranchExistsResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/git/repositories/:id/tracked-branch-exists - Checking if the tracked branch still exists',
+      { organizationId, repositoryId },
+    );
+
+    return this.gitRepositoriesService.checkTrackedBranchExists(
+      req.user.userId,
+      organizationId,
+      repositoryId,
+    );
   }
 
   @Get(':id/available-remote-directories')

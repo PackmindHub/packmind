@@ -55,6 +55,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
       | 'setTrackedRepository'
       | 'updateTrackedBranch'
       | 'removeTrackedRepository'
+      | 'checkTrackedBranchExists'
     >
   >;
   let logger: jest.Mocked<PackmindLogger>;
@@ -81,6 +82,7 @@ describe('GitRepositoriesController tracked repository routes', () => {
       setTrackedRepository: jest.fn(),
       updateTrackedBranch: jest.fn(),
       removeTrackedRepository: jest.fn(),
+      checkTrackedBranchExists: jest.fn(),
     };
     logger = stubLogger();
 
@@ -91,6 +93,53 @@ describe('GitRepositoriesController tracked repository routes', () => {
   });
 
   afterEach(() => jest.clearAllMocks());
+
+  describe('checkTrackedBranchExists', () => {
+    const repositoryId = createGitRepoId('repo-1');
+
+    describe('when the provider no longer has the branch', () => {
+      let result: Awaited<
+        ReturnType<typeof controller.checkTrackedBranchExists>
+      >;
+
+      beforeEach(async () => {
+        mockService.checkTrackedBranchExists.mockResolvedValue({
+          exists: false,
+        });
+        result = await controller.checkTrackedBranchExists(
+          orgId,
+          mockRequest,
+          repositoryId,
+        );
+      });
+
+      it('reports the branch as absent', () => {
+        expect(result).toEqual({ exists: false });
+      });
+
+      // The branch is read from the stored repository, so the route needs no
+      // branch parameter at all — nothing to escape, nothing to mangle.
+      it('asks about the repository on behalf of the caller', () => {
+        expect(mockService.checkTrackedBranchExists).toHaveBeenCalledWith(
+          userId,
+          orgId,
+          repositoryId,
+        );
+      });
+    });
+
+    describe('when the branch is still there', () => {
+      it('reports the branch as present', async () => {
+        mockService.checkTrackedBranchExists.mockResolvedValue({
+          exists: true,
+        });
+
+        await expect(
+          controller.checkTrackedBranchExists(orgId, mockRequest, repositoryId),
+        ).resolves.toEqual({ exists: true });
+      });
+    });
+  });
 
   describe('getTrackedRepository', () => {
     describe('on happy path', () => {

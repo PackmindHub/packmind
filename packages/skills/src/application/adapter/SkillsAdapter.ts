@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IBaseAdapter,
   PackmindEventEmitterService,
+  instrumentUseCases,
 } from '@packmind/node-utils';
 import {
   CreateSkillCommand,
@@ -213,6 +214,11 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillFileService(),
       this.eventEmitterService,
     );
+
+    // Use cases have no base class to hook the way repositories and services
+    // do, and this is where every one of the domain's use cases is built - see
+    // docker/otel/README.md.
+    instrumentUseCases(this);
 
     this.logger.info('SkillsAdapter initialized successfully');
   }

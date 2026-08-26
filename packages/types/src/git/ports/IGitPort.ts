@@ -14,6 +14,8 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   FindOrCreateGitRepoCommand,
   FindOrCreateGitRepoResponse,
+  CheckTrackedBranchExistsCommand,
+  CheckTrackedBranchExistsResponse,
   GetAvailableRemoteDirectoriesCommand,
   GetTrackedRepositoryCommand,
   GetTrackedRepositoryResponse,
@@ -255,6 +257,22 @@ export interface IGitPort {
     repo: string,
     branch: string,
   ): Promise<boolean>;
+
+  /**
+   * Check whether the branch a repository is tracked on still exists on its
+   * provider — the state a merged pull request leaves behind when its branch is
+   * deleted, in which no distribution is recorded any more.
+   *
+   * The branch is read from the stored repository, and the answer is cached for
+   * a few minutes: pages that list many repositories ask this once per
+   * repository on every render.
+   *
+   * @param command - Command naming the repository whose tracked branch to check
+   * @returns Promise of whether the tracked branch exists
+   */
+  checkTrackedBranchExists(
+    command: CheckTrackedBranchExistsCommand,
+  ): Promise<CheckTrackedBranchExistsResponse>;
 
   /**
    * Probe a git provider's stored credentials against the upstream API to

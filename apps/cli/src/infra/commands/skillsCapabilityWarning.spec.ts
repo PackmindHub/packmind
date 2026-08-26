@@ -2,6 +2,7 @@ import {
   buildSkillsSkippedWarning,
   configuredAgentsSupportSkills,
 } from './skillsCapabilityWarning';
+import { EXEC_NAME } from '../utils/execName';
 
 describe('skillsCapabilityWarning', () => {
   describe('configuredAgentsSupportSkills', () => {
@@ -32,8 +33,8 @@ describe('skillsCapabilityWarning', () => {
         expect(warning).toContain('no coding agents are configured');
       });
 
-      it('points to packmind-cli config agents', () => {
-        expect(warning).toContain('packmind-cli config agents');
+      it('points to the config agents command', () => {
+        expect(warning).toContain(`${EXEC_NAME} config agents`);
       });
     });
 
@@ -48,8 +49,8 @@ describe('skillsCapabilityWarning', () => {
         expect(warning).toContain('do not support skills');
       });
 
-      it('points to packmind-cli config agents', () => {
-        expect(warning).toContain('packmind-cli config agents');
+      it('points to the config agents command', () => {
+        expect(warning).toContain(`${EXEC_NAME} config agents`);
       });
 
       it('includes a capable agent example', () => {

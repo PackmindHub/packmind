@@ -4,6 +4,12 @@ title: 'CLI: Command-Line Interface'
 
 ## Overview
 
+<Note>
+  **The command is `packmind`** — The older `packmind-cli` name still works, but
+  it is deprecated and will be removed in a future release. Update any scripts,
+  aliases, or CI jobs that still call `packmind-cli`.
+</Note>
+
 The Packmind CLI provides the following commands:
 
 - **`init`** - Initialize Packmind in your project (configure agents + install skills)
@@ -68,7 +74,7 @@ Simply copy the provided command and paste it into your terminal. The script han
 npm install -g @packmind/cli
 ```
 
-After installation, the `packmind-cli` command will be available globally.
+After installation, the `packmind` command will be available globally.
 
 **npx** (no installation required):
 
@@ -87,7 +93,9 @@ brew tap PackmindHub/cli
 brew install packmind-cli
 ```
 
-After installation, the `packmind-cli` command will be available globally.
+The Homebrew formula is still named `packmind-cli`, and it installs the
+executable under that name. If `packmind` is not found after a Homebrew
+install, use `packmind-cli`.
 
 ### Alternative: Standalone Executables
 
@@ -110,7 +118,7 @@ chmod +x packmind-cli-*-{version}
 
 ```bash
 # Linux/macOS
-sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
+sudo mv packmind-cli-*-{version} /usr/local/bin/packmind
 
 # Windows: Move to a directory in your PATH or run directly
 ```
@@ -118,11 +126,11 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 <Tip>
   **Choosing an Installation Method** — Use **one-click install** for the
   simplest experience with automatic authentication. Use **npm global** if you
-  want `packmind-cli` always available system-wide. Use **npx** for
-  project-specific usage or testing without installation. Use **Homebrew** if
-  you prefer managing packages through your system package manager
-  (macOS/Linux). Use **standalone executables** if you don't have Node.js
-  installed or need a specific binary for your environment.
+  want `packmind` always available system-wide. Use **npx** for project-specific
+  usage or testing without installation. Use **Homebrew** if you prefer managing
+  packages through your system package manager (macOS/Linux). Use **standalone
+  executables** if you don't have Node.js installed or need a specific binary
+  for your environment.
 </Tip>
 
 ## Authentication
@@ -134,7 +142,7 @@ The CLI requires authentication to communicate with your Packmind instance.
 The easiest way to authenticate is using the `login` command:
 
 ```bash
-packmind-cli login
+packmind login
 ```
 
 This will:
@@ -146,7 +154,7 @@ This will:
 **For self-hosted instances**, specify your host:
 
 ```bash
-packmind-cli login --host https://your-packmind-instance.com
+packmind login --host https://your-packmind-instance.com
 ```
 
 **Manual code entry** (if browser flow doesn't work):
@@ -154,7 +162,7 @@ packmind-cli login --host https://your-packmind-instance.com
 You can also enter a login code manually from the web interface:
 
 ```bash
-packmind-cli login --code YOUR_CODE_HERE
+packmind login --code YOUR_CODE_HERE
 ```
 
 ### Logout Command
@@ -162,7 +170,7 @@ packmind-cli login --code YOUR_CODE_HERE
 To clear stored credentials:
 
 ```bash
-packmind-cli logout
+packmind logout
 ```
 
 This removes the credentials file. If you also have `PACKMIND_API_KEY` set as an environment variable, you'll need to unset it separately:
@@ -176,7 +184,7 @@ unset PACKMIND_API_KEY
 Check your current authentication status:
 
 ```bash
-packmind-cli whoami
+packmind whoami
 ```
 
 This displays:
@@ -225,7 +233,7 @@ source ~/.zshrc
 - name: Install Packmind packages
   env:
     PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
-  run: packmind-cli install
+  run: packmind install
 ```
 
 <Tip>
@@ -249,7 +257,7 @@ The init command performs these main actions:
 ### Basic Usage
 
 ```bash
-packmind-cli init
+packmind init
 ```
 
 This will:
@@ -283,7 +291,7 @@ Next step: Run /packmind-onboard in your AI agent to onboard the project
 ```
 
 <Tip>
-  **First-time setup** — Run `packmind-cli init` after installing the CLI and
+  **First-time setup** — Run `packmind init` after installing the CLI and
   logging in. It's the quickest way to get Packmind configured for your project.
   After initialization, use the `/packmind-onboard` skill in your AI agent to
   scan your project and generate project-specific standards and commands.
@@ -303,9 +311,9 @@ The command has three subcommands: `git track` to set or move the tracked branch
 </Info>
 
 <Note>
-  **Renamed** — These used to be the top-level `packmind-cli track` and
-  `packmind-cli untrack` commands. The old names now exit with an error naming
-  their replacement.
+  **Renamed** — These used to be the top-level `packmind track` and `packmind
+  untrack` commands. The old names now exit with an error naming their
+  replacement.
 </Note>
 
 ### Git Track
@@ -317,7 +325,7 @@ Set which repository and branch Packmind tracks for your project.
 Run the command from inside your project to track the current repository and branch:
 
 ```bash
-packmind-cli git track
+packmind git track
 ```
 
 Packmind derives the repository and branch from your local git remote and current branch, then asks you to confirm before setting it:
@@ -333,7 +341,7 @@ If the branch you are on is already the tracked branch, the command reports that
 If a **different** branch is already tracked, the command stops and tells you to use `--update` to move it:
 
 ```
-Repository my-org/my-repo is already tracked on branch main. Run `packmind-cli git track --update` to move it to dev.
+Repository my-org/my-repo is already tracked on branch main. Run `packmind git track --update` to move it to dev.
 ```
 
 #### Track a Specific Branch
@@ -341,7 +349,7 @@ Repository my-org/my-repo is already tracked on branch main. Run `packmind-cli g
 Use `--branch` to name the branch explicitly instead of tracking whichever one you have checked out:
 
 ```bash
-packmind-cli git track --branch main
+packmind git track --branch main
 ```
 
 This is useful when you are working on a feature branch but want governance anchored to your default branch — you no longer have to `git checkout main` first. The branch does not need to be checked out locally.
@@ -354,12 +362,30 @@ Packmind now tracks my-org/my-repo on branch main.
 
 `--branch` works with `--update` too, to move tracking to a branch you are not currently on.
 
+The branch has to exist, though. A name Packmind cannot find in your repository is refused instead of being tracked, so a typo cannot leave you waiting for distributions that are never recorded:
+
+```
+Branch mian does not exist in my-org/my-repo. Check the spelling, or run `git fetch` first if the branch only exists on the remote.
+```
+
+Both local branches and branches you have fetched from the remote count. A branch created on the remote since your last fetch is unknown locally — run `git fetch` and try again.
+
+#### When No Branch Is Checked Out
+
+Mid-rebase, after `git checkout <commit>`, or in a CI job that checked out a pull request merge ref, your repository has no current branch — Git calls this a detached `HEAD`. There is nothing to track in that state, so the command stops instead of tracking a branch called `HEAD`:
+
+```
+No branch is checked out for my-org/my-repo — HEAD is detached. Check a branch out, or name one with `packmind git track --branch <name>`.
+```
+
+Naming the branch with `--branch` works as usual, so tracking can still be set from a detached checkout.
+
 #### Move the Tracked Branch
 
 Use the `--update` flag to move tracking to your current branch when a different branch is already tracked. Packmind asks you to confirm the change before applying it:
 
 ```bash
-packmind-cli git track --update
+packmind git track --update
 ```
 
 ```
@@ -371,7 +397,7 @@ Tracked branch for my-org/my-repo changed from main to dev.
 Add `--branch` to move tracking to a branch other than the one you have checked out:
 
 ```bash
-packmind-cli git track --update --branch main
+packmind git track --update --branch main
 ```
 
 If you cancel the prompt, the tracked branch is left unchanged.
@@ -381,13 +407,13 @@ Moving the tracked branch is **reversible**: the distributions recorded on the b
 If nothing is tracked yet, `--update` has nothing to move and points you to the commands that start tracking:
 
 ```
-Nothing is tracked yet — run `packmind-cli init` or `packmind-cli git track` to start tracking.
+Nothing is tracked yet — run `packmind init` or `packmind git track` to start tracking.
 ```
 
 <Tip>
-  **During onboarding** — `packmind-cli init` also offers to track the current
+  **During onboarding** — `packmind init` also offers to track the current
   repository and branch, so you can set the anchor as part of your first-time
-  setup. Use `packmind-cli git track` later to set or move it.
+  setup. Use `packmind git track` later to set or move it.
 </Tip>
 
 ### Git Untrack
@@ -401,7 +427,7 @@ Take a repository out of Packmind's governance views. Tracking applies to the re
 Run it from a clone of the repository. Packmind asks you to confirm first, and names the tracked branch so you can see what you are about to remove:
 
 ```bash
-packmind-cli git untrack
+packmind git untrack
 ```
 
 ```
@@ -410,9 +436,9 @@ Stop tracking my-org/my-repo? Packmind currently tracks branch main. (y/N)
 Packmind no longer tracks my-org/my-repo. Distributions recorded on branch main are kept and reappear if you track it again.
 ```
 
-The repository disappears from Distribution History and the Deployments overview. **Nothing is deleted** — run `packmind-cli git track` on the same branch again and the whole history comes back, with new distributions appended. See [Removing Tracking](/governance/distribution#removing-tracking).
+The repository disappears from Distribution History and the Deployments overview. **Nothing is deleted** — run `packmind git track` on the same branch again and the whole history comes back, with new distributions appended. See [Removing Tracking](/governance/distribution#removing-tracking).
 
-While the repository is untracked, `packmind-cli install` behaves as it does for a repository that was never tracked: it completes locally and tells you the distribution was not recorded.
+While the repository is untracked, `packmind install` behaves as it does for a repository that was never tracked: it completes locally and tells you the distribution was not recorded.
 
 Running `git untrack` on a repository that is not tracked changes nothing and reports it, exiting successfully so the command is safe to repeat:
 
@@ -425,7 +451,7 @@ Repository is not tracked in 'my-organization' organization
 Check what Packmind tracks for the repository you are in, without changing anything:
 
 ```bash
-packmind-cli git info
+packmind git info
 ```
 
 When the repository is tracked and you are on the tracked branch:
@@ -438,13 +464,13 @@ When the repository is tracked but you are on **another** branch, the command ad
 
 ```
 Packmind tracks my-org/my-repo on branch 'main'.
-You are on 'dev', so distributions from here are not recorded. Run `packmind-cli git track --update` to move tracking to 'dev'.
+You are on 'dev', so distributions from here are not recorded. Run `packmind git track --update` to move tracking to 'dev'.
 ```
 
 When the repository is not tracked at all:
 
 ```
-my-org/my-repo is not tracked in Packmind. Run `packmind-cli git track` to track branch 'main'.
+my-org/my-repo is not tracked in Packmind. Run `packmind git track` to track branch 'main'.
 ```
 
 All three are answers rather than failures, so the command succeeds in each case. It only fails when it cannot answer — outside a git repository, with no git remote, or when you are not signed in.
@@ -455,13 +481,13 @@ All three are answers rather than failures, so the command succeeds in each case
 - **Solution**: The feature is not enabled for your organization yet. Contact your Packmind administrator.
 
 - **Problem**: The command reports you are not logged in.
-- **Solution**: Run `packmind-cli login` first, then retry.
+- **Solution**: Run `packmind login` first, then retry.
 
 - **Problem**: The command cannot determine the repository or branch.
 - **Solution**: Run it from inside a git repository that has a configured remote and a checked-out branch.
 
 - **Problem**: `Command "packmind track" has been removed.`
-- **Solution**: Use `packmind-cli git track` (or `packmind-cli git untrack` in place of `packmind-cli track --remove`).
+- **Solution**: Use `packmind git track` (or `packmind git untrack` in place of `packmind track --remove`).
 
 ## Config Command
 
@@ -476,7 +502,7 @@ Manage AI coding agents configured in your `packmind.json` files. The `config ag
 Configure which AI coding agents to generate artifacts for via an interactive prompt:
 
 ```bash
-packmind-cli config agents setup
+packmind config agents setup
 ```
 
 This presents an interactive prompt where you can select from supported AI coding agents:
@@ -504,7 +530,7 @@ The command auto-detects existing agent configurations in your project and pre-s
 Display all configured coding agents across `packmind.json` files in a matrix view:
 
 ```bash
-packmind-cli config agents list
+packmind config agents list
 ```
 
 The output shows a matrix with file paths as rows and agent names as columns, using checkmarks (✓) and dashes (-) to indicate which agents are configured in each file. Each file also shows its source — whether agents are configured locally (via the `agents` property in `packmind.json`) or inherited from organization settings.
@@ -512,7 +538,7 @@ The output shows a matrix with file paths as rows and agent names as columns, us
 Use `--path` to scope the listing to a specific directory:
 
 ```bash
-packmind-cli config agents list --path ./apps/api
+packmind config agents list --path ./apps/api
 ```
 
 #### Config Agents Add
@@ -520,13 +546,13 @@ packmind-cli config agents list --path ./apps/api
 Add one or more coding agents to all `packmind.json` files:
 
 ```bash
-packmind-cli config agents add claude cursor
+packmind config agents add claude cursor
 ```
 
 Use `--path` to target a specific directory:
 
 ```bash
-packmind-cli config agents add --path ./packages/core claude
+packmind config agents add --path ./packages/core claude
 ```
 
 If the targeted files currently inherit agent configuration from organization settings, a confirmation prompt warns that adding local agents will override the organization-level defaults.
@@ -536,13 +562,13 @@ If the targeted files currently inherit agent configuration from organization se
 Remove one or more coding agents from all `packmind.json` files:
 
 ```bash
-packmind-cli config agents rm cursor copilot
+packmind config agents rm cursor copilot
 ```
 
 Use `--path` to target a specific directory:
 
 ```bash
-packmind-cli config agents rm --path ./apps/frontend claude
+packmind config agents rm --path ./apps/frontend claude
 ```
 
 When all agents are removed from a file, the `agents` property is deleted entirely and the file reverts to organization-level defaults.
@@ -562,8 +588,8 @@ When all agents are removed from a file, the `agents` property is deleted entire
 | `codex`      | Codex          |
 
 <Tip>
-  After adding or removing agents, run `packmind-cli install` to deploy or clean
-  up the corresponding agent artifact files in your repository.
+  After adding or removing agents, run `packmind install` to deploy or clean up
+  the corresponding agent artifact files in your repository.
 </Tip>
 
 ## Install Command
@@ -573,13 +599,13 @@ Download commands, standards, and skills from packages to your local machine.
 ### List Available Packages
 
 ```bash
-packmind-cli packages list
+packmind packages list
 ```
 
 ### View Package Details
 
 ```bash
-packmind-cli packages show <package-slug>
+packmind packages show <package-slug>
 ```
 
 ### View Workspace Status
@@ -587,7 +613,7 @@ packmind-cli packages show <package-slug>
 See an overview of all `packmind.json` files and their installed packages across your workspace:
 
 ```bash
-packmind-cli install --status
+packmind install --status
 ```
 
 **Example output:**
@@ -613,13 +639,13 @@ This is useful for:
 ### Install Packages
 
 ```bash
-packmind-cli install <package-slug> [additional-package-slugs...]
+packmind install <package-slug> [additional-package-slugs...]
 ```
 
 **Example:**
 
 ```bash
-packmind-cli install backend frontend
+packmind install backend frontend
 ```
 
 This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
@@ -636,16 +662,16 @@ When you install or uninstall packages, the CLI generates a `packmind-lock.json`
 
 ### Recursive Install (Monorepos)
 
-By default, `packmind-cli install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+By default, `packmind install` (with no package slugs) finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
 
 ```bash
-packmind-cli install
+packmind install
 ```
 
 To scope the recursive install to a specific directory, use the `--path` option:
 
 ```bash
-packmind-cli install --path apps/frontend
+packmind install --path apps/frontend
 ```
 
 <Tip>
@@ -667,7 +693,7 @@ If you install anywhere else, the install still completes locally, but nothing i
 - **The repository is not tracked** — no repository is tracked for this project yet:
 
   ```
-  Distribution not recorded — my-org/my-repo is not tracked in Packmind. Ask an admin to run `packmind-cli git track` to start tracking it.
+  Distribution not recorded — my-org/my-repo is not tracked in Packmind. Ask an admin to run `packmind git track` to start tracking it.
   ```
 
 - **You are on a different branch** — the repository is tracked, but on another branch:
@@ -691,19 +717,19 @@ If you install anywhere else, the install still completes locally, but nothing i
 <Note>
   **Not seeing your activity in Packmind?** — Confirm you are on the tracked
   repository and branch. An organization admin can set or move the tracked
-  branch with `packmind-cli git track`. If the branch was tracked before and is
-  not anymore, its distributions are still kept — they reappear when tracking
-  moves back. See [Distribution History and the Tracked
+  branch with `packmind git track`. If the branch was tracked before and is not
+  anymore, its distributions are still kept — they reappear when tracking moves
+  back. See [Distribution History and the Tracked
   Branch](/governance/distribution#distribution-history-and-the-tracked-branch).
 </Note>
 
 ### Install Globally for Claude Code (`~/.claude`)
 
-When you run `packmind-cli install` from inside your `~/.claude` directory, the CLI switches into **home-install mode** — a streamlined flow optimized for sharing Packmind artifacts across every project you open in Claude Code, rather than tying them to a single repository.
+When you run `packmind install` from inside your `~/.claude` directory, the CLI switches into **home-install mode** — a streamlined flow optimized for sharing Packmind artifacts across every project you open in Claude Code, rather than tying them to a single repository.
 
 ```bash
 cd ~/.claude
-packmind-cli install <package-slug>
+packmind install <package-slug>
 ```
 
 **Why install here:**
@@ -719,7 +745,7 @@ packmind-cli install <package-slug>
   **When to use this mode** — Reach for `~/.claude` installs when you want a
   package available to Claude Code everywhere: personal coding preferences,
   cross-project organizational defaults, or experimental skills you want to try
-  without modifying any repository. Per-repo `packmind-cli install` remains the
+  without modifying any repository. Per-repo `packmind install` remains the
   right choice for project-specific standards that should be shared with
   teammates and committed to source control.
 </Tip>
@@ -760,7 +786,7 @@ If no `packmind.json` files are found, the CLI falls back to using standards tha
 ### Basic Usage
 
 ```bash
-packmind-cli lint .
+packmind lint .
 ```
 
 This command:
@@ -776,17 +802,17 @@ This command:
 Lint a specific directory:
 
 ```bash
-packmind-cli lint src/
+packmind lint src/
 ```
 
 ```bash
-packmind-cli lint /path/to/your/project
+packmind lint /path/to/your/project
 ```
 
 Lint a single file:
 
 ```bash
-packmind-cli lint src/components/Button.tsx
+packmind lint src/components/Button.tsx
 ```
 
 When a single file is passed:
@@ -813,7 +839,7 @@ When working on large codebases, you can focus the lint check on only the files 
 **Check modified lines only:**
 
 ```bash
-packmind-cli lint . --changed-lines
+packmind lint . --changed-lines
 ```
 
 This analyzes only the specific lines you've changed, making it ideal for pre-commit hooks or reviewing your work before pushing.
@@ -821,7 +847,7 @@ This analyzes only the specific lines you've changed, making it ideal for pre-co
 **Check modified files only:**
 
 ```bash
-packmind-cli lint . --changed-files
+packmind lint . --changed-files
 ```
 
 This analyzes all content in files you've modified, useful when you want full context but don't want to scan the entire codebase.
@@ -833,7 +859,7 @@ This analyzes all content in files you've modified, useful when you want full co
 git add .
 
 # Check only what you changed
-packmind-cli lint . --changed-lines
+packmind lint . --changed-lines
 
 # If clean, commit
 git commit -m "Your changes"
@@ -844,7 +870,7 @@ git commit -m "Your changes"
 Choose between human-readable and IDE-friendly output:
 
 ```bash
-packmind-cli lint . --logger=ide
+packmind lint . --logger=ide
 ```
 
 **Human-readable format** (default) shows:
@@ -862,10 +888,10 @@ Use the `--level` flag to filter which violations are displayed based on their s
 
 ```bash
 # Show only errors (suppress warnings)
-packmind-cli lint . --level error
+packmind lint . --level error
 
 # Show warnings and errors (everything)
-packmind-cli lint . --level warning
+packmind lint . --level warning
 ```
 
 | Value     | What is displayed                    |
@@ -890,7 +916,7 @@ Manage skills in your Packmind organization. Skills are reusable knowledge packa
 ### Initialize Default Skills
 
 ```bash
-packmind-cli skills init
+packmind skills init
 ```
 
 This command installs Packmind's default skills locally, including:
@@ -900,14 +926,14 @@ This command installs Packmind's default skills locally, including:
 
 <Tip>
   **Automatic installation** — Default skills are also installed automatically
-  when you run `packmind-cli init`, install a package with `packmind-cli
-  install`, or when packages are distributed to your repository via the web app.
+  when you run `packmind init`, install a package with `packmind install`, or
+  when packages are distributed to your repository via the web app.
 </Tip>
 
 ### List Skills
 
 ```bash
-packmind-cli skills list
+packmind skills list
 ```
 
 This command displays all skills in your Packmind organization, showing:
@@ -931,8 +957,8 @@ Available skills:
 ### Add a Skill
 
 ```bash
-packmind-cli playbook add <path>
-packmind-cli playbook submit --no-review
+packmind playbook add <path>
+packmind playbook submit --no-review
 ```
 
 **Arguments:**
@@ -942,8 +968,8 @@ packmind-cli playbook submit --no-review
 **Example:**
 
 ```bash
-packmind-cli playbook add ./my-skill
-packmind-cli playbook submit --no-review
+packmind playbook add ./my-skill
+packmind playbook submit --no-review
 ```
 
 <Info>
@@ -970,7 +996,7 @@ Create and manage coding standards from the command line.
 ### List Standards
 
 ```bash
-packmind-cli standards list
+packmind standards list
 ```
 
 This command displays all standards in your Packmind organization, showing:
@@ -1007,7 +1033,7 @@ Create and manage reusable, multi-step workflow commands from the command line.
 ### List Commands
 
 ```bash
-packmind-cli commands list
+packmind commands list
 ```
 
 This command displays all commands in your Packmind organization, showing:
@@ -1033,8 +1059,8 @@ Available commands:
 ### Create a Command
 
 ```bash
-packmind-cli playbook add path/to-command.md
-packmind-cli playbook submit
+packmind playbook add path/to-command.md
+packmind playbook submit
 ```
 
 The markdown file content will be used as the command's prompt. The name of the command will be deduced from the file path.
@@ -1060,7 +1086,7 @@ Create and manage packages from the command line.
 ### List Packages
 
 ```bash
-packmind-cli packages list
+packmind packages list
 ```
 
 This command displays all packages in your Packmind organization, showing:
@@ -1071,7 +1097,7 @@ This command displays all packages in your Packmind organization, showing:
 ### Create a Package
 
 ```bash
-packmind-cli packages create <name>
+packmind packages create <name>
 ```
 
 **Arguments:**
@@ -1087,13 +1113,13 @@ packmind-cli packages create <name>
 **Example:**
 
 ```bash
-packmind-cli packages create "Backend Standards"
+packmind packages create "Backend Standards"
 ```
 
 With a description:
 
 ```bash
-packmind-cli packages create "Backend Standards" -d "Standards and commands for backend development"
+packmind packages create "Backend Standards" -d "Standards and commands for backend development"
 ```
 
 This creates a new empty package in your Packmind organization. After creation, you can add commands, standards, and skills to the package through the web interface or by using the `packages add` command.
@@ -1107,7 +1133,7 @@ When you create a package, Packmind automatically generates a **slug** from the 
 
 The slug is used for:
 
-- Package installation: `packmind-cli install backend-standards`
+- Package installation: `packmind install backend-standards`
 - Package identification and distribution
 
 If a package with the same slug already exists in your [space](/concepts/spaces), Packmind appends a counter (e.g., `backend-standards-1`) to ensure uniqueness.
@@ -1115,9 +1141,9 @@ If a package with the same slug already exists in your [space](/concepts/spaces)
 ### Add Items to a Package
 
 ```bash
-packmind-cli packages add --to <package-slug> --standard <standard-slug>
-packmind-cli packages add --to <package-slug> --command <command-slug>
-packmind-cli packages add --to <package-slug> --skill <skill-slug>
+packmind packages add --to <package-slug> --standard <standard-slug>
+packmind packages add --to <package-slug> --command <command-slug>
+packmind packages add --to <package-slug> --skill <skill-slug>
 ```
 
 **Options:**
@@ -1134,19 +1160,19 @@ packmind-cli packages add --to <package-slug> --skill <skill-slug>
 Add a standard to a package:
 
 ```bash
-packmind-cli packages add --to backend --standard error-handling
+packmind packages add --to backend --standard error-handling
 ```
 
 Add a command to a package:
 
 ```bash
-packmind-cli packages add --to backend --command create-api-endpoint
+packmind packages add --to backend --command create-api-endpoint
 ```
 
 Add a skill to a package:
 
 ```bash
-packmind-cli packages add --to backend --skill debugging-workflow
+packmind packages add --to backend --skill debugging-workflow
 ```
 
 <Tip>
@@ -1184,7 +1210,7 @@ The `plugins` commands detect what kind of workspace you are in by looking insid
 Render a Packmind package as a Claude plugin in the current workspace.
 
 ```bash
-packmind-cli plugins render <package-slug>
+packmind plugins render <package-slug>
 ```
 
 **Arguments:**
@@ -1196,7 +1222,7 @@ packmind-cli plugins render <package-slug>
 Run the command from the root of your marketplace repository (the directory that contains `.claude-plugin/marketplace.json`):
 
 ```bash
-packmind-cli plugins render security
+packmind plugins render security
 ```
 
 The CLI will:
@@ -1224,7 +1250,7 @@ Plugin "security" already exists at "./plugins/security". Overwrite? [y/N]
 Run the command from the root of your standalone plugin repository (the directory that contains `.claude-plugin/plugin.json`):
 
 ```bash
-packmind-cli plugins render security
+packmind plugins render security
 ```
 
 The CLI will:
@@ -1251,7 +1277,7 @@ Plugin "security" already exists in this workspace. Overwrite? [y/N]
 Remove a rendered plugin from the current workspace and notify Packmind that the distribution has been deleted.
 
 ```bash
-packmind-cli plugins delete <package-slug>
+packmind plugins delete <package-slug>
 ```
 
 **Arguments:**
@@ -1263,7 +1289,7 @@ packmind-cli plugins delete <package-slug>
 Run the command from the root of your marketplace repository:
 
 ```bash
-packmind-cli plugins delete security
+packmind plugins delete security
 ```
 
 The CLI will:
@@ -1288,14 +1314,14 @@ Plugin "security" is not declared in marketplace.json. Nothing to delete.
 Run the command from the root of your standalone plugin repository:
 
 ```bash
-packmind-cli plugins delete security
+packmind plugins delete security
 ```
 
 After confirmation, the CLI removes the rendered `commands/` and `skills/` directories. The `.claude-plugin/plugin.json` manifest is left untouched so you can re-render the plugin later.
 
 ### Troubleshooting
 
-- **Problem**: `No .claude-plugin/marketplace.json or .claude-plugin/plugin.json found in this directory.`
+- **Problem**: `No .claude-plugin/marketplace.json, .github/plugin/marketplace.json, or .claude-plugin/plugin.json found in this directory.`
 - **Solution**: Run the command from the root of a workspace that contains one of these manifests. Create the appropriate manifest first if the workspace is brand new.
 
 - **Problem**: `The plugin '<name>' is not handled in this repo.` (standalone mode)
@@ -1314,7 +1340,7 @@ Manage local artifact changes and propose them to your team using a git-like sta
 ### View Differences
 
 ```bash
-packmind-cli playbook diff
+packmind playbook diff
 ```
 
 Compares your local artifact files (standards, commands, skills) against the versions published in Packmind. No changes are submitted.
@@ -1351,7 +1377,7 @@ For each standard, the diff shows:
 ### Check Status
 
 ```bash
-packmind-cli playbook status
+packmind playbook status
 ```
 
 Shows staged changes ready for submission and untracked local modifications.
@@ -1373,7 +1399,7 @@ Use `packmind playbook add <path>` to track them
 ### Stage Changes
 
 ```bash
-packmind-cli playbook add <path>
+packmind playbook add <path>
 ```
 
 Stages a local artifact change for submission. The change type (created or updated) is detected automatically by comparing with the deployed version.
@@ -1381,7 +1407,7 @@ Stages a local artifact change for submission. The change type (created or updat
 ### Stage Removal
 
 ```bash
-packmind-cli playbook rm <path>
+packmind playbook rm <path>
 ```
 
 Stages an artifact for removal from the playbook. The artifact must have been distributed by Packmind. Alias: `remove`.
@@ -1389,7 +1415,7 @@ Stages an artifact for removal from the playbook. The artifact must have been di
 ### Unstage Changes
 
 ```bash
-packmind-cli playbook unstage <path>
+packmind playbook unstage <path>
 ```
 
 Removes a previously staged change from the playbook without submitting it.
@@ -1397,7 +1423,7 @@ Removes a previously staged change from the playbook without submitting it.
 ### Submit Proposals
 
 ```bash
-packmind-cli playbook submit -m "Improve error handling rules for better observability"
+packmind playbook submit -m "Improve error handling rules for better observability"
 ```
 
 Submits all staged changes as change proposals for team review in the Packmind web app.
@@ -1415,7 +1441,7 @@ When you modify a rule in a standard file, Packmind automatically determines whe
 <Tip>
   **Requires a git repository** — The `playbook` command requires your project
   to be in a git repository with a configured remote. Make sure you have run
-  `packmind-cli install` to set up your `packmind.json` before using `playbook`.
+  `packmind install` to set up your `packmind.json` before using `playbook`.
 </Tip>
 
 ## Update Command
@@ -1423,7 +1449,7 @@ When you modify a rule in a standard file, Packmind automatically determines whe
 Update the Packmind CLI to the latest version.
 
 ```bash
-packmind-cli update
+packmind update
 ```
 
 This checks for a newer version and updates the CLI in place:
@@ -1440,7 +1466,7 @@ Downloading packmind-cli-macos-arm64...
 Downloaded successfully (12.4 MB)
 
 Updated to v1.3.0
-Binary location: /usr/local/bin/packmind-cli
+Binary location: /usr/local/bin/packmind
 ```
 
 If you are already on the latest version:
@@ -1454,7 +1480,7 @@ Already up to date (v1.3.0)
   run the command with `sudo`:
 
 ```bash
-sudo packmind-cli update
+sudo packmind update
 ```
 
 </Tip>
@@ -1464,7 +1490,7 @@ sudo packmind-cli update
 Use the `--check` flag to see if a newer version is available without performing the update:
 
 ```bash
-packmind-cli update --check
+packmind update --check
 ```
 
 This is useful in CI/CD pipelines or scripts where you want to detect outdated CLI versions without automatically upgrading. The command exits with code `1` if a newer version is available, and code `0` if already up to date.
@@ -1472,8 +1498,8 @@ This is useful in CI/CD pipelines or scripts where you want to detect outdated C
 **Example:**
 
 ```bash
-if ! packmind-cli update --check; then
-  echo "A new version of packmind-cli is available. Run 'packmind-cli update' to upgrade."
+if ! packmind update --check; then
+  echo "A new version of packmind is available. Run 'packmind update' to upgrade."
 fi
 ```
 

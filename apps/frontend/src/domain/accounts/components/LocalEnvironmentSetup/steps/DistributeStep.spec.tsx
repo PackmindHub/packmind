@@ -68,13 +68,13 @@ describe('DistributeStep', () => {
 
         it('displays qualified install command for package-1', () => {
           expect(
-            screen.getByDisplayValue('packmind-cli install @global/package-1'),
+            screen.getByDisplayValue('packmind install @global/package-1'),
           ).toBeInTheDocument();
         });
 
         it('displays qualified install command for package-2', () => {
           expect(
-            screen.getByDisplayValue('packmind-cli install @global/package-2'),
+            screen.getByDisplayValue('packmind install @global/package-2'),
           ).toBeInTheDocument();
         });
       });
@@ -86,13 +86,13 @@ describe('DistributeStep', () => {
 
         it('displays unqualified install command for package-1', () => {
           expect(
-            screen.getByDisplayValue('packmind-cli install package-1'),
+            screen.getByDisplayValue('packmind install package-1'),
           ).toBeInTheDocument();
         });
 
         it('displays unqualified install command for package-2', () => {
           expect(
-            screen.getByDisplayValue('packmind-cli install package-2'),
+            screen.getByDisplayValue('packmind install package-2'),
           ).toBeInTheDocument();
         });
       });

@@ -14,6 +14,7 @@ import {
 } from 'typeorm';
 import assert from 'assert';
 import { BadRequestException } from '@nestjs/common';
+import { instrumentMethods } from '../observability/instrumentMethods';
 
 const origin = 'AbstractRepository';
 
@@ -25,7 +26,17 @@ export abstract class AbstractRepository<
     protected readonly repository: Repository<Entity>,
     private readonly schema: EntitySchema<WithSoftDelete<Entity>>,
     protected readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+  ) {
+    // Since the pg instrumentation is off (see apps/api/src/otel.ts), this is
+    // the only place a trace records database work at all: the repository
+    // method is the span, and its duration is the query's. Datadog Database
+    // Monitoring has the statement; this says which method asked for it.
+    //
+    // Covers the 26 subclasses of this class wherever they are constructed,
+    // including the localDataSource default-argument path. Repositories that
+    // do not extend it are instrumented by their *Repositories aggregator.
+    instrumentMethods(this);
+  }
 
   async add(entity: Entity): Promise<Entity> {
     this.logger.info(`Adding ${this.entityName} to database`, {

@@ -469,52 +469,6 @@ export class GitProvidersController {
     }
   }
 
-  @Get(':id/repos/:owner/:repo/branches/:branch/exists')
-  async checkBranchExists(
-    @Param('orgId') organizationId: OrganizationId,
-    @Param('id') gitProviderId: GitProviderId,
-    @Param('owner') owner: string,
-    @Param('repo') repo: string,
-    @Param('branch') branch: string,
-  ): Promise<{ exists: boolean }> {
-    this.logger.info(
-      'GET /organizations/:orgId/git/providers/:id/repos/:owner/:repo/branches/:branch/exists - Checking if branch exists',
-      {
-        organizationId,
-        gitProviderId,
-        owner,
-        repo,
-        branch,
-      },
-    );
-
-    try {
-      const exists = await this.gitProvidersService.checkBranchExists(
-        organizationId,
-        gitProviderId,
-        owner,
-        repo,
-        branch,
-      );
-      return { exists };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/git/providers/:id/repos/:owner/:repo/branches/:branch/exists - Failed to check if branch exists',
-        {
-          organizationId,
-          gitProviderId,
-          owner,
-          repo,
-          branch,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
   @Put(':id')
   async updateGitProvider(
     @Param('orgId') organizationId: OrganizationId,

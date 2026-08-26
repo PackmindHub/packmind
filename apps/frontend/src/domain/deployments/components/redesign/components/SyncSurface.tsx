@@ -348,7 +348,7 @@ export function SyncSurface({
               Distributions without a connected provider are listed separately
               and must be updated via{' '}
               <PMText as="span" fontFamily="mono" fontSize="xs">
-                packmind-cli install
+                packmind install
               </PMText>
               .
             </PMText>
@@ -705,7 +705,7 @@ const LOCK_ROW_TOOLTIP: Record<LockReason, string> = {
   'in-progress':
     'Distribution currently in progress — wait for it to finish before redistributing.',
   'no-app-token':
-    'This provider has no token — use `packmind-cli install` to update this distribution.',
+    'This provider has no token — use `packmind install` to update this distribution.',
 };
 
 const LOCK_ROW_BADGE: Record<
@@ -1081,11 +1081,11 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText('packmind-cli install');
+      await navigator.clipboard.writeText('packmind install');
       pmToaster.create({
         type: 'success',
         title: 'Copied',
-        description: '`packmind-cli install` copied to your clipboard.',
+        description: '`packmind install` copied to your clipboard.',
       });
     } catch {
       pmToaster.create({
@@ -1139,7 +1139,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
                 bg="background.tertiary"
                 borderRadius="sm"
               >
-                packmind-cli install
+                packmind install
               </PMText>
             </PMText>
           </PMHStack>
@@ -1167,7 +1167,7 @@ function CliInstallSection({ cliBlocks }: Readonly<{ cliBlocks: CliBlock[] }>) {
               borderRadius="sm"
             >
               <PMText as="span" fontFamily="mono" fontSize="sm" color="warning">
-                packmind-cli install
+                packmind install
               </PMText>
               <PMButton variant="tertiary" size="sm" onClick={handleCopy}>
                 Copy

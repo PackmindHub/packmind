@@ -1,4 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
+import { MarketplaceVendor } from '../../marketplaces/MarketplaceVendor';
 
 export type RenderPackageAsPluginMode = 'marketplace' | 'standalone';
 
@@ -20,6 +21,11 @@ export type RenderPackageAsPluginCommand = PackmindCommand & {
   gitRemoteUrl?: string;
   /** Git branch of the render target. */
   gitBranch?: string;
+  /**
+   * Which vendor's plugin format to render. Defaults to 'anthropic' (Claude)
+   * when omitted, for backward compatibility with existing callers.
+   */
+  targetVendor?: MarketplaceVendor;
 };
 
 export type RenderedPluginFile = {

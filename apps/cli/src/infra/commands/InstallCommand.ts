@@ -37,6 +37,7 @@ import {
   displayableParsedPackageSlug,
   ParsedPackageSlug,
 } from '../../domain/entities/PackageSlug';
+import { EXEC_NAME } from '../utils/execName';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../../../package.json');
@@ -162,13 +163,23 @@ export type DistributionTrackingDecision =
   | { action: 'record-legacy' }
   | { action: 'skip'; reason: 'repo_not_tracked' }
   | { action: 'skip'; reason: 'wrong_branch'; trackedBranch: string }
+  | { action: 'skip'; reason: 'tracked_branch_gone'; trackedBranch: string }
+  | { action: 'skip'; reason: 'detached_head'; trackedBranch: string }
   | { action: 'inform' };
 
 export function decideDistributionTracking(params: {
   lookup: TrackingLookup;
   currentBranch: string;
+  /**
+   * Asked only about a tracked branch we are not on, so the git call is skipped
+   * in the common cases. Answering `true` when it cannot tell keeps the plain
+   * wrong-branch message, which is never actively wrong.
+   */
+  branchExists: (branch: string) => boolean;
+  /** True when HEAD is not on a branch — a rebase, or a CI job on a merge ref. */
+  detached: boolean;
 }): DistributionTrackingDecision {
-  const { lookup, currentBranch } = params;
+  const { lookup, currentBranch, branchExists, detached } = params;
 
   switch (lookup.status) {
     case 'flag-off':
@@ -181,9 +192,19 @@ export function decideDistributionTracking(params: {
         return { action: 'skip', reason: 'repo_not_tracked' };
       }
       if (tracked.branch !== currentBranch) {
+        // Worst cause first: a tracked branch that is gone records nothing for
+        // anybody, and a detached HEAD is not "being on the wrong branch" —
+        // git reports the branch as `HEAD`, which names no branch at all.
+        if (!branchExists(tracked.branch)) {
+          return {
+            action: 'skip',
+            reason: 'tracked_branch_gone',
+            trackedBranch: tracked.branch,
+          };
+        }
         return {
           action: 'skip',
-          reason: 'wrong_branch',
+          reason: detached ? 'detached_head' : 'wrong_branch',
           trackedBranch: tracked.branch,
         };
       }
@@ -214,8 +235,18 @@ function reportDistributionTrackingDecision(
       if (decision.reason === 'repo_not_tracked') {
         logWarningConsole(
           `Distribution not recorded — ${context.owner}/${context.repo} is not tracked in Packmind. Ask an admin to run ${formatCommand(
-            'packmind git track',
+            `${EXEC_NAME} git track`,
           )} to start tracking it.`,
+        );
+      } else if (decision.reason === 'detached_head') {
+        logWarningConsole(
+          `Distribution not recorded — no branch is checked out here (HEAD is detached), and Packmind records distributions on '${decision.trackedBranch}'. Check that branch out to record this distribution.`,
+        );
+      } else if (decision.reason === 'tracked_branch_gone') {
+        logWarningConsole(
+          `Distribution not recorded — the tracked branch '${decision.trackedBranch}' is not in this repository, so nothing is recorded anywhere. Ask an admin to run ${formatCommand(
+            `${EXEC_NAME} git track --update`,
+          )} to move tracking to '${context.currentBranch}'.`,
         );
       } else {
         logWarningConsole(
@@ -264,9 +295,11 @@ async function computeDistributionTrackingDecision(
   let owner: string;
   let repo: string;
   let gitBranch: string;
+  let detached: boolean;
   try {
     const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
     gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+    detached = packmindCliHexa.isDetachedHead(gitRoot);
     ({ owner, repo } = parseOwnerRepo(gitRemoteUrl));
   } catch {
     const decision: DistributionTrackingDecision = { action: 'inform' };
@@ -278,6 +311,15 @@ async function computeDistributionTrackingDecision(
   const decision = decideDistributionTracking({
     lookup,
     currentBranch: gitBranch,
+    branchExists: (branch) => {
+      try {
+        return packmindCliHexa.branchExists(gitRoot, branch);
+      } catch {
+        // Unable to ask git: keep the message that assumes the branch is there.
+        return true;
+      }
+    },
+    detached,
   });
   reportDistributionTrackingDecision(decision, {
     owner,

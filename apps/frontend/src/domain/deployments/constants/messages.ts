@@ -40,7 +40,7 @@ export const PACKAGE_MESSAGES = {
   },
   distribution: {
     notConfigured:
-      'This target is not configured for in-app distribution. Use `packmind-cli install` to distribute.',
+      'This target is not configured for in-app distribution. Use `packmind install` to distribute.',
     upToDate: 'This package is up to date',
   },
 } as const;

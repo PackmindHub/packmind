@@ -1,12 +1,18 @@
 /**
- * Ordered candidate paths for the Claude Code marketplace descriptor.
+ * Ordered candidate paths for the marketplace descriptor.
  *
- * The official layout places the manifest at `.claude-plugin/marketplace.json`
- * in the repository root
+ * The official Claude Code layout places the manifest at
+ * `.claude-plugin/marketplace.json` in the repository root
  * (https://code.claude.com/docs/en/plugin-marketplaces). Some ad-hoc repos
  * keep a bare `marketplace.json` at the root instead, so we accept it as a
- * fallback. The descriptor lookup probes these paths in order and the first
- * existing file wins.
+ * fallback. `.github/plugin/marketplace.json` is the equivalent candidate for
+ * a GitHub Copilot marketplace.
+ *
+ * A repo's marketplace config targets either GitHub Copilot or Claude Code,
+ * never both, so detection stays purely path-based — first existing file
+ * wins — and is not content-based. The descriptor lookup probes these paths
+ * in this exact order (deliberately not alphabetical); if somehow more than
+ * one candidate file exists, the earlier entry in this list wins.
  *
  * Single source of truth — used by `LinkMarketplaceUseCase`,
  * `ValidateMarketplaceUrlUseCase` (at link / validation time) and
@@ -16,6 +22,7 @@
 export const MARKETPLACE_DESCRIPTOR_PATHS = [
   '.claude-plugin/marketplace.json',
   'marketplace.json',
+  '.github/plugin/marketplace.json',
 ] as const;
 
 /**

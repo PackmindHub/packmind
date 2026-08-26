@@ -43,6 +43,7 @@ import {
   PlaybookChangeEntry,
 } from '../../../domain/repositories/IPlaybookLocalRepository';
 import { ILockFileRepository } from '../../../domain/repositories/ILockFileRepository';
+import { EXEC_NAME } from '../../utils/execName';
 
 export type PlaybookSubmitHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -135,7 +136,7 @@ export async function playbookSubmitHandler(
     if (conflictCount === 0) return;
     logInfoConsole(
       `${conflictCount} change${conflictCount !== 1 ? 's were' : ' was'} skipped and remain${conflictCount !== 1 ? '' : 's'} staged. ` +
-        'Rename them and run `packmind playbook submit` again.',
+        `Rename them and run \`${EXEC_NAME} playbook submit\` again.`,
     );
   };
 
@@ -234,8 +235,8 @@ export async function playbookSubmitHandler(
       );
     }
     logInfoConsole(
-      'Your staged changes were kept. Fix the issue above (for stale deployed content, run `packmind pull` to sync), ' +
-        'or drop the affected change with `packmind playbook unstage <path>`, then retry.',
+      `Your staged changes were kept. Fix the issue above (for stale deployed content, run \`${EXEC_NAME} pull\` to sync), ` +
+        `or drop the affected change with \`${EXEC_NAME} playbook unstage <path>\`, then retry.`,
     );
     exit(1);
     return;
@@ -320,7 +321,7 @@ export async function playbookSubmitHandler(
         logErrorConsole('Failed to apply changes: a conflict was detected.');
         logInfoConsole(
           'This usually means the artifact was modified since your last pull.\n' +
-            'Run `packmind pull` to sync your local state, then retry.',
+            `Run \`${EXEC_NAME} pull\` to sync your local state, then retry.`,
         );
       } else {
         logErrorConsole(`Failed to apply changes: ${err.message}`);
@@ -417,7 +418,7 @@ export async function playbookSubmitHandler(
       if (isCommunityEditionError(error)) {
         logErrorConsole(error.message);
         logInfoConsole(
-          `Run ${formatCommand('`packmind-cli playbook submit --no-review`')} to apply changes directly.`,
+          `Run ${formatCommand(`\`${EXEC_NAME} playbook submit --no-review\``)} to apply changes directly.`,
         );
         exit(1);
         return;
@@ -507,7 +508,7 @@ export async function playbookSubmitHandler(
     if (succeededSpaces.length > 0) {
       logWarningConsole(
         `Submitted to: ${succeededSpaces.map(displaySpace).join(', ')}. ` +
-          `Run 'packmind playbook submit' again to retry failed spaces.`,
+          `Run '${EXEC_NAME} playbook submit' again to retry failed spaces.`,
       );
     }
     exit(1);

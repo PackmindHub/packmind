@@ -151,7 +151,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       if (deployment.source === 'cli') {
         return (
           <PMTooltip
-            label="This distribution was done using packmind-cli, no commit available"
+            label="This distribution was done using the Packmind CLI, no commit available"
             placement="top"
           >
             <PMBox display="inline-flex" cursor="help">
@@ -341,6 +341,7 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     [RenderMode.GH_COPILOT]: 'Github Copilot',
     [RenderMode.CLAUDE]: 'Claude',
     [RenderMode.CLAUDE_PLUGIN]: 'Claude Plugin',
+    [RenderMode.COPILOT_PLUGIN]: 'Copilot Plugin',
     [RenderMode.CURSOR]: 'Cursor',
     [RenderMode.PACKMIND]: 'Packmind',
     [RenderMode.GITLAB_DUO]: 'Gitlab Duo',

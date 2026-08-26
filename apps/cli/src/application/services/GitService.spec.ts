@@ -165,6 +165,113 @@ describe('GitService', () => {
     });
   });
 
+  describe('branchExists', () => {
+    const FOR_EACH_REF =
+      'for-each-ref --format="%(refname)" refs/heads refs/remotes';
+
+    describe('when the branch is a local branch', () => {
+      let result: boolean;
+
+      beforeEach(() => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/heads/dev\nrefs/remotes/origin/main\n',
+        });
+        result = service.branchExists('/repo', 'dev');
+      });
+
+      it('reports the branch exists', () => {
+        expect(result).toBe(true);
+      });
+
+      // Plumbing, so no checkout markers, no color and no columns to strip.
+      it('lists refs instead of parsing the human-facing branch listing', () => {
+        expect(gitRunner).toHaveBeenCalledWith(FOR_EACH_REF, { cwd: '/repo' });
+      });
+    });
+
+    describe('when the branch is the checked-out one', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/heads/dev\n',
+        });
+
+        expect(service.branchExists('/repo', 'main')).toBe(true);
+      });
+    });
+
+    describe('when the branch only exists on a remote', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'refs/heads/main\nrefs/remotes/origin/main\nrefs/remotes/origin/dev\n',
+        });
+
+        expect(service.branchExists('/repo', 'dev')).toBe(true);
+      });
+    });
+
+    describe('when the branch only exists on a remote other than origin', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/upstream/dev\n',
+        });
+
+        expect(service.branchExists('/repo', 'dev')).toBe(true);
+      });
+    });
+
+    describe('when the branch name contains slashes', () => {
+      it('reports the branch exists', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/origin/feature/login\n',
+        });
+
+        expect(service.branchExists('/repo', 'feature/login')).toBe(true);
+      });
+    });
+
+    // A symref to the remote's default branch, not a branch anyone can track.
+    describe("when asked for the remote's HEAD symref", () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/origin/HEAD\n',
+        });
+
+        expect(service.branchExists('/repo', 'HEAD')).toBe(false);
+      });
+    });
+
+    describe('when the branch does not exist', () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({
+          stdout: 'refs/heads/main\nrefs/remotes/origin/main\n',
+        });
+
+        expect(service.branchExists('/repo', 'mian')).toBe(false);
+      });
+    });
+
+    describe('when the repository has no branch yet', () => {
+      it('reports the branch is unknown', () => {
+        gitRunner.mockReturnValue({ stdout: '' });
+
+        expect(service.branchExists('/repo', 'main')).toBe(false);
+      });
+    });
+
+    describe('when not in a git repository', () => {
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
+
+        expect(() => service.branchExists('/non-git', 'main')).toThrow(
+          'Failed to get Git branches',
+        );
+      });
+    });
+  });
+
   describe('getCurrentBranch', () => {
     describe('when on a branch', () => {
       let result: ReturnType<typeof service.getCurrentBranch>;
@@ -175,7 +282,7 @@ describe('GitService', () => {
       });
 
       it('returns the current branch name', () => {
-        expect(result).toEqual({ branch: 'main' });
+        expect(result).toEqual({ branch: 'main', detached: false });
       });
 
       it('calls gitRunner with rev-parse command', () => {
@@ -191,17 +298,21 @@ describe('GitService', () => {
 
         const result = service.getCurrentBranch('/repo');
 
-        expect(result).toEqual({ branch: 'feature/my-feature' });
+        expect(result).toEqual({
+          branch: 'feature/my-feature',
+          detached: false,
+        });
       });
     });
 
+    // Mid-rebase, `git checkout <sha>`, or a CI job on a pull request merge ref.
     describe('when in detached HEAD state', () => {
-      it('returns HEAD', () => {
+      it('reports the detachment alongside what git answered', () => {
         gitRunner.mockReturnValue({ stdout: 'HEAD\n' });
 
         const result = service.getCurrentBranch('/repo');
 
-        expect(result).toEqual({ branch: 'HEAD' });
+        expect(result).toEqual({ branch: 'HEAD', detached: true });
       });
     });
 
@@ -364,7 +475,7 @@ describe('GitService', () => {
 
       it('does not name an unrelated command', () => {
         expect(() => service.getGitRemoteUrl('/non-git')).not.toThrow(
-          /packmind-cli lint/,
+          /packmind(-cli)? lint/,
         );
       });
     });

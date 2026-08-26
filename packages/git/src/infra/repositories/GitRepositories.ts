@@ -1,3 +1,4 @@
+import { instrumentComponents } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
 import { IGitRepositories } from '../../domain/repositories/IGitRepositories';
 import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
@@ -67,6 +68,19 @@ export class GitRepositories implements IGitRepositories {
       (opts as GitHexaOpts)?.gitRepoFactory ??
       new GitRepoFactory(tokenResolverFactory);
     this.gitProviderFactory = new GitProviderFactory(tokenResolverFactory);
+
+    // Covers the repositories that do not extend AbstractRepository, which
+    // instruments itself. An explicit list rather than reflection over the
+    // fields: this class also holds a TypeORM DataSource, which must not be
+    // patched.
+    instrumentComponents([
+      this.gitProviderRepository,
+      this.gitRepoRepository,
+      this.gitCommitRepository,
+      this.organizationGitHubAppRepository,
+      this.gitRepoFactory,
+      this.gitProviderFactory,
+    ]);
   }
 
   getGitProviderRepository(): IGitProviderRepository {
