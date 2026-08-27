@@ -2,7 +2,6 @@ name: Quality and Security Checks
 
 env:
   ENTERPRISE_EDITION: proprietary
-  OSS_EDITION: oss
   HUSKY: '0'
 
 on:

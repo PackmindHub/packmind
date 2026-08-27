@@ -27,9 +27,6 @@ on:
       cli-artifact:
         description: 'CLI build artifact name'
         value: ${{ jobs.build-cli.outputs.artifact-name }}
-      cli-version:
-        description: 'CLI version'
-        value: ${{ jobs.build-cli.outputs.version }}
       cli-executables-artifact:
         description: 'CLI executables artifact name'
         value: ${{ jobs.build-cli.outputs.cli-executables-artifact }}
