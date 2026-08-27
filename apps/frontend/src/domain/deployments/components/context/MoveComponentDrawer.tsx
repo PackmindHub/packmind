@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router';
 import { LuSearch, LuTriangleAlert } from 'react-icons/lu';
 import {
   PMBox,
@@ -21,7 +20,6 @@ import type {
   PackageResponse,
   SpaceId,
 } from '@packmind/types';
-import { routes } from '../../../../shared/utils/routes';
 import {
   useAddArtefactsToPackagesMutation,
   useRemoveArtefactsFromPackageMutation,
@@ -91,8 +89,7 @@ export function MoveComponentDrawer({
   packages,
   spaceId,
   organizationId,
-  orgSlug,
-  spaceSlug,
+  onCreatePackage,
   onMoved,
 }: Readonly<{
   open: boolean;
@@ -108,8 +105,12 @@ export function MoveComponentDrawer({
   packages: readonly PackageResponse[];
   spaceId: SpaceId;
   organizationId: OrganizationId;
-  orgSlug: string;
-  spaceSlug: string;
+  /**
+   * There is nowhere to move to, so the reader is offered a package to create.
+   * Handed in rather than done here, because what opens over this drawer is the
+   * surface's to decide and this one has no address of its own any more.
+   */
+  onCreatePackage: () => void;
   /**
    * The move went through, so whoever holds the selection can drop it. Called
    * before the drawer closes, and only on the path where the source no longer
@@ -331,8 +332,7 @@ export function MoveComponentDrawer({
                 {targets.length === 0 ? (
                   <NowhereToGo
                     hasSource={source !== null}
-                    orgSlug={orgSlug}
-                    spaceSlug={spaceSlug}
+                    onCreate={onCreatePackage}
                   />
                 ) : (
                   <PMVStack gap={2} alignItems="stretch">
@@ -514,9 +514,8 @@ function TargetRow({
  */
 function NowhereToGo({
   hasSource,
-  orgSlug,
-  spaceSlug,
-}: Readonly<{ hasSource: boolean; orgSlug: string; spaceSlug: string }>) {
+  onCreate,
+}: Readonly<{ hasSource: boolean; onCreate: () => void }>) {
   return (
     <PMVStack gap={2} alignItems="flex-start">
       <PMText variant="body">
@@ -524,10 +523,16 @@ function NowhereToGo({
           ? 'This space has only one package.'
           : 'This space has no package.'}
       </PMText>
-      <PMLink asChild variant="underline" fontSize="sm">
-        <RouterLink to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
+      {/*
+        Drawn as the link it was, because it goes to the same place it always
+        went: the only difference is that the place now opens over this drawer
+        instead of replacing it, and the reader has no reason to be told that
+        twice.
+      */}
+      <PMLink asChild variant="underline" fontSize="sm" cursor="pointer">
+        <button type="button" onClick={onCreate}>
           {hasSource ? 'Create another one' : 'Create one'}
-        </RouterLink>
+        </button>
       </PMLink>
     </PMVStack>
   );

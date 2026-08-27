@@ -106,6 +106,7 @@ export function ContextPackagePane({
   orgSlug,
   spaceSlug,
   packageHref,
+  onCreatePackage,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
@@ -130,6 +131,13 @@ export function ContextPackagePane({
   spaceSlug: string;
   /** The package's own page, which still holds everything not moved here. */
   packageHref: string;
+  /**
+   * Opens the drawer that names a new package, which the move drawer asks for
+   * when there is nowhere to move to. The surface holds it: it is what decides
+   * whether the new package is opened, and from here it must not be, or the
+   * pane would be remounted out from under the drawer that asked.
+   */
+  onCreatePackage: () => void;
   /**
    * The package is gone, so the surface has to stop asking for it. Deleting is
    * the one action here that outlives the pane: everything else changes what
@@ -391,8 +399,7 @@ export function ContextPackagePane({
       packages={packages}
       spaceId={spaceId}
       organizationId={organizationId}
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
+      onCreatePackage={onCreatePackage}
       onMoved={clearSelection}
     />
   );

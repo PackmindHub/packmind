@@ -62,6 +62,14 @@ const COVERAGE_PARAM = 'coverage';
 const NO_PACKAGE_VALUE: InventoryCoverage = 'none';
 
 /**
+ * Why a package is being created, which decides what happens to it once it
+ * exists: `open-it` for the reader who asked for a package, `stay` for the one
+ * who asked for somewhere to put something and is still looking at the drawer
+ * they asked from.
+ */
+type CreateIntent = 'open-it' | 'stay';
+
+/**
  * The Context surface of a space: its packages on the left, what the selected
  * one holds on the right.
  *
@@ -287,13 +295,19 @@ export function SpaceContextSurface() {
   );
 
   /*
-   * Naming a new package, held here and not in the rail that opens it: the two
-   * places that ask for one are the rail and the blank state, which is the rail
-   * and everything else, and what happens next is a selection, which is this
+   * Naming a new package, held here and not in the rail that opens it, because
+   * what happens once it exists is a selection and the selection is this
    * component's to make.
+   *
+   * Which is not the same answer everywhere, hence an intent rather than a
+   * boolean. Asked for from the rail or the blank state, the new package is what
+   * the reader wants to look at next. Asked for from a move with nowhere to go,
+   * it is a target for the drawer still open on screen: opening it would remount
+   * the pane under that drawer and throw away the components picked to move.
    */
-  const [creatingPackage, setCreatingPackage] = useState(false);
-  const createPackage = useCallback(() => setCreatingPackage(true), []);
+  const [creating, setCreating] = useState<CreateIntent | null>(null);
+  const createAndOpen = useCallback(() => setCreating('open-it'), []);
+  const createAndStay = useCallback(() => setCreating('stay'), []);
   const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
   const showOrphans = useCallback(
     () => show(INVENTORY_VALUE, NO_PACKAGE_VALUE),
@@ -341,13 +355,17 @@ export function SpaceContextSurface() {
    * the blank state is one of the two places that opens it, and that branch
    * returns before the surface itself does.
    */
-  const packageDrawer = creatingPackage && (
+  const packageDrawer = creating !== null && (
     <CreatePackageDrawer
       spaceId={spaceId}
       organizationId={organization.id}
       open
-      onOpenChange={(isOpen) => setCreatingPackage(isOpen)}
-      onCreated={selectPackage}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setCreating(null);
+      }}
+      onCreated={(packageId) => {
+        if (creating === 'open-it') selectPackage(packageId);
+      }}
     />
   );
 
@@ -357,7 +375,7 @@ export function SpaceContextSurface() {
         <PackagesBlankState
           orgSlug={orgSlug}
           spaceSlug={spaceSlug}
-          onCreate={createPackage}
+          onCreate={createAndOpen}
         />
         {packageDrawer}
       </>
@@ -406,7 +424,7 @@ export function SpaceContextSurface() {
               onSelect={selectPackage}
               onShowInventory={showInventory}
               onShowOrphans={showOrphans}
-              onCreatePackage={createPackage}
+              onCreatePackage={createAndOpen}
             />
           )}
           {/*
@@ -426,6 +444,7 @@ export function SpaceContextSurface() {
                 catalogue={catalogue}
                 coverage={coverage}
                 onCoverageChange={setCoverage}
+                onCreatePackage={createAndStay}
                 spaceId={spaceId}
                 organizationId={organization.id}
                 orgSlug={orgSlug}
@@ -451,6 +470,7 @@ export function SpaceContextSurface() {
                     spaceSlug,
                     selectedPackage.id,
                   )}
+                  onCreatePackage={createAndStay}
                   onDeleted={forgetPackage}
                 />
               )

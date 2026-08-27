@@ -59,6 +59,7 @@ export function SpaceInventoryPane({
   organizationId,
   orgSlug,
   spaceSlug,
+  onCreatePackage,
 }: Readonly<{
   packages: readonly PackageResponse[];
   catalogue: SpaceCatalogue;
@@ -75,6 +76,12 @@ export function SpaceInventoryPane({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
+  /**
+   * Opens the drawer that names a new package, for the placing drawer that has
+   * nowhere to place anything. The surface holds it, for the reason the package
+   * pane gives: it decides what happens to the package afterwards.
+   */
+  onCreatePackage: () => void;
 }>) {
   const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
     null,
@@ -301,8 +308,7 @@ export function SpaceInventoryPane({
           packages={packages}
           spaceId={spaceId}
           organizationId={organizationId}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
+          onCreatePackage={onCreatePackage}
           onMoved={clearSelection}
         />
       )}
