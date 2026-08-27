@@ -143,7 +143,11 @@ jobs:
           path: apps/frontend/build/client
 
   build-packages:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # Wider runner than the other jobs: build and typecheck fan out to 45 tasks
+    # with a ~6s critical path, so the step is bound by available cores rather
+    # than by task ordering (Nx reported 16.5s of 22.4s as recoverable on 4).
+    # Falls back to the standard tag where the 8-core variable is not set.
+    runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
@@ -172,11 +176,14 @@ jobs:
       # `build` type checks via `dependsOn: [typecheck]` (see nx.json), so the
       # gate holds for `nx build` anywhere. `typecheck` is still listed here to
       # cover `migrations`, which has a typecheck target but no build target.
+      # `--parallel=100%` because Nx otherwise defaults to 3 workers, which
+      # would leave most of this job's wider runner idle; the percentage form
+      # resolves to availableParallelism() so it tracks the runner size.
       - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/*
+        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
