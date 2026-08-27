@@ -4,6 +4,9 @@
 
 ## Changed
 
+- The command is now `packmind`. The installer and `packmind update` maintain a single real executable under that name, and the older `packmind-cli` becomes a symlink to it — the two swapped roles, so `packmind-cli` keeps working and keeps receiving updates instead of silently freezing at the version it was installed at. Running it now prints a deprecation warning: it will be removed in a later release, so scripts and CI jobs calling `packmind-cli` should be moved over
+- Messages now name the executable you actually invoked instead of hardcoding `packmind-cli`. The log prefix, `--help` usage output, `--version` and every suggested command follow the name you typed, so a suggestion can always be copied and run as-is. Previously the CLI could greet you as `packmind-cli` and then tell you to run `packmind init`
+
 ## Fixed
 
 ## Removed
@@ -22,8 +25,6 @@
 - Change `untrack` command to `git untrack` command
 - `--help` now lists the old `track` and `untrack` as `[Removed] Use "git track" instead`, matching what running them says. They used to be listed as `[Deprecated]` while answering "has been removed".
 - `git track --help` no longer describes `--update` as moving tracking to the current branch, which stopped being true when `--branch` shipped. Both entries now say the two options combine.
-- The command is now `packmind`. The installer and `packmind update` maintain a single real executable under that name, and the older `packmind-cli` becomes a symlink to it — the two swapped roles, so `packmind-cli` keeps working and keeps receiving updates instead of silently freezing at the version it was installed at. Running it now prints a deprecation warning: it will be removed in a later release, so scripts and CI jobs calling `packmind-cli` should be moved over
-- Messages now name the executable you actually invoked instead of hardcoding `packmind-cli`. The log prefix, `--help` usage output, `--version` and every suggested command follow the name you typed, so a suggestion can always be copied and run as-is. Previously the CLI could greet you as `packmind-cli` and then tell you to run `packmind init`
 
 ## Fixed
 
