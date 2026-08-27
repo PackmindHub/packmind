@@ -35,14 +35,6 @@ echo "📦 Building frontend..."
 echo "📦 Building API..."
 ./node_modules/.bin/nx build api --configuration=production
 
-# Dockerfile.api copies dist/packages/standards/samples/generated, which is
-# produced by the standards build's asset globs. Neither app build depends on it
-# — both bundle the packages from source via the tsconfig paths — so it has to be
-# asked for explicitly. The Dockerfile guards the copy with `if [ -d ... ]`, so a
-# missing dist yields an image with no standard samples and no error.
-echo "📦 Building standards (standard samples for the API image)..."
-./node_modules/.bin/nx build standards
-
 # Bundle migrations for Docker
 echo "📦 Bundling migrations for Docker..."
 ./node_modules/.bin/nx bundle-docker migrations
@@ -52,6 +44,15 @@ echo "✅ All Nx builds completed!"
 # ========================================================================
 # STEP 2: BUILD DOCKER IMAGES
 # ========================================================================
+
+# Dockerfile.api copies dist/packages/standards/samples/generated into the image.
+# In CI that directory comes from a "Download standard samples artifacts" step in
+# the docker job; locally it has to be built. Neither app build produces it — both
+# bundle the packages from source — and the Dockerfile guards the copy with
+# `if [ -d ... ]`, so without this the image silently ships without samples.
+echo "📦 Preparing image inputs: standard samples..."
+./node_modules/.bin/nx build standards
+
 echo "🐳 Building Docker images..."
 
 # Build API image
