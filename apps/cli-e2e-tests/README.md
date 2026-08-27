@@ -100,153 +100,91 @@ console.log(result.stderr); // Standard error
 ## Performance
 
 This suite is the longest job of the build stage, so it gates everything that
-runs after it. It runs on an 8-core runner (`ACTION_RUNNER_TAG_8_CORES`) rather
-than the pipeline's default 4: the suite waits on a spawned CLI and on HTTP
-rather than on CPU, so twice the cores nearly halves it while the total work
-barely changes. Jest's default worker count is `nproc - 1`, so it follows the
-runner without a flag. CI runs the suite twice — once against the CLI this commit builds
-(`workspace`) and once against the CLI already published on the registry
-(`registry`, which guards the API against breaking the versions users run) — as
-two parallel legs of the same matrix job. Two properties of its design drive
-its cost:
+runs after it. CI runs it as two parallel legs of one matrix job — once against
+the CLI this commit builds (`workspace`) and once against the CLI already
+published on the registry (`registry`, which guards the API against breaking the
+versions users run) — on an 8-core runner (`ACTION_RUNNER_TAG_8_CORES`) rather
+than the pipeline's default 4.
+
+Two properties of the suite's design drive its cost:
 
 - **Setup runs per test, not per suite.** `jest-stage` re-runs the
   `describeWithUserSignedUp` setup before every `it`, so each test pays a fresh
   signup, signin, API-key generation and space lookup — plus whatever the
-  suite's own `beforeEach` adds (a git repo, a package, an `install` run).
-  A suite with 62 one-assertion tests pays that 62 times.
+  suite's own `beforeEach` adds (a git repo, a package, an `install` run). A
+  suite with 62 one-assertion tests pays that 62 times.
 - **Wall clock is bounded by the longest single suite.** Jest spreads suites
-  over workers but never splits one, so no amount of extra workers takes the
-  run below the duration of the slowest file. That bound is relative to the
-  hardware, not absolute: with less contention the longest file also runs
-  faster. Measured on an 8-vCPU runner with 6 workers, `install.spec.ts` alone
-  accounts for the entire run — so splitting it is the prerequisite for any
-  further capacity paying off.
+  over workers but never splits one. On the 8-core runner `install.spec.ts`
+  alone accounts for the entire run (floor ≈ wall in every measurement), so
+  splitting it is the prerequisite for any extra capacity paying off. Perfect
+  packing would still stop at `serial / workers` ≈ 44s.
 
-### Benchmarking a change
+### What was measured, so the next change starts from facts
 
-`scripts/cli-e2e-benchmark-report.mjs` turns Jest's JSON report into the
-metrics that make those two properties visible:
+Measured on CI hardware with a benchmark harness (removed once it had answered;
+see PR #443 for the runs and the raw numbers):
+
+| Change                                                | Effect                                                         | Verdict                                                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 4 vCPU / 3 workers → 8 vCPU / 6 workers               | −46 % (105s → 55s)                                             | **adopted**                                                                                   |
+| Running the two CLI legs in parallel                  | job 6:26 → 2:38                                                | **adopted**                                                                                   |
+| Whole stack → `backend` alone, reached directly       | −10 to −14 % at 8 cores                                        | rejected: the suite would stop exercising nginx and the Vite proxy that real clients traverse |
+| bcrypt cost factor 10 → 4                             | −23s serial, ≈ −5s wall (−9 %)                                 | rejected: not worth weakening a production password hash                                      |
+| One shared `NODE_COMPILE_CACHE` across the CLI spawns | −14 % per spawn in isolation, **no wall-clock win under load** | rejected: see below                                                                           |
+| Dropping `frontend`/`nginx` from stack startup        | −4s, i.e. nothing                                              | the critical path is `install-dependencies` and the migrations                                |
+| A bigger runner than 8 cores                          | nothing                                                        | floor already equals wall                                                                     |
+
+**Where a test's time actually goes.** One full `install.spec.ts` test costs
+~580ms on the 8-core runner: `cliInstall` 467ms, `signup` 49ms, `signin` 44ms,
+and 20ms for everything else (git repo 8ms, package 6ms, API key 4ms, space
+2ms). Of the 467ms, **413ms is launching the CLI at all** — a `--version` run,
+which makes no API call and writes nothing — leaving 53ms for the command's own
+work. Across 287 tests that is roughly **120s of the ~305s serial cost spent on
+process startup.** Reducing the _number_ of CLI spawns therefore beats anything
+that makes the API faster; `install.spec.ts` runs `install` once per `it`, and
+sharing one run across the assertions of a `describe` would remove tens of
+seconds at the cost of the one-assertion-per-test style.
+
+**The compile cache, and why the negative result is worth keeping.**
+`NODE_COMPILE_CACHE` reuses V8 bytecode across processes, which should be
+exactly right for the same bundle compiled 287 times — and in isolation it is:
+413ms → 354ms per spawn, −14 %, reproduced twice to within 2ms. Run as A/B arms
+inside a single benchmark run it did not survive: the two stack shapes
+disagreed in sign (−2.3s and **+5.7s**), both cached arms did _more_ serial work
+than their controls, and the two cached arms landed within 0.2s of each other
+despite their controls sitting 7.8s apart — consistent with the cache imposing a
+floor of its own, plausibly contention between six workers over one directory.
+**The transferable lesson is about method:** a per-spawn measurement taken
+sequentially and unloaded does not predict suite behaviour under worker
+contention, however cleanly it reproduces. If revisited, try one cache directory
+_per Jest worker_ (keyed on `JEST_WORKER_ID`), which needs a `runCli` change and
+a fresh A/B — not the shared directory measured here.
+
+### Measuring a change
+
+`scripts/cli-e2e-benchmark-report.mjs` turns Jest's JSON report into the metrics
+that make the two properties above visible:
 
 ```bash
-nx test cli-e2e-tests --skip-nx-cache --json --outputFile=/tmp/baseline.workers-3.json
-node scripts/cli-e2e-benchmark-report.mjs report /tmp/baseline.workers-3.json
+nx test cli-e2e-tests --skip-nx-cache --json --outputFile=/tmp/before.workers-6.json
+node scripts/cli-e2e-benchmark-report.mjs report /tmp/before.workers-6.json
+node scripts/cli-e2e-benchmark-report.mjs compare /tmp/before.workers-6.json /tmp/after.workers-6.json
 ```
 
-| Metric            | Reading                                                                                                                                                                                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `wall`            | what CI waits for                                                                                                                                                                                                                                                        |
-| `serial`          | Σ suite durations — the work to spread over the workers                                                                                                                                                                                                                  |
-| `floor`           | longest single suite — the hard lower bound on `wall`. Flagged **at wall** when it accounts for the whole run, which means extra workers buy nothing until that file is split                                                                                            |
-| `per test`        | suite duration ÷ test count. Since every `it` re-runs the whole setup, this is the cost of one setup-and-act cycle — the number to watch when changing how tests get their fixtures                                                                                      |
-| `outside tests`   | suite duration − Σ test durations: module load and top-level setup **only**. Not the per-test hook cost — jest-circus starts a test's clock before its `beforeEach` runs, so hook time already sits inside each test's duration, and Jest's JSON cannot separate the two |
-| worker efficiency | `serial / (wall × workers)`; ~1.0 means the workers are saturated, and a low value with `floor` at wall means they are idling on the longest file                                                                                                                        |
+| Metric            | Reading                                                                                                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wall`            | what CI waits for                                                                                                                                                                                                               |
+| `serial`          | Σ suite durations — the work to spread over the workers                                                                                                                                                                         |
+| `floor`           | longest single suite: the hard lower bound on `wall`. Flagged **at wall** when it accounts for the whole run, meaning extra workers buy nothing until that file is split                                                        |
+| `per test`        | suite duration ÷ test count. Since every `it` re-runs the whole setup, this is the cost of one setup-and-act cycle                                                                                                              |
+| `outside tests`   | suite duration − Σ test durations: module load and top-level setup **only**. Not the per-test hook cost — jest-circus starts a test's clock before its `beforeEach` runs, so hook time already sits inside each test's duration |
+| worker efficiency | `serial / (wall × workers)`; ~1.0 means saturated, and a low value with `floor` at wall means the workers are idling on the longest file                                                                                        |
 
 The label and worker count are read back out of the file name
-(`<label>.workers-<n>.json`), because Jest's JSON records neither. Pass several
-reports to `compare` to get one row each:
+(`<label>.workers-<n>.json`), because Jest's JSON records neither.
 
-```bash
-node scripts/cli-e2e-benchmark-report.mjs compare /tmp/baseline.workers-3.json /tmp/api-only.workers-6.json
-```
-
-To measure on CI hardware, run the **CLI E2E Benchmark** workflow
-(`.github/workflows/cli-e2e-benchmark.yml`): pick variants from its catalogue,
-each of which pins a stack shape, a runner size and a worker count. It runs each
-against its own stack and posts the per-variant tables plus a comparison to the
-job summary and the step log. Adding the `cli-e2e-benchmark` label to a pull
-request runs the default 2×2 against that branch.
-
-`docker-compose.cli-e2e.yml` is the overlay its `api-only` variants use: it
-publishes the API port on loopback so `PACKMIND_INSTANCE_URL` can point straight
-at the API, which lets the job start `backend` alone — no frontend dev server,
-no nginx, and no Vite proxy hop on every request.
-
-What the first sweep measured, so the next change starts from facts rather than
-from the same guesses:
-
-| Change                                       | Effect on the suite                                                                          |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 4 vCPU / 3 workers → 8 vCPU / 6 workers      | **−50 %** (105.5s → 52.4s)                                                                   |
-| whole stack → `backend` alone, direct        | 0 % at 4 vCPU, −5 % at 8 vCPU                                                                |
-| dropping the frontend and nginx from startup | −4s, i.e. nothing: `install-dependencies` and the migrations are the startup's critical path |
-
-### Where one test's time actually goes
-
-`scripts/measure-cli-e2e-setup-cost.mjs` replays the whole fixture sequence of
-one `install.spec.ts` test against a live API and times each phase, so the
-per-test cost can be attributed instead of guessed. Measured on the 8-core CI
-runner, sequential and unloaded (median of 15 sequences):
-
-| Phase            |    Median | Share of the test |
-| ---------------- | --------: | ----------------: |
-| `cliInstall`     |     467ms |               80% |
-| `signup`         |      49ms |                8% |
-| `signin`         |      44ms |                8% |
-| `gitRepo`        |       8ms |                1% |
-| `createPackage`  |       6ms |                1% |
-| `generateApiKey` |       4ms |                1% |
-| `getGlobalSpace` |       2ms |                0% |
-| `tempDirs`       |       0ms |                0% |
-| **one test**     | **580ms** |              100% |
-
-The single dominant cost is launching the CLI. A `--version` run — no API call,
-nothing written — takes **413ms** of the `install` command's 467ms, so 53ms is
-the command's own work and the rest is Node starting up and compiling the
-bundle. Across the suite's 287 tests that is roughly **120s of the ~305s serial
-cost spent on process startup alone.** Two consequences:
-
-- Anything that reduces the _number_ of CLI spawns beats anything that makes
-  the API faster. `install.spec.ts` runs `install` once per `it`; sharing one
-  run across the assertions of a `describe` would remove tens of seconds, at
-  the cost of the one-assertion-per-test style — a deliberate trade-off, not an
-  obvious win.
-- Making each spawn cheaper is the other half, and it is where a clean
-  measurement turned out not to predict the suite. See below.
-
-### A shared compile cache: measured, and rejected
-
-`NODE_COMPILE_CACHE` gives Node a V8 bytecode cache reused across processes,
-which should be exactly right here — the same bundle compiled 287 times. In the
-isolated probe it is: **413ms → 354ms per spawn, −14 %**, reproduced twice on CI
-hardware to within 2ms. It needs no code change either, since `runCli` copies
-the whole `process.env` into the child.
-
-Under the real suite it does not survive. The benchmark's `-cc` arms are the
-same cells with one shared cache, run alongside their controls in the same run:
-
-| Variant           |  Wall | Serial | vs its control |
-| ----------------- | ----: | -----: | -------------: |
-| `baseline-8w6`    | 56.9s | 295.1s |        control |
-| `baseline-8w6-cc` | 54.6s | 308.5s |          −2.3s |
-| `api-only-8w6`    | 49.1s | 276.9s |        control |
-| `api-only-8w6-cc` | 54.8s | 305.0s |      **+5.7s** |
-
-The two pairs disagree in sign, and both cached arms did _more_ serial work than
-their controls. The two `-cc` arms also land within 0.2s of each other despite
-different stack shapes, while their controls are 7.8s apart — consistent with
-the cache imposing a floor of its own. The plausible mechanism, untested, is
-contention: six workers spawning CLIs concurrently against one cache directory
-serialise on it, which a sequential probe by construction cannot see. In the
-slower stack shape that hides behind API latency; in the faster one it becomes
-the bottleneck.
-
-So CI deliberately does not set it. **The lesson worth keeping is about the
-method rather than the variable:** a per-spawn measurement taken sequentially
-and unloaded does not predict suite behaviour under worker contention, however
-cleanly it reproduces. If this is revisited, the thing to try is one cache
-directory _per Jest worker_ (keyed on `JEST_WORKER_ID`), which needs a change in
-`runCli` and a fresh A/B — not the shared directory measured here.
-
-`scripts/measure-bcrypt-cost.mjs` sizes the other CPU-bound candidate, inside
-the API container where bcrypt's native binding is built:
-
-```bash
-docker compose exec -T backend node scripts/measure-bcrypt-cost.mjs --rounds 4,6,8,10
-```
-
-`UserService` hardcodes `saltRounds = 10`, and every test pays one hash
-(signup) and one compare (signin): **40ms + 40ms = 80ms per test, 23.0s over
-the suite.** Dropping to rounds=4 would recover 22.6s of serial cost — about 5s
-of wall clock, −9%. That is not worth weakening a production password hash, so
-the factor is deliberately left alone.
+**Measure a candidate as an A/B in one run, on one machine.** The suite step on
+the `workspace` leg measured 54, 57, 56, 54, 59, 54 and 57 seconds across seven
+successive commits of one branch: a 5s spread makes any effect smaller than that
+unmeasurable by comparing commits. That spread is what made the compile cache
+look like a win.

@@ -282,11 +282,12 @@ jobs:
     # sequence in a single job, it added its whole duration to the critical path
     # of the `build` stage — and `quality` waits for that stage in full.
     name: cli-e2e-tests (${{ matrix.cli-source }})
-    # An 8-core runner rather than the pipeline's default 4. Measured on the
-    # benchmark workflow: the suite is bound by waiting on a spawned CLI and on
-    # HTTP, not by CPU, so doubling the cores nearly halves it — 105s to 55s —
-    # while the total work barely changes. Jest's own default worker count is
-    # `nproc - 1`, so it follows the runner without a flag here.
+    # An 8-core runner rather than the pipeline's default 4. Measured: the suite
+    # is bound by waiting on a spawned CLI and on HTTP, not by CPU, so doubling
+    # the cores nearly halves it — 105s to 55s — while the total work barely
+    # changes. Jest's own default worker count is `nproc - 1`, so it follows the
+    # runner without a flag here. See apps/cli-e2e-tests/README.md for the
+    # numbers and for the candidates that were measured and rejected.
     #
     # The fallback chain keeps a checkout without the new variable working: the
     # 8-core tag, then the pipeline's usual tag, then self-hosted.
@@ -408,9 +409,10 @@ jobs:
       # Deliberately NOT setting `NODE_COMPILE_CACHE` here. Measured in
       # isolation it looks like the cheapest win available: one shared V8
       # bytecode cache takes a CLI spawn from 413ms to 354ms, -14%, twice
-      # reproduced. Under the real suite it does not survive - the benchmark's
-      # `-cc` arms make the faster configuration ~10% slower, and both cached
-      # arms did more total work than their controls. See the suite's README.
+      # reproduced. Under the real suite it does not survive: run as A/B arms,
+      # the two stack shapes disagreed in sign (-2.3s and +5.7s) and both cached
+      # arms did more total work than their controls. The suite's README has the
+      # table and the likely reason.
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
