@@ -18,6 +18,16 @@ on:
       - 'release-cli/*'
   pull_request:
 
+# Only pull requests share a group, and only they cancel. Non-PR runs key on
+# `github.run_id`, which is unique per run: keying them on `github.ref` instead
+# would put every push to `main` — and every release tag — in one group with
+# `cancel-in-progress` false, i.e. queued one at a time behind a ~7 minute
+# pipeline. Cancelling them is not an option either: they push images and
+# deploy, so an interrupted run leaves partial state.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # Stage 1: Build and Test
   build:
