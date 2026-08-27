@@ -33,13 +33,33 @@ const AUTH_PHASES = ['signup', 'signin', 'generateApiKey', 'getGlobalSpace'];
 // written, so the difference between the two separates the fixed cost of
 // launching the CLI from the work the command actually does. That distinction
 // decides whether the lever is "fewer spawns per test" or "a faster command".
+// `cliVersionCached` is the same spawn again with NODE_COMPILE_CACHE pointed at
+// a warmed directory. Node caches the compiled bytecode of the bundle there, so
+// the gap against `cliVersion` is how much of the startup is V8 re-parsing code
+// it has already seen. Available since Node 22 and needs no code change, which
+// is why it is worth a column of its own.
 const FULL_PHASES = [
   'tempDirs',
   'gitRepo',
   'createPackage',
   'cliVersion',
+  'cliVersionCached',
   'cliInstall',
 ];
+
+// One cache directory for the whole script run, warmed on first use: in a real
+// suite run the first test would warm it and the other 286 would benefit.
+let compileCacheDir;
+function warmCompileCache(cwd, home) {
+  if (compileCacheDir) return compileCacheDir;
+  compileCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-v8cache-'));
+  runCli('--version', {
+    cwd,
+    home,
+    env: { NODE_COMPILE_CACHE: compileCacheDir },
+  });
+  return compileCacheDir;
+}
 
 function parseArgs(argv) {
   const options = { iterations: 30, tests: 287, warmup: 3, full: false };
@@ -112,10 +132,15 @@ function setupGitRepo(testDir) {
 }
 
 /** Spawns the built CLI the way `runCli` does, and waits for it to exit. */
-function runCli(command, { apiKey, cwd, home }) {
+function runCli(command, { apiKey, cwd, home, env: extraEnv }) {
   const target = cliPath();
   const args = command.split(' ');
-  const env = { ...process.env, HOME: home, PACKMIND_API_KEY: apiKey };
+  const env = {
+    ...process.env,
+    HOME: home,
+    ...(apiKey ? { PACKMIND_API_KEY: apiKey } : {}),
+    ...extraEnv,
+  };
   const isJs = target.endsWith('.cjs') || target.endsWith('.js');
   const result = isJs
     ? spawnSync('node', [target, ...args], { cwd, env, encoding: 'utf-8' })
@@ -224,6 +249,16 @@ async function oneSetup(url, full = false) {
     started = performance.now();
     runCli('--version', { apiKey, cwd: testDir, home: testHome });
     timings.cliVersion = performance.now() - started;
+
+    const cacheDir = warmCompileCache(testDir, testHome);
+    started = performance.now();
+    runCli('--version', {
+      apiKey,
+      cwd: testDir,
+      home: testHome,
+      env: { NODE_COMPILE_CACHE: cacheDir },
+    });
+    timings.cliVersionCached = performance.now() - started;
 
     started = performance.now();
     runCli(`install ${created.package.slug}`, {
@@ -343,10 +378,16 @@ async function main() {
       `The auth fixture is ${auth.toFixed(0)}ms of that, and bcrypt ${hashing.toFixed(0)}ms of the auth fixture.`,
     );
     const spawn = perPhase.cliVersion.median;
+    const cached = perPhase.cliVersionCached.median;
     const work = perPhase.cliInstall.median - spawn;
     lines.push('');
     lines.push(
       `Of the \`cliInstall\` ${perPhase.cliInstall.median.toFixed(0)}ms, **${spawn.toFixed(0)}ms is launching the CLI at all** (\`--version\` does no API call and writes nothing) and ${work.toFixed(0)}ms is the command's own work. Over the file that is ${over(spawn)}s of pure process startup against ${over(work)}s of work.`,
+    );
+    lines.push('');
+    const saved = spawn - cached;
+    lines.push(
+      `With \`NODE_COMPILE_CACHE\` warmed, the same spawn takes ${cached.toFixed(0)}ms — **${saved > 0 ? '−' : '+'}${Math.abs(saved).toFixed(0)}ms (${((Math.abs(saved) / spawn) * 100).toFixed(0)}%)**, or ${over(Math.abs(saved))}s over the file, for an environment variable and no code change.`,
     );
   } else {
     lines.push(
