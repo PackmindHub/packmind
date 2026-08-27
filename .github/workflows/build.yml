@@ -60,6 +60,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -109,6 +111,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -167,6 +171,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -240,6 +246,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -285,6 +293,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:

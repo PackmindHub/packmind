@@ -138,6 +138,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
@@ -173,7 +175,11 @@ jobs:
         run: ./node_modules/.bin/nx bundle-docker migrations
 
       # Docker setup
+      # Only the release-tag path builds linux/arm64 (see the `release` group in
+      # docker-bake.hcl); on `main` the bake is linux/amd64 only, so emulation
+      # setup is ~10s of pure overhead.
       - name: Set up QEMU
+        if: startsWith(github.ref, 'refs/tags/release/')
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
