@@ -5,11 +5,12 @@ license: 'Complete terms in LICENSE.txt'
 ---
 
 # packmind-onboard
-Run "packmind-cli --version" to get the current cli installation.
-    
+Run "packmind --version" to get the current cli installation.
+
 Find the highest version at or below the cli version in this list:
 - 0.16.0
 - 0.23.0
+- 0.35.0
 Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
 
 
@@ -59,7 +60,7 @@ basename "$(git rev-parse --show-toplevel)"
 
 Remember this as the repository name for package creation in Step 2.
 
-Also run `packmind-cli whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
+Also run `packmind whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
 
 
 ---
@@ -291,13 +292,13 @@ Follow [`packmind-versions/$PACKMIND_CLI_VERSION/completion-summary.md`](packmin
 
 ### Package creation fails
 
-If `packmind-cli packages create` fails:
+If `packmind packages create` fails:
 
 ```
 ❌ Failed to create package: [error message]
 
 Please check:
-  - You are logged in: `packmind-cli login`
+  - You are logged in: `packmind login`
   - Your network connection is working
   - The package name is valid
 
@@ -314,7 +315,7 @@ If CLI commands fail with authentication errors:
 ❌ Not logged in to Packmind
 
 Please run:
-  packmind-cli login
+  packmind login
 
 Then re-run this skill.
 ```
