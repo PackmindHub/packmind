@@ -2,7 +2,6 @@ name: Quality and Security Checks
 
 env:
   ENTERPRISE_EDITION: proprietary
-  OSS_EDITION: oss
   HUSKY: '0'
 
 on:
@@ -12,10 +11,6 @@ on:
         required: true
         type: string
         description: 'Node.js version to use'
-      cli-executables-artifact:
-        required: true
-        type: string
-        description: 'CLI executables artifact name from build-proprietary'
     secrets:
       GITGUARDIAN_API_KEY:
         required: true
@@ -23,9 +18,6 @@ on:
       SONAR_TOKEN:
         required: true
         description: 'Token for SonarCloud code quality analysis'
-      PACKMIND_API_KEY:
-        required: false
-        description: 'API key to run new packmind-cli'
 
 jobs:
   gitguardian-scan:
@@ -69,6 +61,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate Proprietary tsconfig
         env:
@@ -104,6 +98,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate Proprietary tsconfig
         env:
@@ -117,31 +113,6 @@ jobs:
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  packmind-cli:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
-    name: Run Packmind CLI
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download CLI executable
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.cli-executables-artifact }}
-          path: ./cli-binary
-
-      - name: Make binary executable
-        run: chmod +x ./cli-binary/packmind-cli-linux-x64
-
-      - name: Run Packmind CLI
-        run: ./cli-binary/packmind-cli-linux-x64 lint .
-        env:
-          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
   check-oss-sync:
     if: vars.PACKMIND_EDITION == 'proprietary'

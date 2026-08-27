@@ -9,6 +9,26 @@ name: Main CI/CD Pipeline
 # │ - PACKMIND_EDITION: 'oss' or 'proprietary'                     │
 # │ - ACTION_RUNNER_TAG: (optional) defaults to 'self-hosted'      │
 # └─────────────────────────────────────────────────────────────────┘
+#
+# Three roots start at once — `build`, `quality` and `e2e` — because none of
+# them reads anything the others produce. Every `needs:` below is a real data
+# dependency (an artifact) or a deployment gate; nothing waits on a stage just
+# because that stage used to come earlier in a list.
+#
+#   build ─┬─────────────────► quality-packmind-cli ─┐
+#          └── artifacts ───────────────────────────┬┴► docker ─► deploy ─► release
+#   quality ────────────────────────────────────────┤
+#   e2e ────────────────────────────────────────────┘
+#
+# `needs:` gates on a called workflow as a whole, never on individual jobs
+# inside it. That is why the E2E suites and the artifact-consuming Packmind
+# lint each live in their own file: leaving them alongside jobs with different
+# dependencies is what serialised this pipeline in the first place.
+#
+# Every called workflow keeps at least one unconditional job, so no caller job
+# here can ever be reported `skipped`. Do not add an `if:` that could skip a
+# whole called workflow — GitHub skips its dependents too, silently, and
+# `deploy-staging-and-release` would stop deploying with nothing showing red.
 
 on:
   push:
@@ -18,8 +38,19 @@ on:
       - 'release-cli/*'
   pull_request:
 
+# Only pull requests share a group, and only they cancel. Non-PR runs key on
+# `github.run_id`, which is unique per run: keying them on `github.ref` instead
+# would put every push to `main` — and every release tag — in one group with
+# `cancel-in-progress` false, i.e. queued one at a time behind a ~7 minute
+# pipeline. Cancelling them is not an option either: they push images and
+# deploy, so an interrupted run leaves partial state.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  # Stage 1: Build and Test
+  # Compile, unit and integration tests. Produces every artifact the pipeline
+  # consumes downstream.
   build:
     uses: ./.github/workflows/build.yml
     with:
@@ -28,22 +59,42 @@ jobs:
       VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
       VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
 
-  # Stage 2: Quality and Security Checks
+  # The E2E suites. Each builds what it needs from source inside its own
+  # containers, so it consumes no build artifact and has no reason to wait for
+  # `build`. Sitting inside build.yml, it added its whole duration to the front
+  # of every downstream stage — `needs:` gates on the called workflow as a
+  # whole, never on individual jobs inside it.
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    with:
+      node-version: 24.18.0
+
+  # GitGuardian, lint+format, Sonar and the OSS parity check. All source-only:
+  # they read the checkout and nothing else, so no `needs:`.
   quality:
-    needs: [build]
     uses: ./.github/workflows/quality.yml
     with:
       node-version: 24.18.0
-      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # The one quality check with a real build dependency: it runs the CLI
+  # executable that build-cli uploaded.
+  quality-packmind-cli:
+    needs: [build]
+    uses: ./.github/workflows/quality-packmind-cli.yml
+    with:
+      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
+    secrets:
       PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
-  # Stage 3: Docker Images (on main branch, and release tags)
-  # Note: The docker workflow handles branch conditions internally based on edition
+  # Docker images (on main and release tags; docker.yml gates that internally).
+  # `e2e` is in the needs by choice: no image reaches Docker Hub from code whose
+  # E2E suites fail. It is free — docker starts at max(build, quality, e2e,
+  # build+packmind-lint), which Sonar sets, and E2E finishes under it.
   docker:
-    needs: [build, quality]
+    needs: [build, quality, e2e, quality-packmind-cli]
     uses: ./.github/workflows/docker.yml
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
@@ -54,9 +105,9 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  # Stage 4: Publish CLI Release (only on release-cli/* tags, OSS only)
+  # Only on release-cli/* tags, OSS only.
   publish-cli-release:
-    needs: [build, quality]
+    needs: [build, quality, e2e, quality-packmind-cli]
     if: startsWith(github.ref, 'refs/tags/release-cli/') && vars.PACKMIND_EDITION == 'oss'
     permissions:
       contents: write
@@ -73,10 +124,11 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       HOMEBREW_TAP_PAT: ${{ secrets.HOMEBREW_TAP_PAT }}
 
-  # Stage 5: Deploy and Update Helm Charts (after Docker images are built)
-  # Note: The deploy workflow handles edition-specific logic internally
+  # Deploy and update Helm charts, after the images exist. This is the gate
+  # nothing gets past on red: deploy.yml handles edition-specific logic
+  # internally.
   deploy-staging-and-release:
-    needs: [build, quality, docker]
+    needs: [build, quality, e2e, quality-packmind-cli, docker]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
     with:
@@ -87,9 +139,9 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       HELM_CHARTS_PAT: ${{ secrets.HELM_CHARTS_PAT }}
 
-  # Stage 6: Create Release (only on release tags, after all deployments)
+  # Only on release tags, after the deployment.
   create-release:
-    needs: [build, quality, docker, deploy-staging-and-release]
+    needs: [build, quality, e2e, quality-packmind-cli, docker, deploy-staging-and-release]
     if: startsWith(github.ref, 'refs/tags/release/')
     permissions:
       contents: write
