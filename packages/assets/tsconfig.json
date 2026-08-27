@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.effective.json",
   "compilerOptions": {
     "module": "commonjs",
+    "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "importHelpers": true,

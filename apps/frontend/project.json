@@ -6,6 +6,10 @@
   "tags": ["env:browser"],
   "// targets": "to see all targets run: nx show project frontend --web",
   "targets": {
+    "build": {
+      "// dependsOn": "The Vite build resolves every @packmind/* import through nxViteTsPaths to packages/*/src, never to dist/packages, so the inferred ^build chain rebuilds 17 packages this target never reads. Use `nx build-deps frontend` when you actually want those dists.",
+      "dependsOn": []
+    },
     "serve": {
       "executor": "nx:run-commands",
       "options": {
