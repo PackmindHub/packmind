@@ -1,6 +1,9 @@
-import { IGitProviderFactory } from '../../domain/repositories/IGitProviderFactory';
+import {
+  GitProviderCredentials,
+  IGitProviderFactory,
+} from '../../domain/repositories/IGitProviderFactory';
 import { IGitProvider } from '../../domain/repositories/IGitProvider';
-import { GitProvider, GitProviderVendors } from '@packmind/types';
+import { GitProviderVendors } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { GithubProvider } from './github/GithubProvider';
 import { GitlabProvider } from './gitlab/GitlabProvider';
@@ -22,7 +25,9 @@ export class GitProviderFactory implements IGitProviderFactory {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async createGitProvider(provider: GitProvider): Promise<IGitProvider> {
+  async createGitProvider(
+    provider: GitProviderCredentials,
+  ): Promise<IGitProvider> {
     switch (provider.source) {
       case GitProviderVendors.github: {
         const resolver = await this.tokenResolverFactory.build(provider);

@@ -157,11 +157,15 @@ export class UpdateGitProviderUseCase
       credentialView.authMethod === 'token' &&
       isProbeableSource(gitProvider.source ?? existingProvider.source)
     ) {
-      await assertCandidateCredentialsWork(this.gitProviderService, {
-        ...existingProvider,
-        ...patch,
-        token: suppliedToken,
-      });
+      await assertCandidateCredentialsWork(
+        this.gitProviderService,
+        {
+          ...existingProvider,
+          ...patch,
+          token: suppliedToken,
+        },
+        this.logger,
+      );
     }
 
     return this.gitProviderService.updateGitProvider(id, patch);

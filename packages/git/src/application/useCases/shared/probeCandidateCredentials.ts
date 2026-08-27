@@ -1,9 +1,10 @@
 import {
-  GitProvider,
   GitProviderVendors,
   InvalidGitProviderCredentialsError,
 } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { CheckAuthFailureReason } from '../../../domain/repositories/IGitProvider';
+import { GitProviderCredentials } from '../../../domain/repositories/IGitProviderFactory';
 import { GitProviderService } from '../../GitProviderService';
 
 /**
@@ -46,12 +47,22 @@ const FAILURE_MESSAGE: Record<CheckAuthFailureReason, string> = {
  */
 export async function assertCandidateCredentialsWork(
   gitProviderService: Pick<GitProviderService, 'checkAuthForProviderConfig'>,
-  candidate: GitProvider,
+  candidate: GitProviderCredentials,
+  logger?: Pick<PackmindLogger, 'warn'>,
 ): Promise<void> {
   let result;
   try {
     result = await gitProviderService.checkAuthForProviderConfig(candidate);
-  } catch {
+  } catch (error) {
+    // Anything thrown here — a real outage, but equally a misconfigured
+    // candidate the resolver refuses to build — becomes the same "could not
+    // reach the provider" message. Record what it actually was, so a defect on
+    // our side is not indistinguishable from the provider being down.
+    logger?.warn('Candidate git credentials could not be verified', {
+      source: candidate.source,
+      authMethod: candidate.authMethod,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new InvalidGitProviderCredentialsError(FAILURE_MESSAGE.network);
   }
 

@@ -1,5 +1,8 @@
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
-import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+import {
+  GitProviderCredentials,
+  IGitProviderFactory,
+} from '../domain/repositories/IGitProviderFactory';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
@@ -95,7 +98,7 @@ export class GitProviderService {
    * never touches the repository.
    */
   async checkAuthForProviderConfig(
-    gitProvider: GitProvider,
+    gitProvider: GitProviderCredentials,
   ): Promise<CheckAuthResult> {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);

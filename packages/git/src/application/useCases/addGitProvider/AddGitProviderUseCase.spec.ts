@@ -4,6 +4,7 @@ import {
   GitProviderDisplayNameAlreadyUsedError,
   GitProviderVendor,
   GitProviderVendors,
+  InvalidGitProviderCredentialsError,
   createGitProviderId,
   createOrganizationGitHubAppId,
 } from '@packmind/types';
@@ -45,6 +46,7 @@ describe('AddGitProviderUseCase', () => {
     mockGitProviderService = {
       addGitProvider: jest.fn(),
       findGitProvidersByOrganizationId: jest.fn().mockResolvedValue([]),
+      checkAuthForProviderConfig: jest.fn().mockResolvedValue({ ok: true }),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -415,6 +417,14 @@ describe('AddGitProviderUseCase', () => {
       it('calls addGitProvider', () => {
         expect(mockGitProviderService.addGitProvider).toHaveBeenCalled();
       });
+
+      // The CLI creates these to track repositories and has no credential to
+      // check, so probing would fail every one of them.
+      it('does not probe the provider', () => {
+        expect(
+          mockGitProviderService.checkAuthForProviderConfig,
+        ).not.toHaveBeenCalled();
+      });
     });
 
     describe('when allowTokenlessProvider is false', () => {
@@ -606,6 +616,122 @@ describe('AddGitProviderUseCase', () => {
         expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith(
           expect.objectContaining({ displayName: '' }),
         );
+      });
+    });
+  });
+
+  describe('verifying a supplied token', () => {
+    const tokenInput = {
+      gitProvider: {
+        source: GitProviderVendors.github,
+        url: 'https://github.com',
+        token: 'ghp_candidate',
+        authMethod: 'token' as const,
+        displayName: '',
+      },
+      organizationId,
+      userId: memberUser.id,
+      verifyCredentials: true,
+    };
+
+    describe('when the provider accepts the token', () => {
+      beforeEach(async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+        await useCase.execute(tokenInput);
+      });
+
+      it('probes the candidate before storing it', () => {
+        expect(
+          mockGitProviderService.checkAuthForProviderConfig,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({ token: 'ghp_candidate' }),
+        );
+      });
+    });
+
+    // The route has no runtime DTO validation, so a hand-rolled client can omit
+    // authMethod entirely. That used to create a working token connection; the
+    // probe must not turn it into a spurious "could not reach the provider".
+    describe('when the request omits authMethod', () => {
+      beforeEach(async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+        await useCase.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: 'ghp_candidate',
+            displayName: '',
+          } as unknown as (typeof tokenInput)['gitProvider'],
+          organizationId,
+          userId: memberUser.id,
+          verifyCredentials: true,
+        });
+      });
+
+      it('probes with the defaulted token auth method', () => {
+        expect(
+          mockGitProviderService.checkAuthForProviderConfig,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({ authMethod: 'token' }),
+        );
+      });
+    });
+
+    describe('when the provider rejects the token', () => {
+      let rejection: Promise<unknown>;
+
+      beforeEach(() => {
+        mockGitProviderService.checkAuthForProviderConfig.mockResolvedValue({
+          ok: false,
+          reason: 'unauthorized',
+        });
+        rejection = useCase.execute(tokenInput).catch((error) => error);
+      });
+
+      it('reports the credentials as invalid', async () => {
+        await expect(rejection).resolves.toBeInstanceOf(
+          InvalidGitProviderCredentialsError,
+        );
+      });
+
+      it('does not create the connection', async () => {
+        await rejection;
+
+        expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      });
+    });
+
+    // The GitHub App installation is its own proof of access and carries no
+    // token to probe.
+    describe('when the connection uses GitHub App auth', () => {
+      beforeEach(async () => {
+        mockGitProviderService.addGitProvider.mockResolvedValue(
+          gitProviderFactory(),
+        );
+        await useCase.execute({
+          gitProvider: {
+            source: GitProviderVendors.github,
+            url: null,
+            token: null,
+            authMethod: 'app' as const,
+            appInstallationId: 42,
+            organizationGitHubAppId: createOrganizationGitHubAppId('app-1'),
+            displayName: '',
+          },
+          organizationId,
+          userId: memberUser.id,
+          verifyCredentials: true,
+        });
+      });
+
+      it('does not probe the provider', () => {
+        expect(
+          mockGitProviderService.checkAuthForProviderConfig,
+        ).not.toHaveBeenCalled();
       });
     });
   });
