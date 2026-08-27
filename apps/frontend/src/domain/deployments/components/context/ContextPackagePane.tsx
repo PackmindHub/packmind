@@ -18,7 +18,13 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuEllipsisVertical, LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
+import {
+  LuEllipsisVertical,
+  LuPackageMinus,
+  LuPencil,
+  LuPlus,
+  LuTrash2,
+} from 'react-icons/lu';
 import type {
   OrganizationId,
   PackageResponse,
@@ -58,11 +64,14 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import {
   useDeletePackagesBatchMutation,
+  useListPackageDeploymentsQuery,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
+import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
+import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 const CONTENT_TAB = 'content';
@@ -172,6 +181,15 @@ export function ContextPackagePane({
   const [addingComponents, setAddingComponents] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [removingFromTargets, setRemovingFromTargets] = useState(false);
+
+  /*
+   * Read here for the menu item below, which has to know whether the package is
+   * in any target before offering to take it out of them. The Distribution tab
+   * asks the same query, and React Query answers both from one request.
+   */
+  const { data: deployments = [] } = useListPackageDeploymentsQuery(pkg.id);
+  const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*
@@ -626,6 +644,30 @@ export function ContextPackagePane({
                         Edit details
                       </PMHStack>
                     </PMMenu.Item>
+                    {/*
+                      Taking the package back out of the targets it reached. It
+                      used to be a button on the Distribution tab, at the same
+                      weight as two controls that only changed what was on
+                      screen; it belongs with the other thing on this pane that
+                      undoes something, one menu away from a stray click.
+
+                      Absent rather than disabled when the package is in no
+                      target: the tab says so in a sentence, and a menu is a
+                      list of what can be done.
+                    */}
+                    {isInAnyTarget && (
+                      <PMMenu.Item
+                        value="remove-package-from-targets"
+                        onClick={() => setRemovingFromTargets(true)}
+                      >
+                        <PMHStack gap={2}>
+                          <PMIcon>
+                            <LuPackageMinus />
+                          </PMIcon>
+                          {PACKAGE_MESSAGES.removal.buttonLabel}
+                        </PMHStack>
+                      </PMMenu.Item>
+                    )}
                     <PMMenu.Item
                       value="delete-package"
                       color="text.error"
@@ -830,6 +872,16 @@ export function ContextPackagePane({
         open={confirmingDelete}
         onOpenChange={({ open }) => setConfirmingDelete(open)}
         isLoading={isDeleting}
+      />
+      {/*
+        Outside the menu that opens it: clicking a menu item closes the menu, and
+        a dialog mounted inside it would close with it.
+      */}
+      <RemovePackageFromTargetsDialog
+        selectedPackage={pkg}
+        distributions={deployments}
+        open={removingFromTargets}
+        onOpenChange={setRemovingFromTargets}
       />
     </PMTabsCompound.Root>
   );

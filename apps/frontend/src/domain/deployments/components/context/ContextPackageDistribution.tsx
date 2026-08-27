@@ -3,10 +3,7 @@ import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import { LuGitBranch, LuHistory } from 'react-icons/lu';
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
-import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
-import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { PackageDistributionList } from '../PackageDistributionList';
-import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
 import { PackageDetailPane } from '../redesign/components/PackageDetailPane';
 import {
   SyncSurface,
@@ -64,15 +61,6 @@ export function ContextPackageDistribution({
     () => providersWithTokenSet(providersResponse),
     [providersResponse],
   );
-  /*
-   * The events, read here for the two controls that need them: the removal
-   * dialog, which lists the targets to take the package out of, and the history
-   * reading. One query for both, so the second one opens on what the first one
-   * already knows.
-   */
-  const { data: deployments = [], isLoading: isLoadingDeployments } =
-    useListPackageDeploymentsQuery(pkg.id);
-
   const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
   const [view, setView] = useState<DistributionView>('targets');
 
@@ -110,46 +98,27 @@ export function ContextPackageDistribution({
         paddingX={6}
         paddingTop={4}
         paddingBottom={3}
-        gap={2}
+        gap={1}
         align="center"
-        justify="space-between"
         flexShrink={0}
       >
-        <PMHStack gap={1}>
-          <ContextChip
-            label="Targets"
-            /*
-             * Absent rather than zero while the query is out: a chip reading
-             * zero and then three is a wrong answer followed by a right one.
-             */
-            count={
-              isLoading ? undefined : (drift?.installLocations.length ?? 0)
-            }
-            icon={<LuGitBranch />}
-            isActive={view === 'targets'}
-            onClick={() => setView('targets')}
-          />
-          <ContextChip
-            label="History"
-            icon={<LuHistory />}
-            isActive={view === 'history'}
-            onClick={() => setView('history')}
-          />
-        </PMHStack>
-        {/*
-          Absent rather than disabled where the package has landed nowhere: the
-          body under this bar is already saying so in a sentence, and a greyed
-          control repeating it in the corner is furniture. It disables itself
-          once it is here, for the targets it cannot act on.
-        */}
-        {drift && (
-          <RemovePackageFromTargetsButton
-            selectedPackage={pkg}
-            distributions={deployments}
-            distributionsLoading={isLoadingDeployments}
-            size="sm"
-          />
-        )}
+        <ContextChip
+          label="Targets"
+          /*
+           * Absent rather than zero while the query is out: a chip reading
+           * zero and then three is a wrong answer followed by a right one.
+           */
+          count={isLoading ? undefined : (drift?.installLocations.length ?? 0)}
+          icon={<LuGitBranch />}
+          isActive={view === 'targets'}
+          onClick={() => setView('targets')}
+        />
+        <ContextChip
+          label="History"
+          icon={<LuHistory />}
+          isActive={view === 'history'}
+          onClick={() => setView('history')}
+        />
       </PMHStack>
 
       {view === 'history' ? (
@@ -202,7 +171,7 @@ export function ContextPackageDistribution({
           paddingX={6}
           paddingBottom={6}
         >
-          <NeverDistributed pkg={pkg} />
+          <NeverDistributed />
         </PMBox>
       )}
     </PMVStack>
@@ -214,7 +183,7 @@ export function ContextPackageDistribution({
  * costs rather than reporting an absence of rows: the package is readable here
  * and by nothing else.
  */
-function NeverDistributed({ pkg }: Readonly<{ pkg: PackageResponse }>) {
+function NeverDistributed() {
   return (
     <PMBox
       borderWidth="1px"
@@ -230,13 +199,6 @@ function NeverDistributed({ pkg }: Readonly<{ pkg: PackageResponse }>) {
           Distributing it writes its components into a repository, where the
           agents working there pick them up.
         </PMText>
-        <PMBox paddingTop={3}>
-          <DeployPackageButton
-            size="sm"
-            selectedPackages={[pkg]}
-            label="Distribute"
-          />
-        </PMBox>
       </PMVStack>
     </PMBox>
   );
