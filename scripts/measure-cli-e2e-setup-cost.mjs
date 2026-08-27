@@ -19,16 +19,25 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { execFileSync, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-const PHASES = ['signup', 'signin', 'generateApiKey', 'getGlobalSpace'];
+const AUTH_PHASES = ['signup', 'signin', 'generateApiKey', 'getGlobalSpace'];
+// `--full` adds what `install.spec.ts` — the file that sets the suite's floor —
+// does in its beforeEach chain on top of the auth fixture. Its `it` bodies are
+// pure assertions, so these phases are the whole per-test cost of that file.
+const FULL_PHASES = ['tempDirs', 'gitRepo', 'createPackage', 'cliInstall'];
 
 function parseArgs(argv) {
-  const options = { iterations: 30, tests: 287, warmup: 3 };
+  const options = { iterations: 30, tests: 287, warmup: 3, full: false };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === '--iterations') options.iterations = Number(argv[++index]);
     else if (flag === '--tests') options.tests = Number(argv[++index]);
     else if (flag === '--warmup') options.warmup = Number(argv[++index]);
+    else if (flag === '--full') options.full = true;
     else {
       process.stderr.write(`Unknown argument: ${flag}\n`);
       process.exit(1);
@@ -68,8 +77,48 @@ function organizationIdFromApiKey(apiKey) {
   return payload.organization.id;
 }
 
+function cliPath() {
+  return (
+    process.env['CLI_BINARY_PATH'] ??
+    path.resolve(process.cwd(), 'dist/apps/cli/main.cjs')
+  );
+}
+
+/** The five git invocations `setupGitRepo` runs. */
+function setupGitRepo(testDir) {
+  const run = (args) =>
+    execFileSync('git', args, { cwd: testDir, stdio: 'ignore' });
+  run(['init', '-b', 'main', '.']);
+  run([
+    'remote',
+    'add',
+    'origin',
+    'git@github.com:PackmindHub/sample-repo.git',
+  ]);
+  run(['config', 'user.email', 'test@packmind.com']);
+  run(['config', 'user.name', 'Test User']);
+  run(['commit', '--allow-empty', '-m', 'Initial commit']);
+}
+
+/** Spawns the built CLI the way `runCli` does, and waits for it to exit. */
+function runCli(command, { apiKey, cwd, home }) {
+  const target = cliPath();
+  const args = command.split(' ');
+  const env = { ...process.env, HOME: home, PACKMIND_API_KEY: apiKey };
+  const isJs = target.endsWith('.cjs') || target.endsWith('.js');
+  const result = isJs
+    ? spawnSync('node', [target, ...args], { cwd, env, encoding: 'utf-8' })
+    : spawnSync(target, args, { cwd, env, encoding: 'utf-8' });
+  if (result.status !== 0) {
+    throw new Error(
+      `CLI \`${command}\` exited ${result.status}: ${(result.stderr || result.stdout || '').slice(0, 400)}`,
+    );
+  }
+  return result;
+}
+
 /** One full fixture setup, as `describeWithUserSignedUp` performs it. */
-async function oneSetup(url) {
+async function oneSetup(url, full = false) {
   const email = `bench-${randomUUID()}@example.com`;
   // The API asks for at least 8 characters and at least two non-alphanumerics;
   // a UUID's own hyphens cover both. Deliberately not the password-shaped
@@ -110,16 +159,68 @@ async function oneSetup(url) {
   timings.generateApiKey = apiKeyCall.ms;
 
   const organizationId = organizationIdFromApiKey(apiKeyCall.value.apiKey);
-  timings.getGlobalSpace = (
-    await timed(() =>
-      fetch(`${url}/api/v0/organizations/${organizationId}/spaces/global`, {
+  const globalSpace = await timed(() =>
+    fetch(`${url}/api/v0/organizations/${organizationId}/spaces/global`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKeyCall.value.apiKey}`,
+      },
+    })
+      .then((response) => expectOk(response, 'getGlobalSpace'))
+      .then((response) => response.json()),
+  );
+  timings.getGlobalSpace = globalSpace.ms;
+  const spaceId = globalSpace.value.id;
+
+  if (!full) {
+    return timings;
+  }
+
+  // From here on: install.spec.ts's own beforeEach, on top of the fixture.
+  let started = performance.now();
+  const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
+  const testHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-home-'));
+  timings.tempDirs = performance.now() - started;
+
+  try {
+    started = performance.now();
+    setupGitRepo(testDir);
+    timings.gitRepo = performance.now() - started;
+
+    const apiKey = apiKeyCall.value.apiKey;
+    started = performance.now();
+    const created = await fetch(
+      `${url}/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages`,
+      {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKeyCall.value.apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
-      }).then((response) => expectOk(response, 'getGlobalSpace')),
+        body: JSON.stringify({
+          name: 'Bench package',
+          description: 'Package used to time one install.spec test',
+          recipeIds: [],
+          standardIds: [],
+          spaceId,
+        }),
+      },
     )
-  ).ms;
+      .then((response) => expectOk(response, 'createPackage'))
+      .then((response) => response.json());
+    timings.createPackage = performance.now() - started;
+
+    started = performance.now();
+    runCli(`install ${created.package.slug}`, {
+      apiKey,
+      cwd: testDir,
+      home: testHome,
+    });
+    timings.cliInstall = performance.now() - started;
+  } finally {
+    fs.rmSync(testDir, { recursive: true, force: true });
+    fs.rmSync(testHome, { recursive: true, force: true });
+  }
 
   return timings;
 }
@@ -155,15 +256,16 @@ async function main() {
   // Warm up first: the API is an Nx dev server, and its first requests pay
   // lazy module loading and an empty connection pool.
   for (let index = 0; index < options.warmup; index += 1) {
-    await oneSetup(url);
+    await oneSetup(url, options.full);
   }
 
-  const samples = Object.fromEntries(PHASES.map((phase) => [phase, []]));
+  const phases = options.full ? [...AUTH_PHASES, ...FULL_PHASES] : AUTH_PHASES;
+  const samples = Object.fromEntries(phases.map((phase) => [phase, []]));
   const totals = [];
   for (let index = 0; index < options.iterations; index += 1) {
-    const timings = await oneSetup(url);
+    const timings = await oneSetup(url, options.full);
     let total = 0;
-    for (const phase of PHASES) {
+    for (const phase of phases) {
       samples[phase].push(timings[phase]);
       total += timings[phase];
     }
@@ -171,38 +273,68 @@ async function main() {
   }
 
   const perPhase = Object.fromEntries(
-    PHASES.map((phase) => [phase, stats(samples[phase])]),
+    phases.map((phase) => [phase, stats(samples[phase])]),
   );
   const perSetup = stats(totals);
 
   const lines = [];
-  lines.push('## CLI E2E fixture setup cost');
+  lines.push(
+    options.full
+      ? '## CLI E2E cost of one full `install.spec.ts` test'
+      : '## CLI E2E fixture setup cost',
+  );
   lines.push('');
   lines.push(`Measured against \`${url}\`, ${options.iterations} sequences.`);
   lines.push('');
   lines.push('| Phase | Median | p90 | Min | Max |');
   lines.push('| --- | --: | --: | --: | --: |');
-  for (const phase of PHASES) {
+  for (const phase of phases) {
     const s = perPhase[phase];
     lines.push(
       `| \`${phase}\` | ${s.median.toFixed(0)}ms | ${s.p90.toFixed(0)}ms | ${s.min.toFixed(0)}ms | ${s.max.toFixed(0)}ms |`,
     );
   }
   lines.push(
-    `| **one full setup** | **${perSetup.median.toFixed(0)}ms** | ${perSetup.p90.toFixed(0)}ms | ${perSetup.min.toFixed(0)}ms | ${perSetup.max.toFixed(0)}ms |`,
+    `| **${options.full ? 'one whole test' : 'one full setup'}** | **${perSetup.median.toFixed(0)}ms** | ${perSetup.p90.toFixed(0)}ms | ${perSetup.min.toFixed(0)}ms | ${perSetup.max.toFixed(0)}ms |`,
   );
   lines.push('');
 
-  // The two password-hashing calls are the reason for measuring this at all.
+  const over = (ms) => ((ms * options.tests) / 1000).toFixed(0);
+  const auth = AUTH_PHASES.reduce(
+    (sum, phase) => sum + perPhase[phase].median,
+    0,
+  );
   const hashing = perPhase.signup.median + perPhase.signin.median;
-  const projected = (perSetup.median * options.tests) / 1000;
-  const projectedHashing = (hashing * options.tests) / 1000;
+
   lines.push(
-    `Across ${options.tests} tests, one setup per test: **${projected.toFixed(0)}s** of serial cost, of which **${projectedHashing.toFixed(0)}s** sits in \`signup\` + \`signin\` — the two calls that each perform one bcrypt operation.`,
+    `Over ${options.tests} tests, one per test: **${over(perSetup.median)}s** of serial cost.`,
   );
   lines.push('');
+  if (options.full) {
+    // The point of this mode: say which phase to attack, not just the total.
+    const ranked = [...AUTH_PHASES, ...FULL_PHASES]
+      .map((phase) => ({ phase, median: perPhase[phase].median }))
+      .sort((a, b) => b.median - a.median);
+    lines.push('Where it goes, largest first:');
+    lines.push('');
+    for (const { phase, median } of ranked) {
+      const share = ((median / perSetup.median) * 100).toFixed(0);
+      lines.push(
+        `- \`${phase}\` — ${median.toFixed(0)}ms, ${share}% of the test, ${over(median)}s over the file`,
+      );
+    }
+    lines.push('');
+    lines.push(
+      `The auth fixture is ${auth.toFixed(0)}ms of that, and bcrypt ${hashing.toFixed(0)}ms of the auth fixture.`,
+    );
+  } else {
+    lines.push(
+      `Of that, **${over(hashing)}s** sits in \`signup\` + \`signin\` — the two calls that each perform one bcrypt operation.`,
+    );
+  }
+  lines.push('');
   lines.push(
-    "Sequential and unloaded, so this is a floor: under the real run the API serves several Jest workers at once. Compare it against the suite's measured serial cost to see what share the fixture setup accounts for.",
+    "Sequential and unloaded, so this is a floor: under the real run the API serves several Jest workers at once, and the git and CLI subprocesses compete with them. Compare it against the file's measured duration to see how much is accounted for.",
   );
 
   process.stdout.write(`${lines.join('\n')}\n`);

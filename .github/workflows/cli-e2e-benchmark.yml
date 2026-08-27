@@ -113,10 +113,35 @@ jobs:
         with:
           node-version: ${{ inputs.node-version || '24.18.0' }}
 
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Needed only by the `--full` measurement below, which spawns the real CLI
+      # the way `runCli` does. The auth-only measurement uses Node built-ins.
+      - name: Activate pnpm through corepack
+        run: |
+          corepack enable
+          corepack prepare --activate
+
+      - run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
+
+      - run: ./node_modules/.bin/nx run packmind-cli:build
+
+      - name: Install dist CLI runtime dependencies
+        run: sh scripts/install-dist-cli-deps.sh
+
+      - name: Fix CLI artifacts permissions
+        run: |
+          chmod +x dist/apps/cli/main.cjs || true
+          chmod -R +r dist/apps/cli/
 
       - name: Start the API alone
         env:
@@ -137,6 +162,17 @@ jobs:
       - name: Measure one fixture setup
         run: |
           node scripts/measure-cli-e2e-setup-cost.mjs --iterations 30 \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The same sequence plus what install.spec.ts's beforeEach adds — the git
+      # repo, the package, and one real `install` run. That file sets the
+      # suite's floor and its `it` bodies are pure assertions, so this is the
+      # whole per-test cost of the file that decides the wall clock. 62 is its
+      # test count.
+      - name: Measure one whole install.spec test
+        run: |
+          node scripts/measure-cli-e2e-setup-cost.mjs --full \
+            --iterations 15 --tests 62 \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Measure bcrypt inside the API container
