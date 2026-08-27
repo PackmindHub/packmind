@@ -523,38 +523,51 @@ export function ContextPackagePane({
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
             {/*
-              Adding what exists, beside creating what does not. Two controls
-              and not one menu: the question "which of these do I want" and the
-              question "what kind of thing am I writing" are answered from
-              opposite ends, one by a list of the space and one by a list of
-              types, and folding them together would hide whichever one the
-              reader came for behind the other.
+              Creating and adding belong to the Content tab, so they leave with
+              it. The header sits above both tabs and used to keep every verb on
+              screen whatever the reader was looking at: on Distribution, two of
+              the four controls wrote components, which is not the question that
+              tab asks. Distribute stays on both, because it acts on the package
+              and not on the list being shown.
             */}
-            <PMButton
-              variant="secondary"
-              size="sm"
-              onClick={() => setAddingComponents(true)}
-            >
-              <PMIcon fontSize="xs">
-                <LuPlus />
-              </PMIcon>
-              Add components
-            </PMButton>
-            {/*
-              Creating sits here, on the pane, and not in the rail below the list
-              of packages: the rail creates containers, this creates what goes in
-              them, and side by side the two would read as the same gesture.
+            {tab === CONTENT_TAB && (
+              <>
+                {/*
+                  Adding what exists, beside creating what does not. Two
+                  controls and not one menu: the question "which of these do I
+                  want" and the question "what kind of thing am I writing" are
+                  answered from opposite ends, one by a list of the space and
+                  one by a list of types, and folding them together would hide
+                  whichever one the reader came for behind the other.
+                */}
+                <PMButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setAddingComponents(true)}
+                >
+                  <PMIcon fontSize="xs">
+                    <LuPlus />
+                  </PMIcon>
+                  Add components
+                </PMButton>
+                {/*
+                  Creating sits here, on the pane, and not in the rail below the
+                  list of packages: the rail creates containers, this creates
+                  what goes in them, and side by side the two would read as the
+                  same gesture.
 
-              It carries the primary only while the package is empty, which is
-              the one state where filling it is the thing to do next. As soon as
-              there is something in it, getting it out is.
-            */}
-            <ContextCreateMenu
-              orgSlug={orgSlug}
-              spaceSlug={spaceSlug}
-              packageId={pkg.id}
-              variant={isEmpty ? 'primary' : 'secondary'}
-            />
+                  It carries the primary only while the package is empty, which
+                  is the one state where filling it is the thing to do next. As
+                  soon as there is something in it, getting it out is.
+                */}
+                <ContextCreateMenu
+                  orgSlug={orgSlug}
+                  spaceSlug={spaceSlug}
+                  packageId={pkg.id}
+                  variant={isEmpty ? 'primary' : 'secondary'}
+                />
+              </>
+            )}
             {/*
               Every way the package leaves Packmind, under one control: the
               repositories it writes to, the marketplaces it publishes to, and
