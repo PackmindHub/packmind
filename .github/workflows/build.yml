@@ -286,8 +286,12 @@ jobs:
     # is bound by waiting on a spawned CLI and on HTTP, not by CPU, so doubling
     # the cores nearly halves it — 105s to 55s — while the total work barely
     # changes. Jest's own default worker count is `nproc - 1`, so it follows the
-    # runner without a flag here. See apps/cli-e2e-tests/README.md for the
-    # numbers and for the candidates that were measured and rejected.
+    # runner without a flag here.
+    #
+    # A bigger runner buys nothing beyond this: at 8 cores the longest single
+    # file (`install.spec.ts`) already accounts for the whole run, so the
+    # workers idle on it. Splitting that file is the prerequisite for more
+    # capacity paying off, and is capped at `serial / workers` ~= 44s.
     #
     # The fallback chain keeps a checkout without the new variable working: the
     # 8-core tag, then the pipeline's usual tag, then self-hosted.
@@ -409,10 +413,13 @@ jobs:
       # Deliberately NOT setting `NODE_COMPILE_CACHE` here. Measured in
       # isolation it looks like the cheapest win available: one shared V8
       # bytecode cache takes a CLI spawn from 413ms to 354ms, -14%, twice
-      # reproduced. Under the real suite it does not survive: run as A/B arms,
-      # the two stack shapes disagreed in sign (-2.3s and +5.7s) and both cached
-      # arms did more total work than their controls. The suite's README has the
-      # table and the likely reason.
+      # reproduced on this runner. Under the real suite it does not survive: run
+      # as A/B arms in one benchmark run, the two stack shapes disagreed in sign
+      # (-2.3s and +5.7s) and both cached arms did MORE total work than their
+      # controls — six workers contending over one cache directory is the likely
+      # reason, which a sequential probe cannot see. Do not re-derive the -14%
+      # and ship it. A per-worker cache dir (keyed on JEST_WORKER_ID) is the
+      # untried variant, and needs a `runCli` change plus a fresh A/B.
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
