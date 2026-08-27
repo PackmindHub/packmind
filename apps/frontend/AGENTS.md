@@ -33,7 +33,8 @@ React Router v7 single-page application for Packmind, built with Chakra UI and T
 - **Port**: 4200 (default development)
 - **Environment Variables**: Vite env vars with `VITE_` prefix
 - **API Base URL**: Configured via environment variable
-- **Build Output**: `dist/apps/frontend/`
+- **Build Output**: `apps/frontend/build/client/` — set by `react-router build`, not by
+  `vite.config.ts`'s `build.outDir`
 
 <!-- start: Packmind standards -->
 # Packmind Standards
