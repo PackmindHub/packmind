@@ -316,19 +316,22 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      # The registry leg runs the CLI from `CLI_BINARY_PATH` and never touches
-      # `dist/apps/cli`, and `cli-e2e-tests:test` does not depend on the CLI's
-      # build target, so building it there would be dead work.
+      # Both legs build the CLI, even though the registry leg runs the binary
+      # from `CLI_BINARY_PATH` and never reads `dist/apps/cli`. This is the
+      # first Nx command of the job, and it is what creates `.nx/workspace-data`
+      # as the runner user. The compose services run Nx as root over the
+      # `.:/packmind` bind mount and share that same directory, so if they get
+      # there first the files land root-owned and the later `nx test` dies with
+      # `Permission denied (os error 13)`. Skipping the build here costs nothing
+      # anyway: the registry leg's suite is the shorter of the two, so the job's
+      # wall clock is set by the workspace leg either way.
       - name: Build the workspace CLI
-        if: matrix.cli-source == 'workspace'
         run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
-        if: matrix.cli-source == 'workspace'
         run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
-        if: matrix.cli-source == 'workspace'
         run: |
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
