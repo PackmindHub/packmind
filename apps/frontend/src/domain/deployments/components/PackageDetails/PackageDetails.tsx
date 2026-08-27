@@ -18,7 +18,6 @@ import {
   PMDataList,
   PMTabs,
   PMEmptyState,
-  PMAccordion,
 } from '@packmind/ui';
 import { LuTerminal } from 'react-icons/lu';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -39,7 +38,7 @@ import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
 import { PackageDistributionList } from '../PackageDistributionList';
-import { CopiableTextField } from '../../../../shared/components/inputs/CopiableTextField';
+import { PackageInstallSnippets } from '../PackageInstallSnippets';
 import { useState } from 'react';
 
 interface PackageDetailsProps {
@@ -261,9 +260,6 @@ export const PackageDetails = ({
   const isPackageEmpty =
     commandCount === 0 && standardCount === 0 && skillCount === 0;
 
-  const installCommand = `packmind install @${spaceSlug}/${pkg.slug}`;
-  const installAsClaudePluginCommand = `packmind plugins render @${spaceSlug}/${pkg.slug}`;
-
   return (
     <PMPage
       title={pkg.name}
@@ -341,42 +337,10 @@ export const PackageDetails = ({
                           Install this package
                         </PMText>
                       </PMHStack>
-                      <CopiableTextField value={installCommand} readOnly />
-                      <PMAccordion.Root collapsible>
-                        <PMAccordion.Item
-                          value="more-install-options"
-                          border="none"
-                        >
-                          <PMAccordion.ItemTrigger
-                            cursor="pointer"
-                            py={1}
-                            width="fit-content"
-                          >
-                            <PMAccordion.ItemIndicator />
-                            <PMText
-                              variant="small"
-                              fontWeight="medium"
-                              color="secondary"
-                            >
-                              More install options
-                            </PMText>
-                          </PMAccordion.ItemTrigger>
-                          <PMAccordion.ItemContent pt={3} pb={1}>
-                            <PMVStack align="stretch" gap={2}>
-                              <PMText variant="body" fontWeight="medium">
-                                Install as Claude plugin
-                              </PMText>
-                              <PMText variant="small" color="secondary">
-                                Use this package as a Claude Code plugin.
-                              </PMText>
-                              <CopiableTextField
-                                value={installAsClaudePluginCommand}
-                                readOnly
-                              />
-                            </PMVStack>
-                          </PMAccordion.ItemContent>
-                        </PMAccordion.Item>
-                      </PMAccordion.Root>
+                      <PackageInstallSnippets
+                        spaceSlug={spaceSlug}
+                        packageSlug={pkg.slug}
+                      />
                     </PMVStack>
                   )}
                 </PMHStack>
