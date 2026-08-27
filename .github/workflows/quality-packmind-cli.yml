@@ -1,0 +1,48 @@
+name: Packmind CLI Lint
+
+# Split out of quality.yml: this is the only quality check that consumes a
+# build artifact (the linux-x64 executable that build-cli uploads), so it is
+# the only one with any reason to wait for `build`. Keeping it in quality.yml
+# forced `needs: [build]` onto GitGuardian, lint+format, Sonar and the OSS
+# parity check, none of which read anything the build produces — `needs:` gates
+# on the called workflow as a whole, never on individual jobs inside it.
+#
+# No `node-version` input: this job has no `setup-node` step and no matrix. It
+# downloads the executable and runs it.
+on:
+  workflow_call:
+    inputs:
+      cli-executables-artifact:
+        required: true
+        type: string
+        description: 'CLI executables artifact name from the build workflow'
+    secrets:
+      PACKMIND_API_KEY:
+        required: false
+        description: 'API key to run new packmind-cli'
+
+jobs:
+  packmind-cli:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    name: Run Packmind CLI
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download CLI executable
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.cli-executables-artifact }}
+          path: ./cli-binary
+
+      - name: Make binary executable
+        run: chmod +x ./cli-binary/packmind-cli-linux-x64
+
+      - name: Run Packmind CLI
+        run: ./cli-binary/packmind-cli-linux-x64 lint .
+        env:
+          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}

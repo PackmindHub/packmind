@@ -38,22 +38,30 @@ jobs:
     with:
       node-version: 24.18.0
 
-  # Stage 2: Quality and Security Checks
+  # GitGuardian, lint+format, Sonar and the OSS parity check. All source-only:
+  # they read the checkout and nothing else, so no `needs:`.
   quality:
-    needs: [build]
     uses: ./.github/workflows/quality.yml
     with:
       node-version: 24.18.0
-      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # The one quality check with a real build dependency: it runs the CLI
+  # executable that build-cli uploaded.
+  quality-packmind-cli:
+    needs: [build]
+    uses: ./.github/workflows/quality-packmind-cli.yml
+    with:
+      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
+    secrets:
       PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
   # Stage 3: Docker Images (on main branch, and release tags)
   # Note: The docker workflow handles branch conditions internally based on edition
   docker:
-    needs: [build, quality, e2e]
+    needs: [build, quality, e2e, quality-packmind-cli]
     uses: ./.github/workflows/docker.yml
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
@@ -66,7 +74,7 @@ jobs:
 
   # Stage 4: Publish CLI Release (only on release-cli/* tags, OSS only)
   publish-cli-release:
-    needs: [build, quality, e2e]
+    needs: [build, quality, e2e, quality-packmind-cli]
     if: startsWith(github.ref, 'refs/tags/release-cli/') && vars.PACKMIND_EDITION == 'oss'
     permissions:
       contents: write
@@ -86,7 +94,7 @@ jobs:
   # Stage 5: Deploy and Update Helm Charts (after Docker images are built)
   # Note: The deploy workflow handles edition-specific logic internally
   deploy-staging-and-release:
-    needs: [build, quality, e2e, docker]
+    needs: [build, quality, e2e, quality-packmind-cli, docker]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
     with:
@@ -99,7 +107,7 @@ jobs:
 
   # Stage 6: Create Release (only on release tags, after all deployments)
   create-release:
-    needs: [build, quality, e2e, docker, deploy-staging-and-release]
+    needs: [build, quality, e2e, quality-packmind-cli, docker, deploy-staging-and-release]
     if: startsWith(github.ref, 'refs/tags/release/')
     permissions:
       contents: write
