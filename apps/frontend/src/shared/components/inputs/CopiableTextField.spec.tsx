@@ -4,14 +4,10 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { CopiableTextField } from './CopiableTextField';
 
-// Mock the clipboard API. `Object.assign` would go through the setter, and
-// jsdom exposes `navigator.clipboard` as a getter-only accessor — so once a
-// sibling spec in the same worker has installed its own stub, the assignment
-// throws "Cannot set property clipboard of #<Navigator> which has only a
-// getter". Defining the property outright is order-independent.
-// jsdom's `navigator` is shared by every spec in the worker, so the stub is put
-// back at the end of the file rather than left on the global for whoever runs
-// next.
+// jsdom's `navigator` is shared by every spec in the worker, so the clipboard
+// stub is defined rather than assigned — `Object.assign` goes through jsdom's
+// getter-only `clipboard` accessor and throws once a sibling spec has installed
+// its own — and put back afterwards rather than left on the global.
 const mockWriteText = vi.fn();
 const originalClipboard = Object.getOwnPropertyDescriptor(
   navigator,
@@ -20,7 +16,6 @@ const originalClipboard = Object.getOwnPropertyDescriptor(
 Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: mockWriteText },
   configurable: true,
-  writable: true,
 });
 
 afterAll(() => {

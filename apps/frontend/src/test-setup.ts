@@ -22,24 +22,14 @@ afterAll(async () => {
   vi.clearAllTimers();
   vi.useRealTimers();
 
-  // Restores the per-file module reset that `isolate: false` turns off.
+  // Vitest resets the module registry between spec files only when `isolate` is
+  // true, and vite.config.ts sets it to false. Without this, a spec's `vi.mock`
+  // leaks forward onto whichever spec runs next in the same worker, so the
+  // failures land on specs that never mocked anything. Restoring the reset keeps
+  // the speed-up: externalised node_modules stay in Node's own ESM cache, which
+  // `vi.resetModules()` does not touch.
   //
-  // Vitest's worker loop only resets the module registry between spec files when
-  // `isolate` is true (see the `if (config.isolate)` branch in its worker's run
-  // loop). `vite.config.ts` sets `isolate: false` so the module graph is
-  // evaluated once per worker instead of once per file — the change that makes
-  // the suite ~2.8x faster — which leaves the registry shared. A spec that calls
-  // `vi.mock` would then hand its mocked module to whichever spec runs next in
-  // the same worker: the mock leaks *forward* onto innocent neighbours, so the
-  // failures land on specs that never mocked anything and drift run to run.
-  //
-  // Clearing the registry here restores file-level module isolation while
-  // keeping the win: externalised node_modules (Chakra, React) live in Node's
-  // own ESM cache, which this does not touch, so they stay loaded per worker.
-  //
-  // Registered in the setup file, so it runs last — Vitest unwinds `afterAll`
-  // hooks in reverse registration order, which leaves each spec's own teardown
-  // running before the modules it closes over are dropped.
+  // Lives in the setup file so it unwinds last, after each spec's own `afterAll`.
   vi.resetModules();
 });
 

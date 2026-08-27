@@ -6,11 +6,6 @@ import * as SpacesQueries from '../../../spaces/api/queries/SpacesQueries';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router';
 
-// Named factories rather than bare automocks: a module's mock registration
-// survives the spec file that made it, and an automock loses to a factory mock
-// registered for the same module by another spec. Five other specs mock
-// DeploymentsQueries with a factory and three mock SpacesQueries, so an
-// automock here resolves to whichever shape registered first.
 vi.mock('../../../deployments/api/queries/DeploymentsQueries', () => ({
   useGetDashboardKpiQuery: vi.fn(),
   useGetDashboardNonLiveQuery: vi.fn(),
