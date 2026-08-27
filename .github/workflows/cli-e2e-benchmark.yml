@@ -128,10 +128,17 @@ jobs:
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
 
+      # Every expression below reaches the shell through `env:` rather than
+      # being spliced into the script text. These particular values come from
+      # the catalogue above, but keeping the boundary makes the scripts safe by
+      # construction rather than by inspection.
       - name: Resolve variant
+        env:
+          VARIANT_STACK: ${{ matrix.variant.stack }}
+          VARIANT_WORKERS: ${{ matrix.variant.workers }}
         run: |
           set -eu
-          case '${{ matrix.variant.stack }}' in
+          case "${VARIANT_STACK}" in
             baseline)
               # What CI runs today: the whole stack, and the API reached through
               # the frontend dev server's /api proxy on port 4200.
@@ -147,7 +154,7 @@ jobs:
               instance_url='http://localhost:3000'
               ;;
             *)
-              echo "Unknown stack '${{ matrix.variant.stack }}'" >&2
+              echo "Unknown stack '${VARIANT_STACK}'" >&2
               exit 1
               ;;
           esac
@@ -155,7 +162,7 @@ jobs:
             echo "COMPOSE_FILES=${compose_files}"
             echo "COMPOSE_SERVICES=${services}"
             echo "PACKMIND_INSTANCE_URL=${instance_url}"
-            echo "JEST_WORKERS=${{ matrix.variant.workers }}"
+            echo "JEST_WORKERS=${VARIANT_WORKERS}"
           } >> "$GITHUB_ENV"
           echo "nproc: $(nproc)"
 
@@ -185,6 +192,7 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+          VARIANT_NAME: ${{ matrix.variant.name }}
         run: |
           set -eu
           mkdir -p benchmark-results
@@ -197,7 +205,7 @@ jobs:
           else
             args="--maxWorkers=${workers}"
           fi
-          report="benchmark-results/${{ matrix.variant.name }}.workers-${workers}.json"
+          report="benchmark-results/${VARIANT_NAME}.workers-${workers}.json"
           started=$(date +%s)
           # shellcheck disable=SC2086 # args is a deliberate word list
           ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache \
@@ -214,30 +222,43 @@ jobs:
       # outside a browser can get at.
       - name: Summarize
         if: always() && steps.run.outputs.report != ''
+        env:
+          VARIANT_NAME: ${{ matrix.variant.name }}
+          VARIANT_STACK: ${{ matrix.variant.stack }}
+          VARIANT_RUNNER: ${{ matrix.variant.runner }}
+          STARTUP_SECONDS: ${{ steps.stack.outputs.startup_seconds }}
+          SUITE_SECONDS: ${{ steps.run.outputs.suite_seconds }}
+          REPORT: ${{ steps.run.outputs.report }}
         run: |
           {
-            echo "### \`${{ matrix.variant.name }}\` — ${{ matrix.variant.stack }} on ${{ matrix.variant.runner }}"
+            echo "### \`${VARIANT_NAME}\` — ${VARIANT_STACK} on ${VARIANT_RUNNER}"
             echo
-            echo "- Stack startup: **${{ steps.stack.outputs.startup_seconds }}s**"
-            echo "- Suite step (Nx included): **${{ steps.run.outputs.suite_seconds }}s**"
+            echo "- Stack startup: **${STARTUP_SECONDS}s**"
+            echo "- Suite step (Nx included): **${SUITE_SECONDS}s**"
             echo
-            node scripts/cli-e2e-benchmark-report.mjs report "${{ steps.run.outputs.report }}"
+            node scripts/cli-e2e-benchmark-report.mjs report "${REPORT}"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Record the step timings
         if: always() && steps.run.outputs.report != ''
+        env:
+          VARIANT_NAME: ${{ matrix.variant.name }}
+          VARIANT_STACK: ${{ matrix.variant.stack }}
+          VARIANT_RUNNER: ${{ matrix.variant.runner }}
+          STARTUP_SECONDS: ${{ steps.stack.outputs.startup_seconds }}
+          SUITE_SECONDS: ${{ steps.run.outputs.suite_seconds }}
         run: |
           # Kept next to the Jest report so the compare job can show the stack
-          # startup, which the Jest JSON knows nothing about.
-          cat > "benchmark-results/${{ matrix.variant.name }}.env.json" <<JSON
-          {
-            "name": "${{ matrix.variant.name }}",
-            "stack": "${{ matrix.variant.stack }}",
-            "runner": "${{ matrix.variant.runner }}",
-            "startupSeconds": ${{ steps.stack.outputs.startup_seconds }},
-            "suiteStepSeconds": ${{ steps.run.outputs.suite_seconds }}
-          }
-          JSON
+          # startup, which the Jest JSON knows nothing about. Built with jq so
+          # the values are encoded as JSON rather than pasted into a template.
+          jq -n \
+            --arg name "${VARIANT_NAME}" \
+            --arg stack "${VARIANT_STACK}" \
+            --arg runner "${VARIANT_RUNNER}" \
+            --argjson startupSeconds "${STARTUP_SECONDS}" \
+            --argjson suiteStepSeconds "${SUITE_SECONDS}" \
+            '{name: $name, stack: $stack, runner: $runner, startupSeconds: $startupSeconds, suiteStepSeconds: $suiteStepSeconds}' \
+            > "benchmark-results/${VARIANT_NAME}.env.json"
 
       - name: Upload the report
         if: always()
@@ -270,11 +291,13 @@ jobs:
           merge-multiple: true
 
       - name: Compare the variants
+        env:
+          VARIANT_NAMES: ${{ needs.plan.outputs.names }}
         run: |
           set -eu
           # Planned order, so the first variant is the comparison baseline.
           ordered=''
-          for variant in $(printf '%s' '${{ needs.plan.outputs.names }}' | tr ',' ' '); do
+          for variant in $(printf '%s' "${VARIANT_NAMES}" | tr ',' ' '); do
             match=$(find benchmark-results -name "${variant}.workers-*.json" | head -n 1)
             if [ -n "${match}" ]; then
               ordered="${ordered} ${match}"

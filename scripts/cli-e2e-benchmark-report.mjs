@@ -13,10 +13,19 @@
  * - `floor`      the longest single suite. Jest cannot finish before it, no
  *                matter how many workers are available, so it is the hard
  *                lower bound for `wall` and the argument for splitting a suite.
- * - `hooks`      per suite, its duration minus the sum of its test durations.
- *                Jest times a test body only, so this is the setup cost —
- *                here mostly the per-test signup, git repo and CLI install
- *                that `describeWithUserSignedUp` re-runs for every `it`.
+ *                When `floor` meets `wall`, the workers are idling on that one
+ *                file and no extra capacity will help until it is split.
+ * - `per test`   a suite's duration divided by its test count. Because every
+ *                `it` here re-runs the whole `describeWithUserSignedUp` setup,
+ *                this is the cost of one full setup-and-act cycle, and the
+ *                number to watch when changing how tests get their fixtures.
+ * - `outside`    a suite's duration minus the sum of its test durations: module
+ *                load and top-level setup. Note this is NOT the per-test hook
+ *                cost — jest-circus starts a test's clock before its
+ *                `beforeEach` hooks run, so hook time is already inside each
+ *                test's own duration. Separating the two needs instrumentation
+ *                Jest's JSON does not carry, which is why `per test` above is
+ *                the metric to use for the fixture question.
  *
  * Usage:
  *   node scripts/cli-e2e-benchmark-report.mjs report <jest.json> [--label <name>]
@@ -41,6 +50,24 @@ function fail(message) {
 
 function seconds(ms) {
   return (ms / 1000).toFixed(1);
+}
+
+/**
+ * Suite time per test. Every `it` in this suite re-runs the whole
+ * `describeWithUserSignedUp` setup, so this average is the cost of one
+ * setup-and-act cycle rather than a meaningless mean.
+ */
+function perTestMs(totalMs, testCount) {
+  return testCount > 0 ? `${(totalMs / testCount).toFixed(0)}ms` : '—';
+}
+
+/**
+ * Calls out the case that decides whether extra workers are worth buying: the
+ * longest file taking up the whole run.
+ */
+function floorNote(metrics) {
+  const atWall = metrics.wall > 0 && metrics.floor / metrics.wall >= 0.95;
+  return `${seconds(metrics.floor)}s${atWall ? ' **at wall**' : ''}`;
 }
 
 function readJestReport(file) {
@@ -84,9 +111,10 @@ function analyze(report, { label, workers }) {
       name: suiteName(suite.name),
       duration,
       testTime,
-      // Setup: everything Jest spent in the suite outside a test body —
-      // module load plus the before/after hooks.
-      hookTime: Math.max(0, duration - testTime),
+      // Everything Jest spent in the suite outside a test body. That is
+      // module load and top-level setup only: jest-circus folds each test's
+      // before/after hooks into that test's own duration.
+      outsideTests: Math.max(0, duration - testTime),
       testCount: tests.filter((test) => test.status !== 'pending').length,
       skipped: tests.filter((test) => test.status === 'pending').length,
       tests,
@@ -103,7 +131,10 @@ function analyze(report, { label, workers }) {
   );
   const wall = Math.max(0, endTime - startTime);
   const floor = suites.length > 0 ? suites[0].duration : 0;
-  const hookTime = suites.reduce((sum, suite) => sum + suite.hookTime, 0);
+  const outsideTests = suites.reduce(
+    (sum, suite) => sum + suite.outsideTests,
+    0,
+  );
 
   const slowestTests = suites
     .flatMap((suite) =>
@@ -123,8 +154,8 @@ function analyze(report, { label, workers }) {
     wall,
     serial,
     floor,
-    hookTime,
-    testTime: serial - hookTime,
+    outsideTests,
+    testTime: serial - outsideTests,
     suiteCount: suites.length,
     testCount: suites.reduce((sum, suite) => sum + suite.testCount, 0),
     skipped: suites.reduce((sum, suite) => sum + suite.skipped, 0),
@@ -150,7 +181,10 @@ function renderReport(metrics) {
     `| Floor (longest suite) | ${seconds(metrics.floor)}s — \`${metrics.suites[0]?.name ?? 'n/a'}\` |`,
   );
   lines.push(
-    `| Setup vs test bodies | ${seconds(metrics.hookTime)}s hooks / ${seconds(metrics.testTime)}s tests |`,
+    `| Cost per test | ${perTestMs(metrics.serial, metrics.testCount)} |`,
+  );
+  lines.push(
+    `| Outside test bodies | ${seconds(metrics.outsideTests)}s (module load and top-level setup) |`,
   );
   lines.push(
     `| Suites / tests | ${metrics.suiteCount} / ${metrics.testCount}${metrics.skipped ? ` (+${metrics.skipped} skipped)` : ''} |`,
@@ -165,13 +199,11 @@ function renderReport(metrics) {
 
   lines.push('### Per suite');
   lines.push('');
-  lines.push('| Suite | Duration | Tests | Setup | Test bodies | Setup/test |');
-  lines.push('| --- | --: | --: | --: | --: | --: |');
+  lines.push('| Suite | Duration | Tests | Per test | Outside tests |');
+  lines.push('| --- | --: | --: | --: | --: |');
   for (const suite of metrics.suites) {
-    const perTest =
-      suite.testCount > 0 ? (suite.hookTime / suite.testCount).toFixed(0) : '—';
     lines.push(
-      `| \`${suite.name}\` | ${seconds(suite.duration)}s | ${suite.testCount} | ${seconds(suite.hookTime)}s | ${seconds(suite.testTime)}s | ${perTest}ms |`,
+      `| \`${suite.name}\` | ${seconds(suite.duration)}s | ${suite.testCount} | ${perTestMs(suite.duration, suite.testCount)} | ${seconds(suite.outsideTests)}s |`,
     );
   }
   lines.push('');
@@ -200,7 +232,7 @@ function renderComparison(all) {
   lines.push('## CLI E2E benchmark — variant comparison');
   lines.push('');
   lines.push(
-    '| Variant | Wall | vs baseline | Serial | Floor | Setup | Workers | Efficiency |',
+    '| Variant | Wall | vs baseline | Serial | Floor | Per test | Workers | Efficiency |',
   );
   lines.push('| --- | --: | --: | --: | --: | --: | --: | --: |');
   for (const metrics of all) {
@@ -209,12 +241,16 @@ function renderComparison(all) {
         ? `${(((metrics.wall - baseline.wall) / baseline.wall) * 100).toFixed(0)}%`
         : '—';
     lines.push(
-      `| \`${metrics.label}\` | **${seconds(metrics.wall)}s** | ${metrics === baseline ? 'baseline' : delta} | ${seconds(metrics.serial)}s | ${seconds(metrics.floor)}s | ${seconds(metrics.hookTime)}s | ${metrics.workers ?? '—'} | ${metrics.efficiency?.toFixed(2) ?? '—'} |`,
+      `| \`${metrics.label}\` | **${seconds(metrics.wall)}s** | ${metrics === baseline ? 'baseline' : delta} | ${seconds(metrics.serial)}s | ${floorNote(metrics)} | ${perTestMs(metrics.serial, metrics.testCount)} | ${metrics.workers ?? '—'} | ${metrics.efficiency?.toFixed(2) ?? '—'} |`,
     );
   }
   lines.push('');
   lines.push(
-    '`Serial` is the work to spread over the workers, `Floor` the longest single suite (the hard lower bound on `Wall`), `Setup` the share spent in hooks rather than in test bodies.',
+    '`Serial` is the work to spread over the workers, `Floor` the longest single suite (the hard lower bound on `Wall`), `Per test` a suite-time-per-test average that stands in for one full setup-and-act cycle.',
+  );
+  lines.push('');
+  lines.push(
+    'A `Floor` flagged **at wall** means the workers are idling on that one file: more of them, or a bigger runner, buys nothing until it is split.',
   );
 
   return lines.join('\n');

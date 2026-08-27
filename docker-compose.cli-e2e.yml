@@ -20,7 +20,11 @@
 services:
   backend:
     ports:
-      - '${PACKMIND_API_PORT:-3000}:3000'
+      # Bound to loopback, not to every interface: the only client is the Jest
+      # process on the same host, and on a CI runner or a laptop an API with no
+      # TLS and a seeded database has no business being reachable from the
+      # network.
+      - '127.0.0.1:${PACKMIND_API_PORT:-3000}:3000'
     environment:
       # The repo reaches the container through a bind mount, which delivers
       # inotify events on Linux, so polling the whole monorepo every 200ms only
