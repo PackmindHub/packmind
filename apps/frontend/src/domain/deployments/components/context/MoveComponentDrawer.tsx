@@ -38,8 +38,8 @@ import {
   type MoveTarget,
 } from './buildMoveTargets';
 import {
-  COMPONENT_TYPE_LABELS,
-  COMPONENT_TYPE_LABELS_SINGULAR,
+  componentSetKind,
+  componentSetSubject,
   type ContextComponent,
 } from './buildPackageContext';
 
@@ -137,24 +137,9 @@ export function MoveComponentDrawer({
     [targets, query],
   );
 
-  /*
-   * What the selection is called. A mixed one has no kind of its own, so it is
-   * "components": naming the first type would say something untrue about the
-   * rest, and counting the types would read as a summary of the list the user
-   * just built.
-   */
-  const types = new Set(components.map((picked) => picked.type));
-  const kind =
-    components.length === 1
-      ? COMPONENT_TYPE_LABELS_SINGULAR[components[0].type].toLowerCase()
-      : types.size === 1
-        ? COMPONENT_TYPE_LABELS[components[0].type].toLowerCase()
-        : 'components';
-  /* What a message calls them: one is named, several are counted. */
-  const subject =
-    components.length === 1
-      ? components[0].name
-      : `${components.length} ${kind}`;
+  /* What the selection is called, and how a message refers to it. */
+  const kind = componentSetKind(components);
+  const subject = componentSetSubject(components);
   /*
    * How many of the picked components no package carries. Read off the same
    * package list the candidates are built from, so the sentence and the rows

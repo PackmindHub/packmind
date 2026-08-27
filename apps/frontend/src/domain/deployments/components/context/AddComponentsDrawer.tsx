@@ -25,9 +25,9 @@ import {
 } from './buildAddableComponents';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
-  COMPONENT_TYPE_LABELS,
-  COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
+  componentSetKind,
+  componentSetSubject,
   type ContextComponent,
   type ContextGroup,
   type SpaceCatalogue,
@@ -119,15 +119,8 @@ export function AddComponentsDrawer({
    * mixed pick has no kind of its own, so it is "components". Naming the first
    * type would say something untrue about the rest.
    */
-  const types = new Set(picked.map((component) => component.type));
-  const kind =
-    picked.length === 1
-      ? COMPONENT_TYPE_LABELS_SINGULAR[picked[0].type].toLowerCase()
-      : types.size === 1
-        ? COMPONENT_TYPE_LABELS[picked[0].type].toLowerCase()
-        : 'components';
-  const subject =
-    picked.length === 1 ? picked[0].name : `${picked.length} ${kind}`;
+  const kind = componentSetKind(picked);
+  const subject = componentSetSubject(picked);
 
   const places = deployedPlaceParts(
     getDeployedTargets(pkg.id),

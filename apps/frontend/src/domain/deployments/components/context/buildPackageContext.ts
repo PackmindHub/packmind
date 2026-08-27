@@ -112,6 +112,49 @@ export const COMPONENT_TYPE_LABELS_SINGULAR: Record<
   skill: 'Skill',
 };
 
+/**
+ * What a set of picked components is called in a sentence.
+ *
+ * One is named by its own type, several of one type by that type's plural, and a
+ * mixed set by "components": naming the first type would say something untrue
+ * about the rest, and counting the types would read as a summary of the list the
+ * user has just built rather than as a name for it.
+ *
+ * Lower case, because every caller drops it mid-sentence rather than starting
+ * one with it.
+ */
+export function componentSetKind(
+  components: readonly Pick<ContextComponent, 'type'>[],
+): string {
+  if (components.length === 1) {
+    return COMPONENT_TYPE_LABELS_SINGULAR[components[0].type].toLowerCase();
+  }
+
+  const types = new Set(components.map((component) => component.type));
+  if (types.size === 1) {
+    return COMPONENT_TYPE_LABELS[components[0].type].toLowerCase();
+  }
+
+  return 'components';
+}
+
+/**
+ * How a sentence refers to a set of picked components: one is named, several are
+ * counted.
+ *
+ * The count and the noun cannot disagree, because the noun is
+ * `componentSetKind` reading the same set. Three surfaces say this now, and they
+ * say it about the same selection in the same words: what is being added, what
+ * is being moved, and what is being taken back out.
+ */
+export function componentSetSubject(
+  components: readonly Pick<ContextComponent, 'type' | 'name'>[],
+): string {
+  return components.length === 1
+    ? components[0].name
+    : `${components.length} ${componentSetKind(components)}`;
+}
+
 /*
  * One mapper per type, exported because two surfaces build the same row from
  * the same entity: a package's own content and the space-wide inventory. Two
