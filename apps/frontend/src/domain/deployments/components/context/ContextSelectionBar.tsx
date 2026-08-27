@@ -1,4 +1,22 @@
-import { PMButton, PMHStack, PMText } from '@packmind/ui';
+import type { ReactNode } from 'react';
+import { PMButton, PMHStack, PMIcon, PMText } from '@packmind/ui';
+
+/**
+ * One thing the bar can do with what is picked. The label names the destination
+ * side of the gesture rather than the verb alone, because two of them sit side
+ * by side and "Move" next to "Remove" says nothing about where either goes.
+ */
+export type SelectionAction = {
+  label: string;
+  /**
+   * The same glyph the gesture wears wherever else it is offered, taken from
+   * `COMPONENT_ACTION_ICONS`. Required rather than optional: the bar carries
+   * more than one action now, and one bare button beside an iconed one reads as
+   * something that failed to render.
+   */
+  icon: ReactNode;
+  onAct: () => void;
+};
 
 /**
  * What is picked, and what can be done with it.
@@ -12,21 +30,24 @@ import { PMButton, PMHStack, PMText } from '@packmind/ui';
  * It counts rather than naming: at three components the names no longer fit on
  * the line, and the list behind the bar is already showing which ones they are.
  *
- * Shared by the two lists that can pick components, with only the wording of
- * the action between them: from a package the components are moved out of it,
- * and from the space inventory the ones in no package are added to one. Two
- * copies of this bar would have grown two ideas of what a selection looks like.
+ * Shared by the two lists that can pick components, with only their actions
+ * between them: read inside a package a selection can leave it, for another
+ * package or for none, and read across the space the components in no package
+ * can be given one. Two copies of this bar would have grown two ideas of what a
+ * selection looks like.
  */
 export function ContextSelectionBar({
   count,
-  actionLabel,
-  onAct,
+  actions,
   onClear,
 }: Readonly<{
   count: number;
-  /** Names the destination side of the gesture, which differs by list. */
-  actionLabel: string;
-  onAct: () => void;
+  /**
+   * What can be done with the picked components, in the order it is offered.
+   * A list rather than one action because a package's own list has two, and the
+   * bar is the only place a bulk one of either can be asked for.
+   */
+  actions: readonly SelectionAction[];
   onClear: () => void;
 }>) {
   return (
@@ -48,9 +69,17 @@ export function ContextSelectionBar({
         {count} selected
       </PMText>
       <PMHStack gap={2}>
-        <PMButton variant="secondary" size="xs" onClick={onAct}>
-          {actionLabel}
-        </PMButton>
+        {actions.map((action) => (
+          <PMButton
+            key={action.label}
+            variant="secondary"
+            size="xs"
+            onClick={action.onAct}
+          >
+            <PMIcon fontSize="xs">{action.icon}</PMIcon>
+            {action.label}
+          </PMButton>
+        ))}
         <PMButton variant="tertiary" size="xs" onClick={onClear}>
           Clear
         </PMButton>

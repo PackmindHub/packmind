@@ -28,11 +28,13 @@ import type {
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
+  componentSetSubject,
   type ContextComponent,
   type ContextGroup,
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import { componentIdsPayload } from './buildMoveTargets';
 import {
   componentEditHref,
   componentEntryHref,
@@ -42,7 +44,10 @@ import {
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
-import { ContextComponentList } from './ContextComponentList';
+import {
+  COMPONENT_ACTION_ICONS,
+  ContextComponentList,
+} from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
@@ -51,7 +56,12 @@ import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
-import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
+import {
+  useDeletePackagesBatchMutation,
+  useRemoveArtefactsFromPackageMutation,
+} from '../../api/queries/DeploymentsQueries';
+import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 const CONTENT_TAB = 'content';
@@ -171,6 +181,23 @@ export function ContextPackagePane({
   const { deleteComponent, isDeleting: isDeletingComponent } =
     useDeleteContextComponent({ spaceId, organizationId });
   /*
+   * What is being taken out of this package, held as a list for the reason the
+   * move is: the confirmation has to outlive the row and the detail it was
+   * opened from, and one row or a whole selection ask the same question.
+   */
+  const [removing, setRemoving] = useState<readonly ContextComponent[] | null>(
+    null,
+  );
+  /*
+   * No `isPending` read from it: the confirmation below runs its own spinner off
+   * the promise this returns, which is also what keeps it open when the call
+   * fails.
+   */
+  const { mutateAsync: removeArtefacts } =
+    useRemoveArtefactsFromPackageMutation();
+  const { getDeployedTargets, getDeployedMarketplaces } =
+    usePackageDeploymentStatus(spaceId, organizationId);
+  /*
    * The picked components, resolved against what the package still holds. That
    * is also what repairs the selection after a move: the components that left
    * are no longer in the groups, so they drop out of it on their own.
@@ -251,6 +278,67 @@ export function ContextPackagePane({
     }
   };
 
+  /*
+   * Taking components out of this package without taking them out of the space.
+   *
+   * The gesture the surface was missing: a component could be moved to another
+   * package or deleted outright, so the only way to unbundle one was the edit
+   * form on its own page. One call for the whole selection, because the remove
+   * endpoint takes a bag of per-type ids: a partial removal would leave the pane
+   * disagreeing with the package.
+   *
+   * Rethrows on failure rather than swallowing, which is how the confirmation
+   * knows to stay open on the selection the user still wants to remove.
+   */
+  const removeFromPackage = async (components: readonly ContextComponent[]) => {
+    try {
+      await removeArtefacts({
+        spaceId,
+        packageId: pkg.id,
+        ...componentIdsPayload(components),
+      });
+    } catch (error) {
+      pmToaster.create({
+        type: 'error',
+        title: `Couldn't remove ${componentSetSubject(components)} from ${pkg.name}`,
+        description: 'Try again, or check your space access.',
+      });
+      throw error;
+    }
+
+    pmToaster.create({
+      type: 'success',
+      title: `Removed ${componentSetSubject(components)} from ${pkg.name}`,
+    });
+    /*
+     * Only the removed keys, rather than clearing the selection the way a move
+     * does. A move is asked of the whole selection by definition; this is also
+     * asked of one row, and dropping three unrelated ticks because a fourth row
+     * left would undo work the user did not ask to undo.
+     */
+    setSelectedKeys((previous) => {
+      const next = new Set(previous);
+      for (const component of components) {
+        next.delete(componentSelectionKey(component));
+      }
+      return next;
+    });
+    /*
+     * The component on screen just left the package this pane is showing, so the
+     * address that says it is open has to close, exactly as it does when one is
+     * deleted. It still exists, and its own page is still where it is read.
+     */
+    if (
+      detail &&
+      components.some(
+        (component) =>
+          componentSelectionKey(component) === componentSelectionKey(detail),
+      )
+    ) {
+      setSearchParams(packageDetailParams(searchParams, pkg.id));
+    }
+  };
+
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
       ? DISTRIBUTION_TAB
@@ -300,6 +388,31 @@ export function ContextPackagePane({
       orgSlug={orgSlug}
       spaceSlug={spaceSlug}
       onMoved={clearSelection}
+    />
+  );
+
+  /*
+   * The confirmation the old navigation already asks this question with, rather
+   * than a second one written here. Removing an artefact from a package is one
+   * question, and two dialogs asking it would be two chances to promise
+   * different things about where the component ends up. It runs its own spinner
+   * and closes itself on success, so all this passes it is what it is about.
+   *
+   * Built beside the delete dialog and rendered in both branches, for the same
+   * reason: the row and the detail it was opened from are both rebuilt by its
+   * own success.
+   */
+  const removeComponentsDialog = removing && removing.length > 0 && (
+    <RemoveArtifactFromPackageConfirm
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setRemoving(null);
+      }}
+      packageName={pkg.name}
+      deployedTargets={getDeployedTargets(pkg.id)}
+      deployedMarketplaces={getDeployedMarketplaces(pkg.id)}
+      artifactNames={removing.map((component) => component.name)}
+      onConfirm={() => removeFromPackage(removing)}
     />
   );
 
@@ -356,11 +469,13 @@ export function ContextPackagePane({
                 pkg.id,
               )}
               onMove={() => setMoving([detail])}
+              onRemove={() => setRemoving([detail])}
               onDelete={() => setDeletingComponent(detail)}
             />
           )}
         </PMBox>
         {moveDrawer}
+        {removeComponentsDialog}
         {deleteComponentDialog}
       </>
     );
@@ -537,8 +652,22 @@ export function ContextPackagePane({
             {selection.length > 0 && (
               <ContextSelectionBar
                 count={selection.length}
-                actionLabel="Move to another package"
-                onAct={() => setMoving(selection)}
+                actions={[
+                  {
+                    label: 'Move to another package',
+                    icon: COMPONENT_ACTION_ICONS.move,
+                    onAct: () => setMoving(selection),
+                  },
+                  {
+                    /*
+                      Second, so the one that changes what gets distributed is
+                      not the one nearest the pointer coming off the list.
+                    */
+                    label: 'Remove from package',
+                    icon: COMPONENT_ACTION_ICONS.remove,
+                    onAct: () => setRemoving(selection),
+                  },
+                ]}
                 onClear={clearSelection}
               />
             )}
@@ -579,6 +708,7 @@ export function ContextPackagePane({
                       ),
                     }))}
                     onMove={(component) => setMoving([component])}
+                    onRemove={(component) => setRemoving([component])}
                     selectedKeys={selectedKeys}
                     onToggleSelect={toggleSelect}
                   />
@@ -608,6 +738,7 @@ export function ContextPackagePane({
       </PMTabsCompound.Content>
 
       {moveDrawer}
+      {removeComponentsDialog}
       {deleteComponentDialog}
       {/*
         Mounted only while it is open, like the drawer below it, so the picks

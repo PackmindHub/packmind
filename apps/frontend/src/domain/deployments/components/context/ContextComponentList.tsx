@@ -6,14 +6,18 @@ import {
   PMHStack,
   PMIcon,
   PMIconButton,
+  PMMenu,
+  PMPortal,
   PMText,
-  PMTooltip,
 } from '@packmind/ui';
 import {
   LuBookCheck,
   LuChevronRight,
+  LuEllipsisVertical,
   LuFolderInput,
   LuPackage,
+  LuPackageMinus,
+  LuPlus,
   LuTerminal,
   LuWandSparkles,
 } from 'react-icons/lu';
@@ -32,6 +36,23 @@ export const COMPONENT_TYPE_ICONS: Record<ContextComponentType, ReactNode> = {
   command: <LuTerminal />,
   skill: <LuWandSparkles />,
 };
+
+/**
+ * The mark of each gesture a selection of components can be put through, in one
+ * place, for the reason the type icons are: a row's menu offers these from here
+ * and the selection bar offers the same ones from the panes, so two files would
+ * be choosing a glyph for one action.
+ *
+ * `add` has no row of its own to sit on, since a component is added to a package
+ * rather than acted on inside one. It is here because it is the third thing a
+ * selection can be put through, and a bar with one bare button among iconed ones
+ * reads as a rendering gap.
+ */
+export const COMPONENT_ACTION_ICONS = {
+  move: <LuFolderInput />,
+  remove: <LuPackageMinus />,
+  add: <LuPlus />,
+} as const;
 
 /**
  * One row of the list, and optionally the packages the component belongs to.
@@ -54,6 +75,7 @@ export function ContextComponentList({
   entries,
   showPackages = false,
   onMove,
+  onRemove,
   selectedKeys,
   onToggleSelect,
 }: Readonly<{
@@ -65,6 +87,12 @@ export function ContextComponentList({
    * several packages, so there is no source to move it out of.
    */
   onMove?: (component: ContextComponent) => void;
+  /**
+   * Taking a component back out of the package it is being read from, which
+   * comes with `onMove` and under the same condition: there is a package to
+   * leave only in a list scoped to one.
+   */
+  onRemove?: (component: ContextComponent) => void;
   /** Which rows are picked, by `componentSelectionKey`. */
   selectedKeys?: ReadonlySet<string>;
   /**
@@ -88,6 +116,7 @@ export function ContextComponentList({
           isFirst={index === 0}
           showPackages={showPackages}
           onMove={onMove}
+          onRemove={onRemove}
           isSelected={
             selectedKeys?.has(componentSelectionKey(entry.component)) ?? false
           }
@@ -103,6 +132,7 @@ function ComponentRow({
   isFirst,
   showPackages,
   onMove,
+  onRemove,
   isSelected,
   onToggleSelect,
 }: Readonly<{
@@ -110,6 +140,7 @@ function ComponentRow({
   isFirst: boolean;
   showPackages: boolean;
   onMove?: (component: ContextComponent) => void;
+  onRemove?: (component: ContextComponent) => void;
   isSelected: boolean;
   onToggleSelect?: (component: ContextComponent) => void;
 }>) {
@@ -117,9 +148,9 @@ function ComponentRow({
 
   return (
     /*
-     * The row is a link and an action side by side, not a link with a button
+     * The row is a link and its actions side by side, not a link with controls
      * inside it: a control nested in an anchor is activated by the anchor, so
-     * moving a component would first navigate away from the list it was moved
+     * opening the menu would first navigate away from the list it was opened
      * from. The hover sits on the pair so the row still lights up as one thing.
      */
     <PMHStack
@@ -206,19 +237,56 @@ function ComponentRow({
           </PMBox>
         </Link>
       </PMBox>
-      {onMove && (
+      {(onMove || onRemove) && (
         <PMBox display="flex" alignItems="center" paddingRight={2}>
-          <PMTooltip label="Move to another package" showArrow>
-            <PMIconButton
-              aria-label={`Move ${component.name} to another package`}
-              variant="ghost"
-              size="xs"
-              color="text.faded"
-              onClick={() => onMove(component)}
-            >
-              <LuFolderInput />
-            </PMIconButton>
-          </PMTooltip>
+          {/*
+            A menu, where moving alone was a single icon. Two ghost icons a few
+            pixels apart, told apart only by their glyph, is not how to offer
+            "put this somewhere else" beside "take this out of here": the two
+            read the same at a glance and one of them changes what gets
+            distributed. The detail view already answers "more than one thing to
+            do with this component" this way.
+          */}
+          <PMMenu.Root>
+            <PMMenu.Trigger asChild>
+              <PMIconButton
+                aria-label={`More actions for ${component.name}`}
+                variant="ghost"
+                size="xs"
+                color="text.faded"
+              >
+                <LuEllipsisVertical />
+              </PMIconButton>
+            </PMMenu.Trigger>
+            <PMPortal>
+              <PMMenu.Positioner>
+                <PMMenu.Content>
+                  {onMove && (
+                    <PMMenu.Item
+                      value="move-component"
+                      onClick={() => onMove(component)}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>{COMPONENT_ACTION_ICONS.move}</PMIcon>
+                        Move to another package
+                      </PMHStack>
+                    </PMMenu.Item>
+                  )}
+                  {onRemove && (
+                    <PMMenu.Item
+                      value="remove-component"
+                      onClick={() => onRemove(component)}
+                    >
+                      <PMHStack gap={2}>
+                        <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
+                        Remove from package
+                      </PMHStack>
+                    </PMMenu.Item>
+                  )}
+                </PMMenu.Content>
+              </PMMenu.Positioner>
+            </PMPortal>
+          </PMMenu.Root>
         </PMBox>
       )}
     </PMHStack>

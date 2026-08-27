@@ -22,6 +22,7 @@ import {
   type InventoryCoverage,
 } from './buildSpaceInventory';
 import {
+  COMPONENT_ACTION_ICONS,
   COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
@@ -240,8 +241,13 @@ export function SpaceInventoryPane({
             {selection.length > 0 && (
               <ContextSelectionBar
                 count={selection.length}
-                actionLabel="Add to a package"
-                onAct={() => setPlacing(selection)}
+                actions={[
+                  {
+                    label: 'Add to a package',
+                    icon: COMPONENT_ACTION_ICONS.add,
+                    onAct: () => setPlacing(selection),
+                  },
+                ]}
                 onClear={clearSelection}
               />
             )}
