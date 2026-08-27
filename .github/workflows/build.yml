@@ -267,6 +267,127 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx test @packmind/integration-tests
 
+  # ---------------------------------------------------------------------------
+  # TEMPORARY — benchmark only. Delete once split-vs-merged has been decided.
+  #
+  # Redoes, in a single job, exactly what build-packages + test-integration do
+  # side by side, so the two shapes can be compared on the same commit, the same
+  # runner size and the same pool. Read the arbitration off the step durations
+  # and the summary this job writes:
+  #
+  #   merged wall clock = this job's duration
+  #   split  wall clock = max(build-packages, test-integration)
+  #
+  # It gates nothing (continue-on-error) and uploads no artifact, so no other job
+  # can depend on it and a failure here cannot block the pipeline — correctness is
+  # still covered by the two real jobs.
+  #
+  # It costs one extra 8-core runner per CI run. That is the price of the
+  # measurement; remove the job as soon as the call is made.
+  #
+  # Its Nx cache uses its own key prefix so it cannot collide with the two real
+  # jobs. That also means its FIRST run starts from a cold cache and is therefore
+  # pessimistic — compare from the second run onwards.
+  # ---------------------------------------------------------------------------
+  bench-merged-packages-and-integration:
+    name: bench (temporary) - packages + integration merged
+    runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    continue-on-error: true
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-bench-merged-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-${{ github.sha }}
+          restore-keys: |
+            nx-bench-merged-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+
+      - name: Report cores
+        run: echo "nproc=$(nproc)" >> "$GITHUB_STEP_SUMMARY"
+
+      # Same four commands as the two real jobs, in the order a merged job would
+      # run them. Integration keeps its own step rather than joining the run-many:
+      # a forwarded --maxWorkers=1 would serialise its 18 spec files, which
+      # measured 266s against 108s locally.
+      - name: Bench - build packages
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: |
+          date +%s > /tmp/bench-t0
+          ./node_modules/.bin/nx run-many -t build -p packages/*
+          date +%s > /tmp/bench-t1
+      - name: Bench - test packages
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: |
+          ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests,linter-ast --passWithNoTests --parallel=$(nproc) -- --maxWorkers=1
+          date +%s > /tmp/bench-t2
+      - name: Bench - test linter-ast
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: |
+          ./node_modules/.bin/nx test linter-ast --passWithNoTests
+          date +%s > /tmp/bench-t3
+      - name: Bench - test integration tests
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: |
+          ./node_modules/.bin/nx test @packmind/integration-tests
+          date +%s > /tmp/bench-t4
+
+      - name: Bench summary
+        if: always()
+        run: |
+          # "n/a" rather than a negative number when a phase did not complete.
+          span() {
+            if [ -f "$1" ] && [ -f "$2" ]; then
+              echo "$(( $(cat "$2") - $(cat "$1") ))"
+            else
+              echo "n/a"
+            fi
+          }
+          {
+            echo "## Merged shape (this job)"
+            echo ""
+            echo "| phase | seconds |"
+            echo "| --- | --- |"
+            echo "| build packages | $(span /tmp/bench-t0 /tmp/bench-t1) |"
+            echo "| test packages | $(span /tmp/bench-t1 /tmp/bench-t2) |"
+            echo "| test linter-ast | $(span /tmp/bench-t2 /tmp/bench-t3) |"
+            echo "| test integration | $(span /tmp/bench-t3 /tmp/bench-t4) |"
+            echo "| **total (build+test)** | **$(span /tmp/bench-t0 /tmp/bench-t4)** |"
+            echo ""
+            echo "Split shape = max(build-packages, test-integration) in this same run."
+            echo "Add each job's own setup time (checkout+node+install) when comparing:"
+            echo "the merged shape pays it once, the split shape pays it twice."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
