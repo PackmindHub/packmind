@@ -98,13 +98,38 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
 
       - name: Use Node.js ${{ inputs.node-version || '24.18.0' }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version || '24.18.0' }}
-          cache: 'pnpm'
+
+      # pnpm comes from corepack rather than from a third-party setup action.
+      # This file is entirely new code, so SonarCloud's supply-chain rule
+      # requires every non-first-party action in it to be pinned to a full
+      # commit SHA — and corepack reads the version straight from
+      # `packageManager` in package.json, which is one dependency fewer and one
+      # pin fewer to keep current. The other workflows keep the action; their
+      # lines predate the rule, and changing them is a repo-wide decision rather
+      # than this PR's.
+      #
+      # Order matters: corepack writes its shims for whichever Node is on PATH,
+      # so this has to follow setup-node. That costs setup-node's
+      # `cache: 'pnpm'`, which needs pnpm to exist before it runs, so the store
+      # is cached explicitly below instead.
+      - name: Activate pnpm through corepack
+        run: |
+          corepack enable
+          corepack prepare --activate
+          pnpm --version
+
+      - name: Cache the pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Cache pnpm supply-chain verification
         uses: actions/cache@v4
