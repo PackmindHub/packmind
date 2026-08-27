@@ -100,7 +100,11 @@ console.log(result.stderr); // Standard error
 ## Performance
 
 This suite is the longest job of the build stage, so it gates everything that
-runs after it. Two properties of its design drive that cost:
+runs after it. CI runs it twice — once against the CLI this commit builds
+(`workspace`) and once against the CLI already published on the registry
+(`registry`, which guards the API against breaking the versions users run) — as
+two parallel legs of the same matrix job. Two properties of its design drive
+its cost:
 
 - **Setup runs per test, not per suite.** `jest-stage` re-runs the
   `describeWithUserSignedUp` setup before every `it`, so each test pays a fresh
