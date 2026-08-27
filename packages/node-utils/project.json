@@ -6,12 +6,7 @@
   "tags": ["env:node"],
   "implicitDependencies": [],
   "targets": {
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --noEmit --project packages/node-utils/tsconfig.lib.json"
-      }
-    },
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

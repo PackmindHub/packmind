@@ -5,6 +5,7 @@
   "projectType": "library",
   "tags": ["type:util", "scope:test", "env:node"],
   "targets": {
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

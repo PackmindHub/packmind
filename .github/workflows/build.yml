@@ -143,7 +143,10 @@ jobs:
           path: apps/frontend/build/client
 
   build-packages:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # Wider runner: this job fans out to 45 tasks with a ~6s critical path, so
+    # it is bound by cores rather than task ordering. Falls back to the standard
+    # tag where the 8-core variable is not set.
+    runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
@@ -169,11 +172,14 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build packages
+      # `build` type checks via dependsOn (see nx.json); `typecheck` is listed
+      # too for `migrations`, which has no build target. `--parallel=100%`
+      # because Nx defaults to 3 workers whatever the machine size.
+      - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}

@@ -5,6 +5,7 @@
   "projectType": "library",
   "tags": ["env:shared"],
   "targets": {
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
