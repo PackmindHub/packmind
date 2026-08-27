@@ -4,11 +4,12 @@ description: 'Use when updating, adding, fixing, changing, or deprecating Packmi
 ---
 
 # Update Playbook
-Run "packmind-cli --version" to get the current cli installation.
-    
+Run "packmind --version" to get the current cli installation.
+
 Find the highest version at or below the cli version in this list:
 - 0.21.0
 - 0.23.0
+- 0.35.0
 Remember this value as $PACKMIND_CLI_VERSION for the rest of the skill.
 
 Evaluate the user's intent against existing Packmind artifacts (standards, commands, skills) to identify what needs creating or updating. Produce a structured change report, then apply approved changes using the `playbook` CLI workflow.
@@ -67,7 +68,7 @@ This intent summary is passed as input to all subagents.
 
 ### Analyzing Playbook
 
-> **CLI health check**: Before launching subagents, run `packmind-cli --version`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
+> **CLI health check**: Before launching subagents, run `packmind --version`. If it fails, stop immediately and tell the user: "The Packmind CLI is not available or not working. Please check your installation before proceeding." Do not continue.
 
 > **No subagent support?** If the `Task` tool is unavailable, perform all three domain analyses sequentially in the current session — run each `steps/analyze-*.md` analysis one after another before proceeding to Change Report.
 
