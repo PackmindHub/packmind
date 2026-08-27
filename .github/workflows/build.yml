@@ -186,11 +186,30 @@ jobs:
         run: ./node_modules/.bin/nx run-many -t build -p packages/*
       # @packmind/integration-tests runs in its own job (test-integration) so it
       # does not sit on this job's critical path.
+      #
+      # --maxWorkers=1 gives each project a single Jest process and lets Nx
+      # provide the parallelism instead. Every Jest worker pays ~4s of fixed cost
+      # before running a test — ~1s of process startup plus ~3s to load the
+      # @packmind/node-utils barrel — so the default (Nx 3 projects x Jest 3
+      # workers) spends most of a 4-vCPU runner re-paying that. Measured here,
+      # three interleaved rounds: 123s/118s/117s with the default against
+      # 87s/88s with one worker per project. Passed on the command line rather
+      # than set in the jest configs so `nx test <project>` on a developer
+      # machine keeps using every core.
+      #
+      # linter-ast is excluded because its target is a hand-written command that
+      # already passes --runInBand (it needs --experimental-vm-modules), so it is
+      # single-process anyway and rejects a forwarded --maxWorkers.
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests,linter-ast --passWithNoTests -- --maxWorkers=1
+      - name: Test linter-ast
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: ./node_modules/.bin/nx test linter-ast --passWithNoTests
 
       - name: Upload standard samples artifacts
         uses: actions/upload-artifact@v4
