@@ -250,9 +250,11 @@ export function DeploymentsOverviewRedesignContent() {
   const autoUpdateHref = organization
     ? routes.org.toSetupAutoUpdate(organization.slug)
     : null;
-  const selectedPackageHistoryHref =
+  const selectedPackageHistory =
     organization && spaceSlug && selectedPackage
-      ? `${routes.space.toPackage(organization.slug, spaceSlug, selectedPackage.id)}?tab=distributions`
+      ? {
+          href: `${routes.space.toPackage(organization.slug, spaceSlug, selectedPackage.id)}?tab=distributions`,
+        }
       : null;
   const packageHistoryHref = (pkgId: PackageId) =>
     organization && spaceSlug
@@ -412,7 +414,7 @@ export function DeploymentsOverviewRedesignContent() {
                     onSyncPackage={handleSyncPackage}
                     providersWithToken={providersWithToken}
                     isProvidersLoading={isProvidersLoading && !isStubMode}
-                    distributionHistoryHref={selectedPackageHistoryHref}
+                    distributionHistory={selectedPackageHistory}
                     packagePageHref={packagePageHref(selectedPackage.id)}
                   />
                 ) : (

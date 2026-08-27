@@ -106,7 +106,6 @@ export function ContextPackagePane({
   orgSlug,
   spaceSlug,
   packageHref,
-  distributionHistoryHref,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
@@ -131,8 +130,6 @@ export function ContextPackagePane({
   spaceSlug: string;
   /** The package's own page, which still holds everything not moved here. */
   packageHref: string;
-  /** Where the distribution events of this package are listed. */
-  distributionHistoryHref: string;
   /**
    * The package is gone, so the surface has to stop asking for it. Deleting is
    * the one action here that outlives the pane: everything else changes what
@@ -765,7 +762,6 @@ export function ContextPackagePane({
           packages={driftPackages}
           isLoading={isLoading}
           isError={isError}
-          distributionHistoryHref={distributionHistoryHref}
         />
       </PMTabsCompound.Content>
 

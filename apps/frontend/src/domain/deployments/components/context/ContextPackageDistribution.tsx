@@ -1,8 +1,17 @@
 import { useMemo, useState } from 'react';
-import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMBox,
+  PMHStack,
+  PMIcon,
+  PMSpinner,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
+import { LuChevronLeft } from 'react-icons/lu';
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import { PackageDistributionList } from '../PackageDistributionList';
 import { PackageDetailPane } from '../redesign/components/PackageDetailPane';
 import {
   SyncSurface,
@@ -27,7 +36,6 @@ export function ContextPackageDistribution({
   packages,
   isLoading,
   isError,
-  distributionHistoryHref,
 }: Readonly<{
   pkg: PackageResponse;
   /** Null when the package has never been distributed anywhere. */
@@ -36,8 +44,6 @@ export function ContextPackageDistribution({
   packages: PackageDrift[];
   isLoading: boolean;
   isError: boolean;
-  /** The package's own page, where the distribution events are listed. */
-  distributionHistoryHref: string;
 }>) {
   const { data: providersResponse, isLoading: isProvidersLoading } =
     useGetGitProvidersQuery();
@@ -45,8 +51,18 @@ export function ContextPackageDistribution({
     () => providersWithTokenSet(providersResponse),
     [providersResponse],
   );
-
   const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
+  /*
+   * The events are read here rather than on the package's page, which is what
+   * the pane's failure alert used to link out to. Reading why a distribution
+   * failed is the one thing the reader does next after being told that it did,
+   * and leaving the surface to do it drops everything else they had open.
+   *
+   * It takes over the tab rather than sitting under the drift pane, which owns
+   * its own height and scrolls inside it. A second scrolling region under a
+   * scrolling region is how a reader loses both.
+   */
+  const [showingHistory, setShowingHistory] = useState(false);
 
   /*
    * The redistribute flow takes over the pane and leaves the rail alone: the
@@ -64,6 +80,21 @@ export function ContextPackageDistribution({
           onCancel={() => setSyncScope(null)}
           onConfirm={() => setSyncScope(null)}
         />
+      </PMBox>
+    );
+  }
+
+  /* Same takeover, for the same reason. */
+  if (showingHistory) {
+    return (
+      <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
+        <PMVStack align="stretch" gap={4}>
+          <BackToDistributions onBack={() => setShowingHistory(false)} />
+          <PackageDistributionList
+            packageId={pkg.id}
+            title="Distribution history"
+          />
+        </PMVStack>
       </PMBox>
     );
   }
@@ -103,8 +134,37 @@ export function ContextPackageDistribution({
         onSyncPackage={(packageId, installKeys) =>
           setSyncScope({ kind: 'package', packageId, installKeys })
         }
-        distributionHistoryHref={distributionHistoryHref}
+        distributionHistory={{ onOpen: () => setShowingHistory(true) }}
       />
+    </PMBox>
+  );
+}
+
+/**
+ * The way out of a takeover, in the shape the component detail already uses on
+ * this surface: a chevron and the name of what it goes back to, rather than the
+ * word "Back", because the name is the information.
+ */
+function BackToDistributions({ onBack }: Readonly<{ onBack: () => void }>) {
+  return (
+    <PMBox
+      display="inline-flex"
+      alignItems="center"
+      gap="4px"
+      fontSize="sm"
+      color="text.faded"
+      cursor="pointer"
+      width="fit-content"
+      _hover={{ color: 'text.primary' }}
+      transition="color 150ms ease-out"
+      asChild
+    >
+      <button type="button" onClick={onBack}>
+        <PMIcon fontSize="sm">
+          <LuChevronLeft />
+        </PMIcon>
+        Distributions
+      </button>
     </PMBox>
   );
 }

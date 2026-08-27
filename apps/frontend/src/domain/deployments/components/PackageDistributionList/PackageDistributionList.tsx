@@ -7,11 +7,17 @@ import { PMEmptyState, PMBox, PMSpinner, PMText } from '@packmind/ui';
 
 interface PackageDistributionListProps {
   packageId: PackageId;
+  /**
+   * What the section calls itself. Defaulted rather than fixed, because a
+   * surface that shows nothing but these events has to name them, and one that
+   * shows them beside the package's other distribution state does not.
+   */
+  title?: string;
 }
 
 export const PackageDistributionList: React.FC<
   PackageDistributionListProps
-> = ({ packageId }) => {
+> = ({ packageId, title = 'Distributions' }) => {
   const {
     data: deployments,
     isLoading: isLoadingDeployments,
@@ -72,7 +78,7 @@ export const PackageDistributionList: React.FC<
       usersMap={buildUserMap(users)}
       loading={false}
       error={isError ? error?.message : undefined}
-      title="Distributions"
+      title={title}
       hidePackageColumn
       hideVersionColumn
     />

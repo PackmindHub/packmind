@@ -409,11 +409,6 @@ export function SpaceContextSurface() {
                   spaceSlug,
                   selectedPackage.id,
                 )}
-                distributionHistoryHref={`${routes.space.toPackage(
-                  orgSlug,
-                  spaceSlug,
-                  selectedPackage.id,
-                )}?tab=distributions`}
                 onDeleted={forgetPackage}
               />
             )
