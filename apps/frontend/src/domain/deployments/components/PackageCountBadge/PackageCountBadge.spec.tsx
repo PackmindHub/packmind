@@ -8,7 +8,11 @@ import { formatPackageNames } from './PackagesDropdown';
 import { createPackageId, createStandardId, Package } from '@packmind/types';
 import * as usePackagesForArtifactModule from '../../hooks/usePackagesForArtifact';
 
-vi.mock('../../hooks/usePackagesForArtifact');
+// Both exports stubbed, matching what the bare automock used to produce.
+vi.mock('../../hooks/usePackagesForArtifact', () => ({
+  usePackagesForArtifact: vi.fn(),
+  getArtifactPackages: vi.fn(),
+}));
 
 const mockUsePackagesForArtifact = vi.spyOn(
   usePackagesForArtifactModule,

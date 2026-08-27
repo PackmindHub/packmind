@@ -4,8 +4,10 @@ import { PackmindError } from './errors/PackmindError';
 import { PackmindConflictError } from './errors/PackmindConflictError';
 import type { Mock, Mocked } from 'vitest';
 
-// Mock axios
-vi.mock('axios');
+// `create` is the only axios export ApiService touches; the rest are type-only.
+vi.mock('axios', () => ({
+  default: { create: vi.fn() },
+}));
 
 const mockedAxios = axios as Mocked<typeof axios>;
 

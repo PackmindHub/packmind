@@ -21,6 +21,16 @@ afterAll(async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
   vi.clearAllTimers();
   vi.useRealTimers();
+
+  // Vitest resets the module registry between spec files only when `isolate` is
+  // true, and vite.config.ts sets it to false. Without this, a spec's `vi.mock`
+  // leaks forward onto whichever spec runs next in the same worker, so the
+  // failures land on specs that never mocked anything. Restoring the reset keeps
+  // the speed-up: externalised node_modules stay in Node's own ESM cache, which
+  // `vi.resetModules()` does not touch.
+  //
+  // Lives in the setup file so it unwinds last, after each spec's own `afterAll`.
+  vi.resetModules();
 });
 
 // Mock winston globally to prevent PackmindLogger instantiation issues in frontend tests
