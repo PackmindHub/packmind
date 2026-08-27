@@ -143,7 +143,11 @@ jobs:
           path: apps/frontend/build/client
 
   build-packages:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # The heaviest test job, and CPU-saturated: it burned 3.4 of 4 cores on the
+    # 4-vCPU runner, so cores convert almost directly into wall clock here.
+    # Falls back to the standard tag when ACTION_RUNNER_TAG_8_CORES is unset, so
+    # forks and editions without the variable still run.
+    runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
@@ -191,11 +195,16 @@ jobs:
       # provide the parallelism instead. Every Jest worker pays ~4s of fixed cost
       # before running a test — ~1s of process startup plus ~3s to load the
       # @packmind/node-utils barrel — so the default (Nx 3 projects x Jest 3
-      # workers) spends most of a 4-vCPU runner re-paying that. Measured here,
-      # three interleaved rounds: 123s/118s/117s with the default against
+      # workers) spends most of a 4-vCPU runner re-paying that. Measured on
+      # 4 vCPU, three interleaved rounds: 123s/118s/117s with the default against
       # 87s/88s with one worker per project. Passed on the command line rather
       # than set in the jest configs so `nx test <project>` on a developer
       # machine keeps using every core.
+      #
+      # One Jest process per project means the useful concurrency is Nx's, so
+      # --parallel tracks the runner's core count rather than Nx's default of 3
+      # (which would idle 5 of 8 cores) or a hardcoded 8 (measured worse than 3
+      # when it lands on the 4-vCPU fallback runner: 101s against 88s).
       #
       # linter-ast is excluded because its target is a hand-written command that
       # already passes --runInBand (it needs --experimental-vm-modules), so it is
@@ -204,7 +213,7 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests,linter-ast --passWithNoTests -- --maxWorkers=1
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests,linter-ast --passWithNoTests --parallel=$(nproc) -- --maxWorkers=1
       - name: Test linter-ast
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
