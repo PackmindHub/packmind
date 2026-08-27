@@ -140,6 +140,24 @@ export class GitSettings
     return description ?? null;
   }
 
+  async openReauthFromDrawer(): Promise<void> {
+    await this.page.locator('[data-testid="connection-drawer-reauth"]').click();
+    await this.page
+      .locator('[data-testid="reauth-pat-input"]')
+      .waitFor({ state: 'visible' });
+  }
+
+  async submitReauthToken(token: string): Promise<void> {
+    await this.page.locator('[data-testid="reauth-pat-input"]').fill(token);
+    await this.page.locator('[data-testid="reauth-submit"]').click();
+  }
+
+  async waitForReauthAccepted(): Promise<void> {
+    await this.page
+      .getByText('Token accepted.')
+      .waitFor({ state: 'visible', timeout: 5000 });
+  }
+
   expectedUrl(): string | RegExp {
     return /\/settings\/git$/;
   }

@@ -1,6 +1,12 @@
 export type ServerErrorResponse = {
   data: {
     message: string;
+    /**
+     * Stable discriminator some endpoints add when one HTTP status covers
+     * several distinct failures, so clients branch on a code instead of
+     * matching on message text.
+     */
+    reason?: string;
   };
   status: number;
   statusText: string;

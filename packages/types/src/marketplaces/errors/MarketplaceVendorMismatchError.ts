@@ -15,7 +15,7 @@ export class MarketplaceVendorMismatchError extends Error {
     public readonly currentVendor: MarketplaceVendor,
   ) {
     super(
-      `Marketplace "${marketplaceName}" was linked as a ${previousVendor} marketplace but its descriptor now declares ${currentVendor}. Packmind will not overwrite or auto-migrate an existing marketplace config — revert the descriptor or unlink and relink the marketplace to change its type.`,
+      `Marketplace "${marketplaceName}" is linked in the "${previousVendor}" format but its descriptor now declares "${currentVendor}". Packmind will not overwrite or auto-migrate an existing marketplace config — revert the descriptor or unlink and relink the marketplace to change its type.`,
     );
     this.name = 'MarketplaceVendorMismatchError';
   }

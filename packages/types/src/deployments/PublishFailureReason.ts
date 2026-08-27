@@ -12,6 +12,10 @@
  * - `standards_only`: the package lost its last skill/recipe between enqueue
  *   and job execution, so rendering it now would produce an empty
  *   (manifest-only) plugin. The publish is failed instead of committed.
+ * - `vendor_mismatch`: the descriptor in the repository now declares a
+ *   different vendor than the one the marketplace was linked with. Packmind
+ *   refuses to auto-migrate an existing marketplace config, so the publish
+ *   fails instead of overwriting it.
  * - `other`: catch-all for unexpected failures (network, Git, etc.).
  */
 export type PublishFailureReason =
@@ -19,4 +23,5 @@ export type PublishFailureReason =
   | 'name_conflict_unmanaged'
   | 'invalid_token'
   | 'standards_only'
+  | 'vendor_mismatch'
   | 'other';
