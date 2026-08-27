@@ -100,7 +100,11 @@ console.log(result.stderr); // Standard error
 ## Performance
 
 This suite is the longest job of the build stage, so it gates everything that
-runs after it. CI runs it twice — once against the CLI this commit builds
+runs after it. It runs on an 8-core runner (`ACTION_RUNNER_TAG_8_CORES`) rather
+than the pipeline's default 4: the suite waits on a spawned CLI and on HTTP
+rather than on CPU, so twice the cores nearly halves it while the total work
+barely changes. Jest's default worker count is `nproc - 1`, so it follows the
+runner without a flag. CI runs the suite twice — once against the CLI this commit builds
 (`workspace`) and once against the CLI already published on the registry
 (`registry`, which guards the API against breaking the versions users run) — as
 two parallel legs of the same matrix job. Two properties of its design drive

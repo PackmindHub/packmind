@@ -282,7 +282,17 @@ jobs:
     # sequence in a single job, it added its whole duration to the critical path
     # of the `build` stage — and `quality` waits for that stage in full.
     name: cli-e2e-tests (${{ matrix.cli-source }})
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # An 8-core runner rather than the pipeline's default 4. Measured on the
+    # benchmark workflow: the suite is bound by waiting on a spawned CLI and on
+    # HTTP, not by CPU, so doubling the cores nearly halves it — 105s to 55s —
+    # while the total work barely changes. Jest's own default worker count is
+    # `nproc - 1`, so it follows the runner without a flag here.
+    #
+    # The fallback chain keeps a checkout without the new variable working: the
+    # 8-core tag, then the pipeline's usual tag, then self-hosted.
+    runs-on: >-
+      ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG ||
+      'self-hosted' }}
     timeout-minutes: 20
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
@@ -315,6 +325,12 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
+
+      # Cheap, and it is the only way to tell from a log whether the job landed
+      # on the 8-core runner and how many workers Jest will therefore use.
+      - name: Report the runner size
+        run: |
+          echo "cores: $(nproc) - Jest defaults to $(( $(nproc) - 1 )) workers"
 
       # Both legs build the CLI, even though the registry leg runs the binary
       # from `CLI_BINARY_PATH` and never reads `dist/apps/cli`. This is the
