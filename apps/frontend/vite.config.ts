@@ -6,15 +6,17 @@ import { readFileSync } from 'fs';
 
 // Turns the workspace tsconfig `paths` into static Vite aliases.
 //
-// nxViteTsPaths does the same job through a `resolveId` hook, but that hook runs
-// with enforce:'pre' on *every* import specifier in the graph — including the
-// thousands of bare npm ones it will never match — and each call is a
-// rolldown -> JS round trip plus a synchronous existsSync. Resolving the same
-// mappings as static aliases keeps the work inside the Rust resolver and cuts
-// roughly 18% off the build, for a byte-for-byte identical bundle.
+// This replaces nxViteTsPaths, which did the same mapping from a `resolveId`
+// hook registered enforce:'pre' — so every import specifier in the graph paid a
+// rolldown -> JS round trip plus a synchronous existsSync, including the
+// thousands of bare npm ones it could never match. Keeping the work inside
+// rolldown's Rust resolver cuts roughly 18% off the build, with every emitted
+// file byte-size identical.
 //
-// The aliases are derived from tsconfig.base.effective.json at config time, so
-// they stay in step with whichever edition `scripts/select-tsconfig.mjs` picked.
+// Derived from tsconfig.base.effective.json at config time, so the aliases
+// follow whichever edition scripts/select-tsconfig.mjs selected. Unlike the
+// plugin there is no filesystem fallback, so a mapping that does not match the
+// file on disk is a build error instead of a silent search.
 function tsconfigPathAliases(workspaceRoot: string) {
   const { compilerOptions } = JSON.parse(
     readFileSync(
@@ -140,16 +142,10 @@ export default defineConfig(() => {
       // frontend through the dedicated `frontend:typecheck` target instead.
       Checker({ typescript: true, enableBuild: false }),
     ],
-    // Uncomment this if you are using workers.
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },
     build: {
-      // react-router build owns the real output location and writes the app to
-      // apps/frontend/build/{client,server} — which is what project.json
-      // declares as this target's output and what Dockerfile.frontend copies.
-      // outDir only reaches plugins that write through it, so keep it pointing
-      // somewhere harmless rather than implying it is the app's build directory.
+      // Not the app's output directory: react-router build writes to
+      // build/client, which project.json declares and Dockerfile.frontend
+      // copies. outDir only ever reached plugins writing through it.
       outDir: '../../dist/apps/frontend',
       emptyOutDir: true,
       reportCompressedSize: true,
