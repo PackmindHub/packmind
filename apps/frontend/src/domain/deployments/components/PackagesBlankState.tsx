@@ -16,20 +16,11 @@ import { LuPackage } from 'react-icons/lu';
 interface PackagesBlankStateProps {
   orgSlug: string;
   spaceSlug: string;
-  /**
-   * Creates the package here rather than on the create page.
-   *
-   * Optional because this state is shared by two navigations: the packages page
-   * sends the reader to the form it has always sent them to, and the context
-   * surface opens a drawer over itself, having nowhere to send them to.
-   */
-  onCreate?: () => void;
 }
 
 export const PackagesBlankState = ({
   orgSlug,
   spaceSlug,
-  onCreate,
 }: PackagesBlankStateProps) => {
   return (
     <PMBox
@@ -76,34 +67,17 @@ export const PackagesBlankState = ({
                   for easy distribution
                 </PMBox>
               </PMBox>
-              {/*
-                The same button twice, because one of them navigates and the
-                other does not: `asChild` hands its rendering to the link, and
-                there is no link to hand it to when the answer is a drawer.
-              */}
-              {onCreate ? (
-                <PMButton
-                  variant="primary"
-                  w="fit-content"
-                  size={'xs'}
-                  marginTop={'auto'}
-                  onClick={onCreate}
-                >
+              <PMButton
+                variant="primary"
+                asChild
+                w="fit-content"
+                size={'xs'}
+                marginTop={'auto'}
+              >
+                <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
                   Create
-                </PMButton>
-              ) : (
-                <PMButton
-                  variant="primary"
-                  asChild
-                  w="fit-content"
-                  size={'xs'}
-                  marginTop={'auto'}
-                >
-                  <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
-                    Create
-                  </Link>
-                </PMButton>
-              )}
+                </Link>
+              </PMButton>
             </PMBox>
           </PMGridItem>
         </PMGrid>

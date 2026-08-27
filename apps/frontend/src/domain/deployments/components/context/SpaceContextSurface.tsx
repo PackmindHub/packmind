@@ -30,7 +30,7 @@ import {
   selectSkillFile,
   sortFilesByPath,
 } from './buildComponentDetail';
-import { PackagesBlankState } from '../PackagesBlankState';
+import { ContextBlankState } from './ContextBlankState';
 import { CreatePackageDrawer } from './CreatePackageDrawer';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextSkillFileRail } from './ContextSkillFileRail';
@@ -372,11 +372,7 @@ export function SpaceContextSurface() {
   if (packages.length === 0) {
     return (
       <>
-        <PackagesBlankState
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
-          onCreate={createAndOpen}
-        />
+        <ContextBlankState onCreate={createAndOpen} />
         {packageDrawer}
       </>
     );
