@@ -5,12 +5,7 @@
   "projectType": "library",
   "tags": ["env:browser"],
   "targets": {
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --noEmit --project packages/frontend/tsconfig.lib.json"
-      }
-    },
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

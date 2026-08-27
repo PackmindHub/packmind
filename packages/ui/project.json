@@ -5,7 +5,8 @@
   "projectType": "library",
   "tags": ["env:browser"],
   "// targets": "to see all targets run: nx show project ui --web",
-  "// build": "The 'build' entry below only adds dependsOn; the rest of the target is inferred from vite.config.ts by @nx/vite/plugin. It has to be declared here because the 'dependsOn: [typecheck]' that nx.json puts on @nx/js:swc never reaches ui - ui builds with vite, not swc - and without it 'nx build ui' bundles without type checking. '^build' is what the inferred target already carried; keep it.",
+  "// build": "Adds dependsOn only; the rest is inferred from vite.config.ts. Needed because ui builds with vite, so the 'dependsOn: [typecheck]' nx.json sets on @nx/js:swc does not reach it. '^build' comes from the inferred target; keep it.",
+  "// typecheck": "Kept explicit, unlike the other packages: @nx/vite/plugin also infers a 'typecheck' target here, and an empty '{}' would let that one win instead of the targetDefaults command.",
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

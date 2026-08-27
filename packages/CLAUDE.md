@@ -150,7 +150,11 @@ packages. What it does not tell you:
 > `nx.json`). So a `project.json` that lists only `build` still has a `test` target — check with
 > `./node_modules/.bin/nx show project <package-name>` instead of reading `project.json`.
 >
-> `ui` is the one package with a hand-declared target that is not inferred:
-> `./node_modules/.bin/nx typecheck ui`. Its build output goes to `dist/packages/packmind-ui`.
+> Every package declares `typecheck` (`tsc --noEmit`), and `build` depends on it, so building a
+> package type checks it. The target is one line — `"typecheck": {}` — inheriting its command from
+> `targetDefaults` in `nx.json`; a package that omits it silently gets no type gate.
+>
+> `ui` is the one package whose `build` is not purely inferred: it declares `dependsOn` so the vite
+> build gates on `typecheck` too. Its build output goes to `dist/packages/packmind-ui`.
 
 **Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`

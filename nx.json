@@ -107,7 +107,7 @@
       "dependsOn": ["^build"],
       "inputs": ["default", "^default"]
     },
-    "// @nx/js:swc": "Building a package still type checks it, via 'dependsOn: [typecheck]'. What changed is HOW. The executor's own type check (on by default, hence skipTypeCheck here) ran tsc --emitDeclarationOnly and resolved each dependency from its dist/ .d.ts, so it needed '^build' - which serialised the 22 packages into a 9-deep chain and cost ~2s/package regardless of size. The 'typecheck' target resolves dependencies from source instead (every @packmind/* path in tsconfig.base.json maps to packages/*/src), so it needs no build ordering: 'typecheck' has no '^', so each package depends only on its OWN type check and packages stay parallel. The declarations that emitDeclarationOnly produced were dead output - nothing reads dist/packages/*, since api/frontend/cli all bundle from source.",
+    "// @nx/js:swc": "Transpile only; the type gate is the project's own 'typecheck' target, via dependsOn below. The executor's built-in check ran 'tsc --emitDeclarationOnly' resolving each dependency from its dist/ .d.ts, which forced '^build' and serialised the packages into a 9-deep chain - for declarations nothing consumes. 'typecheck' has no '^', so packages stay parallel.",
     "@nx/js:swc": {
       "cache": true,
       "dependsOn": ["typecheck"],
@@ -116,8 +116,13 @@
         "skipTypeCheck": true
       }
     },
+    "// typecheck": "Shared definition: a project opts in with '\"typecheck\": {}' and inherits the command. A project that omits it has no type gate at all, since 'dependsOn: [typecheck]' on a missing target is silently a no-op.",
     "typecheck": {
       "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project {projectRoot}/tsconfig.lib.json"
+      },
       "inputs": ["default", "^default", "{workspaceRoot}/tsconfig.base.json"]
     },
     "test": {

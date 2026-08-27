@@ -5,12 +5,7 @@
   "projectType": "library",
   "tags": ["env:shared"],
   "targets": {
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --noEmit --project packages/editions/tsconfig.lib.json"
-      }
-    },
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],

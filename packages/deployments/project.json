@@ -5,12 +5,7 @@
   "projectType": "library",
   "tags": ["env:node"],
   "targets": {
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --noEmit --project packages/deployments/tsconfig.lib.json"
-      }
-    },
+    "typecheck": {},
     "build": {
       "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
