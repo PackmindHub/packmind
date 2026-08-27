@@ -275,12 +275,14 @@ jobs:
           retention-days: 30
 
   cli-e2e-tests:
-    # Two legs, in parallel: the CLI this commit builds, and the CLI already
-    # published on the registry. The published-CLI leg guards the API against
-    # breaking the versions users are running; it validates nothing about this
-    # commit's own CLI, so it has no reason to wait for the other leg. Run in
-    # sequence in a single job, it added its whole duration to the critical path
-    # of the `build` stage — and `quality` waits for that stage in full.
+    # `cli-source` is a matrix dimension, so this definition expands into two
+    # parallel jobs — `cli-e2e-tests (workspace)` and `cli-e2e-tests (registry)`
+    # — testing the CLI this commit builds and the CLI already published on npm.
+    # The registry job guards the API against breaking the versions users are
+    # running; it validates nothing about this commit's own CLI, so it has no
+    # reason to wait for the other. Run in sequence inside a single job, as
+    # before, it added its whole duration to the critical path of the `build`
+    # stage — and `quality` waits for that stage in full.
     name: cli-e2e-tests (${{ matrix.cli-source }})
     # An 8-core runner rather than the pipeline's default 4. Measured: the suite
     # is bound by waiting on a spawned CLI and on HTTP, not by CPU, so doubling
@@ -359,18 +361,18 @@ jobs:
       # Getting this wrong is not obvious from the failure: the run reports
       # `17 passed, 287 total` and then dies in Nx's own output writer with
       # `EACCES ... .nx/cache/terminalOutputs/<id>`. That is what happened when
-      # this leg's `nx show projects` claimed only the second directory.
+      # the registry job's `nx show projects` claimed only the second directory.
       - name: Claim Nx's scratch directories as the runner user
         run: |
           mkdir -p .nx/cache/terminalOutputs .nx/workspace-data
           ./node_modules/.bin/nx show projects > /dev/null
 
-      # Workspace leg only: this is the CLI under test there. The registry leg
+      # Workspace job only: this is the CLI under test there. The registry job
       # runs the binary at `CLI_BINARY_PATH` and needs no `dist/apps/cli` — the
       # full suite passes without it, which the failure above confirmed. Keeping
-      # the build off that leg also decouples the signals: a broken CLI build no
-      # longer reddens "does the published CLI still work against this API", a
-      # question `build-cli` already answers in its own job.
+      # the build out of the registry job also decouples the signals: a broken
+      # CLI build no longer reddens "does the published CLI still work against
+      # this API", a question `build-cli` already answers in its own job.
       - name: Build the workspace CLI
         if: matrix.cli-source == 'workspace'
         run: ./node_modules/.bin/nx run packmind-cli:build
@@ -400,7 +402,7 @@ jobs:
           CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
           cd -
           echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
-          # Only ever set on this leg: the test helpers fall back to the built
+          # Only ever set in the registry job: the helpers fall back to the built
           # CLI when it is absent, but an empty value would be taken as a path.
           echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
 
@@ -434,8 +436,8 @@ jobs:
           echo "Waiting for API to be ready..."
           timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done"
 
-      # `--skip-nx-cache` on both legs: the cache key covers the workspace
-      # sources, not `CLI_BINARY_PATH`, so the two legs would otherwise be
+      # `--skip-nx-cache` in both jobs: the cache key covers the workspace
+      # sources, not `CLI_BINARY_PATH`, so the two would otherwise be
       # indistinguishable to Nx.
       #
       # Deliberately NOT setting `NODE_COMPILE_CACHE` here. Measured in
