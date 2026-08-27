@@ -3,6 +3,12 @@ set -eu
 # Refresh origin/main so `affected` has an accurate base.
 git fetch origin main --quiet 2>/dev/null || true
 
+# OSS <-> proprietary source parity. Runs first: it is a few seconds against the
+# counterpart repo, and there is no point spending ten minutes on lint/test/build
+# for a push that the check-oss-sync CI job would reject anyway. Silently inert
+# when no counterpart remote is configured.
+scripts/check-edition-parity.sh
+
 # Base for `nx affected` — fall back if origin/main is unavailable.
 BASE=$(git merge-base HEAD origin/main 2>/dev/null || echo "HEAD~1")
 
