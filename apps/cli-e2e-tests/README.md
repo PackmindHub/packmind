@@ -196,15 +196,47 @@ the command's own work and the rest is Node starting up and compiling the
 bundle. Across the suite's 287 tests that is roughly **120s of the ~305s serial
 cost spent on process startup alone.** Two consequences:
 
-- CI sets `NODE_COMPILE_CACHE` for the suite, pointing every spawn at one V8
-  bytecode cache under `runner.temp`. Measured: the same spawn drops from 413ms
-  to **354ms (−14%)**. It needs no code change — `runCli` copies the whole
-  `process.env` into the child.
 - Anything that reduces the _number_ of CLI spawns beats anything that makes
   the API faster. `install.spec.ts` runs `install` once per `it`; sharing one
   run across the assertions of a `describe` would remove tens of seconds, at
   the cost of the one-assertion-per-test style — a deliberate trade-off, not an
   obvious win.
+- Making each spawn cheaper is the other half, and it is where a clean
+  measurement turned out not to predict the suite. See below.
+
+### A shared compile cache: measured, and rejected
+
+`NODE_COMPILE_CACHE` gives Node a V8 bytecode cache reused across processes,
+which should be exactly right here — the same bundle compiled 287 times. In the
+isolated probe it is: **413ms → 354ms per spawn, −14 %**, reproduced twice on CI
+hardware to within 2ms. It needs no code change either, since `runCli` copies
+the whole `process.env` into the child.
+
+Under the real suite it does not survive. The benchmark's `-cc` arms are the
+same cells with one shared cache, run alongside their controls in the same run:
+
+| Variant           |  Wall | Serial | vs its control |
+| ----------------- | ----: | -----: | -------------: |
+| `baseline-8w6`    | 56.9s | 295.1s |        control |
+| `baseline-8w6-cc` | 54.6s | 308.5s |          −2.3s |
+| `api-only-8w6`    | 49.1s | 276.9s |        control |
+| `api-only-8w6-cc` | 54.8s | 305.0s |      **+5.7s** |
+
+The two pairs disagree in sign, and both cached arms did _more_ serial work than
+their controls. The two `-cc` arms also land within 0.2s of each other despite
+different stack shapes, while their controls are 7.8s apart — consistent with
+the cache imposing a floor of its own. The plausible mechanism, untested, is
+contention: six workers spawning CLIs concurrently against one cache directory
+serialise on it, which a sequential probe by construction cannot see. In the
+slower stack shape that hides behind API latency; in the faster one it becomes
+the bottleneck.
+
+So CI deliberately does not set it. **The lesson worth keeping is about the
+method rather than the variable:** a per-spawn measurement taken sequentially
+and unloaded does not predict suite behaviour under worker contention, however
+cleanly it reproduces. If this is revisited, the thing to try is one cache
+directory _per Jest worker_ (keyed on `JEST_WORKER_ID`), which needs a change in
+`runCli` and a fresh A/B — not the shared directory measured here.
 
 `scripts/measure-bcrypt-cost.mjs` sizes the other CPU-bound candidate, inside
 the API container where bcrypt's native binding is built:

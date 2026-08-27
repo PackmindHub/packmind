@@ -405,19 +405,16 @@ jobs:
       # sources, not `CLI_BINARY_PATH`, so the two legs would otherwise be
       # indistinguishable to Nx.
       #
-      # `NODE_COMPILE_CACHE` is the cheapest lever the benchmark found. Every
-      # test spawns the CLI at least once, and 413ms of a 467ms `install` run is
-      # the spawn itself rather than the command's work — Node re-compiling the
-      # same bundle 287 times over. Pointing all the spawns at one V8 bytecode
-      # cache measured 354ms instead of 413ms, -14% per spawn. The directory is
-      # under `runner.temp`, so it is per-job and cannot go stale across runs;
-      # Node creates it on first use. `runCli` copies the whole `process.env`
-      # into the child, so setting it here is enough - no test-helper change.
+      # Deliberately NOT setting `NODE_COMPILE_CACHE` here. Measured in
+      # isolation it looks like the cheapest win available: one shared V8
+      # bytecode cache takes a CLI spawn from 413ms to 354ms, -14%, twice
+      # reproduced. Under the real suite it does not survive - the benchmark's
+      # `-cc` arms make the faster configuration ~10% slower, and both cached
+      # arms did more total work than their controls. See the suite's README.
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-          NODE_COMPILE_CACHE: ${{ runner.temp }}/node-compile-cache
         run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
