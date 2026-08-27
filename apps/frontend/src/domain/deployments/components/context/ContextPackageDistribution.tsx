@@ -1,17 +1,20 @@
 import { useMemo, useState } from 'react';
 import {
   PMBox,
+  PMButton,
   PMHStack,
   PMIcon,
   PMSpinner,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronLeft } from 'react-icons/lu';
+import { LuChevronLeft, LuHistory } from 'react-icons/lu';
 import type { GitProviderId, PackageResponse } from '@packmind/types';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
+import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { PackageDistributionList } from '../PackageDistributionList';
+import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
 import { PackageDetailPane } from '../redesign/components/PackageDetailPane';
 import {
   SyncSurface,
@@ -51,16 +54,23 @@ export function ContextPackageDistribution({
     () => providersWithTokenSet(providersResponse),
     [providersResponse],
   );
+  /*
+   * The events, read here for the two controls that need them: the removal
+   * dialog, which lists the targets to take the package out of, and the history
+   * takeover. One query for both, so the second one opens on what the first one
+   * already knows.
+   */
+  const { data: deployments = [], isLoading: isLoadingDeployments } =
+    useListPackageDeploymentsQuery(pkg.id);
+
   const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
   /*
-   * The events are read here rather than on the package's page, which is what
-   * the pane's failure alert used to link out to. Reading why a distribution
-   * failed is the one thing the reader does next after being told that it did,
-   * and leaving the surface to do it drops everything else they had open.
+   * The events behind the current state, kept out of the way until asked for
+   * because they are not the question the tab opens on.
    *
-   * It takes over the tab rather than sitting under the drift pane, which owns
-   * its own height and scrolls inside it. A second scrolling region under a
-   * scrolling region is how a reader loses both.
+   * Shown as a takeover of the tab rather than a section under the drift pane,
+   * which owns its own height and scrolls inside it. A second scrolling region
+   * under a scrolling region is how a reader loses both.
    */
   const [showingHistory, setShowingHistory] = useState(false);
 
@@ -84,7 +94,6 @@ export function ContextPackageDistribution({
     );
   }
 
-  /* Same takeover, for the same reason. */
   if (showingHistory) {
     return (
       <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
@@ -116,27 +125,83 @@ export function ContextPackageDistribution({
     );
   }
 
-  if (!drift) {
-    return (
-      <PMBox flex="1" minH={0} overflowY="auto" padding={6}>
-        <NeverDistributed pkg={pkg} />
-      </PMBox>
-    );
-  }
-
   return (
-    <PMBox flex="1" minH={0}>
-      <PackageDetailPane
-        pkg={drift}
-        hideIdentityHeader
-        providersWithToken={providersWithToken}
-        isProvidersLoading={isProvidersLoading}
-        onSyncPackage={(packageId, installKeys) =>
-          setSyncScope({ kind: 'package', packageId, installKeys })
-        }
-        distributionHistory={{ onOpen: () => setShowingHistory(true) }}
-      />
-    </PMBox>
+    <PMVStack align="stretch" gap={0} flex="1" minH={0}>
+      {/*
+        The two things the tab owes the reader that the drift pane does not
+        carry: what happened before the current state, and the way to take the
+        package back out of a target.
+
+        Above the pane and not inside it, because the pane is the Distribution
+        surface's and is read by two other screens.
+      */}
+      <PMHStack
+        paddingX={6}
+        paddingTop={4}
+        paddingBottom={3}
+        gap={2}
+        align="center"
+        justify="space-between"
+        flexShrink={0}
+      >
+        <PMButton
+          variant="tertiary"
+          size="sm"
+          onClick={() => setShowingHistory(true)}
+        >
+          <PMIcon fontSize="sm">
+            <LuHistory />
+          </PMIcon>
+          Distribution history
+        </PMButton>
+        {/*
+          Absent rather than disabled where the package has landed nowhere: the
+          body under this bar is already saying so in a sentence, and a greyed
+          control repeating it in the corner is furniture. It disables itself
+          once it is here, for the targets it cannot act on.
+        */}
+        {drift && (
+          <RemovePackageFromTargetsButton
+            selectedPackage={pkg}
+            distributions={deployments}
+            distributionsLoading={isLoadingDeployments}
+            size="sm"
+          />
+        )}
+      </PMHStack>
+
+      {drift ? (
+        <PMBox flex="1" minH={0}>
+          <PackageDetailPane
+            pkg={drift}
+            hideIdentityHeader
+            providersWithToken={providersWithToken}
+            isProvidersLoading={isProvidersLoading}
+            onSyncPackage={(packageId, installKeys) =>
+              setSyncScope({ kind: 'package', packageId, installKeys })
+            }
+            /*
+             * The events are read on this tab rather than on the package's page,
+             * which is what this used to link out to. Reading why a distribution
+             * failed is the one thing the reader does next after being told that
+             * it did, and leaving the surface to do it drops everything else
+             * they had open.
+             */
+            distributionHistory={{ onOpen: () => setShowingHistory(true) }}
+          />
+        </PMBox>
+      ) : (
+        <PMBox
+          flex="1"
+          minH={0}
+          overflowY="auto"
+          paddingX={6}
+          paddingBottom={6}
+        >
+          <NeverDistributed pkg={pkg} />
+        </PMBox>
+      )}
+    </PMVStack>
   );
 }
 
