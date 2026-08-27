@@ -337,22 +337,36 @@ jobs:
         run: |
           echo "cores: $(nproc) - Jest defaults to $(( $(nproc) - 1 )) workers"
 
-      # Both legs build the CLI, even though the registry leg runs the binary
-      # from `CLI_BINARY_PATH` and never reads `dist/apps/cli`. This is the
-      # first Nx command of the job, and it is what creates `.nx/workspace-data`
-      # as the runner user. The compose services run Nx as root over the
-      # `.:/packmind` bind mount and share that same directory, so if they get
-      # there first the files land root-owned and the later `nx test` dies with
-      # `Permission denied (os error 13)`. Skipping the build here costs nothing
-      # anyway: the registry leg's suite is the shorter of the two, so the job's
-      # wall clock is set by the workspace leg either way.
+      # Some Nx command must run as the runner user before `docker compose up`.
+      # The compose services run Nx as root over the `.:/packmind` bind mount
+      # and share `.nx/workspace-data` (a SQLite DB — see the
+      # NX_INVOCATION_ROOT_PID comment in docker-compose.yml) through it. Root
+      # writing into a runner-owned DB is fine; the reverse is not, so whichever
+      # side creates those files first decides whether the later `nx test` works
+      # or dies with `Permission denied (os error 13)`.
+      #
+      # On the workspace leg the build below already does this, which is why it
+      # must stay ahead of the compose step. The registry leg has no build, so
+      # it claims the directory with the cheapest Nx command instead.
+      - name: Claim the Nx workspace data as the runner user
+        if: matrix.cli-source == 'registry'
+        run: ./node_modules/.bin/nx show projects > /dev/null
+
+      # Workspace leg only: this is the CLI under test on that leg. The registry
+      # leg runs the binary at `CLI_BINARY_PATH` and never reads
+      # `dist/apps/cli`, so building it there would couple "does the published
+      # CLI still work against this API" to "does this commit's CLI compile" —
+      # a signal `build-cli` already owns in its own job.
       - name: Build the workspace CLI
+        if: matrix.cli-source == 'workspace'
         run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
+        if: matrix.cli-source == 'workspace'
         run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
+        if: matrix.cli-source == 'workspace'
         run: |
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
