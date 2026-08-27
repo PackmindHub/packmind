@@ -162,6 +162,75 @@ describe('GitProviderGatewayApi', () => {
       });
     });
 
+    describe('when only a token is provided', () => {
+      beforeEach(async () => {
+        await gateway.updateGitProvider(organizationId, providerId, {
+          token: 'ghp_reauth',
+        });
+      });
+
+      it('sends a body containing only the token', () => {
+        expect(mockedApi.put).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/${providerId}`,
+          { token: 'ghp_reauth' },
+        );
+      });
+    });
+
+    describe('when a token is provided without an authMethod alongside other fields', () => {
+      beforeEach(async () => {
+        await gateway.updateGitProvider(organizationId, providerId, {
+          source: GitProviderVendors.github,
+          url: 'https://github.com',
+          token: 'ghp_rotated',
+        });
+      });
+
+      it('forwards the token', () => {
+        expect(mockedApi.put).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/${providerId}`,
+          {
+            source: GitProviderVendors.github,
+            url: 'https://github.com',
+            token: 'ghp_rotated',
+          },
+        );
+      });
+    });
+
+    describe('when an empty token accompanies a rename', () => {
+      beforeEach(async () => {
+        await gateway.updateGitProvider(organizationId, providerId, {
+          displayName: 'New name',
+          token: '',
+        });
+      });
+
+      it('omits the token so the stored credential survives', () => {
+        expect(mockedApi.put).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/${providerId}`,
+          { displayName: 'New name' },
+        );
+      });
+    });
+
+    describe('when a leftover token accompanies a switch to app auth', () => {
+      beforeEach(async () => {
+        await gateway.updateGitProvider(organizationId, providerId, {
+          authMethod: 'app',
+          appInstallationId: 42,
+          token: 'ghp_stale',
+        });
+      });
+
+      it('drops the token that contradicts the requested auth method', () => {
+        expect(mockedApi.put).toHaveBeenCalledWith(
+          `/organizations/${organizationId}/git/providers/${providerId}`,
+          { authMethod: 'app', appInstallationId: 42 },
+        );
+      });
+    });
+
     describe('when authMethod is "token" with a token', () => {
       beforeEach(async () => {
         await gateway.updateGitProvider(organizationId, providerId, {

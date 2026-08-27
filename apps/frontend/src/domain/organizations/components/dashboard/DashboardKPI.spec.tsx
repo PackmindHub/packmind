@@ -6,8 +6,13 @@ import * as SpacesQueries from '../../../spaces/api/queries/SpacesQueries';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router';
 
-vi.mock('../../../deployments/api/queries/DeploymentsQueries');
-vi.mock('../../../spaces/api/queries/SpacesQueries');
+vi.mock('../../../deployments/api/queries/DeploymentsQueries', () => ({
+  useGetDashboardKpiQuery: vi.fn(),
+  useGetDashboardNonLiveQuery: vi.fn(),
+}));
+vi.mock('../../../spaces/api/queries/SpacesQueries', () => ({
+  useGetSpacesQuery: vi.fn(),
+}));
 vi.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   useCurrentSpace: () => ({
     spaceId: 'space-id-1',

@@ -35,7 +35,10 @@ import {
 import { sortRulesByContent } from './buildComponentDetail';
 import type { ContextComponent } from './buildPackageContext';
 import { COMPONENT_TYPE_LABELS_SINGULAR } from './buildPackageContext';
-import { COMPONENT_TYPE_ICONS } from './ContextComponentList';
+import {
+  COMPONENT_ACTION_ICONS,
+  COMPONENT_TYPE_ICONS,
+} from './ContextComponentList';
 
 /**
  * One component, read inside the package that carries it.
@@ -56,6 +59,7 @@ export function ContextComponentDetail({
   backHref,
   editHref,
   onMove,
+  onRemove,
   onDelete,
 }: Readonly<{
   component: ContextComponent;
@@ -65,6 +69,11 @@ export function ContextComponentDetail({
   /** Null for a type with no edit route of its own. */
   editHref: string | null;
   onMove: () => void;
+  /**
+   * Taking this component out of the package named in the back link, which is
+   * where the reader lands once it is gone from here.
+   */
+  onRemove: () => void;
   onDelete: () => void;
 }>) {
   const label = COMPONENT_TYPE_LABELS_SINGULAR[component.type];
@@ -127,8 +136,10 @@ export function ContextComponentDetail({
             proposals. It keeps its own label rather than saying "Open page",
             so the button says what will be on screen.
 
-            Secondary, the same weight as the pane's own "Open package": both
-            are the way out of this surface to a page that still holds more.
+            Secondary, because reading the component is what this screen is
+            for. The package header used to carry a button like it and no longer
+            does: everything its page held is on this surface now. A component's
+            page is not, which is why this one is still here.
           */}
           <PMButton variant="secondary" size="sm" asChild>
             <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>
@@ -163,6 +174,18 @@ export function ContextComponentDetail({
             <PMPortal>
               <PMMenu.Positioner>
                 <PMMenu.Content>
+                  {/*
+                    Above the deletion and not coloured like it, because the two
+                    are one word apart and only one of them destroys anything:
+                    this one takes the component out of one package, the other
+                    takes it out of the space.
+                  */}
+                  <PMMenu.Item value="remove-component" onClick={onRemove}>
+                    <PMHStack gap={2}>
+                      <PMIcon>{COMPONENT_ACTION_ICONS.remove}</PMIcon>
+                      Remove from package
+                    </PMHStack>
+                  </PMMenu.Item>
                   <PMMenu.Item
                     value="delete-component"
                     color="text.error"

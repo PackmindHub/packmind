@@ -10,9 +10,15 @@ import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import type { MockedFunction } from 'vitest';
 
-vi.mock('../hooks/useAuthContext');
-vi.mock('../../spaces/api/queries/SpacesQueries');
-vi.mock('../../deployments/api/queries/DeploymentsQueries');
+vi.mock('../hooks/useAuthContext', () => ({
+  useAuthContext: vi.fn(),
+}));
+vi.mock('../../spaces/api/queries/SpacesQueries', () => ({
+  useGetSpacesQuery: vi.fn(),
+}));
+vi.mock('../../deployments/api/queries/DeploymentsQueries', () => ({
+  useListPackagesBySpaceQuery: vi.fn(),
+}));
 vi.mock('./LocalEnvironmentSetup/hooks', () => ({
   useCliLoginCode: vi.fn(() => ({
     loginCode: 'TEST-CODE-123',

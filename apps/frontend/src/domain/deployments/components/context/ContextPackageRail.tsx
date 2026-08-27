@@ -54,7 +54,7 @@ export function ContextPackageRail({
   onSelect,
   onShowInventory,
   onShowOrphans,
-  createPackageHref,
+  onCreatePackage,
 }: Readonly<{
   packages: readonly PackageResponse[];
   /** What the space owns, so the search can look inside the packages. */
@@ -73,7 +73,11 @@ export function ContextPackageRail({
   onSelect: (packageId: PackageId) => void;
   onShowInventory: () => void;
   onShowOrphans: () => void;
-  createPackageHref: string;
+  /**
+   * Opens the drawer that names a new package, held by the surface: it is what
+   * selects the package once it exists, and the rail has no address of its own.
+   */
+  onCreatePackage: () => void;
 }>) {
   /*
    * Local, and deliberately not in the URL beside the open package. The package
@@ -220,13 +224,16 @@ export function ContextPackageRail({
         borderColor="border.tertiary"
         flexShrink={0}
       >
-        <PMButton variant="secondary" size="sm" width="full" asChild>
-          <Link to={createPackageHref}>
-            <PMIcon fontSize="xs">
-              <LuPlus />
-            </PMIcon>
-            New package
-          </Link>
+        <PMButton
+          variant="secondary"
+          size="sm"
+          width="full"
+          onClick={onCreatePackage}
+        >
+          <PMIcon fontSize="xs">
+            <LuPlus />
+          </PMIcon>
+          New package
         </PMButton>
       </PMBox>
     </PMBox>

@@ -143,10 +143,9 @@ jobs:
           path: apps/frontend/build/client
 
   build-packages:
-    # The heaviest test job, and CPU-saturated: it burned 3.4 of 4 cores on the
-    # 4-vCPU runner, so cores convert almost directly into wall clock here.
-    # Falls back to the standard tag when ACTION_RUNNER_TAG_8_CORES is unset, so
-    # forks and editions without the variable still run.
+    # Wider runner: this job fans out to 45 tasks with a ~6s critical path, so
+    # it is bound by cores rather than task ordering. Falls back to the standard
+    # tag where the 8-core variable is not set.
     runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
@@ -173,11 +172,14 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build packages
+      # `build` type checks via dependsOn (see nx.json); `typecheck` is listed
+      # too for `migrations`, which has no build target. `--parallel=100%`
+      # because Nx defaults to 3 workers whatever the machine size.
+      - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
       # @packmind/integration-tests runs in its own job (test-integration) so it
       # does not sit on this job's critical path.
       #
@@ -192,9 +194,9 @@ jobs:
       # machine keeps using every core.
       #
       # One Jest process per project means the useful concurrency is Nx's, so
-      # --parallel tracks the runner's core count rather than Nx's default of 3
-      # (which would idle 5 of 8 cores) or a hardcoded 8 (measured worse than 3
-      # when it lands on the 4-vCPU fallback runner: 101s against 88s).
+      # --parallel=100% tracks the runner's core count, as the build step above
+      # does. Nx's default of 3 would idle 5 of 8 cores, and a hardcoded 8
+      # measured worse than 3 on the 4-vCPU fallback runner: 101s against 88s.
       #
       # The cap goes through PACKMIND_JEST_MAX_WORKERS (see jest.preset.js) rather
       # than a forwarded `-- --maxWorkers=1`, because a CLI flag applies to every
@@ -207,7 +209,7 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           PACKMIND_JEST_MAX_WORKERS: '1'
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests --parallel=$(nproc)
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests --parallel=100%
 
       - name: Upload standard samples artifacts
         uses: actions/upload-artifact@v4
@@ -337,13 +339,39 @@ jobs:
           retention-days: 30
 
   cli-e2e-tests:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # Two legs, in parallel: the CLI this commit builds, and the CLI already
+    # published on the registry. The published-CLI leg guards the API against
+    # breaking the versions users are running; it validates nothing about this
+    # commit's own CLI, so it has no reason to wait for the other leg. Run in
+    # sequence in a single job, it added its whole duration to the critical path
+    # of the `build` stage — and `quality` waits for that stage in full.
+    name: cli-e2e-tests (${{ matrix.cli-source }})
+    # An 8-core runner rather than the pipeline's default 4. Measured: the suite
+    # is bound by waiting on a spawned CLI and on HTTP, not by CPU, so doubling
+    # the cores nearly halves it — 105s to 55s — while the total work barely
+    # changes. Jest's own default worker count is `nproc - 1`, so it follows the
+    # runner without a flag here.
+    #
+    # A bigger runner buys nothing beyond this: at 8 cores the longest single
+    # file (`install.spec.ts`) already accounts for the whole run, so the
+    # workers idle on it. Splitting that file is the prerequisite for more
+    # capacity paying off, and is capped at `serial / workers` ~= 44s.
+    #
+    # The fallback chain keeps a checkout without the new variable working: the
+    # 8-core tag, then the pipeline's usual tag, then self-hosted.
+    runs-on: >-
+      ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG ||
+      'self-hosted' }}
     timeout-minutes: 20
     env:
       PACKMIND_INSTANCE_URL: http://localhost:4200
     strategy:
+      # A failure on one CLI is a distinct piece of information from a failure
+      # on the other; cancelling the sibling would hide half of it.
+      fail-fast: false
       matrix:
         node-version: ['${{ inputs.node-version }}']
+        cli-source: [workspace, registry]
 
     steps:
       - uses: actions/checkout@v4
@@ -367,16 +395,78 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
 
-      - run: ./node_modules/.bin/nx run packmind-cli:build
+      # Cheap, and it is the only way to tell from a log whether the job landed
+      # on the 8-core runner and how many workers Jest will therefore use.
+      - name: Report the runner size
+        run: |
+          echo "cores: $(nproc) - Jest defaults to $(( $(nproc) - 1 )) workers"
+
+      # Nx keeps two scratch directories inside the repo, and the compose
+      # services run Nx as ROOT over the `.:/packmind` bind mount, so they share
+      # both. Root writing into a runner-owned file is fine; the reverse is not,
+      # so whichever side gets there first decides whether the later `nx test`
+      # survives. Both must therefore be claimed as the runner user BEFORE
+      # `docker compose up`:
+      #
+      #   .nx/cache/terminalOutputs  Nx writes a task's captured output here
+      #                              even under `--skip-nx-cache`. Creating the
+      #                              directory is enough: owning it lets the
+      #                              runner add files, whatever root also puts
+      #                              inside.
+      #   .nx/workspace-data         a SQLite DB (see the NX_INVOCATION_ROOT_PID
+      #                              comment in docker-compose.yml). The runner
+      #                              has to CREATE the DB, not just the
+      #                              directory, so an actual Nx command is
+      #                              required — `nx show projects` is the
+      #                              cheapest one that does it.
+      #
+      # Getting this wrong is not obvious from the failure: the run reports
+      # `17 passed, 287 total` and then dies in Nx's own output writer with
+      # `EACCES ... .nx/cache/terminalOutputs/<id>`. That is what happened when
+      # this leg's `nx show projects` claimed only the second directory.
+      - name: Claim Nx's scratch directories as the runner user
+        run: |
+          mkdir -p .nx/cache/terminalOutputs .nx/workspace-data
+          ./node_modules/.bin/nx show projects > /dev/null
+
+      # Workspace leg only: this is the CLI under test there. The registry leg
+      # runs the binary at `CLI_BINARY_PATH` and needs no `dist/apps/cli` — the
+      # full suite passes without it, which the failure above confirmed. Keeping
+      # the build off that leg also decouples the signals: a broken CLI build no
+      # longer reddens "does the published CLI still work against this API", a
+      # question `build-cli` already answers in its own job.
+      - name: Build the workspace CLI
+        if: matrix.cli-source == 'workspace'
+        run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
+        if: matrix.cli-source == 'workspace'
         run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
+        if: matrix.cli-source == 'workspace'
         run: |
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
           ls -la dist/apps/cli/
+
+      - name: Install latest production CLI from registry
+        if: matrix.cli-source == 'registry'
+        run: |
+          PROD_CLI_DIR="$(mktemp -d)"
+          cd "${PROD_CLI_DIR}"
+          pnpm init
+          # Throwaway install: only need the CLI binary resolvable to run --version.
+          # bcrypt/msgpackr-extract ship prebuilt binaries, so their build scripts
+          # are not required. Disable strictDepBuilds (default true in pnpm 11) to
+          # avoid ERR_PNPM_IGNORED_BUILDS here where there is no allowBuilds config.
+          pnpm add @packmind/cli --config.strictDepBuilds=false
+          CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
+          cd -
+          echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
+          # Only ever set on this leg: the test helpers fall back to the built
+          # CLI when it is absent, but an empty value would be taken as a path.
+          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
 
       - name: Start docker compose for CLI E2E tests
         uses: nick-fields/retry@v3
@@ -396,50 +486,42 @@ jobs:
             docker ps -a --format 'table {{.Names}}\t{{.Status}}'
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}
           CI: 'true'
           APP_WEB_URL: ${{ env.PACKMIND_INSTANCE_URL }}
 
       - name: Wait for services to be ready
         env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}
           PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
         run: |
           echo "Waiting for API to be ready..."
           timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done"
 
+      # `--skip-nx-cache` on both legs: the cache key covers the workspace
+      # sources, not `CLI_BINARY_PATH`, so the two legs would otherwise be
+      # indistinguishable to Nx.
+      #
+      # Deliberately NOT setting `NODE_COMPILE_CACHE` here. Measured in
+      # isolation it looks like the cheapest win available: one shared V8
+      # bytecode cache takes a CLI spawn from 413ms to 354ms, -14%, twice
+      # reproduced on this runner. Under the real suite it does not survive: run
+      # as A/B arms in one benchmark run, the two stack shapes disagreed in sign
+      # (-2.3s and +5.7s) and both cached arms did MORE total work than their
+      # controls — six workers contending over one cache directory is the likely
+      # reason, which a sequential probe cannot see. Do not re-derive the -14%
+      # and ship it. A per-worker cache dir (keyed on JEST_WORKER_ID) is the
+      # untried variant, and needs a `runCli` change plus a fresh A/B.
       - name: Run CLI E2E tests
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx test cli-e2e-tests
-
-      - name: Install latest production CLI from registry
-        run: |
-          PROD_CLI_DIR="$(mktemp -d)"
-          cd "${PROD_CLI_DIR}"
-          pnpm init
-          # Throwaway install: only need the CLI binary resolvable to run --version.
-          # bcrypt/msgpackr-extract ship prebuilt binaries, so their build scripts
-          # are not required. Disable strictDepBuilds (default true in pnpm 11) to
-          # avoid ERR_PNPM_IGNORED_BUILDS here where there is no allowBuilds config.
-          pnpm add @packmind/cli --config.strictDepBuilds=false
-          CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
-          cd -
-          echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
-          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
-
-      - name: Run CLI E2E tests against production CLI
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384'
-          CLI_BINARY_PATH: ${{ env.CLI_BINARY_PATH }}
         run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
 
       - name: Collect Docker container logs
         if: always()
         env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}
         run: |
           mkdir -p docker-logs-cli-e2e
           echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
@@ -455,14 +537,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ github.sha }}
+          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}-${{ github.sha }}
           path: docker-logs-cli-e2e/
           if-no-files-found: ignore
 
       - name: Cleanup Docker containers
         if: always()
         env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
+          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}-${{ matrix.cli-source }}
         run: docker compose down -v --remove-orphans
 
   e2e-tests:

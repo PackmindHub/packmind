@@ -116,6 +116,9 @@ export interface IGitSettingsPage extends IPackmindAppPage {
   waitForFirstRowStatus(
     state: 'connected' | 'token_expired' | 'unreachable' | 'checking',
   ): Promise<void>;
+  openReauthFromDrawer(): Promise<void>;
+  submitReauthToken(token: string): Promise<void>;
+  waitForReauthAccepted(): Promise<void>;
 }
 
 export interface ICliSetupPage extends IPackmindAppPage {

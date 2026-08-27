@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router';
 import { LuSearch, LuTriangleAlert } from 'react-icons/lu';
 import {
   PMBox,
@@ -21,7 +20,6 @@ import type {
   PackageResponse,
   SpaceId,
 } from '@packmind/types';
-import { routes } from '../../../../shared/utils/routes';
 import {
   useAddArtefactsToPackagesMutation,
   useRemoveArtefactsFromPackageMutation,
@@ -38,8 +36,8 @@ import {
   type MoveTarget,
 } from './buildMoveTargets';
 import {
-  COMPONENT_TYPE_LABELS,
-  COMPONENT_TYPE_LABELS_SINGULAR,
+  componentSetKind,
+  componentSetSubject,
   type ContextComponent,
 } from './buildPackageContext';
 
@@ -91,8 +89,7 @@ export function MoveComponentDrawer({
   packages,
   spaceId,
   organizationId,
-  orgSlug,
-  spaceSlug,
+  onCreatePackage,
   onMoved,
 }: Readonly<{
   open: boolean;
@@ -108,8 +105,12 @@ export function MoveComponentDrawer({
   packages: readonly PackageResponse[];
   spaceId: SpaceId;
   organizationId: OrganizationId;
-  orgSlug: string;
-  spaceSlug: string;
+  /**
+   * There is nowhere to move to, so the reader is offered a package to create.
+   * Handed in rather than done here, because what opens over this drawer is the
+   * surface's to decide and this one has no address of its own any more.
+   */
+  onCreatePackage: () => void;
   /**
    * The move went through, so whoever holds the selection can drop it. Called
    * before the drawer closes, and only on the path where the source no longer
@@ -137,24 +138,9 @@ export function MoveComponentDrawer({
     [targets, query],
   );
 
-  /*
-   * What the selection is called. A mixed one has no kind of its own, so it is
-   * "components": naming the first type would say something untrue about the
-   * rest, and counting the types would read as a summary of the list the user
-   * just built.
-   */
-  const types = new Set(components.map((picked) => picked.type));
-  const kind =
-    components.length === 1
-      ? COMPONENT_TYPE_LABELS_SINGULAR[components[0].type].toLowerCase()
-      : types.size === 1
-        ? COMPONENT_TYPE_LABELS[components[0].type].toLowerCase()
-        : 'components';
-  /* What a message calls them: one is named, several are counted. */
-  const subject =
-    components.length === 1
-      ? components[0].name
-      : `${components.length} ${kind}`;
+  /* What the selection is called, and how a message refers to it. */
+  const kind = componentSetKind(components);
+  const subject = componentSetSubject(components);
   /*
    * How many of the picked components no package carries. Read off the same
    * package list the candidates are built from, so the sentence and the rows
@@ -337,8 +323,8 @@ export function MoveComponentDrawer({
                       </PMIcon>
                     </PMBox>
                     <PMText variant="small" color="secondary">
-                      {source.name} is deployed to {sourcePlaces}. They keep the
-                      old content until the packages are distributed again.
+                      {source.name} is deployed to {sourcePlaces}, where the old
+                      content remains until the packages are distributed again.
                     </PMText>
                   </PMHStack>
                 ) : null}
@@ -346,8 +332,7 @@ export function MoveComponentDrawer({
                 {targets.length === 0 ? (
                   <NowhereToGo
                     hasSource={source !== null}
-                    orgSlug={orgSlug}
-                    spaceSlug={spaceSlug}
+                    onCreate={onCreatePackage}
                   />
                 ) : (
                   <PMVStack gap={2} alignItems="stretch">
@@ -529,9 +514,8 @@ function TargetRow({
  */
 function NowhereToGo({
   hasSource,
-  orgSlug,
-  spaceSlug,
-}: Readonly<{ hasSource: boolean; orgSlug: string; spaceSlug: string }>) {
+  onCreate,
+}: Readonly<{ hasSource: boolean; onCreate: () => void }>) {
   return (
     <PMVStack gap={2} alignItems="flex-start">
       <PMText variant="body">
@@ -539,10 +523,16 @@ function NowhereToGo({
           ? 'This space has only one package.'
           : 'This space has no package.'}
       </PMText>
-      <PMLink asChild variant="underline" fontSize="sm">
-        <RouterLink to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
+      {/*
+        Drawn as the link it was, because it goes to the same place it always
+        went: the only difference is that the place now opens over this drawer
+        instead of replacing it, and the reader has no reason to be told that
+        twice.
+      */}
+      <PMLink asChild variant="underline" fontSize="sm" cursor="pointer">
+        <button type="button" onClick={onCreate}>
           {hasSource ? 'Create another one' : 'Create one'}
-        </RouterLink>
+        </button>
       </PMLink>
     </PMVStack>
   );

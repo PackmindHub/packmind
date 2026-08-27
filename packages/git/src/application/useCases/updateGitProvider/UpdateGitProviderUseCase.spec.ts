@@ -9,6 +9,7 @@ import {
   InvalidGitProviderCredentialsError,
   Organization,
   User,
+  createGitProviderId,
   createOrganizationGitHubAppId,
   createOrganizationId,
   createUserId,
@@ -55,6 +56,7 @@ describe('UpdateGitProviderUseCase', () => {
       findGitProviderById: jest.fn(),
       updateGitProvider: jest.fn(),
       findGitProvidersByOrganizationId: jest.fn().mockResolvedValue([]),
+      checkAuthForProviderConfig: jest.fn().mockResolvedValue({ ok: true }),
     } as Partial<
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
@@ -73,13 +75,17 @@ describe('UpdateGitProviderUseCase', () => {
 
   describe('updating token on a token-method provider', () => {
     describe('when only token is updated', () => {
-      it('succeeds', async () => {
+      let updatedProvider: ReturnType<typeof gitProviderFactory>;
+      let result: unknown;
+
+      beforeEach(async () => {
         const existingProvider = gitProviderFactory({
           organizationId,
           token: 'old-token',
           authMethod: 'token',
+          source: GitProviderVendors.github,
         });
-        const updatedProvider = gitProviderFactory({
+        updatedProvider = gitProviderFactory({
           ...existingProvider,
           token: 'new-token',
         });
@@ -90,15 +96,128 @@ describe('UpdateGitProviderUseCase', () => {
           updatedProvider,
         );
 
-        const result = await useCase.execute({
+        result = await useCase.execute({
           id: existingProvider.id,
           gitProvider: { token: 'new-token' },
           userId: String(adminUser.id),
           organizationId: String(organizationId),
         });
+      });
 
+      it('succeeds', () => {
         expect(result).toEqual(updatedProvider);
       });
+
+      it('verifies the candidate token against the provider', () => {
+        expect(
+          mockGitProviderService.checkAuthForProviderConfig,
+        ).toHaveBeenCalledWith(expect.objectContaining({ token: 'new-token' }));
+      });
+    });
+
+    describe('when the provider rejects the candidate token', () => {
+      let rejection: Promise<unknown>;
+
+      beforeEach(() => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'old-token',
+          authMethod: 'token',
+          source: GitProviderVendors.github,
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.checkAuthForProviderConfig.mockResolvedValue({
+          ok: false,
+          reason: 'unauthorized',
+        });
+
+        rejection = useCase
+          .execute({
+            id: existingProvider.id,
+            gitProvider: { token: 'dead-token' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          })
+          .catch((error) => error);
+      });
+
+      it('reports the credentials as invalid', async () => {
+        await expect(rejection).resolves.toBeInstanceOf(
+          InvalidGitProviderCredentialsError,
+        );
+      });
+
+      it('leaves the stored token untouched', async () => {
+        await rejection;
+
+        expect(mockGitProviderService.updateGitProvider).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the probe itself cannot run', () => {
+      beforeEach(() => {
+        const existingProvider = gitProviderFactory({
+          organizationId,
+          token: 'old-token',
+          authMethod: 'token',
+          source: GitProviderVendors.github,
+        });
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          existingProvider,
+        );
+        mockGitProviderService.checkAuthForProviderConfig.mockRejectedValue(
+          new Error('socket hang up'),
+        );
+      });
+
+      // An unverifiable token must not be reported as validated, which is the
+      // whole point of the probe.
+      it('refuses the update rather than saving an unverified token', async () => {
+        await expect(
+          useCase.execute({
+            id: createGitProviderId('any'),
+            gitProvider: { token: 'unverifiable' },
+            userId: String(adminUser.id),
+            organizationId: String(organizationId),
+          }),
+        ).rejects.toBeInstanceOf(InvalidGitProviderCredentialsError);
+      });
+    });
+  });
+
+  // The probe must stay confined to token updates: a rename and a GitHub App
+  // rebind both go through this same use case and must not start making network
+  // calls, nor gain a new way to fail.
+  describe('when no token is supplied', () => {
+    beforeEach(async () => {
+      const existingProvider = gitProviderFactory({
+        organizationId,
+        token: 'stored-token',
+        authMethod: 'token',
+        source: GitProviderVendors.github,
+        displayName: 'Old name',
+      });
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        existingProvider,
+      );
+      mockGitProviderService.updateGitProvider.mockResolvedValue(
+        existingProvider,
+      );
+
+      await useCase.execute({
+        id: existingProvider.id,
+        gitProvider: { displayName: 'New name' },
+        userId: String(adminUser.id),
+        organizationId: String(organizationId),
+      });
+    });
+
+    it('does not probe the provider', () => {
+      expect(
+        mockGitProviderService.checkAuthForProviderConfig,
+      ).not.toHaveBeenCalled();
     });
   });
 

@@ -31,4 +31,7 @@ React Router v8 SPA for Packmind.
   (`src/services/api/PackmindApiService.ts`). In dev, `vite.config.ts` proxies `/api` to
   `API_HOSTNAME`:`API_PORT` **only when both are set**; otherwise requests go to the frontend's own
   origin.
-- **Build output**: `dist/apps/frontend/`
+- **Build output**: `apps/frontend/build/client/` — `react-router build` owns the location, not
+  `vite.config.ts`'s `build.outDir`. It is what `project.json` declares as the target's output and
+  what `dockerfile/Dockerfile.frontend` copies into nginx's document root. A `build/server/` is also
+  emitted; `ssr: false` means it exists only to prerender `index.html`, and it is not deployed.

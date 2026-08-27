@@ -9,6 +9,8 @@ import {
 import {
   buildPackageContext,
   componentSelectionKey,
+  componentSetKind,
+  componentSetSubject,
   packageComponentCount,
   type PackageComponentIds,
   type PackageContext,
@@ -333,5 +335,65 @@ describe('componentSelectionKey', () => {
     expect(componentSelectionKey({ type: 'command', key: 'c1' })).toEqual(
       componentSelectionKey({ type: 'command', key: 'c1' }),
     );
+  });
+});
+
+describe('componentSetKind', () => {
+  it('names one component by the singular of its type', () => {
+    expect(componentSetKind([{ type: 'standard' }])).toBe('standard');
+  });
+
+  describe('when several components share one type', () => {
+    it('names them by the plural of that type', () => {
+      expect(componentSetKind([{ type: 'skill' }, { type: 'skill' }])).toBe(
+        'skills',
+      );
+    });
+  });
+
+  describe('when the components are of several types', () => {
+    it('names them without naming any of the types', () => {
+      expect(
+        componentSetKind([{ type: 'standard' }, { type: 'command' }]),
+      ).toBe('components');
+    });
+  });
+
+  it('reads the whole set rather than its first member', () => {
+    expect(
+      componentSetKind([
+        { type: 'command' },
+        { type: 'command' },
+        { type: 'skill' },
+      ]),
+    ).toBe('components');
+  });
+});
+
+describe('componentSetSubject', () => {
+  it('names one component rather than counting it', () => {
+    expect(componentSetSubject([{ type: 'standard', name: 'Naming' }])).toBe(
+      'Naming',
+    );
+  });
+
+  it('counts several of one type under that type', () => {
+    expect(
+      componentSetSubject([
+        { type: 'command', name: 'Release' },
+        { type: 'command', name: 'Review' },
+      ]),
+    ).toBe('2 commands');
+  });
+
+  describe('when the components are of several types', () => {
+    it('counts them without naming a type', () => {
+      expect(
+        componentSetSubject([
+          { type: 'standard', name: 'Naming' },
+          { type: 'skill', name: 'Onboard' },
+        ]),
+      ).toBe('2 components');
+    });
   });
 });

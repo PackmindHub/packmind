@@ -4,12 +4,28 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { CopiableTextarea } from './CopiableTextarea';
 
-// Mock the clipboard API
+// jsdom's `navigator` is shared by every spec in the worker, so the clipboard
+// stub is defined rather than assigned — `Object.assign` goes through jsdom's
+// getter-only `clipboard` accessor and throws once a sibling spec has installed
+// its own — and put back afterwards rather than left on the global.
 const mockWriteText = vi.fn();
-Object.assign(navigator, {
-  clipboard: {
-    writeText: mockWriteText,
-  },
+const originalClipboard = Object.getOwnPropertyDescriptor(
+  navigator,
+  'clipboard',
+);
+Object.defineProperty(navigator, 'clipboard', {
+  value: { writeText: mockWriteText },
+  configurable: true,
+});
+
+afterAll(() => {
+  if (originalClipboard) {
+    Object.defineProperty(navigator, 'clipboard', originalClipboard);
+  } else {
+    // Nothing owned it before: dropping the own property re-exposes jsdom's
+    // prototype accessor.
+    delete (navigator as unknown as { clipboard?: unknown }).clipboard;
+  }
 });
 
 const renderWithUI = (component: React.ReactElement) => {

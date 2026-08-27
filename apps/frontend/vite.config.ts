@@ -1,25 +1,65 @@
 import { defineConfig } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
 import path from 'path';
+import { readFileSync } from 'fs';
+
+// Turns the workspace tsconfig `paths` into static Vite aliases.
+//
+// This replaces nxViteTsPaths, which did the same mapping from a `resolveId`
+// hook registered enforce:'pre' — so every import specifier in the graph paid a
+// rolldown -> JS round trip plus a synchronous existsSync, including the
+// thousands of bare npm ones it could never match. Keeping the work inside
+// rolldown's Rust resolver cuts roughly 18% off the build, with every emitted
+// file byte-size identical.
+//
+// Derived from tsconfig.base.effective.json at config time, so the aliases
+// follow whichever edition scripts/select-tsconfig.mjs selected. Unlike the
+// plugin there is no filesystem fallback, so a mapping that does not match the
+// file on disk is a build error instead of a silent search.
+function tsconfigPathAliases(workspaceRoot: string) {
+  const { compilerOptions } = JSON.parse(
+    readFileSync(
+      path.join(workspaceRoot, 'tsconfig.base.effective.json'),
+      'utf-8',
+    ),
+  );
+  const paths: Record<string, string[]> = compilerOptions?.paths ?? {};
+  const escape = (literal: string) =>
+    literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Longest key first, so `@packmind/foo/test/*` wins over `@packmind/foo/*`.
+  return Object.keys(paths)
+    .sort((a, b) => b.length - a.length)
+    .map((key) => {
+      const target = path.join(workspaceRoot, paths[key][0]);
+      return key.endsWith('/*')
+        ? {
+            find: new RegExp(`^${escape(key.slice(0, -2))}/(.*)$`),
+            replacement: target.replace(/\*$/, '') + '$1',
+          }
+        : { find: new RegExp(`^${escape(key)}$`), replacement: target };
+    });
+}
 
 export default defineConfig(() => {
   // Determine edition mode (defaults to OSS if not explicitly set to 'proprietary')
   const isOssMode = process.env.PACKMIND_EDITION !== 'proprietary';
 
-  // Configure resolve aliases based on edition
-  const resolveAliases = isOssMode
-    ? {
-        '@packmind/proprietary/frontend': path.resolve(
-          __dirname,
-          'src/domain/editions/stubs',
-        ),
-      }
-    : {
-        '@packmind/proprietary/frontend': path.resolve(__dirname, 'src'),
-      };
+  const workspaceRoot = path.resolve(__dirname, '../..');
+
+  // Configure resolve aliases based on edition. These come first so the exact
+  // `@packmind/proprietary/frontend` specifier is claimed before the generated
+  // tsconfig aliases get a look at it.
+  const resolveAliases = [
+    {
+      find: /^@packmind\/proprietary\/frontend$/,
+      replacement: isOssMode
+        ? path.resolve(__dirname, 'src/domain/editions/stubs')
+        : path.resolve(__dirname, 'src'),
+    },
+    ...tsconfigPathAliases(workspaceRoot),
+  ];
 
   const proxy: Record<
     string,
@@ -93,8 +133,6 @@ export default defineConfig(() => {
       // suite dies with "can't detect preamble". Tests do not need the plugin:
       // `jsx: "react-jsx"` lets esbuild handle the JSX transform on its own.
       !process.env.VITEST && reactRouter(),
-      nxViteTsPaths(),
-      nxCopyAssetsPlugin(['*.md']),
       // enableBuild: false keeps the checker to the dev-server overlay. Its build
       // path spawns a bare `tsc --noEmit` from the workspace root — which has no
       // tsconfig.json, so tsc prints its usage and exits 1 — then calls
@@ -104,11 +142,10 @@ export default defineConfig(() => {
       // frontend through the dedicated `frontend:typecheck` target instead.
       Checker({ typescript: true, enableBuild: false }),
     ],
-    // Uncomment this if you are using workers.
-    // worker: {
-    //  plugins: [ nxViteTsPaths() ],
-    // },
     build: {
+      // Not the app's output directory: react-router build writes to
+      // build/client, which project.json declares and Dockerfile.frontend
+      // copies. outDir only ever reached plugins writing through it.
       outDir: '../../dist/apps/frontend',
       emptyOutDir: true,
       reportCompressedSize: true,
@@ -126,6 +163,15 @@ export default defineConfig(() => {
       // which is not enough for the heavier component suites under full-suite
       // parallelism — the shortfall showed up as an intermittent timeout.
       testTimeout: 15000,
+      // Vitest's default `isolate: true` recycles the worker for every spec, so
+      // each file re-evaluates the whole module graph — Chakra plus the
+      // `@packmind/ui` barrel, which nearly every spec pulls in. That
+      // re-evaluation, not the tests, dominated the suite's wall clock; sharing
+      // the worker collapses it to once per worker and roughly triples the
+      // speed. Turning isolation off also disables Vitest's per-file module
+      // reset, so `src/test-setup.ts` restores that by hand — keep the two
+      // together, `isolate: false` alone lets mocks leak between specs.
+      isolate: false,
       reporters: ['default'],
       coverage: {
         reportsDirectory: '../../coverage/apps/frontend',

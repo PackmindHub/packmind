@@ -1,4 +1,10 @@
-import { PMButton, PMMenu, PMPortal, PMText } from '@packmind/ui';
+import {
+  PMButton,
+  PMMenu,
+  PMPortal,
+  PMText,
+  type PMButtonVariants,
+} from '@packmind/ui';
 import type { PackageId } from '@packmind/types';
 import { useStandardCreationOptions } from '../../../standards/components/useStandardCreationOptions';
 import { useCommandCreationOptions } from '../../../commands/components/useCommandCreationOptions';
@@ -33,7 +39,18 @@ export function ContextCreateMenu({
   orgSlug,
   spaceSlug,
   packageId,
-}: Readonly<{ orgSlug: string; spaceSlug: string; packageId: PackageId }>) {
+  variant = 'primary',
+}: Readonly<{
+  orgSlug: string;
+  spaceSlug: string;
+  packageId: PackageId;
+  /**
+   * How loud the trigger is, decided by the caller: whether creating is the
+   * thing to do next depends on what the package already holds, which the menu
+   * has no way of knowing.
+   */
+  variant?: PMButtonVariants;
+}>) {
   const standards = useStandardCreationOptions({
     orgSlug,
     spaceSlug,
@@ -47,7 +64,9 @@ export function ContextCreateMenu({
       <PMMenu.Root>
         <PMMenu.Trigger asChild>
           {/* The label the three per-type pages already use. */}
-          <PMButton size="sm">Create</PMButton>
+          <PMButton size="sm" variant={variant}>
+            Create
+          </PMButton>
         </PMMenu.Trigger>
         <PMPortal>
           <PMMenu.Positioner>

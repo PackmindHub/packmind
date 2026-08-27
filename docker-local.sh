@@ -44,6 +44,15 @@ echo "✅ All Nx builds completed!"
 # ========================================================================
 # STEP 2: BUILD DOCKER IMAGES
 # ========================================================================
+
+# Dockerfile.api copies dist/packages/standards/samples/generated into the image.
+# In CI that directory comes from a "Download standard samples artifacts" step in
+# the docker job; locally it has to be built. Neither app build produces it — both
+# bundle the packages from source — and the Dockerfile guards the copy with
+# `if [ -d ... ]`, so without this the image silently ships without samples.
+echo "📦 Preparing image inputs: standard samples..."
+./node_modules/.bin/nx build standards
+
 echo "🐳 Building Docker images..."
 
 # Build API image

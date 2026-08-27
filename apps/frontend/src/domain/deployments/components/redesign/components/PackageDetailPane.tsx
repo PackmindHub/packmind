@@ -80,13 +80,29 @@ function formatAbsoluteDate(iso: string): string {
   return format(parsed, 'yyyy-MM-dd h:mm a');
 }
 
+/**
+ * Where the reader goes to see this package's distribution events, which is
+ * where the details of a failure are: a route the pane links to, or a callback
+ * the surface around the pane answers by showing the events itself.
+ *
+ * One destination in two shapes rather than two props, so a surface cannot
+ * offer both and leave the pane to pick.
+ */
+export type DistributionHistoryTarget =
+  | { readonly href: string }
+  | { readonly onOpen: () => void };
+
 type PackageDetailPaneProps = {
   pkg: PackageDrift;
   providersWithToken: Set<GitProviderId>;
   isProvidersLoading: boolean;
   onSyncPackage: (pkgId: PackageId, installKeys?: string[]) => void;
-  /** Link to the package's distribution history (failure details live there). */
-  distributionHistoryHref: string | null;
+  /**
+   * How to reach the distribution events, or null on a surface that already
+   * lists them itself: a second way to reach what is on screen is not a way
+   * out, it is a loop.
+   */
+  distributionHistory: DistributionHistoryTarget | null;
   /** Link to the package's detail page (default tab). */
   packagePageHref?: string | null;
   /**
@@ -109,7 +125,7 @@ export function PackageDetailPane({
   providersWithToken,
   isProvidersLoading,
   onSyncPackage,
-  distributionHistoryHref,
+  distributionHistory,
   packagePageHref,
   hideIdentityHeader = false,
 }: Readonly<PackageDetailPaneProps>) {
@@ -374,15 +390,20 @@ export function PackageDetailPane({
                     ? 'The last distribution attempt failed on 1 target.'
                     : `The last distribution attempt failed on ${failedInstallCount} targets.`}
                 </PMAlert.Title>
-                {distributionHistoryHref && (
+                {distributionHistory && (
                   <PMAlert.Description>
-                    <PMLink asChild variant="underline" fontSize="sm">
-                      <Link to={distributionHistoryHref}>
+                    <PMLink
+                      asChild
+                      variant="underline"
+                      fontSize="sm"
+                      cursor="pointer"
+                    >
+                      <DistributionHistoryTrigger target={distributionHistory}>
                         View distribution history for error details
                         <PMIcon fontSize="xs" marginLeft="4px">
                           <LuArrowUpRight />
                         </PMIcon>
-                      </Link>
+                      </DistributionHistoryTrigger>
                     </PMLink>
                   </PMAlert.Description>
                 )}
@@ -456,7 +477,7 @@ export function PackageDetailPane({
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
-                      distributionHistoryHref={distributionHistoryHref}
+                      distributionHistory={distributionHistory}
                     />
                   );
                 })}
@@ -477,7 +498,7 @@ export function PackageDetailPane({
                       selected={selectedKeys.has(key)}
                       lockReason={lockByKey.get(key) ?? null}
                       onToggle={() => toggleInstall(key)}
-                      distributionHistoryHref={distributionHistoryHref}
+                      distributionHistory={distributionHistory}
                     />
                   );
                 })}
@@ -573,7 +594,7 @@ type InstallRowProps = {
   selected: boolean;
   lockReason: InstallLockReason | null;
   onToggle: () => void;
-  distributionHistoryHref: string | null;
+  distributionHistory: DistributionHistoryTarget | null;
 };
 
 const LOCK_CHECKBOX_TOOLTIP: Record<InstallLockReason, string> = {
@@ -587,7 +608,7 @@ function InstallRow({
   selected,
   lockReason,
   onToggle,
-  distributionHistoryHref,
+  distributionHistory,
 }: Readonly<InstallRowProps>) {
   const behindCount = entry.behindArtifacts.length;
   const hasDrift = behindCount > 0;
@@ -668,7 +689,7 @@ function InstallRow({
           />
           <DistributionEventLine
             entry={entry}
-            distributionHistoryHref={distributionHistoryHref}
+            distributionHistory={distributionHistory}
           />
         </PMVStack>
       </PMHStack>
@@ -911,10 +932,10 @@ function RowStateLine({
 
 function DistributionEventLine({
   entry,
-  distributionHistoryHref,
+  distributionHistory,
 }: Readonly<{
   entry: InstallDriftEntry;
-  distributionHistoryHref: string | null;
+  distributionHistory: DistributionHistoryTarget | null;
 }>) {
   const anchorIso = entry.lastDistributedAt ?? entry.mostRecentDeployedAt;
   if (!anchorIso) return null;
@@ -928,16 +949,16 @@ function DistributionEventLine({
     entry.mostRecentDeployedAtDays >= STALE_DAYS_THRESHOLD;
   const color = failed ? 'red.500' : stale ? 'orange.500' : 'text.faded';
 
-  if (failed && distributionHistoryHref) {
+  if (failed && distributionHistory) {
     return (
       <PMTooltip
         label={`Failed ${formatAbsoluteDate(anchorIso)} — view error details`}
         placement="top"
       >
-        <PMLink asChild>
-          <Link
-            to={distributionHistoryHref}
-            aria-label={`View distribution history (failed ${anchorIso})`}
+        <PMLink asChild cursor="pointer">
+          <DistributionHistoryTrigger
+            target={distributionHistory}
+            ariaLabel={`View distribution history (failed ${anchorIso})`}
           >
             <PMHStack gap="4px" align="center" color={color}>
               <PMText
@@ -952,7 +973,7 @@ function DistributionEventLine({
                 <LuArrowUpRight />
               </PMIcon>
             </PMHStack>
-          </Link>
+          </DistributionHistoryTrigger>
         </PMLink>
       </PMTooltip>
     );
@@ -972,6 +993,36 @@ function DistributionEventLine({
         </PMText>
       </PMHStack>
     </PMTooltip>
+  );
+}
+
+/*
+ * The element that opens the distribution events, drawn the same either way: a
+ * router link when they are a page, a button when the surface around the pane
+ * shows them itself. Both call sites wrap it in `PMLink asChild`, so the reader
+ * is not asked to tell apart two controls that lead to the same list.
+ */
+function DistributionHistoryTrigger({
+  target,
+  ariaLabel,
+  children,
+}: Readonly<{
+  target: DistributionHistoryTarget;
+  ariaLabel?: string;
+  children: ReactNode;
+}>) {
+  if ('href' in target) {
+    return (
+      <Link to={target.href} aria-label={ariaLabel}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={target.onOpen} aria-label={ariaLabel}>
+      {children}
+    </button>
   );
 }
 

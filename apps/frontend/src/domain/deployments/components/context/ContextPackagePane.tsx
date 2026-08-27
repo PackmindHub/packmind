@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import {
   PMAlertDialog,
   PMBadge,
@@ -18,7 +18,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuEllipsisVertical, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuEllipsisVertical, LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
 import type {
   OrganizationId,
   PackageResponse,
@@ -28,10 +28,13 @@ import type {
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
   componentSelectionKey,
+  componentSetSubject,
   type ContextComponent,
   type ContextGroup,
+  type SpaceCatalogue,
 } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import { componentIdsPayload } from './buildMoveTargets';
 import {
   componentEditHref,
   componentEntryHref,
@@ -41,15 +44,25 @@ import {
 } from './buildComponentDetail';
 import { ContextComponentDetail } from './ContextComponentDetail';
 import { ContextSkillFileDetail } from './ContextSkillFileDetail';
-import { ContextComponentList } from './ContextComponentList';
+import {
+  COMPONENT_ACTION_ICONS,
+  ContextComponentList,
+} from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import { ContextSelectionBar } from './ContextSelectionBar';
+import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
-import { useDeletePackagesBatchMutation } from '../../api/queries/DeploymentsQueries';
+import {
+  useDeletePackagesBatchMutation,
+  useRemoveArtefactsFromPackageMutation,
+} from '../../api/queries/DeploymentsQueries';
+import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 const CONTENT_TAB = 'content';
@@ -83,6 +96,7 @@ const TAB_PARAM = 'tab';
 export function ContextPackagePane({
   pkg,
   packages,
+  catalogue,
   groups,
   total,
   detail,
@@ -91,14 +105,17 @@ export function ContextPackagePane({
   organizationId,
   orgSlug,
   spaceSlug,
-  packageHref,
-  packageEditHref,
-  distributionHistoryHref,
+  onCreatePackage,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
   /** The whole space, so a component can be moved without a second query. */
   packages: readonly PackageResponse[];
+  /**
+   * Everything the space owns, for the same reason: a component can be added to
+   * this package without asking the server what there is to add.
+   */
+  catalogue: SpaceCatalogue;
   /** What this package holds, grouped by type, built by the surface. */
   groups: readonly ContextGroup[];
   /** Components in the package, which the Content tab carries as its count. */
@@ -111,12 +128,13 @@ export function ContextPackagePane({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
-  /** The package's own page, which still holds everything not moved here. */
-  packageHref: string;
-  /** Where membership is chosen, until a component can be added from here. */
-  packageEditHref: string;
-  /** Where the distribution events of this package are listed. */
-  distributionHistoryHref: string;
+  /**
+   * Opens the drawer that names a new package, which the move drawer asks for
+   * when there is nowhere to move to. The surface holds it: it is what decides
+   * whether the new package is opened, and from here it must not be, or the
+   * pane would be remounted out from under the drawer that asked.
+   */
+  onCreatePackage: () => void;
   /**
    * The package is gone, so the surface has to stop asking for it. Deleting is
    * the one action here that outlives the pane: everything else changes what
@@ -151,6 +169,7 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [addingComponents, setAddingComponents] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { mutateAsync: deletePackages, isPending: isDeleting } =
@@ -165,6 +184,23 @@ export function ContextPackagePane({
   const { deleteComponent, isDeleting: isDeletingComponent } =
     useDeleteContextComponent({ spaceId, organizationId });
   /*
+   * What is being taken out of this package, held as a list for the reason the
+   * move is: the confirmation has to outlive the row and the detail it was
+   * opened from, and one row or a whole selection ask the same question.
+   */
+  const [removing, setRemoving] = useState<readonly ContextComponent[] | null>(
+    null,
+  );
+  /*
+   * No `isPending` read from it: the confirmation below runs its own spinner off
+   * the promise this returns, which is also what keeps it open when the call
+   * fails.
+   */
+  const { mutateAsync: removeArtefacts } =
+    useRemoveArtefactsFromPackageMutation();
+  const { getDeployedTargets, getDeployedMarketplaces } =
+    usePackageDeploymentStatus(spaceId, organizationId);
+  /*
    * The picked components, resolved against what the package still holds. That
    * is also what repairs the selection after a move: the components that left
    * are no longer in the groups, so they drop out of it on their own.
@@ -178,6 +214,14 @@ export function ContextPackagePane({
         ),
     [groups, selectedKeys],
   );
+
+  /*
+   * Nothing in the package, which is what decides where the header's primary
+   * sits: on filling it while it is empty, on distributing it once it is not.
+   * Read from the groups rather than from `total`, so it agrees with the body
+   * below, which is showing its empty state off the same condition.
+   */
+  const isEmpty = groups.length === 0;
 
   const toggleSelect = useCallback((component: ContextComponent) => {
     setSelectedKeys((previous) => {
@@ -245,6 +289,67 @@ export function ContextPackagePane({
     }
   };
 
+  /*
+   * Taking components out of this package without taking them out of the space.
+   *
+   * The gesture the surface was missing: a component could be moved to another
+   * package or deleted outright, so the only way to unbundle one was the edit
+   * form on its own page. One call for the whole selection, because the remove
+   * endpoint takes a bag of per-type ids: a partial removal would leave the pane
+   * disagreeing with the package.
+   *
+   * Rethrows on failure rather than swallowing, which is how the confirmation
+   * knows to stay open on the selection the user still wants to remove.
+   */
+  const removeFromPackage = async (components: readonly ContextComponent[]) => {
+    try {
+      await removeArtefacts({
+        spaceId,
+        packageId: pkg.id,
+        ...componentIdsPayload(components),
+      });
+    } catch (error) {
+      pmToaster.create({
+        type: 'error',
+        title: `Couldn't remove ${componentSetSubject(components)} from ${pkg.name}`,
+        description: 'Try again, or check your space access.',
+      });
+      throw error;
+    }
+
+    pmToaster.create({
+      type: 'success',
+      title: `Removed ${componentSetSubject(components)} from ${pkg.name}`,
+    });
+    /*
+     * Only the removed keys, rather than clearing the selection the way a move
+     * does. A move is asked of the whole selection by definition; this is also
+     * asked of one row, and dropping three unrelated ticks because a fourth row
+     * left would undo work the user did not ask to undo.
+     */
+    setSelectedKeys((previous) => {
+      const next = new Set(previous);
+      for (const component of components) {
+        next.delete(componentSelectionKey(component));
+      }
+      return next;
+    });
+    /*
+     * The component on screen just left the package this pane is showing, so the
+     * address that says it is open has to close, exactly as it does when one is
+     * deleted. It still exists, and its own page is still where it is read.
+     */
+    if (
+      detail &&
+      components.some(
+        (component) =>
+          componentSelectionKey(component) === componentSelectionKey(detail),
+      )
+    ) {
+      setSearchParams(packageDetailParams(searchParams, pkg.id));
+    }
+  };
+
   const tab =
     searchParams.get(TAB_PARAM) === DISTRIBUTION_TAB
       ? DISTRIBUTION_TAB
@@ -291,9 +396,33 @@ export function ContextPackagePane({
       packages={packages}
       spaceId={spaceId}
       organizationId={organizationId}
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
+      onCreatePackage={onCreatePackage}
       onMoved={clearSelection}
+    />
+  );
+
+  /*
+   * The confirmation the old navigation already asks this question with, rather
+   * than a second one written here. Removing an artefact from a package is one
+   * question, and two dialogs asking it would be two chances to promise
+   * different things about where the component ends up. It runs its own spinner
+   * and closes itself on success, so all this passes it is what it is about.
+   *
+   * Built beside the delete dialog and rendered in both branches, for the same
+   * reason: the row and the detail it was opened from are both rebuilt by its
+   * own success.
+   */
+  const removeComponentsDialog = removing && removing.length > 0 && (
+    <RemoveArtifactFromPackageConfirm
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setRemoving(null);
+      }}
+      packageName={pkg.name}
+      deployedTargets={getDeployedTargets(pkg.id)}
+      deployedMarketplaces={getDeployedMarketplaces(pkg.id)}
+      artifactNames={removing.map((component) => component.name)}
+      onConfirm={() => removeFromPackage(removing)}
     />
   );
 
@@ -350,11 +479,13 @@ export function ContextPackagePane({
                 pkg.id,
               )}
               onMove={() => setMoving([detail])}
+              onRemove={() => setRemoving([detail])}
               onDelete={() => setDeletingComponent(detail)}
             />
           )}
         </PMBox>
         {moveDrawer}
+        {removeComponentsDialog}
         {deleteComponentDialog}
       </>
     );
@@ -392,23 +523,60 @@ export function ContextPackagePane({
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
             {/*
-              The way out to everything this surface does not carry yet:
-              edition, deletion, marketplace publication. Secondary, because
-              reading the package is what this screen is for.
+              Adding what exists, beside creating what does not. Two controls
+              and not one menu: the question "which of these do I want" and the
+              question "what kind of thing am I writing" are answered from
+              opposite ends, one by a list of the space and one by a list of
+              types, and folding them together would hide whichever one the
+              reader came for behind the other.
             */}
-            <PMButton variant="secondary" size="sm" asChild>
-              <Link to={packageHref}>Open package</Link>
+            <PMButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setAddingComponents(true)}
+            >
+              <PMIcon fontSize="xs">
+                <LuPlus />
+              </PMIcon>
+              Add components
             </PMButton>
             {/*
               Creating sits here, on the pane, and not in the rail below the list
               of packages: the rail creates containers, this creates what goes in
               them, and side by side the two would read as the same gesture.
+
+              It carries the primary only while the package is empty, which is
+              the one state where filling it is the thing to do next. As soon as
+              there is something in it, getting it out is.
             */}
             <ContextCreateMenu
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
               packageId={pkg.id}
+              variant={isEmpty ? 'primary' : 'secondary'}
             />
+            {/*
+              Every way the package leaves Packmind, under one control: the
+              repositories it writes to, the marketplaces it publishes to, and
+              the command a developer runs in their own checkout. One menu and
+              not one button per channel, because the product does not treat
+              them as different kinds of thing, and the menu is where each
+              edition already contributes the channels it has.
+
+              Absent rather than disabled on an empty package: there is nothing
+              to send anywhere, which is what the package's own page already
+              decided by hiding its install block while a package is empty. A
+              disabled primary would also put the loudest control on the screen
+              on the one thing that cannot be done yet.
+            */}
+            {!isEmpty && (
+              <DeployPackageButton
+                label="Distribute"
+                size="sm"
+                selectedPackages={[pkg]}
+                cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
+              />
+            )}
             {/*
               Deleting the package, behind a menu rather than beside the two
               buttons: the plugin-first navigation has no packages list, so this
@@ -503,14 +671,28 @@ export function ContextPackagePane({
         paddingY={5}
       >
         {groups.length === 0 ? (
-          <EmptyPackageBody packageEditHref={packageEditHref} />
+          <EmptyPackageBody onAdd={() => setAddingComponents(true)} />
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
               <ContextSelectionBar
                 count={selection.length}
-                actionLabel="Move to another package"
-                onAct={() => setMoving(selection)}
+                actions={[
+                  {
+                    label: 'Move to another package',
+                    icon: COMPONENT_ACTION_ICONS.move,
+                    onAct: () => setMoving(selection),
+                  },
+                  {
+                    /*
+                      Second, so the one that changes what gets distributed is
+                      not the one nearest the pointer coming off the list.
+                    */
+                    label: 'Remove from package',
+                    icon: COMPONENT_ACTION_ICONS.remove,
+                    onAct: () => setRemoving(selection),
+                  },
+                ]}
                 onClear={clearSelection}
               />
             )}
@@ -551,6 +733,7 @@ export function ContextPackagePane({
                       ),
                     }))}
                     onMove={(component) => setMoving([component])}
+                    onRemove={(component) => setRemoving([component])}
                     selectedKeys={selectedKeys}
                     onToggleSelect={toggleSelect}
                   />
@@ -575,12 +758,32 @@ export function ContextPackagePane({
           packages={driftPackages}
           isLoading={isLoading}
           isError={isError}
-          distributionHistoryHref={distributionHistoryHref}
         />
       </PMTabsCompound.Content>
 
       {moveDrawer}
+      {removeComponentsDialog}
       {deleteComponentDialog}
+      {/*
+        Mounted only while it is open, like the drawer below it, so the picks
+        start empty every time: what was ticked and abandoned last time is not a
+        draft worth keeping, and the candidates it was ticked from may not even
+        be candidates any more.
+      */}
+      {addingComponents && (
+        <AddComponentsDrawer
+          pkg={pkg}
+          catalogue={catalogue}
+          spaceId={spaceId}
+          organizationId={organizationId}
+          orgSlug={orgSlug}
+          spaceSlug={spaceSlug}
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setAddingComponents(false);
+          }}
+        />
+      )}
       {/*
         Mounted only while it is open, rather than kept around hidden, so its two
         fields start from what the package currently says: they are drafts held
@@ -624,9 +827,7 @@ export function ContextPackagePane({
  * the user to admire an empty frame: an empty package gives an agent nothing to
  * read and distributes nothing.
  */
-function EmptyPackageBody({
-  packageEditHref,
-}: Readonly<{ packageEditHref: string }>) {
+function EmptyPackageBody({ onAdd }: Readonly<{ onAdd: () => void }>) {
   return (
     <PMBox
       borderWidth="1px"
@@ -640,12 +841,12 @@ function EmptyPackageBody({
       </PMText>
       <PMText as="div" color="secondary" paddingTop={1}>
         A package with no component gives an agent nothing to read and
-        distributes nothing. Add standards, commands or skills to it from its
-        own edit form, and it is distributable as soon as you save.
+        distributes nothing. Pick standards, commands or skills the space
+        already owns, and it is distributable as soon as you add them.
       </PMText>
       <PMBox paddingTop={4}>
-        <PMButton variant="primary" size="sm" asChild>
-          <Link to={packageEditHref}>Add components</Link>
+        <PMButton variant="primary" size="sm" onClick={onAdd}>
+          Add components
         </PMButton>
       </PMBox>
     </PMBox>

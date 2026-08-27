@@ -167,13 +167,21 @@ export class GitProviderGatewayApi
     if (data.source !== undefined) body.source = data.source;
     if (data.url !== undefined) body.url = data.url;
     if (data.displayName !== undefined) body.displayName = data.displayName;
-    if (data.authMethod !== undefined) {
-      body.authMethod = data.authMethod;
-      if (data.authMethod === 'app') {
-        body.appInstallationId = data.appInstallationId;
-      } else {
-        body.token = data.token;
-      }
+    if (data.authMethod !== undefined) body.authMethod = data.authMethod;
+
+    // Credentials travel on their own merit rather than behind authMethod:
+    // re-authenticating a PAT connection patches the token alone, and gating it
+    // made that body `{}`, which the backend rejects with "Git provider update
+    // data is required". Each credential is still withheld when the caller
+    // explicitly asks for the other auth method, so a leftover form field
+    // cannot contradict the switch. An empty token means "leave it unchanged"
+    // in every form feeding this gateway; forwarding it would wipe the stored
+    // credential.
+    if (data.token && data.authMethod !== 'app') {
+      body.token = data.token;
+    }
+    if (data.appInstallationId !== undefined && data.authMethod !== 'token') {
+      body.appInstallationId = data.appInstallationId;
     }
     return await this._api.put<GitProviderUI>(
       `${this._endpoint}/${organizationId}/git/providers/${id}`,

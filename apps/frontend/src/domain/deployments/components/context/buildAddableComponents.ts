@@ -35,9 +35,9 @@ export type AddableComponents = {
  *
  * Built from the same two inputs as the pane's own content, and through the
  * same three mappers, so a row offered for adding is the same object as the row
- * it becomes once added. That is what lets the picker reuse the list the pane
- * already renders instead of growing a second idea of what a component looks
- * like.
+ * it becomes once added: one name, one summary, one version, decided in one
+ * place. The picker renders it differently, because a candidate is ticked where
+ * a member is opened, but it is not describing a different thing.
  *
  * Local, like the move targets: the space catalogue and the package's ids are
  * both already loaded by the Context surface, so nothing here needs the server.
