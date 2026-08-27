@@ -22,7 +22,7 @@ on:
       variants:
         description: 'Variants to run (see the catalogue in the plan job)'
         required: false
-        default: 'baseline-4,api-only-4,baseline-8w6,api-only-8w6'
+        default: 'baseline-8w6,baseline-8w6-cc,api-only-8w6,api-only-8w6-cc'
       node-version:
         description: 'Node version'
         required: false
@@ -56,6 +56,13 @@ jobs:
             'api-only-4': { stack: 'api-only', runner: 'depot-ubuntu-24.04-4', workers: '' },
             'baseline-8w6': { stack: 'baseline', runner: 'depot-ubuntu-24.04-8', workers: '6' },
             'api-only-8w6': { stack: 'api-only', runner: 'depot-ubuntu-24.04-8', workers: '6' },
+            // The `-cc` arms are the same cell with one shared V8 compile cache
+            // across the CLI spawns. Paired with the cell above they are an A/B
+            // in a single run, on the same hardware — which is the only honest
+            // way to size a 3-4s effect, since the run-to-run spread across
+            // commits is wider than the effect itself.
+            'baseline-8w6-cc': { stack: 'baseline', runner: 'depot-ubuntu-24.04-8', workers: '6', compileCache: true },
+            'api-only-8w6-cc': { stack: 'api-only', runner: 'depot-ubuntu-24.04-8', workers: '6', compileCache: true },
             // Oversubscribed on purpose: the suite spends much of its time
             // waiting on a spawned CLI and on HTTP, so more workers than cores
             // may still pay. Where it stops paying is where the longest single
@@ -69,9 +76,12 @@ jobs:
             .split(',')
             .map((name) => name.trim())
             .filter(Boolean);
+          // The runner-size and stack-shape sweep is answered and written up in
+          // apps/cli-e2e-tests/README.md, so the default is now the open
+          // question: two A/B pairs for the compile cache, one per stack shape.
           const names = requested.length
             ? requested
-            : ['baseline-4', 'api-only-4', 'baseline-8w6', 'api-only-8w6'];
+            : ['baseline-8w6', 'baseline-8w6-cc', 'api-only-8w6', 'api-only-8w6-cc'];
 
           const unknown = names.filter((name) => !catalogue[name]);
           if (unknown.length) {
@@ -324,15 +334,23 @@ jobs:
           timeout 120 bash -c \
             "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done"
 
+      # `NODE_COMPILE_CACHE` is set only on the `-cc` arms. An empty value is
+      # the same as unset to Node, so the non-cc arms are genuinely uncached.
+      # `runCli` copies the whole `process.env` into the CLI it spawns, so
+      # setting it here reaches every spawn without a test-helper change.
       - name: Run the suite
         id: run
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
           VARIANT_NAME: ${{ matrix.variant.name }}
+          NODE_COMPILE_CACHE: >-
+            ${{ matrix.variant.compileCache && format('{0}/node-compile-cache',
+            runner.temp) || '' }}
         run: |
           set -eu
           mkdir -p benchmark-results
+          echo "NODE_COMPILE_CACHE=${NODE_COMPILE_CACHE:-<unset>}"
           # The report script reads the label and the worker count back out of
           # the file name, since Jest's JSON records neither.
           workers="${JEST_WORKERS:-}"
