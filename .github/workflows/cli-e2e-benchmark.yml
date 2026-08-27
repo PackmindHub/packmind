@@ -136,7 +136,12 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile --prefer-offline
+      # `--ignore-scripts` here, unlike in build.yml: this host install only has
+      # to produce `nx`, the CLI bundle and Jest. The project's own `prepare`
+      # already exits immediately under CI, and the dependencies with build
+      # scripts — bcrypt above all — belong to the API, which runs in the
+      # compose stack with its own install rather than on this host.
+      - run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
       - name: Generate tsconfig
         env:
