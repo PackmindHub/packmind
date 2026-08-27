@@ -170,3 +170,51 @@ from the same guesses:
 | 4 vCPU / 3 workers → 8 vCPU / 6 workers      | **−50 %** (105.5s → 52.4s)                                                                   |
 | whole stack → `backend` alone, direct        | 0 % at 4 vCPU, −5 % at 8 vCPU                                                                |
 | dropping the frontend and nginx from startup | −4s, i.e. nothing: `install-dependencies` and the migrations are the startup's critical path |
+
+### Where one test's time actually goes
+
+`scripts/measure-cli-e2e-setup-cost.mjs` replays the whole fixture sequence of
+one `install.spec.ts` test against a live API and times each phase, so the
+per-test cost can be attributed instead of guessed. Measured on the 8-core CI
+runner, sequential and unloaded (median of 15 sequences):
+
+| Phase            |    Median | Share of the test |
+| ---------------- | --------: | ----------------: |
+| `cliInstall`     |     467ms |               80% |
+| `signup`         |      49ms |                8% |
+| `signin`         |      44ms |                8% |
+| `gitRepo`        |       8ms |                1% |
+| `createPackage`  |       6ms |                1% |
+| `generateApiKey` |       4ms |                1% |
+| `getGlobalSpace` |       2ms |                0% |
+| `tempDirs`       |       0ms |                0% |
+| **one test**     | **580ms** |              100% |
+
+The single dominant cost is launching the CLI. A `--version` run — no API call,
+nothing written — takes **413ms** of the `install` command's 467ms, so 53ms is
+the command's own work and the rest is Node starting up and compiling the
+bundle. Across the suite's 287 tests that is roughly **120s of the ~305s serial
+cost spent on process startup alone.** Two consequences:
+
+- CI sets `NODE_COMPILE_CACHE` for the suite, pointing every spawn at one V8
+  bytecode cache under `runner.temp`. Measured: the same spawn drops from 413ms
+  to **354ms (−14%)**. It needs no code change — `runCli` copies the whole
+  `process.env` into the child.
+- Anything that reduces the _number_ of CLI spawns beats anything that makes
+  the API faster. `install.spec.ts` runs `install` once per `it`; sharing one
+  run across the assertions of a `describe` would remove tens of seconds, at
+  the cost of the one-assertion-per-test style — a deliberate trade-off, not an
+  obvious win.
+
+`scripts/measure-bcrypt-cost.mjs` sizes the other CPU-bound candidate, inside
+the API container where bcrypt's native binding is built:
+
+```bash
+docker compose exec -T backend node scripts/measure-bcrypt-cost.mjs --rounds 4,6,8,10
+```
+
+`UserService` hardcodes `saltRounds = 10`, and every test pays one hash
+(signup) and one compare (signin): **40ms + 40ms = 80ms per test, 23.0s over
+the suite.** Dropping to rounds=4 would recover 22.6s of serial cost — about 5s
+of wall clock, −9%. That is not worth weakening a production password hash, so
+the factor is deliberately left alone.
