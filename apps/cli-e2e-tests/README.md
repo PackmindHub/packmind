@@ -162,29 +162,21 @@ a fresh A/B — not the shared directory measured here.
 
 ### Measuring a change
 
-`scripts/cli-e2e-benchmark-report.mjs` turns Jest's JSON report into the metrics
-that make the two properties above visible:
+`nx test cli-e2e-tests --skip-nx-cache --json --outputFile=<file>` gives Jest's
+per-suite timings. Three numbers are worth deriving from it: the sum of the suite
+durations (the work to spread over the workers), the longest single suite (the
+hard lower bound on wall clock — when it equals wall clock, extra workers buy
+nothing until that file is split), and suite duration ÷ test count (the cost of
+one setup-and-act cycle, since every `it` re-runs the whole setup).
 
-```bash
-nx test cli-e2e-tests --skip-nx-cache --json --outputFile=/tmp/before.workers-6.json
-node scripts/cli-e2e-benchmark-report.mjs report /tmp/before.workers-6.json
-node scripts/cli-e2e-benchmark-report.mjs compare /tmp/before.workers-6.json /tmp/after.workers-6.json
-```
-
-| Metric            | Reading                                                                                                                                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wall`            | what CI waits for                                                                                                                                                                                                               |
-| `serial`          | Σ suite durations — the work to spread over the workers                                                                                                                                                                         |
-| `floor`           | longest single suite: the hard lower bound on `wall`. Flagged **at wall** when it accounts for the whole run, meaning extra workers buy nothing until that file is split                                                        |
-| `per test`        | suite duration ÷ test count. Since every `it` re-runs the whole setup, this is the cost of one setup-and-act cycle                                                                                                              |
-| `outside tests`   | suite duration − Σ test durations: module load and top-level setup **only**. Not the per-test hook cost — jest-circus starts a test's clock before its `beforeEach` runs, so hook time already sits inside each test's duration |
-| worker efficiency | `serial / (wall × workers)`; ~1.0 means saturated, and a low value with `floor` at wall means the workers are idling on the longest file                                                                                        |
-
-The label and worker count are read back out of the file name
-(`<label>.workers-<n>.json`), because Jest's JSON records neither.
+One caveat on those timings: **jest-circus starts a test's clock at `test_start`,
+before its `beforeEach` hooks.** Hook time is therefore already inside each
+test's own duration, and Jest's JSON cannot separate the two — which is why the
+per-test attribution above had to be produced by replaying the fixture sequence
+directly rather than read out of Jest.
 
 **Measure a candidate as an A/B in one run, on one machine.** The suite step on
-the `workspace` leg measured 54, 57, 56, 54, 59, 54 and 57 seconds across seven
-successive commits of one branch: a 5s spread makes any effect smaller than that
-unmeasurable by comparing commits. That spread is what made the compile cache
-look like a win.
+the `workspace` leg measured 54, 57, 56, 54, 59, 54, 57 and 55 seconds across
+eight successive commits of one branch: a 5s spread makes any effect smaller than
+that unmeasurable by comparing commits. That spread is exactly what made the
+compile cache look like a win.
