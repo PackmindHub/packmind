@@ -1,9 +1,19 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import { newDb } from 'pg-mem';
+import { IBackup, IMemoryDb, newDb } from 'pg-mem';
 
-export async function makeTestDatasource(
+export type TestDatabase = {
+  /**
+   * The underlying pg-mem instance. Its `backup()` gives an O(1) restore point,
+   * which is what makes seed-once fixtures possible — see
+   * `createTestDatasourceFixture`.
+   */
+  db: IMemoryDb;
+  datasource: DataSource;
+};
+
+export async function makeTestDatabase(
   entities: EntitySchema[],
-): Promise<DataSource> {
+): Promise<TestDatabase> {
   const db = newDb({
     autoCreateForeignKeyIndices: true,
   });
@@ -20,10 +30,19 @@ export async function makeTestDatasource(
     name: 'version',
   });
 
-  return db.adapters.createTypeormDataSource({
+  const datasource = db.adapters.createTypeormDataSource({
     type: 'postgres',
     entities,
-  });
+  }) as DataSource;
+
+  return { db, datasource };
+}
+
+export async function makeTestDatasource(
+  entities: EntitySchema[],
+): Promise<DataSource> {
+  const { datasource } = await makeTestDatabase(entities);
+  return datasource;
 }
 
 /**
@@ -48,10 +67,26 @@ export async function makeTestDatasource(
  *   });
  * });
  * ```
+ *
+ * When every test in a file needs the same seeded rows, seed them once in
+ * `beforeAll` and call `snapshot()`. `cleanup()` then rewinds to that seeded
+ * state instead of truncating, which is an O(1) pg-mem operation:
+ *
+ * ```typescript
+ * beforeAll(async () => {
+ *   await fixture.initialize();
+ *   await seedTheRowsEveryTestNeeds(fixture.datasource);
+ *   fixture.snapshot();
+ * });
+ *
+ * afterEach(() => fixture.cleanup()); // back to the seeded state
+ * ```
  */
 export function createTestDatasourceFixture(entities: EntitySchema[]) {
+  let db: IMemoryDb | null = null;
   let datasource: DataSource | null = null;
   let tableNames: string[] = [];
+  let backup: IBackup | null = null;
 
   return {
     get datasource(): DataSource {
@@ -64,7 +99,9 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
     },
 
     async initialize(): Promise<DataSource> {
-      datasource = await makeTestDatasource(entities);
+      const testDatabase = await makeTestDatabase(entities);
+      db = testDatabase.db;
+      datasource = testDatabase.datasource;
       await datasource.initialize();
       await datasource.synchronize();
 
@@ -77,11 +114,35 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
     },
 
     /**
-     * Truncates all tables to reset state between tests.
-     * Much faster than dropping and recreating the schema.
+     * Records the current rows as the state `cleanup()` rewinds to.
+     *
+     * Call this after seeding, in `beforeAll`. Taking a restore point is O(1),
+     * and so is every subsequent `cleanup()` — which is what lets a whole file
+     * share one seed instead of rebuilding it per test.
+     *
+     * The schema must not change afterwards; snapshot after `initialize()`.
+     */
+    snapshot(): void {
+      if (!db) {
+        throw new Error(
+          'Datasource not initialized. Call initialize() in beforeAll.',
+        );
+      }
+      backup = db.backup();
+    },
+
+    /**
+     * Resets state between tests: rewinds to the last `snapshot()` when one was
+     * taken, otherwise truncates all tables (itself much faster than dropping
+     * and recreating the schema).
      */
     async cleanup(): Promise<void> {
       if (!datasource?.isInitialized) return;
+
+      if (backup) {
+        backup.restore();
+        return;
+      }
 
       // Truncate all tables in a single transaction
       // Use CASCADE to handle foreign key constraints
@@ -104,8 +165,10 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
       if (datasource?.isInitialized) {
         await datasource.destroy();
       }
+      db = null;
       datasource = null;
       tableNames = [];
+      backup = null;
     },
   };
 }

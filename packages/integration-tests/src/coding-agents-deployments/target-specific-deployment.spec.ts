@@ -71,9 +71,11 @@ describe('Target-Specific Deployment Integration', () => {
   let vscodeTarget: Target;
   let rootTarget: Target;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
@@ -175,6 +177,8 @@ class MyService {
       path: '/',
       gitRepoId: gitRepo.id,
     };
+
+    fixture.snapshot();
   });
 
   afterEach(async () => {

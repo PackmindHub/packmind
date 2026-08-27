@@ -21,10 +21,13 @@ describe('Package deployment integration', () => {
   let command2: Command;
   let standard1: Standard;
   let standard2: Standard;
+  let commit: Awaited<ReturnType<typeof createGitCommit>>;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
@@ -38,11 +41,18 @@ describe('Package deployment integration', () => {
     standard1 = await dataFactory.withStandard({ name: 'Standard 1' });
     standard2 = await dataFactory.withStandard({ name: 'Standard 2' });
 
-    // Mock the git commit to prevent actual git operations during tests
-    // With async deployment, the actual commit happens in the background job
-    const commit = await createGitCommit();
-    const gitAdapter = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitAdapter, 'commitToGit').mockResolvedValue(commit);
+    commit = await createGitCommit();
+
+    fixture.snapshot();
+  });
+
+  // Mock the git commit to prevent actual git operations during tests.
+  // With async deployment, the actual commit happens in the background job.
+  // Spies are restored after each test, so they are re-installed per test.
+  beforeEach(() => {
+    jest
+      .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')
+      .mockResolvedValue(commit);
   });
 
   afterEach(async () => {

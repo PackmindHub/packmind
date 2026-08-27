@@ -22,7 +22,6 @@
     "uuid": "^11.1.0",
     "typeorm": "0.3.31",
     "jsonwebtoken": "^9.0.3",
-    "jest-stage": "^1.0.0",
     "bullmq": "^5.58.2"
   }
 }

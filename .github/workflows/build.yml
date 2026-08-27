@@ -180,11 +180,36 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
         run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
+      # @packmind/integration-tests runs in its own job (test-integration) so it
+      # does not sit on this job's critical path.
+      #
+      # --maxWorkers=1 gives each project a single Jest process and lets Nx
+      # provide the parallelism instead. Every Jest worker pays ~4s of fixed cost
+      # before running a test — ~1s of process startup plus ~3s to load the
+      # @packmind/node-utils barrel — so the default (Nx 3 projects x Jest 3
+      # workers) spends most of a 4-vCPU runner re-paying that. Measured on
+      # 4 vCPU, three interleaved rounds: 123s/118s/117s with the default against
+      # 87s/88s with one worker per project. Passed on the command line rather
+      # than set in the jest configs so `nx test <project>` on a developer
+      # machine keeps using every core.
+      #
+      # One Jest process per project means the useful concurrency is Nx's, so
+      # --parallel=100% tracks the runner's core count, as the build step above
+      # does. Nx's default of 3 would idle 5 of 8 cores, and a hardcoded 8
+      # measured worse than 3 on the 4-vCPU fallback runner: 101s against 88s.
+      #
+      # The cap goes through PACKMIND_JEST_MAX_WORKERS (see jest.preset.js) rather
+      # than a forwarded `-- --maxWorkers=1`, because a CLI flag applies to every
+      # project and cannot be overridden per project. Going through the preset lets
+      # linter-ast stay in the run-many (a forwarded flag made it fail: its target
+      # is a hand-written command that already passes --runInBand) and would let
+      # @packmind/integration-tests keep the 4 workers its own config declares.
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          PACKMIND_JEST_MAX_WORKERS: '1'
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests --parallel=100%
 
       - name: Upload standard samples artifacts
         uses: actions/upload-artifact@v4
@@ -192,6 +217,39 @@ jobs:
           name: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/packages/standards/samples/generated/
           if-no-files-found: ignore
+
+  # Split out of build-packages: it is the longest single test target, so running
+  # it on its own runner takes it off that job's critical path.
+  test-integration:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Test integration tests
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: ./node_modules/.bin/nx test @packmind/integration-tests
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}

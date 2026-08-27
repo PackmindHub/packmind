@@ -895,9 +895,6 @@ importers:
       bullmq:
         specifier: ^5.58.2
         version: 5.77.6
-      jest-stage:
-        specifier: ^1.0.0
-        version: 1.0.0(jest@30.4.2(@types/node@20.19.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.20))(@types/node@20.19.9)(typescript@5.8.3)))
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
