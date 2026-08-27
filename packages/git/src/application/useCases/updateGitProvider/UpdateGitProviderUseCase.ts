@@ -18,6 +18,10 @@ import {
   normalizeDisplayName,
 } from '../shared/validateDisplayName';
 import { providerHasAuth } from '../shared/providerAuthState';
+import {
+  assertCandidateCredentialsWork,
+  isProbeableSource,
+} from '../shared/probeCandidateCredentials';
 
 const origin = 'UpdateGitProviderUseCase';
 
@@ -132,6 +136,32 @@ export class UpdateGitProviderUseCase
       }
 
       patch.displayName = normalizedDisplayName;
+    }
+
+    // The re-authentication panel promises the token is validated against the
+    // instance before it replaces the stored one, but nothing above this line
+    // ever contacts the provider — validateProviderCredentials only checks that
+    // the credential fields are coherent. Probe a supplied token for real, so a
+    // dead one is refused instead of being saved and reported as accepted.
+    //
+    // Deliberately narrow: it fires only when the caller actually sends a token
+    // and the connection ends up token-authenticated. A rename sends no token,
+    // and a GitHub App rebind resolves to authMethod 'app', so neither pays for
+    // a network round trip nor gains a new way to fail. It also runs last, after
+    // the local and display-name checks, so a request that fails anyway never
+    // reaches the provider.
+    const suppliedToken = gitProvider.token;
+    if (
+      typeof suppliedToken === 'string' &&
+      suppliedToken.length > 0 &&
+      credentialView.authMethod === 'token' &&
+      isProbeableSource(gitProvider.source ?? existingProvider.source)
+    ) {
+      await assertCandidateCredentialsWork(this.gitProviderService, {
+        ...existingProvider,
+        ...patch,
+        token: suppliedToken,
+      });
     }
 
     return this.gitProviderService.updateGitProvider(id, patch);

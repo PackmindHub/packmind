@@ -89,6 +89,19 @@ export class GitProviderService {
     };
   }
 
+  /**
+   * Probe a GitProvider shape that is not necessarily persisted, so a candidate
+   * credential can be verified before it replaces the stored one. Read-only: it
+   * never touches the repository.
+   */
+  async checkAuthForProviderConfig(
+    gitProvider: GitProvider,
+  ): Promise<CheckAuthResult> {
+    const providerInstance =
+      await this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.checkAuth();
+  }
+
   async checkProviderAuth(
     gitProviderId: GitProviderId,
   ): Promise<CheckAuthResult> {
@@ -99,9 +112,7 @@ export class GitProviderService {
       throw new Error('Git provider not found');
     }
 
-    const providerInstance =
-      await this.gitProviderFactory.createGitProvider(gitProvider);
-    return providerInstance.checkAuth();
+    return this.checkAuthForProviderConfig(gitProvider);
   }
 
   async checkBranchExists(

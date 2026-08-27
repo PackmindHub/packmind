@@ -419,6 +419,69 @@ describe('GitProviderService', () => {
     });
   });
 
+  describe('checkAuthForProviderConfig', () => {
+    let result: Awaited<
+      ReturnType<typeof gitProviderService.checkAuthForProviderConfig>
+    >;
+
+    beforeEach(async () => {
+      mockGithubProviderInstance.checkAuth.mockResolvedValue({ ok: true });
+      result = await gitProviderService.checkAuthForProviderConfig({
+        ...mockGitProvider,
+        token: 'candidate-token',
+      });
+    });
+
+    it('probes the provider built from the given config', () => {
+      expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+        expect.objectContaining({ token: 'candidate-token' }),
+      );
+    });
+
+    it('returns the probe result', () => {
+      expect(result).toEqual({ ok: true });
+    });
+
+    // The point of the method: a candidate credential is not stored yet, so it
+    // must be verifiable without a repository read.
+    it('does not read the provider from the repository', () => {
+      expect(mockGitProviderRepository.findById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('checkProviderAuth', () => {
+    describe('when the provider is not found', () => {
+      it('reports the provider as missing', async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(null);
+
+        await expect(
+          gitProviderService.checkProviderAuth(createGitProviderId('missing')),
+        ).rejects.toThrow('Git provider not found');
+      });
+    });
+
+    describe('when the provider exists', () => {
+      let result: Awaited<
+        ReturnType<typeof gitProviderService.checkProviderAuth>
+      >;
+
+      beforeEach(async () => {
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        mockGithubProviderInstance.checkAuth.mockResolvedValue({
+          ok: false,
+          reason: 'unauthorized',
+        });
+        result = await gitProviderService.checkProviderAuth(
+          createGitProviderId('provider-1'),
+        );
+      });
+
+      it('returns the probe result for the stored provider', () => {
+        expect(result).toEqual({ ok: false, reason: 'unauthorized' });
+      });
+    });
+  });
+
   describe('checkBranchExists', () => {
     const owner = 'test-owner';
     const repo = 'test-repo';
