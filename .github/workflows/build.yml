@@ -337,40 +337,50 @@ jobs:
         run: |
           echo "cores: $(nproc) - Jest defaults to $(( $(nproc) - 1 )) workers"
 
-      # Both legs build the CLI, even though the registry leg runs the binary
-      # from `CLI_BINARY_PATH`. It looks like dead work on that leg and it is
-      # not — two separate reasons, the second only half understood:
+      # Nx keeps two scratch directories inside the repo, and the compose
+      # services run Nx as ROOT over the `.:/packmind` bind mount, so they share
+      # both. Root writing into a runner-owned file is fine; the reverse is not,
+      # so whichever side gets there first decides whether the later `nx test`
+      # survives. Both must therefore be claimed as the runner user BEFORE
+      # `docker compose up`:
       #
-      # 1. This is the job's first Nx command, and it creates
-      #    `.nx/workspace-data` as the runner user. The compose services run Nx
-      #    as root over the `.:/packmind` bind mount and share that directory
-      #    (a SQLite DB — see the NX_INVOCATION_ROOT_PID comment in
-      #    docker-compose.yml). Root writing a runner-owned DB is fine, the
-      #    reverse is not, so whoever creates those files first decides whether
-      #    the later `nx test` works or dies with `Permission denied (os error
-      #    13)`. Any Nx command satisfies this — `nx show projects` was tried
-      #    and does claim the directory successfully.
-      # 2. Even with (1) satisfied, dropping the build and the two dist steps
-      #    that follow it made `nx test` fail on the registry leg. So the suite
-      #    needs `dist/apps/cli` for something beyond `runCli`'s fallback path,
-      #    which nothing in the suite references directly. The cause was not
-      #    identified: the GitHub REST log API returns a fixed byte budget from
-      #    the end of a job log, which the docker-log collection fills, so the
-      #    Jest error is not retrievable that way.
+      #   .nx/cache/terminalOutputs  Nx writes a task's captured output here
+      #                              even under `--skip-nx-cache`. Creating the
+      #                              directory is enough: owning it lets the
+      #                              runner add files, whatever root also puts
+      #                              inside.
+      #   .nx/workspace-data         a SQLite DB (see the NX_INVOCATION_ROOT_PID
+      #                              comment in docker-compose.yml). The runner
+      #                              has to CREATE the DB, not just the
+      #                              directory, so an actual Nx command is
+      #                              required — `nx show projects` is the
+      #                              cheapest one that does it.
       #
-      # Before trying again, get the actual failure — a `--json --outputFile`
-      # run uploaded as an artifact, or the raw log from the web UI. Note the
-      # prize is small: the registry leg is the shorter of the two, so its 19s
-      # of dist steps do not move the job's wall clock at all. The real gain
-      # would be signal independence (a broken CLI build should not redden
-      # "does the published CLI still work against this API"), not speed.
+      # Getting this wrong is not obvious from the failure: the run reports
+      # `17 passed, 287 total` and then dies in Nx's own output writer with
+      # `EACCES ... .nx/cache/terminalOutputs/<id>`. That is what happened when
+      # this leg's `nx show projects` claimed only the second directory.
+      - name: Claim Nx's scratch directories as the runner user
+        run: |
+          mkdir -p .nx/cache/terminalOutputs .nx/workspace-data
+          ./node_modules/.bin/nx show projects > /dev/null
+
+      # Workspace leg only: this is the CLI under test there. The registry leg
+      # runs the binary at `CLI_BINARY_PATH` and needs no `dist/apps/cli` — the
+      # full suite passes without it, which the failure above confirmed. Keeping
+      # the build off that leg also decouples the signals: a broken CLI build no
+      # longer reddens "does the published CLI still work against this API", a
+      # question `build-cli` already answers in its own job.
       - name: Build the workspace CLI
+        if: matrix.cli-source == 'workspace'
         run: ./node_modules/.bin/nx run packmind-cli:build
 
       - name: Install dist CLI runtime dependencies
+        if: matrix.cli-source == 'workspace'
         run: sh scripts/install-dist-cli-deps.sh
 
       - name: Fix CLI artifacts permissions
+        if: matrix.cli-source == 'workspace'
         run: |
           chmod +x dist/apps/cli/main.cjs || true
           chmod -R +r dist/apps/cli/
