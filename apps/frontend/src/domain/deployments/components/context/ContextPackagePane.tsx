@@ -61,6 +61,7 @@ import {
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
@@ -211,6 +212,14 @@ export function ContextPackagePane({
         ),
     [groups, selectedKeys],
   );
+
+  /*
+   * Nothing in the package, which is what decides where the header's primary
+   * sits: on filling it while it is empty, on distributing it once it is not.
+   * Read from the groups rather than from `total`, so it agrees with the body
+   * below, which is showing its empty state off the same condition.
+   */
+  const isEmpty = groups.length === 0;
 
   const toggleSelect = useCallback((component: ContextComponent) => {
     setSelectedKeys((previous) => {
@@ -527,10 +536,6 @@ export function ContextPackagePane({
               opposite ends, one by a list of the space and one by a list of
               types, and folding them together would hide whichever one the
               reader came for behind the other.
-
-              Secondary, because Create is the primary of this pair: a package
-              is filled with components that mostly do not exist yet on the day
-              it is made.
             */}
             <PMButton
               variant="secondary"
@@ -546,12 +551,39 @@ export function ContextPackagePane({
               Creating sits here, on the pane, and not in the rail below the list
               of packages: the rail creates containers, this creates what goes in
               them, and side by side the two would read as the same gesture.
+
+              It carries the primary only while the package is empty, which is
+              the one state where filling it is the thing to do next. As soon as
+              there is something in it, getting it out is.
             */}
             <ContextCreateMenu
               orgSlug={orgSlug}
               spaceSlug={spaceSlug}
               packageId={pkg.id}
+              variant={isEmpty ? 'primary' : 'secondary'}
             />
+            {/*
+              Every way the package leaves Packmind, under one control: the
+              repositories it writes to, the marketplaces it publishes to, and
+              the command a developer runs in their own checkout. One menu and
+              not one button per channel, because the product does not treat
+              them as different kinds of thing, and the menu is where each
+              edition already contributes the channels it has.
+
+              Absent rather than disabled on an empty package: there is nothing
+              to send anywhere, which is what the package's own page already
+              decided by hiding its install block while a package is empty. A
+              disabled primary would also put the loudest control on the screen
+              on the one thing that cannot be done yet.
+            */}
+            {!isEmpty && (
+              <DeployPackageButton
+                label="Distribute"
+                size="sm"
+                selectedPackages={[pkg]}
+                cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
+              />
+            )}
             {/*
               Deleting the package, behind a menu rather than beside the two
               buttons: the plugin-first navigation has no packages list, so this
