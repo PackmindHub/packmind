@@ -168,16 +168,6 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      # Nx skips build/test for any project whose inputs are unchanged, but only
-      # if it can see a previous run's results. Without this the cache is empty
-      # on every run and every project is rebuilt and retested from scratch.
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-packages-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-${{ github.sha }}
-          restore-keys: |
-            nx-packages-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -248,13 +238,6 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-integration-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-${{ github.sha }}
-          restore-keys: |
-            nx-integration-${{ runner.os }}-${{ vars.PACKMIND_EDITION }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
