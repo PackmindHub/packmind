@@ -14,7 +14,6 @@ import {
   SKILL_MD_FILENAME,
 } from '../../../skills/utils/skillMdUtils';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
-import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
@@ -461,11 +460,6 @@ export function SpaceContextSurface() {
                   organizationId={organization.id}
                   orgSlug={orgSlug}
                   spaceSlug={spaceSlug}
-                  packageHref={routes.space.toPackage(
-                    orgSlug,
-                    spaceSlug,
-                    selectedPackage.id,
-                  )}
                   onCreatePackage={createAndStay}
                   onDeleted={forgetPackage}
                 />

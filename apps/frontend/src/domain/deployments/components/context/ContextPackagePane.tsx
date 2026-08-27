@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import {
   PMAlertDialog,
   PMBadge,
@@ -105,7 +105,6 @@ export function ContextPackagePane({
   organizationId,
   orgSlug,
   spaceSlug,
-  packageHref,
   onCreatePackage,
   onDeleted,
 }: Readonly<{
@@ -129,8 +128,6 @@ export function ContextPackagePane({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
-  /** The package's own page, which still holds everything not moved here. */
-  packageHref: string;
   /**
    * Opens the drawer that names a new package, which the move drawer asks for
    * when there is nowhere to move to. The surface holds it: it is what decides
@@ -525,14 +522,6 @@ export function ContextPackagePane({
             )}
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
-            {/*
-              The way out to everything this surface does not carry yet:
-              edition, deletion, marketplace publication. Secondary, because
-              reading the package is what this screen is for.
-            */}
-            <PMButton variant="secondary" size="sm" asChild>
-              <Link to={packageHref}>Open package</Link>
-            </PMButton>
             {/*
               Adding what exists, beside creating what does not. Two controls
               and not one menu: the question "which of these do I want" and the
