@@ -176,7 +176,8 @@ per-test attribution above had to be produced by replaying the fixture sequence
 directly rather than read out of Jest.
 
 **Measure a candidate as an A/B in one run, on one machine.** The suite step on
-the `workspace` leg measured 54, 57, 56, 54, 59, 54, 57 and 55 seconds across
-eight successive commits of one branch: a 5s spread makes any effect smaller than
-that unmeasurable by comparing commits. That spread is exactly what made the
-compile cache look like a win.
+the `workspace` leg measured 54, 57, 56, 54, 59, 54, 57, 55 and 62 seconds across
+nine successive commits of one branch — several of which changed nothing the
+suite executes. An 8s spread makes any effect smaller than that unmeasurable by
+comparing commits, and that spread is exactly what made a shared compile cache
+look like a win.
