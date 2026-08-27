@@ -322,8 +322,8 @@ export function MoveComponentDrawer({
                       </PMIcon>
                     </PMBox>
                     <PMText variant="small" color="secondary">
-                      {source.name} is deployed to {sourcePlaces}. They keep the
-                      old content until the packages are distributed again.
+                      {source.name} is deployed to {sourcePlaces}, where the old
+                      content remains until the packages are distributed again.
                     </PMText>
                   </PMHStack>
                 ) : null}

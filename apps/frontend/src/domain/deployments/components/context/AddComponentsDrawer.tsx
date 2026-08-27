@@ -227,8 +227,9 @@ export function AddComponentsDrawer({
                           </PMIcon>
                         </PMBox>
                         <PMText variant="small" color="secondary">
-                          {pkg.name} is deployed to {places}. They keep the old
-                          content until the package is distributed again.
+                          {pkg.name} is deployed to {places}, where the old
+                          content remains until the package is distributed
+                          again.
                         </PMText>
                       </PMHStack>
                     ) : null}
