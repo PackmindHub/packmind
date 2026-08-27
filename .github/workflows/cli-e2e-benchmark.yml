@@ -56,7 +56,13 @@ jobs:
             'api-only-4': { stack: 'api-only', runner: 'depot-ubuntu-24.04-4', workers: '' },
             'baseline-8w6': { stack: 'baseline', runner: 'depot-ubuntu-24.04-8', workers: '6' },
             'api-only-8w6': { stack: 'api-only', runner: 'depot-ubuntu-24.04-8', workers: '6' },
+            // Oversubscribed on purpose: the suite spends much of its time
+            // waiting on a spawned CLI and on HTTP, so more workers than cores
+            // may still pay. Where it stops paying is where the longest single
+            // file becomes the floor.
+            'api-only-8w12': { stack: 'api-only', runner: 'depot-ubuntu-24.04-8', workers: '12' },
             'api-only-16w12': { stack: 'api-only', runner: 'depot-ubuntu-24.04-16', workers: '12' },
+            'api-only-16w24': { stack: 'api-only', runner: 'depot-ubuntu-24.04-16', workers: '24' },
           };
 
           const requested = (process.env.REQUESTED || '')
@@ -203,6 +209,9 @@ jobs:
           fi
           echo "report=${report}" >> "$GITHUB_OUTPUT"
 
+      # Tee rather than redirect: the job summary is the readable form, but it is
+      # not exposed by the REST API, so the step log is the only copy anything
+      # outside a browser can get at.
       - name: Summarize
         if: always() && steps.run.outputs.report != ''
         run: |
@@ -213,7 +222,7 @@ jobs:
             echo "- Suite step (Nx included): **${{ steps.run.outputs.suite_seconds }}s**"
             echo
             node scripts/cli-e2e-benchmark-report.mjs report "${{ steps.run.outputs.report }}"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Record the step timings
         if: always() && steps.run.outputs.report != ''
@@ -293,4 +302,4 @@ jobs:
                 console.log(`| \`${v.name}\` | ${v.stack} | \`${v.runner}\` | ${v.startupSeconds}s | ${v.suiteStepSeconds}s |`);
               ' "${env_file}"
             done
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
