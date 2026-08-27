@@ -1,62 +1,88 @@
 name: CLI E2E Benchmark
 
-# Measures where the `cli-e2e-tests` job spends its time, and what a candidate
-# change actually buys, by running the same suite under several environments and
-# reporting them side by side in the job summary.
+# Measures where the `cli-e2e-tests` suite spends its time, and what a candidate
+# change actually buys, by running it under several environments and reporting
+# them side by side in the job summary.
 #
-# Two axes are covered:
-#   - the stack shape — the whole compose stack reached through the frontend
-#     dev-server proxy (what CI does today) versus the API alone, reached
-#     directly;
-#   - the worker count, against the runner size picked below.
+# The variant catalogue below is a 2×2: the stack shape (the whole compose stack
+# reached through the frontend dev-server proxy, which is what CI does today,
+# versus the API alone reached directly) crossed with the runner size and the
+# worker count. Each cell isolates one axis; the fourth is the combination.
 #
-# Manual only: it starts one full stack per variant and is not meant to gate a
-# pull request.
+# Two ways to run it:
+#   - `workflow_dispatch` from the default branch, to pick the variants;
+#   - add the `cli-e2e-benchmark` label to a pull request, which runs the
+#     catalogue against that branch. Re-add the label to re-run.
+#
+# Never on push: each variant starts its own full stack, so this is opt-in.
 
 on:
   workflow_dispatch:
     inputs:
-      runner:
-        description: 'Runner label to benchmark on (vCPU count is the point)'
-        required: false
-        default: 'depot-ubuntu-24.04-4'
       variants:
-        description: 'Variants to run: baseline, baseline-tuned, api-only, api-only-tuned'
+        description: 'Variants to run (see the catalogue in the plan job)'
         required: false
-        default: 'baseline,api-only,api-only-tuned'
-      max_workers:
-        description: 'Jest --maxWorkers for the "-tuned" variants'
-        required: false
-        default: '6'
+        default: 'baseline-4,api-only-4,baseline-8w6,api-only-8w6'
       node-version:
         description: 'Node version'
         required: false
         default: '24.18.0'
+  pull_request:
+    types: [labeled]
 
 jobs:
   plan:
+    # On a pull request, only the benchmark label starts this.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.label.name == 'cli-e2e-benchmark'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.parse.outputs.matrix }}
+      names: ${{ steps.parse.outputs.names }}
     steps:
-      - name: Parse variants into a matrix
+      - name: Build the variant matrix
         id: parse
+        env:
+          # Empty on a pull_request event, which has no inputs — the default in
+          # the script then applies.
+          REQUESTED: ${{ inputs.variants }}
         run: |
-          matrix=$(printf '%s' '${{ inputs.variants }}' \
-            | tr ',' '\n' \
-            | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
-            | grep -v '^$' \
-            | jq -R . | jq -sc .)
-          if [ "${matrix}" = "[]" ]; then
-            echo "No variant requested" >&2
-            exit 1
-          fi
-          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
-          echo "Variants: ${matrix}"
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          // The catalogue. `workers: ''` means "leave Jest's default", which is
+          // nproc - 1, so the 4-vCPU cells run the 3 workers CI uses today.
+          const catalogue = {
+            'baseline-4': { stack: 'baseline', runner: 'depot-ubuntu-24.04-4', workers: '' },
+            'api-only-4': { stack: 'api-only', runner: 'depot-ubuntu-24.04-4', workers: '' },
+            'baseline-8w6': { stack: 'baseline', runner: 'depot-ubuntu-24.04-8', workers: '6' },
+            'api-only-8w6': { stack: 'api-only', runner: 'depot-ubuntu-24.04-8', workers: '6' },
+            'api-only-16w12': { stack: 'api-only', runner: 'depot-ubuntu-24.04-16', workers: '12' },
+          };
+
+          const requested = (process.env.REQUESTED || '')
+            .split(',')
+            .map((name) => name.trim())
+            .filter(Boolean);
+          const names = requested.length
+            ? requested
+            : ['baseline-4', 'api-only-4', 'baseline-8w6', 'api-only-8w6'];
+
+          const unknown = names.filter((name) => !catalogue[name]);
+          if (unknown.length) {
+            console.error(`Unknown variant(s): ${unknown.join(', ')}`);
+            console.error(`Known: ${Object.keys(catalogue).join(', ')}`);
+            process.exit(1);
+          }
+
+          const matrix = names.map((name) => ({ name, ...catalogue[name] }));
+          console.log(`matrix=${JSON.stringify(matrix)}`);
+          console.log(`names=${names.join(',')}`);
+          NODE
+          echo "Planned: $(cat "$GITHUB_OUTPUT" | grep '^names=')"
 
   benchmark:
     needs: plan
-    runs-on: ${{ inputs.runner }}
+    runs-on: ${{ matrix.variant.runner }}
     timeout-minutes: 30
     strategy:
       # One variant failing still leaves the others worth comparing.
@@ -68,10 +94,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
 
-      - name: Use Node.js ${{ inputs.node-version }}
+      - name: Use Node.js ${{ inputs.node-version || '24.18.0' }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ inputs.node-version || '24.18.0' }}
           cache: 'pnpm'
 
       - name: Cache pnpm supply-chain verification
@@ -97,38 +123,25 @@ jobs:
           chmod -R +r dist/apps/cli/
 
       - name: Resolve variant
-        id: variant
-        env:
-          MAX_WORKERS: ${{ inputs.max_workers }}
         run: |
           set -eu
-          case '${{ matrix.variant }}' in
+          case '${{ matrix.variant.stack }}' in
             baseline)
+              # What CI runs today: the whole stack, and the API reached through
+              # the frontend dev server's /api proxy on port 4200.
               compose_files='-f docker-compose.yml'
               services=''
               instance_url='http://localhost:4200'
-              workers=''
-              ;;
-            baseline-tuned)
-              compose_files='-f docker-compose.yml'
-              services=''
-              instance_url='http://localhost:4200'
-              workers="${MAX_WORKERS}"
               ;;
             api-only)
+              # `backend` alone (Compose still pulls in install-dependencies,
+              # run-migrations, postgres and redis), reached directly.
               compose_files='-f docker-compose.yml -f docker-compose.cli-e2e.yml'
               services='backend'
               instance_url='http://localhost:3000'
-              workers=''
-              ;;
-            api-only-tuned)
-              compose_files='-f docker-compose.yml -f docker-compose.cli-e2e.yml'
-              services='backend'
-              instance_url='http://localhost:3000'
-              workers="${MAX_WORKERS}"
               ;;
             *)
-              echo "Unknown variant '${{ matrix.variant }}'" >&2
+              echo "Unknown stack '${{ matrix.variant.stack }}'" >&2
               exit 1
               ;;
           esac
@@ -136,15 +149,15 @@ jobs:
             echo "COMPOSE_FILES=${compose_files}"
             echo "COMPOSE_SERVICES=${services}"
             echo "PACKMIND_INSTANCE_URL=${instance_url}"
-            echo "JEST_WORKERS=${workers}"
+            echo "JEST_WORKERS=${{ matrix.variant.workers }}"
           } >> "$GITHUB_ENV"
-          echo "Variant '${{ matrix.variant }}': ${compose_files} services='${services:-<all>}' url=${instance_url} workers='${workers:-<jest default>}'"
+          echo "nproc: $(nproc)"
 
       - name: Start the stack
         id: stack
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: cli-e2e-bench-${{ github.run_number }}-${{ matrix.variant }}
+          COMPOSE_PROJECT_NAME: cli-e2e-bench-${{ github.run_number }}-${{ matrix.variant.name }}
           CI: 'true'
         run: |
           set -eu
@@ -153,6 +166,7 @@ jobs:
           APP_WEB_URL="${PACKMIND_INSTANCE_URL}" docker compose ${COMPOSE_FILES} \
             up -d --wait --wait-timeout 420 ${COMPOSE_SERVICES}
           echo "startup_seconds=$(( $(date +%s) - started ))" >> "$GITHUB_OUTPUT"
+          # shellcheck disable=SC2086
           docker compose ${COMPOSE_FILES} ps -a
 
       - name: Wait for the API to answer
@@ -170,12 +184,14 @@ jobs:
           mkdir -p benchmark-results
           # The report script reads the label and the worker count back out of
           # the file name, since Jest's JSON records neither.
-          workers="${JEST_WORKERS:-$(( $(nproc) - 1 ))}"
-          report="benchmark-results/${{ matrix.variant }}.workers-${workers}.json"
-          args=''
-          if [ -n "${JEST_WORKERS}" ]; then
-            args="--maxWorkers=${JEST_WORKERS}"
+          workers="${JEST_WORKERS:-}"
+          if [ -z "${workers}" ]; then
+            workers=$(( $(nproc) - 1 ))
+            args=''
+          else
+            args="--maxWorkers=${workers}"
           fi
+          report="benchmark-results/${{ matrix.variant.name }}.workers-${workers}.json"
           started=$(date +%s)
           # shellcheck disable=SC2086 # args is a deliberate word list
           ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache \
@@ -191,33 +207,48 @@ jobs:
         if: always() && steps.run.outputs.report != ''
         run: |
           {
-            echo "### Variant \`${{ matrix.variant }}\` on \`${{ inputs.runner }}\`"
+            echo "### \`${{ matrix.variant.name }}\` — ${{ matrix.variant.stack }} on ${{ matrix.variant.runner }}"
             echo
             echo "- Stack startup: **${{ steps.stack.outputs.startup_seconds }}s**"
-            echo "- Suite step: **${{ steps.run.outputs.suite_seconds }}s**"
+            echo "- Suite step (Nx included): **${{ steps.run.outputs.suite_seconds }}s**"
             echo
             node scripts/cli-e2e-benchmark-report.mjs report "${{ steps.run.outputs.report }}"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record the step timings
+        if: always() && steps.run.outputs.report != ''
+        run: |
+          # Kept next to the Jest report so the compare job can show the stack
+          # startup, which the Jest JSON knows nothing about.
+          cat > "benchmark-results/${{ matrix.variant.name }}.env.json" <<JSON
+          {
+            "name": "${{ matrix.variant.name }}",
+            "stack": "${{ matrix.variant.stack }}",
+            "runner": "${{ matrix.variant.runner }}",
+            "startupSeconds": ${{ steps.stack.outputs.startup_seconds }},
+            "suiteStepSeconds": ${{ steps.run.outputs.suite_seconds }}
+          }
+          JSON
 
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cli-e2e-benchmark-${{ github.run_number }}-${{ matrix.variant }}
+          name: cli-e2e-benchmark-${{ github.run_number }}-${{ matrix.variant.name }}
           path: benchmark-results/
           if-no-files-found: warn
 
       - name: Cleanup
         if: always()
         env:
-          COMPOSE_PROJECT_NAME: cli-e2e-bench-${{ github.run_number }}-${{ matrix.variant }}
+          COMPOSE_PROJECT_NAME: cli-e2e-bench-${{ github.run_number }}-${{ matrix.variant.name }}
         run: |
           # shellcheck disable=SC2086
           docker compose ${COMPOSE_FILES:--f docker-compose.yml} down -v --remove-orphans
 
   compare:
-    needs: benchmark
-    if: always()
+    needs: [plan, benchmark]
+    if: always() && needs.plan.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -232,20 +263,34 @@ jobs:
       - name: Compare the variants
         run: |
           set -eu
-          # Requested order, so the first variant is the comparison baseline.
+          # Planned order, so the first variant is the comparison baseline.
           ordered=''
-          for variant in $(printf '%s' '${{ inputs.variants }}' | tr ',' ' '); do
+          for variant in $(printf '%s' '${{ needs.plan.outputs.names }}' | tr ',' ' '); do
             match=$(find benchmark-results -name "${variant}.workers-*.json" | head -n 1)
             if [ -n "${match}" ]; then
               ordered="${ordered} ${match}"
             else
-              echo "No report for variant '${variant}' — it likely failed." >&2
+              echo "No report for variant '${variant}' — it failed or never started." >&2
             fi
           done
           if [ -z "${ordered}" ]; then
             echo "No report to compare." >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          # shellcheck disable=SC2086 # ordered is a deliberate word list
-          node scripts/cli-e2e-benchmark-report.mjs compare ${ordered} \
-            >> "$GITHUB_STEP_SUMMARY"
+          {
+            # shellcheck disable=SC2086 # ordered is a deliberate word list
+            node scripts/cli-e2e-benchmark-report.mjs compare ${ordered}
+            echo
+            echo '### Stack startup and total suite step'
+            echo
+            echo '| Variant | Stack | Runner | Startup | Suite step |'
+            echo '| --- | --- | --- | --: | --: |'
+            for env_file in benchmark-results/*.env.json; do
+              [ -f "${env_file}" ] || continue
+              node -e '
+                const e = require("fs").readFileSync(process.argv[1], "utf-8");
+                const v = JSON.parse(e);
+                console.log(`| \`${v.name}\` | ${v.stack} | \`${v.runner}\` | ${v.startupSeconds}s | ${v.suiteStepSeconds}s |`);
+              ' "${env_file}"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
