@@ -28,7 +28,18 @@ const AUTH_PHASES = ['signup', 'signin', 'generateApiKey', 'getGlobalSpace'];
 // `--full` adds what `install.spec.ts` — the file that sets the suite's floor —
 // does in its beforeEach chain on top of the auth fixture. Its `it` bodies are
 // pure assertions, so these phases are the whole per-test cost of that file.
-const FULL_PHASES = ['tempDirs', 'gitRepo', 'createPackage', 'cliInstall'];
+// `cliVersion` is not part of a real test. It is the same spawn as `cliInstall`
+// — node starting up and parsing the CLI bundle — with no API call and no file
+// written, so the difference between the two separates the fixed cost of
+// launching the CLI from the work the command actually does. That distinction
+// decides whether the lever is "fewer spawns per test" or "a faster command".
+const FULL_PHASES = [
+  'tempDirs',
+  'gitRepo',
+  'createPackage',
+  'cliVersion',
+  'cliInstall',
+];
 
 function parseArgs(argv) {
   const options = { iterations: 30, tests: 287, warmup: 3, full: false };
@@ -211,6 +222,10 @@ async function oneSetup(url, full = false) {
     timings.createPackage = performance.now() - started;
 
     started = performance.now();
+    runCli('--version', { apiKey, cwd: testDir, home: testHome });
+    timings.cliVersion = performance.now() - started;
+
+    started = performance.now();
     runCli(`install ${created.package.slug}`, {
       apiKey,
       cwd: testDir,
@@ -326,6 +341,12 @@ async function main() {
     lines.push('');
     lines.push(
       `The auth fixture is ${auth.toFixed(0)}ms of that, and bcrypt ${hashing.toFixed(0)}ms of the auth fixture.`,
+    );
+    const spawn = perPhase.cliVersion.median;
+    const work = perPhase.cliInstall.median - spawn;
+    lines.push('');
+    lines.push(
+      `Of the \`cliInstall\` ${perPhase.cliInstall.median.toFixed(0)}ms, **${spawn.toFixed(0)}ms is launching the CLI at all** (\`--version\` does no API call and writes nothing) and ${work.toFixed(0)}ms is the command's own work. Over the file that is ${over(spawn)}s of pure process startup against ${over(work)}s of work.`,
     );
   } else {
     lines.push(
