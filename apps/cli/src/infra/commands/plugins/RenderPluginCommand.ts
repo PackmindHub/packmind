@@ -7,7 +7,8 @@ import { PackageSlugArgType } from '../customParameters/PackageSlugArgType';
 
 export const renderPluginCommand = command({
   name: 'render',
-  description: 'Render a Packmind package as a Claude plugin',
+  description:
+    'Render a Packmind package as a Claude Code or GitHub Copilot plugin',
   args: {
     packageSlug: positional({
       type: PackageSlugArgType,

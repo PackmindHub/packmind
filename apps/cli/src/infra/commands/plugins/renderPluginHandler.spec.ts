@@ -146,6 +146,17 @@ describe('renderPluginHandler', () => {
         expect.objectContaining({ targetVendor: 'github' }),
       );
     });
+
+    it('names the descriptor it actually updated', async () => {
+      await renderPluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
+      expect(log).toHaveBeenCalledWith(
+        'Updated .github/plugin/marketplace.json',
+      );
+    });
   });
 
   describe('marketplace mode first render', () => {
@@ -256,6 +267,17 @@ describe('renderPluginHandler', () => {
           expect.stringContaining('Skipped'),
         );
       });
+    });
+
+    it('names the descriptor it actually updated', async () => {
+      await renderPluginHandler(
+        { packageSlug: { packageSlug: 'security' } },
+        buildDeps(),
+      );
+
+      expect(log).toHaveBeenCalledWith(
+        'Updated .claude-plugin/marketplace.json',
+      );
     });
 
     it('exits zero on success', async () => {
@@ -558,6 +580,7 @@ describe('renderPluginHandler', () => {
             pluginName: 'security',
             gitRemoteUrl: 'git@github.com:org/repo.git',
             gitBranch: 'main',
+            targetVendor: 'anthropic',
           });
         });
 

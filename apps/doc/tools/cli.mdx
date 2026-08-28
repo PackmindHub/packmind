@@ -36,7 +36,7 @@ The Packmind CLI provides the following commands:
 - **`packages create`** - Create a new package
 - **`packages add`** - Add standards, commands, or skills to a package
 - **`packages list`** - List all packages in your organization
-- **`plugins render`** - Render a Packmind package as a Claude plugin
+- **`plugins render`** - Render a Packmind package as a Claude Code or GitHub Copilot plugin
 - **`plugins delete`** - Delete a rendered Claude plugin from this workspace
 - **`update`** - Update the CLI to the latest version
 
@@ -1207,7 +1207,7 @@ The `plugins` commands detect what kind of workspace you are in by looking insid
 
 ### Plugins Render
 
-Render a Packmind package as a Claude plugin in the current workspace.
+Render a Packmind package as a Claude Code or GitHub Copilot plugin in the current workspace.
 
 ```bash
 packmind plugins render <package-slug>
@@ -1231,11 +1231,19 @@ The CLI will:
 2. Write them under `plugins/security/` (commands in `plugins/security/commands/`, skills in `plugins/security/skills/`)
 3. Add or update the plugin entry inside `.claude-plugin/marketplace.json`, pointing `source` to `./plugins/security`
 
+<Note>
+  **GitHub Copilot marketplaces** — The CLI picks the plugin format from the
+  descriptor it finds. A repository holding `.github/plugin/marketplace.json`
+  instead is rendered in the Copilot format: commands land in
+  `plugins/security/.github/prompts/` as `.prompt.md` files, and no
+  `plugin.json` manifest is written.
+</Note>
+
 **Example output:**
 
 ```
 Rendered 12 files into ./plugins/security/
-Skipped 3 standards (not supported in Claude plugins).
+Skipped 3 standards (not supported in plugins).
 Updated .claude-plugin/marketplace.json
 ```
 

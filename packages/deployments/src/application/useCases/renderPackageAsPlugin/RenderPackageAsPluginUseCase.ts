@@ -87,10 +87,13 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
   protected async executeForMembers(
     command: RenderPackageAsPluginCommand & MemberContext,
   ): Promise<RenderPackageAsPluginResponse> {
-    this.logger.info('Rendering package as Claude plugin', {
+    const targetVendor: MarketplaceVendor = command.targetVendor ?? 'anthropic';
+
+    this.logger.info('Rendering package as plugin', {
       organizationId: command.organizationId,
       packageSlug: command.packageSlug,
       mode: command.mode,
+      targetVendor,
     });
 
     const pkg = await this.resolvePackageBySlug(
@@ -117,7 +120,6 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
     // its slug stays stable. Always emit the package slug so the plugin stays
     // installable, and so `name` matches the `plugins/<slug>` source path.
     const pluginName = pkg.slug;
-    const targetVendor: MarketplaceVendor = command.targetVendor ?? 'anthropic';
 
     const target = this.buildSyntheticTarget(command.pluginRoot);
     // Neither deployer reads repository contents; only the id is referenced
@@ -163,8 +165,9 @@ export class RenderPackageAsPluginUseCase extends AbstractMemberUseCase<
       skillsUpdate,
     ]);
 
-    this.logger.info('Rendered package as Claude plugin', {
+    this.logger.info('Rendered package as plugin', {
       packageSlug: command.packageSlug,
+      targetVendor,
       fileCount: files.length,
       skippedStandardsCount: deployer.getLastSkippedStandardsCount(),
     });

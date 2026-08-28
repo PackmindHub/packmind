@@ -1,5 +1,5 @@
 import { writeFileSync, readFileSync, mkdirSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { RenderedPluginFile } from '@packmind/types';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import {
@@ -46,6 +46,9 @@ export async function renderPluginHandler(
     return;
   }
 
+  // The descriptor found on disk decides the plugin format; `standalone` has no
+  // Copilot equivalent, so it resolves to Claude like the marketplace default.
+  const targetVendor = ctx.vendor === 'copilot' ? 'github' : 'anthropic';
   const pluginName = args.packageSlug.packageSlug;
   const packageSlug = displayableParsedPackageSlug(args.packageSlug);
   const { gitRemoteUrl, gitBranch } = await resolveGitContext(
@@ -55,7 +58,6 @@ export async function renderPluginHandler(
 
   if (ctx.mode === 'marketplace') {
     const manifestPath = ctx.manifestPath as string;
-    const targetVendor = ctx.vendor === 'copilot' ? 'github' : 'anthropic';
 
     let marketplace: Marketplace;
     try {
@@ -143,7 +145,7 @@ export async function renderPluginHandler(
 
     deps.log(`Rendered ${response.files.length} files into ./${pluginRoot}`);
     reportSkippedStandards(deps, response.skippedStandardsCount);
-    deps.log('Updated .claude-plugin/marketplace.json');
+    deps.log(`Updated ${relative(cwd, manifestPath)}`);
     deps.exit(0);
     return;
   }
@@ -178,6 +180,7 @@ export async function renderPluginHandler(
       pluginName,
       gitRemoteUrl,
       gitBranch,
+      targetVendor,
     });
 
     writeFiles(cwd, response.files);
@@ -195,7 +198,7 @@ function reportSkippedStandards(
 ): void {
   if (skippedStandardsCount > 0) {
     deps.log(
-      `Skipped ${skippedStandardsCount} standards (not supported in Claude plugins).`,
+      `Skipped ${skippedStandardsCount} standards (not supported in plugins).`,
     );
   }
 }
