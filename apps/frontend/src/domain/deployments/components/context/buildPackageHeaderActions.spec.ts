@@ -100,8 +100,8 @@ describe('buildPackageHeaderActions', () => {
       expect(build(pkg).update?.count).toBe(1);
     });
 
-    it('leaves the distribute menu quiet, so only one control is loud', () => {
-      expect(build(pkg).distributeVariant).toBe('secondary');
+    it('gives the control the weight, chevron half and all', () => {
+      expect(build(pkg).distributeVariant).toBe('primary');
     });
   });
 

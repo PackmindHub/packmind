@@ -470,6 +470,34 @@ export function ContextPackagePane({
   };
 
   /*
+   * Every way the package leaves Packmind, under one control: the repositories
+   * it writes to, the marketplaces it publishes to, and the command a developer
+   * runs in their own checkout. One menu and not one button per channel,
+   * because the product does not treat them as different kinds of thing, and
+   * the menu is where each edition already contributes the channels it has.
+   *
+   * Absent rather than disabled on an empty package: there is nothing to send
+   * anywhere, which is what the package's own page already decided by hiding
+   * its install block while a package is empty. A disabled primary would also
+   * put the loudest control on the screen on the one thing that cannot be done
+   * yet.
+   *
+   * Written once and asked for in two shapes, because the two call sites below
+   * differ by the one prop and everything else about them has to stay the same.
+   */
+  const distributeControl = (trigger: 'standalone' | 'split') =>
+    isEmpty ? null : (
+      <DeployPackageButton
+        label="Distribute"
+        trigger={trigger}
+        size="sm"
+        variant={headerActions.distributeVariant}
+        selectedPackages={[pkg]}
+        cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
+      />
+    );
+
+  /*
    * Built once and rendered by whichever half is on screen. The drawer has to
    * outlive the thing it was opened from: from the list, the move rebuilds that
    * list, and from the detail, the move empties the detail.
@@ -658,60 +686,53 @@ export function ContextPackagePane({
               </>
             )}
             {/*
-              Every way the package leaves Packmind, under one control: the
-              repositories it writes to, the marketplaces it publishes to, and
-              the command a developer runs in their own checkout. One menu and
-              not one button per channel, because the product does not treat
-              them as different kinds of thing, and the menu is where each
-              edition already contributes the channels it has.
+              One send control, whatever the state. Catching up where the
+              package already is and reaching somewhere new are two questions,
+              and the header used to ask both out loud, side by side: a
+              `Distribute` menu and a primary `Update N destinations`. Two
+              buttons, one verb as far as the reader is concerned, and no room
+              up here to explain which one is theirs.
 
-              Absent rather than disabled on an empty package: there is nothing
-              to send anywhere, which is what the package's own page already
-              decided by hiding its install block while a package is empty. A
-              disabled primary would also put the loudest control on the screen
-              on the one thing that cannot be done yet.
-            */}
-            {!isEmpty && (
-              <DeployPackageButton
-                label="Distribute"
-                size="sm"
-                variant={headerActions.distributeVariant}
-                selectedPackages={[pkg]}
-                cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
-              />
-            )}
-            {/*
-              Catching up where the package already is, which is a different
-              question from the menu beside it and now says so. That menu picks
-              a destination; this one has them already and only has to be told
-              to go.
+              So they join. The corrective push takes the wide half, since it is
+              the one thing the state is asking for, and the open ended one
+              keeps the chevron it already had. The seam is a pixel of the page
+              showing between two halves of the same colour, which is what makes
+              them read as one object rather than as two buttons that touch.
 
-              After the menu rather than before, so the weight still climbs from
-              left to right across the header, and it is the last thing read
-              before the pointer reaches the overflow.
+              Behind a chevron is a real cost for someone who came to add a
+              destination while the package happens to be drifting. It is paid
+              because the Distribution tab below keeps its own way to every
+              destination, and because a second primary in the header is what
+              sent us here.
 
-              Absent rather than disabled when nothing is behind: there is
+              Disabled only when every drifted destination is stuck, where the
+              tooltip is the answer. Absent when nothing is behind: there is
               nothing to catch up, and a greyed control saying so is a sentence
-              written as a button. Disabled only when every drifted destination
-              is stuck, where the tooltip is the answer.
+              written as a button.
             */}
-            {headerActions.update && (
-              <PMTooltip
-                label={headerActions.update.lockTooltip}
-                placement="top"
-              >
-                <PMButton
-                  variant="primary"
-                  size="sm"
-                  disabled={headerActions.update.lockTooltip !== null}
-                  onClick={updateDriftedDestinations}
+            {headerActions.update ? (
+              <PMHStack gap="1px">
+                <PMTooltip
+                  label={headerActions.update.lockTooltip}
+                  placement="top"
                 >
-                  <PMIcon fontSize="xs">
-                    <LuRotateCw />
-                  </PMIcon>
-                  {headerActions.update.label}
-                </PMButton>
-              </PMTooltip>
+                  <PMButton
+                    variant="primary"
+                    size="sm"
+                    disabled={headerActions.update.lockTooltip !== null}
+                    onClick={updateDriftedDestinations}
+                    borderEndRadius={isEmpty ? undefined : 0}
+                  >
+                    <PMIcon fontSize="xs">
+                      <LuRotateCw />
+                    </PMIcon>
+                    {headerActions.update.label}
+                  </PMButton>
+                </PMTooltip>
+                {distributeControl('split')}
+              </PMHStack>
+            ) : (
+              distributeControl('standalone')
             )}
             {/*
               Deleting the package, behind a menu rather than beside the two

@@ -3,25 +3,31 @@ import type { PackageLockProfile } from '../redesign/selectors/installLock';
 import type { PackageDrift } from '../redesign/types';
 
 /**
- * What the two package-wide controls in the pane header are, once the drift is
+ * What the package-wide send control in the pane header is, once the drift is
  * known.
  *
  * There are two verbs here and they are not the same question. Reaching a new
  * place is open ended: you pick a destination, and it is a deliberate act.
  * Catching up where you already are is corrective: the destinations are known
- * and the only thing to decide is which of the stale ones. They used to share
- * the word "Distribute", one at the top of the pane and one under the list at
- * the bottom, both drawn as a primary. Naming them apart and giving only one of
- * them the weight at a time is the whole point of this.
+ * and the only thing to decide is which of the stale ones.
+ *
+ * Still two acts, no longer two buttons. Side by side they read as one word
+ * said twice: the header has no room to teach the distinction, so a reader sees
+ * "send this package" written in two places and has to work out which one is
+ * theirs. Where there is something to catch up, the pane draws them as one
+ * split control instead, the corrective push on the wide half and the open
+ * ended one behind the chevron. That leaves one send control in every state,
+ * and it is the verb that changes with the state rather than the number of
+ * buttons.
  */
 export type PackageHeaderActions = {
   /**
-   * How loudly the `Distribute` menu is drawn.
+   * How loudly the send control is drawn, chevron half included: two halves of
+   * one button cannot disagree about their weight.
    *
-   * Primary only where there is nothing to correct and nowhere the package is
-   * read from yet: getting it out is then the thing to do next. Everywhere else
-   * it goes quiet, because either the package is current, or something louder
-   * has the floor.
+   * Quiet in the one state with nothing to do, where the package is current and
+   * already read somewhere. Anywhere else there is either drift to clear or a
+   * package that has never left Packmind, and this control is the answer to it.
    */
   distributeVariant: 'primary' | 'secondary';
   /** The drift-clearing push, or null when nothing is behind. */
@@ -55,8 +61,15 @@ export function buildPackageHeaderActions({
 
   const behindCount = drift ? packageBehindInstallCount(drift) : 0;
   if (behindCount > 0) {
+    /*
+     * Loud, where the same branch used to answer `secondary`. Back then the
+     * menu was a button of its own beside a primary `Update`, and only one of
+     * the two could carry the weight. It is now the chevron half of that same
+     * button, so the weight is the whole control's and there is nothing left to
+     * take it away from.
+     */
     return {
-      distributeVariant: 'secondary',
+      distributeVariant: 'primary',
       update: {
         count: behindCount,
         label: `Update ${behindCount} destination${behindCount === 1 ? '' : 's'}`,

@@ -22,6 +22,20 @@ export interface DeployPackageButtonProps {
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'primary' | 'secondary' | 'tertiary';
+  /**
+   * How the control presents itself.
+   *
+   * `standalone` is the button it has always been.
+   *
+   * `split` is the right half of a split button, where a neighbour owns the
+   * wide half and states the verb. With `cliInstall` it draws the chevron alone
+   * and keeps `label` as its accessible name, so a screen reader still hears
+   * the two acts as the two buttons they are; without it there is no menu and
+   * no chevron to draw alone, so the label stays. Either way the joined edge is
+   * squared. Only the package pane's header asks for this, and it always passes
+   * `cliInstall`.
+   */
+  trigger?: 'standalone' | 'split';
   selectedPackages: Package[];
   /**
    * The coordinates of the single package this button is about, when the
@@ -69,6 +83,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
   disabled = false,
   size = 'md',
   variant = 'primary',
+  trigger = 'standalone',
   selectedPackages,
   cliInstall,
 }) => {
@@ -79,10 +94,23 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
       {cliInstall ? (
         <PMMenu.Root>
           <PMMenu.Trigger asChild>
-            <PMButton size={size} variant={variant} disabled={disabled}>
-              {label}
-              <LuChevronDown aria-hidden />
-            </PMButton>
+            {trigger === 'split' ? (
+              <PMButton
+                size={size}
+                variant={variant}
+                disabled={disabled}
+                aria-label={label}
+                paddingInline={2}
+                borderStartRadius={0}
+              >
+                <LuChevronDown aria-hidden />
+              </PMButton>
+            ) : (
+              <PMButton size={size} variant={variant} disabled={disabled}>
+                {label}
+                <LuChevronDown aria-hidden />
+              </PMButton>
+            )}
           </PMMenu.Trigger>
           <PMPortal>
             <PMMenu.Positioner>
@@ -155,6 +183,7 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
           variant={variant}
           disabled={disabled}
           onClick={() => setCodeRepoOpen(true)}
+          borderStartRadius={trigger === 'split' ? 0 : undefined}
         >
           {label}
         </PMButton>
