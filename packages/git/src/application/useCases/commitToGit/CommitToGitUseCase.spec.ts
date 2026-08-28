@@ -6,6 +6,7 @@ import {
   createGitProviderId,
   DeleteItemType,
   GitProvider,
+  GitProviderNotFoundError,
   GitProviderVendor,
   GitProviderVendors,
 } from '@packmind/types';
@@ -201,7 +202,7 @@ describe('CommitToGitUseCase', () => {
           [{ path: 'test.txt', content: 'content' }],
           'Commit message',
         ),
-      ).rejects.toThrow('Git provider not found');
+      ).rejects.toThrow(GitProviderNotFoundError);
     });
 
     it('throws error if files array is empty', async () => {

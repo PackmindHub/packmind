@@ -5,6 +5,7 @@ import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { IGitProvider } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
+  GitProviderNotFoundError,
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
@@ -335,7 +336,7 @@ describe('GitProviderService', () => {
           gitProviderService.getAvailableRepos(
             createGitProviderId('nonexistent-provider'),
           ),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
 
@@ -460,7 +461,7 @@ describe('GitProviderService', () => {
 
         await expect(
           gitProviderService.checkProviderAuth(createGitProviderId('missing')),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
 
@@ -653,7 +654,7 @@ describe('GitProviderService', () => {
             repo,
             branch,
           ),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
 
@@ -815,7 +816,7 @@ describe('GitProviderService', () => {
             marketplaceRepo,
             'packmind/sync',
           ),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toBeInstanceOf(GitProviderNotFoundError);
       });
     });
 

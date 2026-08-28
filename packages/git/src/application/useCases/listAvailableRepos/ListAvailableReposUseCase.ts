@@ -1,5 +1,6 @@
 import { GitProviderService } from '../../GitProviderService';
 import {
+  GitProviderNotFoundError,
   IListAvailableReposUseCase,
   ListAvailableReposCommand,
   ListAvailableReposResponse,
@@ -22,7 +23,7 @@ export class ListAvailableReposUseCase implements IListAvailableReposUseCase {
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     // Business rule: token-auth providers must have a token configured.

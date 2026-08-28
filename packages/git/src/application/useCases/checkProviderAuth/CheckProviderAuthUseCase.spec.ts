@@ -2,6 +2,7 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
+  GitProviderNotFoundError,
   IAccountsPort,
   Organization,
   User,
@@ -129,7 +130,7 @@ describe('CheckProviderAuthUseCase', () => {
     });
 
     it('rejects with Git provider not found', async () => {
-      await expect(executePromise).rejects.toThrow('Git provider not found');
+      await expect(executePromise).rejects.toThrow(GitProviderNotFoundError);
     });
 
     it('never calls the service probe', async () => {
@@ -155,7 +156,7 @@ describe('CheckProviderAuthUseCase', () => {
     });
 
     it('rejects with Git provider not found, not leaking existence', async () => {
-      await expect(executePromise).rejects.toThrow('Git provider not found');
+      await expect(executePromise).rejects.toThrow(GitProviderNotFoundError);
     });
 
     it('never calls the service probe', async () => {

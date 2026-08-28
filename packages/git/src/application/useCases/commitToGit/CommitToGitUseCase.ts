@@ -3,6 +3,7 @@ import {
   FileModification,
   GitCommit,
   GitProvider,
+  GitProviderNotFoundError,
   DeleteItem,
   DeleteItemType,
 } from '@packmind/types';
@@ -47,7 +48,7 @@ export class CommitToGitUseCase {
     );
 
     if (!provider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(repo.providerId);
     }
 
     // Create IGitRepo instance based on provider (token validation delegated to factory)

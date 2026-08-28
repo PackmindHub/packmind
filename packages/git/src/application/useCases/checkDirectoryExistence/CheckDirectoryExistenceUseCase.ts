@@ -1,6 +1,7 @@
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  GitProviderNotFoundError,
   ICheckDirectoryExistenceUseCase,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
@@ -51,7 +52,7 @@ export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceU
       gitRepo.providerId,
     );
     if (!gitProvider) {
-      throw new Error('Git provider not found for this repository');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     // Create git repository instance for technical operations (token validation delegated to factory)

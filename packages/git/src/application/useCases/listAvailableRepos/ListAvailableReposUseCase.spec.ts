@@ -1,6 +1,7 @@
 import {
   GitProvider,
   GitProviderId,
+  GitProviderNotFoundError,
   ListAvailableReposResponse,
   createGitProviderId,
   createOrganizationId,
@@ -193,7 +194,7 @@ describe('ListAvailableReposUseCase', () => {
 
         await expect(
           useCase.execute({ ...baseCommand, gitProviderId: providerId }),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toThrow(GitProviderNotFoundError);
       });
     });
 

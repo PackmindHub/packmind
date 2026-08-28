@@ -3,7 +3,9 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   DeleteGitRepoCommand,
   DeleteGitRepoResponse,
+  GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GitRepoNotFoundError,
   IAccountsPort,
   IDeleteGitRepoUseCase,
   createUserId,
@@ -44,7 +46,7 @@ export class DeleteGitRepoUseCase
     const repository =
       await this.gitRepoService.findGitRepoByIdIgnoringType(repositoryId);
     if (!repository) {
-      throw new Error('Repository not found');
+      throw new GitRepoNotFoundError(repositoryId);
     }
 
     // Business rule: if providerId is specified, validate ownership
@@ -57,7 +59,7 @@ export class DeleteGitRepoUseCase
       repository.providerId,
     );
     if (!gitProvider) {
-      throw new Error('Git provider not found for this repository');
+      throw new GitProviderNotFoundError(repository.providerId);
     }
 
     if (gitProvider.organizationId !== organization.id) {

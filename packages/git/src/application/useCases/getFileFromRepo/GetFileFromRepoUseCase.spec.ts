@@ -3,7 +3,11 @@ import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { GitRepo } from '@packmind/types';
-import { GitProvider, GitProviderVendors } from '@packmind/types';
+import {
+  GitProvider,
+  GitProviderNotFoundError,
+  GitProviderVendors,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 
 describe('GetFileFromRepoUseCase', () => {
@@ -136,7 +140,7 @@ describe('GetFileFromRepoUseCase', () => {
 
       await expect(
         useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),
-      ).rejects.toThrow('Git provider not found');
+      ).rejects.toThrow(GitProviderNotFoundError);
     });
   });
 

@@ -2,6 +2,7 @@ import { CheckDirectoryExistenceUseCase } from './CheckDirectoryExistenceUseCase
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  GitProviderNotFoundError,
   createGitRepoId,
   createGitProviderId,
   createOrganizationId,
@@ -232,7 +233,7 @@ describe('CheckDirectoryExistenceUseCase', () => {
         mockGitProviderService.findGitProviderById.mockResolvedValue(null);
 
         await expect(useCase.execute(validCommand)).rejects.toThrow(
-          'Git provider not found for this repository',
+          GitProviderNotFoundError,
         );
       });
     });

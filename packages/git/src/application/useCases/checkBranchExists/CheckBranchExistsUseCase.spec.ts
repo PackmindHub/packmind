@@ -1,6 +1,7 @@
 import {
   GitProvider,
   GitProviderId,
+  GitProviderNotFoundError,
   createGitProviderId,
   createOrganizationId,
 } from '@packmind/types';
@@ -156,7 +157,7 @@ describe('CheckBranchExistsUseCase', () => {
 
         await expect(
           useCase.execute({ gitProviderId: providerId, ...args }),
-        ).rejects.toThrow('Git provider not found');
+        ).rejects.toThrow(GitProviderNotFoundError);
       });
     });
   });

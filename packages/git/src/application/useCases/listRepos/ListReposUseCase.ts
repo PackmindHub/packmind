@@ -1,5 +1,5 @@
 import { GitRepo } from '@packmind/types';
-import { GitProviderId } from '@packmind/types';
+import { GitProviderId, GitProviderNotFoundError } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 
@@ -25,7 +25,7 @@ export class ListReposUseCase {
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     return this.gitRepoService.findGitReposByProviderId(gitProviderId);

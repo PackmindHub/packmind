@@ -1,5 +1,5 @@
 import { GitProviderService } from '../../GitProviderService';
-import { GitProviderId } from '@packmind/types';
+import { GitProviderId, GitProviderNotFoundError } from '@packmind/types';
 
 export interface CheckBranchExistsUseCaseInput {
   gitProviderId: GitProviderId;
@@ -32,7 +32,7 @@ export class CheckBranchExistsUseCase {
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     // Business rule: token-auth providers must have a token configured.

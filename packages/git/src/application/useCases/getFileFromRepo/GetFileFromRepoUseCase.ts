@@ -1,5 +1,5 @@
 import { GitRepo } from '@packmind/types';
-import { GitProvider } from '@packmind/types';
+import { GitProvider, GitProviderNotFoundError } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
@@ -41,7 +41,7 @@ export class GetFileFromRepoUseCase {
     );
 
     if (!provider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     // Create IGitRepo instance based on provider (token validation delegated to factory)

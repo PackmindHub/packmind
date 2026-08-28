@@ -8,6 +8,7 @@ import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
   GitProviderId,
+  GitProviderNotFoundError,
   ListAvailableReposResponse,
   createGitProviderId,
   createGitRepoId,
@@ -75,7 +76,7 @@ export class GitProviderService {
       await this.gitProviderRepository.findById(gitProviderId);
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     // Create an instance of IGitProvider using the factory (token validation delegated)
@@ -113,7 +114,7 @@ export class GitProviderService {
       await this.gitProviderRepository.findById(gitProviderId);
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     return this.checkAuthForProviderConfig(gitProvider);
@@ -132,7 +133,7 @@ export class GitProviderService {
       await this.gitProviderRepository.findById(gitProviderId);
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     // Create an instance of IGitProvider using the factory (token validation delegated)
@@ -156,7 +157,7 @@ export class GitProviderService {
       await this.gitProviderRepository.findById(gitProviderId);
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
@@ -192,7 +193,7 @@ export class GitProviderService {
       await this.gitProviderRepository.findById(gitProviderId);
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
@@ -233,7 +234,7 @@ export class GitProviderService {
     );
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
@@ -257,7 +258,7 @@ export class GitProviderService {
     );
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
@@ -282,7 +283,7 @@ export class GitProviderService {
     );
 
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     if (gitProvider.authMethod !== 'app' && !gitProvider.token) {
@@ -330,7 +331,7 @@ export class GitProviderService {
     );
 
     if (!gitProvider) {
-      throw new Error('Git provider not found for this repository');
+      throw new GitProviderNotFoundError(gitRepo.providerId);
     }
 
     // Create an instance of IGitRepo using the factory (token validation delegated)

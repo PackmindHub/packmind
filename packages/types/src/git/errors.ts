@@ -56,6 +56,20 @@ export class GitProviderNotFoundError extends Error {
 }
 
 /**
+ * Error thrown when a git repository cannot be found
+ */
+export class GitRepoNotFoundError extends Error {
+  constructor(public readonly gitRepoId: string) {
+    super(`Git repository with ID '${gitRepoId}' not found`);
+    this.name = 'GitRepoNotFoundError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitRepoNotFoundError);
+    }
+  }
+}
+
+/**
  * Error thrown when a git provider doesn't belong to the specified organization
  */
 export class GitProviderOrganizationMismatchError extends Error {

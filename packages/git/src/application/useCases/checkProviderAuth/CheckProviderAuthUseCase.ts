@@ -3,6 +3,7 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CheckProviderAuthCommand,
   CheckProviderAuthResponse,
+  GitProviderNotFoundError,
   IAccountsPort,
   ICheckProviderAuthUseCase,
 } from '@packmind/types';
@@ -40,12 +41,12 @@ export class CheckProviderAuthUseCase
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     if (gitProvider.organizationId !== organizationId) {
       // Don't leak existence of providers in other organizations.
-      throw new Error('Git provider not found');
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     return this.gitProviderService.checkProviderAuth(gitProviderId);
