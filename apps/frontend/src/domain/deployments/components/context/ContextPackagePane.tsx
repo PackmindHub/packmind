@@ -27,6 +27,7 @@ import {
 } from 'react-icons/lu';
 import type {
   OrganizationId,
+  PackageId,
   PackageResponse,
   SkillFile,
   SpaceId,
@@ -56,6 +57,7 @@ import {
 } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
+import type { SyncScope } from '../redesign/components/SyncSurface';
 import { ContextSelectionBar } from './ContextSelectionBar';
 import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
@@ -178,6 +180,17 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  /*
+   * The redistribute flow in progress, or null when there is none. Rendered by
+   * the Distribution tab, owned here.
+   *
+   * Here rather than there because the tab is not the only way in: the header
+   * above both tabs is what carries the package-wide push, and the flow has to
+   * survive the tab switch that opening it from there implies. It also means a
+   * flow started from the list is still there on the way back from the other
+   * tab, where before it was thrown away by the tab unmounting.
+   */
+  const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
   const [addingComponents, setAddingComponents] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -251,6 +264,19 @@ export function ContextPackagePane({
   }, []);
 
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+
+  /*
+   * `installKeys` left undefined means every drifted destination, which is what
+   * `SyncSurface` already reads it as. The caller decides which of the two it
+   * is asking for; this only carries the answer.
+   */
+  const startSync = useCallback(
+    (packageId: PackageId, installKeys?: string[]) =>
+      setSyncScope({ kind: 'package', packageId, installKeys }),
+    [],
+  );
+
+  const closeSync = useCallback(() => setSyncScope(null), []);
 
   /*
    * The batch mutation with one id in it, which is what the package page does
@@ -813,6 +839,9 @@ export function ContextPackagePane({
           packages={driftPackages}
           isLoading={isLoading}
           isError={isError}
+          syncScope={syncScope}
+          onSyncPackage={startSync}
+          onSyncClose={closeSync}
         />
       </PMTabsCompound.Content>
 

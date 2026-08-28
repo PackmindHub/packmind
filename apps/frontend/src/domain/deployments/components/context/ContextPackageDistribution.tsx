@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import { LuGitBranch, LuHistory } from 'react-icons/lu';
-import type { GitProviderId, PackageResponse } from '@packmind/types';
+import type {
+  GitProviderId,
+  PackageId,
+  PackageResponse,
+} from '@packmind/types';
 import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { PackageDistributionList } from '../PackageDistributionList';
 import { PackageDetailPane } from '../redesign/components/PackageDetailPane';
@@ -46,6 +50,9 @@ export function ContextPackageDistribution({
   packages,
   isLoading,
   isError,
+  syncScope,
+  onSyncPackage,
+  onSyncClose,
 }: Readonly<{
   pkg: PackageResponse;
   /** Null when the package has never been distributed anywhere. */
@@ -54,6 +61,22 @@ export function ContextPackageDistribution({
   packages: PackageDrift[];
   isLoading: boolean;
   isError: boolean;
+  /**
+   * The redistribute flow in progress, or null when there is none.
+   *
+   * Held by the pane above rather than here, even though this is what renders
+   * it: the header sitting above both tabs is what will carry the package-wide
+   * push, and a flow two controls can start cannot be owned by one of the two
+   * halves it can be started from.
+   */
+  syncScope: SyncScope | null;
+  /**
+   * Asks the pane above to start the flow, for every drifted destination or for
+   * the subset the list has ticked.
+   */
+  onSyncPackage: (packageId: PackageId, installKeys?: string[]) => void;
+  /** The flow is over, whether it ran or was cancelled. */
+  onSyncClose: () => void;
 }>) {
   const { data: providersResponse, isLoading: isProvidersLoading } =
     useGetGitProvidersQuery();
@@ -61,7 +84,6 @@ export function ContextPackageDistribution({
     () => providersWithTokenSet(providersResponse),
     [providersResponse],
   );
-  const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
   const [view, setView] = useState<DistributionView>('targets');
 
   /*
@@ -77,8 +99,8 @@ export function ContextPackageDistribution({
           scope={syncScope}
           providersWithToken={providersWithToken}
           isProvidersLoading={isProvidersLoading}
-          onCancel={() => setSyncScope(null)}
-          onConfirm={() => setSyncScope(null)}
+          onCancel={onSyncClose}
+          onConfirm={onSyncClose}
         />
       </PMBox>
     );
@@ -156,9 +178,7 @@ export function ContextPackageDistribution({
             surfaceOwnsDistribute
             providersWithToken={providersWithToken}
             isProvidersLoading={isProvidersLoading}
-            onSyncPackage={(packageId, installKeys) =>
-              setSyncScope({ kind: 'package', packageId, installKeys })
-            }
+            onSyncPackage={onSyncPackage}
             /*
              * The events are read on this tab rather than on the package's page,
              * which is what this used to link out to. Reading why a distribution
