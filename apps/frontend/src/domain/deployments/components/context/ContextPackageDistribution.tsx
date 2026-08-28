@@ -148,6 +148,12 @@ export function ContextPackageDistribution({
           <PackageDetailPane
             pkg={drift}
             hideIdentityHeader
+            /*
+             * The header above this pane carries `Distribute`, so the pane does
+             * not need a second package-wide push of its own. Its footer takes
+             * that job over for the drifted ones.
+             */
+            surfaceOwnsDistribute
             providersWithToken={providersWithToken}
             isProvidersLoading={isProvidersLoading}
             onSyncPackage={(packageId, installKeys) =>

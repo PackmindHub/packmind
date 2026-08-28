@@ -112,6 +112,22 @@ type PackageDetailPaneProps = {
    * remain. Defaults to `false` (full header, as on the deployments overview).
    */
   hideIdentityHeader?: boolean;
+  /**
+   * Set by a surface that carries its own package-wide Distribute control, so
+   * the pane stops carrying a second one: the header's `Distribute package`
+   * goes, and the footer's primary takes over the job it did, redistributing
+   * every drifted distribution when none are ticked.
+   *
+   * The pane used to hold both a package-wide push in its header and a
+   * subset push in its footer. Two drift-aware pushes in one pane is the
+   * duplication; the surface's own control is a different question, since it
+   * lists every target and preselects nothing.
+   *
+   * Defaults to `false`, which is the deployments overview and the package
+   * detail page: there the header button is the only package-wide redistribute
+   * on screen.
+   */
+  surfaceOwnsDistribute?: boolean;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -128,6 +144,7 @@ export function PackageDetailPane({
   distributionHistory,
   packagePageHref,
   hideIdentityHeader = false,
+  surfaceOwnsDistribute = false,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -170,6 +187,11 @@ export function PackageDetailPane({
   }, [driftedKeys, lockByKey]);
   const allDriftedLocked =
     driftedKeys.length > 0 && driftedLockCounts.locked === driftedKeys.length;
+  /*
+   * The package-wide push in the header, which only exists to be the one
+   * redistribute on a surface that offers none of its own.
+   */
+  const showHeaderDistribute = hasDrift && !surfaceOwnsDistribute;
   const headerLockTooltip = (() => {
     if (!allDriftedLocked) return null;
     if (driftedLockCounts.inProgress === driftedKeys.length) {
@@ -268,6 +290,15 @@ export function PackageDetailPane({
     return count;
   }, [driftedKeys, selectedKeys, lockByKey]);
 
+  /*
+   * Ticking nothing is the common case: the selection starts empty and there is
+   * no select-all. Where the pane has given up its header button, that would
+   * leave a disabled primary behind a sentence asking for a click first, and a
+   * package behind in six places would cost six ticks to push. So an empty
+   * selection means all of them.
+   */
+  const redistributeAll = surfaceOwnsDistribute && selectedDriftedCount === 0;
+
   return (
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
@@ -278,7 +309,7 @@ export function PackageDetailPane({
         bg="background.primary"
       >
         <PMVStack gap={2.5} align="stretch">
-          {(!hideIdentityHeader || hasDrift) && (
+          {(!hideIdentityHeader || showHeaderDistribute) && (
             <PMHStack gap={3} align="start" justify="space-between">
               {!hideIdentityHeader && (
                 <PMVStack gap={1} align="start" flex={1} minW={0}>
@@ -325,7 +356,7 @@ export function PackageDetailPane({
                   </PMText>
                 </PMVStack>
               )}
-              {hasDrift && (
+              {showHeaderDistribute && (
                 <PMTooltip label={headerLockTooltip} placement="top">
                   <PMButton
                     variant="secondary"
@@ -520,28 +551,43 @@ export function PackageDetailPane({
         >
           <PMHStack gap={3} align="center" justify="space-between">
             <PMText fontSize="xs" color="secondary">
-              {selectedDriftedCount === 0
-                ? 'Select distributions to redistribute.'
-                : `${selectedDriftedCount} of ${behindInstallCount} drifted selected.`}
+              {redistributeAll
+                ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} behind.`
+                : selectedDriftedCount === 0
+                  ? 'Select distributions to redistribute.'
+                  : `${selectedDriftedCount} of ${behindInstallCount} drifted selected.`}
             </PMText>
-            <PMButton
-              variant="primary"
-              size="sm"
-              disabled={selectedDriftedCount === 0}
-              onClick={() =>
-                onSyncPackage(
-                  pkg.id,
-                  Array.from(selectedKeys).filter((k) =>
-                    driftedKeys.includes(k),
-                  ),
-                )
-              }
+            <PMTooltip
+              label={redistributeAll ? headerLockTooltip : null}
+              placement="top"
             >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-              Redistribute to selected
-            </PMButton>
+              <PMButton
+                variant="primary"
+                size="sm"
+                disabled={
+                  redistributeAll
+                    ? allDriftedLocked
+                    : selectedDriftedCount === 0
+                }
+                onClick={() =>
+                  redistributeAll
+                    ? onSyncPackage(pkg.id)
+                    : onSyncPackage(
+                        pkg.id,
+                        Array.from(selectedKeys).filter((k) =>
+                          driftedKeys.includes(k),
+                        ),
+                      )
+                }
+              >
+                <PMIcon fontSize="sm">
+                  <LuRotateCw />
+                </PMIcon>
+                {redistributeAll
+                  ? `Redistribute all ${behindInstallCount}`
+                  : 'Redistribute to selected'}
+              </PMButton>
+            </PMTooltip>
           </PMHStack>
         </PMBox>
       )}
