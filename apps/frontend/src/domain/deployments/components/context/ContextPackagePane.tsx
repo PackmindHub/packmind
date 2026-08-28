@@ -63,7 +63,7 @@ import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
 import { packageLockProfile } from '../redesign/selectors/installLock';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
-import { ContextSelectionBar } from './ContextSelectionBar';
+import { SelectionBar } from '../SelectionBar';
 import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
@@ -835,7 +835,7 @@ export function ContextPackagePane({
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
-              <ContextSelectionBar
+              <SelectionBar
                 count={selection.length}
                 actions={[
                   {

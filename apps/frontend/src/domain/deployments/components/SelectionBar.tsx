@@ -21,6 +21,12 @@ export type SelectionAction = {
 /**
  * What is picked, and what can be done with it.
  *
+ * It sits beside the panes rather than inside the Context surface it was
+ * written for: the install list of `PackageDetailPane` picks the same way, and
+ * that pane is read by three surfaces, only one of which is Context. A shared
+ * bar reaching down into one surface's folder would have made the dependency
+ * point the wrong way.
+ *
  * Sticky at the top of the list rather than at the bottom of the pane: a
  * selection is made by running down a list, so the row that was just ticked is
  * near the pointer and the action has to be too. Pinned because a package with
@@ -36,7 +42,7 @@ export type SelectionAction = {
  * can be given one. Two copies of this bar would have grown two ideas of what a
  * selection looks like.
  */
-export function ContextSelectionBar({
+export function SelectionBar({
   count,
   actions,
   onClear,

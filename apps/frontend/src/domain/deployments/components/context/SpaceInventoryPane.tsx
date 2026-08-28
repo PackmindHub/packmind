@@ -20,7 +20,7 @@ import {
   ContextComponentList,
 } from './ContextComponentList';
 import { ContextChip } from './ContextChip';
-import { ContextSelectionBar } from './ContextSelectionBar';
+import { SelectionBar } from '../SelectionBar';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 
 /**
@@ -240,7 +240,7 @@ export function SpaceInventoryPane({
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
-              <ContextSelectionBar
+              <SelectionBar
                 count={selection.length}
                 actions={[
                   {
