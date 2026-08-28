@@ -71,10 +71,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   *
-   * Note: This may be called twice due to circular dependency with DeploymentsHexa.
-   * The first call initializes with placeholder deploymentPort, the second call
-   * updates with the real deploymentPort via setDeploymentPort().
    */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
@@ -92,16 +88,15 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
-      // Get deployment port - this will be updated later via setDeploymentPort()
-      // due to circular dependency with DeploymentsHexa
+      // Get deployment port - DeploymentsHexa builds its adapter in its
+      // constructor, so this reference is live even though that hexa is
+      // initialized after this one.
       let deploymentPort: IDeploymentPort;
       try {
         deploymentPort =
           registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
       } catch {
-        this.logger.warn(
-          'DeploymentPort not yet available - will be set via setDeploymentPort()',
-        );
+        this.logger.warn('DeploymentPort not available in registry');
         // Create a stub deployment port that will be replaced
         deploymentPort = {} as IDeploymentPort;
       }
@@ -130,58 +125,6 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
       this.logger.info('RecipesHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize RecipesHexa', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Set the deployment port after initialization to avoid circular dependencies.
-   * This is called by the application after DeploymentsHexa is initialized.
-   *
-   * According to the adapter standardization plan, we reinitialize the adapter
-   * with the updated deployment port.
-   */
-  public async setDeploymentPort(
-    registry: HexaRegistry,
-    deploymentPort: IDeploymentPort,
-  ): Promise<void> {
-    this.logger.info('Updating deployment port and reinitializing adapter');
-
-    try {
-      // Get all ports again (they should all be available now)
-      const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
-      const accountsPort =
-        registry.getAdapter<IAccountsPort>(IAccountsPortName);
-      const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
-      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
-
-      // Get JobsService
-      const jobsService = registry.getService(JobsService);
-
-      // Get PackmindEventEmitterService (required) - for domain event emission
-      const eventEmitterService = registry.getService(
-        PackmindEventEmitterService,
-      );
-
-      // Reinitialize adapter with updated ports
-      // The adapter will rebuild delayed jobs with the real deployment port
-      await this.adapter.initialize({
-        [IGitPortName]: gitPort,
-        [IDeploymentPortName]: deploymentPort,
-        [IAccountsPortName]: accountsPort,
-        [ISpacesPortName]: spacesPort,
-        [ILlmPortName]: llmPort,
-        jobsService,
-        eventEmitterService,
-      });
-
-      this.logger.info(
-        'Deployment port updated and adapter reinitialized successfully',
-      );
-    } catch (error) {
-      this.logger.error('Failed to update deployment port', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

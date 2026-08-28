@@ -188,42 +188,6 @@ export class HexaRegistry {
       for (const hexa of this.hexas.values()) {
         await hexa.initialize(this);
       }
-
-      // Post-initialization: Set deployment port on RecipesHexa if both are available
-      // This needs to happen after all hexas are initialized to avoid circular dependencies
-      try {
-        // Find RecipesHexa and DeploymentsHexa by iterating through registered hexas
-        let commandsHexa: BaseHexa | undefined;
-        let deploymentsHexa: BaseHexa | undefined;
-
-        for (const [constructor, hexa] of this.hexas.entries()) {
-          if (constructor.name === 'RecipesHexa') {
-            commandsHexa = hexa;
-          } else if (constructor.name === 'DeploymentsHexa') {
-            deploymentsHexa = hexa;
-          }
-        }
-
-        if (commandsHexa && deploymentsHexa) {
-          // Check if RecipesHexa has setDeploymentPort method (it's a special case for delayed jobs)
-          const commandsHexaWithMethod = commandsHexa as unknown as {
-            setDeploymentPort?: (
-              registry: HexaRegistry,
-              port: unknown,
-            ) => Promise<void>;
-          };
-          if (typeof commandsHexaWithMethod.setDeploymentPort === 'function') {
-            const deploymentPort = deploymentsHexa.getAdapter();
-            await commandsHexaWithMethod.setDeploymentPort(
-              this,
-              deploymentPort,
-            );
-          }
-        }
-      } catch {
-        // RecipesHexa or DeploymentsHexa not available - this is fine
-        // Some test setups might not have both hexas registered
-      }
     } catch (error) {
       // If initialization fails, reset the state
       this.isInitialized = false;

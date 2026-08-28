@@ -92,6 +92,60 @@ class DependentHexa extends BaseHexa {
   }
 }
 
+// Hexas exposing ports that depend on each other, mirroring the
+// Commands <-> Deployments cycle: each builds its adapter in its constructor,
+// so peers resolve a live reference during initialize() whatever the order.
+const IPingPortName = 'IPingPort';
+const IPongPortName = 'IPongPort';
+
+class PingAdapter {
+  public pongPort: PongAdapter | null = null;
+}
+
+class PongAdapter {
+  public pingPort: PingAdapter | null = null;
+}
+
+class PingHexa extends BaseHexa<BaseHexaOpts, PingAdapter> {
+  private readonly adapter = new PingAdapter();
+
+  async initialize(registry: HexaRegistry): Promise<void> {
+    this.adapter.pongPort = registry.getAdapter<PongAdapter>(IPongPortName);
+  }
+
+  getAdapter(): PingAdapter {
+    return this.adapter;
+  }
+
+  getPortName(): string {
+    return IPingPortName;
+  }
+
+  destroy(): void {
+    // Nothing to clean up
+  }
+}
+
+class PongHexa extends BaseHexa<BaseHexaOpts, PongAdapter> {
+  private readonly adapter = new PongAdapter();
+
+  async initialize(registry: HexaRegistry): Promise<void> {
+    this.adapter.pingPort = registry.getAdapter<PingAdapter>(IPingPortName);
+  }
+
+  getAdapter(): PongAdapter {
+    return this.adapter;
+  }
+
+  getPortName(): string {
+    return IPongPortName;
+  }
+
+  destroy(): void {
+    // Nothing to clean up
+  }
+}
+
 describe('HexaRegistry', () => {
   let registry: HexaRegistry;
   let mockDataSource: DataSource;
@@ -416,6 +470,48 @@ describe('HexaRegistry', () => {
 
       it('does not capture error', () => {
         expect(dependentHexa.dependencyError).toBeNull();
+      });
+    });
+  });
+
+  describe('circular port dependencies', () => {
+    describe('when two hexas expose a port to each other', () => {
+      beforeEach(async () => {
+        registry.register(PingHexa);
+        registry.register(PongHexa);
+        await registry.init(mockDataSource);
+      });
+
+      it('gives PingHexa the adapter instance exposed by PongHexa', () => {
+        expect(registry.get(PingHexa).getAdapter().pongPort).toBe(
+          registry.get(PongHexa).getAdapter(),
+        );
+      });
+
+      it('gives PongHexa the adapter instance exposed by PingHexa', () => {
+        expect(registry.get(PongHexa).getAdapter().pingPort).toBe(
+          registry.get(PingHexa).getAdapter(),
+        );
+      });
+    });
+
+    describe('when the same hexas are registered in the opposite order', () => {
+      beforeEach(async () => {
+        registry.register(PongHexa);
+        registry.register(PingHexa);
+        await registry.init(mockDataSource);
+      });
+
+      it('gives PingHexa the adapter instance exposed by PongHexa', () => {
+        expect(registry.get(PingHexa).getAdapter().pongPort).toBe(
+          registry.get(PongHexa).getAdapter(),
+        );
+      });
+
+      it('gives PongHexa the adapter instance exposed by PingHexa', () => {
+        expect(registry.get(PongHexa).getAdapter().pingPort).toBe(
+          registry.get(PingHexa).getAdapter(),
+        );
       });
     });
   });
