@@ -13,7 +13,10 @@ import {
   type GitProviderId,
 } from '@packmind/types';
 
-import { PackageDetailPane } from './PackageDetailPane';
+import {
+  PackageDetailPane,
+  type DistributionHistoryTarget,
+} from './PackageDetailPane';
 import type { PackageDrift, RepoInstall } from '../types';
 
 const providerId = createGitProviderId('provider-1');
@@ -63,25 +66,47 @@ const driftedPackage = (installCount: number): PackageDrift => {
   };
 };
 
+/** The same package, with its last distribution failed on one destination. */
+const packageWithFailure = (installCount: number): PackageDrift => {
+  const pkg = driftedPackage(installCount);
+  return {
+    ...pkg,
+    installLocations: pkg.installLocations.map((location, index) =>
+      index === 0
+        ? { ...location, lastDistributionStatus: DistributionStatus.failure }
+        : location,
+    ),
+  };
+};
+
 const renderPane = (props?: {
   surfaceOwnsDistribute?: boolean;
   installCount?: number;
   onSyncPackage?: (pkgId: string, installKeys?: string[]) => void;
   providersWithToken?: Set<GitProviderId>;
+  distributionHistory?: DistributionHistoryTarget | null;
+  hasFailure?: boolean;
+  surfaceOwnsHistory?: boolean;
 }) => {
   const onSyncPackage = props?.onSyncPackage ?? vi.fn();
+  const installCount = props?.installCount ?? 3;
   render(
     <MemoryRouter>
       <UIProvider>
         <PackageDetailPane
-          pkg={driftedPackage(props?.installCount ?? 3)}
+          pkg={
+            props?.hasFailure
+              ? packageWithFailure(installCount)
+              : driftedPackage(installCount)
+          }
           providersWithToken={
             props?.providersWithToken ?? new Set([providerId])
           }
           isProvidersLoading={false}
           onSyncPackage={onSyncPackage}
-          distributionHistory={null}
+          distributionHistory={props?.distributionHistory ?? null}
           surfaceOwnsDistribute={props?.surfaceOwnsDistribute}
+          surfaceOwnsHistory={props?.surfaceOwnsHistory}
         />
       </UIProvider>
     </MemoryRouter>,
@@ -234,6 +259,99 @@ describe('PackageDetailPane', () => {
       expect(
         screen.getByRole('button', { name: /Distribute package/ }),
       ).toBeDisabled();
+    });
+  });
+  /*
+   * Without this link the events are reachable only from a failure, so a
+   * package that has always been pushed cleanly has no way to see its own
+   * distribution record.
+   */
+  describe('when the surface hands the pane a history page', () => {
+    it('links to it from the summary', () => {
+      renderPane({ distributionHistory: { href: '/history' } });
+
+      expect(
+        screen.getByRole('link', { name: 'Distribution history' }),
+      ).toHaveAttribute('href', '/history');
+    });
+  });
+
+  describe('when the surface shows the events itself', () => {
+    it('asks it to rather than routing away', async () => {
+      const onOpen = vi.fn();
+      renderPane({ distributionHistory: { onOpen } });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Distribution history' }),
+      );
+
+      expect(onOpen).toHaveBeenCalled();
+    });
+  });
+
+  describe('when the surface has no events to point at', () => {
+    it('offers nothing rather than a dead link', () => {
+      renderPane({ distributionHistory: null });
+
+      expect(
+        screen.queryByRole('link', { name: 'Distribution history' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when the surface carries a standing entry of its own', () => {
+    const renderOwned = () =>
+      renderPane({
+        surfaceOwnsHistory: true,
+        distributionHistory: { href: '/history' },
+      });
+
+    it('drops the summary link rather than doubling it', () => {
+      renderOwned();
+
+      expect(
+        screen.queryByRole('link', { name: 'Distribution history' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('still answers a failure with the events', () => {
+      renderPane({
+        surfaceOwnsHistory: true,
+        hasFailure: true,
+        distributionHistory: { href: '/history' },
+      });
+
+      expect(
+        screen.getByRole('link', {
+          name: /View distribution history for error details/,
+        }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when a destination failed its last distribution', () => {
+    const renderFailed = () =>
+      renderPane({
+        hasFailure: true,
+        distributionHistory: { href: '/history' },
+      });
+
+    it('drops the summary link', () => {
+      renderFailed();
+
+      expect(
+        screen.queryByRole('link', { name: 'Distribution history' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('leaves the alert to carry the only way in', () => {
+      renderFailed();
+
+      expect(
+        screen.getByRole('link', {
+          name: /View distribution history for error details/,
+        }),
+      ).toHaveAttribute('href', '/history');
     });
   });
 });

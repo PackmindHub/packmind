@@ -171,11 +171,19 @@ export function ContextPackageDistribution({
             pkg={drift}
             hideIdentityHeader
             /*
-             * The header above this pane carries `Distribute`, so the pane does
-             * not need a second package-wide push of its own. Its footer takes
-             * that job over for the drifted ones.
+             * The header above this pane carries both `Distribute` and, when
+             * something is behind, `Update N destinations`, so the pane does not
+             * need a package-wide push of its own. What it keeps acts on a
+             * selection, which is a different question.
              */
             surfaceOwnsDistribute
+            /*
+             * The `History` chip sits right above this pane, so the pane's own
+             * standing link to the events would be a second door beside the
+             * first. Its failure alert still opens them, which is where the
+             * reader asks for them.
+             */
+            surfaceOwnsHistory
             providersWithToken={providersWithToken}
             isProvidersLoading={isProvidersLoading}
             onSyncPackage={onSyncPackage}
