@@ -23,9 +23,11 @@ import {
   LuPackageMinus,
   LuPencil,
   LuPlus,
+  LuRotateCw,
   LuTrash2,
 } from 'react-icons/lu';
 import type {
+  GitProviderId,
   OrganizationId,
   PackageId,
   PackageResponse,
@@ -41,6 +43,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
   componentEditHref,
@@ -58,6 +61,8 @@ import {
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
 import type { SyncScope } from '../redesign/components/SyncSurface';
+import { packageLockProfile } from '../redesign/selectors/installLock';
+import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import { ContextSelectionBar } from './ContextSelectionBar';
 import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
@@ -70,6 +75,7 @@ import {
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
 import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
@@ -425,6 +431,45 @@ export function ContextPackagePane({
   const distributionBadge = buildDistributionTabBadge(drift);
 
   /*
+   * Read here for the header's own push. React Query answers this and the
+   * identical call inside the Distribution tab from one request, so the two
+   * cannot disagree about which providers can be written to.
+   */
+  const { data: providersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo<Set<GitProviderId>>(
+    () => providersWithTokenSet(providersResponse),
+    [providersResponse],
+  );
+
+  /*
+   * The two package-wide controls, decided together rather than each on its
+   * own: which of them is loud is the whole question, and two conditions
+   * written apart is how both ended up primary in the first place.
+   *
+   * The same lock reading the rail uses, so a package the rail flags as stuck
+   * does not offer a live button here.
+   */
+  const headerActions = buildPackageHeaderActions({
+    drift,
+    isResolved: !isLoading && !isError,
+    lockProfile: drift
+      ? packageLockProfile(drift, providersWithToken, isProvidersLoading)
+      : 'none',
+  });
+
+  /*
+   * The push is asked for from a header that sits above both tabs, and it is
+   * answered on one of them, so the tab comes along. Scoped to nothing, which
+   * `SyncSurface` reads as every drifted destination: the header's count is the
+   * whole of them, and the list is where a subset gets picked.
+   */
+  const updateDriftedDestinations = () => {
+    showTab(DISTRIBUTION_TAB);
+    startSync(pkg.id);
+  };
+
+  /*
    * Built once and rendered by whichever half is on screen. The drawer has to
    * outlive the thing it was opened from: from the list, the move rebuilds that
    * list, and from the detail, the move empties the detail.
@@ -630,9 +675,43 @@ export function ContextPackagePane({
               <DeployPackageButton
                 label="Distribute"
                 size="sm"
+                variant={headerActions.distributeVariant}
                 selectedPackages={[pkg]}
                 cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
               />
+            )}
+            {/*
+              Catching up where the package already is, which is a different
+              question from the menu beside it and now says so. That menu picks
+              a destination; this one has them already and only has to be told
+              to go.
+
+              After the menu rather than before, so the weight still climbs from
+              left to right across the header, and it is the last thing read
+              before the pointer reaches the overflow.
+
+              Absent rather than disabled when nothing is behind: there is
+              nothing to catch up, and a greyed control saying so is a sentence
+              written as a button. Disabled only when every drifted destination
+              is stuck, where the tooltip is the answer.
+            */}
+            {headerActions.update && (
+              <PMTooltip
+                label={headerActions.update.lockTooltip}
+                placement="top"
+              >
+                <PMButton
+                  variant="primary"
+                  size="sm"
+                  disabled={headerActions.update.lockTooltip !== null}
+                  onClick={updateDriftedDestinations}
+                >
+                  <PMIcon fontSize="xs">
+                    <LuRotateCw />
+                  </PMIcon>
+                  {headerActions.update.label}
+                </PMButton>
+              </PMTooltip>
             )}
             {/*
               Deleting the package, behind a menu rather than beside the two
