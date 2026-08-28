@@ -35,65 +35,119 @@ describe('withTransientRetry', () => {
     withTransientRetry(operation, { logger, label: 'test', delayMs: 0 });
 
   describe('when the operation succeeds', () => {
-    it('returns its result without retrying', async () => {
-      const operation = jest.fn().mockResolvedValue('ok');
+    let operation: jest.Mock;
+    let result: unknown;
 
-      await expect(run(operation)).resolves.toBe('ok');
+    beforeEach(async () => {
+      operation = jest.fn().mockResolvedValue('ok');
+      result = await run(operation);
+    });
+
+    it('returns its result', () => {
+      expect(result).toBe('ok');
+    });
+
+    it('attempts once', () => {
       expect(operation).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when the operation fails transiently', () => {
-    it.each([undefined, 408, 429, 500, 502, 503, 504])(
-      'retries once on status %s',
-      async (status) => {
-        const operation = jest
-          .fn()
-          .mockRejectedValueOnce(axiosError(status))
-          .mockResolvedValue('recovered');
+    describe.each([undefined, 408, 429, 500, 502, 503, 504])(
+      'on status %s',
+      (status) => {
+        let operation: jest.Mock;
+        let result: unknown;
 
-        await expect(run(operation)).resolves.toBe('recovered');
-        expect(operation).toHaveBeenCalledTimes(2);
+        beforeEach(async () => {
+          operation = jest
+            .fn()
+            .mockRejectedValueOnce(axiosError(status))
+            .mockResolvedValue('recovered');
+          result = await run(operation);
+        });
+
+        it('returns what the second attempt produced', () => {
+          expect(result).toBe('recovered');
+        });
+
+        it('attempts twice', () => {
+          expect(operation).toHaveBeenCalledTimes(2);
+        });
       },
     );
 
-    it('rethrows when the retry fails too', async () => {
+    describe('when the retry fails too', () => {
       const error = axiosError(503);
-      const operation = jest.fn().mockRejectedValue(error);
+      let operation: jest.Mock;
+      let rejection: unknown;
 
-      await expect(run(operation)).rejects.toBe(error);
-      expect(operation).toHaveBeenCalledTimes(2);
+      beforeEach(async () => {
+        operation = jest.fn().mockRejectedValue(error);
+        rejection = await run(operation).catch((thrown) => thrown);
+      });
+
+      it('rethrows the error', () => {
+        expect(rejection).toBe(error);
+      });
+
+      it('attempts twice', () => {
+        expect(operation).toHaveBeenCalledTimes(2);
+      });
     });
   });
 
   describe('when the operation fails permanently', () => {
-    it.each([401, 403, 404, 422])(
-      'does not retry on status %s',
-      async (status) => {
-        const error = axiosError(status);
-        const operation = jest.fn().mockRejectedValue(error);
+    describe.each([401, 403, 404, 422])('on status %s', (status) => {
+      const error = axiosError(status);
+      let operation: jest.Mock;
+      let rejection: unknown;
 
-        await expect(run(operation)).rejects.toBe(error);
+      beforeEach(async () => {
+        operation = jest.fn().mockRejectedValue(error);
+        rejection = await run(operation).catch((thrown) => thrown);
+      });
+
+      it('rethrows the error', () => {
+        expect(rejection).toBe(error);
+      });
+
+      it('attempts once', () => {
         expect(operation).toHaveBeenCalledTimes(1);
-      },
-    );
+      });
+    });
 
-    it('does not retry non-axios errors', async () => {
+    describe('when the error did not come from axios', () => {
       const error = new Error('boom');
-      const operation = jest.fn().mockRejectedValue(error);
+      let operation: jest.Mock;
+      let rejection: unknown;
 
-      await expect(run(operation)).rejects.toBe(error);
-      expect(operation).toHaveBeenCalledTimes(1);
+      beforeEach(async () => {
+        operation = jest.fn().mockRejectedValue(error);
+        rejection = await run(operation).catch((thrown) => thrown);
+      });
+
+      it('rethrows the error', () => {
+        expect(rejection).toBe(error);
+      });
+
+      it('attempts once', () => {
+        expect(operation).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
   describe('isTransientProviderError', () => {
-    it('treats a response-less axios error as transient', () => {
-      expect(isTransientProviderError(axiosError())).toBe(true);
+    describe('when an axios error carries no response', () => {
+      it('treats it as transient', () => {
+        expect(isTransientProviderError(axiosError())).toBe(true);
+      });
     });
 
-    it('treats a 403 as permanent', () => {
-      expect(isTransientProviderError(axiosError(403))).toBe(false);
+    describe('when the provider answered with a 403', () => {
+      it('treats it as permanent', () => {
+        expect(isTransientProviderError(axiosError(403))).toBe(false);
+      });
     });
   });
 });

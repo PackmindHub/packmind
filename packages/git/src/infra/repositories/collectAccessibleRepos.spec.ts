@@ -53,36 +53,56 @@ describe('collectAccessibleRepos', () => {
   });
 
   describe('when pages are under-filled', () => {
-    it('keeps pulling pages until the target is met', async () => {
-      const fetchPage = jest
-        .fn()
-        .mockResolvedValue({ repositories: [repo('a')], totalPages: 10 });
+    describe('and more pages remain than the target needs', () => {
+      let result: Awaited<ReturnType<typeof collectAccessibleRepos>>;
+      let fetchPage: jest.Mock;
 
-      const result = await collectAccessibleRepos({
-        startPage: 1,
-        fetchPage,
-        logger,
-        targetCount: 3,
+      beforeEach(async () => {
+        fetchPage = jest
+          .fn()
+          .mockResolvedValue({ repositories: [repo('a')], totalPages: 10 });
+
+        result = await collectAccessibleRepos({
+          startPage: 1,
+          fetchPage,
+          logger,
+          targetCount: 3,
+        });
       });
 
-      expect(fetchPage).toHaveBeenCalledTimes(3);
-      expect(result.repositories).toHaveLength(3);
+      it('keeps pulling pages until the target is met', () => {
+        expect(fetchPage).toHaveBeenCalledTimes(3);
+      });
+
+      it('gathers exactly the target count', () => {
+        expect(result.repositories).toHaveLength(3);
+      });
     });
 
-    it('stops when the provider runs out of pages', async () => {
-      const fetchPage = jest
-        .fn()
-        .mockResolvedValue({ repositories: [repo('a')], totalPages: 2 });
+    describe('when the provider runs out of pages first', () => {
+      let result: Awaited<ReturnType<typeof collectAccessibleRepos>>;
+      let fetchPage: jest.Mock;
 
-      const result = await collectAccessibleRepos({
-        startPage: 1,
-        fetchPage,
-        logger,
-        targetCount: 100,
+      beforeEach(async () => {
+        fetchPage = jest
+          .fn()
+          .mockResolvedValue({ repositories: [repo('a')], totalPages: 2 });
+
+        result = await collectAccessibleRepos({
+          startPage: 1,
+          fetchPage,
+          logger,
+          targetCount: 100,
+        });
       });
 
-      expect(fetchPage).toHaveBeenCalledTimes(2);
-      expect(result.lastLoadedPage).toBe(2);
+      it('stops at the last page the provider has', () => {
+        expect(fetchPage).toHaveBeenCalledTimes(2);
+      });
+
+      it('reports that page as the last loaded one', () => {
+        expect(result.lastLoadedPage).toBe(2);
+      });
     });
   });
 
@@ -115,6 +135,9 @@ describe('collectAccessibleRepos', () => {
 
     it('leaves the caller a page to resume from', () => {
       expect(result.lastLoadedPage).toBe(MAX_PROVIDER_PAGES_PER_REQUEST);
+    });
+
+    it('still reports how many pages the provider has', () => {
       expect(result.totalPages).toBe(500);
     });
 
@@ -165,19 +188,27 @@ describe('collectAccessibleRepos', () => {
   });
 
   describe('when resuming from a later page', () => {
-    it('starts at the requested page', async () => {
-      const fetchPage = jest
+    let result: Awaited<ReturnType<typeof collectAccessibleRepos>>;
+    let fetchPage: jest.Mock;
+
+    beforeEach(async () => {
+      fetchPage = jest
         .fn()
         .mockResolvedValue({ repositories: [repo('a')], totalPages: 3 });
 
-      const result = await collectAccessibleRepos({
+      result = await collectAccessibleRepos({
         startPage: 3,
         fetchPage,
         logger,
         targetCount: 100,
       });
+    });
 
+    it('starts at the requested page', () => {
       expect(fetchPage).toHaveBeenCalledWith(3);
+    });
+
+    it('reports that page as the last loaded one', () => {
       expect(result.lastLoadedPage).toBe(3);
     });
   });
