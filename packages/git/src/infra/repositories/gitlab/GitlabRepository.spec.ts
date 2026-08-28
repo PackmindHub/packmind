@@ -1,4 +1,5 @@
 import { GitlabRepository } from './GitlabRepository';
+import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { GitlabRepositoryOptions } from './types';
@@ -42,6 +43,7 @@ describe('GitlabRepository', () => {
     it('creates axios client with correct configuration', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://gitlab.com/api/v4',
+        timeout: PROVIDER_REQUEST_TIMEOUT_MS,
         headers: {
           'Content-Type': 'application/json',
           'PRIVATE-TOKEN': 'test-token',
@@ -61,6 +63,7 @@ describe('GitlabRepository', () => {
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
           baseURL: 'https://custom-gitlab.com/api/v4',
+          timeout: PROVIDER_REQUEST_TIMEOUT_MS,
           headers: {
             'Content-Type': 'application/json',
             'PRIVATE-TOKEN': 'test-token',
@@ -81,6 +84,7 @@ describe('GitlabRepository', () => {
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
           baseURL: 'https://gitlab.company.com/api/v4',
+          timeout: PROVIDER_REQUEST_TIMEOUT_MS,
           headers: {
             'Content-Type': 'application/json',
             'PRIVATE-TOKEN': 'test-token',

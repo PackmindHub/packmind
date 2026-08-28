@@ -8,6 +8,10 @@ import {
   GitFileChange,
   GitFileChangeStatus,
 } from '@packmind/types';
+import {
+  PROVIDER_REQUEST_TIMEOUT_MS,
+  withTransientRetry,
+} from '../http/withTransientRetry';
 
 export interface GithubRepositoryOptions {
   owner: string;
@@ -50,6 +54,7 @@ export class GithubRepository implements IGitRepo {
 
     this.axiosInstance = axios.create({
       baseURL: 'https://api.github.com',
+      timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
@@ -847,9 +852,12 @@ export class GithubRepository implements IGitRepo {
         branch: targetBranch,
       });
 
-      const response = await this.axiosInstance.get(
-        `/repos/${owner}/${repo}/contents/${path}`,
-        { params: { ref: targetBranch } },
+      const response = await withTransientRetry(
+        () =>
+          this.axiosInstance.get(`/repos/${owner}/${repo}/contents/${path}`, {
+            params: { ref: targetBranch },
+          }),
+        { logger: this.logger, label: `contents ${owner}/${repo}/${path}` },
       );
 
       if (response.data && response.data.sha) {

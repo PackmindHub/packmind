@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
+import { PROVIDER_REQUEST_TIMEOUT_MS } from '../http/withTransientRetry';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -49,6 +50,7 @@ describe('GithubRepository', () => {
     it('creates an axios instance with the correct base configuration', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://api.github.com',
+        timeout: PROVIDER_REQUEST_TIMEOUT_MS,
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/vnd.github.v3+json',

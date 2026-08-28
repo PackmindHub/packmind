@@ -4,6 +4,10 @@ import { PackmindLogger } from '@packmind/logger';
 import { GitBranchComparison, GitCommit, GitFileChange } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
 import { extractNextPageUrl } from './linkHeaderUtils';
+import {
+  PROVIDER_REQUEST_TIMEOUT_MS,
+  withTransientRetry,
+} from '../http/withTransientRetry';
 
 const origin = 'GitlabRepository';
 
@@ -52,6 +56,7 @@ export class GitlabRepository implements IGitRepo {
 
     this.axiosInstance = axios.create({
       baseURL: this.baseUrl,
+      timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab docs
@@ -935,13 +940,17 @@ export class GitlabRepository implements IGitRepo {
       });
 
       const encodedPath = encodeURIComponent(path);
-      const response = await this.axiosInstance.get(
-        `/projects/${this.encodedProjectPath}/repository/files/${encodedPath}`,
-        {
-          params: {
-            ref: targetBranch,
-          },
-        },
+      const response = await withTransientRetry(
+        () =>
+          this.axiosInstance.get(
+            `/projects/${this.encodedProjectPath}/repository/files/${encodedPath}`,
+            {
+              params: {
+                ref: targetBranch,
+              },
+            },
+          ),
+        { logger: this.logger, label: `files ${this.projectPath}/${path}` },
       );
 
       if (response.data && response.data.blob_id) {
