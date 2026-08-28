@@ -10,6 +10,34 @@ import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
 const origin = 'GithubTokenResolverFactory';
 
 /**
+ * How long a built App resolver is reused before it is built again.
+ *
+ * Building one is not cheap: it resolves the hosting mode, then reads either
+ * two config values or an `OrganizationGitHubApp` row, and the resolver it
+ * hands back mints an installation token on first use. Building a fresh one per
+ * call threw all of that away every time — so reading three files from one
+ * repository paid for it three times over, which is most of why linking a
+ * marketplace took as long as it did.
+ *
+ * The window is deliberately short. `build()` is also where an on-prem App's
+ * revocation is noticed, and a reused resolver does not re-check it, so a
+ * minute bounds how long a revoked App keeps working while still covering the
+ * bursts this exists for: several reads inside one request, milliseconds apart.
+ */
+const APP_RESOLVER_REUSE_MS = 60_000;
+
+type CachedAppResolver = {
+  resolver: IGithubTokenResolver;
+  /**
+   * The identity the resolver was built against. A provider re-pointed at
+   * another installation or another App rebuilds at once rather than waiting
+   * the window out.
+   */
+  identity: string;
+  expiresAt: number;
+};
+
+/**
  * GitHub App hosting mode used by the factory.
  *
  * Distinct from Packmind's edition (oss vs proprietary): the proprietary
@@ -49,6 +77,13 @@ export interface IConfigProvider {
  *     and uses `provider.appInstallationId` from the row.
  */
 export class GithubTokenResolverFactory {
+  /**
+   * Built App resolvers, by provider. Only App auth is kept: a
+   * `PatTokenResolver` costs nothing to build, and reusing one would keep
+   * handing out a token that has since been rotated.
+   */
+  private readonly appResolvers = new Map<string, CachedAppResolver>();
+
   constructor(
     private readonly config: IConfigProvider = {
       getConfig: (key) => Configuration.getConfig(key),
@@ -94,6 +129,19 @@ export class GithubTokenResolverFactory {
         throw new Error(
           'GithubTokenResolverFactory: provider.appInstallationId must be a positive integer',
         );
+      }
+
+      // Everything below this point is a read — of config, or of the
+      // OrganizationGitHubApp row — followed by a resolver that will mint a
+      // token. A live one for the same identity answers all of it.
+      const identity = `${installationId}:${provider.organizationGitHubAppId ?? ''}`;
+      const cached = this.appResolvers.get(providerId);
+      if (
+        cached &&
+        cached.identity === identity &&
+        Date.now() < cached.expiresAt
+      ) {
+        return cached.resolver;
       }
 
       const mode = await this.resolveMode();
@@ -167,12 +215,20 @@ export class GithubTokenResolverFactory {
         mode,
       });
 
-      return new AppInstallationTokenResolver({
+      const resolver = new AppInstallationTokenResolver({
         providerId,
         appId,
         privateKeyPem,
         installationId,
       });
+
+      this.appResolvers.set(providerId, {
+        resolver,
+        identity,
+        expiresAt: Date.now() + APP_RESOLVER_REUSE_MS,
+      });
+
+      return resolver;
     }
 
     throw new Error(

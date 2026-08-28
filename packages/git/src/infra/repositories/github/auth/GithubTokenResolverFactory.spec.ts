@@ -292,6 +292,104 @@ describe('GithubTokenResolverFactory', () => {
     });
   });
 
+  // Reading one file used to build a whole resolver — mode, config or DB row,
+  // then a freshly minted token. Probing three descriptor paths therefore paid
+  // for it three times, which is what made linking a marketplace slow.
+  describe('reusing a built App resolver', () => {
+    const appProvider = () =>
+      makeProvider({ authMethod: 'app', appInstallationId: 987654 });
+
+    class CountingConfig implements IConfigProvider {
+      calls = 0;
+      constructor(private readonly values: Record<string, string | null>) {}
+      async getConfig(key: string): Promise<string | null> {
+        this.calls += 1;
+        return this.values[key] ?? null;
+      }
+    }
+
+    const appConfig = () =>
+      new CountingConfig({
+        GITHUB_APP_ID: '123456',
+        GITHUB_APP_PRIVATE_KEY:
+          '-----BEGIN RSA PRIVATE KEY-----\nMOCK\n-----END RSA PRIVATE KEY-----',
+      });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    describe('when the same provider is built again inside the window', () => {
+      let first: unknown;
+      let second: unknown;
+      let config: CountingConfig;
+
+      beforeEach(async () => {
+        jest.useFakeTimers();
+        config = appConfig();
+        const factory = new GithubTokenResolverFactory(config, 'shared');
+
+        first = await factory.build(appProvider());
+        jest.advanceTimersByTime(30_000);
+        second = await factory.build(appProvider());
+      });
+
+      it('hands back the very same resolver', () => {
+        expect(second).toBe(first);
+      });
+
+      // The app id and the private key, read once between the two builds.
+      it('reads the App credentials only once', () => {
+        expect(config.calls).toBe(2);
+      });
+    });
+
+    describe('when the window has passed', () => {
+      it('builds a new resolver', async () => {
+        jest.useFakeTimers();
+        const factory = new GithubTokenResolverFactory(appConfig(), 'shared');
+
+        const first = await factory.build(appProvider());
+        jest.advanceTimersByTime(61_000);
+        const second = await factory.build(appProvider());
+
+        expect(second).not.toBe(first);
+      });
+    });
+
+    // A provider re-pointed at another installation must not keep answering
+    // with the old one's token while the window runs down.
+    describe('when the installation behind the provider changed', () => {
+      it('builds a new resolver at once', async () => {
+        jest.useFakeTimers();
+        const factory = new GithubTokenResolverFactory(appConfig(), 'shared');
+
+        const first = await factory.build(appProvider());
+        const second = await factory.build(
+          makeProvider({ authMethod: 'app', appInstallationId: 111222 }),
+        );
+
+        expect(second).not.toBe(first);
+      });
+    });
+
+    // A PAT costs nothing to build, and a rotated one has to take effect now.
+    describe('when the provider uses a personal access token', () => {
+      it('builds a new resolver every time', async () => {
+        const factory = new GithubTokenResolverFactory(appConfig(), 'shared');
+        const provider = makeProvider({
+          authMethod: 'token',
+          token: 'ghp_first',
+        });
+
+        const first = await factory.build(provider);
+        const second = await factory.build(provider);
+
+        expect(second).not.toBe(first);
+      });
+    });
+  });
+
   describe('mode inferred from GITHUB_APP_SLUG when no override is provided', () => {
     describe('when GITHUB_APP_SLUG is set', () => {
       it('uses shared mode and reads env-configured GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY', async () => {
