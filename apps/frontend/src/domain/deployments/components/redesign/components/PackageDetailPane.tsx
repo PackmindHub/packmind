@@ -127,21 +127,6 @@ type PackageDetailPaneProps = {
    * screen.
    */
   surfaceOwnsDistribute?: boolean;
-  /**
-   * Set by a surface that already shows a standing way into the events, so the
-   * pane drops the one in its summary rather than putting a second door beside
-   * the first. The context surface's chip row is that case: the chip sits right
-   * above the pane and the summary is the first thing under it.
-   *
-   * The failure alert and a failed row's own event line still use
-   * `distributionHistory` either way. Those are not a standing entry competing
-   * with the surface's, they are the answer to what the pane has just said went
-   * wrong, offered where it said it.
-   *
-   * Defaults to `false`, which is the deployments overview: there nothing else
-   * on screen reaches the events.
-   */
-  surfaceOwnsHistory?: boolean;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -159,7 +144,6 @@ export function PackageDetailPane({
   packagePageHref,
   hideIdentityHeader = false,
   surfaceOwnsDistribute = false,
-  surfaceOwnsHistory = false,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -429,11 +413,11 @@ export function PackageDetailPane({
               wrong has no way to see what it was pushed with and when.
 
               Hidden while the failure alert is up: that alert sits a few pixels
-              below with a link to the same page and a label that says more, and
-              two links to one page in one viewport is noise, not a second way.
-              Hidden too when the surface already carries a standing entry.
+              below with a link to the same place and a label that says more,
+              and two links to one place in one viewport is noise, not a second
+              way.
             */}
-            {distributionHistory && !hasFailure && !surfaceOwnsHistory && (
+            {distributionHistory && !hasFailure && (
               <PMLink
                 asChild
                 variant="underline"

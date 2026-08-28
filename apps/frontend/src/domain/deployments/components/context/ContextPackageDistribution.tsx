@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react';
-import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
-import { LuGitBranch, LuHistory } from 'react-icons/lu';
+import {
+  PMBox,
+  PMCloseButton,
+  PMDrawer,
+  PMHStack,
+  PMHeading,
+  PMPortal,
+  PMSpinner,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import type {
   GitProviderId,
   PackageId,
@@ -15,23 +24,6 @@ import {
 } from '../redesign/components/SyncSurface';
 import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
 import type { PackageDrift } from '../redesign/types';
-import { ContextChip } from './ContextChip';
-
-/**
- * The two readings of where a package has got to: the targets it is installed in
- * and their drift, and the events that put it there.
- *
- * Peers rather than one screen with a way out of it. The first version made the
- * history a takeover, reached by a button and left by a chevron, which put a
- * button and a destructive control above a pane that already carries its own. A
- * chip per reading says the same thing with none, and there is nothing to go
- * back from, because nothing was left.
- *
- * Still not sections stacked under each other: the drift pane owns its height
- * and scrolls inside it, and a second scrolling region under a scrolling region
- * is how a reader loses both.
- */
-type DistributionView = 'targets' | 'history';
 
 /**
  * The other half of a package: not what it holds, but where it landed and what
@@ -42,7 +34,20 @@ type DistributionView = 'targets' | 'history';
  * screen, is how a package ends up looking up to date in one place and behind in
  * the other; and the answer to "this is behind" has to be the redistribute
  * gesture, which only that pane carries.
-
+ *
+ * One reading and no chip row above it. The targets used to share that row with
+ * the distribution events, which are not a second place the package is: they
+ * answer "what happened" where the targets answer "where is it", and the row
+ * showed it, since the events were the one chip that could carry no count. They
+ * open in a drawer now, from the pane's own link and from its failure alert,
+ * which is where a reader asks for them: a row failed, they want to know why,
+ * they read it and go on with the list still behind them. That left one chip,
+ * always active, choosing between itself and nothing, so the row went with it.
+ *
+ * A drawer and not the takeover the events used to be, which was reached by a
+ * button and left by a chevron. What was wrong with that is that it was
+ * somewhere to be. A drawer is not left, it is closed, and what it covers stays
+ * where it was.
  */
 export function ContextPackageDistribution({
   pkg,
@@ -84,7 +89,7 @@ export function ContextPackageDistribution({
     () => providersWithTokenSet(providersResponse),
     [providersResponse],
   );
-  const [view, setView] = useState<DistributionView>('targets');
+  const [isHistoryOpen, setHistoryOpen] = useState(false);
 
   /*
    * The redistribute flow takes over the pane and leaves the rail alone: the
@@ -108,55 +113,7 @@ export function ContextPackageDistribution({
 
   return (
     <PMVStack align="stretch" gap={0} flex="1" minH={0}>
-      {/*
-        Which reading is on screen, above the pane and not inside it, because the
-        pane is the Distribution surface's and is read by two other screens.
-
-        Shown whatever the git side says, including while it is still loading and
-        when nothing has ever been distributed: the count is what answers "how
-        many places is this in" without a click.
-      */}
-      <PMHStack
-        paddingX={6}
-        paddingTop={4}
-        paddingBottom={3}
-        gap={1}
-        align="center"
-        flexShrink={0}
-      >
-        <ContextChip
-          label="Targets"
-          /*
-           * Absent rather than zero while the query is out: a chip reading
-           * zero and then three is a wrong answer followed by a right one.
-           */
-          count={isLoading ? undefined : (drift?.installLocations.length ?? 0)}
-          icon={<LuGitBranch />}
-          isActive={view === 'targets'}
-          onClick={() => setView('targets')}
-        />
-        <ContextChip
-          label="History"
-          icon={<LuHistory />}
-          isActive={view === 'history'}
-          onClick={() => setView('history')}
-        />
-      </PMHStack>
-
-      {view === 'history' ? (
-        <PMBox
-          flex="1"
-          minH={0}
-          overflowY="auto"
-          paddingX={6}
-          paddingBottom={6}
-        >
-          <PackageDistributionList
-            packageId={pkg.id}
-            title="Distribution history"
-          />
-        </PMBox>
-      ) : isLoading ? (
+      {isLoading ? (
         <PMHStack flex="1" minH={0} justify="center" align="center" gap={2}>
           <PMSpinner />
           <PMText color="secondary">Loading distributions...</PMText>
@@ -177,24 +134,16 @@ export function ContextPackageDistribution({
              * selection, which is a different question.
              */
             surfaceOwnsDistribute
-            /*
-             * The `History` chip sits right above this pane, so the pane's own
-             * standing link to the events would be a second door beside the
-             * first. Its failure alert still opens them, which is where the
-             * reader asks for them.
-             */
-            surfaceOwnsHistory
             providersWithToken={providersWithToken}
             isProvidersLoading={isProvidersLoading}
             onSyncPackage={onSyncPackage}
             /*
-             * The events are read on this tab rather than on the package's page,
-             * which is what this used to link out to. Reading why a distribution
-             * failed is the one thing the reader does next after being told that
-             * it did, and leaving the surface to do it drops everything else
-             * they had open.
+             * The pane's standing link and its failure alert both land here, and
+             * this surface no longer claims to own the entry, so the link is
+             * back in the summary row. That link is the whole of what the chip
+             * used to be, one row lower and next to what prompts it.
              */
-            distributionHistory={{ onOpen: () => setView('history') }}
+            distributionHistory={{ onOpen: () => setHistoryOpen(true) }}
           />
         </PMBox>
       ) : (
@@ -208,6 +157,44 @@ export function ContextPackageDistribution({
           <NeverDistributed />
         </PMBox>
       )}
+
+      {/*
+        Titled with the package and not with "Distribution history": the list
+        inside already carries that as its section heading, and the one thing
+        the drawer can add is which package these events belong to.
+
+        Rendered whether or not anything has asked for it. A drawer mounted by
+        the same click that opens it is one frame of an empty panel sliding in.
+      */}
+      <PMDrawer.Root
+        open={isHistoryOpen}
+        onOpenChange={(event) => setHistoryOpen(event.open)}
+        placement="end"
+        size="xl"
+      >
+        <PMPortal>
+          <PMDrawer.Backdrop />
+          <PMDrawer.Positioner>
+            <PMDrawer.Content>
+              <PMDrawer.Header
+                borderBottom="1px solid"
+                borderColor="border.tertiary"
+              >
+                <PMHeading level="h3">{pkg.name}</PMHeading>
+                <PMDrawer.CloseTrigger asChild>
+                  <PMCloseButton size="sm" />
+                </PMDrawer.CloseTrigger>
+              </PMDrawer.Header>
+              <PMDrawer.Body padding={5}>
+                <PackageDistributionList
+                  packageId={pkg.id}
+                  title="Distribution history"
+                />
+              </PMDrawer.Body>
+            </PMDrawer.Content>
+          </PMDrawer.Positioner>
+        </PMPortal>
+      </PMDrawer.Root>
     </PMVStack>
   );
 }

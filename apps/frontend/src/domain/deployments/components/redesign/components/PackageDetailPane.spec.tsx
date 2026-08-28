@@ -86,7 +86,6 @@ const renderPane = (props?: {
   providersWithToken?: Set<GitProviderId>;
   distributionHistory?: DistributionHistoryTarget | null;
   hasFailure?: boolean;
-  surfaceOwnsHistory?: boolean;
 }) => {
   const onSyncPackage = props?.onSyncPackage ?? vi.fn();
   const installCount = props?.installCount ?? 3;
@@ -106,7 +105,6 @@ const renderPane = (props?: {
           onSyncPackage={onSyncPackage}
           distributionHistory={props?.distributionHistory ?? null}
           surfaceOwnsDistribute={props?.surfaceOwnsDistribute}
-          surfaceOwnsHistory={props?.surfaceOwnsHistory}
         />
       </UIProvider>
     </MemoryRouter>,
@@ -296,36 +294,6 @@ describe('PackageDetailPane', () => {
       expect(
         screen.queryByRole('link', { name: 'Distribution history' }),
       ).not.toBeInTheDocument();
-    });
-  });
-
-  describe('when the surface carries a standing entry of its own', () => {
-    const renderOwned = () =>
-      renderPane({
-        surfaceOwnsHistory: true,
-        distributionHistory: { href: '/history' },
-      });
-
-    it('drops the summary link rather than doubling it', () => {
-      renderOwned();
-
-      expect(
-        screen.queryByRole('link', { name: 'Distribution history' }),
-      ).not.toBeInTheDocument();
-    });
-
-    it('still answers a failure with the events', () => {
-      renderPane({
-        surfaceOwnsHistory: true,
-        hasFailure: true,
-        distributionHistory: { href: '/history' },
-      });
-
-      expect(
-        screen.getByRole('link', {
-          name: /View distribution history for error details/,
-        }),
-      ).toBeInTheDocument();
     });
   });
 
