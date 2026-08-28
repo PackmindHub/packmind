@@ -20,6 +20,10 @@ export type ListAvailableRepositoriesResult = {
   // several provider pages, so callers must resume pagination from
   // `lastLoadedPage + 1` rather than from the requested page.
   lastLoadedPage: number;
+  // True when a provider page failed partway through and the batch was cut
+  // short. The repositories returned are still usable — the rest can be
+  // fetched by resuming pagination — but the list is not the full batch.
+  partial: boolean;
 };
 
 export interface IGitProvider {

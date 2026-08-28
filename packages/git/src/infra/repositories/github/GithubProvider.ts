@@ -9,6 +9,7 @@ import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenR
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
+import { collectAccessibleRepos } from '../collectAccessibleRepos';
 import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
@@ -63,33 +64,25 @@ export class GithubProvider implements IGitProvider {
       // `{ repositories: [...] }`).
       const kind = this.resolver.getKind();
 
-      const repositories: ExternalRepository[] = [];
-      let currentPage = page;
-      let totalPages = page;
-      let lastLoadedPage = page;
-
       // Filtering out repos we lack write access to means a single provider
       // page can yield far fewer than REPOS_PER_PAGE results — sometimes just
-      // one. Keep pulling provider pages until we have a full page worth of
-      // accessible repos or run out of pages, so "load more" returns a
-      // consistent batch instead of a confusing trickle.
-      do {
-        const { rawRepos, totalPages: pageTotalPages } =
-          kind === 'installation'
-            ? await this.fetchInstallationRepos(currentPage)
-            : await this.fetchUserRepos(currentPage);
+      // one — so a batch spans as many provider pages as it needs, bounded.
+      return await collectAccessibleRepos({
+        startPage: page,
+        logger: this.logger,
+        targetCount: REPOS_PER_PAGE,
+        fetchPage: async (currentPage) => {
+          const { rawRepos, totalPages } =
+            kind === 'installation'
+              ? await this.fetchInstallationRepos(currentPage)
+              : await this.fetchUserRepos(currentPage);
 
-        totalPages = pageTotalPages;
-        lastLoadedPage = currentPage;
-        repositories.push(...this.mapAccessibleRepos(rawRepos, kind));
-
-        currentPage += 1;
-      } while (
-        repositories.length < REPOS_PER_PAGE &&
-        lastLoadedPage < totalPages
-      );
-
-      return { repositories, totalPages, lastLoadedPage };
+          return {
+            repositories: this.mapAccessibleRepos(rawRepos, kind),
+            totalPages,
+          };
+        },
+      });
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),

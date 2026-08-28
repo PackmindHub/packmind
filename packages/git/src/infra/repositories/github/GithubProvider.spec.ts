@@ -315,6 +315,49 @@ describe('GithubProvider', () => {
         ).rejects.toThrow('Failed to fetch repositories from GitHub');
       });
     });
+    describe('when a later provider page fails', () => {
+      let result: Awaited<
+        ReturnType<typeof githubProvider.listAvailableRepositories>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get
+          .mockResolvedValueOnce({
+            data: [
+              {
+                name: 'repo-1',
+                owner: { login: 'test-owner' },
+                description: null,
+                private: false,
+                default_branch: 'main',
+                language: null,
+                stargazers_count: 0,
+                permissions: { pull: true, push: true, admin: false },
+              },
+            ],
+            headers: {
+              link: '<https://api.github.com/user/repos?page=9&per_page=100>; rel="last"',
+            },
+          })
+          .mockRejectedValue(new Error('Network error'));
+
+        result = await githubProvider.listAvailableRepositories(1);
+      });
+
+      it('returns the repositories already fetched instead of failing', () => {
+        expect(result.repositories.map((repo) => repo.name)).toEqual([
+          'repo-1',
+        ]);
+      });
+
+      it('flags the batch as partial', () => {
+        expect(result.partial).toBe(true);
+      });
+
+      it('reports the last page that landed so the caller can resume', () => {
+        expect(result.lastLoadedPage).toBe(1);
+      });
+    });
 
     it('throws error with generic message for non-Error objects', async () => {
       const mockError = 'String error';

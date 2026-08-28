@@ -13,6 +13,7 @@ import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
 } from '../http/withTransientRetry';
+import { collectAccessibleRepos } from '../collectAccessibleRepos';
 
 const origin = 'GitlabProvider';
 
@@ -53,35 +54,30 @@ export class GitlabProvider implements IGitProvider {
     try {
       this.logger.debug('Fetching GitLab projects');
 
-      const repositories: ExternalRepository[] = [];
-      let currentPage = page;
-      let totalPages = page;
-      let lastLoadedPage = page;
-
       // Filtering out projects we lack write access to means a single provider
-      // page can yield far fewer than PROJECTS_PER_PAGE results. Keep pulling
-      // provider pages until we have a full page worth of accessible projects
-      // or run out of pages, so "load more" returns a consistent batch instead
-      // of a confusing trickle.
-      do {
-        const { rawProjects, totalPages: pageTotalPages } =
-          await this.fetchProjectsPage(currentPage);
+      // page can yield far fewer than PROJECTS_PER_PAGE results, so a batch
+      // spans as many provider pages as it needs, bounded.
+      const result = await collectAccessibleRepos({
+        startPage: page,
+        logger: this.logger,
+        targetCount: PROJECTS_PER_PAGE,
+        fetchPage: async (currentPage) => {
+          const { rawProjects, totalPages } =
+            await this.fetchProjectsPage(currentPage);
 
-        totalPages = pageTotalPages;
-        lastLoadedPage = currentPage;
-        repositories.push(...this.mapAccessibleProjects(rawProjects));
-
-        currentPage += 1;
-      } while (
-        repositories.length < PROJECTS_PER_PAGE &&
-        lastLoadedPage < totalPages
-      );
-
-      this.logger.info('GitLab projects retrieved successfully', {
-        totalCount: repositories.length,
+          return {
+            repositories: this.mapAccessibleProjects(rawProjects),
+            totalPages,
+          };
+        },
       });
 
-      return { repositories, totalPages, lastLoadedPage };
+      this.logger.info('GitLab projects retrieved successfully', {
+        totalCount: result.repositories.length,
+        partial: result.partial,
+      });
+
+      return result;
     } catch (error) {
       this.logger.error('Failed to list available repositories', {
         error: error instanceof Error ? error.message : String(error),
