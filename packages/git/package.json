@@ -11,7 +11,7 @@
     "@packmind/node-utils": "workspace:*",
     "@packmind/test-utils": "workspace:*",
     "@packmind/types": "workspace:*",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "bullmq": "^5.58.2",
     "typeorm": "0.3.31",
     "uuid": "^11.1.0"
