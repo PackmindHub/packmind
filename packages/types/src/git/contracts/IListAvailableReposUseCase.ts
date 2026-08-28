@@ -24,6 +24,11 @@ export type ListAvailableReposResponse = {
   // callers resume pagination from `lastLoadedPage + 1`, not `currentPage + 1`.
   lastLoadedPage: number;
   repositories: ExternalRepository[];
+  // True when a provider page failed partway through this batch. The
+  // repositories listed are usable, but they are not everything this page
+  // would have held — callers should offer a way to retry the remainder
+  // rather than presenting the list as complete.
+  partial: boolean;
 };
 
 export type IListAvailableReposUseCase = IUseCase<

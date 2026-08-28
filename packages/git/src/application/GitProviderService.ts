@@ -1,5 +1,8 @@
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
-import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+import {
+  GitProviderCredentials,
+  IGitProviderFactory,
+} from '../domain/repositories/IGitProviderFactory';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { CheckAuthResult } from '../domain/repositories/IGitProvider';
 import {
@@ -79,13 +82,14 @@ export class GitProviderService {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);
     // Always filters for write-only repositories
-    const { repositories, totalPages, lastLoadedPage } =
+    const { repositories, totalPages, lastLoadedPage, partial } =
       await providerInstance.listAvailableRepositories(page);
     return {
       currentPage: page,
       availablePages: totalPages,
       lastLoadedPage,
       repositories,
+      partial,
     };
   }
 
@@ -95,7 +99,7 @@ export class GitProviderService {
    * never touches the repository.
    */
   async checkAuthForProviderConfig(
-    gitProvider: GitProvider,
+    gitProvider: GitProviderCredentials,
   ): Promise<CheckAuthResult> {
     const providerInstance =
       await this.gitProviderFactory.createGitProvider(gitProvider);

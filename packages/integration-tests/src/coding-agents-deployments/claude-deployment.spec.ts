@@ -18,735 +18,396 @@ import {
 } from '@packmind/types';
 
 import assert from 'assert';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
+import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
-import { integrationTestWithUser } from '../helpers/integrationTest';
 
-describe(
-  'Claude Deployment Integration',
-  integrationTestWithUser((getContext) => {
-    let testApp: TestApp;
-    let standardsPort: IStandardsPort;
-    let gitPort: IGitPort;
-    let deployerService: DeployerService;
+describe('Claude Deployment Integration', () => {
+  const fixture = createIntegrationTestFixture(integrationTestSchemas);
 
-    let recipe: Command;
-    let standard: Standard;
-    let user: User;
-    let gitRepo: GitRepo;
+  let testApp: TestApp;
+  let standardsPort: IStandardsPort;
+  let gitPort: IGitPort;
+  let deployerService: DeployerService;
 
-    beforeEach(async () => {
-      const testContext = await getContext();
-      testApp = testContext.testApp;
-      user = testContext.user;
+  let recipe: Command;
+  let standard: Standard;
+  let user: User;
+  let gitRepo: GitRepo;
 
-      // Get deployer service from hexa
-      deployerService = testApp.codingAgentHexa.getDeployerService();
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-      // Get adapters
-      standardsPort = testApp.standardsHexa.getAdapter();
-      gitPort = testApp.gitHexa.getAdapter();
+    testApp = new TestApp(fixture.datasource);
+    await testApp.initialize();
 
-      // Create test recipe
-      recipe = await testApp.commandsHexa.getAdapter().captureCommand({
-        ...testContext.basePackmindCommand,
-        name: 'Test Recipe',
-        content: 'This is test recipe content for deployment',
+    // Get deployer service from hexa
+    deployerService = testApp.codingAgentHexa.getDeployerService();
+
+    // Get adapters
+    standardsPort = testApp.standardsHexa.getAdapter();
+    gitPort = testApp.gitHexa.getAdapter();
+
+    const signUpResult = await testApp.accountsHexa
+      .getAdapter()
+      .signUpWithOrganization({
+        email: 'someone@example.com',
+        password: 's3cret!@',
+        method: 'password',
       });
+    user = signUpResult.user;
+    const organization = signUpResult.organization;
 
-      // Create test standard
-      standard = await testApp.standardsHexa.getAdapter().createStandard({
-        ...testContext.basePackmindCommand,
-        name: 'Test Standard',
-        description: 'A test standard for deployment',
-        rules: [
-          { content: 'Use meaningful variable names' },
-          { content: 'Write comprehensive tests' },
-        ],
-        scope: 'backend',
-      });
+    const space = await testApp.spacesHexa
+      .getAdapter()
+      .getSpaceBySlug('global', organization.id);
+    assert(space, 'Default Global space should exist');
 
-      // Create git provider and repository
-      const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
-        ...testContext.basePackmindCommand,
-        gitProvider: {
-          source: GitProviderVendors.github,
-          url: 'https://api.github.com',
-          token: 'test-github-token',
-          authMethod: 'token' as const,
-        },
-      });
+    const basePackmindCommand = {
+      userId: user.id,
+      organizationId: organization.id,
+      spaceId: space.id,
+    };
 
-      gitRepo = await testApp.gitHexa.getAdapter().addGitRepo({
-        ...testContext.basePackmindCommand,
-        gitProviderId: gitProvider.id,
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-      });
+    // Create test recipe
+    recipe = await testApp.commandsHexa.getAdapter().captureCommand({
+      ...basePackmindCommand,
+      name: 'Test Recipe',
+      content: 'This is test recipe content for deployment',
     });
 
-    describe('when CLAUDE.md does not exist', () => {
-      let defaultTarget: Target;
-
-      beforeEach(() => {
-        // Create a default target for testing
-        defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
-        // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-      });
-
-      afterEach(() => {
-        jest.restoreAllMocks();
-      });
-
-      describe('when deploying a single recipe', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-        let commandFile: FileModification | undefined;
-
-        beforeEach(async () => {
-          const recipeVersions: CommandVersion[] = [
-            {
-              id: 'recipe-version-1' as CommandVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              userId: user.id,
-            },
-          ];
-
-          fileUpdates = await deployerService.aggregateCommandDeployments(
-            recipeVersions,
-            gitRepo,
-            [defaultTarget],
-            ['claude'],
-          );
-
-          commandFile = fileUpdates.createOrUpdate.find(
-            (file) =>
-              file.path.startsWith('.claude/commands/') &&
-              file.path.endsWith('.md'),
-          );
-        });
-
-        it('creates two files to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
-
-        it('includes one recipe command file', () => {
-          expect(
-            fileUpdates.createOrUpdate.filter(
-              (f) =>
-                f.path.startsWith('.claude/commands/') &&
-                f.path.endsWith('.md'),
-            ),
-          ).toHaveLength(1);
-        });
-
-        it('has one file to delete for legacy cleanup', () => {
-          expect(fileUpdates.delete).toHaveLength(1);
-        });
-
-        it('deletes legacy .claude/commands/packmind/ directory', () => {
-          expect(fileUpdates.delete).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                path: '.claude/commands/packmind/',
-                type: 'directory',
-              }),
-            ]),
-          );
-        });
-
-        it('creates recipe file in .claude/commands/', () => {
-          expect(commandFile).toBeDefined();
-        });
-
-        it('uses correct path for recipe file', () => {
-          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
-        });
-
-        it('includes frontmatter delimiter', () => {
-          expect(commandFile?.content).toContain('---');
-        });
-
-        it('includes recipe description in frontmatter', () => {
-          expect(commandFile?.content).toContain(
-            `description: '${recipe.name}'`,
-          );
-        });
-
-        it('includes recipe content', () => {
-          expect(commandFile?.content).toContain(recipe.content);
-        });
-
-        it('excludes standards content', () => {
-          expect(commandFile?.content).not.toContain('## Packmind Standards');
-        });
-      });
-
-      describe('when deploying standards', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-        let standardFile: FileModification | undefined;
-
-        beforeEach(async () => {
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          fileUpdates = await deployerService.aggregateStandardsDeployments(
-            standardVersions,
-            gitRepo,
-            [defaultTarget],
-            ['claude'],
-          );
-
-          standardFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.startsWith('.claude/rules/packmind/standard-'),
-          );
-        });
-
-        it('creates two files to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
-
-        it('includes one standard rule file', () => {
-          expect(
-            fileUpdates.createOrUpdate.filter((f) =>
-              f.path.startsWith('.claude/rules/packmind/'),
-            ),
-          ).toHaveLength(1);
-        });
-
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
-        });
-
-        it('creates individual standard file in .claude/rules/packmind/', () => {
-          expect(standardFile).toBeDefined();
-        });
-
-        it('uses correct path for standard file', () => {
-          expect(standardFile?.path).toBe(
-            '.claude/rules/packmind/standard-test-standard.md',
-          );
-        });
-
-        it('includes frontmatter delimiter', () => {
-          expect(standardFile?.content).toContain('---');
-        });
-
-        it('includes standard name in frontmatter', () => {
-          expect(standardFile?.content).toContain("name: 'Test Standard'");
-        });
-
-        it('includes paths in frontmatter', () => {
-          expect(standardFile?.content).toContain('paths:');
-        });
-
-        it('includes alwaysApply setting', () => {
-          expect(standardFile?.content).toContain('alwaysApply: false');
-        });
-
-        it('includes standard description', () => {
-          expect(standardFile?.content).toContain(
-            `description: '${standard.description}'`,
-          );
-        });
-
-        it('includes standard header', () => {
-          expect(standardFile?.content).toContain('# Standard: Test Standard');
-        });
-
-        it('includes first rule content', () => {
-          expect(standardFile?.content).toContain(
-            '* Use meaningful variable names',
-          );
-        });
-
-        it('includes second rule content', () => {
-          expect(standardFile?.content).toContain(
-            '* Write comprehensive tests',
-          );
-        });
-
-        it('includes link to full standard', () => {
-          expect(standardFile?.content).toContain(
-            'Full standard is available here for further request: [Test Standard](../../../.packmind/standards/test-standard.md)',
-          );
-        });
-      });
-
-      describe('when deploying recipes and standards together', () => {
-        let pathMap: Map<string, FileModification>;
-
-        beforeEach(async () => {
-          const recipeVersions: CommandVersion[] = [
-            {
-              id: 'recipe-version-1' as CommandVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              userId: user.id,
-            },
-          ];
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          // Deploy recipes first
-          const commandUpdates =
-            await deployerService.aggregateCommandDeployments(
-              recipeVersions,
-              gitRepo,
-              [defaultTarget],
-              ['claude'],
-            );
-
-          // Deploy standards second
-          const standardsUpdates =
-            await deployerService.aggregateStandardsDeployments(
-              standardVersions,
-              gitRepo,
-              [defaultTarget],
-              ['claude'],
-            );
-
-          // Simulate the file merging that DeployerService does
-          const allUpdates = [commandUpdates, standardsUpdates];
-          pathMap = new Map<string, FileModification>();
-
-          for (const update of allUpdates) {
-            for (const file of update.createOrUpdate) {
-              pathMap.set(file.path, file);
-            }
-          }
-        });
-
-        it('creates three files (recipe, standard, CLAUDE.md clearing)', () => {
-          expect(pathMap.size).toBe(3);
-        });
-
-        it('creates recipe command file in .claude/commands/', () => {
-          expect(pathMap.has(`.claude/commands/${recipe.slug}.md`)).toBe(true);
-        });
-
-        it('creates standard file in .claude/rules/packmind/', () => {
-          expect(
-            pathMap.has('.claude/rules/packmind/standard-test-standard.md'),
-          ).toBe(true);
-        });
-
-        it('creates CLAUDE.md section clearing', () => {
-          expect(pathMap.has('CLAUDE.md')).toBe(true);
-        });
-
-        describe('recipe file content', () => {
-          let commandFile: FileModification | undefined;
-
-          beforeEach(() => {
-            commandFile = pathMap.get(`.claude/commands/${recipe.slug}.md`);
-          });
-
-          it('includes frontmatter delimiter', () => {
-            expect(commandFile?.content).toContain('---');
-          });
-
-          it('includes recipe description in frontmatter', () => {
-            expect(commandFile?.content).toContain(
-              `description: '${recipe.name}'`,
-            );
-          });
-        });
-
-        it('includes standard header in standard file', () => {
-          const standardFile = pathMap.get(
-            '.claude/rules/packmind/standard-test-standard.md',
-          );
-          expect(standardFile?.content).toContain('# Standard: Test Standard');
-        });
-      });
+    // Create test standard
+    standard = await testApp.standardsHexa.getAdapter().createStandard({
+      ...basePackmindCommand,
+      name: 'Test Standard',
+      description: 'A test standard for deployment',
+      rules: [
+        { content: 'Use meaningful variable names' },
+        { content: 'Write comprehensive tests' },
+      ],
+      scope: 'backend',
     });
 
-    // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
-    // They don't check for existing content - that's handled by the merge layer.
-    // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
+    // Create git provider and repository
+    const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
+      ...basePackmindCommand,
+      gitProvider: {
+        source: GitProviderVendors.github,
+        url: 'https://api.github.com',
+        token: 'test-github-token',
+        authMethod: 'token' as const,
+      },
+    });
 
-    describe('when CLAUDE.md exists but is missing recipe instructions', () => {
-      let defaultTarget: Target;
+    gitRepo = await testApp.gitHexa.getAdapter().addGitRepo({
+      ...basePackmindCommand,
+      gitProviderId: gitProvider.id,
+      owner: 'test-owner',
+      repo: 'test-repo',
+      branch: 'main',
+    });
 
-      beforeEach(() => {
-        // Create a default target for testing
-        defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
-        // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
-        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    fixture.snapshot();
+  });
+
+  afterEach(async () => {
+    jest.clearAllMocks();
+    await fixture.cleanup();
+  });
+
+  afterAll(() => fixture.destroy());
+
+  describe('when CLAUDE.md does not exist', () => {
+    let defaultTarget: Target;
+
+    beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('when deploying a single recipe', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let commandFile: FileModification | undefined;
+
+      beforeEach(async () => {
+        const recipeVersions: CommandVersion[] = [
+          {
+            id: 'recipe-version-1' as CommandVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            userId: user.id,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateCommandDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
+
+        commandFile = fileUpdates.createOrUpdate.find(
+          (file) =>
+            file.path.startsWith('.claude/commands/') &&
+            file.path.endsWith('.md'),
+        );
       });
 
-      afterEach(() => {
-        jest.restoreAllMocks();
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
       });
 
-      describe('when generating recipe command file', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-        let commandFile: FileModification;
-
-        beforeEach(async () => {
-          const recipeVersions: CommandVersion[] = [
-            {
-              id: 'recipe-version-1' as CommandVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              userId: user.id,
-            },
-          ];
-
-          fileUpdates = await deployerService.aggregateCommandDeployments(
-            recipeVersions,
-            gitRepo,
-            [defaultTarget],
-            ['claude'],
-          );
-
-          const foundCommandFile = fileUpdates.createOrUpdate.find(
+      it('includes one recipe command file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter(
             (f) =>
               f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
-          );
-          assert(foundCommandFile, 'Recipe file should exist');
-          commandFile = foundCommandFile;
-        });
-
-        it('creates two files to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
-
-        it('includes one recipe command file', () => {
-          expect(
-            fileUpdates.createOrUpdate.filter(
-              (f) =>
-                f.path.startsWith('.claude/commands/') &&
-                f.path.endsWith('.md'),
-            ),
-          ).toHaveLength(1);
-        });
-
-        it('has one file to delete for legacy cleanup', () => {
-          expect(fileUpdates.delete).toHaveLength(1);
-        });
-
-        it('deletes legacy .claude/commands/packmind/ directory', () => {
-          expect(fileUpdates.delete).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                path: '.claude/commands/packmind/',
-                type: 'directory',
-              }),
-            ]),
-          );
-        });
-
-        it('uses correct path for recipe file', () => {
-          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
-        });
-
-        it('includes frontmatter delimiter', () => {
-          expect(commandFile.content).toContain('---');
-        });
-
-        it('includes recipe description in frontmatter', () => {
-          expect(commandFile.content).toContain(
-            `description: '${recipe.name}'`,
-          );
-        });
-
-        it('includes recipe content', () => {
-          expect(commandFile.content).toContain(recipe.content);
-        });
-
-        it('excludes user content', () => {
-          expect(commandFile.content).not.toContain('# Some User Instructions');
-        });
-
-        it('excludes standards content', () => {
-          expect(commandFile.content).not.toContain('# Packmind Standards');
-        });
+          ),
+        ).toHaveLength(1);
       });
 
-      describe('when generating individual standard file', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-        let standardFile: FileModification;
+      it('has one file to delete for legacy cleanup', () => {
+        expect(fileUpdates.delete).toHaveLength(1);
+      });
 
-        beforeEach(async () => {
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
+      it('deletes legacy .claude/commands/packmind/ directory', () => {
+        expect(fileUpdates.delete).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+              type: 'directory',
+            }),
+          ]),
+        );
+      });
 
-          fileUpdates = await deployerService.aggregateStandardsDeployments(
-            standardVersions,
-            gitRepo,
-            [defaultTarget],
-            ['claude'],
-          );
+      it('creates recipe file in .claude/commands/', () => {
+        expect(commandFile).toBeDefined();
+      });
 
-          const foundStandardFile = fileUpdates.createOrUpdate.find((f) =>
+      it('uses correct path for recipe file', () => {
+        expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(commandFile?.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(commandFile?.content).toContain(`description: '${recipe.name}'`);
+      });
+
+      it('includes recipe content', () => {
+        expect(commandFile?.content).toContain(recipe.content);
+      });
+
+      it('excludes standards content', () => {
+        expect(commandFile?.content).not.toContain('## Packmind Standards');
+      });
+    });
+
+    describe('when deploying standards', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let standardFile: FileModification | undefined;
+
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
+
+        standardFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.startsWith('.claude/rules/packmind/standard-'),
+        );
+      });
+
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one standard rule file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/rules/packmind/'),
-          );
-          assert(foundStandardFile, 'Standard file should exist');
-          standardFile = foundStandardFile;
-        });
+          ),
+        ).toHaveLength(1);
+      });
 
-        it('creates two files to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
 
-        it('includes one standard rule file', () => {
-          expect(
-            fileUpdates.createOrUpdate.filter((f) =>
-              f.path.startsWith('.claude/rules/packmind/'),
-            ),
-          ).toHaveLength(1);
-        });
+      it('creates individual standard file in .claude/rules/packmind/', () => {
+        expect(standardFile).toBeDefined();
+      });
 
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
-        });
+      it('uses correct path for standard file', () => {
+        expect(standardFile?.path).toBe(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+      });
 
-        it('uses correct path for standard file', () => {
-          expect(standardFile?.path).toBe(
-            '.claude/rules/packmind/standard-test-standard.md',
-          );
-        });
+      it('includes frontmatter delimiter', () => {
+        expect(standardFile?.content).toContain('---');
+      });
 
-        it('includes frontmatter delimiter', () => {
-          expect(standardFile.content).toContain('---');
-        });
+      it('includes standard name in frontmatter', () => {
+        expect(standardFile?.content).toContain("name: 'Test Standard'");
+      });
 
-        it('includes standard name in frontmatter', () => {
-          expect(standardFile.content).toContain("name: 'Test Standard'");
-        });
+      it('includes paths in frontmatter', () => {
+        expect(standardFile?.content).toContain('paths:');
+      });
 
-        it('includes standard header', () => {
-          expect(standardFile.content).toContain('# Standard: Test Standard');
-        });
+      it('includes alwaysApply setting', () => {
+        expect(standardFile?.content).toContain('alwaysApply: false');
+      });
 
-        it('includes first rule content', () => {
-          expect(standardFile.content).toContain(
-            '* Use meaningful variable names',
-          );
-        });
+      it('includes standard description', () => {
+        expect(standardFile?.content).toContain(
+          `description: '${standard.description}'`,
+        );
+      });
 
-        it('includes second rule content', () => {
-          expect(standardFile.content).toContain('* Write comprehensive tests');
-        });
+      it('includes standard header', () => {
+        expect(standardFile?.content).toContain('# Standard: Test Standard');
+      });
 
-        it('excludes user content', () => {
-          expect(standardFile.content).not.toContain(
-            '# Some User Instructions',
-          );
-        });
+      it('includes first rule content', () => {
+        expect(standardFile?.content).toContain(
+          '* Use meaningful variable names',
+        );
+      });
 
-        it('excludes recipes content', () => {
-          expect(standardFile.content).not.toContain('# Packmind Recipes');
-        });
+      it('includes second rule content', () => {
+        expect(standardFile?.content).toContain('* Write comprehensive tests');
+      });
+
+      it('includes link to full standard', () => {
+        expect(standardFile?.content).toContain(
+          'Full standard is available here for further request: [Test Standard](../../../.packmind/standards/test-standard.md)',
+        );
       });
     });
 
-    describe('unit tests for ClaudeDeployer', () => {
-      let defaultTarget: Target;
-      let claudeDeployer: ClaudeDeployer;
+    describe('when deploying recipes and standards together', () => {
+      let pathMap: Map<string, FileModification>;
 
-      beforeEach(() => {
-        defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
-        // standardsPort and gitPort are already initialized in the main beforeEach
-        claudeDeployer = new ClaudeDeployer(standardsPort, gitPort);
-      });
+      beforeEach(async () => {
+        const recipeVersions: CommandVersion[] = [
+          {
+            id: 'recipe-version-1' as CommandVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            userId: user.id,
+          },
+        ];
 
-      describe('when deploying empty recipe list', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-        beforeEach(async () => {
-          jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
-          fileUpdates = await claudeDeployer.deployCommands(
-            [],
-            gitRepo,
-            defaultTarget,
-          );
-        });
-
-        it('creates one file to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(1);
-        });
-
-        it('includes CLAUDE.md clearing section', () => {
-          expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
-        });
-
-        it('has one file to delete for legacy cleanup', () => {
-          expect(fileUpdates.delete).toHaveLength(1);
-        });
-
-        it('deletes legacy .claude/commands/packmind/ directory', () => {
-          expect(fileUpdates.delete).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                path: '.claude/commands/packmind/',
-                type: 'directory',
-              }),
-            ]),
-          );
-        });
-      });
-
-      describe('when deploying empty standards list', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-
-        beforeEach(async () => {
-          jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
-          fileUpdates = await claudeDeployer.deployStandards(
-            [],
-            gitRepo,
-            defaultTarget,
-          );
-        });
-
-        it('creates one file to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(1);
-        });
-
-        it('includes CLAUDE.md clearing section', () => {
-          expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
-        });
-
-        it('has no files to delete', () => {
-          expect(fileUpdates.delete).toHaveLength(0);
-        });
-      });
-
-      describe('when GitHexa errors occur', () => {
-        let fileUpdates: {
-          createOrUpdate: FileModification[];
-          delete: { path: string }[];
-        };
-        let commandFile: FileModification | undefined;
-
-        beforeEach(async () => {
-          jest
-            .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-            .mockRejectedValue(new Error('GitHub API error'));
-
-          const recipeVersions: CommandVersion[] = [
-            {
-              id: 'recipe-version-1' as CommandVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              userId: user.id,
-            },
-          ];
-
-          fileUpdates = await claudeDeployer.deployCommands(
+        // Deploy recipes first
+        const commandUpdates =
+          await deployerService.aggregateCommandDeployments(
             recipeVersions,
             gitRepo,
-            defaultTarget,
+            [defaultTarget],
+            ['claude'],
           );
 
-          commandFile = fileUpdates.createOrUpdate.find(
-            (f) =>
-              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
+        // Deploy standards second
+        const standardsUpdates =
+          await deployerService.aggregateStandardsDeployments(
+            standardVersions,
+            gitRepo,
+            [defaultTarget],
+            ['claude'],
           );
-        });
 
-        it('creates two files to update', () => {
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
+        // Simulate the file merging that DeployerService does
+        const allUpdates = [commandUpdates, standardsUpdates];
+        pathMap = new Map<string, FileModification>();
 
-        it('has one file to delete for legacy cleanup', () => {
-          expect(fileUpdates.delete).toHaveLength(1);
-        });
+        for (const update of allUpdates) {
+          for (const file of update.createOrUpdate) {
+            pathMap.set(file.path, file);
+          }
+        }
+      });
 
-        it('deletes legacy .claude/commands/packmind/ directory', () => {
-          expect(fileUpdates.delete).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                path: '.claude/commands/packmind/',
-                type: 'directory',
-              }),
-            ]),
-          );
-        });
+      it('creates three files (recipe, standard, CLAUDE.md clearing)', () => {
+        expect(pathMap.size).toBe(3);
+      });
 
-        it('sets correct recipe file path', () => {
-          expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+      it('creates recipe command file in .claude/commands/', () => {
+        expect(pathMap.has(`.claude/commands/${recipe.slug}.md`)).toBe(true);
+      });
+
+      it('creates standard file in .claude/rules/packmind/', () => {
+        expect(
+          pathMap.has('.claude/rules/packmind/standard-test-standard.md'),
+        ).toBe(true);
+      });
+
+      it('creates CLAUDE.md section clearing', () => {
+        expect(pathMap.has('CLAUDE.md')).toBe(true);
+      });
+
+      describe('recipe file content', () => {
+        let commandFile: FileModification | undefined;
+
+        beforeEach(() => {
+          commandFile = pathMap.get(`.claude/commands/${recipe.slug}.md`);
         });
 
         it('includes frontmatter delimiter', () => {
@@ -759,6 +420,366 @@ describe(
           );
         });
       });
+
+      it('includes standard header in standard file', () => {
+        const standardFile = pathMap.get(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+        expect(standardFile?.content).toContain('# Standard: Test Standard');
+      });
     });
-  }),
-);
+  });
+
+  // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
+  // They don't check for existing content - that's handled by the merge layer.
+  // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
+
+  describe('when CLAUDE.md exists but is missing recipe instructions', () => {
+    let defaultTarget: Target;
+
+    beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('when generating recipe command file', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let commandFile: FileModification;
+
+      beforeEach(async () => {
+        const recipeVersions: CommandVersion[] = [
+          {
+            id: 'recipe-version-1' as CommandVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            userId: user.id,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateCommandDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
+
+        const foundCommandFile = fileUpdates.createOrUpdate.find(
+          (f) =>
+            f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
+        );
+        assert(foundCommandFile, 'Recipe file should exist');
+        commandFile = foundCommandFile;
+      });
+
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one recipe command file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter(
+            (f) =>
+              f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
+          ),
+        ).toHaveLength(1);
+      });
+
+      it('has one file to delete for legacy cleanup', () => {
+        expect(fileUpdates.delete).toHaveLength(1);
+      });
+
+      it('deletes legacy .claude/commands/packmind/ directory', () => {
+        expect(fileUpdates.delete).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+              type: 'directory',
+            }),
+          ]),
+        );
+      });
+
+      it('uses correct path for recipe file', () => {
+        expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(commandFile.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(commandFile.content).toContain(`description: '${recipe.name}'`);
+      });
+
+      it('includes recipe content', () => {
+        expect(commandFile.content).toContain(recipe.content);
+      });
+
+      it('excludes user content', () => {
+        expect(commandFile.content).not.toContain('# Some User Instructions');
+      });
+
+      it('excludes standards content', () => {
+        expect(commandFile.content).not.toContain('# Packmind Standards');
+      });
+    });
+
+    describe('when generating individual standard file', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let standardFile: FileModification;
+
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
+
+        const foundStandardFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/rules/packmind/'),
+        );
+        assert(foundStandardFile, 'Standard file should exist');
+        standardFile = foundStandardFile;
+      });
+
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one standard rule file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/rules/packmind/'),
+          ),
+        ).toHaveLength(1);
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('uses correct path for standard file', () => {
+        expect(standardFile?.path).toBe(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(standardFile.content).toContain('---');
+      });
+
+      it('includes standard name in frontmatter', () => {
+        expect(standardFile.content).toContain("name: 'Test Standard'");
+      });
+
+      it('includes standard header', () => {
+        expect(standardFile.content).toContain('# Standard: Test Standard');
+      });
+
+      it('includes first rule content', () => {
+        expect(standardFile.content).toContain(
+          '* Use meaningful variable names',
+        );
+      });
+
+      it('includes second rule content', () => {
+        expect(standardFile.content).toContain('* Write comprehensive tests');
+      });
+
+      it('excludes user content', () => {
+        expect(standardFile.content).not.toContain('# Some User Instructions');
+      });
+
+      it('excludes recipes content', () => {
+        expect(standardFile.content).not.toContain('# Packmind Recipes');
+      });
+    });
+  });
+
+  describe('unit tests for ClaudeDeployer', () => {
+    let defaultTarget: Target;
+    let claudeDeployer: ClaudeDeployer;
+
+    beforeEach(() => {
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      // standardsPort and gitPort are already initialized in the main beforeEach
+      claudeDeployer = new ClaudeDeployer(standardsPort, gitPort);
+    });
+
+    describe('when deploying empty recipe list', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+        fileUpdates = await claudeDeployer.deployCommands(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes CLAUDE.md clearing section', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('has one file to delete for legacy cleanup', () => {
+        expect(fileUpdates.delete).toHaveLength(1);
+      });
+
+      it('deletes legacy .claude/commands/packmind/ directory', () => {
+        expect(fileUpdates.delete).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+              type: 'directory',
+            }),
+          ]),
+        );
+      });
+    });
+
+    describe('when deploying empty standards list', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+        fileUpdates = await claudeDeployer.deployStandards(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes CLAUDE.md clearing section', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when GitHexa errors occur', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let commandFile: FileModification | undefined;
+
+      beforeEach(async () => {
+        jest
+          .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
+          .mockRejectedValue(new Error('GitHub API error'));
+
+        const recipeVersions: CommandVersion[] = [
+          {
+            id: 'recipe-version-1' as CommandVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            userId: user.id,
+          },
+        ];
+
+        fileUpdates = await claudeDeployer.deployCommands(
+          recipeVersions,
+          gitRepo,
+          defaultTarget,
+        );
+
+        commandFile = fileUpdates.createOrUpdate.find(
+          (f) =>
+            f.path.startsWith('.claude/commands/') && f.path.endsWith('.md'),
+        );
+      });
+
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('has one file to delete for legacy cleanup', () => {
+        expect(fileUpdates.delete).toHaveLength(1);
+      });
+
+      it('deletes legacy .claude/commands/packmind/ directory', () => {
+        expect(fileUpdates.delete).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+              type: 'directory',
+            }),
+          ]),
+        );
+      });
+
+      it('sets correct recipe file path', () => {
+        expect(commandFile?.path).toBe(`.claude/commands/${recipe.slug}.md`);
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(commandFile?.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(commandFile?.content).toContain(`description: '${recipe.name}'`);
+      });
+    });
+  });
+});

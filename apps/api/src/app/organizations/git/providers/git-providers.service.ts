@@ -145,6 +145,9 @@ export class GitProvidersService {
       // `completeGithubAppInstall` method which sets this true because no PAT
       // is captured at install time.
       allowTokenlessProvider: false,
+      // A human just typed this token, so check it works before the connection
+      // is created — the App-installation flow does not, having no PAT to check.
+      verifyCredentials: true,
       source,
     };
 

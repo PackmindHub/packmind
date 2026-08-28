@@ -155,6 +155,7 @@ describe('GitProviderService', () => {
           repositories: mockRepos,
           totalPages: 1,
           lastLoadedPage: 1,
+          partial: false,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-1'),
@@ -189,6 +190,7 @@ describe('GitProviderService', () => {
           repositories: [],
           totalPages: 10,
           lastLoadedPage: 3,
+          partial: false,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-1'),
@@ -229,6 +231,7 @@ describe('GitProviderService', () => {
           repositories: mockRepos,
           totalPages: 1,
           lastLoadedPage: 1,
+          partial: false,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-2'),
@@ -290,6 +293,7 @@ describe('GitProviderService', () => {
           repositories: mockRepos,
           totalPages: 1,
           lastLoadedPage: 1,
+          partial: false,
         });
         result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-3'),

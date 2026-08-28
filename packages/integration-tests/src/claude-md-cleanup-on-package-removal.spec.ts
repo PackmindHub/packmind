@@ -42,9 +42,11 @@ describe('CLAUDE.md cleanup on package removal', () => {
   let commitToGit: jest.Mock;
   let getFileFromRepo: jest.Mock;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
@@ -57,8 +59,15 @@ describe('CLAUDE.md cleanup on package removal', () => {
     standard = await dataFactory.withStandard({ name: 'Test Standard' });
 
     commit = await createGitCommit();
-    commitToGit = jest.fn().mockResolvedValue(commit);
+
+    fixture.snapshot();
+  });
+
+  // Spies are restored after each test, so the git stubs are re-installed per test.
+  beforeEach(() => {
     const gitAdapter = testApp.gitHexa.getAdapter();
+
+    commitToGit = jest.fn().mockResolvedValue(commit);
     jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
     getFileFromRepo = jest.fn();

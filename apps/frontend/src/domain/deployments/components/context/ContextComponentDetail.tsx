@@ -136,8 +136,10 @@ export function ContextComponentDetail({
             proposals. It keeps its own label rather than saying "Open page",
             so the button says what will be on screen.
 
-            Secondary, the same weight as the pane's own "Open package": both
-            are the way out of this surface to a page that still holds more.
+            Secondary, because reading the component is what this screen is
+            for. The package header used to carry a button like it and no longer
+            does: everything its page held is on this surface now. A component's
+            page is not, which is why this one is still here.
           */}
           <PMButton variant="secondary" size="sm" asChild>
             <Link to={component.href}>{`Open ${label.toLowerCase()}`}</Link>

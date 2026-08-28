@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { PMBox, PMHStack, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import type { PackageId, SkillId } from '@packmind/types';
@@ -14,7 +14,6 @@ import {
   SKILL_MD_FILENAME,
 } from '../../../skills/utils/skillMdUtils';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
-import { routes } from '../../../../shared/utils/routes';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { PACKAGE_PARAM } from '../../hooks/useCreateIntoPackage';
 import { buildPackageContext } from './buildPackageContext';
@@ -30,7 +29,8 @@ import {
   selectSkillFile,
   sortFilesByPath,
 } from './buildComponentDetail';
-import { PackagesBlankState } from '../PackagesBlankState';
+import { ContextBlankState } from './ContextBlankState';
+import { CreatePackageDrawer } from './CreatePackageDrawer';
 import { ContextPackageRail } from './ContextPackageRail';
 import { ContextSkillFileRail } from './ContextSkillFileRail';
 import { ContextPackagePane } from './ContextPackagePane';
@@ -59,6 +59,14 @@ const INVENTORY_VALUE = 'all';
  */
 const COVERAGE_PARAM = 'coverage';
 const NO_PACKAGE_VALUE: InventoryCoverage = 'none';
+
+/**
+ * Why a package is being created, which decides what happens to it once it
+ * exists: `open-it` for the reader who asked for a package, `stay` for the one
+ * who asked for somewhere to put something and is still looking at the drawer
+ * they asked from.
+ */
+type CreateIntent = 'open-it' | 'stay';
 
 /**
  * The Context surface of a space: its packages on the left, what the selected
@@ -284,6 +292,21 @@ export function SpaceContextSurface() {
     (packageId: PackageId) => show(packageId),
     [show],
   );
+
+  /*
+   * Naming a new package, held here and not in the rail that opens it, because
+   * what happens once it exists is a selection and the selection is this
+   * component's to make.
+   *
+   * Which is not the same answer everywhere, hence an intent rather than a
+   * boolean. Asked for from the rail or the blank state, the new package is what
+   * the reader wants to look at next. Asked for from a move with nowhere to go,
+   * it is a target for the drawer still open on screen: opening it would remount
+   * the pane under that drawer and throw away the components picked to move.
+   */
+  const [creating, setCreating] = useState<CreateIntent | null>(null);
+  const createAndOpen = useCallback(() => setCreating('open-it'), []);
+  const createAndStay = useCallback(() => setCreating('stay'), []);
   const showInventory = useCallback(() => show(INVENTORY_VALUE), [show]);
   const showOrphans = useCallback(
     () => show(INVENTORY_VALUE, NO_PACKAGE_VALUE),
@@ -325,96 +348,127 @@ export function SpaceContextSurface() {
     );
   }
 
+  /*
+   * Mounted only while it is open, like the drawers the pane holds, so the name
+   * field starts empty every time. Built here rather than twice below because
+   * the blank state is one of the two places that opens it, and that branch
+   * returns before the surface itself does.
+   */
+  const packageDrawer = creating !== null && (
+    <CreatePackageDrawer
+      spaceId={spaceId}
+      organizationId={organization.id}
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setCreating(null);
+      }}
+      onCreated={(packageId) => {
+        if (creating === 'open-it') selectPackage(packageId);
+      }}
+    />
+  );
+
   if (packages.length === 0) {
-    return <PackagesBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />;
+    return (
+      <>
+        <ContextBlankState onCreate={createAndOpen} />
+        {packageDrawer}
+      </>
+    );
   }
 
   return (
-    <PMBox
-      bg="background.primary"
-      borderWidth="1px"
-      borderColor="border.tertiary"
-      borderRadius="md"
-      overflow="hidden"
-      height="calc(100vh - 120px)"
-      minHeight="480px"
-    >
-      <PMHStack gap={0} align="stretch" height="100%">
-        {/*
+    <>
+      <PMBox
+        bg="background.primary"
+        borderWidth="1px"
+        borderColor="border.tertiary"
+        borderRadius="md"
+        overflow="hidden"
+        height="calc(100vh - 120px)"
+        minHeight="480px"
+      >
+        <PMHStack gap={0} align="stretch" height="100%">
+          {/*
           The rail is the open skill's file tree while there is one with files
           in it, and the space's packages the rest of the time. The inventory
           holds it back: an address can name a component and the inventory at
           once, and the tree of something the pane is not showing would be a
           third thing on screen, answering to nobody.
         */}
-        {selectedPackage && detail && treeFiles && !showingInventory ? (
-          <ContextSkillFileRail
-            skillName={detail.name}
-            packageName={selectedPackage.name}
-            backHref={packageDetailHref(searchParams, selectedPackage.id)}
-            files={treeFiles}
-            selectedPath={selectedFile?.path ?? SKILL_MD_FILENAME}
-            onSelectFile={selectFile}
-          />
-        ) : (
-          <ContextPackageRail
-            packages={packages}
-            catalogue={catalogue}
-            orgSlug={orgSlug}
-            spaceSlug={spaceSlug}
-            selectedPackageId={selectedPackage?.id ?? null}
-            showingInventory={showingInventory}
-            inventoryCount={inventoryCount}
-            orphanCount={orphanCount}
-            showingOrphans={showingInventory && coverage === NO_PACKAGE_VALUE}
-            onSelect={selectPackage}
-            onShowInventory={showInventory}
-            onShowOrphans={showOrphans}
-            createPackageHref={routes.space.toCreatePackage(orgSlug, spaceSlug)}
-          />
-        )}
-        {/*
+          {selectedPackage && detail && treeFiles && !showingInventory ? (
+            <ContextSkillFileRail
+              skillName={detail.name}
+              packageName={selectedPackage.name}
+              backHref={packageDetailHref(searchParams, selectedPackage.id)}
+              files={treeFiles}
+              selectedPath={selectedFile?.path ?? SKILL_MD_FILENAME}
+              onSelectFile={selectFile}
+            />
+          ) : (
+            <ContextPackageRail
+              packages={packages}
+              catalogue={catalogue}
+              orgSlug={orgSlug}
+              spaceSlug={spaceSlug}
+              selectedPackageId={selectedPackage?.id ?? null}
+              showingInventory={showingInventory}
+              inventoryCount={inventoryCount}
+              orphanCount={orphanCount}
+              showingOrphans={showingInventory && coverage === NO_PACKAGE_VALUE}
+              onSelect={selectPackage}
+              onShowInventory={showInventory}
+              onShowOrphans={showOrphans}
+              onCreatePackage={createAndOpen}
+            />
+          )}
+          {/*
           No scroll here: each pane owns its own, because the package pane keeps
           a header and a tab strip in place while only the body below them moves.
         */}
-        <PMBox flex="1" minW={0} minH={0} display="flex" flexDirection="column">
-          {showingInventory ? (
-            <SpaceInventoryPane
-              packages={packages}
-              catalogue={catalogue}
-              coverage={coverage}
-              onCoverageChange={setCoverage}
-              spaceId={spaceId}
-              organizationId={organization.id}
-              orgSlug={orgSlug}
-              spaceSlug={spaceSlug}
-            />
-          ) : (
-            selectedPackage && (
-              <ContextPackagePane
-                key={selectedPackage.id}
-                pkg={selectedPackage}
+          <PMBox
+            flex="1"
+            minW={0}
+            minH={0}
+            display="flex"
+            flexDirection="column"
+          >
+            {showingInventory ? (
+              <SpaceInventoryPane
                 packages={packages}
                 catalogue={catalogue}
-                groups={groups}
-                total={total}
-                detail={detail}
-                detailFile={selectedFile}
+                coverage={coverage}
+                onCoverageChange={setCoverage}
+                onCreatePackage={createAndStay}
                 spaceId={spaceId}
                 organizationId={organization.id}
                 orgSlug={orgSlug}
                 spaceSlug={spaceSlug}
-                packageHref={routes.space.toPackage(
-                  orgSlug,
-                  spaceSlug,
-                  selectedPackage.id,
-                )}
-                onDeleted={forgetPackage}
               />
-            )
-          )}
-        </PMBox>
-      </PMHStack>
-    </PMBox>
+            ) : (
+              selectedPackage && (
+                <ContextPackagePane
+                  key={selectedPackage.id}
+                  pkg={selectedPackage}
+                  packages={packages}
+                  catalogue={catalogue}
+                  groups={groups}
+                  total={total}
+                  detail={detail}
+                  detailFile={selectedFile}
+                  spaceId={spaceId}
+                  organizationId={organization.id}
+                  orgSlug={orgSlug}
+                  spaceSlug={spaceSlug}
+                  onCreatePackage={createAndStay}
+                  onDeleted={forgetPackage}
+                />
+              )
+            )}
+          </PMBox>
+        </PMHStack>
+      </PMBox>
+      {packageDrawer}
+    </>
   );
 }

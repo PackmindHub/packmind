@@ -12,8 +12,19 @@ const nxPreset = require('@nx/jest/preset').default;
 // setup files that the old (broken, never-loaded) jest.preset.ts declared —
 // turning those on repo-wide changes mock behavior between tests and must be a
 // separate, suite-validated change. This commit only fixes the timeout.
+// PACKMIND_JEST_MAX_WORKERS lets CI cap workers per project without a CLI flag.
+// A forwarded `-- --maxWorkers=N` applies to every project in a run-many and
+// cannot be overridden per project, which is fatal for @packmind/integration-tests:
+// it has few, long spec files, so one worker serialises them. Going through the
+// preset instead means a project that declares its own `maxWorkers` keeps it,
+// because a project config overrides the preset.
+//
+// Unset — as on a developer machine — leaves Jest's default (cores - 1).
+const maxWorkersOverride = process.env['PACKMIND_JEST_MAX_WORKERS'];
+
 module.exports = {
   ...nxPreset,
   testTimeout: 30000,
   passWithNoTests: true,
+  ...(maxWorkersOverride ? { maxWorkers: Number(maxWorkersOverride) } : {}),
 };

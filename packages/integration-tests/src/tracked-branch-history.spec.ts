@@ -1,7 +1,7 @@
 import { DistributionSchema } from '@packmind/deployments';
 import { GitCommitSchema, GitRepoSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import { Distribution, GitRepo, Package } from '@packmind/types';
+import { Distribution, GitCommit, GitRepo, Package } from '@packmind/types';
 import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
@@ -22,10 +22,13 @@ describe('Tracked branch distribution history integration', () => {
   let testApp: TestApp;
   let admin: DataFactory;
   let distributedPackage: Package;
+  let commit: GitCommit;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
@@ -45,10 +48,16 @@ describe('Tracked branch distribution history integration', () => {
       });
     distributedPackage = created;
 
-    // Deployment is asynchronous; stub the commit so no real git work happens.
-    const commit = await fixture.datasource
+    commit = await fixture.datasource
       .getRepository(GitCommitSchema)
       .save(gitCommitFactory());
+
+    fixture.snapshot();
+  });
+
+  // Deployment is asynchronous; stub the commit so no real git work happens.
+  // Spies are restored after each test, so it is re-installed per test.
+  beforeEach(() => {
     jest
       .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')
       .mockResolvedValue(commit);

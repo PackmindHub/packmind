@@ -1,7 +1,8 @@
-import { GitHubAppRevokedError, GitProvider } from '@packmind/types';
+import { GitHubAppRevokedError } from '@packmind/types';
 import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IGithubTokenResolver } from '../../../../domain/repositories/IGithubTokenResolver';
+import { GitProviderCredentials } from '../../../../domain/repositories/IGitProviderFactory';
 import { IOrganizationGitHubAppRepository } from '../../../../domain/repositories/IOrganizationGitHubAppRepository';
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
@@ -61,7 +62,7 @@ export class GithubTokenResolverFactory {
     });
   }
 
-  async build(provider: GitProvider): Promise<IGithubTokenResolver> {
+  async build(provider: GitProviderCredentials): Promise<IGithubTokenResolver> {
     if (provider.authMethod === 'token') {
       if (!provider.token) {
         throw new Error(
@@ -72,6 +73,16 @@ export class GithubTokenResolverFactory {
     }
 
     if (provider.authMethod === 'app') {
+      // App auth mints its installation token against the provider's identity,
+      // so unlike token auth it cannot run on a candidate that has not been
+      // persisted yet.
+      const providerId = provider.id;
+      if (!providerId) {
+        throw new Error(
+          'GithubTokenResolverFactory: provider.authMethod is "app" but the provider has not been saved yet',
+        );
+      }
+
       const installationIdRaw = provider.appInstallationId;
       if (installationIdRaw === undefined || installationIdRaw === null) {
         throw new Error(
@@ -118,7 +129,7 @@ export class GithubTokenResolverFactory {
 
         if (!provider.organizationGitHubAppId) {
           throw new Error(
-            `GithubTokenResolverFactory: provider ${provider.id} has authMethod 'app' but no organizationGitHubAppId (on-prem mode)`,
+            `GithubTokenResolverFactory: provider ${providerId} has authMethod 'app' but no organizationGitHubAppId (on-prem mode)`,
           );
         }
 
@@ -133,7 +144,7 @@ export class GithubTokenResolverFactory {
         }
 
         if (app.revokedAt) {
-          throw new GitHubAppRevokedError(String(provider.id));
+          throw new GitHubAppRevokedError(String(providerId));
         }
 
         appIdRaw = app.appId;
@@ -152,12 +163,12 @@ export class GithubTokenResolverFactory {
       }
 
       this.logger.info('Building AppInstallationTokenResolver', {
-        providerId: provider.id,
+        providerId,
         mode,
       });
 
       return new AppInstallationTokenResolver({
-        providerId: provider.id,
+        providerId,
         appId,
         privateKeyPem,
         installationId,

@@ -27,9 +27,11 @@ describe('Package removal from target integration', () => {
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
@@ -46,9 +48,16 @@ describe('Package removal from target integration', () => {
     standard1 = await dataFactory.withStandard({ name: 'Standard 1' });
 
     commit = await createGitCommit();
+
+    fixture.snapshot();
+  });
+
+  // Spies are restored after each test, so the git stub is re-installed per test.
+  beforeEach(() => {
     commitToGit = jest.fn().mockResolvedValue(commit);
-    const gitAdapter = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
+    jest
+      .spyOn(testApp.gitHexa.getAdapter(), 'commitToGit')
+      .mockImplementation(commitToGit);
   });
 
   afterEach(async () => {

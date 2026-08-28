@@ -31,6 +31,7 @@ describe('ListAvailableReposUseCase', () => {
     availablePages: 1,
     lastLoadedPage: 1,
     repositories: [],
+    partial: false,
   };
 
   const tokenProvider: GitProvider = {
@@ -139,6 +140,7 @@ describe('ListAvailableReposUseCase', () => {
           currentPage: 1,
           availablePages: 2,
           lastLoadedPage: 1,
+          partial: false,
           repositories: [
             {
               name: 'repo-a',

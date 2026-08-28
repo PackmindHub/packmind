@@ -27,9 +27,6 @@ on:
       cli-artifact:
         description: 'CLI build artifact name'
         value: ${{ jobs.build-cli.outputs.artifact-name }}
-      cli-version:
-        description: 'CLI version'
-        value: ${{ jobs.build-cli.outputs.version }}
       cli-executables-artifact:
         description: 'CLI executables artifact name'
         value: ${{ jobs.build-cli.outputs.cli-executables-artifact }}
@@ -60,6 +57,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -109,6 +108,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -143,7 +144,10 @@ jobs:
           path: apps/frontend/build/client
 
   build-packages:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # Wider runner: this job fans out to 45 tasks with a ~6s critical path, so
+    # it is bound by cores rather than task ordering. Falls back to the standard
+    # tag where the 8-core variable is not set.
+    runs-on: ${{ vars.ACTION_RUNNER_TAG_8_CORES || vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
     outputs:
       standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
@@ -164,21 +168,51 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build packages
+      # `build` type checks via dependsOn (see nx.json); `typecheck` is listed
+      # too for `migrations`, which has no build target. `--parallel=100%`
+      # because Nx defaults to 3 workers whatever the machine size.
+      - name: Build and typecheck packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+        run: ./node_modules/.bin/nx run-many -t build,typecheck -p packages/* --parallel=100%
+      # @packmind/integration-tests runs in its own job (test-integration) so it
+      # does not sit on this job's critical path.
+      #
+      # --maxWorkers=1 gives each project a single Jest process and lets Nx
+      # provide the parallelism instead. Every Jest worker pays ~4s of fixed cost
+      # before running a test — ~1s of process startup plus ~3s to load the
+      # @packmind/node-utils barrel — so the default (Nx 3 projects x Jest 3
+      # workers) spends most of a 4-vCPU runner re-paying that. Measured on
+      # 4 vCPU, three interleaved rounds: 123s/118s/117s with the default against
+      # 87s/88s with one worker per project. Passed on the command line rather
+      # than set in the jest configs so `nx test <project>` on a developer
+      # machine keeps using every core.
+      #
+      # One Jest process per project means the useful concurrency is Nx's, so
+      # --parallel=100% tracks the runner's core count, as the build step above
+      # does. Nx's default of 3 would idle 5 of 8 cores, and a hardcoded 8
+      # measured worse than 3 on the 4-vCPU fallback runner: 101s against 88s.
+      #
+      # The cap goes through PACKMIND_JEST_MAX_WORKERS (see jest.preset.js) rather
+      # than a forwarded `-- --maxWorkers=1`, because a CLI flag applies to every
+      # project and cannot be overridden per project. Going through the preset lets
+      # linter-ast stay in the run-many (a forwarded flag made it fail: its target
+      # is a hand-written command that already passes --runInBand) and would let
+      # @packmind/integration-tests keep the 4 workers its own config declares.
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          PACKMIND_JEST_MAX_WORKERS: '1'
           NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --exclude=@packmind/integration-tests --passWithNoTests --parallel=100%
 
       - name: Upload standard samples artifacts
         uses: actions/upload-artifact@v4
@@ -186,6 +220,41 @@ jobs:
           name: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/packages/standards/samples/generated/
           if-no-files-found: ignore
+
+  # Split out of build-packages: it is the longest single test target, so running
+  # it on its own runner takes it off that job's critical path.
+  test-integration:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: ${{ github.actor == 'dependabot[bot]' && 15 || 30 }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Cache pnpm supply-chain verification
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pnpm
+          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Test integration tests
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
+        run: ./node_modules/.bin/nx test @packmind/integration-tests
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
@@ -221,6 +290,8 @@ jobs:
         with:
           path: ~/.cache/pnpm
           key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-verify-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Generate tsconfig
         env:
@@ -273,207 +344,3 @@ jobs:
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
             dist/apps/cli-executables/packmind-cli-windows-arm64.exe
           retention-days: 30
-
-  cli-e2e-tests:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 20
-    env:
-      PACKMIND_INSTANCE_URL: http://localhost:4200
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-
-      - name: Cache pnpm supply-chain verification
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pnpm
-          key: pnpm-verify-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Generate tsconfig
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-        run: node scripts/select-tsconfig.mjs
-
-      - run: ./node_modules/.bin/nx run packmind-cli:build
-
-      - name: Install dist CLI runtime dependencies
-        run: sh scripts/install-dist-cli-deps.sh
-
-      - name: Fix CLI artifacts permissions
-        run: |
-          chmod +x dist/apps/cli/main.cjs || true
-          chmod -R +r dist/apps/cli/
-          ls -la dist/apps/cli/
-
-      - name: Start docker compose for CLI E2E tests
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: |
-            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
-            echo "Docker version:"
-            docker --version
-            docker compose version
-            echo "Starting containers..."
-            docker compose up -d --wait --wait-timeout 300
-            echo "Docker compose up completed. Container status:"
-            docker compose ps -a
-            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-          CI: 'true'
-          APP_WEB_URL: ${{ env.PACKMIND_INSTANCE_URL }}
-
-      - name: Wait for services to be ready
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-          PACKMIND_INSTANCE_URL: ${{ env.PACKMIND_INSTANCE_URL }}
-        run: |
-          echo "Waiting for API to be ready..."
-          timeout 60 bash -c "until curl -f ${PACKMIND_INSTANCE_URL}/api/v0/healthcheck > /dev/null 2>&1; do sleep 2; done"
-
-      - name: Run CLI E2E tests
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384 --no-experimental-strip-types'
-        run: ./node_modules/.bin/nx test cli-e2e-tests
-
-      - name: Install latest production CLI from registry
-        run: |
-          PROD_CLI_DIR="$(mktemp -d)"
-          cd "${PROD_CLI_DIR}"
-          pnpm init
-          # Throwaway install: only need the CLI binary resolvable to run --version.
-          # bcrypt/msgpackr-extract ship prebuilt binaries, so their build scripts
-          # are not required. Disable strictDepBuilds (default true in pnpm 11) to
-          # avoid ERR_PNPM_IGNORED_BUILDS here where there is no allowBuilds config.
-          pnpm add @packmind/cli --config.strictDepBuilds=false
-          CLI_BINARY_PATH="$(node -e "console.log(require.resolve('@packmind/cli'))")"
-          cd -
-          echo "Installed CLI version: $(node "${CLI_BINARY_PATH}" --version)"
-          echo "CLI_BINARY_PATH=${CLI_BINARY_PATH}" >> $GITHUB_ENV
-
-      - name: Run CLI E2E tests against production CLI
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          NODE_OPTIONS: '--max-old-space-size=16384'
-          CLI_BINARY_PATH: ${{ env.CLI_BINARY_PATH }}
-        run: ./node_modules/.bin/nx test cli-e2e-tests --skip-nx-cache
-
-      - name: Collect Docker container logs
-        if: always()
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-        run: |
-          mkdir -p docker-logs-cli-e2e
-          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
-          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
-          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
-            echo "Collecting logs for $container..."
-            docker logs "$container" > "docker-logs-cli-e2e/${container}.log" 2>&1 || true
-          done
-          echo "Collected logs:"
-          ls -la docker-logs-cli-e2e/ || echo "No logs collected"
-
-      - name: Upload Docker logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-cli-e2e-${{ github.run_number }}-${{ github.sha }}
-          path: docker-logs-cli-e2e/
-          if-no-files-found: ignore
-
-      - name: Cleanup Docker containers
-        if: always()
-        env:
-          COMPOSE_PROJECT_NAME: cli-e2e-${{ github.run_number }}
-        run: docker compose down -v --remove-orphans
-
-  e2e-tests:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 15
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Start E2E test environment
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 15
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: |
-            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
-            echo "Docker version:"
-            docker --version
-            docker compose version
-            echo "Starting containers..."
-            docker compose --profile=e2e up -d --wait-timeout 300
-            echo "Docker compose up completed. Container status:"
-            docker compose --profile=e2e ps -a
-            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-          CI: 'true'
-          APP_WEB_URL: http://frontend:4200
-
-      - name: Wait for E2E tests to complete
-        env:
-          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
-          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: ./scripts/wait-for-e2e-tests.sh
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-${{ github.run_number }}-${{ github.sha }}
-          path: apps/e2e-tests/playwright-report/
-          if-no-files-found: ignore
-
-      - name: Collect Docker container logs
-        if: always()
-        env:
-          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: |
-          mkdir -p docker-logs
-          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
-          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
-          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
-            echo "Collecting logs for $container..."
-            docker logs "$container" > "docker-logs/${container}.log" 2>&1 || true
-          done
-          echo "Collected logs:"
-          ls -la docker-logs/ || echo "No logs collected"
-
-      - name: Upload Docker logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-${{ github.run_number }}-${{ github.sha }}
-          path: docker-logs/
-          if-no-files-found: ignore
-
-      - name: Cleanup Docker containers
-        if: always()
-        env:
-          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: docker compose --profile=e2e down -v --remove-orphans

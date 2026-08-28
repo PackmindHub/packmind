@@ -32,6 +32,7 @@ import {
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { format } from 'date-fns';
+import { SelectionBar } from '../../SelectionBar';
 import {
   DistributionStatus,
   type GitProviderId,
@@ -112,6 +113,35 @@ type PackageDetailPaneProps = {
    * remain. Defaults to `false` (full header, as on the deployments overview).
    */
   hideIdentityHeader?: boolean;
+  /**
+   * Set by a surface that carries its own package-wide push, so the pane stops
+   * carrying a second one and its header's `Distribute package` goes.
+   *
+   * The pane never offers a package-wide push of its own besides that button.
+   * What the list offers is a subset push, from the selection bar above it, and
+   * that is a different question: it acts on what was ticked and on nothing
+   * else, so it does not compete with whatever the surface calls its own.
+   *
+   * Defaults to `false`, which is the deployments overview and the package
+   * detail page: there the header button is the only package-wide push on
+   * screen.
+   */
+  surfaceOwnsDistribute?: boolean;
+  /**
+   * Set by a surface that already shows a standing way into the events, so the
+   * pane drops the one in its summary rather than putting a second door beside
+   * the first. The context surface's chip row is that case: the chip sits right
+   * above the pane and the summary is the first thing under it.
+   *
+   * The failure alert and a failed row's own event line still use
+   * `distributionHistory` either way. Those are not a standing entry competing
+   * with the surface's, they are the answer to what the pane has just said went
+   * wrong, offered where it said it.
+   *
+   * Defaults to `false`, which is the deployments overview: there nothing else
+   * on screen reaches the events.
+   */
+  surfaceOwnsHistory?: boolean;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -128,6 +158,8 @@ export function PackageDetailPane({
   distributionHistory,
   packagePageHref,
   hideIdentityHeader = false,
+  surfaceOwnsDistribute = false,
+  surfaceOwnsHistory = false,
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -170,6 +202,11 @@ export function PackageDetailPane({
   }, [driftedKeys, lockByKey]);
   const allDriftedLocked =
     driftedKeys.length > 0 && driftedLockCounts.locked === driftedKeys.length;
+  /*
+   * The package-wide push in the header, which only exists to be the one
+   * redistribute on a surface that offers none of its own.
+   */
+  const showHeaderDistribute = hasDrift && !surfaceOwnsDistribute;
   const headerLockTooltip = (() => {
     if (!allDriftedLocked) return null;
     if (driftedLockCounts.inProgress === driftedKeys.length) {
@@ -268,6 +305,16 @@ export function PackageDetailPane({
     return count;
   }, [driftedKeys, selectedKeys, lockByKey]);
 
+  /*
+   * What a push from here would carry. Only the drifted ones: the list lets an
+   * aligned row be ticked, and pushing it would be a distribution that changes
+   * nothing.
+   */
+  const selectedDriftedKeys = useMemo(
+    () => Array.from(selectedKeys).filter((key) => driftedKeys.includes(key)),
+    [selectedKeys, driftedKeys],
+  );
+
   return (
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
       <PMBox
@@ -278,7 +325,7 @@ export function PackageDetailPane({
         bg="background.primary"
       >
         <PMVStack gap={2.5} align="stretch">
-          {(!hideIdentityHeader || hasDrift) && (
+          {(!hideIdentityHeader || showHeaderDistribute) && (
             <PMHStack gap={3} align="start" justify="space-between">
               {!hideIdentityHeader && (
                 <PMVStack gap={1} align="start" flex={1} minW={0}>
@@ -325,7 +372,7 @@ export function PackageDetailPane({
                   </PMText>
                 </PMVStack>
               )}
-              {hasDrift && (
+              {showHeaderDistribute && (
                 <PMTooltip label={headerLockTooltip} placement="top">
                   <PMButton
                     variant="secondary"
@@ -375,6 +422,31 @@ export function PackageDetailPane({
                 value={`${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'}`}
                 tone="error"
               />
+            )}
+            {/*
+              The plain way in to the distribution events. Without it the pane
+              only reaches them from a failure, so a package where nothing went
+              wrong has no way to see what it was pushed with and when.
+
+              Hidden while the failure alert is up: that alert sits a few pixels
+              below with a link to the same page and a label that says more, and
+              two links to one page in one viewport is noise, not a second way.
+              Hidden too when the surface already carries a standing entry.
+            */}
+            {distributionHistory && !hasFailure && !surfaceOwnsHistory && (
+              <PMLink
+                asChild
+                variant="underline"
+                fontSize="sm"
+                cursor="pointer"
+              >
+                <DistributionHistoryTrigger target={distributionHistory}>
+                  Distribution history
+                  <PMIcon fontSize="xs" marginLeft="4px">
+                    <LuArrowUpRight />
+                  </PMIcon>
+                </DistributionHistoryTrigger>
+              </PMLink>
             )}
           </PMHStack>
           {hasFailure && (
@@ -452,6 +524,46 @@ export function PackageDetailPane({
         </PMHStack>
       </PMBox>
 
+      {/*
+        What is ticked and what can be done with it, above the list rather than
+        under it. A selection is made running down a list, so the row that was
+        just ticked is near the pointer and the action has to be too. It used to
+        be a footer below a scrolling region, which is the far end of the pane
+        from the gesture that fills it.
+
+        The same bar the component lists on this surface use, so picking a
+        destination and picking a standard are one gesture with one shape.
+
+        Shown on any pick, so ticking a row is always acknowledged, but it
+        carries an action only when something ticked can actually be pushed: an
+        aligned row is a legal pick and pushing it would change nothing.
+      */}
+      {selectedKeys.size > 0 && (
+        <PMBox
+          paddingX={6}
+          paddingY={3}
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
+          bg="background.primary"
+        >
+          <SelectionBar
+            count={selectedKeys.size}
+            actions={
+              selectedDriftedCount > 0
+                ? [
+                    {
+                      label: `Update ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
+                      icon: <LuRotateCw />,
+                      onAct: () => onSyncPackage(pkg.id, selectedDriftedKeys),
+                    },
+                  ]
+                : []
+            }
+            onClear={() => setSelectedKeys(new Set())}
+          />
+        </PMBox>
+      )}
+
       <PMBox flex="1" overflow="auto" minH={0}>
         {filteredEntries.length === 0 ? (
           <InstallEmptyState
@@ -507,44 +619,6 @@ export function PackageDetailPane({
           </PMVStack>
         )}
       </PMBox>
-
-      {hasDrift && (
-        <PMBox
-          paddingX={6}
-          paddingY={2.5}
-          borderTopWidth="1px"
-          borderColor="border.tertiary"
-          bg="background.secondary"
-          position="sticky"
-          bottom={0}
-        >
-          <PMHStack gap={3} align="center" justify="space-between">
-            <PMText fontSize="xs" color="secondary">
-              {selectedDriftedCount === 0
-                ? 'Select distributions to redistribute.'
-                : `${selectedDriftedCount} of ${behindInstallCount} drifted selected.`}
-            </PMText>
-            <PMButton
-              variant="primary"
-              size="sm"
-              disabled={selectedDriftedCount === 0}
-              onClick={() =>
-                onSyncPackage(
-                  pkg.id,
-                  Array.from(selectedKeys).filter((k) =>
-                    driftedKeys.includes(k),
-                  ),
-                )
-              }
-            >
-              <PMIcon fontSize="sm">
-                <LuRotateCw />
-              </PMIcon>
-              Redistribute to selected
-            </PMButton>
-          </PMHStack>
-        </PMBox>
-      )}
     </PMVStack>
   );
 }

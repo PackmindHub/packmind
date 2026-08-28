@@ -100,6 +100,7 @@ const reposResponse = (
   availablePages: 1,
   lastLoadedPage: 1,
   repositories,
+  partial: false,
 });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

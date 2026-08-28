@@ -28,14 +28,18 @@ describe('Deployments find-or-create repo integration', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
-  beforeAll(() => fixture.initialize());
+  // Every test in this file starts from the same fixture data, so it is seeded
+  // once here and rewound by fixture.cleanup() rather than rebuilt per test.
+  beforeAll(async () => {
+    await fixture.initialize();
 
-  beforeEach(async () => {
     testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
     await dataFactory.withUserAndOrganization();
+
+    fixture.snapshot();
   });
 
   afterEach(async () => {

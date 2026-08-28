@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import {
   PMAlertDialog,
   PMBadge,
@@ -18,9 +18,18 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { LuEllipsisVertical, LuPencil, LuPlus, LuTrash2 } from 'react-icons/lu';
+import {
+  LuEllipsisVertical,
+  LuPackageMinus,
+  LuPencil,
+  LuPlus,
+  LuRotateCw,
+  LuTrash2,
+} from 'react-icons/lu';
 import type {
+  GitProviderId,
   OrganizationId,
+  PackageId,
   PackageResponse,
   SkillFile,
   SpaceId,
@@ -34,6 +43,7 @@ import {
   type SpaceCatalogue,
 } from './buildPackageContext';
 import { buildDistributionTabBadge } from './buildDistributionTabBadge';
+import { buildPackageHeaderActions } from './buildPackageHeaderActions';
 import { componentIdsPayload } from './buildMoveTargets';
 import {
   componentEditHref,
@@ -50,7 +60,10 @@ import {
 } from './ContextComponentList';
 import { ContextCreateMenu } from './ContextCreateMenu';
 import { ContextPackageDistribution } from './ContextPackageDistribution';
-import { ContextSelectionBar } from './ContextSelectionBar';
+import type { SyncScope } from '../redesign/components/SyncSurface';
+import { packageLockProfile } from '../redesign/selectors/installLock';
+import { providersWithTokenSet } from '../redesign/selectors/providerAuth';
+import { SelectionBar } from '../SelectionBar';
 import { AddComponentsDrawer } from './AddComponentsDrawer';
 import { EditPackageDetailsDrawer } from './EditPackageDetailsDrawer';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
@@ -58,11 +71,15 @@ import { usePackageDrift } from './usePackageDrift';
 import { useDeleteContextComponent } from './useDeleteContextComponent';
 import {
   useDeletePackagesBatchMutation,
+  useListPackageDeploymentsQuery,
   useRemoveArtefactsFromPackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { usePackageDeploymentStatus } from '../../hooks/usePackageDeploymentStatus';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemoveArtifactFromPackageConfirm } from '../PackagesPopover';
+import { RemovePackageFromTargetsDialog } from '../RemovePackageFromTargets';
+import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 const CONTENT_TAB = 'content';
@@ -105,7 +122,7 @@ export function ContextPackagePane({
   organizationId,
   orgSlug,
   spaceSlug,
-  packageHref,
+  onCreatePackage,
   onDeleted,
 }: Readonly<{
   pkg: PackageResponse;
@@ -128,8 +145,13 @@ export function ContextPackagePane({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
-  /** The package's own page, which still holds everything not moved here. */
-  packageHref: string;
+  /**
+   * Opens the drawer that names a new package, which the move drawer asks for
+   * when there is nowhere to move to. The surface holds it: it is what decides
+   * whether the new package is opened, and from here it must not be, or the
+   * pane would be remounted out from under the drawer that asked.
+   */
+  onCreatePackage: () => void;
   /**
    * The package is gone, so the surface has to stop asking for it. Deleting is
    * the one action here that outlives the pane: everything else changes what
@@ -164,9 +186,29 @@ export function ContextPackagePane({
   const [selectedKeys, setSelectedKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  /*
+   * The redistribute flow in progress, or null when there is none. Rendered by
+   * the Distribution tab, owned here.
+   *
+   * Here rather than there because the tab is not the only way in: the header
+   * above both tabs is what carries the package-wide push, and the flow has to
+   * survive the tab switch that opening it from there implies. It also means a
+   * flow started from the list is still there on the way back from the other
+   * tab, where before it was thrown away by the tab unmounting.
+   */
+  const [syncScope, setSyncScope] = useState<SyncScope | null>(null);
   const [addingComponents, setAddingComponents] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [removingFromTargets, setRemovingFromTargets] = useState(false);
+
+  /*
+   * Read here for the menu item below, which has to know whether the package is
+   * in any target before offering to take it out of them. The Distribution tab
+   * asks the same query, and React Query answers both from one request.
+   */
+  const { data: deployments = [] } = useListPackageDeploymentsQuery(pkg.id);
+  const isInAnyTarget = listActiveDistributions(deployments, pkg.id).length > 0;
   const { mutateAsync: deletePackages, isPending: isDeleting } =
     useDeletePackagesBatchMutation();
   /*
@@ -228,6 +270,19 @@ export function ContextPackagePane({
   }, []);
 
   const clearSelection = useCallback(() => setSelectedKeys(new Set()), []);
+
+  /*
+   * `installKeys` left undefined means every drifted destination, which is what
+   * `SyncSurface` already reads it as. The caller decides which of the two it
+   * is asking for; this only carries the answer.
+   */
+  const startSync = useCallback(
+    (packageId: PackageId, installKeys?: string[]) =>
+      setSyncScope({ kind: 'package', packageId, installKeys }),
+    [],
+  );
+
+  const closeSync = useCallback(() => setSyncScope(null), []);
 
   /*
    * The batch mutation with one id in it, which is what the package page does
@@ -376,6 +431,73 @@ export function ContextPackagePane({
   const distributionBadge = buildDistributionTabBadge(drift);
 
   /*
+   * Read here for the header's own push. React Query answers this and the
+   * identical call inside the Distribution tab from one request, so the two
+   * cannot disagree about which providers can be written to.
+   */
+  const { data: providersResponse, isLoading: isProvidersLoading } =
+    useGetGitProvidersQuery();
+  const providersWithToken = useMemo<Set<GitProviderId>>(
+    () => providersWithTokenSet(providersResponse),
+    [providersResponse],
+  );
+
+  /*
+   * The two package-wide controls, decided together rather than each on its
+   * own: which of them is loud is the whole question, and two conditions
+   * written apart is how both ended up primary in the first place.
+   *
+   * The same lock reading the rail uses, so a package the rail flags as stuck
+   * does not offer a live button here.
+   */
+  const headerActions = buildPackageHeaderActions({
+    drift,
+    isResolved: !isLoading && !isError,
+    lockProfile: drift
+      ? packageLockProfile(drift, providersWithToken, isProvidersLoading)
+      : 'none',
+  });
+
+  /*
+   * The push is asked for from a header that sits above both tabs, and it is
+   * answered on one of them, so the tab comes along. Scoped to nothing, which
+   * `SyncSurface` reads as every drifted destination: the header's count is the
+   * whole of them, and the list is where a subset gets picked.
+   */
+  const updateDriftedDestinations = () => {
+    showTab(DISTRIBUTION_TAB);
+    startSync(pkg.id);
+  };
+
+  /*
+   * Every way the package leaves Packmind, under one control: the repositories
+   * it writes to, the marketplaces it publishes to, and the command a developer
+   * runs in their own checkout. One menu and not one button per channel,
+   * because the product does not treat them as different kinds of thing, and
+   * the menu is where each edition already contributes the channels it has.
+   *
+   * Absent rather than disabled on an empty package: there is nothing to send
+   * anywhere, which is what the package's own page already decided by hiding
+   * its install block while a package is empty. A disabled primary would also
+   * put the loudest control on the screen on the one thing that cannot be done
+   * yet.
+   *
+   * Written once and asked for in two shapes, because the two call sites below
+   * differ by the one prop and everything else about them has to stay the same.
+   */
+  const distributeControl = (trigger: 'standalone' | 'split') =>
+    isEmpty ? null : (
+      <DeployPackageButton
+        label="Distribute"
+        trigger={trigger}
+        size="sm"
+        variant={headerActions.distributeVariant}
+        selectedPackages={[pkg]}
+        cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
+      />
+    );
+
+  /*
    * Built once and rendered by whichever half is on screen. The drawer has to
    * outlive the thing it was opened from: from the list, the move rebuilds that
    * list, and from the detail, the move empties the detail.
@@ -391,8 +513,7 @@ export function ContextPackagePane({
       packages={packages}
       spaceId={spaceId}
       organizationId={organizationId}
-      orgSlug={orgSlug}
-      spaceSlug={spaceSlug}
+      onCreatePackage={onCreatePackage}
       onMoved={clearSelection}
     />
   );
@@ -519,67 +640,99 @@ export function ContextPackagePane({
           </PMBox>
           <PMHStack flexShrink={0} gap={2}>
             {/*
-              The way out to everything this surface does not carry yet:
-              edition, deletion, marketplace publication. Secondary, because
-              reading the package is what this screen is for.
+              Creating and adding belong to the Content tab, so they leave with
+              it. The header sits above both tabs and used to keep every verb on
+              screen whatever the reader was looking at: on Distribution, two of
+              the four controls wrote components, which is not the question that
+              tab asks. Distribute stays on both, because it acts on the package
+              and not on the list being shown.
             */}
-            <PMButton variant="secondary" size="sm" asChild>
-              <Link to={packageHref}>Open package</Link>
-            </PMButton>
-            {/*
-              Adding what exists, beside creating what does not. Two controls
-              and not one menu: the question "which of these do I want" and the
-              question "what kind of thing am I writing" are answered from
-              opposite ends, one by a list of the space and one by a list of
-              types, and folding them together would hide whichever one the
-              reader came for behind the other.
-            */}
-            <PMButton
-              variant="secondary"
-              size="sm"
-              onClick={() => setAddingComponents(true)}
-            >
-              <PMIcon fontSize="xs">
-                <LuPlus />
-              </PMIcon>
-              Add components
-            </PMButton>
-            {/*
-              Creating sits here, on the pane, and not in the rail below the list
-              of packages: the rail creates containers, this creates what goes in
-              them, and side by side the two would read as the same gesture.
+            {tab === CONTENT_TAB && (
+              <>
+                {/*
+                  Adding what exists, beside creating what does not. Two
+                  controls and not one menu: the question "which of these do I
+                  want" and the question "what kind of thing am I writing" are
+                  answered from opposite ends, one by a list of the space and
+                  one by a list of types, and folding them together would hide
+                  whichever one the reader came for behind the other.
+                */}
+                <PMButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setAddingComponents(true)}
+                >
+                  <PMIcon fontSize="xs">
+                    <LuPlus />
+                  </PMIcon>
+                  Add components
+                </PMButton>
+                {/*
+                  Creating sits here, on the pane, and not in the rail below the
+                  list of packages: the rail creates containers, this creates
+                  what goes in them, and side by side the two would read as the
+                  same gesture.
 
-              It carries the primary only while the package is empty, which is
-              the one state where filling it is the thing to do next. As soon as
-              there is something in it, getting it out is.
-            */}
-            <ContextCreateMenu
-              orgSlug={orgSlug}
-              spaceSlug={spaceSlug}
-              packageId={pkg.id}
-              variant={isEmpty ? 'primary' : 'secondary'}
-            />
+                  It carries the primary only while the package is empty, which
+                  is the one state where filling it is the thing to do next. As
+                  soon as there is something in it, getting it out is.
+                */}
+                <ContextCreateMenu
+                  orgSlug={orgSlug}
+                  spaceSlug={spaceSlug}
+                  packageId={pkg.id}
+                  variant={isEmpty ? 'primary' : 'secondary'}
+                />
+              </>
+            )}
             {/*
-              Every way the package leaves Packmind, under one control: the
-              repositories it writes to, the marketplaces it publishes to, and
-              the command a developer runs in their own checkout. One menu and
-              not one button per channel, because the product does not treat
-              them as different kinds of thing, and the menu is where each
-              edition already contributes the channels it has.
+              One send control, whatever the state. Catching up where the
+              package already is and reaching somewhere new are two questions,
+              and the header used to ask both out loud, side by side: a
+              `Distribute` menu and a primary `Update N destinations`. Two
+              buttons, one verb as far as the reader is concerned, and no room
+              up here to explain which one is theirs.
 
-              Absent rather than disabled on an empty package: there is nothing
-              to send anywhere, which is what the package's own page already
-              decided by hiding its install block while a package is empty. A
-              disabled primary would also put the loudest control on the screen
-              on the one thing that cannot be done yet.
+              So they join. The corrective push takes the wide half, since it is
+              the one thing the state is asking for, and the open ended one
+              keeps the chevron it already had. The seam is a pixel of the page
+              showing between two halves of the same colour, which is what makes
+              them read as one object rather than as two buttons that touch.
+
+              Behind a chevron is a real cost for someone who came to add a
+              destination while the package happens to be drifting. It is paid
+              because the Distribution tab below keeps its own way to every
+              destination, and because a second primary in the header is what
+              sent us here.
+
+              Disabled only when every drifted destination is stuck, where the
+              tooltip is the answer. Absent when nothing is behind: there is
+              nothing to catch up, and a greyed control saying so is a sentence
+              written as a button.
             */}
-            {!isEmpty && (
-              <DeployPackageButton
-                label="Distribute"
-                size="sm"
-                selectedPackages={[pkg]}
-                cliInstall={{ spaceSlug, packageSlug: pkg.slug }}
-              />
+            {headerActions.update ? (
+              <PMHStack gap="1px">
+                <PMTooltip
+                  label={headerActions.update.lockTooltip}
+                  placement="top"
+                >
+                  <PMButton
+                    variant="primary"
+                    size="sm"
+                    disabled={headerActions.update.lockTooltip !== null}
+                    onClick={updateDriftedDestinations}
+                    borderEndRadius={isEmpty ? undefined : 0}
+                  >
+                    <PMIcon fontSize="xs">
+                      <LuRotateCw />
+                    </PMIcon>
+                    {headerActions.update.label}
+                  </PMButton>
+                </PMTooltip>
+                {distributeControl('split')}
+              </PMHStack>
+            ) : (
+              distributeControl('standalone')
             )}
             {/*
               Deleting the package, behind a menu rather than beside the two
@@ -617,6 +770,30 @@ export function ContextPackagePane({
                         Edit details
                       </PMHStack>
                     </PMMenu.Item>
+                    {/*
+                      Taking the package back out of the targets it reached. It
+                      used to be a button on the Distribution tab, at the same
+                      weight as two controls that only changed what was on
+                      screen; it belongs with the other thing on this pane that
+                      undoes something, one menu away from a stray click.
+
+                      Absent rather than disabled when the package is in no
+                      target: the tab says so in a sentence, and a menu is a
+                      list of what can be done.
+                    */}
+                    {isInAnyTarget && (
+                      <PMMenu.Item
+                        value="remove-package-from-targets"
+                        onClick={() => setRemovingFromTargets(true)}
+                      >
+                        <PMHStack gap={2}>
+                          <PMIcon>
+                            <LuPackageMinus />
+                          </PMIcon>
+                          {PACKAGE_MESSAGES.removal.buttonLabel}
+                        </PMHStack>
+                      </PMMenu.Item>
+                    )}
                     <PMMenu.Item
                       value="delete-package"
                       color="text.error"
@@ -679,7 +856,7 @@ export function ContextPackagePane({
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
-              <ContextSelectionBar
+              <SelectionBar
                 count={selection.length}
                 actions={[
                   {
@@ -762,6 +939,9 @@ export function ContextPackagePane({
           packages={driftPackages}
           isLoading={isLoading}
           isError={isError}
+          syncScope={syncScope}
+          onSyncPackage={startSync}
+          onSyncClose={closeSync}
         />
       </PMTabsCompound.Content>
 
@@ -821,6 +1001,16 @@ export function ContextPackagePane({
         open={confirmingDelete}
         onOpenChange={({ open }) => setConfirmingDelete(open)}
         isLoading={isDeleting}
+      />
+      {/*
+        Outside the menu that opens it: clicking a menu item closes the menu, and
+        a dialog mounted inside it would close with it.
+      */}
+      <RemovePackageFromTargetsDialog
+        selectedPackage={pkg}
+        distributions={deployments}
+        open={removingFromTargets}
+        onOpenChange={setRemovingFromTargets}
       />
     </PMTabsCompound.Root>
   );

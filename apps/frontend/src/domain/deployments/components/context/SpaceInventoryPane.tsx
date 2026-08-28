@@ -1,13 +1,6 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { LuPackageX } from 'react-icons/lu';
-import {
-  PMBox,
-  PMHStack,
-  PMHeading,
-  PMIcon,
-  PMText,
-  PMVStack,
-} from '@packmind/ui';
+import { PMBox, PMHStack, PMHeading, PMText, PMVStack } from '@packmind/ui';
 import type { OrganizationId, PackageResponse, SpaceId } from '@packmind/types';
 import {
   COMPONENT_TYPE_LABELS_SINGULAR,
@@ -26,7 +19,8 @@ import {
   COMPONENT_TYPE_ICONS,
   ContextComponentList,
 } from './ContextComponentList';
-import { ContextSelectionBar } from './ContextSelectionBar';
+import { ContextChip } from './ContextChip';
+import { SelectionBar } from '../SelectionBar';
 import { MoveComponentDrawer } from './MoveComponentDrawer';
 
 /**
@@ -59,6 +53,7 @@ export function SpaceInventoryPane({
   organizationId,
   orgSlug,
   spaceSlug,
+  onCreatePackage,
 }: Readonly<{
   packages: readonly PackageResponse[];
   catalogue: SpaceCatalogue;
@@ -75,6 +70,12 @@ export function SpaceInventoryPane({
   organizationId: OrganizationId;
   orgSlug: string;
   spaceSlug: string;
+  /**
+   * Opens the drawer that names a new package, for the placing drawer that has
+   * nowhere to place anything. The surface holds it, for the reason the package
+   * pane gives: it decides what happens to the package afterwards.
+   */
+  onCreatePackage: () => void;
 }>) {
   const [typeFilter, setTypeFilter] = useState<ContextComponentType | null>(
     null,
@@ -177,14 +178,14 @@ export function SpaceInventoryPane({
 
       <PMBox paddingTop={5}>
         <PMHStack gap={1} wrap="wrap">
-          <FilterChip
+          <ContextChip
             label="All"
             count={inventory.total}
             isActive={typeFilter === null}
             onClick={() => setTypeFilter(null)}
           />
           {inventory.groups.map((group) => (
-            <FilterChip
+            <ContextChip
               key={group.type}
               label={group.label}
               count={group.entries.length}
@@ -207,7 +208,7 @@ export function SpaceInventoryPane({
         */}
         {inventory.orphanCount > 0 && (
           <PMHStack gap={1} wrap="wrap" paddingTop={1}>
-            <FilterChip
+            <ContextChip
               label="In no package"
               count={inventory.orphanCount}
               icon={<LuPackageX />}
@@ -239,7 +240,7 @@ export function SpaceInventoryPane({
         ) : (
           <PMVStack gap={5} align="stretch">
             {selection.length > 0 && (
-              <ContextSelectionBar
+              <SelectionBar
                 count={selection.length}
                 actions={[
                   {
@@ -301,62 +302,10 @@ export function SpaceInventoryPane({
           packages={packages}
           spaceId={spaceId}
           organizationId={organizationId}
-          orgSlug={orgSlug}
-          spaceSlug={spaceSlug}
+          onCreatePackage={onCreatePackage}
           onMoved={clearSelection}
         />
       )}
-    </PMBox>
-  );
-}
-
-/**
- * One chip, whichever axis it belongs to. Coverage has one of these too, on a
- * row of its own: sharing this row would make two of them selectable at once
- * and neither of them mean anything, and giving coverage a control of another
- * shape would make one filter look like a different kind of thing.
- */
-function FilterChip({
-  label,
-  count,
-  icon,
-  isActive,
-  onClick,
-}: Readonly<{
-  label: string;
-  count: number;
-  icon?: ReactNode;
-  isActive: boolean;
-  onClick: () => void;
-}>) {
-  return (
-    <PMBox
-      as="button"
-      display="inline-flex"
-      alignItems="center"
-      gap="6px"
-      paddingX={2}
-      paddingY="4px"
-      borderRadius="sm"
-      fontSize="xs"
-      cursor="pointer"
-      bg={isActive ? 'background.tertiary' : 'transparent'}
-      color={isActive ? 'text.primary' : 'text.secondary'}
-      fontWeight={isActive ? 'semibold' : 'normal'}
-      _hover={isActive ? undefined : { bg: 'background.secondary' }}
-      transition="background-color 150ms ease-out"
-      onClick={onClick}
-      aria-pressed={isActive}
-    >
-      {icon && (
-        <PMIcon fontSize="xs" color="text.faded">
-          {icon}
-        </PMIcon>
-      )}
-      {label}
-      <PMBox as="span" color="text.faded" fontVariantNumeric="tabular-nums">
-        {count}
-      </PMBox>
     </PMBox>
   );
 }
