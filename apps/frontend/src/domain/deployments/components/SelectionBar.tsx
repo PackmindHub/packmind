@@ -36,11 +36,16 @@ export type SelectionAction = {
  * It counts rather than naming: at three components the names no longer fit on
  * the line, and the list behind the bar is already showing which ones they are.
  *
- * Shared by the two lists that can pick components, with only their actions
- * between them: read inside a package a selection can leave it, for another
- * package or for none, and read across the space the components in no package
- * can be given one. Two copies of this bar would have grown two ideas of what a
- * selection looks like.
+ * Shared by the three lists that can pick, with only their actions between
+ * them: read inside a package a selection of components can leave it, for
+ * another package or for none; read across the space the components in no
+ * package can be given one; and read down a package's destinations, the ones
+ * that are behind can be pushed. Three copies of this bar would have grown
+ * three ideas of what a selection looks like.
+ *
+ * The install list is the one that does not scroll under it: there the bar is a
+ * strip of its own above the list, and the sticky offset below is inert rather
+ * than wrong.
  */
 export function SelectionBar({
   count,

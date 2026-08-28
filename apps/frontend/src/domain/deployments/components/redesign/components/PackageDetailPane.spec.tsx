@@ -90,6 +90,24 @@ const renderPane = (props?: {
 };
 
 describe('PackageDetailPane', () => {
+  const tickFirstInstall = () =>
+    userEvent.click(
+      screen.getByRole('checkbox', {
+        name: 'Select packmind/service-1 (default)',
+      }),
+    );
+
+  it('offers no selection bar before anything is ticked', () => {
+    renderPane();
+
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+  });
+
+  /*
+   * The deployments overview and the package detail page, which are the two
+   * surfaces of the older navigation. Their package-wide push lives in this
+   * pane's own header and has to keep working.
+   */
   describe('by default', () => {
     it('keeps the header distribute button', () => {
       renderPane();
@@ -99,22 +117,30 @@ describe('PackageDetailPane', () => {
       ).toBeInTheDocument();
     });
 
-    it('asks for a selection before redistributing', () => {
+    it('pushes the whole package from that button', () => {
+      const { onSyncPackage } = renderPane();
+
+      fireEvent.click(
+        screen.getByRole('button', { name: /Distribute package/ }),
+      );
+
+      expect(onSyncPackage).toHaveBeenCalledWith(packageId);
+    });
+
+    it('still offers the subset push from the list', async () => {
       renderPane();
+      await tickFirstInstall();
 
       expect(
-        screen.getByText('Select distributions to redistribute.'),
+        screen.getByRole('button', { name: /Update 1 destination/ }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /Redistribute to selected/ }),
-      ).toBeDisabled();
     });
   });
 
   /*
-   * The Context surface carries `Distribute` in its own header, so the pane
-   * drops the package-wide button it used to keep and its footer takes that
-   * job over.
+   * The Context surface carries the package-wide push in its own header, so the
+   * pane drops the button it used to keep. The subset push is a different
+   * question and stays either way.
    */
   describe('when the surface owns the distribute control', () => {
     it('drops the header distribute button', () => {
@@ -125,43 +151,39 @@ describe('PackageDetailPane', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('offers every drifted distribution when none are ticked', () => {
-      renderPane({ surfaceOwnsDistribute: true, installCount: 3 });
-
-      expect(screen.getByText('3 distributions behind.')).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /Redistribute all 3/ }),
-      ).toBeEnabled();
-    });
-
-    it('redistributes the whole package when none are ticked', () => {
-      const { onSyncPackage } = renderPane({ surfaceOwnsDistribute: true });
-
-      fireEvent.click(
-        screen.getByRole('button', { name: /Redistribute all 3/ }),
-      );
-
-      expect(onSyncPackage).toHaveBeenCalledWith(packageId);
-    });
-
-    it('narrows to the ticked distributions once there are some', async () => {
-      const { onSyncPackage } = renderPane({
-        surfaceOwnsDistribute: true,
-        installCount: 2,
-      });
-
-      await userEvent.click(
-        screen.getByRole('checkbox', {
-          name: 'Select packmind/service-1 (default)',
-        }),
-      );
+    it('keeps the subset push', async () => {
+      renderPane({ surfaceOwnsDistribute: true });
+      await tickFirstInstall();
 
       expect(
-        screen.getByRole('button', { name: /Redistribute to selected/ }),
-      ).toBeEnabled();
+        screen.getByRole('button', { name: /Update 1 destination/ }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when one destination is ticked', () => {
+    it('counts the pick', async () => {
+      renderPane();
+      await tickFirstInstall();
+
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+    });
+
+    it('names the destination it would push in the singular', async () => {
+      renderPane();
+      await tickFirstInstall();
+
+      expect(
+        screen.getByRole('button', { name: /Update 1 destination/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('pushes that one and no other', async () => {
+      const { onSyncPackage } = renderPane({ installCount: 3 });
+      await tickFirstInstall();
 
       fireEvent.click(
-        screen.getByRole('button', { name: /Redistribute to selected/ }),
+        screen.getByRole('button', { name: /Update 1 destination/ }),
       );
 
       expect(onSyncPackage).toHaveBeenCalledWith(packageId, [
@@ -169,14 +191,48 @@ describe('PackageDetailPane', () => {
       ]);
     });
 
-    it('disables the footer when every drifted distribution is locked', () => {
-      renderPane({
-        surfaceOwnsDistribute: true,
-        providersWithToken: new Set<GitProviderId>(),
-      });
+    it('drops the bar again on clear', async () => {
+      renderPane();
+      await tickFirstInstall();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+      expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when two destinations are ticked', () => {
+    it('names them in the plural', async () => {
+      renderPane({ installCount: 3 });
+      await tickFirstInstall();
+      await userEvent.click(
+        screen.getByRole('checkbox', {
+          name: 'Select packmind/service-2 (default)',
+        }),
+      );
 
       expect(
-        screen.getByRole('button', { name: /Redistribute all 3/ }),
+        screen.getByRole('button', { name: /Update 2 destinations/ }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when every drifted destination is locked', () => {
+    it('leaves nothing to tick', () => {
+      renderPane({ providersWithToken: new Set<GitProviderId>() });
+
+      expect(
+        screen.getByRole('checkbox', {
+          name: 'Select packmind/service-1 (default)',
+        }),
+      ).toBeDisabled();
+    });
+
+    it('disables the header push with it', () => {
+      renderPane({ providersWithToken: new Set<GitProviderId>() });
+
+      expect(
+        screen.getByRole('button', { name: /Distribute package/ }),
       ).toBeDisabled();
     });
   });

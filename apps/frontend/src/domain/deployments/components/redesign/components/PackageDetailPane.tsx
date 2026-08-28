@@ -32,6 +32,7 @@ import {
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { format } from 'date-fns';
+import { SelectionBar } from '../../SelectionBar';
 import {
   DistributionStatus,
   type GitProviderId,
@@ -113,19 +114,17 @@ type PackageDetailPaneProps = {
    */
   hideIdentityHeader?: boolean;
   /**
-   * Set by a surface that carries its own package-wide Distribute control, so
-   * the pane stops carrying a second one: the header's `Distribute package`
-   * goes, and the footer's primary takes over the job it did, redistributing
-   * every drifted distribution when none are ticked.
+   * Set by a surface that carries its own package-wide push, so the pane stops
+   * carrying a second one and its header's `Distribute package` goes.
    *
-   * The pane used to hold both a package-wide push in its header and a
-   * subset push in its footer. Two drift-aware pushes in one pane is the
-   * duplication; the surface's own control is a different question, since it
-   * lists every target and preselects nothing.
+   * The pane never offers a package-wide push of its own besides that button.
+   * What the list offers is a subset push, from the selection bar above it, and
+   * that is a different question: it acts on what was ticked and on nothing
+   * else, so it does not compete with whatever the surface calls its own.
    *
    * Defaults to `false`, which is the deployments overview and the package
-   * detail page: there the header button is the only package-wide redistribute
-   * on screen.
+   * detail page: there the header button is the only package-wide push on
+   * screen.
    */
   surfaceOwnsDistribute?: boolean;
 };
@@ -291,13 +290,14 @@ export function PackageDetailPane({
   }, [driftedKeys, selectedKeys, lockByKey]);
 
   /*
-   * Ticking nothing is the common case: the selection starts empty and there is
-   * no select-all. Where the pane has given up its header button, that would
-   * leave a disabled primary behind a sentence asking for a click first, and a
-   * package behind in six places would cost six ticks to push. So an empty
-   * selection means all of them.
+   * What a push from here would carry. Only the drifted ones: the list lets an
+   * aligned row be ticked, and pushing it would be a distribution that changes
+   * nothing.
    */
-  const redistributeAll = surfaceOwnsDistribute && selectedDriftedCount === 0;
+  const selectedDriftedKeys = useMemo(
+    () => Array.from(selectedKeys).filter((key) => driftedKeys.includes(key)),
+    [selectedKeys, driftedKeys],
+  );
 
   return (
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
@@ -483,6 +483,46 @@ export function PackageDetailPane({
         </PMHStack>
       </PMBox>
 
+      {/*
+        What is ticked and what can be done with it, above the list rather than
+        under it. A selection is made running down a list, so the row that was
+        just ticked is near the pointer and the action has to be too. It used to
+        be a footer below a scrolling region, which is the far end of the pane
+        from the gesture that fills it.
+
+        The same bar the component lists on this surface use, so picking a
+        destination and picking a standard are one gesture with one shape.
+
+        Shown on any pick, so ticking a row is always acknowledged, but it
+        carries an action only when something ticked can actually be pushed: an
+        aligned row is a legal pick and pushing it would change nothing.
+      */}
+      {selectedKeys.size > 0 && (
+        <PMBox
+          paddingX={6}
+          paddingY={3}
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
+          bg="background.primary"
+        >
+          <SelectionBar
+            count={selectedKeys.size}
+            actions={
+              selectedDriftedCount > 0
+                ? [
+                    {
+                      label: `Update ${selectedDriftedCount} destination${selectedDriftedCount === 1 ? '' : 's'}`,
+                      icon: <LuRotateCw />,
+                      onAct: () => onSyncPackage(pkg.id, selectedDriftedKeys),
+                    },
+                  ]
+                : []
+            }
+            onClear={() => setSelectedKeys(new Set())}
+          />
+        </PMBox>
+      )}
+
       <PMBox flex="1" overflow="auto" minH={0}>
         {filteredEntries.length === 0 ? (
           <InstallEmptyState
@@ -538,59 +578,6 @@ export function PackageDetailPane({
           </PMVStack>
         )}
       </PMBox>
-
-      {hasDrift && (
-        <PMBox
-          paddingX={6}
-          paddingY={2.5}
-          borderTopWidth="1px"
-          borderColor="border.tertiary"
-          bg="background.secondary"
-          position="sticky"
-          bottom={0}
-        >
-          <PMHStack gap={3} align="center" justify="space-between">
-            <PMText fontSize="xs" color="secondary">
-              {redistributeAll
-                ? `${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} behind.`
-                : selectedDriftedCount === 0
-                  ? 'Select distributions to redistribute.'
-                  : `${selectedDriftedCount} of ${behindInstallCount} drifted selected.`}
-            </PMText>
-            <PMTooltip
-              label={redistributeAll ? headerLockTooltip : null}
-              placement="top"
-            >
-              <PMButton
-                variant="primary"
-                size="sm"
-                disabled={
-                  redistributeAll
-                    ? allDriftedLocked
-                    : selectedDriftedCount === 0
-                }
-                onClick={() =>
-                  redistributeAll
-                    ? onSyncPackage(pkg.id)
-                    : onSyncPackage(
-                        pkg.id,
-                        Array.from(selectedKeys).filter((k) =>
-                          driftedKeys.includes(k),
-                        ),
-                      )
-                }
-              >
-                <PMIcon fontSize="sm">
-                  <LuRotateCw />
-                </PMIcon>
-                {redistributeAll
-                  ? `Redistribute all ${behindInstallCount}`
-                  : 'Redistribute to selected'}
-              </PMButton>
-            </PMTooltip>
-          </PMHStack>
-        </PMBox>
-      )}
     </PMVStack>
   );
 }
