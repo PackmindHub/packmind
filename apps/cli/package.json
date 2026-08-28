@@ -38,7 +38,7 @@
     "chalk": "^5.6.0",
     "cmd-ts": "^0.14.3",
     "diff": "^8.0.3",
-    "dotenv": "^16",
+    "dotenv": "^17",
     "inquirer": "^13.0.2",
     "log-update": "^8.0.0",
     "minimatch": "^10.2.6",
