@@ -90,11 +90,20 @@ export const RemovePackageFromTargetsDialog: React.FC<
                   <RemovePackageFromTargets.Body />
                 </PMDialog.Body>
                 <PMDialog.Footer>
-                  <PMDialog.CloseTrigger asChild>
-                    <PMButton variant="tertiary" size="sm">
-                      {PACKAGE_MESSAGES.removal.cancelButtonLabel}
-                    </PMButton>
-                  </PMDialog.CloseTrigger>
+                  {/*
+                    Closed through the store rather than wrapped in a
+                    `CloseTrigger`, which the dialog recipe pins to the top-right
+                    corner of the content: the footer Cancel landed on top of the
+                    header's cross. Not a `Trigger` either, because the toolbar
+                    caller already renders one and the two would share an id.
+                  */}
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => store.setOpen(false)}
+                  >
+                    {PACKAGE_MESSAGES.removal.cancelButtonLabel}
+                  </PMButton>
                   <RemovePackageFromTargets.Cta />
                 </PMDialog.Footer>
               </RemovePackageFromTargets>
