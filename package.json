@@ -180,7 +180,7 @@
     "crisp-api": "^10.9.1",
     "date-fns": "^4.1.0",
     "diff": "^8.0.3",
-    "dompurify": "^3.4.12",
+    "dompurify": "^3.4.13",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.7",
     "ioredis": "^5.4.2",
