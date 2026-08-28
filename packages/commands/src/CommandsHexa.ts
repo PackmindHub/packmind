@@ -91,15 +91,8 @@ export class CommandsHexa extends BaseHexa<BaseHexaOpts, ICommandsPort> {
       // Get deployment port - DeploymentsHexa builds its adapter in its
       // constructor, so this reference is live even though that hexa is
       // initialized after this one.
-      let deploymentPort: IDeploymentPort;
-      try {
-        deploymentPort =
-          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
-      } catch {
-        this.logger.warn('DeploymentPort not available in registry');
-        // Create a stub deployment port that will be replaced
-        deploymentPort = {} as IDeploymentPort;
-      }
+      const deploymentPort =
+        registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
 
       // Get JobsService
       const jobsService = registry.getService(JobsService);
