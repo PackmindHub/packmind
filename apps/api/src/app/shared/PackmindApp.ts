@@ -56,31 +56,31 @@ export interface PackmindAppDefinition {
  * Get the list of hexas and services to register for the Packmind API application.
  * This centralizes the subscription/initialization logic for the API.
  *
- * Order matters:
- * - SpacesHexa must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
- * - LinterHexa must come before StandardsHexa (StandardsHexa depends on LinterHexa)
- * - CodingAgentHexa must come before DeploymentsHexa
+ * Registration order does not affect wiring: HexaRegistry.init() constructs every
+ * hexa and builds the port map before calling any initialize(), so each hexa
+ * resolves a live reference to its peers' adapters whatever the order, and
+ * circular dependencies (Commands <-> Deployments) resolve on their own.
  *
  * @returns The hexas and services to register
  */
 export function getPackmindAppDefinition(): PackmindAppDefinition {
   return {
     hexas: [
-      SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
+      SpacesHexa,
       AccountsHexa,
       AmplitudeHexa,
       LlmHexa,
       GitHexa,
       CommandsHexa,
-      LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
+      LinterHexa,
       StandardsHexa,
       SkillsHexa,
-      SpacesManagementHexa, // Must come after Spaces, Accounts, Standards, Skills, Recipes
+      SpacesManagementHexa,
       PlaybookChangeManagementHexa,
       PlaybookChangeApplierHexa,
       CodingAgentHexa,
       DeploymentsHexa,
-      MarketplacesHexa, // Must come after DeploymentsHexa (resolves IDeploymentPort)
+      MarketplacesHexa,
       ...apiHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],
