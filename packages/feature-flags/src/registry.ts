@@ -13,13 +13,25 @@ export const ORGA_SPACE_MANAGEMENT_FEATURE_KEY = 'orga-space-management';
 export const SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY = 'space-nav-plugin-first';
 
 /**
+ * Gates whether the marketplace UI offers GitHub Copilot as an agent Packmind
+ * renders plugins for.
+ *
+ * The flag guards what is advertised, not what works: the backend still finds
+ * and parses `.github/plugin/marketplace.json`, so a repository linked while
+ * the flag was on keeps working, and a marketplace that already is a Copilot
+ * one is still labelled as one to everybody. Only the offer is held back.
+ */
+export const COPILOT_MARKETPLACE_FEATURE_KEY = 'copilot-marketplace';
+
+/**
  * Union of all known feature-flag keys. Extend this whenever a new
  * `*_FEATURE_KEY` constant + `DEFAULT_FEATURE_DOMAIN_MAP` entry is added.
  */
 export type FeatureFlagKey =
   | 'change-proposals-in-webapp'
   | 'orga-space-management'
-  | 'space-nav-plugin-first';
+  | 'space-nav-plugin-first'
+  | 'copilot-marketplace';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<
   FeatureFlagKey,
@@ -31,4 +43,5 @@ export const DEFAULT_FEATURE_DOMAIN_MAP: Record<
   ],
   [ORGA_SPACE_MANAGEMENT_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [SPACE_NAV_PLUGIN_FIRST_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [COPILOT_MARKETPLACE_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
