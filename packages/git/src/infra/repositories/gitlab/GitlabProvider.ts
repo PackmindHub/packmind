@@ -9,6 +9,10 @@ import axios, { AxiosInstance, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
+import {
+  PROVIDER_REQUEST_TIMEOUT_MS,
+  withTransientRetry,
+} from '../http/withTransientRetry';
 
 const origin = 'GitlabProvider';
 
@@ -34,6 +38,7 @@ export class GitlabProvider implements IGitProvider {
 
     this.client = axios.create({
       baseURL: this.baseUrl,
+      timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
         'PRIVATE-TOKEN': this.token, // Use header authentication as shown in GitLab API docs
@@ -91,15 +96,19 @@ export class GitlabProvider implements IGitProvider {
   ): Promise<{ rawProjects: unknown; totalPages: number }> {
     // Use the same approach as the working GitLab provider, starting with
     // membership.
-    const response = await this.client.get('/projects', {
-      params: {
-        membership: true,
-        archived: false,
-        order_by: 'last_activity_at', // Use last_activity_at like the working example
-        per_page: PROJECTS_PER_PAGE,
-        page,
-      },
-    });
+    const response = await withTransientRetry(
+      () =>
+        this.client.get('/projects', {
+          params: {
+            membership: true,
+            archived: false,
+            order_by: 'last_activity_at', // Use last_activity_at like the working example
+            per_page: PROJECTS_PER_PAGE,
+            page,
+          },
+        }),
+      { logger: this.logger, label: `/projects page ${page}` },
+    );
 
     this.logger.debug('GitLab API response received', {
       projectCount: response.data?.length || 0,

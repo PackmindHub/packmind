@@ -9,6 +9,10 @@ import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenR
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
+import {
+  PROVIDER_REQUEST_TIMEOUT_MS,
+  withTransientRetry,
+} from '../http/withTransientRetry';
 
 const origin = 'GithubProvider';
 
@@ -23,6 +27,7 @@ export class GithubProvider implements IGitProvider {
   ) {
     this.client = axios.create({
       baseURL: 'https://api.github.com',
+      timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
@@ -159,13 +164,17 @@ export class GithubProvider implements IGitProvider {
   private async fetchUserRepos(
     page: number,
   ): Promise<{ rawRepos: unknown; totalPages: number }> {
-    const response = await this.client.get('/user/repos', {
-      params: {
-        sort: 'updated',
-        per_page: REPOS_PER_PAGE,
-        page,
-      },
-    });
+    const response = await withTransientRetry(
+      () =>
+        this.client.get('/user/repos', {
+          params: {
+            sort: 'updated',
+            per_page: REPOS_PER_PAGE,
+            page,
+          },
+        }),
+      { logger: this.logger, label: `/user/repos page ${page}` },
+    );
     // `/user/repos` has no total count in its body, so the page count comes
     // from the RFC 5988 `Link` header (`rel="last"`).
     return {
@@ -177,12 +186,19 @@ export class GithubProvider implements IGitProvider {
   private async fetchInstallationRepos(
     page: number,
   ): Promise<{ rawRepos: unknown; totalPages: number }> {
-    const response = await this.client.get('/installation/repositories', {
-      params: {
-        per_page: REPOS_PER_PAGE,
-        page,
+    const response = await withTransientRetry(
+      () =>
+        this.client.get('/installation/repositories', {
+          params: {
+            per_page: REPOS_PER_PAGE,
+            page,
+          },
+        }),
+      {
+        logger: this.logger,
+        label: `/installation/repositories page ${page}`,
       },
-    });
+    );
     // The installation endpoint reports `total_count`, so we can derive the
     // page count directly rather than parsing the `Link` header.
     const totalCount = response.data?.total_count;
