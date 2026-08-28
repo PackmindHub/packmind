@@ -100,6 +100,26 @@ describe('PluginsController', () => {
       );
     });
 
+    it('passes targetVendor from the body into the command', async () => {
+      const response: RenderPackageAsPluginResponse = {
+        files: [],
+        skippedStandardsCount: 0,
+        pluginName: 'security',
+        pluginVersion: '0.1.0',
+      };
+      service.renderPlugin.mockResolvedValue(response);
+
+      await controller.render(
+        orgId,
+        { ...body, targetVendor: 'github' },
+        request,
+      );
+
+      expect(service.renderPlugin).toHaveBeenCalledWith(
+        expect.objectContaining({ targetVendor: 'github' }),
+      );
+    });
+
     it('translates PackagesNotFoundError to a NotFoundException', async () => {
       service.renderPlugin.mockRejectedValue(
         new PackagesNotFoundError(['security']),

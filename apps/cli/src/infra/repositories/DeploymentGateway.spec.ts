@@ -297,8 +297,20 @@ describe('DeploymentGateway', () => {
             pluginName: 'security',
             gitRemoteUrl: 'github.com/user/repo',
             gitBranch: 'main',
+            targetVendor: undefined,
           },
         },
+      );
+    });
+
+    it('forwards targetVendor so a Copilot marketplace is rendered as one', async () => {
+      await gateway.renderPlugin({ ...command, targetVendor: 'github' });
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        `/api/v0/organizations/${mockOrganizationId}/plugins/render`,
+        expect.objectContaining({
+          body: expect.objectContaining({ targetVendor: 'github' }),
+        }),
       );
     });
 

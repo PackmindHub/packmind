@@ -11,6 +11,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
 import {
+  MarketplaceVendor,
   OrganizationId,
   RenderPackageAsPluginCommand,
   RenderPackageAsPluginMode,
@@ -44,6 +45,11 @@ export class PluginsController {
       pluginName: string;
       gitRemoteUrl?: string;
       gitBranch?: string;
+      /**
+       * Plugin format to render. Omitted by callers that only ever render for
+       * Claude Code; the use case defaults to `anthropic`.
+       */
+      targetVendor?: MarketplaceVendor;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<RenderPackageAsPluginResponse> {
@@ -53,6 +59,7 @@ export class PluginsController {
         organizationId,
         packageSlug: body.packageSlug,
         mode: body.mode,
+        targetVendor: body.targetVendor,
       },
     );
 
@@ -67,6 +74,7 @@ export class PluginsController {
         pluginName: body.pluginName,
         gitRemoteUrl: body.gitRemoteUrl,
         gitBranch: body.gitBranch,
+        targetVendor: body.targetVendor,
       };
 
       const response = await this.pluginsService.renderPlugin(command);

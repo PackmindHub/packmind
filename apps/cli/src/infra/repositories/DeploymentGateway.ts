@@ -162,6 +162,7 @@ export class DeploymentGateway implements IDeploymentGateway {
           pluginName: command.pluginName,
           gitRemoteUrl: command.gitRemoteUrl,
           gitBranch: command.gitBranch,
+          targetVendor: command.targetVendor,
         },
       },
     );
