@@ -2,10 +2,11 @@ import { SmtpMailService } from './SmtpMailService';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { Configuration } from '../config/config/Configuration';
-import { SentMessageInfo } from 'nodemailer';
+import nodemailer, { SentMessageInfo } from 'nodemailer';
 
 // Mock external dependencies
 jest.mock('../config/config/Configuration');
+jest.mock('nodemailer');
 
 const MockedConfiguration = jest.mocked(Configuration);
 
@@ -279,6 +280,92 @@ Test content here
             }),
           ).rejects.toThrow('Failed to send email: SMTP connection failed');
         });
+      });
+    });
+  });
+
+  describe('transport reuse', () => {
+    let smtpConfig: Record<string, string>;
+    let sendMail: jest.Mock;
+    let close: jest.Mock;
+
+    beforeEach(() => {
+      // Rebuilt per test: the config-change cases mutate it, and a shared
+      // object would carry that mutation into the next test.
+      smtpConfig = {
+        SMTP_HOST: 'smtp.example.com',
+        SMTP_PORT: '587',
+        SMTP_SECURE: 'false',
+        SMTP_USER: 'user',
+        SMTP_PASSWORD: 'password',
+        SMTP_FROM: 'noreply@example.com',
+      };
+
+      sendMail = jest.fn().mockResolvedValue({ messageId: 'id' });
+      close = jest.fn();
+      jest
+        .mocked(nodemailer.createTransport)
+        .mockReturnValue({ sendMail, close } as unknown as ReturnType<
+          typeof nodemailer.createTransport
+        >);
+      MockedConfiguration.getConfig.mockImplementation(async (key: string) =>
+        key in smtpConfig ? smtpConfig[key] : null,
+      );
+    });
+
+    describe('when several emails are sent with unchanged configuration', () => {
+      it('builds the pooled transport once', async () => {
+        await service.sendEmail({
+          recipient: 'a@example.com',
+          subject: 's',
+          contentHtml: '<p>1</p>',
+        });
+        await service.sendEmail({
+          recipient: 'b@example.com',
+          subject: 's',
+          contentHtml: '<p>2</p>',
+        });
+
+        expect(nodemailer.createTransport).toHaveBeenCalledTimes(1);
+      });
+
+      it('still sends every message', async () => {
+        await service.sendEmail({
+          recipient: 'a@example.com',
+          subject: 's',
+          contentHtml: '<p>1</p>',
+        });
+        await service.sendEmail({
+          recipient: 'b@example.com',
+          subject: 's',
+          contentHtml: '<p>2</p>',
+        });
+
+        expect(sendMail).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when the configuration changes between sends', () => {
+      beforeEach(async () => {
+        await service.sendEmail({
+          recipient: 'a@example.com',
+          subject: 's',
+          contentHtml: '<p>1</p>',
+        });
+        smtpConfig['SMTP_HOST'] = 'smtp.elsewhere.com';
+        await service.sendEmail({
+          recipient: 'b@example.com',
+          subject: 's',
+          contentHtml: '<p>2</p>',
+        });
+      });
+
+      it('rebuilds the transport', () => {
+        expect(nodemailer.createTransport).toHaveBeenCalledTimes(2);
+      });
+
+      it('closes the transport it replaced, releasing its sockets', () => {
+        expect(close).toHaveBeenCalledTimes(1);
       });
     });
   });

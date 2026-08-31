@@ -37,6 +37,7 @@ describe('SingleFileDeployer', () => {
   beforeEach(() => {
     mockGitPort = {
       getFileFromRepo: jest.fn(),
+      getFilesFromRepo: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<IGitPort>;
     mockStandardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
 

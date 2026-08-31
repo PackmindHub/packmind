@@ -20,6 +20,23 @@ type MailOptionsTemplate = {
 const origin = 'SmtpMailService';
 
 export class SmtpMailService implements MailService {
+  /**
+   * The live transport, kept alongside the config it was built from.
+   *
+   * buildMailConfig() asks for `pool: true`, but a transport created per send
+   * is torn down with the message, so every email opened a fresh SMTP
+   * connection and authenticated again - the pool never had a second message
+   * to serve. Holding the transport is what makes that setting mean anything.
+   *
+   * Keyed on the serialised config so a changed setting still takes effect:
+   * the old transport is closed and a new one built, rather than the process
+   * having to restart.
+   */
+  private transporter?: {
+    signature: string;
+    transport: nodemailer.Transporter;
+  };
+
   constructor(
     private readonly _logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -107,10 +124,29 @@ export class SmtpMailService implements MailService {
   }
 
   async callNodeMailer(mailOptions: MailOptionsTemplate) {
-    const mailConfig = await this.buildMailConfig();
-    const transporter = nodemailer.createTransport(mailConfig);
+    const transporter = await this.getTransporter();
     const result = await transporter.sendMail(mailOptions);
     return result;
+  }
+
+  private async getTransporter(): Promise<nodemailer.Transporter> {
+    const mailConfig = await this.buildMailConfig();
+    const signature = JSON.stringify(mailConfig);
+
+    if (this.transporter?.signature === signature) {
+      return this.transporter.transport;
+    }
+
+    // Release the sockets the previous configuration was holding before
+    // replacing it, or they stay open until the process exits.
+    this.transporter?.transport.close();
+
+    this.transporter = {
+      signature,
+      transport: nodemailer.createTransport(mailConfig),
+    };
+
+    return this.transporter.transport;
   }
 
   buildMessageForLogging(recipient: string, subject: string, content: string) {

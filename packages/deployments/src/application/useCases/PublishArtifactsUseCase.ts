@@ -1174,18 +1174,21 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const skillPattern = /\.claude\/skills\/([^/]+)\/SKILL\.md$/;
     const addedSkills: string[] = [];
 
-    for (const file of defaultSkillsUpdates.createOrUpdate) {
+    const skillFiles = defaultSkillsUpdates.createOrUpdate.flatMap((file) => {
       const match = skillPattern.exec(file.path);
-      if (match) {
-        const skillName = match[1];
-        // Check if the SKILL.md already exists in the repository
-        const existingFile = await this.gitPort.getFileFromRepo(
-          gitRepo,
-          file.path,
-        );
-        if (!existingFile) {
-          addedSkills.push(skillName);
-        }
+      return match ? [{ path: file.path, skillName: match[1] }] : [];
+    });
+
+    // One provider lookup and one client for the whole set, rather than one
+    // per skill being published.
+    const existingFiles = await this.gitPort.getFilesFromRepo(
+      gitRepo,
+      skillFiles.map(({ path }) => path),
+    );
+
+    for (const { path, skillName } of skillFiles) {
+      if (!existingFiles.has(path)) {
+        addedSkills.push(skillName);
       }
     }
 

@@ -527,6 +527,14 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     return this._getFileFromRepo.getFileFromRepo(gitRepo, filePath, branch);
   }
 
+  public async getFilesFromRepo(
+    gitRepo: GitRepo,
+    filePaths: string[],
+    branch?: string,
+  ): Promise<Map<string, { sha: string; content: string }>> {
+    return this._getFileFromRepo.getFilesFromRepo(gitRepo, filePaths, branch);
+  }
+
   public async addFileToGit(
     repo: GitRepo,
     path: string,

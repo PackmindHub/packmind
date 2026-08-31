@@ -35,6 +35,69 @@ export class GetFileFromRepoUseCase {
       branch,
     });
 
+    const gitRepoInstance = await this.resolveGitRepoInstance(gitRepo);
+
+    return this.readFile(gitRepo, gitRepoInstance, filePath, branch);
+  }
+
+  /**
+   * Read several files over one provider client.
+   *
+   * Callers used to loop over getFileFromRepo, which re-read the provider row
+   * and rebuilt the client for every path — the same repository, looked up
+   * again each time. Resolving both once is the whole point of this method.
+   */
+  public async getFilesFromRepo(
+    gitRepo: GitRepo,
+    filePaths: string[],
+    branch?: string,
+  ): Promise<Map<string, { sha: string; content: string }>> {
+    const uniquePaths = [...new Set(filePaths)];
+
+    this.logger.info('Getting files from git repository', {
+      owner: gitRepo.owner,
+      repo: gitRepo.repo,
+      fileCount: uniquePaths.length,
+      branch,
+    });
+
+    const files = new Map<string, { sha: string; content: string }>();
+    if (uniquePaths.length === 0) {
+      return files;
+    }
+
+    const gitRepoInstance = await this.resolveGitRepoInstance(gitRepo);
+
+    for (const filePath of uniquePaths) {
+      // Per path, not per batch: the callers this replaced each swallowed a
+      // failed read and carried on with the rest, and a publish that loses
+      // every file's existing content because one of them failed would
+      // overwrite rather than merge.
+      try {
+        const fileData = await this.readFile(
+          gitRepo,
+          gitRepoInstance,
+          filePath,
+          branch,
+        );
+
+        if (fileData) {
+          files.set(filePath, fileData);
+        }
+      } catch (error) {
+        this.logger.warn('Failed to read file from repository, skipping it', {
+          owner: gitRepo.owner,
+          repo: gitRepo.repo,
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return files;
+  }
+
+  private async resolveGitRepoInstance(gitRepo: GitRepo): Promise<IGitRepo> {
     // Fetch the git provider by ID
     const provider = await this.gitProviderService.findGitProviderById(
       gitRepo.providerId,
@@ -45,8 +108,15 @@ export class GetFileFromRepoUseCase {
     }
 
     // Create IGitRepo instance based on provider (token validation delegated to factory)
-    const gitRepoInstance = await this.createGitRepoInstance(gitRepo, provider);
+    return this.createGitRepoInstance(gitRepo, provider);
+  }
 
+  private async readFile(
+    gitRepo: GitRepo,
+    gitRepoInstance: IGitRepo,
+    filePath: string,
+    branch?: string,
+  ): Promise<{ sha: string; content: string } | null> {
     // Get file content from repository
     const fileData = await gitRepoInstance.getFileOnRepo(filePath, branch);
 

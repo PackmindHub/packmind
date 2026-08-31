@@ -79,37 +79,36 @@ export async function fetchExistingFilesFromGit(
     }
   }
 
-  for (const [basePath, agent] of uniquePaths) {
-    try {
-      const prefixedPath = getTargetPrefixedPath(basePath, target);
+  // One batch, not one call per agent: each single-file read looked the
+  // provider up in the database and built its own provider client, so a target
+  // with half a dozen agent files paid that six times over to read one
+  // repository. Reads that fail are simply absent from the result, which is
+  // what the per-file error handling here used to do.
+  const prefixedPaths = new Map<string, string>();
+  for (const [basePath] of uniquePaths) {
+    prefixedPaths.set(basePath, getTargetPrefixedPath(basePath, target));
+  }
 
-      logger.debug('Fetching file for agent', {
+  const fetchedFiles = await gitPort.getFilesFromRepo(gitRepo, [
+    ...prefixedPaths.values(),
+  ]);
+
+  for (const [basePath, agent] of uniquePaths) {
+    const prefixedPath = prefixedPaths.get(basePath) as string;
+    const existingFile = fetchedFiles.get(prefixedPath);
+
+    if (existingFile?.content) {
+      existingFiles.set(basePath, existingFile.content);
+      logger.debug('Found existing file for agent', {
         agent,
         basePath,
-        prefixedPath,
+        contentLength: existingFile.content.length,
       });
-
-      const existingFile = await gitPort.getFileFromRepo(gitRepo, prefixedPath);
-
-      if (existingFile?.content) {
-        existingFiles.set(basePath, existingFile.content);
-        logger.debug('Found existing file for agent', {
-          agent,
-          basePath,
-          contentLength: existingFile.content.length,
-        });
-      } else {
-        logger.debug('No existing file found for agent', {
-          agent,
-          basePath,
-        });
-      }
-    } catch (error) {
-      logger.debug('Failed to fetch file for agent (will use empty content)', {
+    } else {
+      logger.debug('No existing file found for agent', {
         agent,
-        error: error instanceof Error ? error.message : String(error),
+        basePath,
       });
-      // Continue with empty content for this agent
     }
   }
 

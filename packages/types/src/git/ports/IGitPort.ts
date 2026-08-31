@@ -98,6 +98,28 @@ export interface IGitPort {
   ): Promise<{ sha: string; content: string } | null>;
 
   /**
+   * Get several files from a git repository in one go.
+   *
+   * Prefer this over calling getFileFromRepo in a loop. Each single-file call
+   * looks the provider up in the database and builds a fresh provider client;
+   * over a publish that reads N files per target that is N lookups and N
+   * clients to read what is always the same repository.
+   *
+   * @param gitRepo - The git repository
+   * @param filePaths - The paths to read; duplicates are read once
+   * @param branch - Optional branch name (defaults to repository default branch)
+   * @returns Promise of a map from requested path to file data. A path that
+   *          does not exist, or that could not be read, is absent from the map
+   *          rather than failing the batch — one unreadable file must not cost
+   *          the caller the contents of the others.
+   */
+  getFilesFromRepo(
+    gitRepo: GitRepo,
+    filePaths: string[],
+    branch?: string,
+  ): Promise<Map<string, { sha: string; content: string }>>;
+
+  /**
    * Ensure a branch exists on a git repository, creating it from a base branch
    * if missing. No-op when the target branch already exists.
    *

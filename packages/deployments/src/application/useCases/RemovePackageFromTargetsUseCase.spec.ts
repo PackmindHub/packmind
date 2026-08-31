@@ -132,6 +132,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
     mockGitPort = {
       getRepositoryById: jest.fn(),
       getFileFromRepo: jest.fn(),
+      getFilesFromRepo: jest.fn().mockResolvedValue(new Map()),
       commitToGit: jest.fn(),
       getFilesInFolder: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;

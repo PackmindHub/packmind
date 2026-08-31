@@ -99,6 +99,7 @@ describe('PublishArtifactsUseCase', () => {
       commitToGit: jest.fn(),
       getRepositoryById: jest.fn(),
       getFileFromRepo: jest.fn(),
+      getFilesFromRepo: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockCodingAgentPort = {

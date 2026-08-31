@@ -191,4 +191,127 @@ describe('GetFileFromRepoUseCase', () => {
       );
     });
   });
+
+  describe('getFilesFromRepo', () => {
+    const encode = (content: string) =>
+      Buffer.from(content, 'utf-8').toString('base64');
+
+    beforeEach(() => {
+      gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
+      mockGitRepoInstance.getFileOnRepo.mockImplementation(
+        async (filePath: string) =>
+          filePath === 'missing.md'
+            ? null
+            : {
+                sha: `sha-${filePath}`,
+                content: encode(`body of ${filePath}`),
+              },
+      );
+    });
+
+    describe('when several files are requested', () => {
+      it('returns the decoded content of each one', async () => {
+        const files = await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'a.md',
+          'b.md',
+        ]);
+
+        expect(files.get('a.md')).toEqual({
+          sha: 'sha-a.md',
+          content: 'body of a.md',
+        });
+      });
+
+      // The reason this method exists: one provider row read and one client
+      // built, however many files the caller wants.
+      it('looks the provider up once', async () => {
+        await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'a.md',
+          'b.md',
+          'c.md',
+        ]);
+
+        expect(gitProviderService.findGitProviderById).toHaveBeenCalledTimes(1);
+      });
+
+      it('builds a single provider client', async () => {
+        await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'a.md',
+          'b.md',
+          'c.md',
+        ]);
+
+        expect(gitRepoFactory.createGitRepo).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the same path is requested twice', () => {
+      it('reads it once', async () => {
+        await useCase.getFilesFromRepo(mockGitRepoEntity, ['a.md', 'a.md']);
+
+        expect(mockGitRepoInstance.getFileOnRepo).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when no paths are requested', () => {
+      it('does not touch the provider at all', async () => {
+        await useCase.getFilesFromRepo(mockGitRepoEntity, []);
+
+        expect(gitProviderService.findGitProviderById).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a file does not exist', () => {
+      it('omits it from the result', async () => {
+        const files = await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'a.md',
+          'missing.md',
+        ]);
+
+        expect(files.has('missing.md')).toBe(false);
+      });
+
+      it('still returns the files that do', async () => {
+        const files = await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'a.md',
+          'missing.md',
+        ]);
+
+        expect(files.has('a.md')).toBe(true);
+      });
+    });
+
+    describe('when one file cannot be read', () => {
+      beforeEach(() => {
+        mockGitRepoInstance.getFileOnRepo.mockImplementation(
+          async (filePath: string) => {
+            if (filePath === 'broken.md') {
+              throw new Error('boom');
+            }
+            return { sha: 'sha', content: encode('ok') };
+          },
+        );
+      });
+
+      // A publish that lost every file's existing content because one read
+      // failed would overwrite those files instead of merging into them.
+      it('does not fail the whole batch', async () => {
+        const files = await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'broken.md',
+          'fine.md',
+        ]);
+
+        expect(files.has('fine.md')).toBe(true);
+      });
+
+      it('omits the unreadable file', async () => {
+        const files = await useCase.getFilesFromRepo(mockGitRepoEntity, [
+          'broken.md',
+          'fine.md',
+        ]);
+
+        expect(files.has('broken.md')).toBe(false);
+      });
+    });
+  });
 });
