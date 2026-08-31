@@ -44,10 +44,11 @@ import type { PackageDrift } from '../redesign/types';
  * they read it and go on with the list still behind them. That left one chip,
  * always active, choosing between itself and nothing, so the row went with it.
  *
- * A drawer and not the takeover the events used to be, which was reached by a
- * button and left by a chevron. What was wrong with that is that it was
- * somewhere to be. A drawer is not left, it is closed, and what it covers stays
- * where it was.
+ * A drawer and not the takeover the events used to be, even though at full
+ * width it covers as much. What was wrong with that one is not that it filled
+ * the screen, it is that it was somewhere to be: reached by a button and left
+ * by a chevron. A drawer is not left, it is closed, and closing it puts back
+ * exactly the state it opened over.
  */
 export function ContextPackageDistribution({
   pkg,
@@ -170,7 +171,16 @@ export function ContextPackageDistribution({
         open={isHistoryOpen}
         onOpenChange={(event) => setHistoryOpen(event.open)}
         placement="end"
-        size="xl"
+        /*
+         * Full width, because `xl` caps the panel at 56rem and the events table
+         * carries a repository, a target, a version, an author, a date and a
+         * status across it. Below that it wraps into something you read column
+         * by column, which is not how you scan a log.
+         *
+         * There is no step between the two: the sizes go from 56rem to the
+         * viewport, so this is the narrower of the two honest answers.
+         */
+        size="full"
       >
         <PMPortal>
           <PMDrawer.Backdrop />
