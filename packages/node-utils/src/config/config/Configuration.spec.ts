@@ -2,6 +2,7 @@ import {
   Configuration,
   CONFIG_SOFT_TTL_MS,
   CONFIG_HARD_TTL_MS,
+  CONFIG_REFRESH_BACKOFF_MS,
 } from './Configuration';
 import { InfisicalConfig } from '../infra/Infisical/InfisicalConfig';
 
@@ -493,6 +494,33 @@ describe('Configuration', () => {
 
           expect(await Configuration.getConfig('CACHED_KEY')).toBe(
             'first-value',
+          );
+        });
+
+        // Otherwise refreshAt stays in the past and every single read starts
+        // another attempt, hammering an Infisical that is already failing.
+        it('backs off rather than retrying on every read', async () => {
+          await Configuration.getConfig('CACHED_KEY');
+          await flushBackgroundRefresh();
+          const attemptsAfterFirstFailure = mockGetValue.mock.calls.length;
+
+          await Configuration.getConfig('CACHED_KEY');
+          await flushBackgroundRefresh();
+
+          expect(mockGetValue).toHaveBeenCalledTimes(attemptsAfterFirstFailure);
+        });
+
+        it('tries again once the backoff has elapsed', async () => {
+          await Configuration.getConfig('CACHED_KEY');
+          await flushBackgroundRefresh();
+          const attemptsAfterFirstFailure = mockGetValue.mock.calls.length;
+
+          currentTime += CONFIG_REFRESH_BACKOFF_MS;
+          await Configuration.getConfig('CACHED_KEY');
+          await flushBackgroundRefresh();
+
+          expect(mockGetValue).toHaveBeenCalledTimes(
+            attemptsAfterFirstFailure + 1,
           );
         });
       });

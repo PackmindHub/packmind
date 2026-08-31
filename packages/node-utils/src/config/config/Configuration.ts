@@ -22,6 +22,15 @@ export const CONFIG_SOFT_TTL_MS = 60_000;
  */
 export const CONFIG_HARD_TTL_MS = 900_000;
 
+/**
+ * How long to leave a failed key alone before trying it again.
+ *
+ * Without this a failed refresh leaves `refreshAt` in the past, so every
+ * subsequent read starts another attempt — turning a busy endpoint into a
+ * steady stream of retries against an Infisical that is already struggling.
+ */
+export const CONFIG_REFRESH_BACKOFF_MS = 5_000;
+
 type CachedValue = {
   value: string | null;
   refreshAt: number;
@@ -185,6 +194,16 @@ export class Configuration {
           expiresAt: now + CONFIG_HARD_TTL_MS,
         });
         return value;
+      })
+      .catch((error) => {
+        // Back off before the next reader tries again, but keep expiresAt
+        // where it was: the hard bound is about how stale a value may get,
+        // and a failed attempt should not extend it.
+        const cached = this.valueCache.get(key);
+        if (cached) {
+          cached.refreshAt = Date.now() + CONFIG_REFRESH_BACKOFF_MS;
+        }
+        throw error;
       })
       .finally(() => {
         this.refreshes.delete(key);
