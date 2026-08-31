@@ -4,11 +4,16 @@ import { PackmindLogger } from '@packmind/logger';
 import { AxiosInstance } from 'axios';
 import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 
 // Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 const mockAxiosInstance = {
+  interceptors: {
+    request: { use: jest.fn() },
+    response: { use: jest.fn() },
+  },
   get: jest.fn(),
   post: jest.fn(),
   put: jest.fn(),
@@ -38,6 +43,7 @@ describe('GitlabProvider', () => {
   describe('constructor', () => {
     it('creates axios client with correct configuration', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
+        ...sharedHttpAgents,
         baseURL: 'https://gitlab.com/api/v4',
         timeout: PROVIDER_REQUEST_TIMEOUT_MS,
         headers: {
@@ -57,6 +63,7 @@ describe('GitlabProvider', () => {
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
+          ...sharedHttpAgents,
           baseURL: 'https://custom-gitlab.com/api/v4',
           timeout: PROVIDER_REQUEST_TIMEOUT_MS,
           headers: {
@@ -77,6 +84,7 @@ describe('GitlabProvider', () => {
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
+          ...sharedHttpAgents,
           baseURL: 'https://gitlab.company.com/api/v4',
           timeout: PROVIDER_REQUEST_TIMEOUT_MS,
           headers: {
@@ -96,6 +104,7 @@ describe('GitlabProvider', () => {
       );
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
+        ...sharedHttpAgents,
         baseURL: 'https://gitlab.company.com/api/v4',
         timeout: PROVIDER_REQUEST_TIMEOUT_MS,
         headers: {

@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, isAxiosError } from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import { createSign } from 'crypto';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { GitProviderId } from '@packmind/types';
@@ -78,6 +79,7 @@ export class AppInstallationTokenResolver implements IGithubTokenResolver {
     this.httpClient =
       httpClient ??
       axios.create({
+        ...sharedHttpAgents,
         baseURL: 'https://api.github.com',
         headers: {
           Accept: 'application/vnd.github+json',

@@ -1,6 +1,7 @@
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance } from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   GitBranchComparison,
@@ -11,6 +12,7 @@ import {
 import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
+  retryStaleSocketReads,
 } from '../http/withTransientRetry';
 
 export interface GithubRepositoryOptions {
@@ -53,6 +55,7 @@ export class GithubRepository implements IGitRepo {
     };
 
     this.axiosInstance = axios.create({
+      ...sharedHttpAgents,
       baseURL: 'https://api.github.com',
       timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
@@ -60,6 +63,8 @@ export class GithubRepository implements IGitRepo {
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    retryStaleSocketReads(this.axiosInstance, this.logger);
 
     // Inject token from resolver on every request
     this.axiosInstance.interceptors.request.use(async (config) => {

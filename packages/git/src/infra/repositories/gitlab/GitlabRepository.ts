@@ -1,5 +1,6 @@
 import { IGitRepo, CommitFile } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { GitBranchComparison, GitCommit, GitFileChange } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
@@ -7,6 +8,7 @@ import { extractNextPageUrl } from './linkHeaderUtils';
 import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
+  retryStaleSocketReads,
 } from '../http/withTransientRetry';
 
 const origin = 'GitlabRepository';
@@ -55,6 +57,7 @@ export class GitlabRepository implements IGitRepo {
     };
 
     this.axiosInstance = axios.create({
+      ...sharedHttpAgents,
       baseURL: this.baseUrl,
       timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
@@ -63,6 +66,8 @@ export class GitlabRepository implements IGitRepo {
       },
       // Note: GitLab API docs show PRIVATE-TOKEN header authentication
     });
+
+    retryStaleSocketReads(this.axiosInstance, this.logger);
 
     this.logger.debug('GitlabRepository initialized successfully', {
       projectPath: this.projectPath,

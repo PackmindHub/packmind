@@ -3,7 +3,7 @@ import * as path from 'path';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Cache, Configuration } from '@packmind/node-utils';
+import { Cache, Configuration, sharedHttpAgents } from '@packmind/node-utils';
 
 const origin = 'PingPackmindSetup';
 const logger = new PackmindLogger(origin, LogLevel.INFO);
@@ -71,6 +71,7 @@ async function sendPing(version: string, instanceId: string): Promise<void> {
     });
 
     await axios.post(WEBHOOK_URL, payload, {
+      ...sharedHttpAgents,
       timeout: 10000, // 10 second timeout
       headers: {
         'Content-Type': 'application/json',

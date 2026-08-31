@@ -6,12 +6,14 @@ import {
 } from '../../../domain/repositories/IGitProvider';
 import { ExternalRepository } from '@packmind/types';
 import axios, { AxiosInstance, isAxiosError } from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
 import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
+  retryStaleSocketReads,
 } from '../http/withTransientRetry';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
 
@@ -38,6 +40,7 @@ export class GitlabProvider implements IGitProvider {
       : `${providedUrl.replace(/\/$/, '')}/api/v4`;
 
     this.client = axios.create({
+      ...sharedHttpAgents,
       baseURL: this.baseUrl,
       timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
@@ -46,6 +49,8 @@ export class GitlabProvider implements IGitProvider {
       },
       // GitLab API documentation shows PRIVATE-TOKEN header authentication
     });
+
+    retryStaleSocketReads(this.client, this.logger);
   }
 
   async listAvailableRepositories(

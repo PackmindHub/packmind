@@ -25,3 +25,4 @@ export {
   GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH,
   normalizeDisplayName,
 } from './application/useCases/shared/validateDisplayName';
+export { PROVIDER_REQUEST_TIMEOUT_MS } from './infra/repositories/http/withTransientRetry';

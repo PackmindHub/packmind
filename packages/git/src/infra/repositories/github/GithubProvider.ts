@@ -7,12 +7,14 @@ import {
 import { ExternalRepository } from '@packmind/types';
 import { IGithubTokenResolver } from '../../../domain/repositories/IGithubTokenResolver';
 import axios, { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 import { collectAccessibleRepos } from '../collectAccessibleRepos';
 import {
   PROVIDER_REQUEST_TIMEOUT_MS,
   withTransientRetry,
+  retryStaleSocketReads,
 } from '../http/withTransientRetry';
 
 const origin = 'GithubProvider';
@@ -27,6 +29,7 @@ export class GithubProvider implements IGitProvider {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.client = axios.create({
+      ...sharedHttpAgents,
       baseURL: 'https://api.github.com',
       timeout: PROVIDER_REQUEST_TIMEOUT_MS,
       headers: {
@@ -34,6 +37,8 @@ export class GithubProvider implements IGitProvider {
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    retryStaleSocketReads(this.client, this.logger);
 
     // Inject token from resolver on every request
     this.client.interceptors.request.use(async (config) => {

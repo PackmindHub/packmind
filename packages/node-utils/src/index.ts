@@ -26,6 +26,7 @@ export * from './nest';
 export * from './observability/instrumentMethods';
 export * from './observability/withSpan';
 export * from './git';
+export * from './http/sharedHttpAgents';
 export * from './repositories/AbstractRepository';
 export * from './repositories/OrganizationScopedRepository';
 export * from './repositories/SpaceScopedRepository';

@@ -44,11 +44,13 @@ import {
   InvalidInstallStateError,
   InstallStateSigner,
   normalizeDisplayName,
+  PROVIDER_REQUEST_TIMEOUT_MS,
 } from '@packmind/git';
 import { INSTALL_STATE_SIGNER } from './git-providers.tokens';
 import { resolveGithubAppMode } from '../../../shared/utils/edition';
 import { GitHubAppManifest } from './types/GitHubAppManifest';
 import axios from 'axios';
+import { sharedHttpAgents } from '@packmind/node-utils';
 import validator from 'validator';
 
 const origin = 'GitProvidersService';
@@ -348,6 +350,10 @@ export class GitProvidersService {
         `https://api.github.com/app-manifests/${encodeURIComponent(command.code)}/conversions`,
         undefined,
         {
+          ...sharedHttpAgents,
+          // Without a ceiling this call waits forever; the caller is an HTTP
+          // request that has long since been abandoned by then.
+          timeout: PROVIDER_REQUEST_TIMEOUT_MS,
           headers: {
             Accept: 'application/vnd.github+json',
           },
