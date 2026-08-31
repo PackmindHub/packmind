@@ -8,7 +8,11 @@ Main backend API for Packmind, built with NestJS. Business logic follows hexagon
 - **Database**: PostgreSQL with TypeORM 0.3 for entity persistence
 - **Authentication**: JWT-based authentication via `@nestjs/jwt` (cookie and API-key based), no Passport strategy or refresh tokens
 - **Background Jobs**: BullMQ (via shared `packages/node-utils` and other packages) for asynchronous task processing
-- **Error Tracking**: Sentry for production error monitoring
+- **Error Tracking**: Sentry, initialised in `apps/api/src/instrument.ts`
+- **Tracing**: OpenTelemetry in `apps/api/src/otel.ts`, entirely gated on
+  `OTEL_EXPORTER_OTLP_ENDPOINT` — unset (the local default) means no exporter is started. It also
+  refuses to export when that endpoint is set but `OTEL_RESOURCE_ATTRIBUTES` carries no deployment
+  environment, rather than mislabel the deployment.
 - **API Style**: RESTful (no OpenAPI/Swagger documentation set up)
 
 ## Technologies
@@ -19,6 +23,7 @@ Main backend API for Packmind, built with NestJS. Business logic follows hexagon
 - **Redis**: Used for SSE pub/sub across instances and caching
 - **BullMQ**: Background job processing (via shared packages)
 - **Sentry**: Error tracking and monitoring
+- **OpenTelemetry**: Traces and logs export, off unless `OTEL_EXPORTER_OTLP_ENDPOINT` is set
 
 ## Main Commands
 

@@ -76,7 +76,7 @@ src/application/services/               always
 src/index.ts                            always — public barrel; nothing is importable until exported here
 src/application/useCases/<useCaseName>/ all but spaces (which drives everything through services)
 src/domain/repositories|useCases|errors/ most
-src/domain/entities/                    only accounts, standards, deployments
+src/domain/entities/                    only accounts and standards
 src/infra/schemas/                      persistence packages only — <name>Schemas.ts barrel of TypeORM EntitySchemas
 src/infra/repositories/                 persistence packages only
 src/application/jobs/ + src/domain/jobs/ only commands, deployments, git
