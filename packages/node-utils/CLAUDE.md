@@ -35,6 +35,7 @@ Note `IRepository` and `QueryOption` come from `@packmind/types`, **not** from h
 | `isFeatureEnabled` | `src/featureFlags/` | backend feature-flag gate (see the `feature-flags-authoring` skill) |
 | `Public`, `authRequest` | `src/nest/` | NestJS decorators/helpers usable without depending on the API app |
 | `migrationColumns`, `database/schemas`, `database/types` | `src/database/` | shared TypeORM column definitions and schema helpers — use these so entities stay consistent |
+| `instrumentMethods`, `withSpan` | `src/observability/` | OpenTelemetry span helpers |
 | `localDataSource` | `src/dataSources/local.ts` | |
 
 ## Text and error utilities — check here first
@@ -45,6 +46,8 @@ These are the ones most often reimplemented by hand:
   blocks into existing file content — what agent-file deployment is built on), `normalizeLineEndings`,
   `removeTrailingSlash`
 - `src/skillMd/`: `parseSkillMd`, `parseSkillMdContent` — SKILL.md frontmatter + body parsing
+- `src/git/`: `parseGitRepoInfo`, `parseGitProviderVendor`, `extractBaseUrl` — remote-URL and
+  owner/repo parsing. This, not `packages/git`, is where that logic lives
 - `src/errors/`: the shared error types
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)

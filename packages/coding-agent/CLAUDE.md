@@ -23,7 +23,7 @@ snake_case strings, not the folder names:
 | `opencode` | `opencode/` |
 | `codex` | `codex/` |
 
-Two sibling folders are **not** agents:
+Four sibling folders are **not** registry-backed agents:
 
 - `genericSectionWriter/` — shared writers for agents whose output is a single marked-up file
   (`GenericSectionWriter`, `GenericStandardSectionWriter`, `GenericCommandSectionWriter`,
@@ -31,6 +31,11 @@ Two sibling folders are **not** agents:
   marker handling.
 - `defaultSkillsDeployer/` — deploys the built-in skills (`OnboardDeployer`,
   `UpdatePlaybookDeployer`) on top of `AbstractDefaultSkillDeployer`.
+- `utils/` — `FileUtils`, `SkillMdContentBuilder`, `YamlFrontmatterUtils`.
+- `copilotPlugin/` — `CopilotPluginDeployer` implements `ICodingAgentDeployer` but has **no**
+  `CodingAgent` key and is absent from the registry. `RenderPackageAsPluginUseCase` in
+  `packages/deployments` instantiates it directly, the same way it does `ClaudePluginDeployer`. Do not
+  expect registry changes to reach it.
 
 ## Adding an agent
 

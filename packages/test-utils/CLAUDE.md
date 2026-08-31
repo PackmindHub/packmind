@@ -42,6 +42,6 @@ be undone; enable `restoreMocks` in the project's `jest.config.ts` rather than r
 `jest.clearAllMocks()`.
 
 Test-writing style (naming, assertions, mock cleanup) is covered by
-`.claude/rules/packmind/standard-backend-tests-redaction.md` — not repeated here.
+the repository-root `.claude/rules/packmind/standard-backend-tests-redaction.md` — not repeated here.
 
 Shared package conventions (env tags, layout, `/test` subpath, branded IDs): [../CLAUDE.md](../CLAUDE.md)
