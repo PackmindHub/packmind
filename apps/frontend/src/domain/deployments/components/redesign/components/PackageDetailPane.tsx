@@ -1238,26 +1238,28 @@ function ModeSectionHeader({
       top={0}
       zIndex={1}
     >
-      <PMVStack gap={0.5} align="stretch">
-        <PMHStack gap={2} align="center">
-          <PMIcon fontSize="sm" color="text.secondary">
-            <Icon />
-          </PMIcon>
-          <PMText fontSize="sm" fontWeight="semibold" color="primary">
-            {meta.title}
-          </PMText>
-          <PMText
-            fontSize="11px"
-            color="faded"
-            fontVariantNumeric="tabular-nums"
-          >
-            · {count} distribution{count === 1 ? '' : 's'}
-          </PMText>
-        </PMHStack>
-        <PMText fontSize="xs" color="secondary">
+      {/*
+        One line, with the note about the mode at the far end of it rather than
+        under the title. Two headers of two lines each cost 80px of a list the
+        reader came here to scroll, to carry a sentence they read the first time
+        and have known ever since. It wraps back to two lines when the pane is
+        too narrow to hold both, which is the one case where the note is worth
+        the row.
+      */}
+      <PMHStack gap={2} align="center" wrap="wrap" rowGap={0.5}>
+        <PMIcon fontSize="sm" color="text.secondary">
+          <Icon />
+        </PMIcon>
+        <PMText fontSize="sm" fontWeight="semibold" color="primary">
+          {meta.title}
+        </PMText>
+        <PMText fontSize="11px" color="faded" fontVariantNumeric="tabular-nums">
+          · {count} distribution{count === 1 ? '' : 's'}
+        </PMText>
+        <PMText fontSize="xs" color="secondary" marginLeft="auto">
           {meta.description}
         </PMText>
-      </PMVStack>
+      </PMHStack>
     </PMBox>
   );
 }
