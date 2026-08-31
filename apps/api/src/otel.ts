@@ -86,6 +86,22 @@ function isNoiseRequest(url: string | undefined): boolean {
 const otlpEndpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
 
 /**
+ * Statement-level Postgres spans, opt-in — see the `instrumentation-pg` comment
+ * below for why they are off by default.
+ *
+ * Named `PACKMIND_` and not `OTEL_` on purpose: the `OTEL_*` namespace belongs
+ * to the specification, and the SDK already reads several of those keys
+ * natively. Same reasoning, and same `process.env`-at-load-time constraint, as
+ * `PACKMIND_OTEL_INSTRUMENT_METHODS` in @packmind/node-utils.
+ *
+ * Anything other than a literal `true` (case- and whitespace-insensitive) leaves
+ * it off, so a typo cannot flood traces by accident.
+ */
+const pgInstrumentationEnabled =
+  (process.env['PACKMIND_OTEL_INSTRUMENT_PG'] ?? '').trim().toLowerCase() ===
+  'true';
+
+/**
  * The environment is REQUIRED whenever exporting, and must come from
  * OTEL_RESOURCE_ATTRIBUTES — the SDK's own resource detector reads it, so it is
  * the one source of truth.
@@ -219,23 +235,31 @@ if (otlpEndpoint && environment) {
         // this ground, so the router instrumentation is pure noise here.
         '@opentelemetry/instrumentation-router': { enabled: false },
 
-        // Postgres belongs to Datadog now. Database Monitoring reads
+        // Postgres belongs to Datadog now, so it is off unless
+        // PACKMIND_OTEL_INSTRUMENT_PG=true. Database Monitoring reads
         // `pg_stat_statements` and expects `dd-trace`, so it cannot consume
         // these spans anyway — and meanwhile a single repository call expanded
         // into eight-plus `pg.query` / `pg-pool.connect` children, burying the
         // first-party spans that say what the request was actually doing.
         //
         // One flag covers every one of those rows: the package registers a `pg`
-        // AND a `pg-pool` module definition. It also stops the pg
+        // AND a `pg-pool` module definition. It also governs the pg
         // connection-pool metrics, which is what DBM reports instead.
         //
-        // Slow queries are still visible, just one level up: `instrumentMethods`
-        // (see @packmind/node-utils) spans every repository method, so a slow
-        // SELECT still surfaces as a slow `<Name>Repository.<method>` span —
-        // without the statement text. Datadog has the statement.
-        '@opentelemetry/instrumentation-pg': { enabled: false },
+        // With it off, slow queries are still visible one level up:
+        // `instrumentMethods` (see @packmind/node-utils) spans every repository
+        // method, so a slow SELECT still surfaces as a slow
+        // `<Name>Repository.<method>` span — without the statement text. Datadog
+        // has the statement. Turn the flag on when you need that statement text
+        // in a trace and Datadog is not where you are looking, which locally it
+        // never is; expect the span count per request to multiply.
+        '@opentelemetry/instrumentation-pg': {
+          enabled: pgInstrumentationEnabled,
+        },
 
-        // Redis is off for the same reason Postgres is: volume without signal.
+        // Redis is off for the same reason Postgres defaults to off: volume
+        // without signal — and here there is no flag, because unlike statement
+        // text these spans were never worth reading.
         // Nearly every span was BullMQ's own bookkeeping — an `evalsha` of
         // moveToActive per worker poll, plus the QueueEvents blocking XREAD —
         // emitted continuously whether or not a job exists, and each one
@@ -282,7 +306,8 @@ if (otlpEndpoint && environment) {
   otelStarted = true;
 
   console.log(
-    `[otel] OpenTelemetry started for "${environment}", exporting to ${otlpEndpoint}`,
+    `[otel] OpenTelemetry started for "${environment}", exporting to ${otlpEndpoint}` +
+      (pgInstrumentationEnabled ? ' (with Postgres instrumentation)' : ''),
   );
 }
 

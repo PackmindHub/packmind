@@ -12,7 +12,8 @@ Main backend API for Packmind, built with NestJS. Business logic follows hexagon
 - **Tracing**: OpenTelemetry in `apps/api/src/otel.ts`, entirely gated on
   `OTEL_EXPORTER_OTLP_ENDPOINT` — unset (the local default) means no exporter is started. It also
   refuses to export when that endpoint is set but `OTEL_RESOURCE_ATTRIBUTES` carries no deployment
-  environment, rather than mislabel the deployment.
+  environment, rather than mislabel the deployment. Postgres statement spans are an opt-in on top,
+  via `PACKMIND_OTEL_INSTRUMENT_PG=true`.
 - **API Style**: RESTful (no OpenAPI/Swagger documentation set up)
 
 ## Technologies
