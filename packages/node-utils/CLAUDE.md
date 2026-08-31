@@ -36,6 +36,7 @@ Note `IRepository` and `QueryOption` come from `@packmind/types`, **not** from h
 | `Public`, `authRequest` | `src/nest/` | NestJS decorators/helpers usable without depending on the API app |
 | `migrationColumns`, `database/schemas`, `database/types` | `src/database/` | shared TypeORM column definitions and schema helpers — use these so entities stay consistent |
 | `instrumentMethods`, `withSpan` | `src/observability/` | OpenTelemetry span helpers |
+| `sharedHttpAgents`, `installGlobalHttpPool` | `src/http/` | keep-alive connection pooling — spread `sharedHttpAgents` into every server-side `axios.create()`; `installGlobalHttpPool()` does the same for global `fetch` and is called once from the API bootstrap |
 | `localDataSource` | `src/dataSources/local.ts` | |
 
 ## Text and error utilities — check here first
