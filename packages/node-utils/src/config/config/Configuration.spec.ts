@@ -1,4 +1,8 @@
-import { Configuration } from './Configuration';
+import {
+  Configuration,
+  CONFIG_SOFT_TTL_MS,
+  CONFIG_HARD_TTL_MS,
+} from './Configuration';
 import { InfisicalConfig } from '../infra/Infisical/InfisicalConfig';
 
 jest.mock('../infra/Infisical/InfisicalConfig');
@@ -365,6 +369,162 @@ describe('Configuration', () => {
 
           expect(result).toBe('env-fallback-value');
         });
+      });
+    });
+  });
+
+  describe('caching of Infisical values', () => {
+    let mockGetValue: jest.Mock;
+    let nowSpy: jest.SpyInstance<number, []>;
+    let currentTime: number;
+
+    // The stale-while-revalidate refresh is deliberately not awaited by the
+    // caller, so tests have to let the microtask queue drain to observe it.
+    const flushBackgroundRefresh = () =>
+      new Promise((resolve) => setImmediate(resolve));
+
+    beforeEach(() => {
+      process.env['CONFIGURATION'] = 'infisical';
+      process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
+      process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
+      process.env['INFISICAL_ENV'] = 'test-env';
+      process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+      delete process.env['CACHED_KEY'];
+
+      currentTime = 1_000_000;
+      nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+
+      mockGetValue = jest.fn().mockResolvedValue('first-value');
+      MockedInfisicalConfig.mockImplementation(() => {
+        return {
+          initClient: jest.fn(),
+          getValue: mockGetValue,
+        } as Partial<InfisicalConfig> as InfisicalConfig;
+      });
+    });
+
+    afterEach(() => {
+      nowSpy.mockRestore();
+    });
+
+    describe('when the same key is read twice inside the soft TTL', () => {
+      it('reads from Infisical once', async () => {
+        await Configuration.getConfig('CACHED_KEY');
+        currentTime += CONFIG_SOFT_TTL_MS - 1;
+        await Configuration.getConfig('CACHED_KEY');
+
+        expect(mockGetValue).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when concurrent readers ask for a cold key', () => {
+      it('reads from Infisical once', async () => {
+        await Promise.all([
+          Configuration.getConfig('CACHED_KEY'),
+          Configuration.getConfig('CACHED_KEY'),
+          Configuration.getConfig('CACHED_KEY'),
+        ]);
+
+        expect(mockGetValue).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when a key is missing from Infisical', () => {
+      it('caches the miss rather than asking again', async () => {
+        mockGetValue.mockResolvedValue(null);
+
+        await Configuration.getConfig('CACHED_KEY');
+        await Configuration.getConfig('CACHED_KEY');
+
+        expect(mockGetValue).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the key is read past the soft TTL', () => {
+      beforeEach(async () => {
+        await Configuration.getConfig('CACHED_KEY');
+        mockGetValue.mockResolvedValue('second-value');
+        currentTime += CONFIG_SOFT_TTL_MS;
+      });
+
+      it('serves the stale value without waiting for the refresh', async () => {
+        expect(await Configuration.getConfig('CACHED_KEY')).toBe('first-value');
+      });
+
+      it('refreshes behind the read, so the next read sees the new value', async () => {
+        await Configuration.getConfig('CACHED_KEY');
+        await flushBackgroundRefresh();
+
+        expect(await Configuration.getConfig('CACHED_KEY')).toBe(
+          'second-value',
+        );
+      });
+    });
+
+    describe('when the key is read past the hard TTL', () => {
+      it('waits for the refresh and returns the fresh value', async () => {
+        await Configuration.getConfig('CACHED_KEY');
+        mockGetValue.mockResolvedValue('second-value');
+        currentTime += CONFIG_HARD_TTL_MS;
+
+        expect(await Configuration.getConfig('CACHED_KEY')).toBe(
+          'second-value',
+        );
+      });
+    });
+
+    describe('when Infisical is unreachable', () => {
+      describe('when a background refresh fails', () => {
+        beforeEach(async () => {
+          await Configuration.getConfig('CACHED_KEY');
+          mockGetValue.mockRejectedValue(new Error('infisical unreachable'));
+          currentTime += CONFIG_SOFT_TTL_MS;
+        });
+
+        it('keeps serving the stale value', async () => {
+          await expect(Configuration.getConfig('CACHED_KEY')).resolves.toBe(
+            'first-value',
+          );
+        });
+
+        it('leaves the entry in place for the next reader', async () => {
+          await Configuration.getConfig('CACHED_KEY');
+          await flushBackgroundRefresh();
+
+          expect(await Configuration.getConfig('CACHED_KEY')).toBe(
+            'first-value',
+          );
+        });
+      });
+
+      describe('when a blocking refresh past the hard TTL fails', () => {
+        it('serves the stale value rather than null', async () => {
+          await Configuration.getConfig('CACHED_KEY');
+          mockGetValue.mockRejectedValue(new Error('infisical unreachable'));
+          currentTime += CONFIG_HARD_TTL_MS;
+
+          expect(await Configuration.getConfig('CACHED_KEY')).toBe(
+            'first-value',
+          );
+        });
+      });
+
+      describe('when there is no cached value to fall back on', () => {
+        it('returns null, as an uncached read does today', async () => {
+          mockGetValue.mockRejectedValue(new Error('infisical unreachable'));
+
+          expect(await Configuration.getConfig('CACHED_KEY')).toBeNull();
+        });
+      });
+    });
+
+    describe('when the cache is reset', () => {
+      it('reads from Infisical again', async () => {
+        await Configuration.getConfig('CACHED_KEY');
+        Configuration.resetCache();
+        await Configuration.getConfig('CACHED_KEY');
+
+        expect(mockGetValue).toHaveBeenCalledTimes(2);
       });
     });
   });
