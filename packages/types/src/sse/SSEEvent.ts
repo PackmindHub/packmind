@@ -124,29 +124,6 @@ export function createHelloWorldEvent(message: string): HelloWorldEvent {
   };
 }
 
-export function createDataChangeEvent<TPayload>(
-  type: 'PUT' | 'DELETE' | 'CREATE' | 'UPDATE',
-  data: TPayload,
-): DataChangeEvent<TPayload> {
-  return {
-    type,
-    data,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-export function createNotificationEvent(
-  title: string,
-  message: string,
-  level: 'info' | 'warning' | 'error' | 'success' = 'info',
-): NotificationEvent {
-  return {
-    type: 'NOTIFICATION',
-    data: { title, message, level },
-    timestamp: new Date().toISOString(),
-  };
-}
-
 export function createProgramStatusChangeEvent(
   ruleId: string,
   language: string,
