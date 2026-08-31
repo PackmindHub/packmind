@@ -672,58 +672,6 @@ describe('UserService', () => {
     });
   });
 
-  describe('.getUserByEmail', () => {
-    describe('when user is found', () => {
-      const email = 'testuser@packmind.com';
-      let user: User;
-      let result: User | null;
-
-      beforeEach(async () => {
-        user = userFactory({
-          id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-          email,
-          memberships: [
-            {
-              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-              organizationId: createOrganizationId(
-                '123e4567-e89b-12d3-a456-426614174001',
-              ),
-              role: 'admin',
-            },
-          ],
-        });
-        mockUserRepository.findByEmail.mockResolvedValue(user);
-        result = await userService.getUserByEmail(email);
-      });
-
-      it('calls repository with correct email', () => {
-        expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
-      });
-
-      it('returns the user', () => {
-        expect(result).toEqual(user);
-      });
-    });
-
-    describe('when user is not found', () => {
-      const email = 'testuser@packmind.com';
-      let result: User | null;
-
-      beforeEach(async () => {
-        mockUserRepository.findByEmail.mockResolvedValue(null);
-        result = await userService.getUserByEmail(email);
-      });
-
-      it('calls repository with correct email', () => {
-        expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
-      });
-
-      it('returns null', () => {
-        expect(result).toBeNull();
-      });
-    });
-  });
-
   describe('.getUserByEmailCaseInsensitive', () => {
     describe('when user is found with different case', () => {
       const searchEmail = 'TestUser@PACKMIND.com';

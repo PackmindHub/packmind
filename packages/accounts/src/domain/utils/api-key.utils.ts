@@ -60,30 +60,3 @@ export function decodeApiKey(apiKey: string): DecodedApiKey {
     };
   }
 }
-
-/**
- * Extracts API key from Authorization header
- * Supports both "Bearer <api_key>" and direct API key formats
- * @param authHeader The Authorization header value
- * @returns The extracted API key or null
- */
-export function extractApiKeyFromHeader(authHeader?: string): string | null {
-  if (!authHeader || authHeader.trim() === '') {
-    return null;
-  }
-
-  // Check if it's just "Bearer" without a key
-  if (authHeader.trim() === 'Bearer') {
-    return '';
-  }
-
-  // Remove "Bearer " prefix if present
-  const bearerPrefix = 'Bearer ';
-  if (authHeader.startsWith(bearerPrefix)) {
-    const key = authHeader.substring(bearerPrefix.length).trim();
-    return key;
-  }
-
-  // Return as-is if no Bearer prefix
-  return authHeader.trim();
-}

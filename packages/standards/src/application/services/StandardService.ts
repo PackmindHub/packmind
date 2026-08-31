@@ -123,25 +123,6 @@ export class StandardService {
     return this.standardRepository.countBySpaceIds(spaceIds);
   }
 
-  async listStandardsByUser(userId: UserId): Promise<Standard[]> {
-    this.logger.info('Listing standards by user', { userId });
-
-    try {
-      const standards = await this.standardRepository.findByUserId(userId);
-      this.logger.info('Standards retrieved by user successfully', {
-        userId,
-        count: standards.length,
-      });
-      return standards;
-    } catch (error) {
-      this.logger.error('Failed to list standards by user', {
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async getStandardById(id: StandardId): Promise<Standard | null> {
     this.logger.info('Getting standard by ID', { id });
 

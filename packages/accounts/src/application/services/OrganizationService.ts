@@ -80,19 +80,6 @@ export class OrganizationService {
     return await this.organizationRepository.findBySlug(slug);
   }
 
-  async listOrganizations(): Promise<Organization[]> {
-    this.logger.info('Listing all organizations');
-    return await this.organizationRepository.list();
-  }
-
-  async updateOrganization(organization: Organization): Promise<Organization> {
-    this.logger.info('Updating organization', {
-      organizationId: organization.id,
-      name: organization.name,
-    });
-    return await this.organizationRepository.add(organization);
-  }
-
   async renameOrganization(
     organization: Organization,
     newName: string,

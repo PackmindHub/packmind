@@ -32,24 +32,6 @@ export class CommandVersionRepository
     };
   }
 
-  async list(): Promise<CommandVersion[]> {
-    this.logger.info('Listing all recipe versions');
-
-    try {
-      const versions = await this.repository.find({
-        order: { version: 'DESC' },
-        relations: ['gitCommit'],
-      });
-      this.logger.info('Recipe versions found', { count: versions.length });
-      return versions;
-    } catch (error) {
-      this.logger.error('Failed to list recipe versions', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async findByCommandId(recipeId: CommandId): Promise<CommandVersion[]> {
     this.logger.info('Finding recipe versions by recipe ID', { recipeId });
 

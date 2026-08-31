@@ -18,8 +18,7 @@ import {
 import { DataSource } from 'typeorm';
 import { GitServices } from './application/GitServices';
 import { GitAdapter } from './application/adapter/GitAdapter';
-import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
-import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
+
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { GitRepositories } from './infra/repositories/GitRepositories';
 import {
@@ -150,37 +149,4 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   // ==================
   // DELAYED JOBS
   // ==================
-
-  /**
-   * Queue a job to fetch file content from a git repository.
-   * This is an asynchronous operation that will fetch the file content
-   * for multiple files at specific commits and return them when completed.
-   *
-   * Takes a list of files (without content) and enriches each with its file content.
-   *
-   * @param input - The input parameters containing the array of files to enrich
-   * @param onComplete - Optional callback to execute when the job completes successfully
-   * @returns The job ID that can be used to track the job status
-   *
-   * @example
-   * ```typescript
-   * const jobId = await gitHexa.addFetchFileContentJob(
-   *   {
-   *     organizationId: 'org-123',
-   *     gitRepoId: 'repo-456',
-   *     files: filesWithoutContent,
-   *   },
-   *   async (result) => {
-   *     console.log(`Fetched ${result.files.length} files`);
-   *     // Process the files with content...
-   *   }
-   * );
-   * ```
-   */
-  public async addFetchFileContentJob(
-    input: FetchFileContentInput,
-    onComplete?: FetchFileContentCallback,
-  ): Promise<string> {
-    return this.adapter.addFetchFileContentJob(input, onComplete);
-  }
 }

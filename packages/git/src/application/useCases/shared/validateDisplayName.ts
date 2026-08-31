@@ -5,7 +5,7 @@ import {
   OrganizationId,
 } from '@packmind/types';
 
-export const GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH = 64;
+const GIT_PROVIDER_DISPLAY_NAME_MAX_LENGTH = 64;
 
 /**
  * Normalize a display name input: trim leading/trailing whitespace and cap at

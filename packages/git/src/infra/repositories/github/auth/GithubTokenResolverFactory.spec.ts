@@ -1,7 +1,6 @@
 import {
   GithubTokenResolverFactory,
   IConfigProvider,
-  resolveGithubAppMode,
 } from './GithubTokenResolverFactory';
 import { PatTokenResolver } from './PatTokenResolver';
 import { AppInstallationTokenResolver } from './AppInstallationTokenResolver';
@@ -430,26 +429,6 @@ describe('GithubTokenResolverFactory', () => {
         const resolver = await factory.build(provider);
 
         expect(resolver).toBeInstanceOf(AppInstallationTokenResolver);
-      });
-    });
-  });
-
-  describe('resolveGithubAppMode', () => {
-    describe('when GITHUB_APP_SLUG is set', () => {
-      it('returns "shared"', async () => {
-        await expect(
-          resolveGithubAppMode(
-            new StubConfig({ GITHUB_APP_SLUG: 'packmind-cloud' }),
-          ),
-        ).resolves.toBe('shared');
-      });
-    });
-
-    describe('when GITHUB_APP_SLUG is not set', () => {
-      it('returns "on-prem"', async () => {
-        await expect(resolveGithubAppMode(new StubConfig({}))).resolves.toBe(
-          'on-prem',
-        );
       });
     });
   });

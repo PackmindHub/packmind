@@ -45,28 +45,6 @@ export class DeployCommandsDelayedJob extends AbstractAIDelayedJob<
     super(queueFactory, logger);
   }
 
-  /**
-   * Add a job with an optional completion callback.
-   * The callback will be executed when the job completes successfully.
-   *
-   * @param input - The job input data
-   * @param onComplete - Optional callback to execute when the job completes
-   * @returns The job ID
-   */
-  async addJobWithCallback(
-    input: DeployCommandsInput,
-    onComplete?: DeployCommandsCallback,
-  ): Promise<string> {
-    const jobId = await this.addJob(input);
-
-    if (onComplete) {
-      this.callbacks.set(jobId, onComplete);
-      this.logger.info(`[${this.origin}] Registered callback for job ${jobId}`);
-    }
-
-    return jobId;
-  }
-
   async onFail(jobId: string): Promise<void> {
     this.logger.error(
       `[${this.origin}] Job ${jobId} failed - recipes could not be deployed`,

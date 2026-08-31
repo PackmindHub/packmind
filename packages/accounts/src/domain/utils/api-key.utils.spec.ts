@@ -1,8 +1,4 @@
-import {
-  encodeApiKey,
-  decodeApiKey,
-  extractApiKeyFromHeader,
-} from './api-key.utils';
+import { encodeApiKey, decodeApiKey } from './api-key.utils';
 import { ApiKeyPayload } from '../entities/ApiKey';
 
 describe('API Key Utils', () => {
@@ -165,62 +161,6 @@ describe('API Key Utils', () => {
 
       it('returns error containing decode failure message', () => {
         expect(decoded.error).toContain('Failed to decode API key');
-      });
-    });
-  });
-
-  describe('extractApiKeyFromHeader', () => {
-    describe('when header has Bearer prefix', () => {
-      it('extracts the API key', () => {
-        const header = 'Bearer my-api-key-123';
-
-        const extracted = extractApiKeyFromHeader(header);
-
-        expect(extracted).toBe('my-api-key-123');
-      });
-    });
-
-    describe('when header has no Bearer prefix', () => {
-      it('returns the header as-is', () => {
-        const header = 'my-api-key-123';
-
-        const extracted = extractApiKeyFromHeader(header);
-
-        expect(extracted).toBe('my-api-key-123');
-      });
-    });
-
-    describe('when header has extra whitespace with Bearer prefix', () => {
-      it('extracts the trimmed API key', () => {
-        const header = 'Bearer   my-api-key-123  ';
-
-        const extracted = extractApiKeyFromHeader(header);
-
-        expect(extracted).toBe('my-api-key-123');
-      });
-    });
-
-    describe('when header is undefined', () => {
-      it('returns null', () => {
-        const extracted = extractApiKeyFromHeader(undefined);
-
-        expect(extracted).toBeNull();
-      });
-    });
-
-    describe('when header is empty', () => {
-      it('returns null', () => {
-        const extracted = extractApiKeyFromHeader('');
-
-        expect(extracted).toBeNull();
-      });
-    });
-
-    describe('when header is just "Bearer" without key', () => {
-      it('returns empty string', () => {
-        const extracted = extractApiKeyFromHeader('Bearer');
-
-        expect(extracted).toBe('');
       });
     });
   });

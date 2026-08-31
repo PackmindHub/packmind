@@ -3,7 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { ruleFactory } from '../../../test/ruleFactory';
+
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { createStandardId } from '@packmind/types';
 import {
@@ -445,103 +445,6 @@ describe('StandardVersionService', () => {
         );
 
         expect(result).toBeNull();
-      });
-    });
-  });
-
-  describe('prepareForGitPublishing', () => {
-    const allowedSpaceIds: SpaceId[] = [createSpaceId(uuidv4())];
-    let standardId: ReturnType<typeof createStandardId>;
-    let version: number;
-    let standardVersion: StandardVersion;
-    let result: { filePath: string; content: string };
-
-    beforeEach(async () => {
-      standardId = createStandardId(uuidv4());
-      version = 1;
-      standardVersion = standardVersionFactory({
-        standardId,
-        version,
-        name: 'Test Standard',
-        slug: 'test-standard',
-        description: 'Test description',
-      });
-
-      const rules = [
-        ruleFactory({
-          content: 'Rule 1',
-          standardVersionId: standardVersion.id,
-        }),
-        ruleFactory({
-          content: 'Rule 2',
-          standardVersionId: standardVersion.id,
-        }),
-      ];
-
-      standardVersionRepository.findByStandardIdAndVersion = jest
-        .fn()
-        .mockResolvedValue(standardVersion);
-      ruleRepository.findByStandardVersionId = jest
-        .fn()
-        .mockResolvedValue(rules);
-
-      result = await standardVersionService.prepareForGitPublishing(
-        standardId,
-        version,
-        allowedSpaceIds,
-      );
-    });
-
-    it('calls version repository with correct parameters', () => {
-      expect(
-        standardVersionRepository.findByStandardIdAndVersion,
-      ).toHaveBeenCalledWith(standardId, version, allowedSpaceIds);
-    });
-
-    it('calls rule repository with correct version ID', () => {
-      expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
-        standardVersion.id,
-      );
-    });
-
-    it('returns correct file path', () => {
-      expect(result.filePath).toEqual('.packmind/standards/test-standard.md');
-    });
-
-    it('includes standard name in content', () => {
-      expect(result.content).toContain('# Test Standard');
-    });
-
-    it('includes description in content', () => {
-      expect(result.content).toContain('Test description');
-    });
-
-    it('includes first rule in content', () => {
-      expect(result.content).toContain('Rule 1');
-    });
-
-    it('includes second rule in content', () => {
-      expect(result.content).toContain('Rule 2');
-    });
-
-    describe('when standard version not found', () => {
-      it('throws error', async () => {
-        const standardId = createStandardId(uuidv4());
-        const version = 999;
-
-        standardVersionRepository.findByStandardIdAndVersion = jest
-          .fn()
-          .mockResolvedValue(null);
-
-        await expect(
-          standardVersionService.prepareForGitPublishing(
-            standardId,
-            version,
-            allowedSpaceIds,
-          ),
-        ).rejects.toThrow(
-          `Standard version not found for standard ${standardId} version ${version}`,
-        );
       });
     });
   });

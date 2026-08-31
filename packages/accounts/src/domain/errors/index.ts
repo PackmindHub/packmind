@@ -13,7 +13,6 @@ export { TooManyLoginAttemptsError } from './TooManyLoginAttemptsError';
 export { UserNotInOrganizationError } from './UserNotInOrganizationError';
 export { OrganizationAdminRequiredError } from './OrganizationAdminRequiredError';
 export { UserCannotExcludeSelfError } from './UserCannotExcludeSelfError';
-export { PasswordResetConfigurationError } from './PasswordResetConfigurationError';
 export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundError';
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
 export { InvalidOrganizationNameError } from './InvalidOrganizationNameError';
