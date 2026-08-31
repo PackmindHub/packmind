@@ -8,22 +8,6 @@ export interface SSEEvent<TData = unknown> {
   timestamp: string;
 }
 
-// Specific event types that can be sent through SSE
-export type SSEEventType =
-  | 'hello_world'
-  | 'PUT'
-  | 'DELETE'
-  | 'CREATE'
-  | 'UPDATE'
-  | 'NOTIFICATION'
-  | 'PROGRAM_STATUS_CHANGE'
-  | 'ASSESSMENT_STATUS_CHANGE'
-  | 'DETECTION_HEURISTICS_UPDATED'
-  | 'USER_CONTEXT_CHANGE'
-  | 'DISTRIBUTION_STATUS_CHANGE'
-  | 'CHANGE_PROPOSAL_UPDATE'
-  | 'MARKETPLACE_PUBLISH_COMPLETED';
-
 // Hello World event for testing
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
   type: 'hello_world';

@@ -13,7 +13,6 @@ export * from './ICreateEmptyRuleDetectionAssessment';
 export * from './ICreateNewDetectionProgramVersion';
 export * from './IExecuteLinterProgramsUseCase';
 export * from './IGenerateProgramJob';
-export * from './IGenerateProgramUseCase';
 export * from './IGetActiveDetectionProgram';
 export * from './IGetActiveDetectionProgramForRule';
 export * from './IGetAllDetectionProgramsByRule';

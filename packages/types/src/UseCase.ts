@@ -5,8 +5,6 @@ import { PackmindEventSource } from './events';
 import { SpaceId } from './spaces/SpaceId';
 
 export type PublicPackmindCommand = object;
-export type PublicEmptyPackmindCommand = Record<string, never>;
-
 export type PackmindCommand = {
   userId: string;
   organizationId: string;

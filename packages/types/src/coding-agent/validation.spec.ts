@@ -2,11 +2,9 @@ import {
   VALID_CODING_AGENTS,
   REQUIRED_CODING_AGENT,
   isValidCodingAgent,
-  validateAgents,
   validateAgentsWithWarnings,
   normalizeCodingAgents,
 } from './validation';
-
 describe('VALID_CODING_AGENTS', () => {
   it('contains all expected coding agents', () => {
     expect(VALID_CODING_AGENTS).toEqual([
@@ -64,67 +62,6 @@ describe('isValidCodingAgent', () => {
 
     it('returns false for string with typo', () => {
       expect(isValidCodingAgent('Cursor')).toBe(false);
-    });
-  });
-});
-
-describe('validateAgents', () => {
-  describe('with undefined input', () => {
-    it('returns null', () => {
-      expect(validateAgents(undefined)).toBeNull();
-    });
-  });
-
-  describe('with null input', () => {
-    it('returns null', () => {
-      expect(validateAgents(null)).toBeNull();
-    });
-  });
-
-  describe('with non-array input', () => {
-    it('returns null for string', () => {
-      expect(validateAgents('claude')).toBeNull();
-    });
-
-    it('returns null for object', () => {
-      expect(validateAgents({ agent: 'claude' })).toBeNull();
-    });
-
-    it('returns null for number', () => {
-      expect(validateAgents(42)).toBeNull();
-    });
-  });
-
-  describe('with valid agents array', () => {
-    describe('when all agents are valid', () => {
-      it('returns all agents', () => {
-        expect(validateAgents(['claude', 'cursor'])).toEqual([
-          'claude',
-          'cursor',
-        ]);
-      });
-    });
-
-    describe('when input is empty', () => {
-      it('returns empty array', () => {
-        expect(validateAgents([])).toEqual([]);
-      });
-    });
-  });
-
-  describe('with mixed valid and invalid agents', () => {
-    it('filters out invalid agents', () => {
-      expect(validateAgents(['claude', 'invalid', 'cursor'])).toEqual([
-        'claude',
-        'cursor',
-      ]);
-    });
-
-    it('filters out non-string values', () => {
-      expect(validateAgents(['claude', 123, 'cursor', null])).toEqual([
-        'claude',
-        'cursor',
-      ]);
     });
   });
 });

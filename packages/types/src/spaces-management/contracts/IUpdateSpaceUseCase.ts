@@ -1,4 +1,4 @@
-import { IUseCase, SpaceMemberCommand } from '../../UseCase';
+import { SpaceMemberCommand } from '../../UseCase';
 import { Space, SpaceType } from '../../spaces/Space';
 import { SpaceColor } from '../../spaces/SpaceColor';
 
@@ -9,8 +9,3 @@ export type UpdateSpaceCommand = SpaceMemberCommand & {
 };
 
 export type UpdateSpaceResponse = Space;
-
-export type IUpdateSpaceUseCase = IUseCase<
-  UpdateSpaceCommand,
-  UpdateSpaceResponse
->;

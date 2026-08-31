@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { PackmindCommand } from '../../UseCase';
 import { UserId } from '../../accounts/User';
 import { SpaceId } from '../SpaceId';
 import { UserSpaceMembership, UserSpaceRole } from '../UserSpaceMembership';
@@ -9,8 +9,3 @@ export type AddMembersToSpaceCommand = PackmindCommand & {
 };
 
 export type AddMembersToSpaceResponse = UserSpaceMembership[];
-
-export type IAddMembersToSpaceUseCase = IUseCase<
-  AddMembersToSpaceCommand,
-  AddMembersToSpaceResponse
->;
