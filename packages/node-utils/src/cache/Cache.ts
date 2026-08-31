@@ -1,4 +1,4 @@
-import Redis, { RedisOptions } from 'ioredis';
+import Redis from 'ioredis';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration } from '../config/config/Configuration';
 
@@ -12,7 +12,6 @@ export class Cache {
   private static instance: Cache;
 
   private client?: Redis;
-  private connectionConfig: RedisOptions;
   private initialized = false;
 
   // Default cache expiration time in seconds (5 minutes)
@@ -34,14 +33,7 @@ export class Cache {
       origin,
       LogLevel.INFO,
     ),
-  ) {
-    // Default Redis configuration - will be updated during initialization
-    this.connectionConfig = {
-      host: 'redis',
-      port: 6379,
-      maxRetriesPerRequest: 3,
-    };
-  }
+  ) {}
 
   /**
    * Initialize the Redis client with configuration
@@ -198,15 +190,5 @@ export class Cache {
     }
 
     this.initialized = false;
-  }
-
-  /**
-   * Get cache statistics (for monitoring/debugging)
-   */
-  async getStats(): Promise<{ connected: boolean; initialized: boolean }> {
-    return {
-      connected: this.client?.status === 'ready',
-      initialized: this.initialized,
-    };
   }
 }

@@ -77,40 +77,4 @@ export class JobsService extends BaseService {
     await this.jobRegistry.initializeAllQueues();
     this.logger.info('Successfully initialized all job queues');
   }
-
-  /**
-   * Submit a job to a specific queue
-   */
-  public async submitJob<TInput>(
-    queueName: string,
-    input: TInput,
-  ): Promise<string> {
-    this.logger.info('Submitting job to queue', {
-      queueName,
-      availableQueues: this.getAvailableQueues(),
-    });
-
-    const queue = this.jobRegistry.getQueue<TInput>(queueName);
-    if (!queue) {
-      this.logger.error('Queue not found', {
-        requestedQueue: queueName,
-        availableQueues: this.getAvailableQueues(),
-      });
-      throw new Error(
-        `Queue '${queueName}' not found. Make sure it's registered and initialized.`,
-      );
-    }
-
-    const jobId = await queue.addJob(input);
-
-    this.logger.info('Successfully submitted job', { queueName, jobId });
-    return jobId;
-  }
-
-  /**
-   * Get available queue names (for debugging/monitoring)
-   */
-  public getAvailableQueues(): string[] {
-    return this.jobRegistry.getRegisteredQueueNames();
-  }
 }
