@@ -661,7 +661,14 @@ function InstallRow({
       bg={hasDrift && selected ? 'background.secondary' : 'background.primary'}
       transition="background-color 120ms ease-out"
     >
-      <PMHStack gap={3} align="center" paddingX={6} paddingY={3}>
+      {/*
+        Eight pixels above and below, which is the density of the events table
+        in the drawer. The row carries one line now, so the twelve it used to
+        take were sized for a second line that is no longer there. The expand
+        button keeps its own padding, so the target stays 26px tall while the
+        row comes down to 43.
+      */}
+      <PMHStack gap={3} align="center" paddingX={6} paddingY={2}>
         <PMBox flexShrink={0} display="flex" alignItems="center" width="20px">
           {hasDrift ? (
             <PMTooltip
@@ -718,7 +725,24 @@ function InstallRow({
           </PMHStack>
         </PMBox>
 
-        <PMVStack gap={0.5} align="flex-end" flexShrink={0}>
+        {/*
+          Where it stands and when it last moved, side by side. Stacked they
+          made every row 59px, so ten destinations came to more than a
+          screenful of a list that is ten destinations long. They are two short
+          phrases in different colours and they read as well across as down.
+
+          Wrapping, so a narrow pane falls back to the stack rather than
+          squeezing the repository name out of the row: on this surface the two
+          together are about 230px of the 900 the row has.
+        */}
+        <PMHStack
+          gap={3}
+          align="center"
+          justify="flex-end"
+          rowGap={0.5}
+          wrap="wrap"
+          flexShrink={0}
+        >
           <RowStateLine
             entry={entry}
             hasDrift={hasDrift}
@@ -729,7 +753,7 @@ function InstallRow({
             entry={entry}
             distributionHistory={distributionHistory}
           />
-        </PMVStack>
+        </PMHStack>
       </PMHStack>
 
       {expanded && hasDrift && (
