@@ -224,29 +224,6 @@ export class PackageService {
     }
   }
 
-  async deletePackage(packageId: PackageId, deletedBy: UserId): Promise<void> {
-    this.logger.info('Deleting package', {
-      packageId,
-      deletedBy,
-    });
-
-    try {
-      await this.packageRepository.deleteById(packageId, deletedBy);
-
-      this.logger.info('Package deleted successfully', {
-        packageId,
-        deletedBy,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete package', {
-        packageId,
-        deletedBy,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async deletePackages(
     packageIds: PackageId[],
     deletedBy: UserId,

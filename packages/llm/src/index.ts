@@ -21,14 +21,11 @@ export type {
   PackmindServiceConfig,
 } from './types/LLMServiceConfig';
 export { LLMProvider } from '@packmind/types';
-export type { LLMRuntimeConfig } from './types/LLMRuntimeConfig';
 export {
   DEFAULT_OPENAI_MODELS,
   DEFAULT_ANTHROPIC_MODELS,
   DEFAULT_GEMINI_MODELS,
   DEFAULT_AZURE_OPENAI_API_VERSION,
-  OPENAI_ENDPOINT,
-  ANTHROPIC_ENDPOINT,
 } from './constants/defaultModels';
 // Re-export types from @packmind/types for convenience
 export type {

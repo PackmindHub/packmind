@@ -16,7 +16,7 @@ import { pmSelectRecipe } from '../components/form/PMSelect/PMSelect.recipe';
 import { pmRadioCard } from '../components/form/PMRadioCard/PMRadioCard.recipe';
 import { pmTreeViewRecipe } from '../components/navigation/PMTreeView/PMTreeView.recipe';
 import { pmDialogRecipe } from '../components/form/PMDialog/PMDialog.recipe';
-export const packmindTheme = (preflight: boolean) =>
+const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
     globalCss: {

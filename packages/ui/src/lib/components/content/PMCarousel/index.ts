@@ -1,1 +1,0 @@
-export { PMCarousel } from './PMCarousel';

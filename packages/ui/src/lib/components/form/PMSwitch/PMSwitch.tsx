@@ -13,8 +13,6 @@ export interface PMSwitchProps extends Omit<
   rootRef?: React.RefObject<HTMLLabelElement | null>;
 }
 
-export type PMSwitchCheckedChangeDetails = SwitchCheckedChangeDetails;
-
 export const PMSwitch = React.forwardRef<HTMLInputElement, PMSwitchProps>(
   function Switch(props, ref) {
     const { children, inputProps, rootRef, ...rest } = props;

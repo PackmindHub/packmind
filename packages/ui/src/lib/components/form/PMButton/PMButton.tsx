@@ -31,4 +31,3 @@ export const PMButton = (props: IPMButtonProps) => {
 };
 
 export const PMButtonGroup = ButtonGroup;
-export type PMButtonGroupProps = ButtonGroupProps;
