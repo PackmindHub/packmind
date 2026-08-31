@@ -267,7 +267,7 @@ describe('PackageDetailPane', () => {
    * distribution record.
    */
   describe('when the surface hands the pane a history page', () => {
-    it('links to it from the summary', () => {
+    it('links to it from the filter row', () => {
       renderPane({ distributionHistory: { href: '/history' } });
 
       expect(
@@ -299,6 +299,10 @@ describe('PackageDetailPane', () => {
     });
   });
 
+  /*
+   * A full-width red band for one destination out of ten is urgency where the
+   * filter already carries a red `Failed` tab that is also a way to see them.
+   */
   describe('when a destination failed its last distribution', () => {
     const renderFailed = () =>
       renderPane({
@@ -306,22 +310,20 @@ describe('PackageDetailPane', () => {
         distributionHistory: { href: '/history' },
       });
 
-    it('drops the summary link', () => {
+    it('keeps the standing way in to the events', () => {
       renderFailed();
 
       expect(
-        screen.queryByRole('link', { name: 'Distribution history' }),
-      ).not.toBeInTheDocument();
+        screen.getByRole('link', { name: 'Distribution history' }),
+      ).toHaveAttribute('href', '/history');
     });
 
-    it('leaves the alert to carry the only way in', () => {
+    it('counts the failure in the filter rather than in a banner', () => {
       renderFailed();
 
       expect(
-        screen.getByRole('link', {
-          name: /View distribution history for error details/,
-        }),
-      ).toHaveAttribute('href', '/history');
+        screen.getByRole('tab', { name: 'Failed, 1 destination' }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -362,10 +364,12 @@ describe('PackageDetailPane', () => {
       expect(screen.queryByText('Distributions')).not.toBeInTheDocument();
     });
 
-    it('still says what is behind, which nothing above puts in words', () => {
+    it('leaves what is behind to the filter, which also acts on it', () => {
       renderPane({ surfaceOwnsStats: ['artifacts', 'distributions'] });
 
-      expect(screen.getByText('3 distributions behind')).toBeInTheDocument();
+      expect(
+        screen.getByRole('tab', { name: 'Drift, 3 destinations' }),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
-  PMAlert,
   PMBadge,
   PMBox,
   PMButton,
@@ -38,10 +37,7 @@ import {
   type GitProviderId,
   type PackageId,
 } from '@packmind/types';
-import {
-  packageBehindInstallCount,
-  packageFailedInstallCount,
-} from '../selectors/buildPackageDriftOverview';
+import { packageBehindInstallCount } from '../selectors/buildPackageDriftOverview';
 import {
   installDriftEntries,
   packageMostRecentPush,
@@ -167,9 +163,7 @@ export function PackageDetailPane({
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
-  const failedInstallCount = packageFailedInstallCount(pkg);
   const hasDrift = behindInstallCount > 0;
-  const hasFailure = failedInstallCount > 0;
   const mostRecentPush = useMemo(() => packageMostRecentPush(pkg), [pkg]);
 
   const entries = useMemo(() => installDriftEntries(pkg), [pkg]);
@@ -321,177 +315,84 @@ export function PackageDetailPane({
 
   return (
     <PMVStack gap={0} align="stretch" minH={0} h="100%">
-      <PMBox
-        paddingX={6}
-        paddingY={3}
-        borderBottomWidth="1px"
-        borderColor="border.tertiary"
-        bg="background.primary"
-      >
-        <PMVStack gap={2.5} align="stretch">
-          {(!hideIdentityHeader || showHeaderDistribute) && (
-            <PMHStack gap={3} align="start" justify="space-between">
-              {!hideIdentityHeader && (
-                <PMVStack gap={1} align="start" flex={1} minW={0}>
-                  <PMHStack gap={2} align="center" minW={0}>
-                    <PMHeading level="h3" color="primary">
-                      {pkg.name}
-                    </PMHeading>
-                    {packagePageHref && (
-                      <PMTooltip
-                        label="Open package page"
-                        showArrow
-                        openDelay={300}
+      {/*
+        Who this is, and nothing else. The state that used to sit under the name
+        moved down to the row that filters on it, so a surface that names the
+        package itself renders no band here at all rather than an empty one.
+      */}
+      {(!hideIdentityHeader || showHeaderDistribute) && (
+        <PMBox
+          paddingX={6}
+          paddingY={3}
+          borderBottomWidth="1px"
+          borderColor="border.tertiary"
+          bg="background.primary"
+        >
+          <PMHStack gap={3} align="start" justify="space-between">
+            {!hideIdentityHeader && (
+              <PMVStack gap={1} align="start" flex={1} minW={0}>
+                <PMHStack gap={2} align="center" minW={0}>
+                  <PMHeading level="h3" color="primary">
+                    {pkg.name}
+                  </PMHeading>
+                  {packagePageHref && (
+                    <PMTooltip
+                      label="Open package page"
+                      showArrow
+                      openDelay={300}
+                    >
+                      <PMLink
+                        asChild
+                        aria-label={`Open ${pkg.name} package page`}
                       >
-                        <PMLink
-                          asChild
-                          aria-label={`Open ${pkg.name} package page`}
-                        >
-                          <Link to={packagePageHref}>
-                            <PMBox
-                              display="inline-flex"
-                              alignItems="center"
-                              justifyContent="center"
-                              width="28px"
-                              height="28px"
-                              borderRadius="sm"
-                              color="text.faded"
-                              transition="color 120ms ease-out, background-color 120ms ease-out"
-                              _hover={{
-                                color: 'text.primary',
-                                bg: 'background.tertiary',
-                              }}
-                            >
-                              <PMIcon fontSize="sm">
-                                <LuArrowUpRight />
-                              </PMIcon>
-                            </PMBox>
-                          </Link>
-                        </PMLink>
-                      </PMTooltip>
-                    )}
-                  </PMHStack>
-                  <PMText fontSize="sm" color="secondary" maxW="68ch">
-                    {pkg.description}
-                  </PMText>
-                </PMVStack>
-              )}
-              {showHeaderDistribute && (
-                <PMTooltip label={headerLockTooltip} placement="top">
-                  <PMButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onSyncPackage(pkg.id)}
-                    disabled={allDriftedLocked}
-                    title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
-                  >
-                    <PMIcon fontSize="sm">
-                      <LuRotateCw />
-                    </PMIcon>
-                    Distribute package
-                  </PMButton>
-                </PMTooltip>
-              )}
-            </PMHStack>
-          )}
-          <PMHStack gap={5} align="center" wrap="wrap">
-            {!surfaceOwnsStats.includes('artifacts') && (
-              <SummaryStat
-                label="Artifacts"
-                value={pkg.artifacts.length.toString()}
-              />
+                        <Link to={packagePageHref}>
+                          <PMBox
+                            display="inline-flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            width="28px"
+                            height="28px"
+                            borderRadius="sm"
+                            color="text.faded"
+                            transition="color 120ms ease-out, background-color 120ms ease-out"
+                            _hover={{
+                              color: 'text.primary',
+                              bg: 'background.tertiary',
+                            }}
+                          >
+                            <PMIcon fontSize="sm">
+                              <LuArrowUpRight />
+                            </PMIcon>
+                          </PMBox>
+                        </Link>
+                      </PMLink>
+                    </PMTooltip>
+                  )}
+                </PMHStack>
+                <PMText fontSize="sm" color="secondary" maxW="68ch">
+                  {pkg.description}
+                </PMText>
+              </PMVStack>
             )}
-            {!surfaceOwnsStats.includes('distributions') && (
-              <SummaryStat
-                label="Distributions"
-                value={totalInstalls.toString()}
-              />
-            )}
-            {hasDrift ? (
-              <SummaryStat
-                label="Drift"
-                value={`${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'} behind`}
-                tone="warn"
-              />
-            ) : (
-              <SummaryStat
-                label="Latest push"
-                value={mostRecentPush?.label ?? '—'}
-                tone={
-                  mostRecentPush && mostRecentPush.days >= STALE_DAYS_THRESHOLD
-                    ? 'warn'
-                    : 'ok'
-                }
-              />
-            )}
-            {hasFailure && (
-              <SummaryStat
-                label="Failed"
-                value={`${failedInstallCount} distribution${failedInstallCount === 1 ? '' : 's'}`}
-                tone="error"
-              />
-            )}
-            {/*
-              The plain way in to the distribution events. Without it the pane
-              only reaches them from a failure, so a package where nothing went
-              wrong has no way to see what it was pushed with and when.
-
-              Hidden while the failure alert is up: that alert sits a few pixels
-              below with a link to the same place and a label that says more,
-              and two links to one place in one viewport is noise, not a second
-              way.
-            */}
-            {distributionHistory && !hasFailure && (
-              <PMLink
-                asChild
-                variant="underline"
-                fontSize="sm"
-                cursor="pointer"
-              >
-                <DistributionHistoryTrigger target={distributionHistory}>
-                  Distribution history
-                  <PMIcon fontSize="xs" marginLeft="4px">
-                    <LuArrowUpRight />
+            {showHeaderDistribute && (
+              <PMTooltip label={headerLockTooltip} placement="top">
+                <PMButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onSyncPackage(pkg.id)}
+                  disabled={allDriftedLocked}
+                  title={`Distribute package across ${behindInstallCount} distribution${behindInstallCount === 1 ? '' : 's'}`}
+                >
+                  <PMIcon fontSize="sm">
+                    <LuRotateCw />
                   </PMIcon>
-                </DistributionHistoryTrigger>
-              </PMLink>
+                  Distribute package
+                </PMButton>
+              </PMTooltip>
             )}
           </PMHStack>
-          {hasFailure && (
-            <PMAlert.Root status="error">
-              <PMAlert.Indicator>
-                <PMIcon>
-                  <LuTriangleAlert />
-                </PMIcon>
-              </PMAlert.Indicator>
-              <PMAlert.Content>
-                <PMAlert.Title>
-                  {failedInstallCount === 1
-                    ? 'The last distribution attempt failed on 1 target.'
-                    : `The last distribution attempt failed on ${failedInstallCount} targets.`}
-                </PMAlert.Title>
-                {distributionHistory && (
-                  <PMAlert.Description>
-                    <PMLink
-                      asChild
-                      variant="underline"
-                      fontSize="sm"
-                      cursor="pointer"
-                    >
-                      <DistributionHistoryTrigger target={distributionHistory}>
-                        View distribution history for error details
-                        <PMIcon fontSize="xs" marginLeft="4px">
-                          <LuArrowUpRight />
-                        </PMIcon>
-                      </DistributionHistoryTrigger>
-                    </PMLink>
-                  </PMAlert.Description>
-                )}
-              </PMAlert.Content>
-            </PMAlert.Root>
-          )}
-        </PMVStack>
-      </PMBox>
+        </PMBox>
+      )}
 
       <PMBox
         paddingX={6}
@@ -501,7 +402,7 @@ export function PackageDetailPane({
         bg="background.primary"
       >
         <PMHStack gap={3} align="center" wrap="wrap">
-          <PMBox position="relative" flex={1} minW="200px" maxW="320px">
+          <PMBox position="relative" flex={1} minW="180px" maxW="260px">
             <PMBox
               position="absolute"
               left="10px"
@@ -517,7 +418,7 @@ export function PackageDetailPane({
               </PMIcon>
             </PMBox>
             <PMInput
-              placeholder="Filter by repo, branch, or target"
+              placeholder="Filter by repo or target"
               value={repoQuery}
               onChange={(e) => setRepoQuery(e.target.value)}
               size="sm"
@@ -529,6 +430,61 @@ export function PackageDetailPane({
             counts={installCounts}
             onChange={setInstallFilter}
           />
+          {/*
+            What the filter control does not already say, on the same row as it
+            rather than on a band of its own above.
+
+            The control states the drift and the failures, in numbers that also
+            act: `Drift 6` and `Failed 1` were a summary stat and a filter chip
+            saying the same figure 130px apart, and the one that acts is the one
+            to keep. What is left is the inventory the surface has not claimed,
+            how long since anything went out, and the way in to the events.
+          */}
+          <PMHStack gap={5} align="center" wrap="wrap" marginLeft="auto">
+            {!surfaceOwnsStats.includes('artifacts') && (
+              <SummaryStat
+                label="Artifacts"
+                value={pkg.artifacts.length.toString()}
+              />
+            )}
+            {!surfaceOwnsStats.includes('distributions') && (
+              <SummaryStat
+                label="Distributions"
+                value={totalInstalls.toString()}
+              />
+            )}
+            <SummaryStat
+              label="Latest push"
+              value={mostRecentPush?.label ?? 'Never'}
+              tone={
+                mostRecentPush && mostRecentPush.days >= STALE_DAYS_THRESHOLD
+                  ? 'warn'
+                  : 'ok'
+              }
+            />
+            {/*
+              Shown whatever went wrong. It used to hide behind a failure
+              alert that carried the same link, and that alert is gone: a
+              full-width red band for one destination out of ten is urgency
+              where the red `Failed 1` chip on this same row is a fact you can
+              also click.
+            */}
+            {distributionHistory && (
+              <PMLink
+                asChild
+                variant="underline"
+                fontSize="sm"
+                cursor="pointer"
+              >
+                <DistributionHistoryTrigger target={distributionHistory}>
+                  Distribution history
+                  <PMIcon fontSize="xs" marginLeft="4px">
+                    <LuArrowUpRight />
+                  </PMIcon>
+                </DistributionHistoryTrigger>
+              </PMLink>
+            )}
+          </PMHStack>
         </PMHStack>
       </PMBox>
 
@@ -1167,6 +1123,11 @@ function InstallFilterControl({
             key={item.value}
             as="button"
             role="tab"
+            /*
+             * Spelled out, because the label and the count are two text nodes
+             * side by side and a screen reader ran them together as "Drift6".
+             */
+            aria-label={`${item.label}, ${count} destination${count === 1 ? '' : 's'}`}
             aria-selected={active}
             aria-disabled={disabled}
             onClick={() => {
