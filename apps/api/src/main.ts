@@ -21,7 +21,11 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 import { shutdownOtel } from './otel';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Configuration, Cache } from '@packmind/node-utils';
+import {
+  Configuration,
+  Cache,
+  installGlobalHttpPool,
+} from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/editions';
 import { pingPackmindSetup } from './startup/ping-packmind-setup';
 
@@ -87,6 +91,12 @@ async function initializeCache(): Promise<void> {
 
 async function bootstrap() {
   try {
+    // Before anything reaches the network. The SDKs that use global fetch
+    // rather than axios - Infisical, and the LLM providers - would otherwise
+    // drop every connection after undici's 4s default and pay a fresh DNS
+    // lookup plus two handshakes on the next call.
+    installGlobalHttpPool();
+
     logger.info('Starting Packmind API server', {
       nodeVersion: process.version,
       environment: process.env.NODE_ENV || 'development',

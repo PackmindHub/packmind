@@ -27,6 +27,7 @@ export * from './observability/instrumentMethods';
 export * from './observability/withSpan';
 export * from './git';
 export * from './http/sharedHttpAgents';
+export * from './http/installGlobalHttpPool';
 export * from './repositories/AbstractRepository';
 export * from './repositories/OrganizationScopedRepository';
 export * from './repositories/SpaceScopedRepository';

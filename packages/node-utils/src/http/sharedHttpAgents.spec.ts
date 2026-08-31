@@ -44,7 +44,9 @@ describe('sharedHttpAgent', () => {
     server.keepAliveTimeout = 60_000;
     server.headersTimeout = 65_000;
 
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, '127.0.0.1', resolve),
+    );
     port = (server.address() as AddressInfo).port;
   });
 
