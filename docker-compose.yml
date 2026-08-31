@@ -329,6 +329,11 @@ services:
       # Keep the value in .env (gitignored) and never in this file: it is a
       # bearer credential for the whole stack, and GitGuardian runs on CI.
       OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      # Statement-level `pg.query` / `pg-pool.connect` spans, off by default:
+      # they multiply the span count per request and Datadog DBM owns that layer
+      # in production. Set to `true` (in .env or inline) when you actually want
+      # the SQL in a local trace. Only read when the SDK starts at all.
+      PACKMIND_OTEL_INSTRUMENT_PG: ${PACKMIND_OTEL_INSTRUMENT_PG:-}
 
     volumes:
       - .:/packmind

@@ -30,10 +30,21 @@ look dead; drop the `127.0.0.1:` prefixes in `docker-compose.yml` to reach them.
 means either shipping a credential in a public JS bundle or running an unauthenticated ingest
 endpoint on our domain. Traces start at the HTTP span, not at the click.
 
-**Postgres is not traced.** Query-level database observability is Datadog Database Monitoring's job;
-it reads `pg_stat_statements` and expects `dd-trace`, so it cannot consume OTLP spans anyway. The
-`pg` instrumentation is switched off in `apps/api/src/otel.ts` — see
-[What is instrumented](#what-is-instrumented).
+**Postgres is not traced by default.** Query-level database observability is Datadog Database
+Monitoring's job; it reads `pg_stat_statements` and expects `dd-trace`, so it cannot consume OTLP
+spans anyway. The `pg` instrumentation is therefore off unless you set
+`PACKMIND_OTEL_INSTRUMENT_PG=true`, which is a third switch alongside the two above and useful
+locally, where Datadog is not where you are looking:
+
+```bash
+COMPOSE_PROFILES=observability \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4318 \
+PACKMIND_OTEL_INSTRUMENT_PG=true \
+docker compose up
+```
+
+Expect the span count per request to multiply — see [What is instrumented](#what-is-instrumented).
+Anything other than a literal `true` leaves it off, so a typo cannot flood traces by accident.
 
 ## Pointing it at Datadog
 
@@ -159,9 +170,10 @@ there. The first two together took one measured request from 24 spans to 6 — 1
   emitting a span each. The cost is losing body-parsing time as its own span.
 - **`instrumentation-router` is off.** Express 5 routes through the standalone `router` package, so
   routing was traced twice.
-- **`instrumentation-pg` is off.** Database work now appears as the repository-method span that
-  issued it, not as `pg.query` / `pg-pool.connect` children. An N+1 therefore shows up as a
-  repository method repeating under one parent rather than as repeated sibling queries.
+- **`instrumentation-pg` is off** unless `PACKMIND_OTEL_INSTRUMENT_PG=true`. Database work then
+  appears as the repository-method span that issued it, not as `pg.query` / `pg-pool.connect`
+  children. An N+1 therefore shows up as a repository method repeating under one parent rather than
+  as repeated sibling queries.
 
 Three routes emit no trace at all, filtered by `ignoreIncomingRequestHook`: `/api/v0` and
 `/api/v0/healthcheck` (polled every few seconds by the container healthcheck, and otherwise most of
@@ -297,11 +309,12 @@ hand. See [Adding your own spans](#adding-your-own-spans).
 
 Four known gaps:
 
-- **Postgres, deliberately.** No `pg.query` or `pg-pool.connect` spans; the repository-method span is
-  what a trace records about a database call, and Datadog DBM has the statement. Re-enable by
-  deleting the `instrumentation-pg` line in `apps/api/src/otel.ts` if you ever need statement-level
-  spans locally — and note that with it off, the repository spans are the _only_ record of database
-  work in a trace, so they are not the layer to drop when trimming span volume.
+- **Postgres, deliberately, but switchable.** By default no `pg.query` or `pg-pool.connect` spans and
+  no pg connection-pool metrics: the repository-method span is what a trace records about a database
+  call, and Datadog DBM has the statement. Set `PACKMIND_OTEL_INSTRUMENT_PG=true` when you need
+  statement-level spans — one flag covers both module definitions, `pg` and `pg-pool`. Leave it off
+  and the repository spans are the _only_ record of database work in a trace, so they are not the
+  layer to drop when trimming span volume.
 - **Redis, deliberately.** No `ioredis` spans either. Nearly all of them were BullMQ bookkeeping — an
   `evalsha` of `moveToActive` per worker poll plus the `QueueEvents` blocking `XREAD`, emitted
   continuously whether or not a job exists — and they arrived parented to whichever request happened
