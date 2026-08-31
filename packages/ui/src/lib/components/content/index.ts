@@ -5,6 +5,8 @@ export { PMCheckbox } from '../form/PMCheckbox';
 export type { PMCheckboxProps } from '../form/PMCheckbox';
 export { PMPage } from './PMPage/PMPage';
 export type { IPMPageProps } from './PMPage/PMPage';
+export { PMFullBleedPage } from './PMFullBleedPage/PMFullBleedPage';
+export type { IPMFullBleedPageProps } from './PMFullBleedPage/PMFullBleedPage';
 export { PMPopover } from './PMPopover';
 export * from './PMEmptyState/PMEmptyState';
 export { PMBadge } from './PMBadge/PMBadge';

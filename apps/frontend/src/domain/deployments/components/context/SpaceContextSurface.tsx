@@ -379,15 +379,18 @@ export function SpaceContextSurface() {
 
   return (
     <>
-      <PMBox
-        bg="background.primary"
-        borderWidth="1px"
-        borderColor="border.tertiary"
-        borderRadius="md"
-        overflow="hidden"
-        height="calc(100vh - 120px)"
-        minHeight="480px"
-      >
+      {/*
+        The height the page hands down, rather than the viewport minus a guess
+        at what sits above. That guess was 120px against a header that measured
+        133, so the shell scrolled by the difference: thirteen pixels, enough
+        for the trackpad to catch the page instead of the list, not enough to
+        reach anything.
+
+        No border and no radius with it. The surface now meets the window on
+        three sides, and a rounded corner against the edge of the screen is a
+        card drawn where there is no card.
+      */}
+      <PMBox bg="background.primary" overflow="hidden" flex="1" minHeight={0}>
         <PMHStack gap={0} align="stretch" height="100%">
           {/*
           The rail is the open skill's file tree while there is one with files

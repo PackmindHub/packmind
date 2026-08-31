@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from 'react-router';
-import { PMPage } from '@packmind/ui';
+import { PMFullBleedPage } from '@packmind/ui';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { ensureOrgContext } from '../../src/shared/data/ensureOrgContext';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
@@ -28,6 +28,12 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
  * after the container it ships in. The package keeps its name one level down,
  * in the rail, where it does mean something — the unit that is distributed.
  *
+ * Full bleed, so the surface gets the whole content area. A page heading here
+ * would name what the sidebar already has highlighted, and it would take that
+ * name out of the height the rail and the pane are asking for: on a 14 inch
+ * laptop the heading and its subtitle cost about a sixth of the window before
+ * the first row of anything.
+ *
  * Only the packages are prefetched. The three catalogues the pane crosses them
  * with are fetched by the surface: they are needed to fill the selected package,
  * not to draw the screen, and blocking the route on all four would make Context
@@ -35,12 +41,8 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
  */
 export default function SpaceContextRouteModule() {
   return (
-    <PMPage
-      title="Context"
-      subtitle="What this space gives a coding agent to read, package by package."
-      isFullWidth
-    >
+    <PMFullBleedPage>
       <SpaceContextSurface />
-    </PMPage>
+    </PMFullBleedPage>
   );
 }
