@@ -29,9 +29,18 @@ remote_url() { git remote get-url "$1" 2>/dev/null || true; }
 #
 # These packages exist only in the proprietary repo (OSS aliases them to
 # packages/editions stubs via tsconfig.paths.oss.json).
+#
+# Asked of the git tree and not of the filesystem: pnpm leaves a bare
+# `packages/<name>/node_modules` behind in the OSS clone for every workspace
+# package it once linked, so `[ -d ]` reported an OSS checkout as proprietary
+# and put it in block mode against its own origin, where every outgoing commit
+# is a difference by definition. It refused every push from OSS.
 IS_PROPRIETARY=0
 for marker in linter marketplaces spaces-management; do
-  if [ -d "packages/$marker" ]; then IS_PROPRIETARY=1; break; fi
+  if git rev-parse -q --verify "HEAD:packages/$marker" >/dev/null 2>&1; then
+    IS_PROPRIETARY=1
+    break
+  fi
 done
 
 if [ "$IS_PROPRIETARY" = "1" ]; then
