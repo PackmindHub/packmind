@@ -18,6 +18,14 @@ export interface PMTextProps extends TextProps {
   color?: PMTextColors;
   children: React.ReactNode;
   textProps?: TextProps;
+  /**
+   * Data attributes, which already reached the rendered element through the
+   * spread below and were only ever refused by this type. A piece of text that
+   * cannot carry a test id is a piece of text an end-to-end suite has to find
+   * by counting its neighbours, which is how it comes to depend on a layout
+   * nobody promised it.
+   */
+  [dataAttribute: `data-${string}`]: unknown;
 }
 
 export function PMText({
