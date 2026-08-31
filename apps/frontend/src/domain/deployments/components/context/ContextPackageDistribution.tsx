@@ -135,6 +135,19 @@ export function ContextPackageDistribution({
              * selection, which is a different question.
              */
             surfaceOwnsDistribute
+            /*
+             * `Artifacts` is the count on the Content tab two rows up, and it
+             * is the size of the half you are not looking at.
+             *
+             * `Distributions` stays. There is no chip row in this edition, so
+             * the summary is the only place the destination count is stated,
+             * and the list below it is somewhere to count rather than somewhere
+             * to read a number.
+             *
+             * What the summary keeps besides it is state rather than
+             * inventory: what is behind, what failed, when this last went out.
+             */
+            surfaceOwnsStats={['artifacts']}
             providersWithToken={providersWithToken}
             isProvidersLoading={isProvidersLoading}
             onSyncPackage={onSyncPackage}

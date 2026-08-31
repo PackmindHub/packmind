@@ -86,6 +86,7 @@ const renderPane = (props?: {
   providersWithToken?: Set<GitProviderId>;
   distributionHistory?: DistributionHistoryTarget | null;
   hasFailure?: boolean;
+  surfaceOwnsStats?: ReadonlyArray<'artifacts' | 'distributions'>;
 }) => {
   const onSyncPackage = props?.onSyncPackage ?? vi.fn();
   const installCount = props?.installCount ?? 3;
@@ -105,6 +106,7 @@ const renderPane = (props?: {
           onSyncPackage={onSyncPackage}
           distributionHistory={props?.distributionHistory ?? null}
           surfaceOwnsDistribute={props?.surfaceOwnsDistribute}
+          surfaceOwnsStats={props?.surfaceOwnsStats}
         />
       </UIProvider>
     </MemoryRouter>,
@@ -320,6 +322,50 @@ describe('PackageDetailPane', () => {
           name: /View distribution history for error details/,
         }),
       ).toHaveAttribute('href', '/history');
+    });
+  });
+
+  describe('when nothing above the pane states the inventory', () => {
+    it('counts the components it holds', () => {
+      renderPane();
+
+      expect(screen.getByText('Artifacts')).toBeInTheDocument();
+    });
+
+    it('counts the destinations it reaches', () => {
+      renderPane();
+
+      expect(screen.getByText('Distributions')).toBeInTheDocument();
+    });
+  });
+
+  describe('when the surface states the component count itself', () => {
+    const renderOwned = () => renderPane({ surfaceOwnsStats: ['artifacts'] });
+
+    it('drops it rather than saying it a row lower', () => {
+      renderOwned();
+
+      expect(screen.queryByText('Artifacts')).not.toBeInTheDocument();
+    });
+
+    it('keeps the destination count it did not claim', () => {
+      renderOwned();
+
+      expect(screen.getByText('Distributions')).toBeInTheDocument();
+    });
+  });
+
+  describe('when the surface states both counts itself', () => {
+    it('drops both', () => {
+      renderPane({ surfaceOwnsStats: ['artifacts', 'distributions'] });
+
+      expect(screen.queryByText('Distributions')).not.toBeInTheDocument();
+    });
+
+    it('still says what is behind, which nothing above puts in words', () => {
+      renderPane({ surfaceOwnsStats: ['artifacts', 'distributions'] });
+
+      expect(screen.getByText('3 distributions behind')).toBeInTheDocument();
     });
   });
 });

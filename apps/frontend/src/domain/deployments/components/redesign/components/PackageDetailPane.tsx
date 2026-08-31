@@ -127,6 +127,25 @@ type PackageDetailPaneProps = {
    * screen.
    */
   surfaceOwnsDistribute?: boolean;
+  /**
+   * The summary stats the surface already states above the pane, dropped here
+   * rather than said a second time a row lower.
+   *
+   * Only the two inventory stats can be named: how many components the package
+   * holds, and how many destinations it reaches. The rest of the row is state
+   * rather than inventory, and a surface that had already said "3 destinations
+   * behind" would not be showing this pane.
+   *
+   * A list and not a flag, because the two are not owned together. The context
+   * surface states the component count on its Content tab in both editions,
+   * and the destination count only where the `Targets` chip exists, which is
+   * the edition that has a second channel to choose it against.
+   *
+   * Defaults to none, which is the deployments overview and the package detail
+   * page: the rail beside the first says the destination count in passing, but
+   * neither states the component count at all.
+   */
+  surfaceOwnsStats?: ReadonlyArray<'artifacts' | 'distributions'>;
 };
 
 type InstallDriftFilter = 'all' | 'drift' | 'failed' | 'aligned';
@@ -144,6 +163,7 @@ export function PackageDetailPane({
   packagePageHref,
   hideIdentityHeader = false,
   surfaceOwnsDistribute = false,
+  surfaceOwnsStats = [],
 }: Readonly<PackageDetailPaneProps>) {
   const totalInstalls = pkg.installLocations.length;
   const behindInstallCount = packageBehindInstallCount(pkg);
@@ -375,14 +395,18 @@ export function PackageDetailPane({
             </PMHStack>
           )}
           <PMHStack gap={5} align="center" wrap="wrap">
-            <SummaryStat
-              label="Artifacts"
-              value={pkg.artifacts.length.toString()}
-            />
-            <SummaryStat
-              label="Distributions"
-              value={totalInstalls.toString()}
-            />
+            {!surfaceOwnsStats.includes('artifacts') && (
+              <SummaryStat
+                label="Artifacts"
+                value={pkg.artifacts.length.toString()}
+              />
+            )}
+            {!surfaceOwnsStats.includes('distributions') && (
+              <SummaryStat
+                label="Distributions"
+                value={totalInstalls.toString()}
+              />
+            )}
             {hasDrift ? (
               <SummaryStat
                 label="Drift"
