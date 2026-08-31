@@ -161,11 +161,25 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         >
           {place}
         </PMText>
-        {detail && (
-          <PMText as="div" variant="small" color="faded" truncate>
-            {detail}
-          </PMText>
-        )}
+        {/*
+          A removal, beside the path it was removed from rather than in a
+          column of its own that said "Distributed" on forty-three rows out of
+          forty-four to carry this one. It sits on the second line because the
+          first is a repository name that needs every pixel it has, and this
+          one has room to spare.
+        */}
+        <PMBox display="flex" alignItems="center" gap={2} minW={0}>
+          {detail && (
+            <PMText as="div" variant="small" color="faded" truncate>
+              {detail}
+            </PMText>
+          )}
+          {isRemoval(deployment) && (
+            <PMBadge colorPalette="orange" size="sm" flexShrink={0}>
+              Removed
+            </PMBadge>
+          )}
+        </PMBox>
       </PMBox>
     );
   };
@@ -233,10 +247,21 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return deployment.authorId || '-';
   };
 
-  const getDate = (date: string) => (
-    <PMText as="div" variant="small" whiteSpace="nowrap">
-      {format(new Date(date), 'yyyy-MM-dd HH:mm')}
-    </PMText>
+  /*
+   * When, and under it who, the way the target cell carries the branch under
+   * the repository. The author was a column of its own, and in a space with
+   * one active developer it printed the same name on every row of the log for
+   * a hundred and ten pixels. It is worth keeping, not worth a column.
+   */
+  const getWhen = (deployment: Distribution): React.ReactNode => (
+    <PMBox minW={0}>
+      <PMText as="div" variant="small" whiteSpace="nowrap">
+        {format(new Date(deployment.createdAt), 'yyyy-MM-dd HH:mm')}
+      </PMText>
+      <PMText as="div" variant="small" color="faded" truncate>
+        {getAuthor(deployment)}
+      </PMText>
+    </PMBox>
   );
 
   const getMessage = (deployment: Distribution): React.ReactNode => {
@@ -249,15 +274,14 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     })();
     if (!text) return <PMText color="faded">-</PMText>;
     /*
-     * One line with the rest under the pointer. An error is three wrapped lines
-     * of prose in this column, and a row that tall on every failure is what
-     * makes a log of forty events four screens of scrolling.
+     * One line, but a wide one. This cell is why a failed row is read at all,
+     * and it used to get whatever the eight columns before it had left over:
+     * two hundred and eight pixels for a message asking for four hundred, so
+     * every error was cut at "Push rejected: branch protectio…", one word
+     * before the reason. Dropping the two columns that said the same value on
+     * every row gives it the width instead.
      */
-    return (
-      <PMText as="div" variant="small" truncate title={text}>
-        {text}
-      </PMText>
-    );
+    return <ClippedText text={text} />;
   };
 
   const getPackageInfo = (deployment: Distribution): React.ReactNode => {
@@ -286,9 +310,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return packages.map((pkg) => pkg!.name).join(', ');
   };
 
-  const getOperationBadge = (
-    deployment: Distribution,
-  ): React.ReactNode | null => {
+  /** Whether this event took the artifact out of the target rather than put it in. */
+  const isRemoval = (deployment: Distribution): boolean => {
     let distributedPackage: DistributedPackage | undefined;
 
     if (type === 'package') {
@@ -312,15 +335,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       );
     }
 
-    if (!distributedPackage) {
-      return null;
-    }
-
-    if (distributedPackage.operation === 'remove') {
-      return <PMText>Removed</PMText>;
-    }
-
-    return <PMText>Distributed</PMText>;
+    return distributedPackage?.operation === 'remove';
   };
 
   const baseColumns: PMTableColumn[] = [
@@ -341,24 +356,17 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     {
       key: 'renderModes',
       header: 'Rendered for',
-      width: '150px',
+      width: '130px',
       align: 'left',
     },
-    {
-      key: 'operation',
-      header: 'Operation',
-      width: '90px',
-      align: 'center',
-    },
     { key: 'commits', header: 'Git Commits', width: '18%' },
-    { key: 'author', header: 'Author', width: '110px' },
     {
       key: 'createdAt',
       header: 'Distributed At',
       width: '135px',
       align: 'left',
     },
-    { key: 'status', header: 'Status', width: '100px', align: 'center' },
+    { key: 'status', header: 'Status', width: '86px', align: 'center' },
     { key: 'message', header: 'Message', grow: true, align: 'left' },
   ] as PMTableColumn[];
 
@@ -368,10 +376,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     package: getPackageInfo(deployment),
     target: getTargetInfo(deployment),
     renderModes: <RenderModes renderModes={deployment.renderModes} />,
-    operation: getOperationBadge(deployment),
     commits: getCommitLinks(deployment),
-    author: getAuthor(deployment),
-    createdAt: getDate(deployment.createdAt),
+    createdAt: getWhen(deployment),
     status: getStatusBadge(deployment.status),
     message: getMessage(deployment),
   }));
@@ -402,6 +408,61 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         tableProps={{ tableLayout: 'fixed', width: '100%' }}
       />
     </PMPageSection>
+  );
+};
+
+/**
+ * One line of text, with a tooltip only when the line is actually cut.
+ *
+ * An unconditional tooltip is the same mistake as the native `title` it
+ * replaces: on a log of forty rows it pops a box over the next row to repeat a
+ * sentence the reader can already see. The tooltip is worth having for the
+ * error that does not fit, and only for that one, so the cell measures itself
+ * and stays silent when there is nothing to add.
+ *
+ * It is a tooltip rather than a `title` because a `title` cannot be reached
+ * from the keyboard, cannot be styled, and waits a second before appearing.
+ */
+const ClippedText: React.FunctionComponent<{ text: string }> = ({ text }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isClipped, setIsClipped] = React.useState(false);
+
+  React.useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const measure = () => setIsClipped(node.scrollWidth > node.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [text]);
+
+  /*
+   * A plain div rather than a PMBox: the measurement needs a ref on the very
+   * element that clips, and PMBox does not forward one.
+   */
+  const line = (
+    <div
+      ref={ref}
+      style={{
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        cursor: isClipped ? 'help' : undefined,
+      }}
+    >
+      <PMText as="span" variant="small">
+        {text}
+      </PMText>
+    </div>
+  );
+
+  if (!isClipped) return line;
+  return (
+    <PMTooltip label={text} placement="top">
+      {line}
+    </PMTooltip>
   );
 };
 
