@@ -31,6 +31,13 @@ export interface IPMTableProps<T extends object = object> {
   getRowId?: (row: T, index: number) => string;
   selectAllLabel?: string;
   onSort?: (columnKey: string) => void;
+  /**
+   * Pin the header row to the top of whatever scrolls the table, so the column
+   * names stay readable past the first screenful. Off by default: a table short
+   * enough to read whole gains nothing, and a table inside a container that
+   * does not scroll would pin its header to a viewport it does not belong to.
+   */
+  stickyHeader?: boolean;
   tableProps?: React.ComponentPropsWithoutRef<typeof Table.Root>;
 }
 
@@ -48,6 +55,7 @@ export function PMTable<T extends object = object>({
   getRowId,
   onSort,
   selectAllLabel = 'Select All',
+  stickyHeader = false,
   tableProps,
 }: Readonly<IPMTableProps<T>>) {
   // getRowId is required for selection
@@ -166,6 +174,15 @@ export function PMTable<T extends object = object>({
     }
   };
 
+  /*
+   * The header cells carry the pinning rather than the row: `position: sticky`
+   * on a `<tr>` is ignored in Safari, and the recipe already gives every header
+   * cell an opaque background for the rows to pass under.
+   */
+  const stickyHeaderProps = stickyHeader
+    ? ({ position: 'sticky', top: 0, zIndex: 1 } as const)
+    : {};
+
   return (
     <Table.Root
       size={size}
@@ -186,7 +203,7 @@ export function PMTable<T extends object = object>({
       <Table.Header>
         <Table.Row>
           {selectable && (
-            <Table.ColumnHeader textAlign="center">
+            <Table.ColumnHeader textAlign="center" {...stickyHeaderProps}>
               <PMCheckbox
                 checked={isAllSelected}
                 onChange={handleSelectAll}
@@ -198,6 +215,7 @@ export function PMTable<T extends object = object>({
           {columns.map((column) => (
             <Table.ColumnHeader
               key={column.key}
+              {...stickyHeaderProps}
               textAlign={getTextAlign(column.align)}
               cursor={column.sortable ? 'pointer' : undefined}
               onClick={column.sortable ? () => onSort?.(column.key) : undefined}

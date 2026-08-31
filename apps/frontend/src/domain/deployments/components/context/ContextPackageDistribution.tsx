@@ -208,11 +208,20 @@ export function ContextPackageDistribution({
                   <PMCloseButton size="sm" />
                 </PMDrawer.CloseTrigger>
               </PMDrawer.Header>
-              <PMDrawer.Body padding={5}>
-                <PackageDistributionList
-                  packageId={pkg.id}
-                  title="Distribution history"
-                />
+              {/*
+                No padding at the top of the scrolling region, because the
+                events table pins its header to it. Sticky sits against the
+                padding box, so twenty pixels there left a band above the
+                header where the rows underneath showed through. The gap moves
+                inside, where it scrolls away with the heading it belongs to.
+              */}
+              <PMDrawer.Body paddingX={5} paddingBottom={5} paddingTop={0}>
+                <PMBox paddingTop={5}>
+                  <PackageDistributionList
+                    packageId={pkg.id}
+                    title="Distribution history"
+                  />
+                </PMBox>
               </PMDrawer.Body>
             </PMDrawer.Content>
           </PMDrawer.Positioner>

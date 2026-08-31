@@ -22,6 +22,9 @@ import { routes } from '../../../../shared/utils/routes';
 
 export type DeploymentType = 'recipe' | 'standard' | 'skill' | 'package';
 
+/** Paths that mean "the repository itself", which the target line leaves out. */
+const ROOT_TARGET_PATHS = new Set(['', '/', '.', './']);
+
 interface DeploymentsHistoryProps {
   deployments: Distribution[];
   type: DeploymentType;
@@ -128,14 +131,43 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return '-';
   };
 
-  // Helper pour target/repo
-  const getTargetInfo = (deployment: Distribution) => {
+  /*
+   * The destination, repository first and on its own line.
+   *
+   * It used to be one sentence, "apps/api/ in owner/repo:main", which in a
+   * 254px column wrapped onto three lines and set the height of every row in
+   * the table. Nothing about it was scannable either: the part that changes
+   * between rows sat in the middle of a phrase. Two lines, the name of the
+   * place and then where in it, read down a column.
+   */
+  const getTargetInfo = (deployment: Distribution): React.ReactNode => {
     const target = deployment.target;
     if (!target) return 'No target specified';
-    if (target.gitRepo) {
-      return `${target.path} in ${target.gitRepo.owner}/${target.gitRepo.repo}:${target.gitRepo.branch}`;
-    }
-    return `${target.path} (Repository: ${target.gitRepoId})`;
+    const place = target.gitRepo
+      ? `${target.gitRepo.owner}/${target.gitRepo.repo}`
+      : `Repository ${target.gitRepoId}`;
+    const isRoot = ROOT_TARGET_PATHS.has(target.path);
+    const detail = [target.gitRepo?.branch, isRoot ? null : target.path]
+      .filter(Boolean)
+      .join(' · ');
+    return (
+      <PMBox minW={0}>
+        <PMText
+          as="div"
+          variant="small"
+          fontWeight="medium"
+          truncate
+          title={place}
+        >
+          {place}
+        </PMText>
+        {detail && (
+          <PMText as="div" variant="small" color="faded" truncate>
+            {detail}
+          </PMText>
+        )}
+      </PMBox>
+    );
   };
 
   const getCommitLinks = (deployment: Distribution) => {
@@ -162,21 +194,32 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       }
       return null;
     }
+    /*
+     * The sha and its subject on one line, cut by the column rather than at a
+     * fixed fifty characters. Truncating in the string and then letting the
+     * result wrap was the worst of both: the message was cut short and the row
+     * still grew to three lines to hold what was left of it.
+     */
     return (
-      <PMBox>
+      <PMBox display="flex" alignItems="baseline" gap={2} minW={0}>
         <PMLink
           variant="active"
           href={commit.url}
           target="_blank"
           rel="noopener noreferrer"
+          flexShrink={0}
+          fontFamily="mono"
         >
           {commit.sha.substring(0, 7)}
         </PMLink>
         {commit.message && (
-          <PMText as="span" variant="small" ml={2}>
-            {commit.message.length > 50
-              ? `${commit.message.substring(0, 50)}...`
-              : commit.message}
+          <PMText
+            variant="small"
+            color="secondary"
+            truncate
+            title={commit.message}
+          >
+            {commit.message}
           </PMText>
         )}
       </PMBox>
@@ -190,16 +233,31 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return deployment.authorId || '-';
   };
 
-  const getDate = (date: string) => {
-    return format(new Date(date), 'yyyy-MM-dd h:mm a');
-  };
+  const getDate = (date: string) => (
+    <PMText as="div" variant="small" whiteSpace="nowrap">
+      {format(new Date(date), 'yyyy-MM-dd HH:mm')}
+    </PMText>
+  );
 
-  const getMessage = (deployment: Distribution) => {
-    if (deployment.status === 'failure' && deployment.error)
-      return deployment.error;
-    if (deployment.status === 'no_changes')
-      return 'No changes detected - already up to date';
-    return '-';
+  const getMessage = (deployment: Distribution): React.ReactNode => {
+    const text = (() => {
+      if (deployment.status === 'failure' && deployment.error)
+        return deployment.error;
+      if (deployment.status === 'no_changes')
+        return 'No changes detected, already up to date';
+      return null;
+    })();
+    if (!text) return <PMText color="faded">-</PMText>;
+    /*
+     * One line with the rest under the pointer. An error is three wrapped lines
+     * of prose in this column, and a row that tall on every failure is what
+     * makes a log of forty events four screens of scrolling.
+     */
+    return (
+      <PMText as="div" variant="small" truncate title={text}>
+        {text}
+      </PMText>
+    );
   };
 
   const getPackageInfo = (deployment: Distribution): React.ReactNode => {
@@ -272,33 +330,33 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           {
             key: 'version',
             header: 'Version',
-            width: '100px',
+            width: '80px',
             align: 'center',
           },
         ]),
     ...(hidePackageColumn
       ? []
       : [{ key: 'package', header: 'Package', width: '150px', align: 'left' }]),
-    { key: 'target', header: 'Target', width: '200px', align: 'left' },
+    { key: 'target', header: 'Target', width: '210px', align: 'left' },
     {
       key: 'renderModes',
       header: 'Rendered for',
-      width: '200px',
-      align: 'center',
+      width: '150px',
+      align: 'left',
     },
     {
       key: 'operation',
       header: 'Operation',
-      width: '100px',
+      width: '90px',
       align: 'center',
     },
     { key: 'commits', header: 'Git Commits', width: '18%' },
-    { key: 'author', header: 'Author', width: '120px' },
+    { key: 'author', header: 'Author', width: '110px' },
     {
       key: 'createdAt',
       header: 'Distributed At',
-      width: '120px',
-      align: 'center',
+      width: '135px',
+      align: 'left',
     },
     { key: 'status', header: 'Status', width: '100px', align: 'center' },
     { key: 'message', header: 'Message', grow: true, align: 'left' },
@@ -320,13 +378,28 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   return (
     <PMPageSection title={title} headingLevel="h5">
+      {/*
+        Pinned header and the tighter of the two densities. A distribution log
+        is read by running down one column at a time, and past the first
+        screenful an unpinned header leaves a grid of cells with no names on
+        it.
+      */}
       <PMTable
         columns={baseColumns}
         data={tableData}
         striped={true}
         hoverable={true}
-        size="md"
+        size="sm"
         variant="line"
+        stickyHeader
+        /*
+          Fixed layout, so the column widths above are the widths. Without it a
+          cell that says it truncates still asks for the width of its longest
+          unbroken line, and one error message pushes the table wider than the
+          drawer: the reader gets a horizontal scrollbar under a log they are
+          reading vertically.
+        */
+        tableProps={{ tableLayout: 'fixed', width: '100%' }}
       />
     </PMPageSection>
   );
@@ -361,18 +434,28 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     : formattedNames;
   const allNames = reorderedNames.join(', ');
 
-  if (reorderedNames.length > 2) {
-    const visibleNames = reorderedNames.slice(0, 2).join(', ');
-    const hiddenCount = reorderedNames.length - 2;
-    const suffix =
-      hiddenCount === 1 ? 'and 1 other' : `and ${hiddenCount} others`;
-
+  /*
+   * One name and a count, with the rest under the pointer. The long form,
+   * "AGENTS.md, Claude, and 1 other", ran to 230px of a column where the value
+   * repeats down almost every row, and wrapped onto a second line as soon as
+   * the names got longer than that.
+   */
+  if (reorderedNames.length > 1) {
     return (
       <PMTooltip label={allNames} placement="top">
-        <PMText>{`${visibleNames}, ${suffix}`}</PMText>
+        <PMText variant="small" truncate>
+          {reorderedNames[0]}
+          <PMText as="span" color="faded">
+            {` +${reorderedNames.length - 1}`}
+          </PMText>
+        </PMText>
       </PMTooltip>
     );
   }
 
-  return allNames;
+  return (
+    <PMText variant="small" truncate>
+      {allNames}
+    </PMText>
+  );
 };
