@@ -1,8 +1,9 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { PackagesNotFoundError } from '@packmind/deployments';
 import {
   OrganizationId,
+  PackageNotPublishableAsPluginError,
   RenderPackageAsPluginResponse,
   TrackPluginDeletedResponse,
 } from '@packmind/types';
@@ -128,6 +129,39 @@ describe('PluginsController', () => {
       await expect(controller.render(orgId, body, request)).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    describe('when the package holds only standards', () => {
+      // A standards-only package is a user mistake, not a server fault: the
+      // CLI (`packmind plugins render`) has no client-side gate, so this is
+      // the one path where the domain error is reachable. Left unmapped it
+      // escapes as a 500 whose body is the opaque "Internal server error",
+      // hiding the explanatory message the error already carries.
+      let thrown: unknown;
+
+      beforeEach(async () => {
+        service.renderPlugin.mockRejectedValue(
+          new PackageNotPublishableAsPluginError('security', 'Security'),
+        );
+        thrown = await controller
+          .render(orgId, body, request)
+          .then(() => undefined)
+          .catch((error: unknown) => error);
+      });
+
+      it('translates PackageNotPublishableAsPluginError to a BadRequestException', () => {
+        expect(thrown).toBeInstanceOf(BadRequestException);
+      });
+
+      it('keeps the domain error message so the CLI can show it', () => {
+        expect((thrown as BadRequestException).getResponse()).toEqual(
+          expect.objectContaining({
+            statusCode: 400,
+            message:
+              'Cannot publish: package "Security" contains only standards. A marketplace plugin needs at least one skill or recipe.',
+          }),
+        );
+      });
     });
   });
 
