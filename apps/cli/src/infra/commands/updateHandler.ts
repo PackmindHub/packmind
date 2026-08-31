@@ -432,6 +432,47 @@ export function isHomebrewInstall(executablePath: string): boolean {
   }
 }
 
+/**
+ * The message shown when the update itself fails.
+ *
+ * The remediation is platform-specific, so it must not be written once for
+ * every OS: Windows shells have no `sudo` (the Windows 11 24H2 one is opt-in),
+ * and the usual Windows cause is not permissions at all — the running `.exe` is
+ * locked against replacement, which surfaces as EPERM/EBUSY and which elevation
+ * alone does not fix.
+ *
+ * Only the advice is platform-aware; the raw errno message is always kept so a
+ * bug report carries the actual cause.
+ */
+function resolveUpdateFailureMessage(
+  message: string,
+  platform: string,
+): string {
+  if (platform === 'win32') {
+    const isReplaceBlocked =
+      message.includes('EPERM') ||
+      message.includes('EBUSY') ||
+      message.includes('EACCES') ||
+      message.includes('permission denied');
+
+    if (!isReplaceBlocked) {
+      return `Update failed: ${message}`;
+    }
+
+    return (
+      `Update failed: ${message}\n` +
+      `Could not replace the executable. Close any other running ${CANONICAL_EXEC_NAME} process, ` +
+      `then re-run '${EXEC_NAME} update' from an Administrator terminal.`
+    );
+  }
+
+  if (message.includes('EACCES') || message.includes('permission denied')) {
+    return `Permission denied. Try running with sudo:\n  sudo ${EXEC_NAME} update`;
+  }
+
+  return `Update failed: ${message}`;
+}
+
 export async function updateHandler(
   deps: IUpdateHandlerDependencies,
 ): Promise<void> {
@@ -535,13 +576,7 @@ export async function updateHandler(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    if (message.includes('EACCES') || message.includes('permission denied')) {
-      logErrorConsole(
-        `Permission denied. Try running with sudo:\n  sudo ${EXEC_NAME} update`,
-      );
-    } else {
-      logErrorConsole(`Update failed: ${message}`);
-    }
+    logErrorConsole(resolveUpdateFailureMessage(message, deps.platform));
     process.exit(1);
   }
 }

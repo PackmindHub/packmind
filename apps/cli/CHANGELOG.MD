@@ -9,6 +9,8 @@
 
 ## Fixed
 
+- A failed `packmind update` on Windows no longer suggests `sudo packmind update`. The Windows shells have no `sudo`, and the usual cause there is not permissions at all — the running executable cannot be replaced, which elevation does not fix. Windows now gets its own advice: close any other running `packmind` process, then re-run from an Administrator terminal. The underlying error is now kept in the message on every platform, and the `sudo` suggestion is unchanged on macOS and Linux
+
 ## Removed
 
 # [0.34.1] - 2026-08-25

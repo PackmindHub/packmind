@@ -1078,6 +1078,91 @@ describe('updateHandler', () => {
     });
   });
 
+  // The remediation for a failed replace is not the same on every OS: `sudo`
+  // does not exist in the Windows shells, and a locked running `.exe` (EPERM /
+  // EBUSY) is not fixed by elevation at all.
+  describe('updateHandler - failure advice', () => {
+    beforeEach(() => {
+      deps.isExecutableMode = true;
+      deps.arch = 'x64';
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [{ tag_name: 'release-cli/0.19.0' }],
+        } as Response)
+        .mockResolvedValueOnce(downloadResponse());
+    });
+
+    describe('when the replace is denied on a POSIX install', () => {
+      beforeEach(async () => {
+        deps.platform = 'linux';
+        deps.executablePath = '/usr/local/bin/packmind';
+        (fs.renameSync as jest.Mock).mockImplementation(() => {
+          throw new Error(
+            "EACCES: permission denied, rename '/usr/local/bin/packmind'",
+          );
+        });
+        await updateHandler(deps);
+      });
+
+      it('suggests sudo', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          'Permission denied. Try running with sudo:\n  sudo packmind update',
+        );
+      });
+    });
+
+    describe('when the replace is blocked on win32', () => {
+      beforeEach(async () => {
+        deps.platform = 'win32';
+        deps.executablePath = 'C:/Users/u/.packmind/bin/packmind.exe';
+        (fs.renameSync as jest.Mock).mockImplementation(() => {
+          throw new Error(
+            "EPERM: operation not permitted, rename 'packmind.exe'",
+          );
+        });
+        await updateHandler(deps);
+      });
+
+      it('does not suggest sudo', () => {
+        expect(mockConsoleLogger.logErrorConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('sudo'),
+        );
+      });
+
+      it('tells the user how to unblock the replace', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "Close any other running packmind process, then re-run 'packmind update' from an Administrator terminal.",
+          ),
+        );
+      });
+
+      it('keeps the underlying errno in the message', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('EPERM: operation not permitted'),
+        );
+      });
+    });
+
+    describe('when win32 fails for an unrelated reason', () => {
+      beforeEach(async () => {
+        deps.platform = 'win32';
+        deps.executablePath = 'C:/Users/u/.packmind/bin/packmind.exe';
+        (fs.renameSync as jest.Mock).mockImplementation(() => {
+          throw new Error('ENOSPC: no space left on device');
+        });
+        await updateHandler(deps);
+      });
+
+      it('does not advise about a blocked replace', () => {
+        expect(mockConsoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          'Update failed: ENOSPC: no space left on device',
+        );
+      });
+    });
+  });
+
   describe('updateHandler - executable mode', () => {
     it('fetches from GitHub releases API', async () => {
       deps.isExecutableMode = true;
