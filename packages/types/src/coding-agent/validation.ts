@@ -16,6 +16,7 @@ export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
   'continue',
   'opencode',
   'codex',
+  'kiro',
 ] as const;
 
 /**

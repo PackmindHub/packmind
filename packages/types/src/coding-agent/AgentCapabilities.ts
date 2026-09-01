@@ -43,6 +43,7 @@ export const AGENT_CAPABILITIES: Record<CodingAgent, AgentCapabilityFlags> = {
   continue: { skills: false, standards: true, commands: true, recipes: true },
   junie: { skills: false, standards: true, commands: true, recipes: true },
   opencode: { skills: true, standards: true, commands: true, recipes: true },
+  kiro: { skills: true, standards: true, commands: false, recipes: false },
 };
 
 export function hasCapableAgent(

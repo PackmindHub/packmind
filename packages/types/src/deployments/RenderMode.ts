@@ -11,6 +11,7 @@ export enum RenderMode {
   CONTINUE = 'CONTINUE',
   OPENCODE = 'OPENCODE',
   CODEX = 'CODEX',
+  KIRO = 'KIRO',
 }
 
 export const REQUIRED_RENDER_MODE = RenderMode.PACKMIND;
@@ -28,6 +29,7 @@ export const RENDER_MODE_ORDER: RenderMode[] = [
   RenderMode.CURSOR,
   RenderMode.GITLAB_DUO,
   RenderMode.CONTINUE,
+  RenderMode.KIRO,
 ];
 
 export const normalizeRenderModes = (modes: RenderMode[]): RenderMode[] => {

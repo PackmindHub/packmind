@@ -19,6 +19,7 @@ export const RENDER_MODE_TO_CODING_AGENT: Record<
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
   [RenderMode.CONTINUE]: CodingAgents.continue,
   [RenderMode.CODEX]: CodingAgents.codex,
+  [RenderMode.KIRO]: CodingAgents.kiro,
 };
 
 export const CODING_AGENT_TO_RENDER_MODE: Partial<

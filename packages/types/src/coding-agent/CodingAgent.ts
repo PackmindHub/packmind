@@ -9,7 +9,8 @@ export type CodingAgent =
   | 'gitlab_duo'
   | 'continue'
   | 'opencode'
-  | 'codex';
+  | 'codex'
+  | 'kiro';
 
 export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   packmind: 'packmind',
@@ -23,4 +24,5 @@ export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   continue: 'continue',
   opencode: 'opencode',
   codex: 'codex',
+  kiro: 'kiro',
 };

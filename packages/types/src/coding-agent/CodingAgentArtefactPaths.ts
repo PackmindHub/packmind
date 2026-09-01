@@ -26,6 +26,7 @@ export type MultiFileCodingAgent = Extract<
   | 'gitlab_duo'
   | 'opencode'
   | 'codex'
+  | 'kiro'
 >;
 
 /**
@@ -86,5 +87,10 @@ export const CODING_AGENT_ARTEFACT_PATHS: Record<
     command: '',
     standard: '',
     skill: '.agents/skills/',
+  },
+  kiro: {
+    command: '',
+    standard: '.kiro/steering/',
+    skill: '.kiro/skills/',
   },
 };

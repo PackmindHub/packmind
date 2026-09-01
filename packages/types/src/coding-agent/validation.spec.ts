@@ -21,7 +21,18 @@ describe('VALID_CODING_AGENTS', () => {
       'continue',
       'opencode',
       'codex',
+      'kiro',
     ]);
+  });
+});
+
+describe('kiro coding agent', () => {
+  it('is included in VALID_CODING_AGENTS', () => {
+    expect(VALID_CODING_AGENTS).toContain('kiro');
+  });
+
+  it('passes isValidCodingAgent', () => {
+    expect(isValidCodingAgent('kiro')).toBe(true);
   });
 });
 
