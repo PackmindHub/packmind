@@ -517,6 +517,7 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     [RenderMode.CONTINUE]: 'Continue',
     [RenderMode.OPENCODE]: 'OpenCode',
     [RenderMode.CODEX]: 'Codex',
+    [RenderMode.KIRO]: 'Kiro',
   };
   const formattedNames = renderModes.map(
     (renderMode) => formatNames[renderMode],

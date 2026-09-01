@@ -53,6 +53,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
       [RenderMode.CONTINUE]: 'Continue',
       [RenderMode.OPENCODE]: 'OpenCode',
       [RenderMode.CODEX]: 'Codex',
+      [RenderMode.KIRO]: 'Kiro',
     };
     return activeRenderModes.map((mode) => labels[mode] ?? mode).join(', ');
   }, [activeRenderModes]);

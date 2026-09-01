@@ -36,6 +36,7 @@ const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.GITLAB_DUO]: 'gitlab_duo',
   [RenderMode.CONTINUE]: 'continue',
   [RenderMode.CODEX]: 'codex',
+  [RenderMode.KIRO]: 'kiro',
 };
 
 const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
@@ -51,6 +52,7 @@ const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   gitlab_duo: RenderMode.GITLAB_DUO,
   continue: RenderMode.CONTINUE,
   codex: RenderMode.CODEX,
+  kiro: RenderMode.KIRO,
 };
 
 const DEFAULT_FORMATS: RenderingItem[] = [
@@ -63,6 +65,7 @@ const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'github-copilot', name: 'Github Copilot', checked: false },
   { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
   { value: 'junie', name: 'Junie', checked: false },
+  { value: 'kiro', name: 'Kiro', checked: false },
   { value: 'opencode', name: 'OpenCode', checked: false },
 ];
 
