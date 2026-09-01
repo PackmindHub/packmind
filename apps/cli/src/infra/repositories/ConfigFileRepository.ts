@@ -4,6 +4,7 @@ import {
   ConfigWithTarget,
   HierarchicalConfigResult,
   PackmindFileConfig,
+  VALID_CODING_AGENTS,
   validateAgentsWithWarnings,
 } from '@packmind/types';
 import type { Dirent } from 'fs';
@@ -62,7 +63,7 @@ export class ConfigFileRepository implements IConfigFileRepository {
 
       if (invalidAgents.length > 0) {
         logWarningConsole(
-          `Invalid agent(s) in ${configPath}: ${invalidAgents.join(', ')}. Valid agents are: packmind, junie, claude, cursor, copilot, agents_md, gitlab_duo, continue`,
+          `Invalid agent(s) in ${configPath}: ${invalidAgents.join(', ')}. Valid agents are: ${VALID_CODING_AGENTS.join(', ')}`,
         );
       }
 

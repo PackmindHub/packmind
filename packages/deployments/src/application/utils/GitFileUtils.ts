@@ -19,6 +19,7 @@ function getFilePathForAgent(agent: CodingAgent): string {
     continue: '.continue/rules/packmind-recipes-index.md',
     opencode: 'AGENTS.md',
     codex: 'AGENTS.md',
+    kiro: '',
   };
 
   return agentToFile[agent];

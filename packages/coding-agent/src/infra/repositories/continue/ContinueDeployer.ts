@@ -13,7 +13,11 @@ import {
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
+import {
+  escapeSingleQuotes,
+  getTargetPrefixedPath,
+  splitScopeGlobs,
+} from '../utils/FileUtils';
 
 const origin = 'ContinueDeployer';
 
@@ -389,37 +393,7 @@ ${recipeVersion.content}`;
    * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single glob).
    */
   private formatGlobsValue(scope: string): string {
-    // Parse comma-separated globs, but don't split on commas inside braces {}
-    const globs: string[] = [];
-    let currentGlob = '';
-    let braceDepth = 0;
-
-    for (let i = 0; i < scope.length; i++) {
-      const char = scope[i];
-
-      if (char === '{') {
-        braceDepth++;
-        currentGlob += char;
-      } else if (char === '}') {
-        braceDepth--;
-        currentGlob += char;
-      } else if (char === ',' && braceDepth === 0) {
-        // Only split on commas that are not inside braces
-        const trimmed = currentGlob.trim();
-        if (trimmed) {
-          globs.push(trimmed);
-        }
-        currentGlob = '';
-      } else {
-        currentGlob += char;
-      }
-    }
-
-    // Add the last glob
-    const trimmed = currentGlob.trim();
-    if (trimmed) {
-      globs.push(trimmed);
-    }
+    const globs = splitScopeGlobs(scope);
 
     // If only one glob, check if it needs quoting
     if (globs.length === 1) {

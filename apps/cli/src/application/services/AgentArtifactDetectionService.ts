@@ -35,6 +35,7 @@ const AGENT_ARTIFACT_CHECKS: ArtifactCheck[] = [
   { agent: 'gitlab_duo', paths: ['.gitlab/duo'] },
   { agent: 'opencode', paths: ['.opencode'] },
   { agent: 'codex', paths: ['.agents/skills'], recursive: true },
+  { agent: 'kiro', paths: ['.kiro'] },
 ];
 
 export class AgentArtifactDetectionService implements IAgentArtifactDetectionService {

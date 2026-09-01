@@ -12,6 +12,7 @@ import { GitlabDuoDeployer } from './gitlabDuo/GitlabDuoDeployer';
 import { ContinueDeployer } from './continue/ContinueDeployer';
 import { OpenCodeDeployer } from './opencode/OpenCodeDeployer';
 import { CodexDeployer } from './codex/CodexDeployer';
+import { KiroDeployer } from './kiro/KiroDeployer';
 
 export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry {
   private readonly deployers = new Map<CodingAgent, ICodingAgentDeployer>();
@@ -64,6 +65,8 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
         return new OpenCodeDeployer(this.standardsPort, this.gitPort);
       case 'codex':
         return new CodexDeployer(this.standardsPort, this.gitPort);
+      case 'kiro':
+        return new KiroDeployer(this.standardsPort, this.gitPort);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }
@@ -81,7 +84,8 @@ export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry
       agent === 'gitlab_duo' ||
       agent === 'continue' ||
       agent === 'opencode' ||
-      agent === 'codex'
+      agent === 'codex' ||
+      agent === 'kiro'
     );
   }
 }

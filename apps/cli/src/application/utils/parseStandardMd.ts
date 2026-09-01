@@ -24,6 +24,10 @@ const DEPLOYER_PARSERS: DeployerParser[] = [
     parse: parseContinueStandard,
   },
   { pattern: '.github/instructions/packmind-', parse: parseCopilotStandard },
+  {
+    pattern: '.kiro/steering/packmind-standard-',
+    parse: parseKiroStandard,
+  },
   // Home-install variant (e.g. `~/.claude`): the agent directory prefix is
   // stripped from on-disk and lockfile paths. Only Claude supports home-install
   // today, so an unprefixed `rules/packmind/standard-…` path is Claude-rendered.
@@ -56,6 +60,7 @@ const AGENT_PARSERS: Record<
   gitlab_duo: () => null, // single-file agent: standards can't be parsed individually
   opencode: () => null, // single-file agent: standards are embedded in AGENTS.md
   codex: () => null, // single-file agent: standards are embedded in AGENTS.md
+  kiro: parseKiroStandard,
 };
 
 /**
@@ -171,6 +176,12 @@ function parseContinueStandard(content: string): ParsedStandardMd | null {
   const parsed = parseIdeStandardBody(body, scope);
   if (!parsed) return null;
   return addFrontmatterFields(parsed, frontmatter);
+}
+
+function parseKiroStandard(content: string): ParsedStandardMd | null {
+  const { frontmatter, body } = extractFrontmatter(content);
+  const scope = extractScopeFromKey(frontmatter, 'fileMatchPattern');
+  return parseIdeStandardBody(body, scope);
 }
 
 function parseCopilotStandard(content: string): ParsedStandardMd | null {
@@ -366,12 +377,45 @@ function normalizeScopeValue(rawValue: string): string {
   // YAML array: ["**/*.ts", "**/*.tsx"]
   if (rawValue.startsWith('[')) {
     const inner = rawValue.slice(1, -1);
-    const items = inner
-      .split(',')
-      .map((item) => item.trim().replace(/(?:^["'])|(?:["']$)/g, ''));
+    const items = splitOutsideBraces(inner).map((item) =>
+      item.replace(/(?:^["'])|(?:["']$)/g, ''),
+    );
     return items.join(', ');
   }
 
   // Quoted string: "**/*.ts"
   return rawValue.replace(/(?:^["'])|(?:["']$)/g, '');
+}
+
+/**
+ * Split on commas that are not inside braces, so a `{ts,tsx}` extension group
+ * stays one glob. Agents that render a scope as a YAML array — Kiro always,
+ * Claude and Continue when the scope holds several globs — write each glob as
+ * one item, and splitting on every comma would tear those groups apart.
+ */
+function splitOutsideBraces(value: string): string[] {
+  const items: string[] = [];
+  let current = '';
+  let braceDepth = 0;
+
+  for (const char of value) {
+    if (char === '{') {
+      braceDepth++;
+      current += char;
+    } else if (char === '}') {
+      braceDepth--;
+      current += char;
+    } else if (char === ',' && braceDepth === 0) {
+      const trimmed = current.trim();
+      if (trimmed) items.push(trimmed);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  const trimmed = current.trim();
+  if (trimmed) items.push(trimmed);
+
+  return items;
 }

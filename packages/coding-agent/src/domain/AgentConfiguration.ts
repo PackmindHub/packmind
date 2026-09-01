@@ -16,4 +16,5 @@ export const AGENT_FILE_PATHS: Record<CodingAgent, string> = {
   continue: '.continue/rules/packmind-recipes-index.md',
   opencode: 'AGENTS.md',
   codex: 'AGENTS.md',
+  kiro: '',
 };

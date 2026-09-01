@@ -27,3 +27,41 @@ export function getTargetPrefixedPath(
 
   return `${cleanTargetPath}${filePath}`;
 }
+
+/**
+ * Split a Packmind scope into its individual globs.
+ *
+ * Scopes are comma-separated, but a glob may itself contain commas inside
+ * braces (a `{ts,tsx}` extension group), so only commas at brace depth zero
+ * separate one glob from the next.
+ */
+export function splitScopeGlobs(scope: string): string[] {
+  const globs: string[] = [];
+  let currentGlob = '';
+  let braceDepth = 0;
+
+  for (const char of scope) {
+    if (char === '{') {
+      braceDepth++;
+      currentGlob += char;
+    } else if (char === '}') {
+      braceDepth--;
+      currentGlob += char;
+    } else if (char === ',' && braceDepth === 0) {
+      const trimmed = currentGlob.trim();
+      if (trimmed) {
+        globs.push(trimmed);
+      }
+      currentGlob = '';
+    } else {
+      currentGlob += char;
+    }
+  }
+
+  const trimmed = currentGlob.trim();
+  if (trimmed) {
+    globs.push(trimmed);
+  }
+
+  return globs;
+}

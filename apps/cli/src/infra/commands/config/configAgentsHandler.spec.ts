@@ -135,6 +135,10 @@ describe('configAgentsHandler', () => {
     it('includes codex agent', () => {
       expect(SELECTABLE_AGENTS).toContain('codex');
     });
+
+    it('includes kiro agent', () => {
+      expect(SELECTABLE_AGENTS).toContain('kiro');
+    });
   });
 
   describe('AGENT_DISPLAY_NAMES', () => {
@@ -176,6 +180,10 @@ describe('configAgentsHandler', () => {
 
     it('maps codex to Codex', () => {
       expect(AGENT_DISPLAY_NAMES.codex).toBe('Codex');
+    });
+
+    it('maps kiro to Kiro', () => {
+      expect(AGENT_DISPLAY_NAMES.kiro).toBe('Kiro');
     });
   });
 

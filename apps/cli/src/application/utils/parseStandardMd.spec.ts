@@ -636,6 +636,40 @@ describe('parseStandardMd', () => {
     });
   });
 
+  describe('when file is in Kiro format', () => {
+    const filePath = '.kiro/steering/packmind-standard-my-standard.md';
+
+    it('extracts name from # Standard: heading', () => {
+      const content =
+        "---\ninclusion: fileMatch\nfileMatchPattern: ['**/*.ts']\n---\n# Standard: Name\n\nDesc :\n\n* Rule 1";
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result).toEqual({
+        name: 'Name',
+        description: 'Desc',
+        scope: '**/*.ts',
+        rules: ['Rule 1'],
+      });
+    });
+
+    describe('when the standard is always included', () => {
+      it('returns an empty scope', () => {
+        const content =
+          '---\ninclusion: always\n---\n# Standard: Name\n\nDesc :\n\n* Rule 1';
+
+        const result = parseStandardMd(content, filePath);
+
+        expect(result).toEqual({
+          name: 'Name',
+          description: 'Desc',
+          scope: '',
+          rules: ['Rule 1'],
+        });
+      });
+    });
+  });
+
   describe('when file path is unknown', () => {
     it('returns null', () => {
       const content = '# Some Standard\n\nDescription';
@@ -752,6 +786,42 @@ describe('parseStandardMdForAgent', () => {
       description: 'Description',
       scope: '**/*.ts',
       rules: ['Rule 1'],
+    });
+  });
+
+  it('parses Kiro format for kiro agent', () => {
+    const content =
+      "---\ninclusion: fileMatch\nfileMatchPattern: ['**/*.ts']\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1";
+
+    const result = parseStandardMdForAgent(content, 'kiro');
+
+    expect(result).toEqual({
+      name: 'My Standard',
+      description: 'Description',
+      scope: '**/*.ts',
+      rules: ['Rule 1'],
+    });
+  });
+
+  describe('when a Kiro standard is always included', () => {
+    it('reads an empty scope', () => {
+      const content =
+        '---\ninclusion: always\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1';
+
+      const result = parseStandardMdForAgent(content, 'kiro');
+
+      expect(result?.scope).toBe('');
+    });
+  });
+
+  describe('when a rendered scope holds a brace extension group', () => {
+    it('keeps the group as one glob', () => {
+      const content =
+        "---\ninclusion: fileMatch\nfileMatchPattern: ['**/*.{ts,tsx}', 'docs/**/*.md']\n---\n## Standard: My Standard\n\nDescription :\n\n* Rule 1";
+
+      const result = parseStandardMdForAgent(content, 'kiro');
+
+      expect(result?.scope).toBe('**/*.{ts,tsx}, docs/**/*.md');
     });
   });
 

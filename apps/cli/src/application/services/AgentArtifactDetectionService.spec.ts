@@ -343,6 +343,22 @@ describe('AgentArtifactDetectionService', () => {
       });
     });
 
+    describe('when .kiro/ directory exists', () => {
+      let result: DetectedAgentArtifact[];
+
+      beforeEach(async () => {
+        await fs.mkdir(path.join(tempDir, '.kiro'), { recursive: true });
+        result = await service.detectAgentArtifacts(tempDir);
+      });
+
+      it('returns kiro agent', () => {
+        expect(result).toContainEqual({
+          agent: 'kiro',
+          artifactPath: path.join(tempDir, '.kiro'),
+        });
+      });
+    });
+
     describe('when multiple agent artifacts exist', () => {
       let result: DetectedAgentArtifact[];
 
