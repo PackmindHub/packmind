@@ -33,19 +33,34 @@ testWithApi.describe('packmind-cli install', () => {
     await dashboardPage.reload();
   });
 
+  /*
+   * The author is no longer part of this. The log used to carry a column for it
+   * and dropped it, on the grounds that every row of one package's history
+   * names the same person, so there is nothing in the UI left to read. What the
+   * log does say is where the distribution landed and how it ended, which is
+   * what the CLI reported and therefore what this test is about. Attribution to
+   * the CLI user is now only checkable through the API, and this suite has no
+   * gateway for reading distributions.
+   */
   testWithApi(
     'it stores the new distribution of the package',
-    async ({ userData, dashboardPage }) => {
+    async ({ dashboardPage }) => {
       const packagesPage = await dashboardPage.openPackages();
       const packagePage = await packagesPage.openPackage(defaultPackage.name);
       await packagePage.openDistributionsTab();
+      await packagePage.openDistributionHistory();
       const distributions = await packagePage.listDistributions();
 
       // eslint-disable-next-line playwright/no-standalone-expect
       expect(distributions).toEqual([
         {
-          target: `/ in ${gitRepoOwner}/${gitRepoName}:${notifyDistributionCommand.gitBranch}`,
-          author: userData.email.split('@')[0],
+          repository: `${gitRepoOwner}/${gitRepoName}`,
+          /*
+           * The branch alone: the command distributed to the repository root,
+           * and the log leaves the path out rather than printing a bare slash.
+           */
+          detail: notifyDistributionCommand.gitBranch,
+          status: 'Success',
         },
       ]);
     },

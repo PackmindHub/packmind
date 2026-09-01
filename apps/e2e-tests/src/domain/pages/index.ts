@@ -75,9 +75,21 @@ export interface IPackagesPage extends IPackmindAppPage {
   openPackage(packageName: string): Promise<IPackagePage>;
 }
 
+/** One row of a package's distribution log, as the log now shows it. */
+export type DistributionLogEntry = {
+  /** `owner/repo`, the first line of the destination. */
+  repository: string;
+  /** Its branch, plus the path when the target is not the repository root. */
+  detail: string;
+  /** The badge: Success, Failed, In Progress, No Changes. */
+  status: string;
+};
+
 export interface IPackagePage extends IPackmindAppPage {
   openDistributionsTab(): Promise<void>;
-  listDistributions(): Promise<{ target: string; author: string }[]>;
+  /** The log is folded when the tab opens; this unfolds it. */
+  openDistributionHistory(): Promise<void>;
+  listDistributions(): Promise<DistributionLogEntry[]>;
   isPackageEmpty(): Promise<boolean>;
   listStandardsInPackage(): Promise<{ name: string }[]>;
 }
