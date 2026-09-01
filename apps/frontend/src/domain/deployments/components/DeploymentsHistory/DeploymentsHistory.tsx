@@ -15,6 +15,7 @@ import {
   PMIcon,
 } from '@packmind/ui';
 import { LuInfo } from 'react-icons/lu';
+import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import { Distribution, RenderMode, DistributedPackage } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
@@ -84,16 +85,43 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return <PMEmptyState title={`No distributions found for this ${type}.`} />;
   }
 
+  /*
+   * The test id travels on the badge rather than on the cell, because it is the
+   * badge that carries the word: the e2e suite used to find this column by
+   * counting cells, and the count moved the day the columns around it changed.
+   * A name does not move.
+   */
   const getStatusBadge = (status: string, fallback?: string) => {
+    const testId = DeploymentsHistoryDataTestId.Status;
     if (status === 'in_progress')
-      return <PMBadge colorPalette="blue">In Progress</PMBadge>;
+      return (
+        <PMBadge colorPalette="blue" data-testid={testId}>
+          In Progress
+        </PMBadge>
+      );
     if (status === 'success')
-      return <PMBadge colorPalette="green">Success</PMBadge>;
+      return (
+        <PMBadge colorPalette="green" data-testid={testId}>
+          Success
+        </PMBadge>
+      );
     if (status === 'failure')
-      return <PMBadge colorPalette="red">Failed</PMBadge>;
+      return (
+        <PMBadge colorPalette="red" data-testid={testId}>
+          Failed
+        </PMBadge>
+      );
     if (status === 'no_changes')
-      return <PMBadge colorPalette="blue">No Changes</PMBadge>;
-    return <PMBadge colorPalette="green">{fallback || 'Distributed'}</PMBadge>;
+      return (
+        <PMBadge colorPalette="blue" data-testid={testId}>
+          No Changes
+        </PMBadge>
+      );
+    return (
+      <PMBadge colorPalette="green" data-testid={testId}>
+        {fallback || 'Distributed'}
+      </PMBadge>
+    );
   };
 
   const getVersion = (deployment: Distribution) => {
@@ -158,6 +186,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
           fontWeight="medium"
           truncate
           title={place}
+          data-testid={DeploymentsHistoryDataTestId.DestinationRepository}
         >
           {place}
         </PMText>
@@ -170,7 +199,13 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         */}
         <PMBox display="flex" alignItems="center" gap={2} minW={0}>
           {detail && (
-            <PMText as="div" variant="small" color="faded" truncate>
+            <PMText
+              as="div"
+              variant="small"
+              color="faded"
+              truncate
+              data-testid={DeploymentsHistoryDataTestId.DestinationDetail}
+            >
               {detail}
             </PMText>
           )}

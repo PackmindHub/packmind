@@ -12,34 +12,17 @@ export class PackagePage
   }
 
   /**
-   * Expands the distribution log, which the tab renders folded.
-   *
-   * A step of its own because it is a step the user takes. Without it the rows
-   * are in the page but collapsed, and Playwright's `innerText` on a collapsed
-   * element falls back to its text content rather than returning nothing: the
-   * assertions here passed for a long time against a list nobody had opened,
-   * which is how they came to depend on the exact shape of cells no reader had
-   * ever seen.
-   *
-   * Idempotent, so a spec that opens it twice does not fold it again.
-   */
-  async openDistributionHistory(): Promise<void> {
-    const trigger = this.page.getByRole('button', {
-      name: 'Distribution history',
-    });
-    await trigger.waitFor();
-    if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
-      await trigger.click();
-    }
-  }
-
-  /**
    * The distribution log of the open package, one entry per row.
    *
    * Read by name and not by cell index. The index version broke the day the log
-   * dropped two columns it knew nothing about: it went on reading the fifth
-   * cell, which by then held the status rather than the author, and reported
-   * "Success" as the person who ran the distribution.
+   * was redesigned: the destination became a repository above its branch, the
+   * author column went away, and the fifth cell the suite was pointing at had
+   * become the status, so it reported "Success" as the person who ran the
+   * distribution.
+   *
+   * This tab renders the log directly, with nothing to unfold first. The
+   * collapsed variant belongs to the surfaces of the new navigation, which this
+   * page is not.
    */
   async listDistributions(): Promise<DistributionLogEntry[]> {
     const rows = this.page.locator(

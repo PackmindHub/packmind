@@ -48,7 +48,6 @@ testWithApi.describe('packmind-cli install', () => {
       const packagesPage = await dashboardPage.openPackages();
       const packagePage = await packagesPage.openPackage(defaultPackage.name);
       await packagePage.openDistributionsTab();
-      await packagePage.openDistributionHistory();
       const distributions = await packagePage.listDistributions();
 
       // eslint-disable-next-line playwright/no-standalone-expect

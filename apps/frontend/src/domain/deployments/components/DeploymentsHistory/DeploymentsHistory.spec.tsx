@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
+import { DeploymentsHistoryDataTestId } from '@packmind/frontend';
 import {
   createDistributedPackageId,
   createDistributionId,
@@ -155,6 +156,52 @@ describe('DeploymentsHistory', () => {
       renderHistory([distribution(1)]);
 
       expect(screen.getByText('joan.racenet')).toBeInTheDocument();
+    });
+  });
+
+  /*
+   * What the e2e suite reads. It used to find these by counting cells, which
+   * held until the columns around them changed: it then read the status badge
+   * as the author and the destination as a repository glued to its branch, and
+   * CliInstallDistribution failed on every push. The names are the contract
+   * between this component and that suite, so they are asserted here, where a
+   * rename is caught in seconds rather than in a browser.
+   */
+  describe('the parts the e2e suite reads by name', () => {
+    it('names the repository a distribution landed in', () => {
+      renderHistory([distribution(1)]);
+
+      expect(
+        screen.getByTestId(DeploymentsHistoryDataTestId.DestinationRepository),
+      ).toHaveTextContent('PackmindHub/packmind-proprietary');
+    });
+
+    it('names the branch and path under it', () => {
+      renderHistory([distribution(1)]);
+
+      expect(
+        screen.getByTestId(DeploymentsHistoryDataTestId.DestinationDetail),
+      ).toHaveTextContent('main · packages/cli/');
+    });
+
+    it('names the badge saying how the distribution ended', () => {
+      renderHistory([distribution(1)]);
+
+      expect(
+        screen.getByTestId(DeploymentsHistoryDataTestId.Status),
+      ).toHaveTextContent('Success');
+    });
+
+    describe('when the distribution failed', () => {
+      it('carries the name on that badge too', () => {
+        renderHistory([
+          distribution(1, { status: DistributionStatus.failure }),
+        ]);
+
+        expect(
+          screen.getByTestId(DeploymentsHistoryDataTestId.Status),
+        ).toHaveTextContent('Failed');
+      });
     });
   });
 

@@ -87,8 +87,6 @@ export type DistributionLogEntry = {
 
 export interface IPackagePage extends IPackmindAppPage {
   openDistributionsTab(): Promise<void>;
-  /** The log is folded when the tab opens; this unfolds it. */
-  openDistributionHistory(): Promise<void>;
   listDistributions(): Promise<DistributionLogEntry[]>;
   isPackageEmpty(): Promise<boolean>;
   listStandardsInPackage(): Promise<{ name: string }[]>;
