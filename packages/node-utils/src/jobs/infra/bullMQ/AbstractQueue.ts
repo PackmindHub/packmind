@@ -75,10 +75,17 @@ export abstract class AbstractQueue<Input, Output> implements IQueue<
     }
 
     try {
-      const removed = await this.queue.removeRepeatable(name, {
-        pattern,
+      // `jobId` MUST be passed as the third argument: BullMQ rebuilds the
+      // repeat key with `{ ...repeatOpts, jobId }`, so an inline
+      // `repeatOpts.jobId` is overwritten with `undefined` and the computed
+      // key never matches the one created by `addJob(name, data, { jobId,
+      // repeat })` — the removal then silently no-ops and the schedule
+      // outlives the entity it belongs to.
+      const removed = await this.queue.removeRepeatable(
+        name,
+        { pattern },
         jobId,
-      });
+      );
       if (removed) {
         this._logger.info(
           `[${this.QUEUE_ID}] Removed repeatable job ${jobId} with pattern ${pattern}`,
