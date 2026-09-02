@@ -18,7 +18,7 @@ import {
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { SkillsLearnMoreContent } from './SkillsLearnMoreContent';
+import { CreateFromCodeContent } from '../../../shared/components/cli/CreateFromCodeContent';
 import { SkillsImportContent } from './SkillsImportContent';
 import { SkillExampleDialog } from './SkillExampleDialog';
 import { routes } from '../../../shared/utils/routes';
@@ -125,7 +125,7 @@ export const SkillsBlankState = ({
               </PMBox>
               {spaceSlug && (
                 <GettingStartedLearnMoreDialog
-                  body={<SkillsLearnMoreContent />}
+                  body={<CreateFromCodeContent artifactType="skill" />}
                   title="How to create skills"
                   buttonLabel="Create"
                   buttonVariant="tertiary"

@@ -12,7 +12,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { LuBot, LuUpload } from 'react-icons/lu';
-import { SkillsLearnMoreContent } from './SkillsLearnMoreContent';
+import { CreateFromCodeContent } from '../../../shared/components/cli/CreateFromCodeContent';
 import { SkillsImportContent } from './SkillsImportContent';
 
 /**
@@ -24,6 +24,11 @@ import { SkillsImportContent } from './SkillsImportContent';
  * dialog that says how. That is worth listing next to the other types rather
  * than omitting, since "can I make one of these" is the question the menu
  * answers, and the answer for skills is yes, by another route.
+ *
+ * The from-code dialog is the shared one, scoped to skills. It used to be a
+ * second copy of the same accordion, written out again in this domain, which is
+ * how it drifted into skipping `packmind init` and how its install steps went
+ * on being maintained twice.
  */
 export function useSkillCreationOptions(): {
   items: ReactNode;
@@ -98,7 +103,7 @@ export function useSkillCreationOptions(): {
                 </PMDialog.CloseTrigger>
               </PMDialog.Header>
               <PMDialog.Body>
-                <SkillsLearnMoreContent />
+                <CreateFromCodeContent artifactType="skill" />
               </PMDialog.Body>
               <PMDialog.Footer>
                 <PMButton
