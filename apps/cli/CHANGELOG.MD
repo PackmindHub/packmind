@@ -1,4 +1,4 @@
-# [Unreleased]
+# [0.35.0] - 2026-09-02
 
 ## Added
 
@@ -15,8 +15,6 @@
 - A failed `packmind update` on Windows no longer suggests `sudo packmind update`. The Windows shells have no `sudo`, and the usual cause there is not permissions at all — the running executable cannot be replaced, which elevation does not fix. Windows now gets its own advice: close any other running `packmind` process, then re-run from an Administrator terminal. The underlying error is now kept in the message on every platform, and the `sudo` suggestion is unchanged on macOS and Linux
 - A scope holding a brace group (`**/*.{ts,tsx}`) is no longer split in two. `playbook add` and `playbook diff` read it as `**/*.{ts` plus `tsx}` whenever the agent rendered the scope as a YAML array, and reported a scope change that was not one
 - `plugins render` no longer calls every plugin a Claude one. A render from `.claude-plugin/plugin.json` now tells Packmind which vendor to target, the success line names the manifest it actually updated, and the skipped-standards notice and `--help` stop assuming Claude
-
-## Removed
 
 # [0.34.1] - 2026-08-25
 
@@ -484,7 +482,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...HEAD
+[0.35.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.34.1...release-cli/0.35.0
 [0.34.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.33.0...release-cli/0.34.1
 [0.33.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.32.0...release-cli/0.33.0
 [0.32.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.31.0...release-cli/0.32.0
