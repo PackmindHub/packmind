@@ -11,6 +11,8 @@
 
 ## Fixed
 
+- Spinners on the Git connections page spin again. The refresh control on a connection row declared its own rotation keyframes, and the style serializer emitted them as a second, malformed global `@keyframes spin` with two empty frames. Defined after the theme's, it won for the whole document, so every spinner on the page ran against empty keyframes and sat still: the refresh icon that asked for the animation, the arc in the connection drawer's "Load more repositories" button, and the "Apply changes" button. The control now uses the spinner the rest of the app uses, which leaves the theme as the only definition of those keyframes
+
 - The "how to create with your agent" dialog no longer teaches commands that no longer exist. It named `/packmind-create-standard`, `/packmind-create-command` and `/packmind-create-skill`, one per artifact kind, and all three were retired: a repository that syncs its skills now has them deleted, so the dialog was giving instructions that fail. It names `/packmind-update-playbook`, the one skill that covers every kind of artifact. The setup step above it also offered `packmind init` alone and called it first-time-only, which left a reader whose repository was already set up with nothing to run; it now offers `packmind skills init` too, which is the command that replaces the retired skills in an existing repository
 
 ## Removed

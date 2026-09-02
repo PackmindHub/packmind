@@ -5,6 +5,7 @@ import {
   PMIcon,
   PMMenu,
   PMPortal,
+  PMSpinner,
   PMText,
   PMTooltip,
   PMVStack,
@@ -245,18 +246,23 @@ const RefreshStatusButton: React.FC<RefreshStatusButtonProps> = ({
           : { color: 'text.primary', bg: 'background.tertiary' }
       }
     >
-      <PMIcon
-        fontSize="sm"
-        animation={isFetching ? 'spin 800ms linear infinite' : undefined}
-        css={{
-          '@keyframes spin': {
-            from: { transform: 'rotate(0deg)' },
-            to: { transform: 'rotate(360deg)' },
-          },
-        }}
-      >
-        <LuRefreshCw />
-      </PMIcon>
+      {/*
+        The design system's spinner carries the rotation. Animating the refresh
+        icon instead meant declaring @keyframes locally, and the css prop emits
+        those as a malformed global `@keyframes spin` that overrides the theme's
+        and freezes every spinner on the page — the drawer's included.
+      */}
+      {isFetching ? (
+        <PMSpinner
+          size="inherit"
+          fontSize="sm"
+          data-testid="connection-row-refresh-spinner"
+        />
+      ) : (
+        <PMIcon fontSize="sm">
+          <LuRefreshCw />
+        </PMIcon>
+      )}
     </PMBox>
   </PMTooltip>
 );
