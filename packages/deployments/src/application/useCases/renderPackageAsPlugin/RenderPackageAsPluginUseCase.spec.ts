@@ -299,6 +299,28 @@ describe('RenderPackageAsPluginUseCase', () => {
     });
   });
 
+  describe('when the package is empty', () => {
+    beforeEach(() => {
+      packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([
+        buildPackage(),
+      ]);
+    });
+
+    // A package with nothing in it fails the same publishability check as a
+    // standards-only one, so the message must not claim it holds standards.
+    it('throws PackageNotPublishableAsPluginError', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
+        PackageNotPublishableAsPluginError,
+      );
+    });
+
+    it('reports the missing skill or command rather than standards', async () => {
+      await expect(useCase.execute(buildCommand())).rejects.toThrow(
+        'Cannot publish: package "Security" has no skill or command. A marketplace plugin needs at least one skill or command — standards alone are not enough.',
+      );
+    });
+  });
+
   describe('hook files', () => {
     beforeEach(() => {
       packageService.getPackagesBySlugsAndSpaceWithArtefacts.mockResolvedValue([

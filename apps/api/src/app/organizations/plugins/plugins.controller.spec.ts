@@ -158,7 +158,7 @@ describe('PluginsController', () => {
           expect.objectContaining({
             statusCode: 400,
             message:
-              'Cannot publish: package "Security" contains only standards. A marketplace plugin needs at least one skill or recipe.',
+              'Cannot publish: package "Security" has no skill or command. A marketplace plugin needs at least one skill or command — standards alone are not enough.',
           }),
         );
       });
