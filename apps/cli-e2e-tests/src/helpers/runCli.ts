@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
+import { emitTiming, round } from './timing';
 
 export interface RunCliOptions {
   apiKey?: string;
@@ -69,10 +70,16 @@ export async function runCli(
 
   const args = parseCommandArgs(command);
 
+  // Only the leading tokens: enough to identify the command in a timing line,
+  // without copying message bodies or anything else an argument might carry.
+  const commandLabel = args.slice(0, 2).join(' ');
+  const enteredAt = performance.now();
+
   // Use provided HOME or create a temporary one
   const ownsTempHome = !opts?.home;
   const tempHome =
     opts?.home ?? fs.mkdtempSync(path.join(os.tmpdir(), 'cli-e2e-test-'));
+  const homeReadyAt = performance.now();
 
   // Build clean environment by filtering out PACKMIND_API_KEY
   const cleanEnv: NodeJS.ProcessEnv = {};
@@ -107,6 +114,9 @@ export async function runCli(
           stdio: [stdinMode, 'pipe', 'pipe'],
         });
 
+    const spawnedAt = performance.now();
+    let firstOutputAt: number | undefined;
+
     if (opts?.stdin !== undefined) {
       child.stdin?.write(opts.stdin);
       child.stdin?.end();
@@ -116,10 +126,12 @@ export async function runCli(
     let stderr = '';
 
     child.stdout?.on('data', (data) => {
+      firstOutputAt ??= performance.now();
       stdout += data.toString();
     });
 
     child.stderr?.on('data', (data) => {
+      firstOutputAt ??= performance.now();
       stderr += data.toString();
     });
 
@@ -132,10 +144,34 @@ export async function runCli(
     });
 
     child.on('close', (code, signal) => {
+      const closedAt = performance.now();
+
       // Only clean up if we created the temp directory
       if (ownsTempHome) {
         fs.rmSync(tempHome, { recursive: true, force: true });
       }
+      const cleanedAt = performance.now();
+
+      emitTiming('runCli', {
+        command: commandLabel,
+        code: code ?? (signal ? 1 : 0),
+        // Cost of creating this invocation's throwaway HOME. Every call gets a
+        // fresh one, which is also why the CLI's own 24h version cache — kept
+        // under `os.homedir()` — can never be warm here.
+        homeMs: round(homeReadyAt - enteredAt),
+        // Node reading, parsing and compiling the CLI bundle before it does
+        // any work. Measured ~0.4-0.5s per call, and it is paid every call.
+        startupMs:
+          firstOutputAt === undefined ? null : round(firstOutputAt - spawnedAt),
+        // Output-to-exit. A large value here means the process produced its
+        // answer and then would not exit — a handle still open, not slow work.
+        lingerMs:
+          firstOutputAt === undefined ? null : round(closedAt - firstOutputAt),
+        totalMs: round(closedAt - spawnedAt),
+        // Synchronous recursive delete, on the worker thread, per invocation.
+        cleanupMs: round(cleanedAt - closedAt),
+      });
+
       resolve({
         returnCode: code ?? (signal ? 1 : 0),
         stdout,
